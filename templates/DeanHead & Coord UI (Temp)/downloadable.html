@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Downloadables</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+:root{
+	--page-w: 1440px;
+	--page-h: 1221px;
+	--bg: #F9F9F9;
+
+	--down-margin: 75px;
+	--down-gap: 40px;
+
+	--text-size: 33px;
+	--text-weight: 500; /* Medium */
+	--text-color: #000000;
+
+	--group-gap: 80px;
+	--item-gap: 15px;
+}
+
+/* Page */
+body{
+	margin: 0;
+	background: var(--bg);
+	font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+
+/* Fixed page canvas (optional centering on large screens) */
+.page{
+	width: var(--page-w);
+	min-height: var(--page-h);
+	margin: 0 auto;
+	box-sizing: border-box;
+}
+
+/* Down Container */
+.down{
+	width: 100%;
+	margin: var(--down-margin);
+	display: flex;
+	flex-direction: column;        /* Auto layout: Top to Bottom */
+	gap: var(--down-gap);          /* Gap 40 */
+	box-sizing: border-box;
+}
+
+/* Text under Down Container */
+.down__title{
+	font-size: var(--text-size);   /* 33px */
+	font-weight: var(--text-weight); /* Medium */
+	color: var(--text-color);      /* Black */
+	line-height: 1.25;
+	margin: 0;
+}
+
+/* Item Group Container */
+.item-group{
+	display: flex;
+	flex-wrap: wrap;               /* Wrap around */
+	gap: var(--group-gap);         /* Gap 80 */
+	align-items: flex-start;       /* Left to right flow */
+}
+
+/* Item Container */
+.item{
+	display: flex;
+	flex-direction: column;        /* Top to Bottom */
+	gap: var(--item-gap);          /* Gap 15 */
+	/* Optional width for nice wrapping; adjust/remove as needed */
+	width: clamp(240px, 28%, 360px);
+	box-sizing: border-box;
+}
+
+/* Demo content blocks (remove or replace with real content) */
+.item__thumb{
+	width: 100%;
+	aspect-ratio: 16 / 9;
+	background: #E9E9E9;
+	border-radius: 12px;
+}
+.item__title{
+	font-weight: 600;
+	font-size: 18px;
+	margin: 0;
+}
+.item__desc{
+	font-size: 14px;
+	margin: 0;
+	color: #333;
+}
+
+/* Make sure the 75px margin fits inside the fixed page width */
+@media (max-width: 1500px){
+	.down{ margin: 60px; }
+}
+@media (max-width: 1200px){
+	.page{ width: 100%; }
+	.down{ margin: 40px 24px; }
+}
+</style>
+</head>
+<body>
+	<main class="page">
+		<section class="down">
+		<h1 class="down__title">Downloadables</h1>
+
+		<div class="item-group">
+			<article class="item">
+			<div class="item__thumb"></div>
+			<h2 class="item__title">UESO Brochure 2023</h2>
+			<p class="item__desc">PDF File <strong>11.1 MB</strong></p>
+			</article>
+
+			<article class="item">
+			<div class="item__thumb"></div>
+			<h2 class="item__title">UESO Brochure 2024</h2>
+			<p class="item__desc">PDF File <strong>11.1 MB</strong></p>
+			</article>
+		</div>
+		</section>
+	</main>
+</body>
+</html>
