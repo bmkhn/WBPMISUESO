@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Manage User</title>
+<link href="https://fonts.googleapis.com/css?family=Inter:400,500,700&display=swap" rel="stylesheet">
+
+<!-- Top Section -->
+<style>
+    body {
+        background: #F9F9F9;
+        margin: 0;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .main-container {
+        margin: 60px;
+        display: flex;
+        flex-direction: column;
+        gap: 30px;
+        max-width: 1440px;
+    }
+
+    .container-a {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .text-sort-container {
+        display: flex;
+        flex-direction: row;
+        gap: 60px;
+        align-items: center;
+    }
+
+    .manage-user-text {
+        font-family: 'Inter', sans-serif;
+        font-weight: 400;
+        font-size: 32px;
+        color: #000000;
+    }
+
+    .sort-container {
+        display: flex;
+        flex-direction: row;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .sort-icon {
+
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+
+    }
+
+    .dropdown-container {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 13px;
+
+        border-radius: 12px;
+
+    }
+
+    .dropdown-name {
+        font-family: 'Inter', sans-serif;
+        font-weight: 400;
+        font-size: 16px;
+        color: #000;
+    }
+
+    .dropdown-icon {
+        width: 15px;
+        height: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .button-container {
+        display: flex;
+        flex-direction: row;
+        gap: 20px;
+        align-items: center;
+    }
+
+    .add-user-btn {
+        background: #063A1C;
+        border-radius: 20px;
+        padding: 15px 40px;
+        color: #fff;
+        font-family: 'Inter', sans-serif;
+        font-weight: 500;
+        font-size: 20px;
+        border: none;
+        cursor: pointer;
+    }
+    .export-btn {
+        background: #00538E;
+        border-radius: 20px;
+        padding: 15px 40px;
+        color: #fff;
+        font-family: 'Inter', sans-serif;
+        font-weight: 500;
+        font-size: 20px;
+        border: none;
+        cursor: pointer;
+    }
+</style>
+
+<!-- Table Section -->
+<style>
+    .user-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #FEFCFC;
+        border: 1px solid rgba(0,0,0,0.18);
+        overflow: hidden;
+    }
+
+    .user-table th {
+        font-size: 16px;
+        font-weight: 500;
+        background: rgba(217, 217, 217, 0.2);
+        border-bottom: 1px solid rgba(0,0,0,0.18);
+        padding: 14px 12px;
+        text-align: left;
+        font-family: 'Inter', Arial, sans-serif;
+    }
+
+    .user-table td {
+        font-size: 15px;
+        font-weight: 400;
+        border: none;
+        border-bottom: 1px solid rgba(0,0,0,0.18);
+        padding: 14px 12px;
+        text-align: left;
+        font-family: 'Inter', Arial, sans-serif;
+    }
+
+    .user-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .settings-icon {
+        width: 16px;
+        height: 16px;
+        align-items: center;
+        justify-content: center;
+        display: inline-block;
+        vertical-align: middle;
+        cursor: pointer;
+    }
+
+    .user-table th.settings-col, .user-table td.settings-col {
+        text-align: center !important;
+    }
+</style>
+
+</head>
+<body>
+	<div class="main-container">
+        <!-- Top Section -->
+		<div class="container-a">
+            <div class="text-sort-container">
+                <div class="manage-user-text">Manage User</div>
+                <div class="sort-container">
+                    <div class="sort-icon">
+                        <svg width="20" height="20"><use href="#sort-icon"/></svg>
+                    </div>
+                    <div class="dropdown-container">
+                        <span class="dropdown-name">Sort by</span>
+                        <span class="dropdown-icon">
+                            <svg width="15" height="10"><use href="#dropdown-icon"/></svg>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="button-container">
+                <button class="add-user-btn">Add User</button>
+                <button class="export-btn">Export</button>
+            </div>
+		</div>
+
+        <!-- Table Section -->
+        <table class="user-table">
+            <thead>
+                <tr>
+                    <th>User Name</th>
+                    <th>Email</th>
+                    <th>Joined</th>
+                    <th>Role</th>
+                    <th class="settings-col">Settings</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Alice Johnson</td>
+                    <td>alice.johnson@email.com</td>
+                    <td>2024-01-15</td>
+                    <td>Admin</td>
+                    <td class="settings-col"><span class="settings-icon"><svg class="settings-icon"><use href="#settings-icon"/></svg></span></td>
+                </tr>
+                <tr>
+                    <td>Bob Smith</td>
+                    <td>bob.smith@email.com</td>
+                    <td>2023-11-02</td>
+                    <td>Faculty</td>
+                    <td class="settings-col"><span class="settings-icon"><svg class="settings-icon"><use href="#settings-icon"/></svg></span></td>
+                </tr>
+                <tr>
+                    <td>Carol Lee</td>
+                    <td>carol.lee@email.com</td>
+                    <td>2025-03-10</td>
+                    <td>Client</td>
+                    <td class="settings-col"><span class="settings-icon"><svg class="settings-icon"><use href="#settings-icon"/></svg></span></td>
+                </tr>
+                <tr>
+                    <td>David Kim</td>
+                    <td>david.kim@email.com</td>
+                    <td>2022-08-21</td>
+                    <td>College Coordinator</td>
+                    <td class="settings-col"><span class="settings-icon"><svg class="settings-icon"><use href="#settings-icon"/></svg></span></td>
+                </tr>
+            </tbody>
+        </table>
+	</div>
+
+<!-- SVG Sprite Section -->
+<svg style="display:none;">
+
+    <!-- Settings -->
+    <symbol id="settings-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M2 4C1.45 4 0.979167 3.80417 0.5875 3.4125C0.195833 3.02083 0 2.55 0 2C0 1.45 0.195833 0.979167 0.5875 0.5875C0.979167 0.195833 1.45 0 2 0C2.55 0 3.02083 0.195833 3.4125 0.5875C3.80417 0.979167 4 1.45 4 2C4 2.55 3.80417 3.02083 3.4125 3.4125C3.02083 3.80417 2.55 4 2 4ZM8 4C7.45 4 6.97917 3.80417 6.5875 3.4125C6.19583 3.02083 6 2.55 6 2C6 1.45 6.19583 0.979167 6.5875 0.5875C6.97917 0.195833 7.45 0 8 0C8.55 0 9.02083 0.195833 9.4125 0.5875C9.80417 0.979167 10 1.45 10 2C10 2.55 9.80417 3.02083 9.4125 3.4125C9.02083 3.80417 8.55 4 8 4ZM14 4C13.45 4 12.9792 3.80417 12.5875 3.4125C12.1958 3.02083 12 2.55 12 2C12 1.45 12.1958 0.979167 12.5875 0.5875C12.9792 0.195833 13.45 0 14 0C14.55 0 15.0208 0.195833 15.4125 0.5875C15.8042 0.979167 16 1.45 16 2C16 2.55 15.8042 3.02083 15.4125 3.4125C15.0208 3.80417 14.55 4 14 4Z" fill="#1D1B20"/>
+    </symbol>
+
+    <!-- Sort -->
+    <symbol id="sort-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M9.97066 18.8067V1.13672M9.97066 1.13672L18.8057 9.97172M9.97066 1.13672L1.13566 9.97172" stroke="black" stroke-width="1.97904" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+
+    <!-- Dropdown -->
+    <symbol id="dropdown-icon" viewBox="0 0 15 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M7.11427 6.46831L12.3293 1.25327C12.4265 1.15265 12.5427 1.07239 12.6713 1.01717C12.7998 0.961959 12.9381 0.932896 13.0779 0.93168C13.2178 0.930465 13.3566 0.957121 13.486 1.01009C13.6155 1.06307 13.7331 1.1413 13.8321 1.24022C13.931 1.33914 14.0092 1.45677 14.0622 1.58624C14.1152 1.71572 14.1418 1.85445 14.1406 1.99434C14.1394 2.13423 14.1103 2.27247 14.0551 2.40101C13.9999 2.52954 13.9196 2.6458 13.819 2.74298L7.85912 8.70287C7.66155 8.90038 7.39363 9.01133 7.11427 9.01133C6.8349 9.01133 6.56698 8.90038 6.36941 8.70287L0.409525 2.74298C0.308901 2.6458 0.228639 2.52954 0.173424 2.40101C0.118209 2.27247 0.089146 2.13423 0.0879304 1.99434C0.0867148 1.85445 0.113371 1.71572 0.166344 1.58624C0.219317 1.45677 0.297546 1.33914 0.396466 1.24022C0.495386 1.1413 0.613016 1.06307 0.742492 1.01009C0.871969 0.957121 1.0107 0.930465 1.15059 0.93168C1.29048 0.932896 1.42872 0.961959 1.55726 1.01717C1.68579 1.07239 1.80205 1.15265 1.89923 1.25327L7.11427 6.46831Z" fill="black"/>
+    </symbol>
+</svg>
+
+</body>
+</html>

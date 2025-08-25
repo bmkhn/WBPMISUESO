@@ -1,242 +1,416 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Dashboard</title>
-    <link href="https://fonts.googleapis.com/css?family=Inter:400,700,800&display=swap" rel="stylesheet">
-    <style>
-        body {
-            background: #F9F9F9;
-            margin: 0;
-            font-family: 'Inter', sans-serif;
-        }
+<meta charset="UTF-8">
+<title>Dashboard</title>
+<link href="https://fonts.googleapis.com/css?family=Inter:400,700,800&display=swap" rel="stylesheet">
 
-        .main-container {
-            margin: 60px;
-            display: flex;
-            flex-direction: column;
-            gap: 50px;
-            max-width: 1440px;
-        }
+<style>
+    /* Dropdown wrapper and icon for Project Summary Table */
+    .dropdown-wrapper {
+        position: relative;
+        display: inline-block;
+    }
+    .dropdown-icon {
+        position: absolute;
+        right: 12px;
+        top: 40%;
+        transform: translateY(-50%);
+        pointer-events: none;
+        width: 16px;
+        height: 16px;
+        display: block;
+    }
+    body {
+        background: #F9F9F9;
+        margin: 0;
+        font-family: 'Inter', sans-serif;
+    }
 
-        .container-1 {
-            display: flex;
-            flex-direction: row;
-            justify-content: space-between;
-            width: 100%;
-        }
+    .main-container {
+        margin: 60px;
+        display: flex;
+        flex-direction: column;
+        gap: 50px;
+        max-width: 1440px;
+    }
 
-        .container-1A {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
+    .container-1 {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        width: 100%;
+    }
 
-        .container-1A-row {
-            display: flex;
-            flex-direction: row;
-            align-items: baseline;
-            gap: 10px;
-        }
+    .container-1A {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
 
-        .welcome-text {
-            font-size: 56px;
-            font-weight: 800;
-            background: linear-gradient(90deg, #4AFFDB 0%, #063A1C 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
+    .container-1A-row {
+        display: flex;
+        flex-direction: row;
+        align-items: baseline;
+        gap: 10px;
+    }
 
-        .ueso-text {
-            font-size: 48px;
-            font-weight: 700;
-            color: #000;
-        }
+    .welcome-text {
+        font-size: 56px;
+        font-weight: 800;
+        background: linear-gradient(90deg, #4AFFDB 0%, #063A1C 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
 
-        .viewing-text {
-            font-size: 19px;
-            font-weight: 400;
-            color: #000;
-        }
+    .ueso-text {
+        font-size: 48px;
+        font-weight: 700;
+        color: #000;
+    }
 
-        .container-1B {
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            gap: 10px;
-            background: #F8F8F8;
-            border-radius: 16px;
-            border: 1px solid rgba(0,0,0,0.18);
-            padding: 0 24px;
-            height: 45px; /* Set height to 45px */
-        }
+    .viewing-text {
+        font-size: 19px;
+        font-weight: 400;
+        color: #000;
+    }
 
-        .quarter-text {
-            font-size: 16px;
-            font-weight: 400;
-            color: #000;
-        }
+    .container-1B {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 10px;
+        background: #F8F8F8;
+        border-radius: 16px;
+        border: 1px solid rgba(0,0,0,0.18);
+        padding: 0 24px;
+        height: 45px; /* Set height to 45px */
+    }
 
-        .dropdown-arrow {
-            width: 16px;
-            height: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+    .quarter-text {
+        font-size: 16px;
+        font-weight: 400;
+        color: #000;
+    }
 
-        .dropdown-arrow svg {
-            display: block;
-        }
+    .dropdown-arrow {
+        width: 16px;
+        height: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
 
-        /* Overview Section */
-        .overview-section {
-            max-width: 1440px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        
-        .overview-text {
-            font-family: 'Inter', sans-serif;
-            font-weight: 500;
-            font-size: 24px;
-        }
+    .dropdown-arrow svg {
+        display: block;
+    }
+</style>
 
-        .container-2 {
-            display: flex;
-            flex-direction: row;
-            justify-content: center;
-            align-items: center;
-            gap: 30px;
-        }
-        
-        .container-2A {
-            position: relative;
-            width: 234px;
-            height: 128px;
-            border-radius: 16px;
-            padding: 30px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            gap: 10px;
-            background: #fff;
-            box-sizing: border-box;
-            z-index: 0;
-            border: none; /* Remove border-image and border */
-            overflow: hidden; /* Ensure the pseudo-element doesn't overflow */
-        }
 
-        .container-2A::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            border-radius: 16px;
-            padding: 0.8px; /* Border thickness */
-            background: linear-gradient(180deg, #1CB889 0%, #000000 100%);
-            -webkit-mask:
-                linear-gradient(#fff 0 0) content-box,
-                linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor;
-            mask-composite: exclude;
-            z-index: -1;
-            pointer-events: none;
-        }
+<!-- Overview Section -->
+<style>
+    .overview-section {
+        max-width: 1440px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .overview-text {
+        font-family: 'Inter', sans-serif;
+        font-weight: 500;
+        font-size: 24px;
+    }
 
-        .container-2A-number {
-            font-family: 'Inter', sans-serif;
-            font-weight: 700;
-            font-size: 34px;
-            color: #000;
-        }
-        .container-2A-name {
-            font-family: 'Inter', sans-serif;
-            font-weight: 400;
-            font-size: 16px;
-            color: #000;
-        }
+    .container-2 {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        gap: 30px;
+    }
+    
+    .container-2A {
+        position: relative;
+        width: 234px;
+        height: 128px;
+        border-radius: 16px;
+        padding: 30px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 10px;
+        background: #fff;
+        box-sizing: border-box;
+        z-index: 0;
+        border: none; /* Remove border-image and border */
+        overflow: hidden; /* Ensure the pseudo-element doesn't overflow */
+    }
 
-        /* Summary Section */
-        .summary-section {
-            max-width: 1440px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
+    .container-2A::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 16px;
+        padding: 0.8px; /* Border thickness */
+        background: linear-gradient(180deg, #1CB889 0%, #000000 100%);
+        -webkit-mask:
+            linear-gradient(#fff 0 0) content-box,
+            linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        z-index: -1;
+        pointer-events: none;
+    }
 
-        .summary-text {
-            font-family: 'Inter', sans-serif;
-            font-weight: 500;
-            font-size: 24px;
-        }
+    .container-2A-number {
+        font-family: 'Inter', sans-serif;
+        font-weight: 700;
+        font-size: 34px;
+        color: #000;
+    }
+    .container-2A-name {
+        font-family: 'Inter', sans-serif;
+        font-weight: 400;
+        font-size: 16px;
+        color: #000;
+    }
+</style>
 
-        .container-3 {
-            display: flex;
-            flex-direction: row;
-            gap: 30px;
-            min-height: 300px;
-        }
 
-        .charts-container-outer {
-            flex: 2;
-            background: #FEFCFC;
-            border-radius: 16px;
-            border: 1.1px solid rgba(0,0,0,0.4);
-            min-height: 220px;
-            min-width: 0;
-            box-sizing: border-box;
-            display: flex;
-            align-items: stretch;
-            padding: 24px;
-            position: relative;
-        }
+<!-- Summary Section -->
+<style>
+    .summary-section {
+        max-width: 1440px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
 
-        .expand-icon-container {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            z-index: 2;
-        }
+    .summary-text {
+        font-family: 'Inter', sans-serif;
+        font-weight: 500;
+        font-size: 24px;
+    }
 
-        .expand-icon {
-            cursor: pointer;
-            display: block;
-            transition: transform 0.3s;
-        }
+    .container-3 {
+        display: flex;
+        flex-direction: row;
+        gap: 30px;
+        min-height: 300px;
+    }
 
-        .expand-icon-container:hover .expand-icon {
-            transform: scale(1.1);
-        }
+    .charts-container-outer {
+        flex: 2;
+        background: #FEFCFC;
+        border-radius: 16px;
+        border: 1.1px solid rgba(0,0,0,0.4);
+        min-height: 220px;
+        min-width: 0;
+        box-sizing: border-box;
+        display: flex;
+        align-items: stretch;
+        padding: 24px;
+        position: relative;
+    }
 
-        .charts-inner {
-            display: flex;
-            flex-direction: row;
-            gap: 30px;
-            width: 100%;
-        }
+    .expand-icon-container {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        z-index: 2;
+    }
 
-        .chart {
-            flex: 1;
-            background: transparent;
-            border-radius: 12px;
-            min-height: 172px;
-            min-width: 0;
-            box-sizing: border-box;
-        }
+    .expand-icon {
+        cursor: pointer;
+        display: block;
+        transition: transform 0.3s;
+    }
 
-        .calendar-container {
-            flex: 1;
-            background: #FEFCFC;
-            border-radius: 16px;
-            border: 1.1px solid rgba(0,0,0,0.4);
-            min-height: 220px;
-            min-width: 0;
-            box-sizing: border-box;
-            padding: 24px;
-            position: relative;
-        }
-    </style>
+    .expand-icon-container:hover .expand-icon {
+        transform: scale(1.1);
+    }
+
+    .charts-inner {
+        display: flex;
+        flex-direction: row;
+        gap: 30px;
+        width: 100%;
+    }
+
+    .chart {
+        flex: 1;
+        background: transparent;
+        border-radius: 12px;
+        min-height: 172px;
+        min-width: 0;
+        box-sizing: border-box;
+    }
+
+    .calendar-container {
+        flex: 1;
+        background: #FEFCFC;
+        border-radius: 16px;
+        border: 1.1px solid rgba(0,0,0,0.4);
+        min-height: 220px;
+        min-width: 0;
+        box-sizing: border-box;
+        padding: 24px;
+        position: relative;
+    }
+</style>
+
+
+<!-- Project Summary Table -->
+<style>
+    /* Project Summary Table Styles */
+    .project-summary-table-container {
+        position: relative;
+        margin-top: 30px;
+        width: 100%;
+        background: #FEFCFC;
+        border-radius: 15px;
+        border: 1px solid rgba(0,0,0,0.42);
+        box-sizing: border-box;
+        padding: 0;
+        overflow: hidden;
+    }
+
+    .project-summary-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: transparent;
+    }
+
+    .project-summary-table th, .project-summary-table td {
+        border: none;
+        padding: 16px 18px;
+        font-family: 'Inter', Arial, sans-serif;
+    }
+
+    .project-summary-table th {
+        font-weight: bold;
+        font-size: 18px;
+        background: transparent;
+        text-align: left;
+        border-bottom: 1.5px solid #E0E0E0;
+    }
+
+    .project-summary-table .header-row th {
+        font-weight: 400;
+        font-size: 20px;
+        background: transparent;
+        text-align: left;
+        border-bottom: 1.5px solid #E0E0E0;
+    }
+
+    .project-summary-table .dropdown {
+        font-family: 'Inter', Arial, sans-serif;
+        font-size: 16px;
+        padding: 8px 36px 8px 12px; /* extra right padding for icon */
+        border-radius: 12px;
+        border: 1px solid rgba(0,0,0,0.18);
+        background: #F8F8F8;
+        appearance: none;
+        cursor: pointer;
+        min-width: 120px;
+        margin-left: 8px;
+        position: relative;
+    }
+
+    .project-summary-table .progress {
+        font-weight: 400;
+        font-size: 18px;
+        font-family: 'Inter', Arial, sans-serif;
+    }
+
+    .project-summary-table .progress.high {
+        color: #0B9620;
+    }
+
+    .project-summary-table .progress.low {
+        color: #E90000;
+    }
+
+    .expand-icon-bottom {
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+    }
+</style>
+
+
+<!-- Goal Tile Card -->
+<style>
+    .goal-section {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        width: 100%;
+    }
+
+    .goal-text {
+        font-family: 'Inter', sans-serif;
+        font-weight: 500;
+        font-size: 24px;
+    }
+
+    .goal-card-container {
+        display: flex;
+        flex-direction: row;
+        gap: 15px;
+        width: 100%;
+    }
+
+    .goal-card {
+        position: relative;
+        flex: 1;
+        background: #fff;
+        border-radius: 18px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        padding: 40px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 0;
+        border: 1px solid rgba(0, 0, 0, 0.42);
+        box-sizing: border-box;
+    }
+
+    .goal-card-kebab {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        cursor: pointer;
+    }
+
+    .goal-card-percent {
+        font-family: 'Inter', Arial, sans-serif;
+        font-weight: 900;
+        font-size: 32px;
+        color: #000000;
+        text-align: center;
+        margin-top: 40px;
+    }
+
+    .goal-card-title {
+        margin-top: 35px;
+        font-family: 'Inter', Arial, sans-serif;
+        font-weight: 400;
+        font-size: 15px;
+        color: #000000;
+        text-align: center;
+    }
+
+    .kebab-svg {
+        width: 16px;
+        height: 16px;
+    }
+</style>
+
 </head>
 <body>
     <div class="main-container">
@@ -258,6 +432,7 @@
                 </div>
             </div>
         </div>
+
         <!-- Overview Section -->
         <div class="overview-section">
             <div class="overview-text">Overview</div>
@@ -280,6 +455,7 @@
                 </div>
             </div>
         </div>
+
         <!-- Summary Section -->
         <div class="summary-section">
             <div class="summary-text">Summary</div>
@@ -296,6 +472,7 @@
                         <div class="chart chart-2"></div>
                     </div>
                 </div>
+
                 <!-- Calendar Container (blank, with expand icon) -->
                 <div class="calendar-container">
                     <div class="expand-icon-container">
@@ -305,15 +482,123 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Project Summary Table now below charts and calendar -->
+            <div class="project-summary-table-container">
+                <table class="project-summary-table">
+                    <tr class="header-row">
+                        <th>Projects Summary</th>
+                        <th>
+                            Campus
+                            <span class="dropdown-wrapper">
+                                <select class="dropdown">
+                                    <option>Main</option>
+                                    <option>Satellite</option>
+                                </select>
+                                <span class="dropdown-icon">
+                                    <svg width="16" height="16"><use href="#icon-dropdown"/></svg>
+                                </span>
+                            </span>
+                        </th>
+                        <th>
+                            College
+                            <span class="dropdown-wrapper">
+                                <select class="dropdown">
+                                    <option>Engineering</option>
+                                    <option>Business</option>
+                                </select>
+                                <span class="dropdown-icon">
+                                    <svg width="16" height="16"><use href="#icon-dropdown"/></svg>
+                                </span>
+                            </span>
+                        </th>
+                        <th>
+                            Status
+                            <span class="dropdown-wrapper">
+                                <select class="dropdown">
+                                    <option>Active</option>
+                                    <option>Pending</option>
+                                    <option>Completed</option>
+                                </select>
+                                <span class="dropdown-icon">
+                                    <svg width="16" height="16"><use href="#icon-dropdown"/></svg>
+                                </span>
+                            </span>
+                        </th>
+                    </tr>
+                    <tr>
+                        <th>Title</th>
+                        <th>Team Leader</th>
+                        <th>Status</th>
+                        <th>Progress</th>
+                    </tr>
+                    <tr>
+                        <td>Eco-Tourism Initiative</td>
+                        <td>Jane Smith</td>
+                        <td>Active</td>
+                        <td class="progress high">80%</td>
+                    </tr>
+                    <tr>
+                        <td>SDG Project</td>
+                        <td>John Doe</td>
+                        <td>Pending</td>
+                        <td class="progress low">40%</td>
+                    </tr>
+                </table>
+                <div class="expand-icon-bottom">
+                    <svg class="expand-svg" width="16" height="16"><use href="#icon-expand"/></svg>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Goal Section -->
+        <div class="goal-section">
+            <div class="goal-text">Goals</div>
+            <div class="goal-card-container">
+                <div class="goal-card">
+                    <div class="goal-card-kebab"> <svg class="kebab-svg"><use href="#kebab-icon"/></svg> </div>
+                    <div class="goal-card-percent">75%</div>
+                    <div class="goal-card-title">100 Extension Projects for 2025</div>
+                </div>
+                <div class="goal-card">
+                    <div class="goal-card-kebab"> <svg class="kebab-svg"><use href="#kebab-icon"/></svg> </div>
+                    <div class="goal-card-percent">30%</div>
+                    <div class="goal-card-title">10 SDG Extension Projects for 2025</div>
+                </div>
+                <div class="goal-card">
+                    <div class="goal-card-kebab"> <svg class="kebab-svg"><use href="#kebab-icon"/></svg> </div>
+                    <div class="goal-card-percent">90%</div>
+                    <div class="goal-card-title">5 Student Involved Extension Projects for 2025</div>
+                </div>
+                <div class="goal-card">
+                    <div class="goal-card-kebab"> <svg class="kebab-svg"><use href="#kebab-icon"/></svg> </div>
+                    <div class="goal-card-percent">50%</div>
+                    <div class="goal-card-title">10 Eco-Tourism Projects for 2025</div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <svg style="display:none;">
-      <symbol id="icon-expand" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- SVG Sprite Section -->
+<svg style="display:none;">
+
+    <!-- Expand -->
+    <symbol id="icon-expand" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M15.35 5.43923V1M15.35 1H10.8656M15.35 1L9.96875 6.26404M5.48438 15.2055L1 15.226V10.7663M6.38125 9.87846L1 15.2055" stroke="black" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"/>
-      </symbol>
-    </svg>
+    </symbol>
+
+    <!-- Dropdown -->
+    <symbol id="icon-dropdown" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <polyline points="4,6 8,10 12,6" fill="none" stroke="#000" stroke-width="2"/>
+    </symbol>
+
+    <!-- Kebab -->
+    <symbol id="kebab-icon" viewBox="0 0 4 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M2 16C1.45 16 0.979167 15.8042 0.5875 15.4125C0.195833 15.0208 0 14.55 0 14C0 13.45 0.195833 12.9792 0.5875 12.5875C0.979167 12.1958 1.45 12 2 12C2.55 12 3.02083 12.1958 3.4125 12.5875C3.80417 12.9792 4 13.45 4 14C4 14.55 3.80417 15.0208 3.4125 15.4125C3.02083 15.8042 2.55 16 2 16ZM2 10C1.45 10 0.979167 9.80417 0.5875 9.4125C0.195833 9.02083 0 8.55 0 8C0 7.45 0.195833 6.97917 0.5875 6.5875C0.979167 6.19583 1.45 6 2 6C2.55 6 3.02083 6.19583 3.4125 6.5875C3.80417 6.97917 4 7.45 4 8C4 8.55 3.80417 9.02083 3.4125 9.4125C3.02083 9.80417 2.55 10 2 10ZM2 4C1.45 4 0.979167 3.80417 0.5875 3.4125C0.195833 3.02083 0 2.55 0 2C0 1.45 0.195833 0.979167 0.5875 0.5875C0.979167 0.195833 1.45 0 2 0C2.55 0 3.02083 0.195833 3.4125 0.5875C3.80417 0.979167 4 1.45 4 2C4 2.55 3.80417 3.02083 3.4125 3.4125C3.02083 3.80417 2.55 4 2 4Z" fill="#1D1B20"/>
+    </symbol>
+    
+</svg>
 
 </body>
 </html>
-
