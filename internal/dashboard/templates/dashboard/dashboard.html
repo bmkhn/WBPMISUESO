@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard</title>
+    <link href="https://fonts.googleapis.com/css?family=Inter:400,700,800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: #F9F9F9;
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .main-container {
+            margin: 60px;
+            display: flex;
+            flex-direction: column;
+            gap: 50px;
+            max-width: 1440px;
+        }
+
+        .container-1 {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        .container-1A {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .container-1A-row {
+            display: flex;
+            flex-direction: row;
+            align-items: baseline;
+            gap: 10px;
+        }
+
+        .welcome-text {
+            font-size: 56px;
+            font-weight: 800;
+            background: linear-gradient(90deg, #4AFFDB 0%, #063A1C 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .ueso-text {
+            font-size: 48px;
+            font-weight: 700;
+            color: #000;
+        }
+
+        .viewing-text {
+            font-size: 19px;
+            font-weight: 400;
+            color: #000;
+        }
+
+        .container-1B {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 10px;
+            background: #F8F8F8;
+            border-radius: 16px;
+            border: 1px solid rgba(0,0,0,0.18);
+            padding: 0 24px;
+            height: 45px; /* Set height to 45px */
+        }
+
+        .quarter-text {
+            font-size: 16px;
+            font-weight: 400;
+            color: #000;
+        }
+
+        .dropdown-arrow {
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dropdown-arrow svg {
+            display: block;
+        }
+
+        /* Overview Section */
+        .overview-section {
+            max-width: 1440px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .overview-text {
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            font-size: 24px;
+        }
+
+        .container-2 {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+        }
+        
+        .container-2A {
+            position: relative;
+            width: 234px;
+            height: 128px;
+            border-radius: 16px;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 10px;
+            background: #fff;
+            box-sizing: border-box;
+            z-index: 0;
+            border: none; /* Remove border-image and border */
+            overflow: hidden; /* Ensure the pseudo-element doesn't overflow */
+        }
+
+        .container-2A::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: 16px;
+            padding: 0.8px; /* Border thickness */
+            background: linear-gradient(180deg, #1CB889 0%, #000000 100%);
+            -webkit-mask:
+                linear-gradient(#fff 0 0) content-box,
+                linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .container-2A-number {
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            font-size: 34px;
+            color: #000;
+        }
+        .container-2A-name {
+            font-family: 'Inter', sans-serif;
+            font-weight: 400;
+            font-size: 16px;
+            color: #000;
+        }
+
+        /* Summary Section */
+        .summary-section {
+            max-width: 1440px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .summary-text {
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            font-size: 24px;
+        }
+
+        .container-3 {
+            display: flex;
+            flex-direction: row;
+            gap: 30px;
+            min-height: 300px;
+        }
+
+        .charts-container-outer {
+            flex: 2;
+            background: #FEFCFC;
+            border-radius: 16px;
+            border: 1.1px solid rgba(0,0,0,0.4);
+            min-height: 220px;
+            min-width: 0;
+            box-sizing: border-box;
+            display: flex;
+            align-items: stretch;
+            padding: 24px;
+            position: relative;
+        }
+
+        .expand-icon-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 2;
+        }
+
+        .expand-icon {
+            cursor: pointer;
+            display: block;
+            transition: transform 0.3s;
+        }
+
+        .expand-icon-container:hover .expand-icon {
+            transform: scale(1.1);
+        }
+
+        .charts-inner {
+            display: flex;
+            flex-direction: row;
+            gap: 30px;
+            width: 100%;
+        }
+
+        .chart {
+            flex: 1;
+            background: transparent;
+            border-radius: 12px;
+            min-height: 172px;
+            min-width: 0;
+            box-sizing: border-box;
+        }
+
+        .calendar-container {
+            flex: 1;
+            background: #FEFCFC;
+            border-radius: 16px;
+            border: 1.1px solid rgba(0,0,0,0.4);
+            min-height: 220px;
+            min-width: 0;
+            box-sizing: border-box;
+            padding: 24px;
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="container-1">
+            <div class="container-1A">
+                <div class="container-1A-row">
+                    <div class="welcome-text">Welcome</div>
+                    <div class="ueso-text">to UESO MIS</div>
+                </div>
+                <div class="viewing-text">You are currently viewing as ???.</div>
+            </div>
+            <div class="container-1B">
+                <div class="quarter-text">This Quarter</div>
+                <div class="dropdown-arrow">
+                    <!-- Simple dropdown arrow SVG -->
+                    <svg width="16" height="16" viewBox="0 0 16 16">
+                        <polyline points="4,6 8,10 12,6" fill="none" stroke="#000" stroke-width="2"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+        <!-- Overview Section -->
+        <div class="overview-section">
+            <div class="overview-text">Overview</div>
+            <div class="container-2">
+                <div class="container-2A">
+                    <div class="container-2A-number">10</div>
+                    <div class="container-2A-name">Request Pending</div>
+                </div>
+                <div class="container-2A">
+                    <div class="container-2A-number">121</div>
+                    <div class="container-2A-name">Ongoing Projects</div>
+                </div>
+                <div class="container-2A">
+                    <div class="container-2A-number">58</div>
+                    <div class="container-2A-name">Experts Active</div>
+                </div>
+                <div class="container-2A">
+                    <div class="container-2A-number">8</div>
+                    <div class="container-2A-name">Events in Calendar</div>
+                </div>
+            </div>
+        </div>
+        <!-- Summary Section -->
+        <div class="summary-section">
+            <div class="summary-text">Summary</div>
+            <div class="container-3">
+                <!-- Charts Container: two charts inside one bordered box with expand icon -->
+                <div class="charts-container-outer">
+                    <div class="expand-icon-container">
+                        <svg class="expand-icon" width="16" height="16">
+                          <use href="#icon-expand"></use>
+                        </svg>
+                    </div>
+                    <div class="charts-inner">
+                        <div class="chart chart-1"></div>
+                        <div class="chart chart-2"></div>
+                    </div>
+                </div>
+                <!-- Calendar Container (blank, with expand icon) -->
+                <div class="calendar-container">
+                    <div class="expand-icon-container">
+                        <svg class="expand-icon" width="16" height="16">
+                          <use href="#icon-expand"></use>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <svg style="display:none;">
+      <symbol id="icon-expand" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M15.35 5.43923V1M15.35 1H10.8656M15.35 1L9.96875 6.26404M5.48438 15.2055L1 15.226V10.7663M6.38125 9.87846L1 15.2055" stroke="black" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+      </symbol>
+    </svg>
+
+</body>
+</html>
+
