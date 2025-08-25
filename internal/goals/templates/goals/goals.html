@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Goals</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Page, Goals Text, Add Goal Button -->
+<style>
+    body {
+        background: #F9F9F9;
+        margin: 0;
+        font-family: 'Inter', Arial, sans-serif;
+    }
+
+    .main-container {
+        margin: 60px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        min-height: 1440px;
+    }
+
+    .container-a {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .container-a-text {
+        font-family: 'Inter', Arial, sans-serif;
+        font-weight: 400;
+        font-size: 32px;
+
+    }
+
+    .container-a-button {
+        padding: 15px 45px;
+        font-family: 'Inter', Arial, sans-serif;
+        font-weight: 500;
+        font-size: 18px;
+        color: #FFFFFF;
+        background: #063A1C;
+        border: none;
+        border-radius: 18px;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .container-a-button:hover {
+        background: #04521c;
+    }
+</style>
+
+<!-- Goal Tile Card -->
+<style>
+    .container-b {
+        display: flex;
+        flex-direction: row;
+        gap: 15px;
+        width: 100%;
+    }
+
+    .goal-card {
+        position: relative;
+        flex: 1;
+        background: #fff;
+        border-radius: 18px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        padding: 40px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 0;
+        border: 1px solid rgba(0, 0, 0, 0.42);
+        box-sizing: border-box;
+    }
+
+    .goal-card-kebab {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        cursor: pointer;
+    }
+
+    .goal-card-percent {
+        font-family: 'Inter', Arial, sans-serif;
+        font-weight: 900;
+        font-size: 32px;
+        color: #000000;
+        text-align: center;
+        margin-top: 40px;
+    }
+
+    .goal-card-title {
+        margin-top: 35px;
+        font-family: 'Inter', Arial, sans-serif;
+        font-weight: 400;
+        font-size: 15px;
+        color: #000000;
+        text-align: center;
+    }
+
+    .kebab-svg {
+        width: 16px;
+        height: 16px;
+    }
+
+</style>
+
+<!-- List View -->
+<style>
+    .list-view-text {
+        font-family: 'Inter', Arial, sans-serif;
+        font-weight: 400;
+        font-size: 32px;
+        color: #000000;
+        margin-top: 10px;
+        margin-bottom: 10px;
+    }
+
+    .container-c {
+        width: 100%;
+    }
+
+    .goals-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #FEFCFC;
+        overflow: hidden;
+        border: 1px solid rgba(0,0,0,0.4);
+    }
+
+    .goals-table th {
+        font-size: 18px;
+        font-weight: bold;
+        background: #FEFCFC;
+        border-bottom: 1px solid rgba(0,0,0,0.4);
+        padding: 18px 16px;
+        text-align: left;
+        font-family: 'Inter', Arial, sans-serif;
+    }
+
+    .goals-table td {
+        font-size: 16px;
+        font-weight: 400;
+        border: none;
+        padding: 18px 16px;
+        text-align: left;
+        font-family: 'Inter', Arial, sans-serif;
+    }
+
+    .qualifier-link {
+        font-size: 18px;
+        font-family: 'Inter', Arial, sans-serif;
+        font-weight: 400;
+        color: #0077B6;
+        text-decoration: none;
+        cursor: pointer;
+    }
+</style>
+
+</head>
+<body>
+    <div class="main-container">
+        <!-- Container for Page Title and Add Goal Button -->
+        <div class="container-a">
+            <div class="container-a-text">Goals</div>
+            <button class="container-a-button">Add Goal</button>
+        </div>
+
+        <!-- Container for Goal Cards -->
+        <div class="container-b">
+            <div class="goal-card">
+                <div class="goal-card-kebab"> <svg class="kebab-svg"><use href="#kebab-icon"/></svg> </div>
+                <div class="goal-card-percent">75%</div>
+                <div class="goal-card-title">100 Extension Projects for 2025</div>
+            </div>
+            <div class="goal-card">
+                <div class="goal-card-kebab"> <svg class="kebab-svg"><use href="#kebab-icon"/></svg> </div>
+                <div class="goal-card-percent">30%</div>
+                <div class="goal-card-title">10 SDG Extension Projects for 2025</div>
+            </div>
+            <div class="goal-card">
+                <div class="goal-card-kebab"> <svg class="kebab-svg"><use href="#kebab-icon"/></svg> </div>
+                <div class="goal-card-percent">90%</div>
+                <div class="goal-card-title">5 Student Involved Extension Projects for 2025</div>
+            </div>
+            <div class="goal-card">
+                <div class="goal-card-kebab"> <svg class="kebab-svg"><use href="#kebab-icon"/></svg> </div>
+                <div class="goal-card-percent">50%</div>
+                <div class="goal-card-title">10 Eco-Tourism Projects for 2025</div>
+            </div>
+        </div>
+
+        <!-- List View -->
+        <div class="list-view-text">List View</div>
+        <div class="container-c">
+            <table class="goals-table">
+                <thead>
+                    <tr>
+                        <th>Goal</th>
+                        <th>List of Qualifiers</th>
+                        <th>Progress</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>100 Extension Projects for 2025</td>
+                        <td><span class="qualifier-link">View List</span></td>
+                        <td>75%</td>
+                    </tr>
+                    <tr>
+                        <td>10 SDG Extension Projects for 2025</td>
+                        <td><span class="qualifier-link">View List</span></td>
+                        <td>30%</td>
+                    </tr>
+                    <tr>
+                        <td>5 Student Involved Extension Projects for 2025</td>
+                        <td><span class="qualifier-link">View List</span></td>
+                        <td>90%</td>
+                    </tr>
+                    <tr>
+                        <td>10 Eco-Tourism Projects for 2025</td>
+                        <td><span class="qualifier-link">View List</span></td>
+                        <td>50%</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+<!-- Kebab Icon SVG -->
+<svg style="display:none;">
+    <symbol id="kebab-icon" viewBox="0 0 4 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M2 16C1.45 16 0.979167 15.8042 0.5875 15.4125C0.195833 15.0208 0 14.55 0 14C0 13.45 0.195833 12.9792 0.5875 12.5875C0.979167 12.1958 1.45 12 2 12C2.55 12 3.02083 12.1958 3.4125 12.5875C3.80417 12.9792 4 13.45 4 14C4 14.55 3.80417 15.0208 3.4125 15.4125C3.02083 15.8042 2.55 16 2 16ZM2 10C1.45 10 0.979167 9.80417 0.5875 9.4125C0.195833 9.02083 0 8.55 0 8C0 7.45 0.195833 6.97917 0.5875 6.5875C0.979167 6.19583 1.45 6 2 6C2.55 6 3.02083 6.19583 3.4125 6.5875C3.80417 6.97917 4 7.45 4 8C4 8.55 3.80417 9.02083 3.4125 9.4125C3.02083 9.80417 2.55 10 2 10ZM2 4C1.45 4 0.979167 3.80417 0.5875 3.4125C0.195833 3.02083 0 2.55 0 2C0 1.45 0.195833 0.979167 0.5875 0.5875C0.979167 0.195833 1.45 0 2 0C2.55 0 3.02083 0.195833 3.4125 0.5875C3.80417 0.979167 4 1.45 4 2C4 2.55 3.80417 3.02083 3.4125 3.4125C3.02083 3.80417 2.55 4 2 4Z" fill="#1D1B20"/>
+    </symbol>
+</svg>
+
+</body>
+</html>

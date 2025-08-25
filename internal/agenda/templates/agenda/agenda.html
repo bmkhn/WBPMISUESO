@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Agenda</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Page, Agenda Text, Add Agenda Button -->
+<style>
+    body {
+        background: #F9F9F9;
+        margin: 0;
+        font-family: 'Inter', Arial, sans-serif;
+    }
+
+    .main-container {
+        margin: 60px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        min-height: 1440px;
+    }
+
+    .container-a {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .container-a-text {
+        font-family: 'Inter', Arial, sans-serif;
+        font-weight: 400;
+        font-size: 32px;
+    }
+
+    .container-a-button {
+        padding: 15px 45px;
+        font-family: 'Inter', Arial, sans-serif;
+        font-weight: 500;
+        font-size: 18px;
+        color: #FFFFFF;
+        background: #063A1C;
+        border: none;
+        border-radius: 18px;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .container-a-button:hover {
+        background: #04521c;
+    }
+</style>
+
+<!-- Agenda Tile Card -->
+<style>
+    .container-b {
+        display: flex;
+        flex-direction: row;
+        gap: 15px;
+        width: 100%;
+    }
+
+    .agenda-card-kebab {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        cursor: pointer;
+    }
+
+    .agenda-card {
+        position: relative;
+        width: 100%;
+        padding: 40px;
+        border-radius: 15px;
+        border: 1px solid rgba(0,0,0,0.42);
+        background: linear-gradient(to bottom, #FFB347 0%, #FEFCFC 100%);
+        display: flex;
+        flex-direction: column;
+        gap: 50px;
+        align-items: center;
+        min-width: 0;
+        box-sizing: border-box;
+    }
+
+    .agenda-card-text {
+        font-family: 'Inter', Arial, sans-serif;
+        font-weight: 900;
+        font-size: 20px;
+        color: #000000;
+        text-align: center;
+        margin-top: 30px;
+    }
+
+    .agenda-card-desc {
+        font-family: 'Inter', Arial, sans-serif;
+        font-weight: 400;
+        font-size: 15px;
+        color: #000000;
+        text-align: center;
+        margin-top: 10px;
+        margin-bottom: 40px;
+    }
+
+    .agenda-card-viewlist {
+        position: absolute;
+        left: 20px;
+        bottom: 20px;
+        font-family: 'Inter', Arial, sans-serif;
+        font-weight: 400;
+        font-size: 12px;
+        color: #0077B6;
+        background: none;
+        border: none;
+        cursor: pointer;
+        text-align: left;
+        padding: 0;
+    }
+
+    .kebab-svg {
+        width: 16px;
+        height: 16px;
+    }
+</style>
+
+<!-- Table View -->
+<style>
+    .table-view-container {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+    }
+
+    .title-expand-container {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        margin-top: 30px;
+    }
+
+    .table-title-text {
+        font-family: 'Inter', Arial, sans-serif;
+        font-weight: 400;
+        font-size: 24px;
+        color: #000000;
+    }
+
+    .expand-icon {
+        width: 16px;
+        height: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+
+    .expand-icon:hover {
+        transform: scale(1.1);
+    }
+
+    .agenda-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #FEFCFC;
+        border: 1px solid rgba(0,0,0,0.18);
+        overflow: hidden;
+    }
+
+    .agenda-table th {
+        font-size: 16px;
+        font-weight: 500;
+        background: rgba(217, 217, 217, 0.2);
+        border-bottom: 1px solid rgba(0,0,0,0.18);
+        padding: 14px 12px;
+        text-align: left;
+        font-family: 'Inter', Arial, sans-serif;
+    }
+
+    .agenda-table td {
+        font-size: 15px;
+        font-weight: 400;
+        border: none;
+        border-bottom: 1px solid rgba(0,0,0,0.18);
+        padding: 14px 12px;
+        text-align: left;
+        font-family: 'Inter', Arial, sans-serif;
+    }
+
+    .agenda-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .settings-icon {
+        width: 16px;
+        height: 16px;
+        align-items: center;
+        justify-content: center;
+        display: inline-block;
+        vertical-align: middle;
+        cursor: pointer;
+    }
+
+    .agenda-table th.settings-col, .agenda-table td.settings-col {
+        text-align: center !important;
+    }
+</style>
+
+</head>
+<body>
+    <div class="main-container">
+        <!-- Container for Page Title and Add Agenda Button -->
+        <div class="container-a">
+            <div class="container-a-text">Agenda</div>
+            <button class="container-a-button">Add Agenda</button>
+        </div>
+
+        <!-- Agenda Cards -->
+        <div class="container-b">
+            <div class="agenda-card">
+                <div class="agenda-card-kebab"> <svg class="kebab-svg"><use href="#kebab-icon"/></svg> </div>
+                <div class="agenda-card-text">First Agenda</div>
+                <div class="agenda-card-desc">This is a description of the agenda item. It is centered and uses Inter Regular 15px.</div>
+                <button class="agenda-card-viewlist">View List</button>
+            </div>
+            <div class="agenda-card" style="background: linear-gradient(to bottom, #6DD5FA 0%, #FEFCFC 100%);">
+                <div class="agenda-card-kebab"> <svg class="kebab-svg"><use href="#kebab-icon"/></svg> </div>
+                <div class="agenda-card-text">Second Agenda</div>
+                <div class="agenda-card-desc">Another description for a different agenda card.</div>
+                <button class="agenda-card-viewlist">View List</button>
+            </div>
+            <div class="agenda-card" style="background: linear-gradient(to bottom, #FF9A9E 0%, #FEFCFC 100%);">
+                <div class="agenda-card-kebab"> <svg class="kebab-svg"><use href="#kebab-icon"/></svg> </div>
+                <div class="agenda-card-text">Third Agenda</div>
+                <div class="agenda-card-desc">Description for the third agenda card goes here.</div>
+                <button class="agenda-card-viewlist">View List</button>
+            </div>
+            <div class="agenda-card" style="background: linear-gradient(to bottom, #A18CD1 0%, #FBC2EB 100%);">
+                <div class="agenda-card-kebab"> <svg class="kebab-svg"><use href="#kebab-icon"/></svg> </div>
+                <div class="agenda-card-text">Fourth Agenda</div>
+                <div class="agenda-card-desc">Description for the fourth agenda card goes here.</div>
+                <button class="agenda-card-viewlist">View List</button>
+            </div>
+        </div>
+
+        <!-- Table View -->
+        <div class="table-view-container">
+            <div class="title-expand-container">
+                <span class="table-title-text">First Agenda</span>
+                <span class="expand-icon"> <svg class="expand-icon"> <use href="#expand-icon"/> </svg></span>
+            </div>
+
+            <table class="agenda-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Team Leader</th>
+                        <th>Start Date</th>
+                        <th>Status</th>
+                        <th class="settings-col">Settings</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Agenda Title</td>
+                        <td>John Doe</td>
+                        <td>2025-09-01</td>
+                        <td>Active</td>
+                        <td class="settings-col"><span class="settings-icon"><svg class="settings-icon"><use href="#settings-icon"/></svg></span></td>
+                    </tr>
+                    <tr>
+                        <td>Another Agenda</td>
+                        <td>Jane Smith</td>
+                        <td>2025-09-10</td>
+                        <td>Pending</td>
+                        <td class="settings-col"><span class="settings-icon"><svg class="settings-icon"><use href="#settings-icon"/></svg></span></td>
+                    </tr>
+                    <tr>
+                        <td>Another Agenda</td>
+                        <td>Jane Smith</td>
+                        <td>2025-09-10</td>
+                        <td>Pending</td>
+                        <td class="settings-col"><span class="settings-icon"><svg class="settings-icon"><use href="#settings-icon"/></svg></span></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="title-expand-container">
+                <span class="table-title-text">Second Agenda</span>
+                <span class="expand-icon"> <svg class="expand-icon"> <use href="#expand-icon"/> </svg></span>
+            </div>
+
+            <table class="agenda-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Team Leader</th>
+                        <th>Start Date</th>
+                        <th>Status</th>
+                        <th class="settings-col">Settings</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Agenda Title</td>
+                        <td>John Doe</td>
+                        <td>2025-09-01</td>
+                        <td>Active</td>
+                        <td class="settings-col"><span class="settings-icon"><svg class="settings-icon"><use href="#settings-icon"/></svg></span></td>
+                    </tr>
+                    <tr>
+                        <td>Another Agenda</td>
+                        <td>Jane Smith</td>
+                        <td>2025-09-10</td>
+                        <td>Pending</td>
+                        <td class="settings-col"><span class="settings-icon"><svg class="settings-icon"><use href="#settings-icon"/></svg></span></td>
+                    </tr>
+                    <tr>
+                        <td>Another Agenda</td>
+                        <td>Jane Smith</td>
+                        <td>2025-09-10</td>
+                        <td>Pending</td>
+                        <td class="settings-col"><span class="settings-icon"><svg class="settings-icon"><use href="#settings-icon"/></svg></span></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="title-expand-container">
+                <span class="table-title-text">Third Agenda</span>
+                <span class="expand-icon"> <svg class="expand-icon"> <use href="#expand-icon"/> </svg></span>
+            </div>
+
+            <table class="agenda-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Team Leader</th>
+                        <th>Start Date</th>
+                        <th>Status</th>
+                        <th class="settings-col">Settings</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Agenda Title</td>
+                        <td>John Doe</td>
+                        <td>2025-09-01</td>
+                        <td>Active</td>
+                        <td class="settings-col"><span class="settings-icon"><svg class="settings-icon"><use href="#settings-icon"/></svg></span></td>
+                    </tr>
+                    <tr>
+                        <td>Another Agenda</td>
+                        <td>Jane Smith</td>
+                        <td>2025-09-10</td>
+                        <td>Pending</td>
+                        <td class="settings-col"><span class="settings-icon"><svg class="settings-icon"><use href="#settings-icon"/></svg></span></td>
+                    </tr>
+                    <tr>
+                        <td>Another Agenda</td>
+                        <td>Jane Smith</td>
+                        <td>2025-09-10</td>
+                        <td>Pending</td>
+                        <td class="settings-col"><span class="settings-icon"><svg class="settings-icon"><use href="#settings-icon"/></svg></span></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="title-expand-container">
+                <span class="table-title-text">Fourth Agenda</span>
+                <span class="expand-icon"> <svg class="expand-icon"> <use href="#expand-icon"/> </svg></span>
+            </div>
+
+            <table class="agenda-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Team Leader</th>
+                        <th>Start Date</th>
+                        <th>Status</th>
+                        <th class="settings-col">Settings</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Agenda Title</td>
+                        <td>John Doe</td>
+                        <td>2025-09-01</td>
+                        <td>Active</td>
+                        <td class="settings-col"><span class="settings-icon"><svg class="settings-icon"><use href="#settings-icon"/></svg></span></td>
+                    </tr>
+                    <tr>
+                        <td>Another Agenda</td>
+                        <td>Jane Smith</td>
+                        <td>2025-09-10</td>
+                        <td>Pending</td>
+                        <td class="settings-col"><span class="settings-icon"><svg class="settings-icon"><use href="#settings-icon"/></svg></span></td>
+                    </tr>
+                    <tr>
+                        <td>Another Agenda</td>
+                        <td>Jane Smith</td>
+                        <td>2025-09-10</td>
+                        <td>Pending</td>
+                        <td class="settings-col"><span class="settings-icon"><svg class="settings-icon"><use href="#settings-icon"/></svg></span></td>
+                    </tr>
+                </tbody>
+            </table>
+
+        </div>
+
+<!-- Kebab Icon SVG -->
+<svg style="display:none;">
+    <symbol id="kebab-icon" viewBox="0 0 4 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M2 16C1.45 16 0.979167 15.8042 0.5875 15.4125C0.195833 15.0208 0 14.55 0 14C0 13.45 0.195833 12.9792 0.5875 12.5875C0.979167 12.1958 1.45 12 2 12C2.55 12 3.02083 12.1958 3.4125 12.5875C3.80417 12.9792 4 13.45 4 14C4 14.55 3.80417 15.0208 3.4125 15.4125C3.02083 15.8042 2.55 16 2 16ZM2 10C1.45 10 0.979167 9.80417 0.5875 9.4125C0.195833 9.02083 0 8.55 0 8C0 7.45 0.195833 6.97917 0.5875 6.5875C0.979167 6.19583 1.45 6 2 6C2.55 6 3.02083 6.19583 3.4125 6.5875C3.80417 6.97917 4 7.45 4 8C4 8.55 3.80417 9.02083 3.4125 9.4125C3.02083 9.80417 2.55 10 2 10ZM2 4C1.45 4 0.979167 3.80417 0.5875 3.4125C0.195833 3.02083 0 2.55 0 2C0 1.45 0.195833 0.979167 0.5875 0.5875C0.979167 0.195833 1.45 0 2 0C2.55 0 3.02083 0.195833 3.4125 0.5875C3.80417 0.979167 4 1.45 4 2C4 2.55 3.80417 3.02083 3.4125 3.4125C3.02083 3.80417 2.55 4 2 4Z" fill="#1D1B20"/>
+    </symbol>
+</svg>
+
+<!-- Expand Icon SVG -->
+<svg style="display:none;">
+    <symbol id="expand-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M14.0661 5.36872V1M14.0661 1H9.98295M14.0661 1L9.16632 6.18043M5.08316 14.9799L1 15V10.6112M5.89979 9.73744L1 14.9799" stroke="black" stroke-width="0.972" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+</svg>
+
+<!-- Settings Icon SVG -->
+<svg style="display:none;">
+    <symbol id="settings-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M2 4C1.45 4 0.979167 3.80417 0.5875 3.4125C0.195833 3.02083 0 2.55 0 2C0 1.45 0.195833 0.979167 0.5875 0.5875C0.979167 0.195833 1.45 0 2 0C2.55 0 3.02083 0.195833 3.4125 0.5875C3.80417 0.979167 4 1.45 4 2C4 2.55 3.80417 3.02083 3.4125 3.4125C3.02083 3.80417 2.55 4 2 4ZM8 4C7.45 4 6.97917 3.80417 6.5875 3.4125C6.19583 3.02083 6 2.55 6 2C6 1.45 6.19583 0.979167 6.5875 0.5875C6.97917 0.195833 7.45 0 8 0C8.55 0 9.02083 0.195833 9.4125 0.5875C9.80417 0.979167 10 1.45 10 2C10 2.55 9.80417 3.02083 9.4125 3.4125C9.02083 3.80417 8.55 4 8 4ZM14 4C13.45 4 12.9792 3.80417 12.5875 3.4125C12.1958 3.02083 12 2.55 12 2C12 1.45 12.1958 0.979167 12.5875 0.5875C12.9792 0.195833 13.45 0 14 0C14.55 0 15.0208 0.195833 15.4125 0.5875C15.8042 0.979167 16 1.45 16 2C16 2.55 15.8042 3.02083 15.4125 3.4125C15.0208 3.80417 14.55 4 14 4Z" fill="#1D1B20"/>
+    </symbol>
+</svg>
+
+</body>
+</html>
