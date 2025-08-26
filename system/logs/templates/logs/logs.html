@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Logs</title>
+<link href="https://fonts.googleapis.com/css?family=Inter:400,500,700&display=swap" rel="stylesheet">
+
+<!-- Top Section -->
+<style>
+    .main-container {
+        margin: 60px;
+        display: flex;
+        flex-direction: column;
+        gap: 30px;
+        max-width: 1440px;
+    }
+
+    .top-container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .text-role-container {
+        display: flex;
+        flex-direction: row;
+        gap: 30px;
+        align-items: center;
+    }
+
+    .logs-text {
+        font-family: 'Inter', sans-serif;
+        font-weight: 400;
+        font-size: 32px;
+        color: #000000;
+    }
+
+    .role-container {
+        display: flex;
+        flex-direction: row;
+        gap: 15px;
+        padding: 15px 30px;
+        border-radius: 14px;
+        align-items: center;
+    }
+
+    .role-text {
+        font-family: 'Inter', sans-serif;
+        font-weight: 400;
+        font-size: 24px;
+        color: #000000;
+    }
+
+    .sort-export-container {
+        display: flex;
+        flex-direction: row;
+        gap: 20px;
+        align-items: center;
+    }
+
+    .sort-icon {
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+    }
+
+    .dropdown-container {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 13px;
+        border-radius: 12px;
+    }
+
+    .dropdown-name {
+        font-family: 'Inter', sans-serif;
+        font-weight: 400;
+        font-size: 16px;
+        color: #000;
+    }
+
+    .dropdown-icon {
+        width: 15px;
+        height: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .export-button {
+        background: #00538E;
+        border-radius: 20px;
+        padding: 15px 40px;
+        color: #fff;
+        font-family: 'Inter', sans-serif;
+        font-weight: 500;
+        font-size: 20px;
+        border: none;
+        cursor: pointer;
+    }
+
+    .user-email, .project-name {
+        display: block;
+        font-size: 14px;
+        color: #7E7E7E;
+        font-family: 'Inter', Arial, sans-serif;
+        font-weight: 400;
+        margin-top: 2px;
+    }
+</style>
+
+<!-- Table Section -->
+<style>
+    .logs-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #FEFCFC;
+        border: 1px solid rgba(0,0,0,0.18);
+        overflow: hidden;
+        font-family: 'Inter', Arial, sans-serif;
+        font-weight: 500;
+        font-size: 16px;
+    }
+
+    .logs-table th {
+        font-size: 16px;
+        font-weight: 500;
+        background: rgba(217, 217, 217, 0.2);
+        border-bottom: 1px solid rgba(0,0,0,0.18);
+        padding: 14px 12px;
+        text-align: left;
+        font-family: 'Inter', Arial, sans-serif;
+    }
+
+    .logs-table td {
+        font-size: 15px;
+        font-weight: 400;
+        border: none;
+        border-bottom: 1px solid rgba(0,0,0,0.18);
+        padding: 14px 12px;
+        text-align: left;
+        font-family: 'Inter', Arial, sans-serif;
+    }
+
+    .logs-table tr:last-child td {
+        border-bottom: none;
+    }
+
+</style>
+
+</head>
+
+<body>
+
+<div class="main-container">
+    <div class="top-container">
+        <div class="text-role-container">
+            <div class="logs-text">Activity Logs</div>
+            <div class="role-container">
+                <span class="role-text">Admin</span>
+                <span class="dropdown-icon">
+                    <svg width="15" height="10"><use href="#dropdown-icon"/></svg>
+                </span>
+            </div>
+        </div>
+        <div class="sort-export-container">
+            <span class="sort-icon">
+                <svg width="20" height="20"><use href="#sort-icon"/></svg>
+            </span>
+            <div class="dropdown-container">
+                <span class="dropdown-name">Sort by</span>
+                <span class="dropdown-icon">
+                    <svg width="15" height="10"><use href="#dropdown-icon"/></svg>
+                </span>
+            </div>
+            <button class="export-button">Export</button>
+        </div>
+    </div>
+
+    <table class="logs-table">
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Activity</th>
+                <th>Date</th>
+                <th>Time</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    Alice Johnson
+                    <span class="user-email">alice.johnson@email.com</span>
+                </td>
+                <td>
+                    Logged in
+                    <span class="project-name">Teaching Media Literacy</span>
+                </td>
+                <td>2025-08-26</td>
+                <td>09:15</td>
+            </tr>
+            <tr>
+                <td>
+                    Bob Smith
+                    <span class="user-email">bob.smith@email.com</span>
+                </td>
+                <td>
+                    Exported report
+                    <span class="project-name">Teaching Media Literacy</span>
+                </td>
+                <td>2025-08-26</td>
+                <td>09:20</td>
+            </tr>
+            <tr>
+                <td>
+                    Carol Lee
+                    <span class="user-email">carol.lee@email.com</span>
+                </td>
+                <td>
+                    Changed password
+                    <span class="project-name">Teaching Media Literacy</span>
+                </td>
+                <td>2025-08-25</td>
+                <td>17:45</td>
+            </tr>
+            <tr>
+                <td>
+                    David Kim
+                    <span class="user-email">david.kim@email.com</span>
+                </td>
+                <td>
+                    Added new user
+                    <span class="project-name">Teaching Media Literacy</span>
+                </td>
+                <td>2025-08-25</td>
+                <td>16:30</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+
+
+<!-- SVG Sprite Section -->
+<svg style="display:none;">
+
+    <!-- Sort -->
+    <symbol id="sort-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M9.97066 18.8067V1.13672M9.97066 1.13672L18.8057 9.97172M9.97066 1.13672L1.13566 9.97172" stroke="black" stroke-width="1.97904" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+
+    <!-- Dropdown -->
+    <symbol id="dropdown-icon" viewBox="0 0 15 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M7.11427 6.46831L12.3293 1.25327C12.4265 1.15265 12.5427 1.07239 12.6713 1.01717C12.7998 0.961959 12.9381 0.932896 13.0779 0.93168C13.2178 0.930465 13.3566 0.957121 13.486 1.01009C13.6155 1.06307 13.7331 1.1413 13.8321 1.24022C13.931 1.33914 14.0092 1.45677 14.0622 1.58624C14.1152 1.71572 14.1418 1.85445 14.1406 1.99434C14.1394 2.13423 14.1103 2.27247 14.0551 2.40101C13.9999 2.52954 13.9196 2.6458 13.819 2.74298L7.85912 8.70287C7.66155 8.90038 7.39363 9.01133 7.11427 9.01133C6.8349 9.01133 6.56698 8.90038 6.36941 8.70287L0.409525 2.74298C0.308901 2.6458 0.228639 2.52954 0.173424 2.40101C0.118209 2.27247 0.089146 2.13423 0.0879304 1.99434C0.0867148 1.85445 0.113371 1.71572 0.166344 1.58624C0.219317 1.45677 0.297546 1.33914 0.396466 1.24022C0.495386 1.1413 0.613016 1.06307 0.742492 1.01009C0.871969 0.957121 1.0107 0.930465 1.15059 0.93168C1.29048 0.932896 1.42872 0.961959 1.55726 1.01717C1.68579 1.07239 1.80205 1.15265 1.89923 1.25327L7.11427 6.46831Z" fill="black"/>
+    </symbol>
+</svg>
+
+
+</body>
+</html>
+
+
+
