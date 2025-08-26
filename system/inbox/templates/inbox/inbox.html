@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Inbox</title>
+<link href="https://fonts.googleapis.com/css?family=Inter:400,500,700&display=swap" rel="stylesheet">
+
+<!-- Top Section -->
+<style>
+    body {
+        background: #F9F9F9;
+        margin: 0;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .main-container {
+        margin: 60px;
+        display: flex;
+        flex-direction: column;
+        gap: 30px;
+    }
+
+    .inbox-text {
+        font-family: 'Inter', sans-serif;
+        font-weight: 400;
+        font-size: 32px;
+        color: #000;
+    }
+
+    .top-container {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+    }
+
+    .category-container {
+        display: flex;
+        flex-direction: row;
+        gap: 0px;
+    }
+
+    .category-item {
+        font-family: 'Inter', sans-serif;
+        font-weight: 400;
+        font-size: 18px;
+        color: #000;
+        padding: 15px;
+        border: 1px solid #B8B8B8;
+        background: #fff;
+        opacity: 1;
+        border-radius: 0;
+        transition: border 0.2s, color 0.2s;
+    }
+
+    .category-item.active {
+        border: 1px solid #000;
+    }
+
+    .category-item:first-child {
+        border-top-left-radius: 20px;
+        border-bottom-left-radius: 20px;
+    }
+
+    .category-item:last-child {
+        border-top-right-radius: 20px;
+        border-bottom-right-radius: 20px;
+    }
+
+    .search-container {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        padding: 15px;
+        background: #F2F4F8;
+        border-radius: 13px;
+        gap: 10px;
+        min-width: 300px;
+        border-bottom: 1px solid #535353;
+        box-sizing: border-box;
+    }
+
+    .search-icon {
+        width: 21px;
+        height: 21px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .search-text {
+        font-family: 'Inter', sans-serif;
+        font-weight: 400;
+        font-size: 18px;
+        color: #5A5252;
+    }
+</style>
+
+<!-- Sort + Dropdown -->
+<style>
+    .sort-dropdown-container {
+        display: flex;
+        flex-direction: row;
+        gap: 20px;
+        align-items: center;
+        justify-content: flex-end;
+        width: 100%;
+    }
+
+    .sort-icon {
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+    }
+    .dropdown-container {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 13px;
+        border-radius: 12px;
+    }
+
+    .dropdown-name {
+        font-family: 'Inter', sans-serif;
+        font-weight: 400;
+        font-size: 16px;
+        color: #000;
+    }
+
+    .dropdown-icon {
+        width: 15px;
+        height: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+</style>
+
+<!-- Content Section -->
+<style>
+    .content-container {
+        display: flex;
+        flex-direction: column;
+        gap: 25px;
+    }
+
+    .content-item {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        background: rgba(207, 207, 207, 0.5);
+        border-radius: 15px;
+        padding: 25px;
+    }
+
+    .content-left {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .content-first-text {
+        font-family: 'Inter', sans-serif;
+        font-weight: 700;
+        font-size: 18px;
+        color: #000;
+    }
+
+    .content-second-text {
+        font-family: 'Inter', sans-serif;
+        font-weight: 400;
+        font-size: 11px;
+        color: #000;
+    }
+
+    .content-third-text {
+        font-family: 'Inter', sans-serif;
+        font-weight: 400;
+        font-size: 11px;
+        color: #000;
+    }
+    
+    .content-view-text {
+        font-family: 'Inter', sans-serif;
+        font-weight: 400;
+        font-size: 12px;
+        color: #2200E2;
+        align-self: center;
+        cursor: pointer;
+    }
+</style>
+
+</head>
+<body>
+	<div class="main-container">
+        <!-- Top Section -->
+		<div class="inbox-text">Inbox</div>
+		<div class="top-container">
+			<div class="category-container">
+				<div class="category-item">User Verification</div>
+				<div class="category-item">Client Request</div>
+				<div class="category-item">Export Request</div>
+				<div class="category-item">Submission Review</div>
+			</div>
+			<div class="search-container">
+				<span class="search-icon">
+					<svg width="21" height="21"><use href="#search-icon"/></svg>
+				</span>
+				<span class="search-text">Search</span>
+			</div>
+		</div>
+
+        <!-- Sort + Dropdown -->
+        <div class="sort-dropdown-container">
+            <span class="sort-icon">
+                <svg width="20" height="20"><use href="#sort-icon"/></svg>
+            </span>
+            <div class="dropdown-container">
+                <span class="dropdown-name">Sort by</span>
+                <span class="dropdown-icon">
+                    <svg width="15" height="10"><use href="#dropdown-icon"/></svg>
+                </span>
+            </div>
+        </div>
+
+        <!-- Content Section -->
+        <div class="content-container">
+            <div class="content-item">
+                <div class="content-left">
+                    <div class="content-first-text">Jane Doe</div>
+                    <div class="content-second-text">Role: <strong>Faculty</strong></div>
+                    <div class="content-third-text">Date: 2025-08-27</div>
+                </div>
+                <div class="content-view-text">View Details</div>
+            </div>
+            <div class="content-item">
+                <div class="content-left">
+                    <div class="content-first-text">Jane Smith</div>
+                    <div class="content-second-text">Role: <strong>Faculty</strong></div>
+                    <div class="content-third-text">Date: 2025-08-26</div>
+                </div>
+                <div class="content-view-text">View Details</div>
+            </div>
+            <div class="content-item">
+                <div class="content-left">
+                    <div class="content-first-text">Bob Lee</div>
+                    <div class="content-second-text">Role: <strong>Faculty</strong></div>
+                    <div class="content-third-text">Date: 2025-08-25</div>
+                </div>
+                <div class="content-view-text">View Details</div>
+            </div>
+        </div>
+	</div>
+
+<!-- SVG Sprite Section -->
+<svg style="display:none;">
+
+    <!-- Sort -->
+    <symbol id="sort-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M9.97066 18.8067V1.13672M9.97066 1.13672L18.8057 9.97172M9.97066 1.13672L1.13566 9.97172" stroke="black" stroke-width="1.97904" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+
+    <!-- Dropdown -->
+    <symbol id="dropdown-icon" viewBox="0 0 15 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M7.11427 6.46831L12.3293 1.25327C12.4265 1.15265 12.5427 1.07239 12.6713 1.01717C12.7998 0.961959 12.9381 0.932896 13.0779 0.93168C13.2178 0.930465 13.3566 0.957121 13.486 1.01009C13.6155 1.06307 13.7331 1.1413 13.8321 1.24022C13.931 1.33914 14.0092 1.45677 14.0622 1.58624C14.1152 1.71572 14.1418 1.85445 14.1406 1.99434C14.1394 2.13423 14.1103 2.27247 14.0551 2.40101C13.9999 2.52954 13.9196 2.6458 13.819 2.74298L7.85912 8.70287C7.66155 8.90038 7.39363 9.01133 7.11427 9.01133C6.8349 9.01133 6.56698 8.90038 6.36941 8.70287L0.409525 2.74298C0.308901 2.6458 0.228639 2.52954 0.173424 2.40101C0.118209 2.27247 0.089146 2.13423 0.0879304 1.99434C0.0867148 1.85445 0.113371 1.71572 0.166344 1.58624C0.219317 1.45677 0.297546 1.33914 0.396466 1.24022C0.495386 1.1413 0.613016 1.06307 0.742492 1.01009C0.871969 0.957121 1.0107 0.930465 1.15059 0.93168C1.29048 0.932896 1.42872 0.961959 1.55726 1.01717C1.68579 1.07239 1.80205 1.15265 1.89923 1.25327L7.11427 6.46831Z" fill="black"/>
+    </symbol>
+
+    <!-- Search -->
+    <symbol id="search-icon" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M8.89249 15.9067C9.75154 15.9067 10.6022 15.7375 11.3958 15.4087C12.1895 15.08 12.9106 14.5981 13.518 13.9907C14.1255 13.3833 14.6073 12.6621 14.9361 11.8685C15.2648 11.0748 15.434 10.2242 15.434 9.36515C15.434 8.50611 15.2648 7.65547 14.9361 6.86182C14.6073 6.06817 14.1255 5.34704 13.518 4.7396C12.9106 4.13216 12.1895 3.65032 11.3958 3.32158C10.6022 2.99283 9.75154 2.82363 8.89249 2.82363C7.15758 2.82363 5.49372 3.51283 4.26694 4.7396C3.04017 5.96637 2.35098 7.63023 2.35098 9.36515C2.35098 11.1001 3.04017 12.7639 4.26694 13.9907C5.49372 15.2175 7.15758 15.9067 8.89249 15.9067V15.9067ZM15.7829 14.7139L19.686 18.617C19.7901 18.7177 19.873 18.838 19.9301 18.9711C19.9871 19.1042 20.0171 19.2472 20.0182 19.392C20.0194 19.5368 19.9917 19.6803 19.9368 19.8143C19.8819 19.9482 19.8008 20.0699 19.6984 20.1722C19.596 20.2745 19.4742 20.3553 19.3402 20.4101C19.2061 20.4648 19.0625 20.4923 18.9178 20.4909C18.773 20.4895 18.63 20.4594 18.497 20.4021C18.364 20.3449 18.2438 20.2618 18.1433 20.1576L14.2402 16.2545C12.4876 17.6149 10.2823 18.2563 8.07345 18.0481C5.86455 17.8399 3.81803 16.7977 2.35049 15.1337C0.882947 13.4697 0.104712 11.309 0.174205 9.09141C0.243699 6.87382 1.1557 4.76605 2.72455 3.1972C4.2934 1.62835 6.40116 0.716356 8.61876 0.646862C10.8364 0.577368 12.9971 1.3556 14.6611 2.82314C16.3251 4.29068 17.3673 6.33721 17.5755 8.5461C17.7837 10.755 17.1423 12.9602 15.7818 14.7128L15.7829 14.7139Z" fill="#5A5252"/>
+    </symbol>
+
+</svg>
+
+</body>
+</html>
