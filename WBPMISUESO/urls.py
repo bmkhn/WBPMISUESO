@@ -15,9 +15,11 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
+
 from system.users.views import login_view, logout_view, register_view, quick_login, role_redirect, dashboard_basic, dashboard_admin
 from shared.event_calendar.views import calendar_page, add_event, get_events
+from internal.dashboard.views import dashboard_view
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -38,5 +40,10 @@ urlpatterns = [
 
 
     path('quick-login/<str:role>/', quick_login, name='quick_login'),       # Quick Login URL (For Testing Purposes)
+
+    # Dashboard
+    path('dashboard/', dashboard_view, name='dashboard'),
+
+    ### INCLUDE OTHER APPS LATER
 
 ]

@@ -51,9 +51,6 @@ def dashboard_basic(request):
 def dashboard_admin(request):
     return render(request, 'base_internal.html')  # extends base_internal.html
 
-
-
-
 # Quick Login View for Testing Purposes
 User = get_user_model()
 
@@ -71,3 +68,6 @@ def quick_login(request, role):
         return redirect("role_redirect")
     else:
         return redirect("login")  # or error page
+    
+
+

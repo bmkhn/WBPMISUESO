@@ -38,9 +38,17 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    'shared.event_calendar',    # Event Calendar
-    'system.users',             # Custom User
+    'internal.agenda',          # Agenda
+    'internal.dashboard',       # Dashboard
+    'internal.experts',         # Experts
+    'internal.goals',           # Goals
 
+    'shared.downloadables',     # Downloadables
+    'shared.event_calendar',    # Calendar
+
+    'system.inbox',              # Inbox
+    'system.logs',               # Logs
+    'system.users',              # Custom User
 ]
 
 MIDDLEWARE = [

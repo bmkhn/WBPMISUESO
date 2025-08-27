@@ -1,3 +1,6 @@
+{% extends "base_internal.html" %}
+{% block content %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -551,33 +554,34 @@
             </div>
         </div>
 
-
         <!-- Goal Section -->
+        {% if vpde_content %}
         <div class="goal-section">
             <div class="goal-text">Goals</div>
             <div class="goal-card-container">
-                <div class="goal-card">
-                    <div class="goal-card-kebab"> <svg class="kebab-svg"><use href="#kebab-icon"/></svg> </div>
-                    <div class="goal-card-percent">75%</div>
-                    <div class="goal-card-title">100 Extension Projects for 2025</div>
-                </div>
-                <div class="goal-card">
-                    <div class="goal-card-kebab"> <svg class="kebab-svg"><use href="#kebab-icon"/></svg> </div>
-                    <div class="goal-card-percent">30%</div>
-                    <div class="goal-card-title">10 SDG Extension Projects for 2025</div>
-                </div>
-                <div class="goal-card">
-                    <div class="goal-card-kebab"> <svg class="kebab-svg"><use href="#kebab-icon"/></svg> </div>
-                    <div class="goal-card-percent">90%</div>
-                    <div class="goal-card-title">5 Student Involved Extension Projects for 2025</div>
-                </div>
-                <div class="goal-card">
-                    <div class="goal-card-kebab"> <svg class="kebab-svg"><use href="#kebab-icon"/></svg> </div>
-                    <div class="goal-card-percent">50%</div>
-                    <div class="goal-card-title">10 Eco-Tourism Projects for 2025</div>
-                </div>
+            <div class="goal-card">
+                <div class="goal-card-kebab"> <svg class="kebab-svg"><use href="#kebab-icon"/></svg> </div>
+                <div class="goal-card-percent">75%</div>
+                <div class="goal-card-title">100 Extension Projects for 2025</div>
+            </div>
+            <div class="goal-card">
+                <div class="goal-card-kebab"> <svg class="kebab-svg"><use href="#kebab-icon"/></svg> </div>
+                <div class="goal-card-percent">30%</div>
+                <div class="goal-card-title">10 SDG Extension Projects for 2025</div>
+            </div>
+            <div class="goal-card">
+                <div class="goal-card-kebab"> <svg class="kebab-svg"><use href="#kebab-icon"/></svg> </div>
+                <div class="goal-card-percent">90%</div>
+                <div class="goal-card-title">5 Student Involved Extension Projects for 2025</div>
+            </div>
+            <div class="goal-card">
+                <div class="goal-card-kebab"> <svg class="kebab-svg"><use href="#kebab-icon"/></svg> </div>
+                <div class="goal-card-percent">50%</div>
+                <div class="goal-card-title">10 Eco-Tourism Projects for 2025</div>
+            </div>
             </div>
         </div>
+        {% endif %}
     </div>
 
 <!-- SVG Sprite Section -->
@@ -602,3 +606,5 @@
 
 </body>
 </html>
+
+{% endblock %}
