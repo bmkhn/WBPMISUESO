@@ -46,9 +46,9 @@ INSTALLED_APPS = [
     'shared.downloadables',     # Downloadables
     'shared.event_calendar',    # Calendar
 
-    'system.inbox',              # Inbox
-    'system.logs',               # Logs
-    'system.users',              # Custom User
+    'system.inbox',             # Inbox
+    'system.logs',              # Logs
+    'system.users',             # Custom User
 ]
 
 MIDDLEWARE = [
