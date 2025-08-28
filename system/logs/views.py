@@ -1,3 +1,8 @@
 from django.shortcuts import render
+from system.users.decorators import role_required
+from django.contrib.auth.decorators import login_required
 
-# Create your views here.
+@login_required
+@role_required(allowed_roles=["VP", "DIRECTOR"])
+def logs_view(request):
+    return render(request, 'logs/logs.html')

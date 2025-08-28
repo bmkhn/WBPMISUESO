@@ -3,6 +3,7 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from .forms import RegistrationForm, LoginForm
 from django.contrib.auth import authenticate
+from system.users.decorators import role_required
 
 from django.contrib.auth import get_user_model      # For Creating Test Users (Delete Later)     
 
@@ -39,17 +40,22 @@ def role_redirect(request):
     role = request.user.role  # assuming role is stored on User model
     
     if role in ["PUBLIC", "CLIENT", "FACULTY"]:
-        return redirect("dashboard_basic")
+        return redirect("home")
     else:
-        return redirect("dashboard_admin")
+        return redirect("dashboard")
     
 @login_required
-def dashboard_basic(request):
+def home(request):
     return render(request, 'base_public.html')  # extends base_public.html
 
 @login_required
-def dashboard_admin(request):
+def dashboard(request):
     return render(request, 'base_internal.html')  # extends base_internal.html
+
+@login_required
+@role_required(allowed_roles=["VP", "DIRECTOR"])
+def manage_user(request):
+    return render(request, 'users/manage_user.html')
 
 # Quick Login View for Testing Purposes
 User = get_user_model()

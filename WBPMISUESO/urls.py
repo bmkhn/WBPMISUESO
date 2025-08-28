@@ -17,22 +17,8 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
-from system.users.views import login_view, logout_view, register_view, quick_login, role_redirect, dashboard_basic, dashboard_admin
-
 urlpatterns = [
     path('admin/', admin.site.urls),
-
-    # User Authentication URLs
-    path('login/', login_view, name='login'),               # Login URL
-    path('logout/', logout_view, name='logout'),            # Logout URL
-    path('register/', register_view, name='register'),      # Registration URL
-
-    path('redirector/', role_redirect, name='role_redirect'),
-    path('dashboard/basic/', dashboard_basic, name='dashboard_basic'),
-    path('dashboard/admin/', dashboard_admin, name='dashboard_admin'),
-
-    path('quick-login/<str:role>/', quick_login, name='quick_login'),       # Quick Login URL (For Testing Purposes)
-
 
     # EXTERNAL APPS
     # Home (None Yet)
@@ -57,11 +43,11 @@ urlpatterns = [
 
 
     # SYSTEM APPS
-    # path('inbox/', include('system.inbox.urls')),                   # Inbox
-    # path('logs/', include('system.logs.urls')),                     # Logs
+    path('inbox/', include('system.inbox.urls')),                   # Inbox
+    path('logs/', include('system.logs.urls')),                     # Logs
     # Notifications (None Yet)
     # Settings (None Yet)
-    # path('users/', include('system.users.urls')),                   # Users
+    path('', include('system.users.urls')),                     # Users
 
 
 ]
