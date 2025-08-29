@@ -171,11 +171,9 @@
 		transition: background 0.2s;
 	}
 
-	.topbar-notification-icon 	{ background-image: url("icons/topbar-notification.png"); }
-	.topbar-settings-icon 		{ background-image: url("icons/topbar-settings.png"); }
-	.topbar-profile-icon 		{ background-color: black; }
-
-
+	.topbar-profile-icon { 
+		background-color: black; 
+	}
 
 </style>
 </head>
@@ -196,35 +194,35 @@
 			<!-- General -->
 			<div class="sidebar-tab-group-label">GENERAL</div>
 
-			<a href="/dashboard/" class="sidebar-tab">
+			<a href="/dashboard/" class="sidebar-tab {% if request.path == '/dashboard/' %}active{% endif %}">
 				<svg class="sidebar-tab-icon" width="20" height="20"><use href="#icon-dashboard"/></svg>
 				<span class="table-text">Dashboard</span>
 			</a>
-			<a href="/projects/" class="sidebar-tab">
+			<a href="/projects/" class="sidebar-tab {% if request.path == '/projects/' %}active{% endif %}">
 				<svg class="sidebar-tab-icon" width="22" height="21"><use href="#icon-projects"/></svg>
 				<span class="table-text">Projects</span>
 			</a>
-			<a href="/submission/" class="sidebar-tab">
+			<a href="/submission/" class="sidebar-tab {% if request.path == '/submission/' %}active{% endif %}">
 				<svg class="sidebar-tab-icon" width="20" height="24"><use href="#icon-submission"/></svg>
 				<span class="table-text">Submission</span>
 			</a>
-			<a href="/experts/" class="sidebar-tab">
+			<a href="/experts/" class="sidebar-tab {% if request.path == '/experts/' %}active{% endif %}">
 				<svg class="sidebar-tab-icon" width="25" height="23"><use href="#icon-experts"/></svg>
 				<span class="table-text">Experts</span>
 			</a>
-			<a href="/calendar/" class="sidebar-tab">
+			<a href="/calendar/" class="sidebar-tab {% if request.path == '/calendar/' %}active{% endif %}">
 				<svg class="sidebar-tab-icon" width="24" height="24"><use href="#icon-calendar"/></svg>
 				<span class="table-text">Calendar</span>
 			</a>
-			<a href="/analytics/" class="sidebar-tab">
+			<a href="/analytics/" class="sidebar-tab {% if request.path == '/analytics/' %}active{% endif %}">
 				<svg class="sidebar-tab-icon" width="22" height="20"><use href="#icon-analytics"/></svg>
 				<span class="table-text">Analytics</span>
 			</a>
-			<a href="/agenda/" class="sidebar-tab">
+			<a href="/agenda/" class="sidebar-tab {% if request.path == '/agenda/' %}active{% endif %}">
 				<svg class="sidebar-tab-icon" width="26" height="20"><use href="#icon-agenda"/></svg>
 				<span class="table-text">Agenda</span>
 			</a>
-			<a href="/goals/" class="sidebar-tab">
+			<a href="/goals/" class="sidebar-tab {% if request.path == '/goals/' %}active{% endif %}">
 				<svg class="sidebar-tab-icon" width="22" height="24"><use href="#icon-goals"/></svg>
 				<span class="table-text">Goals</span>
 			</a>
@@ -232,23 +230,23 @@
 			<!-- Content -->
 			<div class="sidebar-tab-group-label">CONTENT</div>
 
-			<a href="/announcements/" class="sidebar-tab">
+			<a href="/announcements/" class="sidebar-tab {% if request.path == '/announcements/' %}active{% endif %}">
 				<svg class="sidebar-tab-icon" width="23" height="18"><use href="#icon-announcements"/></svg>
 				<span class="table-text">Announcements</span>
 			</a>
-			<a href="/archive/" class="sidebar-tab">
+			<a href="/archive/" class="sidebar-tab {% if request.path == '/archive/' %}active{% endif %}">
 				<svg class="sidebar-tab-icon" width="25" height="23"><use href="#icon-archive"/></svg>
 				<span class="table-text">Archive</span>
 			</a>
-			<a href="/budget/" class="sidebar-tab">
+			<a href="/budget/" class="sidebar-tab {% if request.path == '/budget/' %}active{% endif %}">
 				<svg class="sidebar-tab-icon" width="22" height="23"><use href="#icon-budget"/></svg>
 				<span class="table-text">Budget</span>
 			</a>
-			<a href="/about-us/" class="sidebar-tab">
+			<a href="/about-us/" class="sidebar-tab {% if request.path == '/about-us/' %}active{% endif %}">
 				<svg class="sidebar-tab-icon" width="22" height="21"><use href="#icon-aboutus"/></svg>
 				<span class="table-text">About Us</span>
 			</a>
-			<a href="/downloadables/" class="sidebar-tab">
+			<a href="/downloadables/" class="sidebar-tab {% if request.path == '/downloadables/' %}active{% endif %}">
 				<svg class="sidebar-tab-icon" width="20" height="24"><use href="#icon-downloadables"/></svg>
 				<span class="table-text">Downloadables</span>
 			</a>
@@ -256,23 +254,23 @@
 			<!-- Other -->
 			<div class="sidebar-tab-group-label">OTHER</div>
 
-			<a href="/users/" class="sidebar-tab">
+			<a href="/users/" class="sidebar-tab {% if request.path == '/users/' %}active{% endif %}">
 				<svg class="sidebar-tab-icon" width="25" height="24"><use href="#icon-manageuser"/></svg>
 				<span class="table-text">Manage User</span>
 			</a>
-			<a href="/logs/" class="sidebar-tab">
+			<a href="/logs/" class="sidebar-tab {% if request.path == '/logs/' %}active{% endif %}">
 				<svg class="sidebar-tab-icon" width="26" height="18"><use href="#icon-logs"/></svg>
 				<span class="table-text">Logs</span>
 			</a>			
-			<a href="/inbox/" class="sidebar-tab">
+			<a href="/inbox/" class="sidebar-tab {% if request.path == '/inbox/' %}active{% endif %}">
 				<svg class="sidebar-tab-icon" width="25" height="20"><use href="#icon-inbox"/></svg>
 				<span class="table-text">Inbox</span>
 			</a>
-			<a href="#" class="sidebar-tab">
+			<a href="/notification/" class="sidebar-tab {% if request.path == '/notification/' %}active{% endif %}">
 				<svg class="sidebar-tab-icon" width="20" height="24"><use href="#icon-notification"/></svg>
 				<span class="table-text">Notification</span>
 			</a>
-			<a href="#" class="sidebar-tab">
+			<a href="/settings/" class="sidebar-tab {% if request.path == '/settings/' %}active{% endif %}">
 				<svg class="sidebar-tab-icon" width="26" height="25"><use href="#icon-settings"/></svg>
 				<span class="table-text">Settings</span>
 			</a>
@@ -458,29 +456,6 @@
 			sidebar.style.width = expandedWidth + "px";
 		}
 	});
-
-
-	const sidebarTabs = document.querySelectorAll('.sidebar-tab');
-
-	const activeTabId = localStorage.getItem('activeSidebarTab');
-	if(activeTabId){
-		sidebarTabs.forEach(tab => {
-			tab.classList.remove('active');
-			if(tab.dataset.tabId === activeTabId){
-				tab.classList.add('active');
-			}
-		});
-	}
-
-	sidebarTabs.forEach((tab, idx) => {
-		tab.dataset.tabId = idx; // assign a unique ID
-		tab.addEventListener('click', () => {
-			sidebarTabs.forEach(t => t.classList.remove('active'));
-			tab.classList.add('active');
-			localStorage.setItem('activeSidebarTab', tab.dataset.tabId);
-		});
-	});
-
 </script>
 
 </body>

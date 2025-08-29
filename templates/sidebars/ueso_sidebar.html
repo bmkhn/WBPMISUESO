@@ -36,7 +36,6 @@
 		width: 55px;
     }
 
-	/* Drag handle */
 	.resize-handle {
 		position: absolute;
 		top: 0;
@@ -55,9 +54,11 @@
     }
 
     .sidebar-logo-circle {
-		width: 40px;
-		height: 40px;
-		background-color: white;
+		width: 48px;
+		height: 48px;
+		background-size: contain;
+		background-repeat: no-repeat;
+		background-position: center;
 		border-radius: 50%;
 		margin-left: 7px;
 		margin-right: 15px;
@@ -72,8 +73,7 @@
 		display: inline-block;
     }
 
-    /* Hide elements properly when collapsed */
-    .sidebar-container.collapsed .sidebar-tab-group-label {
+	.sidebar-container.collapsed .sidebar-tab-group-label {
     	visibility: hidden;
     }
 
@@ -85,6 +85,7 @@
     .sidebar-tab-group-label {
 		font-family: 'Inter', sans-serif;
 		font-size: 16px;
+		font-weight: 400;
 		padding: 10px 0;
     }
 
@@ -112,15 +113,28 @@
     .sidebar-tab-icon {
 		width: 35px;
 		height: 35px;
-		background-color: white;
-		border-radius: 50%;
+		background-size: contain;
+		background-repeat: no-repeat;
+		background-position: center;
 		margin-right: 15px;
 		flex-shrink: 0;
     }
 
+	.ueso-icon { 
+		background-image: url("icons/ueso.png");
+	}
+
     .sidebar-logout {
       	padding-top: 20px;
     }
+
+	.sidebar-container.collapsed ~ .topbar {
+		left: 55px; 
+	}
+
+	.sidebar-tab.active {
+    	background-color: #052C15;
+	}
 
     .table-text {
 		font-family: 'Inter', sans-serif;
@@ -147,26 +161,18 @@
 		z-index: 10;
 	}
 
-	.sidebar-container.collapsed ~ .topbar {
-		left: 55px; 
-	}
+	.topbar-button {
+		width: 30px;
+		height: 30px;
 
-	.topbar button {
-		width: 45px;
-		height: 45px;
-		border-radius: 50%;
-		background-color: #063A1C;
-		border: none;
-		cursor: pointer;
+		background-size: contain;
+		background-repeat: no-repeat;
+		background-position: center;
 		transition: background 0.2s;
 	}
 
-	.topbar button:hover {
-		background-color: #052C15;
-	}
-
-	.sidebar-tab.active {
-    	background-color: #052C15;
+	.topbar-profile-icon { 
+		background-color: black; 
 	}
 
 </style>
@@ -179,7 +185,7 @@
 
 		<!-- Logo Container -->
 		<div class="sidebar-logo">
-			<div class="sidebar-logo-circle"></div>
+			<div class="sidebar-logo-circle ueso-icon"></div>
 			<span class="sidebar-logo-text">University Extension<br>Services Office</span>
 		</div>
 
@@ -188,91 +194,192 @@
 			<!-- General -->
 			<div class="sidebar-tab-group-label">GENERAL</div>
 
-			<a href="#" class="sidebar-tab">
-				<div class="sidebar-tab-icon"></div>
+			<a href="/dashboard/" class="sidebar-tab {% if request.path == '/dashboard/' %}active{% endif %}">
+				<svg class="sidebar-tab-icon" width="20" height="20"><use href="#icon-dashboard"/></svg>
 				<span class="table-text">Dashboard</span>
 			</a>
-			<a href="#" class="sidebar-tab">
-				<div class="sidebar-tab-icon"></div>
+			<a href="/projects/" class="sidebar-tab {% if request.path == '/projects/' %}active{% endif %}">
+				<svg class="sidebar-tab-icon" width="22" height="21"><use href="#icon-projects"/></svg>
 				<span class="table-text">Projects</span>
 			</a>
-			<a href="#" class="sidebar-tab">
-				<div class="sidebar-tab-icon"></div>
+			<a href="/submission/" class="sidebar-tab {% if request.path == '/submission/' %}active{% endif %}">
+				<svg class="sidebar-tab-icon" width="20" height="24"><use href="#icon-submission"/></svg>
 				<span class="table-text">Submission</span>
 			</a>
-			<a href="#" class="sidebar-tab">
-				<div class="sidebar-tab-icon"></div>
+			<a href="/experts/" class="sidebar-tab {% if request.path == '/experts/' %}active{% endif %}">
+				<svg class="sidebar-tab-icon" width="25" height="23"><use href="#icon-experts"/></svg>
 				<span class="table-text">Experts</span>
 			</a>
-			<a href="#" class="sidebar-tab">
-				<div class="sidebar-tab-icon"></div>
+			<a href="/calendar/" class="sidebar-tab {% if request.path == '/calendar/' %}active{% endif %}">
+				<svg class="sidebar-tab-icon" width="24" height="24"><use href="#icon-calendar"/></svg>
 				<span class="table-text">Calendar</span>
 			</a>
-			<a href="#" class="sidebar-tab">
-				<div class="sidebar-tab-icon"></div>
+			<a href="/analytics/" class="sidebar-tab {% if request.path == '/analytics/' %}active{% endif %}">
+				<svg class="sidebar-tab-icon" width="22" height="20"><use href="#icon-analytics"/></svg>
 				<span class="table-text">Analytics</span>
 			</a>
-			<a href="#" class="sidebar-tab">
-				<div class="sidebar-tab-icon"></div>
+			<a href="/goals/" class="sidebar-tab {% if request.path == '/goals/' %}active{% endif %}">
+				<svg class="sidebar-tab-icon" width="22" height="24"><use href="#icon-goals"/></svg>
 				<span class="table-text">Goals</span>
 			</a>
 
 			<!-- Content -->
 			<div class="sidebar-tab-group-label">CONTENT</div>
 
-			<a href="#" class="sidebar-tab">
-				<div class="sidebar-tab-icon"></div>
+			<a href="/announcements/" class="sidebar-tab {% if request.path == '/announcements/' %}active{% endif %}">
+				<svg class="sidebar-tab-icon" width="23" height="18"><use href="#icon-announcements"/></svg>
 				<span class="table-text">Announcements</span>
 			</a>
-			<a href="#" class="sidebar-tab">
-				<div class="sidebar-tab-icon"></div>
+			<a href="/archive/" class="sidebar-tab {% if request.path == '/archive/' %}active{% endif %}">
+				<svg class="sidebar-tab-icon" width="25" height="23"><use href="#icon-archive"/></svg>
 				<span class="table-text">Archive</span>
 			</a>
-			<a href="#" class="sidebar-tab">
-				<div class="sidebar-tab-icon"></div>
+			<a href="/budget/" class="sidebar-tab {% if request.path == '/budget/' %}active{% endif %}">
+				<svg class="sidebar-tab-icon" width="22" height="23"><use href="#icon-budget"/></svg>
 				<span class="table-text">Budget</span>
 			</a>
-			<a href="#" class="sidebar-tab">
-				<div class="sidebar-tab-icon"></div>
+			<a href="/about-us/" class="sidebar-tab {% if request.path == '/about-us/' %}active{% endif %}">
+				<svg class="sidebar-tab-icon" width="22" height="21"><use href="#icon-aboutus"/></svg>
 				<span class="table-text">About Us</span>
 			</a>
-			<a href="#" class="sidebar-tab">
-				<div class="sidebar-tab-icon"></div>
+			<a href="/downloadables/" class="sidebar-tab {% if request.path == '/downloadables/' %}active{% endif %}">
+				<svg class="sidebar-tab-icon" width="20" height="24"><use href="#icon-downloadables"/></svg>
 				<span class="table-text">Downloadables</span>
 			</a>
 
 			<!-- Other -->
 			<div class="sidebar-tab-group-label">OTHER</div>
-			<a href="#" class="sidebar-tab">
-				<div class="sidebar-tab-icon"></div>
+		
+			<a href="/inbox/" class="sidebar-tab {% if request.path == '/inbox/' %}active{% endif %}">
+				<svg class="sidebar-tab-icon" width="25" height="20"><use href="#icon-inbox"/></svg>
 				<span class="table-text">Inbox</span>
 			</a>
-			<a href="#" class="sidebar-tab">
-				<div class="sidebar-tab-icon"></div>
+			<a href="/notification/" class="sidebar-tab {% if request.path == '/notification/' %}active{% endif %}">
+				<svg class="sidebar-tab-icon" width="20" height="24"><use href="#icon-notification"/></svg>
 				<span class="table-text">Notification</span>
 			</a>
-			<a href="#" class="sidebar-tab">
-				<div class="sidebar-tab-icon"></div>
+			<a href="/settings/" class="sidebar-tab {% if request.path == '/settings/' %}active{% endif %}">
+				<svg class="sidebar-tab-icon" width="26" height="25"><use href="#icon-settings"/></svg>
 				<span class="table-text">Settings</span>
 			</a>
 		</div>
 
 		<!-- Logout -->
 		<div class="sidebar-logout">
-			<a href="#" class="sidebar-tab">
-				<div class="sidebar-tab-icon"></div>
+			<a href="/logout/" class="sidebar-tab">
+				<svg class="sidebar-tab-icon" width="20" height="20"><use href="#icon-logout"/></svg>
 				<span class="table-text">Log Out</span>
 			</a>
 		</div>
 	</div>
 
-	<!-- 🔹 Topbar -->
+	<!-- Topbar -->
 	<div class="topbar">
-		<button></button>
-		<button></button>
-		<button></button>
+		<svg class="topbar-button" width="30" height="30"><use href="#icon-topbar-notification"/></svg>
+		<svg class="topbar-button" width="30" height="30"><use href="#icon-topbar-settings"/></svg>
+		<div class="topbar-button topbar-profile-icon"></div>
 	</div>
-</body>
+
+
+<!-- SVG Sprite Section -->
+<svg style="display:none;">
+
+	<!-- Dashboard -->
+	<symbol id="icon-dashboard" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M7 1H2C1.44772 1 1 1.44772 1 2V9C1 9.55229 1.44772 10 2 10H7C7.55228 10 8 9.55229 8 9V2C8 1.44772 7.55228 1 7 1Z" stroke="#E0E6E3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M18 1H13C12.4477 1 12 1.44772 12 2V5C12 5.55228 12.4477 6 13 6H18C18.5523 6 19 5.55228 19 5V2C19 1.44772 18.5523 1 18 1Z" stroke="#E0E6E3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M18 10H13C12.4477 10 12 10.4477 12 11V18C12 18.5523 12.4477 19 13 19H18C18.5523 19 19 18.5523 19 18V11C19 10.4477 18.5523 10 18 10Z" stroke="#E0E6E3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M7 14H2C1.44772 14 1 14.4477 1 15V18C1 18.5523 1.44772 19 2 19H7C7.55228 19 8 18.5523 8 18V15C8 14.4477 7.55228 14 7 14Z" stroke="#E0E6E3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+
+	<!-- Projects -->
+    <symbol id="icon-projects" viewBox="0 0 22 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M19 20C19.5304 20 20.0391 19.7645 20.4142 19.3453C20.7893 18.9261 21 18.3575 21 17.7647V6.58824C21 5.9954 20.7893 5.42684 20.4142 5.00764C20.0391 4.58844 19.5304 4.35294 19 4.35294H11.1C10.7655 4.35661 10.4355 4.26645 10.1403 4.09072C9.84505 3.91499 9.59396 3.6593 9.41 3.34706L8.6 2.00588C8.41789 1.69682 8.16997 1.44312 7.8785 1.26756C7.58702 1.092 7.26111 1.00006 6.93 1H3C2.46957 1 1.96086 1.2355 1.58579 1.6547C1.21071 2.0739 1 2.64246 1 3.23529V17.7647C1 18.3575 1.21071 18.9261 1.58579 19.3453C1.96086 19.7645 2.46957 20 3 20H19Z" stroke="#E0E6E3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+
+    <!-- Submission -->
+    <symbol id="icon-submission" viewBox="0 0 20 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M7.75 18.6L11.125 15.3M11.125 15.3L7.75 12M11.125 15.3H3.25C2.65326 15.3 2.08097 15.5318 1.65901 15.9444C1.23705 16.3569 1 16.9165 1 17.5V20.8C1 21.3835 1.23705 21.9431 1.65901 22.3556C2.08097 22.7682 2.65326 23 3.25 23H16.75C17.3467 23 17.919 22.7682 18.341 22.3556C18.7629 21.9431 19 21.3835 19 20.8V6.5L13.375 1H3.25C2.65326 1 2.08097 1.23178 1.65901 1.64436C1.23705 2.05695 1 2.61652 1 3.2V10.9M12.25 1V5.4C12.25 5.98348 12.4871 6.54306 12.909 6.95564C13.331 7.36822 13.9033 7.6 14.5 7.6H19" stroke="#E0E6E3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+
+    <!-- Experts -->
+    <symbol id="icon-experts" viewBox="0 0 25 23" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M17.1 10.3333L19.4 12.6667L24 8M17.1 22V19.6667C17.1 18.429 16.6154 17.242 15.7527 16.3668C14.89 15.4917 13.72 15 12.5 15H5.6C4.38 15 3.20998 15.4917 2.34731 16.3668C1.48464 17.242 1 18.429 1 19.6667V22M13.65 5.66667C13.65 8.244 11.5905 10.3333 9.05 10.3333C6.50949 10.3333 4.45 8.244 4.45 5.66667C4.45 3.08934 6.50949 1 9.05 1C11.5905 1 13.65 3.08934 13.65 5.66667Z" stroke="#E0E6E3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+
+    <!-- Calendar -->
+    <symbol id="icon-calendar" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M7.6 1V5.4M16.4 1V5.4M1 9.8H23M5.4 3.2H18.6C21.0301 3.2 23 5.16995 23 7.6V18.6C23 21.0301 21.0301 23 18.6 23H5.4C2.96995 23 1 21.0301 1 18.6V7.6C1 5.16995 2.96995 3.2 5.4 3.2Z" stroke="#E0E6E3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+
+    <!-- Analytics -->
+    <symbol id="icon-analytics" viewBox="0 0 22 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M11 14V19M15 12V19M19 8V19M21 1L12.354 9.646C12.3076 9.69256 12.2524 9.72951 12.1916 9.75471C12.1309 9.77992 12.0658 9.79289 12 9.79289C11.9342 9.79289 11.8691 9.77992 11.8084 9.75471C11.7476 9.72951 11.6924 9.69256 11.646 9.646L8.354 6.354C8.26024 6.26026 8.13308 6.20761 8.0005 6.20761C7.86792 6.20761 7.74076 6.26026 7.647 6.354L1 13M3 16V19M7 12V19" stroke="#E0E6E3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+
+    <!-- Goals -->
+    <symbol id="icon-goals" viewBox="0 0 22 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10.8997 13.1V1L19.6997 5.40001L10.8997 9.80002M20.3168 10.0442C20.9022 11.8484 20.9569 13.7827 20.4746 15.6171C19.9922 17.4515 18.9931 19.1087 17.596 20.3916C16.1989 21.6745 14.4627 22.529 12.5939 22.8536C10.7252 23.1781 8.80249 22.959 7.05468 22.2222C5.30686 21.4855 3.80747 20.2622 2.73489 18.6978C1.66231 17.1335 1.0617 15.2939 1.0045 13.398C0.94731 11.5022 1.43595 9.62976 2.41228 8.00359C3.38861 6.37742 4.81153 5.06595 6.51176 4.22521M6.50186 9.79672C5.95065 10.5304 5.5918 11.3904 5.45801 12.2983C5.32421 13.2062 5.41971 14.1332 5.73582 14.9947C6.05193 15.8563 6.57859 16.625 7.26782 17.2309C7.95705 17.8369 8.78695 18.2607 9.68189 18.4638C10.5768 18.6669 11.5084 18.6429 12.3917 18.3939C13.2749 18.1449 14.0819 17.6788 14.7389 17.0381C15.396 16.3975 15.8823 15.6026 16.1535 14.7259C16.4248 13.8492 16.4723 12.9185 16.2919 12.0187" stroke="#E0E6E3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+
+	<!-- Announcements -->
+	<symbol id="icon-announcements" viewBox="0 0 23 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+		<path d="M10.9222 13.9527C10.801 14.392 10.5945 14.8033 10.3143 15.1628C10.0342 15.5224 9.68599 15.8232 9.28959 16.0482C8.89319 16.2732 8.45636 16.4179 8.00403 16.4741C7.55171 16.5302 7.09275 16.4967 6.65336 16.3755C6.21398 16.2543 5.80277 16.0478 5.44321 15.7676C5.08366 15.4875 4.7828 15.1393 4.55782 14.7429C4.33283 14.3465 4.18813 13.9097 4.13197 13.4573C4.0758 13.005 4.10928 12.5461 4.23049 12.1067M1 7.26093L21.7675 1.49219V15.3372L1 10.7222V7.26093Z" stroke="#E0E6E3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+	</symbol>
+
+	<!-- Archive -->
+	<symbol id="icon-archive" viewBox="0 0 25 23" fill="none" xmlns="http://www.w3.org/2000/svg">
+		<path d="M3.22222 7.04774V19.27C3.22222 19.8593 3.45635 20.4246 3.8731 20.8413C4.28984 21.2581 4.85507 21.4922 5.44444 21.4922H18.7778C19.3671 21.4922 19.9324 21.2581 20.3491 20.8413C20.7659 20.4246 21 19.8593 21 19.27V7.04774M9.88889 11.4922H14.3333M2.11111 1.49219H22.1111C22.7248 1.49219 23.2222 1.98965 23.2222 2.6033V5.93663C23.2222 6.55028 22.7248 7.04774 22.1111 7.04774H2.11111C1.49746 7.04774 1 6.55028 1 5.93663V2.6033C1 1.98965 1.49746 1.49219 2.11111 1.49219Z" stroke="#E0E6E3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+	</symbol>
+
+	<!-- Budget -->
+	<symbol id="icon-budget" viewBox="0 0 22 23" fill="none" xmlns="http://www.w3.org/2000/svg">
+		<path d="M17.09 9.86219C18.0353 10.2146 18.8765 10.7997 19.5358 11.5634C20.195 12.3271 20.6511 13.2446 20.8617 14.2313C21.0724 15.2179 21.0309 16.2417 20.741 17.208C20.4512 18.1744 19.9223 19.052 19.2034 19.7598C18.4845 20.4676 17.5987 20.9827 16.628 21.2574C15.6572 21.5322 14.6329 21.5577 13.6497 21.3316C12.6665 21.1056 11.7561 20.6353 11.0028 19.9642C10.2495 19.2931 9.67763 18.4429 9.34 17.4922M6 5.49219H7V9.49219M15.71 13.3722L16.41 14.0822L13.59 16.9022M13 7.49219C13 10.8059 10.3137 13.4922 7 13.4922C3.68629 13.4922 1 10.8059 1 7.49219C1 4.17848 3.68629 1.49219 7 1.49219C10.3137 1.49219 13 4.17848 13 7.49219Z" stroke="#E0E6E3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+	</symbol>
+
+	<!-- About Us -->
+	<symbol id="icon-aboutus" viewBox="0 0 22 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+		<path d="M15 19.4922V17.4922C15 16.4313 14.5786 15.4139 13.8284 14.6638C13.0783 13.9136 12.0609 13.4922 11 13.4922H5C3.93913 13.4922 2.92172 13.9136 2.17157 14.6638C1.42143 15.4139 1 16.4313 1 17.4922V19.4922M15 1.62019C15.8578 1.84256 16.6174 2.34345 17.1597 3.04425C17.702 3.74505 17.9962 4.60608 17.9962 5.49219C17.9962 6.3783 17.702 7.23933 17.1597 7.94013C16.6174 8.64092 15.8578 9.14182 15 9.36419M21 19.4922V17.4922C20.9993 16.6059 20.7044 15.745 20.1614 15.0445C19.6184 14.344 18.8581 13.8438 18 13.6222M12 5.49219C12 7.70133 10.2091 9.49219 8 9.49219C5.79086 9.49219 4 7.70133 4 5.49219C4 3.28305 5.79086 1.49219 8 1.49219C10.2091 1.49219 12 3.28305 12 5.49219Z" stroke="#E0E6E3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+	</symbol>
+
+	<!-- Downloadables -->
+	<symbol id="icon-downloadables" viewBox="0 0 20 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+		<path d="M12.25 1.24609V5.44609C12.25 6.00305 12.4871 6.53719 12.909 6.93102C13.331 7.32484 13.9033 7.54609 14.5 7.54609H19M10 18.0461V11.7461M10 18.0461L6.625 14.8961M10 18.0461L13.375 14.8961M13.375 1.24609H3.25C2.65326 1.24609 2.08097 1.46734 1.65901 1.86117C1.23705 2.255 1 2.78914 1 3.34609V20.1461C1 20.703 1.23705 21.2372 1.65901 21.631C2.08097 22.0248 2.65326 22.2461 3.25 22.2461H16.75C17.3467 22.2461 17.919 22.0248 18.341 21.631C18.7629 21.2372 19 20.703 19 20.1461V6.49609L13.375 1.24609Z" stroke="#E0E6E3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+	</symbol>
+	
+	<!-- Inbox -->
+	<symbol id="icon-inbox" viewBox="0 0 25 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+		<path d="M23.5 10H16.75L14.5 13.375H10L7.75 10H1M23.5 10V16.75C23.5 17.3467 23.2629 17.919 22.841 18.341C22.419 18.7629 21.8467 19 21.25 19H3.25C2.65326 19 2.08097 18.7629 1.65901 18.341C1.23705 17.919 1 17.3467 1 16.75V10M23.5 10L19.6187 2.24875C19.4325 1.87389 19.1453 1.55842 18.7896 1.33781C18.4338 1.11721 18.0236 1.00022 17.605 1H6.895C6.47641 1.00022 6.06617 1.11721 5.71043 1.33781C5.35468 1.55842 5.06752 1.87389 4.88125 2.24875L1 10" stroke="#E0E6E3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+	</symbol>
+
+	<!-- Notification -->
+	<symbol id="icon-notification" viewBox="0 0 20 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+		<path d="M0 20.4V18H2.5V9.6C2.5 7.94 3.02083 6.47 4.0625 5.19C5.10417 3.89 6.45833 3.04 8.125 2.64V1.8C8.125 1.3 8.30208 0.879999 8.65625 0.539999C9.03125 0.18 9.47917 0 10 0C10.5208 0 10.9583 0.18 11.3125 0.539999C11.6875 0.879999 11.875 1.3 11.875 1.8V2.64C13.5417 3.04 14.8958 3.89 15.9375 5.19C16.9792 6.47 17.5 7.94 17.5 9.6V18H20V20.4H0ZM10 24C9.3125 24 8.71875 23.77 8.21875 23.31C7.73958 22.83 7.5 22.26 7.5 21.6H12.5C12.5 22.26 12.25 22.83 11.75 23.31C11.2708 23.77 10.6875 24 10 24ZM5 18H15V9.6C15 8.28 14.5104 7.15 13.5313 6.21C12.5521 5.27 11.375 4.8 10 4.8C8.625 4.8 7.44792 5.27 6.46875 6.21C5.48958 7.15 5 8.28 5 9.6V18Z" fill="#E0E6E3"/>
+	</symbol>
+
+	<!-- Settings -->
+	<symbol id="icon-settings" viewBox="0 0 26 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+		<path d="M13 15.3636C14.6569 15.3636 16 14.0815 16 12.5C16 10.9185 14.6569 9.63636 13 9.63636C11.3431 9.63636 10 10.9185 10 12.5C10 14.0815 11.3431 15.3636 13 15.3636Z" stroke="#E0E6E3" stroke-width="2.88" stroke-linecap="round" stroke-linejoin="round"/>
+		<path d="M20.4 15.3636C20.2669 15.6515 20.2272 15.9709 20.286 16.2806C20.3448 16.5902 20.4995 16.8759 20.73 17.1009L20.79 17.1582C20.976 17.3355 21.1235 17.546 21.2241 17.7778C21.3248 18.0096 21.3766 18.258 21.3766 18.5089C21.3766 18.7597 21.3248 19.0082 21.2241 19.2399C21.1235 19.4717 20.976 19.6822 20.79 19.8595C20.6043 20.037 20.3837 20.1779 20.1409 20.2739C19.8981 20.37 19.6378 20.4195 19.375 20.4195C19.1122 20.4195 18.8519 20.37 18.6091 20.2739C18.3663 20.1779 18.1457 20.037 17.96 19.8595L17.9 19.8023C17.6643 19.5822 17.365 19.4346 17.0406 19.3785C16.7162 19.3223 16.3816 19.3602 16.08 19.4873C15.7842 19.6083 15.532 19.8092 15.3543 20.0653C15.1766 20.3214 15.0813 20.6215 15.08 20.9286V21.0909C15.08 21.5972 14.8693 22.0828 14.4942 22.4408C14.1191 22.7989 13.6104 23 13.08 23C12.5496 23 12.0409 22.7989 11.6658 22.4408C11.2907 22.0828 11.08 21.5972 11.08 21.0909V21.005C11.0723 20.6891 10.9651 20.3826 10.7725 20.1256C10.5799 19.8685 10.3107 19.6727 10 19.5636C9.69838 19.4366 9.36381 19.3987 9.03941 19.4548C8.71502 19.511 8.41568 19.6586 8.18 19.8786L8.12 19.9359C7.93425 20.1134 7.71368 20.2542 7.47088 20.3503C7.22808 20.4464 6.96783 20.4958 6.705 20.4958C6.44217 20.4958 6.18192 20.4464 5.93912 20.3503C5.69632 20.2542 5.47575 20.1134 5.29 19.9359C5.10405 19.7586 4.95653 19.5481 4.85588 19.3163C4.75523 19.0845 4.70343 18.8361 4.70343 18.5852C4.70343 18.3343 4.75523 18.0859 4.85588 17.8542C4.95653 17.6224 5.10405 17.4118 5.29 17.2345L5.35 17.1773C5.58054 16.9523 5.73519 16.6666 5.794 16.3569C5.85282 16.0473 5.81312 15.7279 5.68 15.44C5.55324 15.1577 5.34276 14.9169 5.07447 14.7473C4.80618 14.5777 4.49179 14.4867 4.17 14.4855H4C3.46957 14.4855 2.96086 14.2843 2.58579 13.9263C2.21071 13.5683 2 13.0827 2 12.5764C2 12.07 2.21071 11.5845 2.58579 11.2264C2.96086 10.8684 3.46957 10.6673 4 10.6673H4.09C4.42099 10.6599 4.742 10.5576 5.0113 10.3738C5.28059 10.1899 5.48572 9.93297 5.6 9.63636C5.73312 9.34846 5.77282 9.02909 5.714 8.71944C5.65519 8.40979 5.50054 8.12406 5.27 7.89909L5.21 7.84182C5.02405 7.66452 4.87653 7.45396 4.77588 7.2222C4.67523 6.99044 4.62343 6.74202 4.62343 6.49114C4.62343 6.24025 4.67523 5.99183 4.77588 5.76007C4.87653 5.52831 5.02405 5.31776 5.21 5.14045C5.39575 4.96295 5.61632 4.82214 5.85912 4.72607C6.10192 4.62999 6.36217 4.58054 6.625 4.58054C6.88783 4.58054 7.14808 4.62999 7.39088 4.72607C7.63368 4.82214 7.85425 4.96295 8.04 5.14045L8.1 5.19773C8.33568 5.41779 8.63502 5.5654 8.95941 5.62155C9.28381 5.6777 9.61838 5.63979 9.92 5.51273H10C10.2958 5.39173 10.548 5.19081 10.7257 4.93472C10.9034 4.67862 10.9987 4.37852 11 4.07136V3.90909C11 3.40277 11.2107 2.91718 11.5858 2.55916C11.9609 2.20114 12.4696 2 13 2C13.5304 2 14.0391 2.20114 14.4142 2.55916C14.7893 2.91718 15 3.40277 15 3.90909V3.995C15.0013 4.30216 15.0966 4.60226 15.2743 4.85835C15.452 5.11445 15.7042 5.31536 16 5.43636C16.3016 5.56343 16.6362 5.60133 16.9606 5.54519C17.285 5.48904 17.5843 5.34142 17.82 5.12136L17.88 5.06409C18.0657 4.88659 18.2863 4.74578 18.5291 4.6497C18.7719 4.55363 19.0322 4.50418 19.295 4.50418C19.5578 4.50418 19.8181 4.55363 20.0609 4.6497C20.3037 4.74578 20.5243 4.88659 20.71 5.06409C20.896 5.24139 21.0435 5.45194 21.1441 5.6837C21.2448 5.91546 21.2966 6.16389 21.2966 6.41477C21.2966 6.66566 21.2448 6.91408 21.1441 7.14584C21.0435 7.3776 20.896 7.58815 20.71 7.76545L20.65 7.82273C20.4195 8.04769 20.2648 8.33342 20.206 8.64307C20.1472 8.95272 20.1869 9.27209 20.32 9.56V9.63636C20.4468 9.91869 20.6572 10.1595 20.9255 10.3291C21.1938 10.4987 21.5082 10.5897 21.83 10.5909H22C22.5304 10.5909 23.0391 10.792 23.4142 11.1501C23.7893 11.5081 24 11.9937 24 12.5C24 13.0063 23.7893 13.4919 23.4142 13.8499C23.0391 14.208 22.5304 14.4091 22 14.4091H21.91C21.5882 14.4103 21.2738 14.5013 21.0055 14.6709C20.7372 14.8405 20.5268 15.0813 20.4 15.3636Z" stroke="#E0E6E3" stroke-width="2.88" stroke-linecap="round" stroke-linejoin="round"/>
+	</symbol>
+
+	<!-- Log Out -->
+	<symbol id="icon-logout" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+		<path d="M14 15L19 10M19 10L14 5M19 10H7M7 19H3C2.46957 19 1.96086 18.7893 1.58579 18.4142C1.21071 18.0391 1 17.5304 1 17V3C1 2.46957 1.21071 1.96086 1.58579 1.58579C1.96086 1.21071 2.46957 1 3 1H7" stroke="#E0E6E3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+	</symbol>
+
+	<!-- Top Bar Notification -->
+	<symbol id="icon-topbar-notification" viewBox="0 0 24 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+		<path d="M0.759766 25.3609V22.4809H3.63977V12.4009C3.63977 10.4089 4.23977 8.64486 5.43977 7.10886C6.63977 5.54886 8.19977 4.52886 10.1198 4.04886V3.04086C10.1198 2.44086 10.3238 1.93686 10.7318 1.52886C11.1638 1.09686 11.6798 0.880859 12.2798 0.880859C12.8798 0.880859 13.3838 1.09686 13.7918 1.52886C14.2238 1.93686 14.4398 2.44086 14.4398 3.04086V4.04886C16.3598 4.52886 17.9198 5.54886 19.1198 7.10886C20.3198 8.64486 20.9198 10.4089 20.9198 12.4009V22.4809H23.7998V25.3609H0.759766ZM12.2798 29.6809C11.4878 29.6809 10.8038 29.4049 10.2278 28.8529C9.67577 28.2769 9.39977 27.5929 9.39977 26.8009H15.1598C15.1598 27.5929 14.8718 28.2769 14.2958 28.8529C13.7438 29.4049 13.0718 29.6809 12.2798 29.6809ZM6.51977 22.4809H18.0398V12.4009C18.0398 10.8169 17.4758 9.46086 16.3478 8.33286C15.2198 7.20486 13.8638 6.64086 12.2798 6.64086C10.6958 6.64086 9.33977 7.20486 8.21177 8.33286C7.08377 9.46086 6.51977 10.8169 6.51977 12.4009V22.4809Z" fill="#1D1B20"/>
+	</symbol>
+
+	<!-- Top Bar Settings -->
+	<symbol id="icon-topbar-settings" viewBox="0 0 31 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+		<path d="M15.4004 18.3996C17.4715 18.3996 19.1504 16.7878 19.1504 14.7996C19.1504 12.8114 17.4715 11.1996 15.4004 11.1996C13.3293 11.1996 11.6504 12.8114 11.6504 14.7996C11.6504 16.7878 13.3293 18.3996 15.4004 18.3996Z" stroke="#1E1E1E" stroke-width="2.88" stroke-linecap="round" stroke-linejoin="round"/>
+		<path d="M24.6504 18.3996C24.484 18.7615 24.4344 19.163 24.5079 19.5523C24.5814 19.9416 24.7747 20.3008 25.0629 20.5836L25.1379 20.6556C25.3703 20.8785 25.5547 21.1432 25.6805 21.4346C25.8064 21.7259 25.8711 22.0382 25.8711 22.3536C25.8711 22.669 25.8064 22.9813 25.6805 23.2727C25.5547 23.564 25.3703 23.8287 25.1379 24.0516C24.9057 24.2748 24.63 24.4518 24.3265 24.5726C24.023 24.6933 23.6977 24.7555 23.3691 24.7555C23.0406 24.7555 22.7153 24.6933 22.4118 24.5726C22.1083 24.4518 21.8326 24.2748 21.6004 24.0516L21.5254 23.9796C21.2308 23.703 20.8566 23.5174 20.4511 23.4468C20.0456 23.3762 19.6274 23.4239 19.2504 23.5836C18.8807 23.7357 18.5654 23.9883 18.3433 24.3103C18.1212 24.6322 18.002 25.0095 18.0004 25.3956V25.5996C18.0004 26.2361 17.737 26.8466 17.2682 27.2967C16.7993 27.7468 16.1634 27.9996 15.5004 27.9996C14.8373 27.9996 14.2015 27.7468 13.7326 27.2967C13.2638 26.8466 13.0004 26.2361 13.0004 25.5996V25.4916C12.9907 25.0944 12.8568 24.7092 12.616 24.386C12.3753 24.0629 12.0388 23.8167 11.6504 23.6796C11.2734 23.5199 10.8551 23.4722 10.4497 23.5428C10.0442 23.6134 9.66999 23.799 9.37539 24.0756L9.30039 24.1476C9.06821 24.3708 8.79249 24.5478 8.48899 24.6686C8.1855 24.7893 7.86018 24.8515 7.53164 24.8515C7.2031 24.8515 6.87778 24.7893 6.57429 24.6686C6.27079 24.5478 5.99507 24.3708 5.76289 24.1476C5.53045 23.9247 5.34605 23.66 5.22024 23.3687C5.09443 23.0773 5.02967 22.765 5.02967 22.4496C5.02967 22.1342 5.09443 21.8219 5.22024 21.5306C5.34605 21.2392 5.53045 20.9745 5.76289 20.7516L5.83789 20.6796C6.12606 20.3968 6.31937 20.0376 6.3929 19.6483C6.46642 19.259 6.41678 18.8575 6.25039 18.4956C6.09194 18.1407 5.82883 17.838 5.49347 17.6248C5.15811 17.4116 4.76512 17.2971 4.36289 17.2956H4.15039C3.48735 17.2956 2.85146 17.0428 2.38262 16.5927C1.91378 16.1426 1.65039 15.5321 1.65039 14.8956C1.65039 14.2591 1.91378 13.6486 2.38262 13.1986C2.85146 12.7485 3.48735 12.4956 4.15039 12.4956H4.26289C4.67663 12.4863 5.0779 12.3578 5.41451 12.1266C5.75113 11.8955 6.00754 11.5725 6.15039 11.1996C6.31678 10.8377 6.36642 10.4362 6.2929 10.0469C6.21937 9.65763 6.02606 9.29842 5.73789 9.01561L5.66289 8.94361C5.43045 8.72071 5.24605 8.45602 5.12024 8.16467C4.99443 7.87331 4.92967 7.56101 4.92967 7.24561C4.92967 6.93021 4.99443 6.61791 5.12024 6.32655C5.24605 6.0352 5.43045 5.7705 5.66289 5.54761C5.89507 5.32447 6.17079 5.14744 6.47429 5.02667C6.77779 4.90589 7.1031 4.84372 7.43164 4.84372C7.76018 4.84372 8.0855 4.90589 8.38899 5.02667C8.69249 5.14744 8.96821 5.32447 9.20039 5.54761L9.27539 5.61961C9.56999 5.89625 9.94416 6.08183 10.3497 6.15241C10.7551 6.223 11.1734 6.17535 11.5504 6.01561H11.6504C12.0201 5.86349 12.3354 5.61092 12.5575 5.28897C12.7796 4.96702 12.8988 4.58975 12.9004 4.20361V3.99961C12.9004 3.36309 13.1638 2.75264 13.6326 2.30255C14.1015 1.85247 14.7373 1.59961 15.4004 1.59961C16.0634 1.59961 16.6993 1.85247 17.1682 2.30255C17.637 2.75264 17.9004 3.36309 17.9004 3.99961V4.10761C17.902 4.49375 18.0212 4.87102 18.2433 5.19297C18.4654 5.51492 18.7807 5.76749 19.1504 5.91961C19.5274 6.07935 19.9456 6.127 20.3511 6.05641C20.7566 5.98583 21.1308 5.80025 21.4254 5.52361L21.5004 5.45161C21.7326 5.22847 22.0083 5.05144 22.3118 4.93067C22.6153 4.80989 22.9406 4.74772 23.2691 4.74772C23.5977 4.74772 23.923 4.80989 24.2265 4.93067C24.53 5.05144 24.8057 5.22847 25.0379 5.45161C25.2703 5.6745 25.4547 5.9392 25.5805 6.23055C25.7064 6.52191 25.7711 6.83421 25.7711 7.14961C25.7711 7.46501 25.7064 7.77731 25.5805 8.06867C25.4547 8.36002 25.2703 8.62471 25.0379 8.84761L24.9629 8.91961C24.6747 9.20242 24.4814 9.56163 24.4079 9.9509C24.3344 10.3402 24.384 10.7417 24.5504 11.1036V11.1996C24.7088 11.5545 24.9719 11.8572 25.3073 12.0704C25.6427 12.2837 26.0357 12.3981 26.4379 12.3996H26.6504C27.3134 12.3996 27.9493 12.6525 28.4182 13.1026C28.887 13.5526 29.1504 14.1631 29.1504 14.7996C29.1504 15.4361 28.887 16.0466 28.4182 16.4967C27.9493 16.9468 27.3134 17.1996 26.6504 17.1996H26.5379C26.1357 17.2011 25.7427 17.3156 25.4073 17.5288C25.0719 17.742 24.8088 18.0447 24.6504 18.3996Z" stroke="#1E1E1E" stroke-width="2.88" stroke-linecap="round" stroke-linejoin="round"/>
+	</symbol>
+
+</svg>
 
 <script>
 	const sidebar = document.getElementById("sidebar");
@@ -321,29 +428,8 @@
 			sidebar.style.width = expandedWidth + "px";
 		}
 	});
-
-
-	const sidebarTabs = document.querySelectorAll('.sidebar-tab');
-
-	const activeTabId = localStorage.getItem('activeSidebarTab');
-	if(activeTabId){
-		sidebarTabs.forEach(tab => {
-			tab.classList.remove('active');
-			if(tab.dataset.tabId === activeTabId){
-				tab.classList.add('active');
-			}
-		});
-	}
-
-	sidebarTabs.forEach((tab, idx) => {
-		tab.dataset.tabId = idx; // assign a unique ID
-		tab.addEventListener('click', () => {
-			sidebarTabs.forEach(t => t.classList.remove('active'));
-			tab.classList.add('active');
-			localStorage.setItem('activeSidebarTab', tab.dataset.tabId);
-		});
-	});
-
 </script>
+
+</body>
 
 </html>
