@@ -1,0 +1,254 @@
+{% extends "base_public.html" %}
+{% block content %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard</title>
+<link href="https://fonts.googleapis.com/css?family=Inter:400,700,800&display=swap" rel="stylesheet">
+
+<!-- Left Section -->
+<style>
+    body {
+        background: #F9F9F9;
+        margin: 0;
+        font-family: 'Inter', sans-serif;
+    }
+    .main-container {
+        display: flex;
+        flex-direction: row;
+        gap: 30px;
+        min-height: 1440px;
+        margin: 70px;
+    }
+
+    .left-container {
+        display: flex;
+        flex-direction: column;
+        gap: 50px;
+        flex: 2;
+        width: 100%;
+    }
+
+    .text-container {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .top-text-container {
+        display: flex;
+        flex-direction: row;
+        gap: 15px;
+        align-items: center;
+    }
+
+    .top-text {
+        font-family: 'Inter', sans-serif;
+        font-weight: 800;
+        font-size: 48px;
+        background: linear-gradient(90deg, #F58924 0%, #1EC492 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        color: transparent;
+    }
+
+    .mid-text {
+        font-family: 'Inter', sans-serif;
+        font-weight: 700;
+        font-size: 48px;
+        color: #000;
+    }
+
+    .bottom-text {
+        font-family: 'Inter', sans-serif;
+        font-weight: 400;
+        font-size: 24px;
+    }
+
+    .project-container {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .project-text {
+        font-family: 'Inter', sans-serif;
+        font-weight: 400;
+        font-size: 28px;
+    }
+
+    .project-box {
+        display: flex;
+        flex-direction: row;
+        gap: 35px;
+        background: #fff;
+        border: 1px solid #C3C3C3;
+        padding: 35px;
+        border-radius: 12px;
+    }
+
+    .project-item {
+        display: flex;
+        flex-direction: column;
+        gap: 35px;
+        width: 100%;
+    }
+
+    .project-pic {
+        background: #ECECEC;
+        height: 250px;
+        border-radius: 8px;
+    }
+
+    .project-title {
+        font-family: 'Inter', sans-serif;
+        font-weight: 700;
+        font-size: 18px;
+    }
+
+    .project-desc {
+        font-family: 'Inter', sans-serif;
+        font-weight: 400;
+        font-size: 18px;
+    }
+
+    .project-more {
+        font-family: 'Inter', sans-serif;
+        font-weight: 400;
+        font-size: 20px;
+        color: #2EA8FF;
+        margin-top: 10px;
+        cursor: pointer;
+    }
+</style>
+
+<!-- Announcement Section -->
+<style>
+    .right-container {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        flex: 1;
+    }
+
+    .announce-text {
+        font-family: 'Inter', sans-serif;
+        font-weight: 400;
+        font-size: 28px;
+    }
+
+    .announce-box {
+        display: flex;
+        flex-direction: column;
+        gap: 40px;
+    }
+
+    .announce-item {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        border: 0.7px solid #DDE1E6;
+        border-radius: 8px;
+        padding: 20px;
+    }
+
+    .announce-pic {
+        background: #ECECEC;
+        height: 250px;
+        border-bottom: 0.7px solid #DDE1E6;
+        border-radius: 8px 8px 0 0;
+    }
+
+    .announce-date {
+        font-family: 'Inter', sans-serif;
+        font-weight: 500;
+        font-size: 14px;
+        color: #E37910;
+    }
+
+    .announce-title {
+        font-family: 'Inter', sans-serif;
+        font-weight: 700;
+        font-size: 20px;
+        color: #625C56;
+    }
+
+    .announce-more {
+        font-family: 'Inter', sans-serif;
+        font-weight: 400;
+        font-size: 20px;
+        color: #2EA8FF;
+        margin-top: 10px;
+        cursor: pointer;
+    }
+
+</style>
+
+</head>
+<body>
+    <div class="main-container">
+        <!-- Left Container -->
+        <div class="left-container">
+            <!-- Text Container -->
+            <div class="text-container">
+                <div class="top-text-container">
+                    <div class="top-text">Welcome</div>
+                    <div class="mid-text">to UESO PMIS</div>
+                </div>
+                <div class="bottom-text">You are currently viewing as a ...</div>
+            </div>
+
+            <!-- Project Container -->
+            <div class="project-container">
+                <div class="project-text">Latest Extension Projects</div>
+
+                <div class="project-box">
+                    <div class="project-item">
+                        <div class="project-pic"></div>
+                        <div class="project-details">
+                            <div class="project-title">Title</div>
+                            <div class="project-desc">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</div>
+                        </div>
+                    </div>
+                    <div class="project-item">
+                        <div class="project-pic"></div>
+                        <div class="project-details">
+                            <div class="project-title">Title</div>
+                            <div class="project-desc">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="project-more">View More Project →</div>
+            </div>
+        </div>
+
+        <!-- Right Container -->
+        <div class="right-container">
+            <div class="announce-text">Latest Announcements</div>
+            <div class="announce-box">
+                <div class="announce-item">
+                    <div class="announce-pic"></div>
+                    <div class="announce-details">
+                        <div class="announce-date">March 10, 2025</div>
+                        <div class="announce-title">Office will be closed for between January 03, 2025 to January 05, 2025</div>
+                    </div>
+                </div>
+
+                <div class="announce-item">
+                    <div class="announce-pic"></div>
+                    <div class="announce-details">
+                        <div class="announce-date">March 10, 2025</div>
+                        <div class="announce-title">Office will be closed for between January 03, 2025 to January 05, 2025</div>
+                    </div>
+                </div>
+            </div>
+            <div class="announce-more">View More Announcements →</div>
+        </div>
+    </div>
+</body>
+</html>
+
+{% endblock %}
