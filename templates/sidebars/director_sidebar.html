@@ -1,3 +1,5 @@
+{% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -121,7 +123,7 @@
     }
 
 	.ueso-icon { 
-		background-image: url("icons/ueso.png");
+		background-image: url("{% static 'ueso.png' %}");
 	}
 
     .sidebar-logout {

@@ -92,8 +92,12 @@ WSGI_APPLICATION = 'WBPMISUESO.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'ueso',                 # Database Name
+        'USER': 'postgres',             # Username
+        'PASSWORD': 'postgres',         # Password
+        'HOST': 'localhost',            # Server Host
+        'PORT': '5432',                 # Server Port
     }
 }
 
@@ -132,7 +136,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [BASE_DIR / "static"]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

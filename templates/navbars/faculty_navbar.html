@@ -1,3 +1,5 @@
+{% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -43,9 +45,7 @@
 		background-size: contain;
 		background-repeat: no-repeat;
 		background-position: center;
-		background-image: url("icons/ueso.png");
-		background-color: #000;
-
+		background-image: url("{% static 'ueso.png' %}");
 	}
 
 	.title {
