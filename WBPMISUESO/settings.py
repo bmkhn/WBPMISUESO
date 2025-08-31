@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'external.home',            # Home
+
     'internal.agenda',          # Agenda
     'internal.dashboard',       # Dashboard
     'internal.experts',         # Experts

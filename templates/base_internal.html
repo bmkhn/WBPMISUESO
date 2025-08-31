@@ -18,12 +18,7 @@
 
     /* Sidebar */
     .sidebar {
-        flex: 0 0 250px;        
-        height: 100vh;
-        transition: width 0.3s ease; 
-        background: #2f3542;    
-        color: white;
-        overflow: hidden;
+        transition: width 0.3s ease;   
     }
 
     /* Collapsed state */
@@ -42,17 +37,15 @@
         min-height: 100vh;
     }
 
-    /* Ensure content adjusts seamlessly */
-    .app-container .sidebar.collapsed + .main-content {
-        margin-left: 0;  /* Prevent extra gap */
-    }
 </style>
 
 </head>
 
 <body>
     <div class="app-container">
-        {% include "sidebars/"|add:user.role|add:"_sidebar.html" %}
+        <div class="sidebar">
+            {% include "sidebars/"|add:user.role|add:"_sidebar.html" %}
+        </div>
         
         <div class="main-content">
             {% block content %}

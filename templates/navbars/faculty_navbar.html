@@ -8,143 +8,154 @@
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
 
 <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+	* {
+		margin: 0;
+		padding: 0;
+		box-sizing: border-box;
+	}
 
-    .main-container {
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-    }
+	.outside-container {
+		width: 100%;
+		display: flex;
+		flex-direction: column;
+	}
 
-    .top-container {
-      width: 100%;
-      height: 115px;
-      background-color: #F7F3F1;
-      padding: 0 40px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+	.top-container {
+		width: 100%;
+		height: 115px;
+		background-color: #F7F3F1;
+		padding: 0 40px;
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
 
-    .logo-container {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-    }
+	.logo-container {
+		display: flex;
+		align-items: center;
+		gap: 20px;
+	}
 
-    .logo-circle {
-      width: 75px;
-      height: 75px;
-      border-radius: 100%;
-      background-color: #ccc; /* Placeholder */
-    }
+	.logo-circle {
+		width: 75px;
+		height: 75px;
+		border-radius: 100%;
+		background-size: contain;
+		background-repeat: no-repeat;
+		background-position: center;
+		background-image: url("icons/ueso.png");
+		background-color: #000;
 
-    .title {
-      font-family: 'Instrument Sans', sans-serif;
-      font-size: 21px;
-      font-weight: bold;
-      color: #000;
-    }
+	}
 
-    .button-container {
-      display: flex;
-      gap: 30px;
-    }
+	.title {
+		font-family: 'Instrument Sans', sans-serif;
+		font-size: 21px;
+		font-weight: bold;
+		color: #000;
+	}
 
-    .nav-button {
-      font-family: 'Inter', sans-serif;
-      color: #404040;
-      font-size: 18px;
-      line-height: 38px;
-      font-weight: 600;
-      padding: 10px 20px;
-      border-radius: 4px;
-      background: none;
-      border: none;
-      cursor: pointer;
-      transition: background-color 0.2s ease, color 0.2s ease;
-    }
+	.button-container {
+		display: flex;
+		gap: 30px;
+	}
 
-    .nav-button:hover {
-      background-color: #000;
-      color: #fff;
-    }
+	.nav-button {
+		font-family: 'Inter', sans-serif;
+		color: #404040;
+		font-size: 18px;
+		line-height: 38px;
+		font-weight: 600;
+		padding: 10px 20px;
+		border-radius: 4px;
+		background: none;
+		border: none;
+		cursor: pointer;
+		transition: background-color 0.2s ease, color 0.2s ease;
+		text-decoration: none;
+		align-self: center;
+	}
 
-    .sign-in-button {
-      font-family: 'Inter', sans-serif;
-      background-color: #2C2C2C;
-      color: #F5F5F5;
-      font-size: 18px;
-      line-height: 38px;
-      font-weight: 5;
-      padding: 10px 20px;
-      border-radius: 4px;
-      border: none;
-      cursor: pointer;
-      transition: background-color 0.2s ease, color 0.2s ease;
-    }
+	.nav-button:hover {
+		background-color: #303030;
+		color: #fff;
+	}
 
+	.nav-button.active {
+		background-color: #000;
+		color: #fff;
+	}
 
-    .bottom-container {
-      background-color: black;
-      display: flex;
-      align-items: left;
-      padding: 0 20px;
-      gap: 20px;
-    }
+	.bottom-container {
+		position: sticky;
+		top: 115px;
+		left: 0;
+		right: 0;
+		width: 100vw;
+		min-width: 100vw;
+		background-color: black;
+		display: flex;
+		align-items: left;
+		gap: 20px;
+		padding: 0 20px;
+		box-sizing: border-box;
+	}
 
-    .bottom-nav-button {
-      font-family: 'Inter', sans-serif;
-      color: #FFFFFF;
-      padding: 0 15px;
-      font-size: 12px;
-      line-height: 20px;
-      font-weight: 5;
-      background: none;
-      border: none;
-      cursor: pointer;
-      transition: background-color 0.2s ease, color 0.2s ease;
-    }
+	.bottom-nav-button {
+		font-family: 'Inter', sans-serif;
+		color: #FFFFFF;
+		padding: 0 15px;
+		font-size: 12px;
+		line-height: 20px;
+		font-weight: 500;
+		background: none;
+		border: none;
+		cursor: pointer;
+		transition: background-color 0.2s ease, color 0.2s ease;
+		text-decoration: none;
+		align-self: center;
+	}
 
-    .bottom-nav-button:hover {
-      background-color: #191919;
-    }
+	.bottom-nav-button:hover {
+		background-color: #191919;
+	}
+
+	.bottom-nav-button.active {
+		background-color: #303030;
+	}
 
 </style>
 </head>
 <body>
 
-  <div class="main-container">
-    <!-- Top Container -->
-    <div class="top-container">
-      <!-- Logo Container -->
-      <div class="logo-container">
-        <div class="logo-circle"></div>
-        <div class="title">University Extensions<br>Services Office</div>
-      </div>
+	<div class="outside-container">
+		<!-- Top Container -->
+		<div class="top-container">
+		<!-- Logo Container -->
+		<div class="logo-container">
+			<div class="logo-circle"></div>
+			<div class="title">University Extensions<br>Services Office</div>
+		</div>
 
-      <!-- Button Container -->
-      <div class="button-container">
-        <button class="nav-button">Home</button>
-        <button class="nav-button">Downloadables</button>
-        <button class="nav-button">Announcements</button>
-        <button class="nav-button">Archives</button>
-        <button class="nav-button">About Us</button>
-        <div class="logo-circle"></div>
-      </div>
-    </div>
+		<!-- Button Container -->
+		<div class="button-container">
+			<a href="/home/" class="nav-button {% if request.path == '/home/' %}active{% endif %}">Home</a>
+			<a href="/downloadables/" class="nav-button {% if request.path == '/downloadables/' %}active{% endif %}">Downloadables</a>
+			<a href="/announcements/" class="nav-button {% if request.path == '/announcements/' %}active{% endif %}">Announcements</a>
+			<a href="/archives/" class="nav-button {% if request.path == '/archives/' %}active{% endif %}">Archives</a>
+			<a href="/about-us/" class="nav-button {% if request.path == '/about-us/' %}active{% endif %}">About Us</a>
+			<div class="logo-circle"></div>
+		</div>
+		</div>
 
-    <!-- Bottom Container -->
-    <div class="bottom-container">
-        <button class="bottom-nav-button">Projects</button>
-        <button class="bottom-nav-button">Calendar</button>
-        <button class="bottom-nav-button">Budget</button>
-    </div>
-  </div>
+		<!-- Bottom Container -->
+		<div class="bottom-container">
+			<a href="/projects/" class="bottom-nav-button {% if request.path == '/projects/' %}active{% endif %}">Projects</a>
+			<a href="/calendar/" class="bottom-nav-button {% if request.path == '/calendar/' %}active{% endif %}">Calendar</a>
+			<a href="/budget/" class="bottom-nav-button {% if request.path == '/budget/' %}active{% endif %}">Budget</a>
+		</div>
+
+	</div>
 
 </body>
 </html>

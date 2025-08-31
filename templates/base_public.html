@@ -1,1 +1,40 @@
-<h1>Public/Client/Faculty Dashboard</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title></title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;700&family=Inter:wght@300;400;700&display=swap" rel="stylesheet">
+
+<style>
+    .app-container {
+        display: flex;         
+        flex-direction: column;           
+    }
+
+    .navbar {
+        flex: 0;
+    } 
+
+    .main-content {
+        background: #f9f9f9;
+    }
+</style>
+
+</head>
+<body>
+    <div class="app-container">
+        <div class="navbar">
+            {% include "navbars/"|add:user.role|add:"_navbar.html" %}
+        </div>
+
+        <div class="main-content">
+            {% block content %}
+            {% endblock %}
+        </div>
+    </div>
+</body>
+</html>
+

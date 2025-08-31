@@ -21,7 +21,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
 
     # EXTERNAL APPS
-    # Home (None Yet)
+    path('home/', include('external.home.urls')),                   # Home
     # Requests (None Yet)
 
     # INTERNAL APPS
@@ -39,7 +39,7 @@ urlpatterns = [
     # Budget (None Yet)
     path('calendar/', include('shared.event_calendar.urls')),       # Calendar
     # path('downloadables/', include('shared.downloadables.urls')),   # Downloadables
-    # Projects
+    # Projects (None Yet)
 
 
     # SYSTEM APPS
@@ -47,7 +47,7 @@ urlpatterns = [
     path('logs/', include('system.logs.urls')),                     # Logs
     # Notifications (None Yet)
     # Settings (None Yet)
-    path('', include('system.users.urls')),                     # Users
+    path('', include('system.users.urls')),                         # Users
 
 
 ]

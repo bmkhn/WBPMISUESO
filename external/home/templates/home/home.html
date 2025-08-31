@@ -5,30 +5,29 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Dashboard</title>
+<title>Home</title>
 <link href="https://fonts.googleapis.com/css?family=Inter:400,700,800&display=swap" rel="stylesheet">
 
 <!-- Left Section -->
 <style>
     body {
         background: #F9F9F9;
-        margin: 0;
         font-family: 'Inter', sans-serif;
     }
-    .main-container {
+
+    .home-container {
         display: flex;
         flex-direction: row;
         gap: 30px;
-        min-height: 1440px;
         margin: 70px;
     }
 
     .left-container {
         display: flex;
         flex-direction: column;
-        gap: 50px;
+        gap: auto;
         flex: 2;
-        width: 100%;
+        justify-content: space-between;
     }
 
     .text-container {
@@ -143,7 +142,7 @@
     .announce-box {
         display: flex;
         flex-direction: column;
-        gap: 40px;
+        gap: 20px;
     }
 
     .announce-item {
@@ -151,18 +150,16 @@
         flex-direction: column;
         gap: 15px;
         border: 0.7px solid #DDE1E6;
-        border-radius: 8px;
-        padding: 20px;
     }
 
     .announce-pic {
         background: #ECECEC;
-        height: 250px;
+        height: 200px;
         border-bottom: 0.7px solid #DDE1E6;
-        border-radius: 8px 8px 0 0;
     }
 
     .announce-date {
+        padding: 0 20px 20px 20px;
         font-family: 'Inter', sans-serif;
         font-weight: 500;
         font-size: 14px;
@@ -170,6 +167,7 @@
     }
 
     .announce-title {
+        padding: 0 20px 20px 20px;
         font-family: 'Inter', sans-serif;
         font-weight: 700;
         font-size: 20px;
@@ -189,7 +187,7 @@
 
 </head>
 <body>
-    <div class="main-container">
+    <div class="home-container">
         <!-- Left Container -->
         <div class="left-container">
             <!-- Text Container -->
@@ -198,7 +196,13 @@
                     <div class="top-text">Welcome</div>
                     <div class="mid-text">to UESO PMIS</div>
                 </div>
-                <div class="bottom-text">You are currently viewing as a ...</div>
+                {% if user.role == "PUBLIC" %}
+                <div class="bottom-text">You are currently viewing as a guest. Log in to access member exclusive features.</div>
+                {% elif user.role == "FACULTY" %}
+                <div class="bottom-text">You are currently viewing as a faculty.</div>
+                {% elif user.role == "CLIENT" %}
+                <div class="bottom-text">You are currently viewing as a client.</div>
+                {% endif %}
             </div>
 
             <!-- Project Container -->
