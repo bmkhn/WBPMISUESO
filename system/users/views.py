@@ -7,18 +7,6 @@ from system.users.decorators import role_required
 
 from django.contrib.auth import get_user_model      # For Creating Test Users (Delete Later)     
 
-
-def register_view(request):
-    if request.method == 'POST':
-        form = RegistrationForm(request.POST, request.FILES)
-        if form.is_valid():
-            user = form.save()
-            login(request, user)
-            return redirect('dashboard')        # Edit Later
-    else:
-        form = RegistrationForm()
-    return render(request, 'users/register.html', {'form': form})
-
 def login_view(request):
     if request.method == 'POST':
         form = LoginForm(request, data=request.POST)
@@ -37,7 +25,7 @@ def logout_view(request):
 
 @login_required
 def role_redirect(request):
-    role = request.user.role  # assuming role is stored on User model
+    role = request.user.role
     
     if role in ["PUBLIC", "CLIENT", "FACULTY"]:
         return redirect("home")
@@ -56,6 +44,28 @@ def dashboard(request):
 @role_required(allowed_roles=["VP", "DIRECTOR"])
 def manage_user(request):
     return render(request, 'users/manage_user.html')
+
+
+
+def register_view(request):
+    return render(request, 'users/register.html')
+
+def forgot_password_view(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        # Handle password reset logic here
+    return render(request, 'users/forgot_password.html')
+
+def registration_client_view(request):
+    return render(request, 'users/registration_client.html')
+
+def registration_faculty_view(request):
+    return render(request, 'users/registration_faculty.html')
+
+def registration_implementer_view(request):
+    return render(request, 'users/registration_implementer.html')
+
+
 
 # Quick Login View for Testing Purposes
 User = get_user_model()
