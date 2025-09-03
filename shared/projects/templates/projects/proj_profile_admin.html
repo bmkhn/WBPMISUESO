@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project</title> 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"> 
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0rem;
+            padding: 0rem;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            font-family: Helvetica, Arial, sans-serif;
+            background-color: #e9e9e9;
+        }
+        main {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: stretch;
+            gap: 1rem;
+        }
+        header {
+            background-color: #245F3E;
+            position: relative;
+            top: 0;
+            width: 100%;
+            padding: 0rem; 
+            height: 4rem;
+        }
+        footer {
+            background-color: #245F3E;
+            position: relative;
+            bottom: 0;
+            width: 100%;
+            height: 20rem;
+        } 
+        main > section { 
+            padding: 3rem 8rem 0 8rem;
+            background-color: whitesmoke;
+            box-shadow: 0 6px 0.5rem rgba(0, 0, 0, 0.2); 
+        } 
+        .tags {
+            display: flex; 
+            justify-content: space-between; 
+            width: 100%; 
+            margin-bottom: 2.25rem;
+        }
+        .dropdown {
+            position: relative;
+            width: 9.5rem;
+        }
+        .dropdown-btn { 
+            margin: 0.75rem; 
+            border: none;
+            width: 100%;
+            padding: 0.5rem;
+            border-radius: 0.75rem;
+            background: none;
+            text-align: center;
+            cursor: pointer;
+            font-family: Helvetica, Arial, sans-serif;
+            font-weight: 400;
+            font-size: 1rem; 
+            border: 0.08rem solid whitesmoke;
+        } 
+        .dropdown-btn:hover {
+            border: 0.08rem solid #000000;
+        }
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100%);
+            left: 0;
+            margin: 0;
+            right: 0; 
+            width: 100%;
+            background: white;
+            border: 0.08rem solid #ccc;
+            border-radius: 0.75rem; 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            z-index: 10;
+            overflow: hidden;
+        }
+        .dropdown-item {
+            padding: 0.75rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-family: Helvetica, Arial, sans-serif;
+            font-weight: 400;
+            text-align: center;
+            border-bottom: 1px solid rgb(196, 196, 196);
+        }
+        .dropdown-item:hover {
+            background-color: #000000;
+            color: white;
+        }
+        .hidden {
+            display: none;
+        } 
+        .sort-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            color: #333;
+            margin-left: 0.5rem;
+        }  
+        .project-card {
+            display: grid;
+            grid-template-rows: 1fr 1fr;
+            gap: 0rem;
+            margin: -0.5rem -2.5rem;
+        }
+        .project-card > div {
+            border-bottom: 1px rgb(122, 122, 122) solid;
+            padding: 1rem 3rem;
+            margin-bottom: 0rem;
+        }
+        h5 {
+            font-size: 0.9rem;
+            color: #666;
+            margin: 1rem 0 2rem 0; 
+            font-weight: 300; 
+        }
+        .title {
+            font-size: 1.5rem;
+            font-weight: 500;
+            margin: 0.25rem 0 1rem 0;
+            color: #222; 
+            text-decoration: none;
+        } 
+        .title:hover {
+            color: #007bff; 
+            text-decoration: none;
+        }
+        .project-authors {
+            display: flex; 
+            flex-direction: row; 
+            align-items: center;
+            gap: 1.5rem;
+            margin: 1rem 0 2rem 0;
+        } 
+        .project-authors content {
+            display: flex; 
+            flex-direction: row; 
+            align-items: center; 
+            gap: 0.75rem;
+        }
+        .project-authors img {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            object-fit: cover; 
+            border: 0.08rem solid #ccc;
+        } 
+        .project-authors a { 
+            font-size: 0.9rem;
+            color: #000000;
+            text-decoration: none;
+        } 
+        .project-authors a:hover { 
+            color: #007bff;
+        }
+        .view {
+            display: inline-block;
+            margin-top: 0.75rem;
+            font-size: 0.9rem;
+            color: #007bff;
+            text-decoration: none;
+        }
+        .view:hover {
+            text-decoration: underline;
+        } 
+        .project-tags {
+            margin: 1rem 0;
+        } 
+        .campus {
+            background-color: #ff9f10; 
+            color: rgb(55, 39, 0);
+            border: 0.08rem solid #ff9f10;
+            font-weight: 600; 
+            padding: 0.35rem 0.6rem;
+            margin-right: 0.5rem;
+            cursor: pointer;
+        } 
+        .agenda {
+            background: linear-gradient(90deg, white, #00ff6e3d); 
+            color: #313131;
+            border: 0.08rem solid #313131;
+            font-weight: 500; 
+            padding: 0.35rem 0.6rem;
+            margin-right: 0.5rem;
+            cursor: pointer;
+        } 
+        .status {
+            background-color: whitesmoke; 
+            color: #1CB889;
+            border: 0.08rem solid #1CB889;
+            font-weight: 500; 
+            padding: 0.35rem 0.6rem;
+            margin-right: 0.5rem;
+            cursor: pointer;
+        }   
+        .tab-contents-section {
+            padding: 0 8rem 3rem 8rem;
+            background-color: #e9e9e9;
+            margin-bottom: 0; 
+            box-shadow: 0 0 0 rgba(0, 0, 0, 0.2);
+        }
+        .tabs { 
+            margin-top: 1rem;
+            display: flex; 
+        }
+        .tabs button {
+            background: none;
+            border: none;
+            width: 9rem; 
+            height: 5rem;
+            font-size: 1rem;
+            font-weight: 400;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 4px solid transparent;
+        }
+        .tabs button:hover {
+            border-bottom: 4px solid #245F3E;
+        }
+        .tabs button.active {
+            border-bottom: 4px solid #245F3E;
+        } 
+        .tab-content {
+            display: none;
+            margin-top: 2rem;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .event-card {
+            display: grid;
+            grid-auto-rows: auto;
+            gap: 2rem; 
+        } 
+        .events-section {
+            display: flex;  
+            flex-direction: column;
+            margin: 1rem; 
+            align-items: center; 
+            justify-content: center; 
+        } 
+        .event-card > section {
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        } 
+        .event-card img {
+            max-width: 25rem;
+            aspect-ratio: 16 / 9;  
+            object-fit: cover;
+            border-radius: 0.75rem;
+            cursor: pointer;  
+            border: 0.08rem solid #525252;
+        }
+        .overlay {
+            display: none; 
+            position: fixed; 
+            top: 0; left: 0; 
+            width: 100vw; 
+            height: 100vh; 
+            background: rgba(0, 0, 0, 0.8); 
+            justify-content: center; 
+            align-items: center; 
+            z-index: 1000;
+        }
+        .overlay img {
+            max-width: 90%; 
+            max-height: 90%;
+            border-radius: 0.5rem; 
+            object-fit: contain;
+        } 
+        .events-section > h3,
+        .tab-content > section > h3 {
+            top: 0; 
+            padding: 0.5rem 0;
+            z-index: 5;
+        }
+        .event-details {
+            display: flex; 
+            align-items: center;
+        }
+        .event-info { 
+            width: 30rem; 
+            padding-right: 2.5rem;
+            text-align: justify;
+            max-height: 15rem;
+            overflow-y: auto;
+        } 
+        .card {
+            background: #fff;
+            border-radius: 0.75rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            padding: 2.5rem;
+            width: 100%;
+            min-height: 10rem;
+            justify-content: space-between;
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem; 
+            min-height: 3.5rem;
+        }
+        .card-header h3 {
+            margin:0;
+            font-size: 1.25rem;
+            font-weight: 500;
+            color: #222; 
+            flex: 1;
+        }
+        .card-body {
+            text-align: center;
+            color: #555;
+            font-size: 0.95rem;
+        }
+        .dropdown {
+            position: relative;
+            width: 14.5rem;
+        }
+        .dropdown-btn { 
+            margin: 0; 
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 0.08rem solid #b6b6b6;
+            border-radius: 0.75rem;
+            background: #f9f9f9;
+            text-align: center;
+            cursor: pointer;
+            font-family: Helvetica, Arial, sans-serif;
+            font-weight: 400;
+            font-size: 1rem;
+        }
+        .dropdown-btn:hover{
+            background-color: #000000;
+            color: white;
+        }
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            margin: 0;
+            right: 0;
+            background: white;
+            border: 0.08rem solid #ccc;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            z-index: 10;
+            overflow: hidden;
+        }
+        .dropdown-item {
+            padding: 0.75rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-family: Helvetica, Arial, sans-serif;
+            font-weight: 400;
+            text-align: center;
+            border-bottom: 1px solid rgb(196, 196, 196);
+        }
+        .dropdown-item:hover {
+            background-color: #000000;
+            color: white;
+        }
+        .card-header .dropdown {
+            flex-shrink: 0;
+        }
+        .hidden {
+            display: none !important;
+        }
+        .submission-content {
+            text-align: center;
+            color: #0b0b0b;
+            font-size: 0.95rem;
+            grid-auto-rows: auto;
+        } 
+        .submission-content section {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2.25rem;
+            background-color: rgb(255, 156, 156);
+            border: 0.08rem solid #ccc;
+            border-radius: 2rem;
+            margin-bottom: 1.25rem;
+        }
+        .submission-content section div h3 {
+            margin-right: -2rem;
+        }
+        .submission-content section div h5 {
+            font-weight: 600;
+            color: #160202;
+        }
+        .search-bar {
+            display: flex; 
+            align-items: center;
+            background-color: #f5f6f7;
+            border: 1px solid #ccc;
+            border-radius: 0.75rem;
+            padding: 0.5rem 1rem;
+            margin-bottom: 1rem;
+            font-size: 1rem;
+            color: #666;
+            width: 100%;
+        }
+        .search-bar input {
+            border: none;
+            outline: none;
+            flex: 1;
+            font-size: 1rem;
+            background: transparent;
+        }
+        .search-bar button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #666;
+            font-size: 1.2rem;
+        }
+        .search-bar button:hover {
+            color: #000;
+        }
+        .files-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 1rem 0;
+        }
+        .files-header h3 {
+            margin: 0;
+            font-size: 1.2rem; 
+            font-weight: 500;
+        }
+        .file-list {
+            margin-top: -1rem;
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+        }
+        .file-card {
+            padding: 0.75rem;
+        }
+        .file-card img {
+            max-height: 10rem;
+            border: 1px solid #000000;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .file-card h4 {
+            font-size: 1rem;
+            margin: 0.3rem 0;
+            font-weight: 500;
+        }
+        .file-card p {
+            font-size: 0.75rem;
+            margin-top: 0.5rem;
+            color: #555;
+        }
+        .dropdown2 {
+            position: relative;
+            width: 9.5rem;
+        }
+        .dropdown-btn2 { 
+            margin: 0.75rem; 
+            border: none;
+            width: 100%;
+            padding: 0.5rem;
+            border-radius: 0.75rem;
+            background: none;
+            text-align: center;
+            cursor: pointer;
+            font-family: Helvetica, Arial, sans-serif;
+            font-weight: 400;
+            font-size: 1rem; 
+            border: 0.08rem solid #e9e9e9;
+        } 
+        .dropdown-btn2:hover {
+            border: 0.08rem solid #000000;
+        }
+        .dropdown-menu2 {
+            position: absolute;
+            top: calc(100% - 0.7rem);
+            left: 0.8rem;
+            margin: 0;
+            right: 0; 
+            width: 100%;
+            background: white;
+            border: 0.08rem solid #ccc;
+            border-radius: 0.75rem; 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            z-index: 10;
+            overflow: hidden;
+        }
+        .dropdown-item2 {
+            padding: 0.75rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-family: Helvetica, Arial, sans-serif;
+            font-weight: 400;
+            text-align: center;
+            border-bottom: 1px solid rgb(196, 196, 196);
+        }
+        .dropdown-item2:hover {
+            background-color: #000000;
+            color: white;
+        } 
+        .sort-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            color: #333;
+            margin-left: 0.5rem;
+        } 
+        .infoseg {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 1.25rem 2rem; 
+            align-items: start;
+            font-size: 0.95rem;
+            text-align: left;
+        }
+        .infoseg div {
+            display: flex;
+            align-items: center;
+        }
+        .infoseg strong {
+            margin-left: 0.4rem;
+            font-weight: 600;
+        }
+        .infoseg div:nth-child(2n) {
+            justify-content: left;
+            text-align: left;
+        }
+        .providers {
+            display: flex;
+            flex-wrap: wrap; 
+            justify-content: center; 
+            gap: 2rem; 
+        }
+        .providers > * {
+            box-sizing: border-box;
+        }
+        .providers > div {
+            border: 0.08rem solid #a9a9a9;
+            border-radius: 2rem;
+            width: 20rem;
+            height: 24rem;
+        }
+        .providers > div h5 {
+            margin: 0;
+            font-weight: 600;
+        }
+        .providers > div h3 {
+            font-weight: 500;
+            margin: 0.25rem 0;
+        }
+        .prof {
+            width: 12rem;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 0rem 1rem 1rem 1rem;
+        }
+        .prov-seg-sec {
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+        }
+        .prov-seg-sec img {
+            width: 5rem;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: -3rem;
+        }
+        .tracker-box { 
+            padding: 1.5rem;
+            background-color: whitesmoke;
+            border: 1px solid #ccc;
+            border-radius: 2rem;
+            margin: -1rem 1rem 4rem 1rem;
+            width: 100%; 
+            justify-content: center; 
+            align-items: center;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        .events-row {
+            display: flex;
+            justify-content: space-evenly;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .event {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 1rem;
+        }
+        #com{
+            font-size: 5.5rem; 
+            color: #076e3e; 
+            vertical-align: middle; 
+            padding: 1rem 0;
+        } 
+        #incom{
+            font-size: 5.5rem; 
+            color: #6e0707; 
+            vertical-align: middle; 
+            padding: 1rem 0;
+        } 
+        .status-text {
+            font-weight: bold; 
+            margin-bottom: 1rem;
+        }
+        .status-text span {
+            font-weight: normal;
+        } 
+        .progress { 
+            display: inline-block; 
+            width: 75%;
+            height: 0.5rem;
+            background-color: #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 1rem;
+        }
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #0a8927, #17f058);
+            transition: width 0.5s ease;
+        }
+    </style>
+</head>
+<body>  
+    <header>
+        <h1>test</h1>
+    </header>  
+    <main>  
+        <section> 
+            <div class="tags"> 
+                <content style="flex-grow: 2;"> 
+                    <button class="campus">PSU - Tiniguiban</button>
+                    <button class="agenda">Promotive and Preventive Health and Nutrition and Gender Sensitivity</button> 
+                </content> 
+                <content style="flex-grow: 0;"> 
+                    <button class="status">Completed</button> 
+                </content>
+            </div> 
+            <div> 
+                <a href="#" class="title">The Idler Wheel Is Wiser Than the Driver of the Screw and Whipping Cords Will Serve You More Than Ropes Will</a>
+                <h5>January 01, 2024 - January 02, 2024</h5>
+            </div> 
+            <div class="project-authors"> 
+                <content>
+                    <img src="https://img.apmcdn.org/3ddbb3761de2e44418a47d0e2ecce75a3bc686c3/square/35d350-20130729-fiona-apple.jpg" alt="">
+                    <a href="#">Fiona Apple McAfee Maggart</a> 
+                </content> 
+                <content>
+                    <img src="https://img.apmcdn.org/3ddbb3761de2e44418a47d0e2ecce75a3bc686c3/square/35d350-20130729-fiona-apple.jpg" alt="">
+                    <a href="#">Fiona Apple McAfee Maggart</a> 
+                </content> 
+            </div> 
+            <div class="tabs">  
+                <button type="button" data-tab="overview">Information</button>
+                <button type="button" data-tab="providers">Providers</button>
+                <button type="button" data-tab="events">Events</button>
+                <button type="button" data-tab="submissions">Submissions</button>
+                <button type="button" data-tab="files">Files</button> 
+                <button type="button" data-tab="evaluations">Evaluations</button>
+            </div>
+        </section> 
+        <section class="tab-contents-section"> 
+            <div> 
+                <div class="tab-content active" id="overview">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="infoseg">
+                                <div><i class="fa-regular fa-circle-question"></i> <strong>Last Update</strong></div>
+                                <div>01/02/2024</div>
+
+                                <div><i class="fa-regular fa-circle-question"></i> <strong>Date Added</strong></div>
+                                <div>01/02/2023</div>
+
+                                <div><i class="fa-regular fa-circle-question"></i> <strong>Project ID</strong></div>
+                                <div>00000008</div>
+
+                                <div><i class="fa-regular fa-circle-question"></i> <strong>Project Status</strong></div>
+                                <div>Ongoing</div>
+
+                                <div><i class="fa-regular fa-circle-question"></i> <strong>Agenda</strong></div>
+                                <div>Promotive and Preventive Health and Nutrition and Gender Sensitivity</div>
+
+                                <div><i class="fa-regular fa-circle-question"></i> <strong>Estimated End</strong></div>
+                                <div>01/02/2025</div>
+
+                                <div><i class="fa-regular fa-circle-question"></i> <strong>Beneficiary</strong></div>
+                                <div>PDL</div>
+
+                                <div><i class="fa-regular fa-circle-question"></i> <strong>Project Type</strong></div>
+                                <div>Needs-Based</div>
+
+                                <div><i class="fa-regular fa-circle-question"></i> <strong>Expected Events</strong></div>
+                                <div>5</div>
+
+                                <div><i class="fa-regular fa-circle-question"></i> <strong>Location</strong></div>
+                                <div>Sta. Monica High School</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-content" id="providers">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Providers</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="providers">
+                                <div>
+                                    <section class="prov-seg-sec">
+                                        <button class="campus">PSU - Tiniguiban</button>
+                                        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQCG-8819DkziNFT4NY9X-eyHPBUa8bulKUnw&s" alt="college">
+                                    </section>
+                                    <section>
+                                        <img src="https://img.apmcdn.org/3ddbb3761de2e44418a47d0e2ecce75a3bc686c3/square/35d350-20130729-fiona-apple.jpg" alt="profile" class="prof">
+                                    </section>
+                                    <section>
+                                        <h3>Fiona Apple McAfee Maggart</h3>
+                                        <h5>Highschool Graduate</h5>
+                                    </section>
+                                    <section>
+                                        <p>No. of Projects: <strong>4</strong></p>
+                                    </section>
+                                </div>
+                                <div>
+                                    <section class="prov-seg-sec">
+                                        <button class="campus">PSU - Tiniguiban</button>
+                                        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQCG-8819DkziNFT4NY9X-eyHPBUa8bulKUnw&s" alt="college">
+                                    </section>
+                                    <section>
+                                        <img src="https://img.apmcdn.org/3ddbb3761de2e44418a47d0e2ecce75a3bc686c3/square/35d350-20130729-fiona-apple.jpg" alt="profile" class="prof">
+                                    </section>
+                                    <section>
+                                        <h3>Fiona Apple McAfee Maggart</h3>
+                                        <h5>Highschool Graduate</h5>
+                                    </section>
+                                    <section>
+                                        <p>No. of Projects: <strong>4</strong></p>
+                                    </section>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-content" id="events">
+                    <div>
+                        <div class="card-header">
+                            <h3>Events Pipeline Status</h3>
+                        </div>
+                        <div class="card-body">
+                              <div class="tracker-box">
+                                <div class="events-row">
+                                    <div class="event">
+                                        <i class="fa-regular fa-calendar-days" id="com"></i>
+                                        <div>Event 1</div>
+                                    </div>
+                                    <div class="event">
+                                        <i class="fa-regular fa-calendar-days" id="com"></i>
+                                        <div>Event 2</div>
+                                    </div>
+                                    <div class="event">
+                                        <i class="fa-regular fa-calendar-days" id="com"></i>
+                                        <div>Event 3</div>
+                                    </div>
+                                    <div class="event">
+                                        <i class="fa-regular fa-calendar-days" id="com"></i>
+                                        <div>Event 4</div>
+                                    </div>
+                                    <div class="event">
+                                        <i class="fa-regular fa-calendar-days" id="incom"></i>
+                                        <div>Event 5</div>
+                                    </div>
+                                </div> 
+                                <div class="progress">
+                                    <div class="progress-bar" id="progressBar"></div>
+                                </div>
+                                <p class="status-text" id="statusText"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <section class="events-section">
+                        <div class="event-card">
+                            <section> 
+                                <div class="event-details"> 
+                                    <div class="event-info">
+                                        <h4>Every Single Night</h4>
+                                        <p><strong>Release Date:</strong> April 23, 2012</p>
+                                        <p><strong>Album:</strong> The Idler Wheel Is Wiser Than the Driver of the Screw and Whipping Cords Will Serve You More Than Ropes Will</p>
+                                        <p><strong>Description:</strong> The lead single from Fiona Apple’s fourth studio album, the song reflects her inner struggles, anxieties, and nightly battles with overwhelming thoughts. It features sparse but intense instrumentation with a hypnotic, almost chant-like vocal delivery.</p>
+                                    </div>
+                                    <div> 
+                                        <img src="https://i.scdn.co/image/ab67616d0000b2731443bd487a471868735f050b" alt="Event Photo" onclick="openOverlay(this)">
+                                    </div> 
+                                    <div class="overlay" id="overlay" onclick="closeOverlay()">
+                                        <img id="overlayImg" src="" alt="Full Image">
+                                    </div> 
+                                </div> 
+                            </section> 
+                                   <section> 
+                                <div class="event-details"> 
+                                    <div class="event-info">
+                                        <h4>Every Single Night</h4>
+                                        <p><strong>Release Date:</strong> April 23, 2012</p>
+                                        <p><strong>Album:</strong> The Idler Wheel Is Wiser Than the Driver of the Screw and Whipping Cords Will Serve You More Than Ropes Will</p>
+                                        <p><strong>Description:</strong> The lead single from Fiona Apple’s fourth studio album, the song reflects her inner struggles, anxieties, and nightly battles with overwhelming thoughts. It features sparse but intense instrumentation with a hypnotic, almost chant-like vocal delivery.</p>
+                                    </div>
+                                    <div> 
+                                        <img src="https://i.scdn.co/image/ab67616d0000b2731443bd487a471868735f050b" alt="Event Photo" onclick="openOverlay(this)">
+                                    </div> 
+                                    <div class="overlay" id="overlay" onclick="closeOverlay()">
+                                        <img id="overlayImg" src="" alt="Full Image">
+                                    </div> 
+                                </div> 
+                            </section>     
+                        </div>
+                    </section>
+                </div>
+                <div class="tab-content" id="submissions">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Due Submissions</h3>
+                            <div class="dropdown">
+                                <button class="dropdown-btn">All ▾</button>
+                                <div class="dropdown-menu hidden">
+                                    <div class="dropdown-item" data-target="all">All</div>
+                                    <div class="dropdown-item" data-target="assigned">Assigned</div>
+                                    <div class="dropdown-item" data-target="late">Late</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-body">
+                        <div class="submission-content active" id="submissions-all">
+                            <p>No items for All.</p>
+                        </div>
+                        <div class="submission-content hidden" id="submissions-assigned">
+                            <p>No items for Assigned.</p>
+                        </div>
+                        <div class="submission-content hidden" id="submissions-late">
+                            <section>
+                                <div>
+                                    <h3>Assessment Form</h3>
+                                    <p>January 01, 2024<p>
+                                    <a href="#" class="view">No notes attached</a>
+                                </div>
+                                <div>
+                                    <h5>Overdue by 2 days</h5>
+                                </div>
+                            </section>
+                            <section>
+                                <div>
+                                    <h3>Assessment Form</h3>
+                                    <p>January 01, 2024<p>
+                                    <a href="#" class="view">No notes attached</a>
+                                </div>
+                                <div>
+                                    <h5>Overdue by 2 days</h5>
+                                </div>
+                            </section>
+                        </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-content" id="files">
+                    <form class="search-bar" onsubmit="doSearch(event)">
+                        <input type="text" id="searchInput" placeholder="Search">
+                        <button type="submit"><i class="fa fa-search"></i></button>
+                    </form>
+                    <div class="files-header">
+                        <h3>Files</h3>
+                        <div style="display: flex; flex-shrink: 3;">
+                        <button class="sort-btn">
+                            <i class="fas fa-arrow-up"></i>
+                        </button>
+                        <div class="dropdown2">
+                            <button class="dropdown-btn2">Sort by ▾</button>
+                            <div class="dropdown-menu2 hidden">
+                                <div class="dropdown-item2">Name</div>
+                                <div class="dropdown-item2">Date Completed</div>
+                                <div class="dropdown-item2">Last Updated</div>
+                                <div class="dropdown-item2">Q4</div>
+                            </div>
+                        </div> 
+                    </div>
+                    </div>
+                    <div class="file-list" id="fileList"></div>
+
+                    <script>
+                    // Example data 
+                    const files = [
+                        { title: "Accomplishment Form", date: "January 01, 2024" },
+                        { title: "Budget Report", date: "January 02, 2024" },
+                        { title: "Project Proposal", date: "January 03, 2024" },
+                        { title: "Meeting Notes", date: "January 04, 2024" },
+                        { title: "Summary Report", date: "January 05, 2024" }
+                    ];
+
+                    const fileList = document.getElementById("fileList");
+
+                    files.forEach(file => {
+                        const card = document.createElement("div");
+                        card.classList.add("file-card");
+
+                        card.innerHTML = `
+                        <img src="https://d9-wret.s3.us-west-2.amazonaws.com/assets/palladium/production/s3fs-public/thumbnails/image/file.jpg" alt="File preview">
+                        <h4>${file.title}</h4>
+                        <p>Date added: <strong>${file.date}</strong></p>
+                        `;
+
+                        fileList.appendChild(card);
+                    });
+                    </script>
+                </div>
+                <div class="tab-content" id="evaluations">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Evaluations</h3>
+                        </div>
+                        <div class="card-body">
+                            <p>No items.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section> 
+    </main>
+    <footer>
+        <p>test</p>
+    </footer> 
+    <script>
+        function doSearch(event) {
+            event.preventDefault(); 
+            const query = document.getElementById("searchInput").value.trim();
+            if(query){
+            
+            }
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabs = document.querySelectorAll('.tabs button');
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    tabContents.forEach(content => content.classList.remove('active'));
+                    const target = this.getAttribute('data-tab');
+                    document.getElementById(target).classList.add('active');
+                });
+            });
+            if (tabs.length > 0) {
+                tabs[0].classList.add('active');
+                const firstTab = tabs[0].getAttribute('data-tab');
+                document.getElementById(firstTab).classList.add('active');
+            }
+        });  
+        function openOverlay(imgElement) {
+            document.getElementById("overlayImg").src = imgElement.src;
+            document.getElementById("overlay").style.display = "flex";
+        }
+
+        function closeOverlay() {
+            document.getElementById("overlay").style.display = "none";
+        }
+        // Select all dropdown buttons
+        document.querySelectorAll('.dropdown-btn').forEach(btn => {
+            btn.addEventListener('click', e => {
+                e.stopPropagation(); // stop document click
+                const menu = btn.nextElementSibling;
+                // Close other open menus
+                document.querySelectorAll('.dropdown-menu').forEach(m => {
+                    if (m !== menu) m.classList.add('hidden');
+                });
+                menu.classList.toggle('hidden');
+            });
+        });
+        // Dropdown item click
+        document.querySelectorAll('.dropdown-item').forEach(item => {
+            item.addEventListener('click', e => {
+                e.stopPropagation();
+                const menu = item.parentElement;
+                const btn = menu.previousElementSibling;
+                btn.textContent = e.target.textContent;
+                menu.classList.add('hidden');
+            });
+        });
+        // Click outside closes all menus
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                menu.classList.add('hidden');
+            });
+        });
+        // Select all dropdown buttons
+        document.querySelectorAll('.dropdown-btn2').forEach(btn => {
+            btn.addEventListener('click', e => {
+                e.stopPropagation(); // stop document click
+                const menu = btn.nextElementSibling;
+                // Close other open menus
+                document.querySelectorAll('.dropdown-menu2').forEach(m => {
+                    if (m !== menu) m.classList.add('hidden');
+                });
+                menu.classList.toggle('hidden');
+            });
+        });
+        // Dropdown item click
+        document.querySelectorAll('.dropdown-item2').forEach(item => {
+            item.addEventListener('click', e => {
+                e.stopPropagation();
+                const menu = item.parentElement;
+                const btn = menu.previousElementSibling;
+                btn.textContent = e.target.textContent;
+                menu.classList.add('hidden');
+            });
+        });
+        // Click outside closes all menus
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.dropdown-menu2').forEach(menu => {
+                menu.classList.add('hidden');
+            });
+        });
+        // Dropdown item click
+        document.querySelectorAll('.dropdown-item').forEach(item => {
+        item.addEventListener('click', e => {
+            e.stopPropagation();
+            const menu = item.parentElement;
+            const btn = menu.previousElementSibling;
+
+            // Update button text
+            btn.textContent = e.target.textContent + " ▾";
+
+            // Hide menu
+            menu.classList.add('hidden');
+
+            // Show corresponding content
+            const target = e.target.getAttribute("data-target");
+            document.querySelectorAll('.submission-content').forEach(c => c.classList.add("hidden"));
+            document.getElementById("submissions-" + target).classList.remove("hidden");
+        });
+        }); 
+        function updateEventProgress() {
+            const completed = document.querySelectorAll('#com').length; 
+            const total = document.querySelectorAll('.event').length; 
+            const percentage = (completed / total) * 100;
+
+            // Update progress bar
+            document.getElementById('progressBar').style.width = percentage + "%";
+
+            // Update status text
+            document.getElementById('statusText').textContent =
+                `${completed} out of ${total} events completed`;
+        }
+
+        // Run once on page load
+        updateEventProgress();
+    </script>
+</body>
+</html>

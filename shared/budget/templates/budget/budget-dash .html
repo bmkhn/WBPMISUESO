@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Budget</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.css' rel='stylesheet'/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
+  <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.js'></script>
+  <style>
+    body {
+      font-family: Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      background-color: #eaeaea;
+    }
+    header {
+      background-color: #245F3E;
+      height: 4rem;
+      display: flex;
+      align-items: center;
+      padding: 0 1rem;
+      color: white;
+    }
+    main {
+      display: flex;
+      flex-direction: column;
+      margin: 2rem 5rem;
+      gap: 1.5rem;
+    }
+    footer {
+      background-color: #245F3E;
+      height: 6rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+    }
+    section {
+      display: flex;
+      flex-direction: row;
+      gap: 1.5rem;
+    }
+    section > div {
+      background-color: white;
+      border-radius: 1rem;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+      padding: 1.5rem 2.5rem;
+    }
+    .list {
+      flex: 2;
+      min-height: 20rem;
+    }
+    .logs {
+      flex: 1;
+      min-height: 20rem;
+      overflow-y: auto;
+    }
+    .summary {
+      display: flex;
+      gap: 1.5rem;
+      width: 100%;
+    }
+    .college-budget, .history {
+      flex: 1;
+    }
+    .college-budget canvas, .history canvas {
+      width: 100% !important;
+      height: 16rem !important;
+    }
+    h2 {
+      font-size: 1.75rem;
+      font-weight: 500;
+    }
+    .files-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .dropdown2 {
+        position: relative;
+        width: 9.5rem;
+    }
+    .dropdown-btn2 { 
+        margin: 0.75rem; 
+        border: none;
+        width: 100%;
+        padding: 0.5rem;
+        border-radius: 0.75rem;
+        background: none;
+        text-align: center;
+        cursor: pointer;
+        font-family: Helvetica, Arial, sans-serif;
+        font-weight: 400;
+        font-size: 1rem; 
+        border: 0.08rem solid whitesmoke;
+    } 
+    .dropdown-btn2:hover {
+        border: 0.08rem solid #000000;
+    }
+    .dropdown-menu2 {
+        position: absolute;
+        top: calc(100% - 0.7rem);
+        left: 0.8rem;
+        margin: 0;
+        right: 0; 
+        width: 100%;
+        background: white;
+        border: 0.08rem solid #ccc;
+        border-radius: 0.75rem; 
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        z-index: 10;
+        overflow: hidden;
+    }
+    .dropdown-item2 {
+        padding: 0.75rem;
+        cursor: pointer;
+        transition: background 0.2s;
+        font-family: Helvetica, Arial, sans-serif;
+        font-weight: 400;
+        text-align: center;
+        border-bottom: 1px solid rgb(196, 196, 196);
+    }
+    .dropdown-item2:hover {
+        background-color: #000000;
+        color: white;
+    } 
+    .sort-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+        color: #333;
+        margin-left: 0.5rem;
+    }
+    .hidden {
+      display: none;
+    }
+    .view-btn {
+      width: 3rem;
+      height: 3rem;
+      border: 0.08rem solid white;
+      border-radius: 0.75rem;
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1.2rem;
+      color: #333;
+      transition: all 0.2s ease-in-out;
+    }
+    .view-btn:hover {
+      background: black;
+      color: white;
+      border-color: black;
+    }
+    .view-btn.active {
+      background: black;
+      color: white;
+      border-color: black;
+    }
+    .files-header > div {
+      display: flex;
+      align-items: center; 
+    }
+    .files-header h2 {
+      margin: 0;       
+      line-height: 1;   
+    }
+    .card-holder {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap:2.4rem;
+      padding: 1rem 4rem 4rem 4rem;
+    }
+    .card {
+      width: 100%;
+      height: 13rem;
+      background-color: #E6F2FB;
+      border-radius: 2rem;
+      padding: 0.5rem 1.5rem;
+    }
+    .card p {
+      font-size: 0.75rem;
+    }
+    .project-authors {
+      display: flex; 
+      flex-direction: row; 
+      align-items: center;
+      gap: 0.5rem;
+      margin: 1rem 0 2rem 0; 
+      position: relative;
+    } 
+    .project-authors content {
+      display: flex; 
+      flex-direction: row; 
+      align-items: center; 
+      gap: 0.75rem;
+    }
+    .project-authors img {
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: 50%;
+      object-fit: cover; 
+      border: 0.08rem solid #ccc;
+    } 
+    .project-title {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        height: 4.2rem; 
+    }
+    .progress { 
+        width: 100%;
+        height: 0.5rem;
+        background-color: #ddd;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-top: 1rem;
+    }
+    .progress-bar {
+        height: 100%;
+        width: 0%; /* starts empty */
+        background: linear-gradient(90deg, #0a8927, #17f058);
+        transition: width 0.5s ease;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Budget Dashboard</h1>
+  </header>
+  <main>
+    <section>
+      <div class="list">
+        <div class="files-header">
+          <div style="display: flex; flex-direction: row; height: 4rem;">
+            <h2 style="margin-right: 1rem; ">Projects</h2>
+            <button class="sort-btn">
+                <i class="fas fa-arrow-up"></i>
+            </button>
+            <div class="dropdown2">
+                <button class="dropdown-btn2">Sort by ▾</button>
+                  <div class="dropdown-menu2 hidden">
+                      <div class="dropdown-item2">Name</div>
+                      <div class="dropdown-item2">Date Completed</div>
+                      <div class="dropdown-item2">Last Updated</div>
+                      <div class="dropdown-item2">Q4</div>
+                  </div>
+              </div>
+            </div>
+              <div style="display: flex; gap: 0.5rem;">
+                <button class="view-btn" id="listBtn">
+                  <i class="fas fa-list"></i>
+                </button>
+                <button class="view-btn active" id="cardBtn">
+                  <i class="fas fa-th-large"></i>
+                </button>
+            </div>
+          </div>
+        <div class="card-holder">
+          <div class="card">
+            <p><i>Last updated January 01, 2024</i></p>
+            <h3 class="project-title">The Idler Wheel Is Wiser Than the Driver of the Screw and Whipping Cords Will Serve You More Than Ropes Will</h3>
+            <div class="project-authors"> 
+                <content>
+                    <img src="https://img.apmcdn.org/3ddbb3761de2e44418a47d0e2ecce75a3bc686c3/square/35d350-20130729-fiona-apple.jpg" alt="">
+                </content> 
+                <content>
+                    <img src="https://img.apmcdn.org/3ddbb3761de2e44418a47d0e2ecce75a3bc686c3/square/35d350-20130729-fiona-apple.jpg" alt="">
+                </content>
+            </div>
+            <div class="progress">
+              <div class="progress-bar" id="progressBar"></div>
+            </div>
+          </div>
+          </div>
+        </div>
+      </div>
+      <div class="logs">
+        <h2>Logs</h2>
+        <ul>
+          <li>1/1/24 - ₱500,000 allocated to PDIs</li>
+          <li>1/15/24 - ₱250,000 allocated to TES</li>
+          <li>2/1/24 - ₱150,000 refunded</li>
+          <li>...</li>
+        </ul>
+      </div>
+    </section>
+    <section>
+      <div class="summary">
+        <div class="college-budget">
+          <h2>College Budget</h2>
+          <canvas id="donutChart"></canvas>
+          <p style="font-size: 2rem; color: green; margin:0;">8%</p>
+          <p>Your college’s current budget for this quarter is ₱7,000,000. It is <span style="color:green;">less than historical mean</span>.</p>
+        </div>
+        <div class="history">
+          <h2>Historical Summary</h2>
+          <canvas id="lineChart"></canvas>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer>
+    <p>© 2025 Budget Dashboard</p>
+  </footer>
+
+  <script>
+    // Dropdown logic
+    document.querySelectorAll('.dropdown-btn2').forEach(btn => {
+        btn.addEventListener('click', e => {
+            e.stopPropagation();
+            const menu = btn.nextElementSibling;
+            document.querySelectorAll('.dropdown-menu2').forEach(m => {
+                if (m !== menu) m.classList.add('hidden');
+            });
+            menu.classList.toggle('hidden');
+        });
+    });
+
+    document.querySelectorAll('.dropdown-item2').forEach(item => {
+        item.addEventListener('click', e => {
+            e.stopPropagation();
+            const menu = item.parentElement;
+            const btn = menu.previousElementSibling;
+            btn.textContent = e.target.textContent + " ▾";
+            menu.classList.add('hidden');
+        });
+    });
+
+    document.addEventListener('click', () => {
+        document.querySelectorAll('.dropdown-menu2').forEach(menu => {
+            menu.classList.add('hidden');
+        });
+    });
+
+    const cardBtn = document.getElementById('cardBtn');
+    const listBtn = document.getElementById('listBtn');
+
+    function setActive(button) {
+      document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
+      button.classList.add('active');
+    }
+
+    cardBtn.addEventListener('click', () => setActive(cardBtn));
+    listBtn.addEventListener('click', () => setActive(listBtn));
+
+    function updateEventProgress() {
+    const completed = 3; // example value
+    const total = 5;     // example value
+    const percentage = (completed / total) * 100;
+
+    // Update progress bar
+    document.getElementById('progressBar').style.width = percentage + "%";
+
+    // Update status text
+    document.getElementById('statusText').textContent =
+        `${completed} out of ${total} events completed`;
+    }
+
+    // Run once on page load
+    updateEventProgress();
+  </script>
+</body>
+</html>

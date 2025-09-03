@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project</title> 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">  
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0rem;
+            padding: 0rem;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            font-family: Helvetica, Arial, sans-serif;
+            background-color: #e9e9e9;
+        }
+        main {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: stretch;
+            gap: 1rem;
+        }
+        header {
+            background-color: #245F3E;
+            position: relative;
+            top: 0;
+            width: 100%;
+            padding: 0rem; 
+            height: 4rem;
+        }
+        footer {
+            background-color: #245F3E;
+            position: relative;
+            bottom: 0;
+            width: 100%;
+            height: 20rem;
+        } 
+        main > section { 
+            padding: 3rem 8rem 0 8rem;
+            background-color: whitesmoke;
+            box-shadow: 0 6px 0.5rem rgba(0, 0, 0, 0.2); 
+        } 
+        .tags {
+            display: flex; 
+            justify-content: space-between; 
+            width: 100%; 
+            margin-bottom: 2.25rem;
+        }
+        .dropdown {
+            position: relative;
+            width: 9.5rem;
+        }
+        .dropdown-btn { 
+            margin: 0.75rem; 
+            border: none;
+            width: 100%;
+            padding: 0.5rem;
+            border-radius: 0.75rem;
+            background: none;
+            text-align: center;
+            cursor: pointer;
+            font-family: Helvetica, Arial, sans-serif;
+            font-weight: 400;
+            font-size: 1rem; 
+            border: 0.08rem solid whitesmoke;
+        } 
+        .dropdown-btn:hover {
+            border: 0.08rem solid #000000;
+        }
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100%);
+            left: 0;
+            margin: 0;
+            right: 0; 
+            width: 100%;
+            background: white;
+            border: 0.08rem solid #ccc;
+            border-radius: 0.75rem; 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            z-index: 10;
+            overflow: hidden;
+        }
+        .dropdown-item {
+            padding: 0.75rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-family: Helvetica, Arial, sans-serif;
+            font-weight: 400;
+            text-align: center;
+            border-bottom: 1px solid rgb(196, 196, 196);
+        }
+        .dropdown-item:hover {
+            background-color: #000000;
+            color: white;
+        }
+        .hidden {
+            display: none !important;
+        } 
+        .sort-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            color: #333;
+            margin-left: 0.5rem;
+        }  
+        .project-card {
+            display: grid;
+            grid-template-rows: 1fr 1fr;
+            gap: 0rem;
+            margin: -0.5rem -2.5rem;
+        }
+        .project-card > div {
+            border-bottom: 1px rgb(122, 122, 122) solid;
+            padding: 1rem 3rem;
+            margin-bottom: 0rem;
+        }
+        h5 {
+            font-size: 0.9rem;
+            color: #666;
+            margin: 1rem 0 2rem 0; 
+            font-weight: 300; 
+        }
+        .title {
+            font-size: 1.5rem;
+            font-weight: 500;
+            margin: 0.25rem 0 1rem 0;
+            color: #222; 
+            text-decoration: none;
+        } 
+        .title:hover {
+            color: #007bff; 
+            text-decoration: none;
+        }
+        .project-authors {
+            display: flex; 
+            flex-direction: row; 
+            align-items: center;
+            gap: 1.5rem;
+            margin: 1rem 0 2rem 0; 
+            position: relative;
+        } 
+        .project-authors content {
+            display: flex; 
+            flex-direction: row; 
+            align-items: center; 
+            gap: 0.75rem;
+        }
+        .project-authors img {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            object-fit: cover; 
+            border: 0.08rem solid #ccc;
+        } 
+        .project-authors a { 
+            font-size: 0.9rem;
+            color: #000000;
+            text-decoration: none;
+        } 
+        .project-authors a:hover { 
+            color: #007bff;
+        }
+        .view {
+            display: inline-block;
+            margin-top: 0.75rem;
+            font-size: 0.9rem;
+            color: #007bff;
+            text-decoration: none;
+        }
+        .view:hover {
+            text-decoration: underline;
+        } 
+        .project-tags {
+            margin: 1rem 0;
+        } 
+        .campus {
+            background-color: #ff9f10; 
+            color: rgb(55, 39, 0);
+            border: 0.08rem solid #ff9f10;
+            font-weight: 600; 
+            padding: 0.35rem 0.6rem;
+            margin-right: 0.5rem;
+            cursor: pointer;
+        } 
+        .agenda {
+            background: linear-gradient(90deg, white, #00ff6e3d); 
+            color: #313131;
+            border: 0.08rem solid #313131;
+            font-weight: 500; 
+            padding: 0.35rem 0.6rem;
+            margin-right: 0.5rem;
+            cursor: pointer;
+        } 
+        .status {
+            background-color: whitesmoke; 
+            color: #1CB889;
+            border: 0.08rem solid #1CB889;
+            font-weight: 500; 
+            padding: 0.35rem 0.6rem;
+            margin-right: 0.5rem;
+            cursor: pointer;
+        }   
+        .tab-contents-section {
+            padding: 0 8rem 3rem 8rem;
+            background-color: #e9e9e9;
+            margin-bottom: 0; 
+            box-shadow: 0 0 0 rgba(0, 0, 0, 0.2);
+        }
+        .tabs { 
+            margin-top: 1rem;
+            display: flex; 
+        }
+        .tabs button {
+            background: none;
+            border: none;
+            width: 9rem; 
+            height: 5rem;
+            font-size: 1rem;
+            font-weight: 400;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 4px solid transparent;
+        }
+        .tabs button:hover {
+            border-bottom: 4px solid #245F3E;
+        }
+        .tabs button.active {
+            border-bottom: 4px solid #245F3E;
+        } 
+        .tab-content {
+            display: none;
+            margin-top: 2rem;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .dropdown2 {
+            position: relative;
+            width: 9.5rem;
+        }
+        .dropdown-btn2 { 
+            margin: 0.75rem; 
+            border: none;
+            width: 100%;
+            padding: 0.5rem;
+            border-radius: 0.75rem;
+            background: none;
+            text-align: center;
+            cursor: pointer;
+            font-family: Helvetica, Arial, sans-serif;
+            font-weight: 400;
+            font-size: 1rem; 
+            border: 0.08rem solid #e9e9e9;
+        } 
+        .dropdown-btn2:hover {
+            border: 0.08rem solid #000000;
+        }
+        .dropdown-menu2 {
+            position: absolute;
+            top: calc(100% - 0.7rem);
+            left: 0.8rem;
+            margin: 0;
+            right: 0; 
+            width: 100%;
+            background: white;
+            border: 0.08rem solid #ccc;
+            border-radius: 0.75rem; 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            z-index: 10;
+            overflow: hidden;
+        }
+        .dropdown-item2 {
+            padding: 0.75rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-family: Helvetica, Arial, sans-serif;
+            font-weight: 400;
+            text-align: center;
+            border-bottom: 1px solid rgb(196, 196, 196);
+        }
+        .dropdown-item2:hover {
+            background-color: #000000;
+            color: white;
+        } 
+        .sort-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            color: #333;
+            margin-left: 0.5rem;
+        }  
+        .expand-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.3rem; 
+            color: #090909;
+            transition: color 0.2s;
+            z-index: 100;
+        }
+        .expand-btn:hover {
+            color: #37d4ff;
+        }
+        .expand-rev {
+            position: absolute;
+            bottom: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.3rem; 
+            color: #090909;
+            transition: color 0.2s;
+            z-index: 100;
+        }
+        .expand-rev:hover {
+            color: #37d4ff;
+        } 
+        .project-content {
+            display: flex;
+            flex-direction: row;
+            gap: 1rem;    
+            align-items: flex-start; 
+        }
+        .project-content section {
+            width: 35rem;
+            border-radius: 0.5rem;
+            flex: 1; 
+        }
+        .logs {
+            background-color: whitesmoke;
+            border-radius: 2rem; 
+            box-shadow: 0 6px 0.5rem rgba(0, 0, 0, 0.2); 
+            max-height: 25rem;
+            overflow-y: auto; 
+            position: relative;
+        }
+        table th, table td {
+            padding: 0.5rem;
+            font-size: 1rem;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            table-layout: fixed;
+        }
+        table th {
+            background-color: #e1e1e1;
+            color: rgb(7, 7, 7);
+            text-align: left;
+            padding: 1rem;
+            border-bottom: 0.08rem solid #a1a1a1;
+        }
+        table td {
+            padding: 1rem;
+            border-bottom: 0.08rem solid #a1a1a1;
+        }
+        .project-summary {
+            position: relative;
+            width: 30rem;
+            height: 40rem;
+            display: flex;
+            justify-content: flex-start;
+            align-items: flex-start;
+        }
+        .chart-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            max-height: 100%;
+        }
+        .chart-container {
+            width: 20rem;
+            height: 20rem;
+            flex-shrink: 0;
+            position: relative;
+        }
+        .goal-title {
+            text-align: left;
+            margin-top: 2rem;
+            font-size: 1.25rem;
+            width: 75%;
+            word-wrap: break-word;
+        }
+        .project-summary canvas {
+            width: 20rem !important;
+            height: 20rem !important;
+            flex-shrink: 0; 
+        } 
+        .cash-available {
+            font-size: 2rem;
+        }
+        .tablenpag { 
+            margin: 0; 
+            border: 0.08rem solid #a1a1a1;
+        } 
+        .expense-add { 
+            position: absolute; 
+            right: 0;
+        }  
+        .expense-add button { 
+            color: white; 
+            background-color: #245F3E; 
+            padding: 0.5rem 1rem; 
+            font-size: 1rem; 
+            border-radius: 2rem;
+        } 
+        .expense-add button:hover {
+            background-color: #000;
+            transition: 1s;
+        }
+        .search-bar {
+            display: flex; 
+            align-items: center;
+            background-color: #f5f6f7;
+            border: 1px solid #ccc;
+            border-radius: 0.75rem;
+            padding: 0.5rem 1rem;
+            margin-bottom: 1rem;
+            font-size: 1rem;
+            color: #666;
+            width: 100%;
+        }
+        .search-bar input {
+            border: none;
+            outline: none;
+            flex: 1;
+            font-size: 1rem;
+            background: transparent;
+        }
+        .search-bar button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #666;
+            font-size: 1.2rem;
+        }
+        .search-bar button:hover {
+            color: #000;
+        }
+        .files-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 1rem 0;
+        }
+        .files-header h3 {
+            margin: 0;
+            font-size: 1.2rem; 
+            font-weight: 500;
+        }
+        .file-list {
+            margin-top: -1rem;
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+        }
+        .file-card {
+            padding: 0.75rem;
+        }
+        .file-card img {
+            max-height: 10rem;
+            border: 1px solid #000000;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .file-card h4 {
+            font-size: 1rem;
+            margin: 0.3rem 0;
+            font-weight: 500;
+        }
+        .file-card p {
+            font-size: 0.75rem;
+            margin-top: 0.5rem;
+            color: #555;
+        } 
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+            pointer-events: auto; 
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .overlay:not(.hidden) {
+            pointer-events: auto;
+            opacity: 1;
+        }
+        .overlay-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            width: 45rem;
+            max-width: 90%;
+            position: relative; 
+            z-index: 201; 
+        }
+        .close-x {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 1.5rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #666;
+            transition: color 0.2s ease;
+        }
+        .close-x:hover {
+            color: #000;
+        }
+        .expenseForm h2 {
+            font-weight: 400;
+        }
+        .expenseForm label {
+            font-family: Helvetica, Arial, sans-serif;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+        .expenseForm div {
+            padding: 0.5rem;
+        }
+        .expenseForm #notes, #amount, #reason {
+            padding: 1rem 0.5rem;
+            border: 1px solid #868686ff;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            width: 95%;
+            background-color: #e9e9e9;
+        }
+        #submitexpense {
+            color: white; 
+            background-color: #245F3E; 
+            padding: 0.5rem 1rem; 
+            font-size: 1rem; 
+            border-radius: 2rem;
+        }
+        #submitexpense:hover {
+            background-color: #000;
+            transition: 1s;
+        }
+        #closeOverlay {
+            color: white; 
+            background-color: #5f2424ff; 
+            padding: 0.5rem 1rem; 
+            font-size: 1rem; 
+            border-radius: 2rem;
+        }
+        #closeOverlay:hover {
+            background-color: #000;
+            transition: 1s;
+        }
+        .form-1, .form-2, .form-3 {
+            display: flex;
+            flex-direction: column; 
+        }
+        .form-4 {
+            display: flex;
+            flex-direction: row !important;
+            justify-content: center !important;
+            gap: 1rem;
+        }
+        .upload-container {
+            background-color: #245F3E; 
+            border: 2px dashed #aaa;
+            padding: 0.75rem 1rem;
+            display: inline-block;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            margin-top: 0.25rem;
+            text-align: center;
+            width: fit-content; 
+            background-color: #f9f9f9;
+        }
+        .file-list {
+            margin-top: 0rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .file-item {
+            display: flex;
+            align-items: center;
+            border: 1px solid #ccc;
+            border-radius: 0.5rem;
+            padding: 0.25rem 0.5rem;
+            background: #fff;
+            font-size: 0.9rem;
+            width: auto;
+        }
+        .file-item span {
+            margin-right: 0.5rem;
+        }
+        .remove-btn {
+            background: none;
+            border: none;
+            color: red;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+    </style>
+</head>
+<body>  
+    <header>
+        <h1>test</h1>
+    </header>  
+    <main>  
+        <section> 
+            <div class="tags"> 
+                <content style="flex-grow: 2;"> 
+                    <button class="campus">PSU - Tiniguiban</button>
+                    <button class="agenda">Promotive and Preventive Health and Nutrition and Gender Sensitivity</button> 
+                </content> 
+                <content style="flex-grow: 0;"> 
+                    <button class="status">Completed</button> 
+                </content>
+            </div> 
+            <div> 
+                <a href="#" class="title">The Idler Wheel Is Wiser Than the Driver of the Screw and Whipping Cords Will Serve You More Than Ropes Will</a>
+                <h5>January 01, 2024 - January 02, 2024</h5>
+            </div> 
+            <div class="project-authors"> 
+                <content>
+                    <img src="https://img.apmcdn.org/3ddbb3761de2e44418a47d0e2ecce75a3bc686c3/square/35d350-20130729-fiona-apple.jpg" alt="">
+                    <a href="#">Fiona Apple McAfee Maggart</a> 
+                </content> 
+                <content>
+                    <img src="https://img.apmcdn.org/3ddbb3761de2e44418a47d0e2ecce75a3bc686c3/square/35d350-20130729-fiona-apple.jpg" alt="">
+                    <a href="#">Fiona Apple McAfee Maggart</a> 
+                </content>  
+                <div class="expense-add"> 
+                    <button type="button">Add Expense</button>
+                </div>
+            </div> 
+            <div class="tabs">  
+                <button type="button" data-tab="overview">Overview</button>
+                <button type="button" data-tab="expenses">Expenses</button> 
+                <button type="button" data-tab="invoices">Invoices</button>
+            </div>
+        </section> 
+        <section class="tab-contents-section"> 
+            <div> 
+                <div class="tab-content active" id="overview">
+                    <div class="project-content">
+                        <section class="project-summary"> 
+                            <div class="chart-wrapper">
+                                <div class="cash-available">
+                                    <p>Current Budget: <strong>₱ 2,000.00</strong></p>
+                                </div>
+                                <div class="chart-container">
+                                    <canvas id="goal1"></canvas>
+                                </div>
+                                <div class="goal-title">
+                                </div>
+                            </div>
+                        </section>
+                        <section class="logs"> 
+                            <button class="expand-btn">⤢</button>
+                            <table style="width:100%">
+                                <colgroup>
+                                    <col style="width: 33%">
+                                    <col style="width: 33%">
+                                    <col style="width: 34%">
+                                </colgroup>
+                                <thead>
+                                <tr>
+                                    <th>Reason</th>
+                                    <th>Amount</th>
+                                    <th>Date</th>
+                                </tr>
+                                <tr>
+                                    <td>Meals</td>
+                                    <td>₱ 2,000.00</td>
+                                    <td>01/01/2024</td>
+                                </tr>
+                                <tr>
+                                    <td>Centro comercial Moctezuma</td>
+                                    <td>Francisco Chang</td>
+                                    <td>Mexico</td>
+                                </tr>
+                            </table>
+                        </section>
+                    </div>
+                </div>
+                <div class="tab-content" id="expenses"> 
+                    <section class="tablenpag">
+                        <table style="width:100%">
+                            <colgroup>
+                                <col style="width: 40%">
+                                <col style="width: 20%">
+                                <col style="width: 20%">
+                                <col style="width: 20%">
+                            </colgroup>
+                            <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Reason</th>
+                                <th>Amount</th>
+                                <th>Date</th>
+                            </tr>
+                            <tr>
+                                <td>The Idler Wheel Is Wiser Than the Driver of the Screw and Whipping Cords Will Serve You More Than Ropes Will</td>
+                                <td>Meals</td>
+                                <td>₱ 2,000.00</td>
+                                <td>01/01/2024</td>
+                            </tr>
+                            <tr>
+                                <td>01/01/2024</td>
+                                <td>Centro comercial Moctezuma</td>
+                                <td>Francisco Chang</td>
+                                <td>Mexico</td>
+                            </tr>
+                        </table>
+                        <div class="pagination" id="pagination"></div>
+                    </section>
+                </div>
+                <div class="tab-content" id="invoices">
+                    <form class="search-bar" onsubmit="doSearch(event)">
+                        <input type="text" id="searchInput" placeholder="Search">
+                        <button type="submit"><i class="fa fa-search"></i></button>
+                    </form>
+                    <div class="files-header">
+                        <h3>Files</h3>
+                        <div style="display: flex; flex-shrink: 3;">
+                        <button class="sort-btn">
+                            <i class="fas fa-arrow-up"></i>
+                        </button>
+                        <div class="dropdown2">
+                            <button class="dropdown-btn2">Sort by ▾</button>
+                            <div class="dropdown-menu2 hidden">
+                                <div class="dropdown-item2">Name</div>
+                                <div class="dropdown-item2">Date Completed</div>
+                                <div class="dropdown-item2">Last Updated</div>
+                                <div class="dropdown-item2">Q4</div>
+                            </div>
+                        </div> 
+                    </div>
+                    </div>
+                    <div class="file-list" id="fileList"></div>
+
+                    <script>
+                    // Example data 
+                    const files = [
+                        { title: "Receipt", date: "January 01, 2024" },
+                        { title: "Receipt", date: "January 02, 2024" },
+                        { title: "Project Proposal", date: "January 03, 2024" },
+                        { title: "Meeting Notes", date: "January 04, 2024" },
+                        { title: "Summary Report", date: "January 05, 2024" }
+                    ];
+
+                    const fileList = document.getElementById("fileList");
+
+                    files.forEach(file => {
+                        const card = document.createElement("div");
+                        card.classList.add("file-card");
+
+                        card.innerHTML = `
+                        <img src="https://d9-wret.s3.us-west-2.amazonaws.com/assets/palladium/production/s3fs-public/thumbnails/image/file.jpg" alt="File preview">
+                        <h4>${file.title}</h4>
+                        <p>Date added: <strong>${file.date}</strong></p>
+                        `;
+
+                        fileList.appendChild(card);
+                    });
+                    </script>
+                </div>
+            </div>
+        </section> 
+        <!-- Overlay background -->
+        <div id="overlay" class="overlay hidden">
+            <!-- Form container -->
+            <div class="overlay-content">
+                <button class="close-x" id="closeX">&times;</button>
+                <h2>Add Expense</h2>
+                <form class="expenseForm"id="expenseForm">
+                    <div class="form-1">
+                        <label for="reason">Reason:</label>
+                        <input type="text" id="reason" name="reason" placeholder="Meals"required>
+
+                        <label for="amount">Total Expense (₱):</label>
+                        <input type="number" id="amount" name="amount" step="0.01" placeholder="100.00"required>      
+                    </div>
+                    <div class="form-2">
+                        <label for="receipt">Upload Receipt/s of Expenses:</label>
+                        <label class="upload-container">
+                            <input type="file" id="receipt" name="receipt" accept="image/*,.pdf" multiple hidden>
+                            📤 Click to upload
+                        </label>
+                        <div class="file-list" id="fileListOverlay"></div>
+                    </div>
+                    <div class="form-3">
+                        <label for="notes">Notes:</label>
+                        <textarea id="notes" name="notes" rows="3" placeholder="(e.g. Bento box)"></textarea>
+                    </div>
+                    <div class="form-4">
+                        <button type="submit" id="submitexpense">Submit</button>
+                        <button type="button" id="closeOverlay">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+    <footer>
+        <p>test</p>
+    </footer> 
+    <script>
+        function doSearch(event) {
+            event.preventDefault(); 
+            const query = document.getElementById("searchInput").value.trim();
+            if(query){
+            
+            }
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabs = document.querySelectorAll('.tabs button');
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    tabContents.forEach(content => content.classList.remove('active'));
+                    const target = this.getAttribute('data-tab');
+                    document.getElementById(target).classList.add('active');
+                });
+            });
+            if (tabs.length > 0) {
+                tabs[0].classList.add('active');
+                const firstTab = tabs[0].getAttribute('data-tab');
+                document.getElementById(firstTab).classList.add('active');
+            }
+        });  
+        const centerTextPlugin = {
+            id: 'centerText',
+            beforeDraw(chart) {
+                const { width, height, ctx } = chart;
+                ctx.save();
+                const dataset = chart.data.datasets[0].data;
+                const value = dataset[0];
+                ctx.font = 'bold 3rem Arial'; // bold text
+                ctx.fillStyle = '#333';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(value + '%', width / 2, height / 2);
+                ctx.restore();
+
+                // Also update the HTML text below the chart
+                const goalText = document.querySelector('.goal-title');
+                if(goalText) {
+                    goalText.innerHTML = `Your project currently has <b>${value}%</b> of its initial budget remaining.`;
+                }
+            }
+        };
+
+        function createFullDoughnut(ctx, value) {
+            return new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    datasets: [{
+                        data: [value, 100 - value],
+                        backgroundColor: ['darkblue', '#000000'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    rotation: -90,
+                    circumference: 360,
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '65%',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: false }
+                    }
+                },
+                plugins: [centerTextPlugin]
+            });
+        }
+
+        // DATA
+        createFullDoughnut(document.getElementById('goal1').getContext('2d'), 50);     
+         
+        // Remove the overlay click event listener and update the button handlers
+        const addBtn = document.querySelector('.expense-add button');
+        const overlay = document.getElementById('overlay');
+        const closeBtn = document.getElementById('closeOverlay');
+
+        addBtn.addEventListener('click', () => {
+            overlay.classList.remove('hidden');
+        });
+
+        closeBtn.addEventListener('click', () => {
+            overlay.classList.add('hidden');
+        });
+
+
+        // Add this to your existing script section
+        document.querySelector('.expand-btn').addEventListener('click', function() {
+            // Find and click the expenses tab
+            const expensesTab = document.querySelector('button[data-tab="expenses"]');
+            expensesTab.click();
+            
+            // Optional: Scroll to the expenses section
+            document.querySelector('#expenses').scrollIntoView({ behavior: 'smooth' });
+        });
+        // Add this to your existing script section
+        const closeX = document.getElementById('closeX');
+            closeX.addEventListener('click', () => {
+            overlay.classList.add('hidden');
+        });
+
+        const fileInput = document.getElementById("receipt");
+        const fileListEl = document.getElementById("fileListOverlay"); // fixed ID
+        let uploadedFiles = [];
+
+        fileInput.addEventListener("change", (event) => {
+        const newFiles = Array.from(event.target.files);
+        uploadedFiles = [...uploadedFiles, ...newFiles];
+        renderFileList();
+        fileInput.value = ""; // allow re-selecting same file
+        });
+
+        function renderFileList() {
+        fileListEl.innerHTML = "";
+        uploadedFiles.forEach((file, index) => {
+            const fileItem = document.createElement("div");
+            fileItem.className = "file-item";
+            fileItem.innerHTML = `
+            <span>${file.name}</span>
+            <button type="button" class="remove-btn" onclick="removeFile(${index})">❌</button>
+            `;
+            fileListEl.appendChild(fileItem);
+        });
+        }
+
+        function removeFile(index) {
+        uploadedFiles.splice(index, 1);
+        renderFileList();
+        }
+    </script>
+</body>
+</html>
