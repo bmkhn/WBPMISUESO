@@ -38,16 +38,28 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    # External Apps
     'external.home',            # Home
+    # 'external.requests',        # Requests
 
+    # Internal Apps
     'internal.agenda',          # Agenda
+    # 'internal.analytics',       # Analytics
     'internal.dashboard',       # Dashboard
     'internal.experts',         # Experts
     'internal.goals',           # Goals
+    # 'internal.submissions',     # Submissions
 
-    'shared.downloadables',     # Downloadables
+    # Shared Apps
+    # 'shared.about_us',          # About Us
+    # 'shared.announcements',     # Announcements
+    # 'shared.archive',           # Archive
+    'shared.budget',            # Budget
     'shared.event_calendar',    # Calendar
+    'shared.downloadables',     # Downloadables
+    'shared.projects',          # Projects
 
+    # System Apps
     'system.inbox',             # Inbox
     'system.logs',              # Logs
     'system.users',             # Custom User
@@ -144,3 +156,14 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'users.User'
+
+# Email settings
+# Email settings for local testing
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# EMAIL_HOST = 'smtp.gmail.com'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'your_gmail_address@gmail.com'
+# EMAIL_HOST_PASSWORD = 'your_gmail_app_password'
+# DEFAULT_FROM_EMAIL = 'your_gmail_address@gmail.com'

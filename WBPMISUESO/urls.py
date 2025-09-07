@@ -18,8 +18,6 @@ from django.contrib import admin
 from django.urls import path, include
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-
     # EXTERNAL APPS
     path('home/', include('external.home.urls')),                   # Home
     # Requests (None Yet)
@@ -41,13 +39,10 @@ urlpatterns = [
     # path('downloadables/', include('shared.downloadables.urls')),   # Downloadables
     # Projects (None Yet)
 
-
     # SYSTEM APPS
     path('inbox/', include('system.inbox.urls')),                   # Inbox
     path('logs/', include('system.logs.urls')),                     # Logs
     # Notifications (None Yet)
     # Settings (None Yet)
     path('', include('system.users.urls')),                         # Users
-
-
 ]

@@ -27,7 +27,11 @@
 <body>
     <div class="app-container">
         <div class="navbar">
-            {% include "navbars/"|add:user.role|add:"_navbar.html" %}
+            {% if user.is_authenticated %}
+                {% include "navbars/"|add:user.role|add:"_navbar.html" %}
+            {% else %}
+                {% include "navbars/public_navbar.html" %}
+            {% endif %}
         </div>
 
         <div class="main-content">

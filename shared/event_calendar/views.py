@@ -7,12 +7,12 @@ from django.contrib.auth.decorators import login_required
 from system.users.decorators import role_required
 
 @login_required
-@role_required(allowed_roles=["DIRECTOR", "VP", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD", "FACULTY"])
+@role_required(allowed_roles=["DIRECTOR", "VP", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD", "FACULTY", "IMPLEMENTER"])
 def calendar_view(request):
     return render(request, 'event_calendar/calendar.html') 
 
 @login_required
-@role_required(allowed_roles=["DIRECTOR", "VP", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD", "FACULTY"])
+@role_required(allowed_roles=["DIRECTOR", "VP", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD", "FACULTY", "IMPLEMENTER"])
 def get_events(request):
     year = int(request.GET.get('year'))
     month = int(request.GET.get('month'))
@@ -25,7 +25,7 @@ def get_events(request):
     return JsonResponse(list(events), safe=False)
 
 @login_required
-@role_required(allowed_roles=["DIRECTOR", "VP", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD", "FACULTY"])
+@role_required(allowed_roles=["DIRECTOR", "VP", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD", "FACULTY", "IMPLEMENTER"])
 @csrf_exempt
 def add_event(request):
     if request.method == 'POST':

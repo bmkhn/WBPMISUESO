@@ -196,12 +196,14 @@
                     <div class="top-text">Welcome</div>
                     <div class="mid-text">to UESO PMIS</div>
                 </div>
-                {% if user.role == "PUBLIC" %}
-                <div class="bottom-text">You are currently viewing as a guest. Log in to access member exclusive features.</div>
+                {% if user.role == "IMPLEMENTER" %}
+                <div class="bottom-text">You are currently viewing as an implementer.</div>
                 {% elif user.role == "FACULTY" %}
                 <div class="bottom-text">You are currently viewing as a faculty.</div>
                 {% elif user.role == "CLIENT" %}
                 <div class="bottom-text">You are currently viewing as a client.</div>
+                {% else %}
+                <div class="bottom-text">You are currently viewing as a guest. Log in to access member exclusive features.</div>
                 {% endif %}
             </div>
 

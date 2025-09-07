@@ -9,7 +9,7 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         roles = [choice[0] for choice in User.Role.choices]
         default_password = "test1234"
- 
+
         for role in roles:
             email = f"{role.lower()}@example.com"
             if not User.objects.filter(email=email).exists():
@@ -24,6 +24,7 @@ class Command(BaseCommand):
                     contact_no="0999999999",
                     campus=User.Campus.MAIN,
                     role=role,
+                    is_confirmed=True,  # Mark test users as confirmed
                 )
                 self.stdout.write(self.style.SUCCESS(f"Created {role} user: {email} / {default_password}"))
             else:

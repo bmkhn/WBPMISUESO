@@ -32,6 +32,8 @@
             display: flex;
             align-items: center;
             gap: 20px;
+            text-decoration: none;
+            color: black;
         }
 
         .logo-icon {
@@ -196,10 +198,10 @@
 </head>
 <body>
     <div class="sign-in-container">
-        <div class="logo-container">
+        <a href="/home/" class="logo-container">
             <img src="{% static 'ueso.png' %}" class="logo-icon" alt="UESO Logo">
             <div class="logo-text">University Extension<br>Services Office</div>
-        </div>
+        </a>
         <div class="center-container">
             <div class="text-container">
                 <div class="welcome-text">Welcome</div>
@@ -208,7 +210,7 @@
             <form method="post" style="width:100%;">
                 {% csrf_token %}
                 <div class="fillbox-container">
-                    <div class="fillbox-label">Username</div>
+                    <div class="fillbox-label">Email Address</div>
                     <div class="fillbox-field">{{ form.username }}</div>
                     <div class="fillbox-label">Password</div>
                     <div class="fillbox-field">{{ form.password }}</div>
@@ -231,7 +233,7 @@
 
         <div class="quick-login-container">
             <h3>Quick Login (Test Users)</h3>
-            <a href="{% url 'quick_login' role='PUBLIC' %}">Login as Public</a>
+            <a href="{% url 'quick_login' role='IMPLEMENTER' %}">Login as Implementer</a>
             <a href="{% url 'quick_login' role='FACULTY' %}">Login as Faculty</a>
             <a href="{% url 'quick_login' role='CLIENT' %}">Login as Client</a>
             <br>

@@ -31,6 +31,8 @@
             display: flex;
             align-items: center;
             gap: 20px;
+            text-decoration: none;
+            color: black;
         }
 
         .logo-icon {
@@ -150,10 +152,10 @@
 </head>
 <body>
     <div class="sign-in-container">
-        <div class="logo-container">
+        <a href="/home/" class="logo-container">
             <img src="{% static 'ueso.png' %}" class="logo-icon" alt="UESO Logo">
             <div class="logo-text">University Extension<br>Services Office</div>
-        </div>
+        </a>
         <div class="center-container">
             <div class="select-text">Select User Type</div>
             <div class="option-container">
