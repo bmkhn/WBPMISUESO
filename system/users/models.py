@@ -11,8 +11,8 @@ class College(models.Model):
 
 class User(AbstractUser):
     class Role(models.TextChoices):
-        PUBLIC = 'PUBLIC', 'Public'
         FACULTY = 'FACULTY', 'Faculty'
+        IMPLEMENTER = 'IMPLEMENTER', 'Implementer'
         CLIENT = 'CLIENT', 'Client'
         UESO = 'UESO', 'UESO'
         COORDINATOR = 'COORDINATOR', 'College Coordinator'
@@ -55,19 +55,21 @@ class User(AbstractUser):
     contact_no = models.CharField(max_length=20)
     campus = models.CharField(max_length=30, choices=Campus.choices)
     college = models.ForeignKey(College, on_delete=models.SET_NULL, null=True, blank=True)
-    role = models.CharField(max_length=50, choices=Role.choices, default=Role.PUBLIC)
+    role = models.CharField(max_length=50, choices=Role.choices)
     degree = models.CharField(max_length=255, blank=True, null=True)
-    expertise = models.TextField(blank=True, null=True)
+    expertise = models.CharField(max_length=255, blank=True, null=True)
     company = models.CharField(max_length=255, blank=True, null=True)
     industry = models.CharField(max_length=255, blank=True, null=True)
     is_expert = models.BooleanField(default=False)
     profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, null=True)
+    # valid_id = models.ImageField(upload_to='valid_ids/', blank=False, null=False) 
     created_by = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='created_users')
     created_at = models.DateTimeField(auto_now_add=True)
+    is_confirmed = models.BooleanField(default=False, null=False)
 
     # Authentication
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username', 'given_name', 'last_name', 'sex', 'contact_no', 'campus', 'role']
+    REQUIRED_FIELDS = ['username', 'given_name', 'last_name', 'sex', 'contact_no', 'role', 'valid_id']
 
     def __str__(self):
         return f"{self.get_full_name()} ({self.role})"

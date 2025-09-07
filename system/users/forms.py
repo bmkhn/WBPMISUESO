@@ -15,7 +15,7 @@ class FacultyRegistrationForm(forms.ModelForm):
         model = User
         fields = [
             'given_name', 'middle_initial', 'last_name', 'sex', 'email', 'contact_no',
-            'campus', 'college', 'role', 'degree', 'expertise', 'password', 'confirm_password'
+            'campus', 'college', 'degree', 'expertise', 'password', 'confirm_password'  # Add Valid ID later on
         ]
 
     def clean(self):
@@ -24,9 +24,3 @@ class FacultyRegistrationForm(forms.ModelForm):
         confirm_password = cleaned_data.get("confirm_password")
         if password and confirm_password and password != confirm_password:
             self.add_error('confirm_password', "Passwords do not match.")
-
-    # def clean_valid_id(self):
-    #     valid_id = self.cleaned_data.get("valid_id")
-    #     if not valid_id:
-    #         raise ValidationError("Please upload a valid ID image.")
-    #     return valid_id

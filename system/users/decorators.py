@@ -10,3 +10,14 @@ def role_required(allowed_roles):
             return view_func(request, *args, **kwargs)
         return wrapper
     return decorator
+
+def user_confirmed(view_func):
+    def wrapper(request, *args, **kwargs):
+        # If it's a non-user, just pass through
+        if not hasattr(request.user, 'is_confirmed'):
+            return view_func(request, *args, **kwargs)
+        # If it's a user, must be confirmed
+        if not request.user.is_confirmed:
+            return HttpResponseForbidden("User not confirmed")
+        return view_func(request, *args, **kwargs)
+    return wrapper

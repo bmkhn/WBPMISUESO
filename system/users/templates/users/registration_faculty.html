@@ -184,28 +184,10 @@
     </style>
 </head>
 <body>
-
-    {% if show_2fa_step %}
-    <form method="post" autocomplete="off" enctype="multipart/form-data" id="registrationForm">
-        {% csrf_token %}
-        <input type="hidden" name="step" value="2fa">
-        <div class="card" id="step4" style="min-height: 0px;">
-            <h2>Email Verification</h2>
-            <p class="subtitle">Enter the 2FA code sent to your email.</p>
-            <div class="form-group">
-                <label for="id_2fa_code">2FA Code <span class="required">*</span></label>
-                <input type="text" id="id_2fa_code" name="2fa_code" maxlength="6" autocomplete="off" required>
-            </div>
-            <div class="actions">
-                <button class="button" type="submit">Verify & Submit</button>
-            </div>
-        </div>
-    </form>
-    {% else %}
     <form method="post" autocomplete="off" enctype="multipart/form-data" id="registrationForm">
         {% csrf_token %}
         <input type="hidden" name="step" value="registration">
-        <!-- Faculty Personal Details -->
+        <!-- Step 1 - [Faculty Personal Details] -->
         <div class="card" id="step1">
             <h2>Create New Account</h2>
             <p class="subtitle">Personal Details</p>
@@ -241,7 +223,7 @@
             </div>
         </div>
 
-        <!-- Faculty Professional Details-->
+        <!-- Step 2 - [Faculty Professional Details] -->
         <div class="card" id="step2" style="display:none;">
             <h2>Create New Account</h2>
             <p class="subtitle">Professional Details</p>
@@ -281,7 +263,7 @@
             </div>
         </div>
 
-        <!-- Faculty Preferred ID -->
+        <!-- Step 3 - [Faculty Preferred ID] -->
         <div class="card" id="step3" style="display:none;">
             <h2>Create New Account</h2>
             <p class="subtitle">Select Your ID</p>
@@ -301,130 +283,28 @@
             </div>
         </div>
     </form>
-    {% endif %}
 
-        <script>
-            // Fix: Get the correct file input id from Django form rendering
-            document.addEventListener('DOMContentLoaded', function() {
-                var fileInput = document.querySelector('input[type="file"][name="valid_id"]');
-                if (fileInput) {
-                    fileInput.addEventListener('change', function(){
-                        const fileNameDiv = document.getElementById('fileName');
-                        if(fileNameDiv) {
-                            if(fileInput.files.length > 0){
-                                fileNameDiv.textContent = "Selected file: " + fileInput.files[0].name;
-                            } else {
-                                fileNameDiv.textContent = "";
-                            }
-                        }
-                    });
-                }
-            });
-
-            function nextStep(current) {
-                // Step 1 validation
-                if (current === 1) {
-                    let valid = true;
-                    // List all required field names for step 1
-                    const requiredFields = ['id_given_name', 'id_email', 'id_last_name', 'id_contact_no', 'id_sex'];
-                    requiredFields.forEach(function(fieldId) {
-                        const field = document.getElementById(fieldId);
-                        if (field && !field.value.trim()) {
-                            valid = false;
-                            field.style.borderColor = "red";
-                        } else if (field) {
-                            field.style.borderColor = "#ddd";
-                        }
-                    });
-                    if (!valid) {
-                        alert("Please fill out all required fields.");
-                        return;
-                    }
-                }
-
-                // Step 2 validation
-                if (current === 2) {
-                    let valid = true;
-                    // List all required field names for step 2
-                    const requiredFields = ['id_degree', 'id_college', 'id_expertise', 'id_password', 'id_confirm_password', 'id_campus'];
-                    requiredFields.forEach(function(fieldId) {
-                        const field = document.getElementById(fieldId);
-                        if (field && !field.value.trim()) {
-                            valid = false;
-                            field.style.borderColor = "red";
-                        } else if (field) {
-                            field.style.borderColor = "#ddd";
-                        }
-                    });
-                    if (!valid) {
-                        alert("Please fill out all required fields.");
-                        return;
-                    }
-
-                    // Password match check
-                    const password = document.getElementById('id_password').value;
-                    const confirmPassword = document.getElementById('id_confirm_password').value;
-                    if (password !== confirmPassword) {
-                        alert("Passwords do not match.");
-                        return;
-                    }
-
-
-                    // Terms and Conditions checkbox check (must be checked to proceed)
-                    const termsCheckbox = document.querySelector('#step2 .checkbox input[type="checkbox"]');
-                    if (!termsCheckbox.checked) {
-                        alert("You must agree to the Terms and Conditions and Privacy Policy before proceeding.");
-                        return;
-                    }
-                }
-
-                document.getElementById("step" + current).style.display = "none";
-                document.getElementById("step" + (current + 1)).style.display = "block";
-            }
-
-            function prevStep(current) {
-                document.getElementById("step" + current).style.display = "none";
-                document.getElementById("step" + (current - 1)).style.display = "block";
-            }
-
-            function selectID(idName) {
-                document.getElementById("preferred_id").value = idName;
-                document.getElementById("selectedID").innerText = "Selected ID: " + idName;
-                nextStep(3);
-            }
-        </script>
-    </form>
 
     <script>
-        // Dynamically set required attribute for 2FA code only when step 4 is visible
-        function set2FARequired() {
-            var step4 = document.getElementById('step4');
-            var codeInput = document.getElementById('id_2fa_code');
-            if (step4 && codeInput) {
-                if (step4.style.display !== 'none') {
-                    codeInput.setAttribute('required', 'required');
-                } else {
-                    codeInput.removeAttribute('required');
+        function validateRequiredFields(fields) {
+            fields.forEach(function(fieldId) {
+                const field = document.getElementById(fieldId);
+                if (field && !field.value.trim()) {
+                    valid = false;
+                    field.style.borderColor = "red";
+                } else if (field) {
+                    field.style.borderColor = "#ddd";
                 }
-            }
+            });
         }
 
-        // Call set2FARequired whenever steps change
         function nextStep(current) {
             // Step 1 validation
             if (current === 1) {
                 let valid = true;
                 // List all required field names for step 1
                 const requiredFields = ['id_given_name', 'id_email', 'id_last_name', 'id_contact_no', 'id_sex'];
-                requiredFields.forEach(function(fieldId) {
-                    const field = document.getElementById(fieldId);
-                    if (field && !field.value.trim()) {
-                        valid = false;
-                        field.style.borderColor = "red";
-                    } else if (field) {
-                        field.style.borderColor = "#ddd";
-                    }
-                });
+                validateRequiredFields(requiredFields);
                 if (!valid) {
                     alert("Please fill out all required fields.");
                     return;
@@ -436,15 +316,7 @@
                 let valid = true;
                 // List all required field names for step 2
                 const requiredFields = ['id_degree', 'id_college', 'id_expertise', 'id_password', 'id_confirm_password', 'id_campus'];
-                requiredFields.forEach(function(fieldId) {
-                    const field = document.getElementById(fieldId);
-                    if (field && !field.value.trim()) {
-                        valid = false;
-                        field.style.borderColor = "red";
-                    } else if (field) {
-                        field.style.borderColor = "#ddd";
-                    }
-                });
+                validateRequiredFields(requiredFields);
                 if (!valid) {
                     alert("Please fill out all required fields.");
                     return;
@@ -469,17 +341,13 @@
 
             document.getElementById("step" + current).style.display = "none";
             document.getElementById("step" + (current + 1)).style.display = "block";
-            set2FARequired();
         }
 
         function prevStep(current) {
             document.getElementById("step" + current).style.display = "none";
             document.getElementById("step" + (current - 1)).style.display = "block";
-            set2FARequired();
         }
-
-        // Initial call on page load
-        document.addEventListener('DOMContentLoaded', set2FARequired);
     </script>
+    
 </body>
 </html>

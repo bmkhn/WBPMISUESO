@@ -1,6 +1,5 @@
 from django.shortcuts import render
-from system.users.decorators import role_required
-from django.contrib.auth.decorators import login_required
+from system.users.decorators import user_confirmed
 
 # @login_required
 # @role_required(allowed_roles=["VP", "DIRECTOR", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD"])
@@ -14,5 +13,10 @@ from django.contrib.auth.decorators import login_required
 #         'vpde_content': vpde_content,
 #     })
 
+@user_confirmed
 def home_view(request):
-    return render(request, 'home/home.html')
+    if request.user.is_authenticated:
+        context = {'is_user': True, 'user_role': getattr(request.user, 'role', None)}
+    else:
+        context = {'is_user': False}
+    return render(request, 'home/home.html', context)
