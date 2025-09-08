@@ -168,144 +168,182 @@
             background: darkgray;
         }
 
-        a{
-          font-family: 'Inter', sans-serif;
-          color: #007bff;
+        a {
+            font-family: 'Inter', sans-serif;
+            color: #007bff;
         }
 
         a:hover {
-          color: purple;
+            color: purple;
         }
 
         .drive:hover {
-          box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
         }
-
     </style>
 </head>
-</head>
+
 <body>
-  <!-- Client Personal Details -->
-  <div class="card" id="step1">
-    <h2>Create New Account</h2>
-    <p class="subtitle">Personal Details</p>
-    <div class="form-grid">
-      <div class="form-group">
-        <label>First Name <span class="required">*</span></label>
-        <input type="text" placeholder="">
-      </div>
-      <div class="form-group">
-        <label>Email Address <span class="required">*</span></label>
-        <input type="email" placeholder="">
-      </div>
-      <div class="form-group">
-        <label>Middle Name</label>
-        <input type="text" placeholder="">
-      </div>
-      <div class="form-group">
-        <label>Contact No. <span class="required">*</span></label>
-        <input type="text" placeholder="09XXXXXXXXX">
-      </div>
-      <div class="form-group">
-        <label>Last Name <span class="required">*</span></label>
-        <input type="text" placeholder="">
-      </div>
-      <div class="form-group">
-        <label>Gender <span class="required">*</span></label>
-        <select>
-          <option>--</option>
-          <option>Male</option>
-          <option>Female</option>
-        </select>
-      </div>
-    </div>
-    <div class="actions">
-      <a href="/register/" class="back">← Back to Sign In</a>
-      <button class="button" onclick="nextStep(1)">Proceed →</button>
-    </div>
-  </div>
-
-    <!-- Client Professional Details -->
-    <div class="card" id="step2" style="display:none;">
-        <h2>Create New Account</h2>
-        <p class="subtitle"> Professional Details<p>
-        <div class="form-grid">
-            <div class="form-group">
-                <label>Degree(s) <span class="required">*</span></label>
-                <input type="text" placeholder="">
-            </div>
-            <div class="form-group">
-                <label>Password <span class="required"></span></label>
-                <input type="password" placeholder="********">
-            </div>
-            <div class="form-group">
-                <label>Field of Expertise <span class="required">*</span></label>
-                <input type="text" placeholder="">
-            </div>
-            <div class="form-group">
-                <label>Re-enter Password <span class="required">*</span></label>
-                <input type="password" placeholder="********">
-            </div>
-            <div class="form-group"></div>
-            <div class="checkbox">
-                <input type="checkbox"> I have read & understand the <a href="#">Terms and Conditions</a> and the <a href="#">Privacy policy</a>.
-            </div>
-        </div>
-        <div class="actions">
-            <a class="back" onclick="prevStep(2)">← Back</a>
-            <button class="button" onclick="nextStep(2)">Proceed →</button>
-        </div>
-    </div> 
-
-    <!-- Client Preferred ID -->
-    <div class="card" id="step3" style="display:none;">
-        <h2>Create New Account</h2>
-        <p class="subtitle">Select Your ID</p>
-        <label>Preferred IDs <span class="required">*</span></label>
-        <div class="id-options">
-            <button onclick="selectID('PhilID (PhilSys)')">PhilID (PhilSys)</button>
-            <button onclick="selectID('Postal ID')">Postal ID</button>
-            <button onclick="selectID('Driver’s License')">Driver’s License</button>
-            <button onclick="selectID('Voter’s ID')">Voter’s ID</button>
-            <button onclick="selectID('Unified Multipurpose ID (UMID)')">Unified Multipurpose ID (UMID)</button>
-            <button onclick="selectID('Philippine Passport')">Philippine Passport</button>
-        </div>
-        <div class="actions">
-            <a class="back" onclick="prevStep(3)">← Back</a>
-        </div>
-    </div>
-
-    <!-- Client Upload ID-->
-    <div class="card" id="step4" style="display:none;">
-        <h2>Upload Picture of ID</h2>
-        <p class="subtitle" id="selectedID">Selected ID: </p>
-        <div style="text-align:center; margin-bottom:20px; border:2px dashed #ddd; padding:20px; border-radius:8px;">
-            <div style="display:flex; justify-content:center; gap:40px; align-items:center;">
-                <div class="drive">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Google_Drive_icon_%282020%29.svg/1147px-Google_Drive_icon_%282020%29.svg.png" 
-                         alt="Upload from Drive" width="100">
-                    <p>Upload from Drive</p>
+    <form method="post" autocomplete="off" enctype="multipart/form-data" id="registrationForm">
+        {% csrf_token %}
+        <input type="hidden" name="step" value="registration">
+        <!-- Step 1 - [Implementer Personal Details] -->
+        <div class="card" id="step1">
+            <h2>Create New Account</h2>
+            <p class="subtitle">Personal Details</p>
+            <div class="form-grid">
+                <div class="form-group">
+                    <div>{{ form.given_name.label_tag }}<span class="required"> *</span></div> 
+                    {{ form.given_name }}
                 </div>
-                <div>
-                    <p>Drag & drop files or <a href="#">Browse</a></p>
+                <div class="form-group">
+                    <div>{{ form.email.label_tag }}<span class="required"> *</span></div>
+                    {{ form.email }}
+                </div>
+                <div class="form-group">
+                    {{ form.middle_initial.label_tag }}
+                    {{ form.middle_initial }}
+                </div>
+                <div class="form-group">
+                    <div>{{ form.contact_no.label_tag }}<span class="required"> *</span></div>
+                    {{ form.contact_no }}
+                </div>
+                <div class="form-group">
+                    <div>{{ form.last_name.label_tag }}<span class="required"> *</span></div>
+                    {{ form.last_name }}
+                </div>
+                <div class="form-group">
+                    <div>{{ form.sex.label_tag }}<span class="required"> *</span></div>
+                    {{ form.sex }}
                 </div>
             </div>
+            <div class="actions">
+                <a href="/register/" class="back">← Back to Sign In</a>
+                <button class="button" type="button" onclick="nextStep(1)">Proceed →</button>
+            </div>
         </div>
 
-        <p style="text-align:center;">or</p>
-        <div class="form-group">
-            <label>Link:</label>
-            <input type="text" placeholder="Paste link here">
+        <!-- Step 2 - [Implementer Professional Details] -->
+        <div class="card" id="step2" style="display:none;">
+            <h2>Create New Account</h2>
+            <p class="subtitle">Professional Details</p>
+            <div class="form-grid">
+                <div class="form-group">
+                    <div>{{ form.degree.label_tag }}<span class="required"> *</span></div>
+                    {{ form.degree }}
+                </div>
+                <div class="form-group">
+                    <div>{{ form.password.label_tag }}<span class="required"> *</span></div>
+                    {{ form.password }}
+                </div>
+                <div class="form-group">
+                    <div>{{ form.expertise.label_tag }}<span class="required"> *</span></div>
+                    {{ form.expertise }}
+                </div>
+                <div class="form-group">
+                    <div>{{ form.confirm_password.label_tag }}<span class="required"> *</span></div>
+                    {{ form.confirm_password }}
+                </div>
+                <div class="form-group"></div>
+                <div class="checkbox">
+                    <input type="checkbox"> I have read & agree with the <a href="#">Terms and Conditions</a> and the <a href="#">Privacy Policy</a>.
+                </div>
+            </div>
+            <div class="actions">
+                <a class="back" onclick="prevStep(2)">← Back</a>
+                <button class="button" type="button" onclick="nextStep(2)">Proceed →</button>
+            </div>
         </div>
 
-        <div class="actions">
-            <a class="back" onclick="prevStep(4)">← Back</a>
-            <button class="button">Submit</button>
+        <!-- Step 3 - [Implementer Preferred ID] -->
+        <div class="card" id="step3" style="display:none;">
+            <h2>Create New Account</h2>
+            <p class="subtitle">Select Your ID</p>
+            <label>Preferred IDs <span class="required">*</span></label>
+            <div class="id-options">
+                <button type="button" onclick="selectID('PhilID (PhilSys)')">PhilID (PhilSys)</button>
+                <button type="button" onclick="selectID('Postal ID')">Postal ID</button>
+                <button type="button" onclick="selectID('Driver’s License')">Driver’s License</button>
+                <button type="button" onclick="selectID('Voter’s ID')">Voter’s ID</button>
+                <button type="button" onclick="selectID('Unified Multipurpose ID (UMID)')">Unified Multipurpose ID (UMID)</button>
+                <button type="button" onclick="selectID('Philippine Passport')">Philippine Passport</button>
+            </div>
+            <input type="hidden" name="preferred_id" id="preferred_id">
+            <div class="actions">
+                <a class="back" onclick="prevStep(3)">← Back</a>
+            </div>
         </div>
-    </div>
-    
+
+        <!-- Step 4 - [Upload ID Placeholder] -->
+        <div class="card" id="step4" style="display:none;">
+            <h2>Upload Your ID</h2>
+            <p class="subtitle">This step will allow you to upload your valid ID for verification.</p>
+            <div style="margin: 40px 0; text-align: center;">
+                <div style="font-size: 18px; color: #888; margin-bottom: 10px;">
+                    <strong>File upload not yet implemented.</strong>
+                </div>
+            </div>
+            <div class="actions">
+                <a class="back" onclick="prevStep(4)">← Back</a>
+                <button class="button" type="submit">Proceed →</button>
+            </div>
+        </div>
+    </form>
+
     <script>
+        function validateRequiredFields(fields) {
+            let valid = true;
+            fields.forEach(function(fieldId) {
+                const field = document.getElementById(fieldId);
+                if (field && !field.value.trim()) {
+                    valid = false;
+                    field.style.borderColor = "red";
+                } else if (field) {
+                    field.style.borderColor = "#ddd";
+                }
+            });
+            return valid;
+        }
+
         function nextStep(current) {
+            // Step 1 Validation
+            if (current === 1) {
+                // List all required field names for step 1
+                const requiredFields = ['id_given_name', 'id_email', 'id_last_name', 'id_contact_no', 'id_sex'];
+                const valid = validateRequiredFields(requiredFields);
+                if (!valid) {
+                    alert("Please fill out all required fields.");
+                    return;
+                }
+            }
+
+            // Step 2 Validation
+            if (current === 2) {
+                // List all required field names for step 2
+                const requiredFields = ['id_degree', 'id_college', 'id_expertise', 'id_password', 'id_confirm_password', 'id_campus'];
+                const valid = validateRequiredFields(requiredFields);
+                if (!valid) {
+                    alert("Please fill out all required fields.");
+                    return;
+                }
+
+                // Password Match Check
+                const password = document.getElementById('id_password').value;
+                const confirmPassword = document.getElementById('id_confirm_password').value;
+                if (password !== confirmPassword) {
+                    alert("Passwords do not match.");
+                    return;
+                }
+
+
+                // Terms and Conditions Checkbox Check (Must Be Checked To Proceed)
+                const termsCheckbox = document.querySelector('#step2 .checkbox input[type="checkbox"]');
+                if (!termsCheckbox.checked) {
+                    alert("You must agree to the Terms and Conditions and Privacy Policy before proceeding.");
+                    return;
+                }
+            }
+
             document.getElementById("step" + current).style.display = "none";
             document.getElementById("step" + (current + 1)).style.display = "block";
         }
@@ -321,5 +359,6 @@
             document.getElementById("selectedID").innerText = "Selected ID: " + idName;
         }
     </script>
+    
 </body>
 </html>

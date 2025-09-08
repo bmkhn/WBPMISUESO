@@ -7,38 +7,79 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background: #FBFBFB;
+            background-color: #FBFBFB;
+            margin: 0;
+            padding: 0;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            min-height: 100vh; 
+            overflow: hidden;
+            box-sizing: border-box;
         }
+
         .card {
             background: #fff;
-            padding: 40px 50px;
+            width: 800px;
+            height: auto;
+            padding: 40px;
             border-radius: 12px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             text-align: center;
-            width: 400px;
         }
+
         h2 {
+            font-size: 55px;
             font-weight: 600;
-            margin-bottom: 20px;
+            margin-top: 20px;
+            margin-bottom: 60px;
         }
+
         p {
             font-size: 16px;
             color: #333;
+        }
+
+        .actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: absolute;
+            left: 40px;
+            right: 40px;
+            bottom: 40px;
+        }
+
+
+        .back {
+            font-family: 'Inter', sans-serif;
+            height: 40px;
+            text-decoration: none;
+            font-size: 14px;
+            color: #007bff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+
+        .back:hover {
+            text-decoration: underline;
+            color: black;
         }
     </style>
 </head>
 <body>
     <div class="card">
-        <h2>THANK YOU FOR SIGNING UP!</h2>
+        <h2>THANK YOU FOR<br>SIGNING UP!</h2>
         <p>
             Your account has been successfully created.<br>
-            We'll need to verify your information before you can access the system.<br><br>
-            Your details will be reviewed. We'll send you an email as soon as your account has been approved.
+            We'll need to verify your information before you can access the system.<br><br><br>
+            Your details will be reviewed. <br>We'll send you an email as soon as your account has been approved.
         </p>
+
+        <div class="actions">
+            <a href="/login/" class="back">← Back to Sign In</a>
+        </div>
     </div>
 </body>
 </html>

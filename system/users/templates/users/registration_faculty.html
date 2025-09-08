@@ -168,7 +168,7 @@
             background: darkgray;
         }
 
-        a{
+        a {
             font-family: 'Inter', sans-serif;
             color: #007bff;
         }
@@ -180,9 +180,9 @@
         .drive:hover {
             box-shadow: 0 2px 8px rgba(0,0,0,0.5);
         }
-
     </style>
 </head>
+
 <body>
     <form method="post" autocomplete="off" enctype="multipart/form-data" id="registrationForm">
         {% csrf_token %}
@@ -279,14 +279,28 @@
             <input type="hidden" name="preferred_id" id="preferred_id">
             <div class="actions">
                 <a class="back" onclick="prevStep(3)">← Back</a>
+            </div>
+        </div>
+
+        <!-- Step 4 - [Upload ID Placeholder] -->
+        <div class="card" id="step4" style="display:none;">
+            <h2>Upload Your ID</h2>
+            <p class="subtitle">This step will allow you to upload your valid ID for verification.</p>
+            <div style="margin: 40px 0; text-align: center;">
+                <div style="font-size: 18px; color: #888; margin-bottom: 10px;">
+                    <strong>File upload not yet implemented.</strong>
+                </div>
+            </div>
+            <div class="actions">
+                <a class="back" onclick="prevStep(4)">← Back</a>
                 <button class="button" type="submit">Proceed →</button>
             </div>
         </div>
     </form>
 
-
     <script>
         function validateRequiredFields(fields) {
+            let valid = true;
             fields.forEach(function(fieldId) {
                 const field = document.getElementById(fieldId);
                 if (field && !field.value.trim()) {
@@ -296,33 +310,32 @@
                     field.style.borderColor = "#ddd";
                 }
             });
+            return valid;
         }
 
         function nextStep(current) {
-            // Step 1 validation
+            // Step 1 Validation
             if (current === 1) {
-                let valid = true;
                 // List all required field names for step 1
                 const requiredFields = ['id_given_name', 'id_email', 'id_last_name', 'id_contact_no', 'id_sex'];
-                validateRequiredFields(requiredFields);
+                const valid = validateRequiredFields(requiredFields);
                 if (!valid) {
                     alert("Please fill out all required fields.");
                     return;
                 }
             }
 
-            // Step 2 validation
+            // Step 2 Validation
             if (current === 2) {
-                let valid = true;
                 // List all required field names for step 2
                 const requiredFields = ['id_degree', 'id_college', 'id_expertise', 'id_password', 'id_confirm_password', 'id_campus'];
-                validateRequiredFields(requiredFields);
+                const valid = validateRequiredFields(requiredFields);
                 if (!valid) {
                     alert("Please fill out all required fields.");
                     return;
                 }
 
-                // Password match check
+                // Password Match Check
                 const password = document.getElementById('id_password').value;
                 const confirmPassword = document.getElementById('id_confirm_password').value;
                 if (password !== confirmPassword) {
@@ -331,7 +344,7 @@
                 }
 
 
-                // Terms and Conditions checkbox check (must be checked to proceed)
+                // Terms and Conditions Checkbox Check (Must Be Checked To Proceed)
                 const termsCheckbox = document.querySelector('#step2 .checkbox input[type="checkbox"]');
                 if (!termsCheckbox.checked) {
                     alert("You must agree to the Terms and Conditions and Privacy Policy before proceeding.");
@@ -346,6 +359,12 @@
         function prevStep(current) {
             document.getElementById("step" + current).style.display = "none";
             document.getElementById("step" + (current - 1)).style.display = "block";
+        }
+
+        function selectID(idName) {
+            document.getElementById("step3").style.display = "none";
+            document.getElementById("step4").style.display = "block";
+            document.getElementById("selectedID").innerText = "Selected ID: " + idName;
         }
     </script>
     
