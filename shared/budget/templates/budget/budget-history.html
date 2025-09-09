@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Home</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0rem;
+            padding: 0rem;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            font-family: Helvetica, Arial, sans-serif;
+            background-color: #f5f5f5;
+        }
+        main {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start; 
+            align-items: stretch;
+            margin: 0 5rem 2rem 5rem; 
+            padding: 1rem 3rem;
+        }
+        footer {
+            background-color: #245F3E;
+            position: relative;
+            bottom: 0;
+            width: 100%;
+            height: 20rem;
+        }    
+        header {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 1.25rem; 
+            margin: 0;
+            padding: 0.5rem 1rem;
+            border: 1px solid #e0e0e0;
+            background-color: #f5f5f5;
+            position: relative;
+            top: 0;
+        } 
+        header img {
+            border-radius: 50%; 
+            border: 4px solid #e4c600;
+            margin-right: 0.75rem;
+            width: 3.25rem;
+            height: 3.25rem;
+            object-fit: cover;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }   
+        header i {
+            font-size: 1.75rem;
+            color: black; 
+            margin-right: 0.75rem;
+            font-weight: 400;  
+            text-decoration: none;
+        }
+        a {
+            text-decoration: none;   
+        }  
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            box-shadow: 0 0 5px rgba(0,0,0,0.5); 
+            background-color: white;
+        }
+        th, td {
+            text-align: left;
+            padding: 1rem;
+            font-size: 0.95rem;
+        }
+        thead {
+            background-color: #f6f6f6;
+        }
+        th {
+            font-weight: 550;
+            border-bottom: 1px solid #ddd;
+        }
+        tr:not(:last-child) td {
+            border-bottom: 1px solid #eee;
+        }
+        .table-container table {
+            width: 100%;
+            margin-bottom: 1rem;
+            border-collapse: collapse;
+        }
+        .table-container th,
+        .table-container td {
+            padding: 1rem 3rem;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }  
+        .sort-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            color: #333;
+            margin-left: 0.5rem;
+        }  
+        .dropdown2 {
+            position: relative;
+            width: 9.5rem;
+        }
+        .dropdown-btn2 { 
+            margin: 0.75rem; 
+            border: none;
+            width: 100%;
+            padding: 0.5rem;
+            border-radius: 0.75rem;
+            background: none;
+            text-align: center;
+            cursor: pointer;
+            font-family: Helvetica, Arial, sans-serif;
+            font-weight: 400;
+            font-size: 1rem; 
+            border: 0.08rem solid #e9e9e9;
+        } 
+        .dropdown-btn2:hover {
+            border: 0.08rem solid #000000;
+        }
+        .dropdown-menu2 {
+            position: absolute;
+            top: calc(100% - 0.7rem);
+            left: 0.8rem;
+            margin: 0;
+            right: 0; 
+            width: 100%;
+            background: white;
+            border: 0.08rem solid #ccc;
+            border-radius: 0.75rem; 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            z-index: 10;
+            overflow: hidden;
+        }
+        .dropdown-item2 {
+            padding: 0.75rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-family: Helvetica, Arial, sans-serif;
+            font-weight: 400;
+            text-align: center;
+            border-bottom: 1px solid rgb(196, 196, 196);
+        }
+        .dropdown-item2:hover {
+            background-color: #000000;
+            color: white;
+        }  
+        .hidden {
+            display: none !important;
+        }   
+        .search-bar {
+            display: flex; 
+            align-items: center;
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 0.75rem;
+            padding: 0.5rem 1rem;
+            margin-bottom: 0rem;
+            font-size: 1rem;
+            color: #666;
+            width: 100%;
+        }
+        .search-bar input {
+            border: none;
+            outline: none;
+            flex: 1;
+            font-size: 1rem;
+            background: transparent;
+        }
+        .search-bar button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #666;
+            font-size: 1.2rem;
+        }
+        .search-bar button:hover {
+            color: #000;
+        } 
+        .files-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+        } 
+    </style>
+</head>
+<body> 
+    <header>
+        <a href="#" title="Notifications">
+            <i class="fa-regular fa-bell"></i>
+        </a>
+        <a href="#" title="Settings">
+            <i class="ri-settings-3-line" style="font-size: 2rem;"></i>
+        </a>
+        <a href="#">
+            <img src="https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png"
+                alt="profilepic">
+        </a>    
+    </header>
+    <main>   
+        <section> 
+            <form class="search-bar" onsubmit="doSearch(event)">
+                <input type="text" id="searchInput" placeholder="Search">
+                <button type="submit"><i class="fa fa-search"></i></button>
+            </form>
+        </section>
+        <section> 
+            <div class="files-header">
+                <h3>History</h3>
+                <div style="display: flex; flex-shrink: 3;">
+                    <button class="sort-btn">
+                        <i class="fas fa-arrow-up"></i>
+                    </button>
+                    <div class="dropdown2">
+                        <button class="dropdown-btn2">Sort by ▾</button>
+                        <div class="dropdown-menu2 hidden">
+                            <div class="dropdown-item2">Name</div>
+                            <div class="dropdown-item2">Date Completed</div>
+                            <div class="dropdown-item2">Last Updated</div>
+                            <div class="dropdown-item2">Q4</div>
+                        </div> 
+                    </div>
+                </div> 
+            </div>
+            <div class="table-container">
+                <table> 
+                    <colgroup>
+                        <col style="width: 20%">
+                        <col style="width: 20%">
+                        <col style="width: 20%">
+                        <col style="width: 20%"> 
+                        <col style="width: 20%">
+                    </colgroup>
+                    <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Action</th>
+                        <th>Subject</th>
+                        <th>Datetime</th> 
+                        <th>Notes</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>English</td>
+                        <td>Imee M. Vito</td>
+                        <td>Ongoing</td>
+                        <td>30%</td> 
+                        <td>None.</td>
+                    </tr>
+                    <tr>
+                        <td>Tech</td>
+                        <td>Aimee M. Vito</td>
+                        <td>Completed</td>
+                        <td>100%</td> 
+                        <td>None.</td>
+                    </tr>
+                    <tr>
+                        <td>English</td>
+                        <td>Imee M. Vito</td>
+                        <td>Ongoing</td>
+                        <td>30%</td> 
+                        <td>None.</td>
+                    </tr>
+                    <tr>
+                        <td>Tech-</td>
+                        <td>Imee M. Vito</td>
+                        <td>Completed</td>
+                        <td>100%</td> 
+                        <td>None.</td>
+                    </tr>
+                    <tr>
+                        <td>English</td>
+                        <td>Imee M. Vito</td>
+                        <td>Ongoing</td>
+                        <td>30%</td> 
+                        <td>None.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section> 
+    </main>
+    <footer>
+        <p>test</p>
+    </footer>
+    <script>
+        function doSearch(event) {
+            event.preventDefault(); 
+            const query = document.getElementById("searchInput").value.trim();
+            if(query){
+            }
+        }
+    </script>
+</body>
+</html>

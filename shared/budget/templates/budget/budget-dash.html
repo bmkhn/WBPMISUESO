@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Home</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0rem;
+            padding: 0rem;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            font-family: Helvetica, Arial, sans-serif;
+            background-color: #f5f5f5;
+        }
+        main {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start; 
+            align-items: stretch;
+            margin: 0 5rem 2rem 5rem;
+            gap: 2rem;  
+            padding: 1rem 3rem;
+        }
+        footer {
+            background-color: #245F3E;
+            position: relative;
+            bottom: 0;
+            width: 100%;
+            height: 20rem;
+        }    
+        header {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 1.25rem; 
+            margin: 0;
+            padding: 0.5rem 1rem;
+            border: 1px solid #e0e0e0;
+            background-color: #f5f5f5;
+            position: relative;
+            top: 0;
+        } 
+        header img {
+            border-radius: 50%; 
+            border: 4px solid #e4c600;
+            margin-right: 0.75rem;
+            width: 3.25rem;
+            height: 3.25rem;
+            object-fit: cover;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }   
+        header i {
+            font-size: 1.75rem;
+            color: black; 
+            margin-right: 0.75rem;
+            font-weight: 400;  
+            text-decoration: none;
+        }
+        a {
+            text-decoration: none;   
+        }  
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+        }
+        th, td {
+            text-align: left;
+            padding: 1rem;
+            font-size: 0.95rem;
+        }
+        thead {
+            background-color: #f6f6f6;
+        }
+        th {
+            font-weight: 550;
+            border-bottom: 1px solid #ddd;
+        }
+        tr:not(:last-child) td {
+            border-bottom: 1px solid #eee;
+        }
+        .table-container table {
+            width: 100%;
+            margin-bottom: 1rem;
+            border-collapse: collapse;
+        }
+        .table-container th,
+        .table-container td {
+            padding: 1rem 3rem;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }  
+        .expand-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.3rem; 
+            color: #090909;
+            transition: color 0.2s;
+            z-index: 100;
+        }
+        .expand-btn:hover {
+            color: #37d4ff;
+        }
+        .expand-rev {
+            position: absolute;
+            bottom: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.3rem; 
+            color: #090909;
+            transition: color 0.2s;
+            z-index: 100;
+        }
+        .expand-rev:hover {
+            color: #37d4ff;
+        } 
+        section {   
+            background-color: white; 
+            border: 0.08rem solid rgb(114, 114, 114); 
+            border-radius: 1rem;  
+            position: relative;
+        } 
+        section > h4 { 
+            padding: 1rem 2rem;
+        } 
+        .sort-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            color: #333;
+            margin-left: 0.5rem;
+        }  
+        .dropdown2 {
+            position: relative;
+            width: 9.5rem;
+        }
+        .dropdown-btn2 { 
+            margin: 0.75rem; 
+            border: none;
+            width: 100%;
+            padding: 0.5rem;
+            border-radius: 0.75rem;
+            background: none;
+            text-align: center;
+            cursor: pointer;
+            font-family: Helvetica, Arial, sans-serif;
+            font-weight: 400;
+            font-size: 1rem; 
+            border: 0.08rem solid #e9e9e9;
+        } 
+        .dropdown-btn2:hover {
+            border: 0.08rem solid #000000;
+        }
+        .dropdown-menu2 {
+            position: absolute;
+            top: calc(100% - 0.7rem);
+            left: 0.8rem;
+            margin: 0;
+            right: 0; 
+            width: 100%;
+            background: white;
+            border: 0.08rem solid #ccc;
+            border-radius: 0.75rem; 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            z-index: 10;
+            overflow: hidden;
+        }
+        .dropdown-item2 {
+            padding: 0.75rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-family: Helvetica, Arial, sans-serif;
+            font-weight: 400;
+            text-align: center;
+            border-bottom: 1px solid rgb(196, 196, 196);
+        }
+        .dropdown-item2:hover {
+            background-color: #000000;
+            color: white;
+        }  
+        .hidden {
+            display: none !important;
+        }  
+        .files-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+        } 
+        .budget-box {
+            border-radius: 1rem;
+            padding: 1.5rem;
+            text-align: left;  
+            font-family: Helvetica, Arial, sans-serif;
+        }
+        .budget-text {
+            font-size: 1rem;
+            margin: 0 0 1rem 0;
+            color: #111;
+        }
+        .budget-percentage {
+            font-size: 3rem;
+            font-weight: 700;
+            margin: 0.5rem 0;
+            background: linear-gradient(90deg, #a68f2d, #3ea047);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .budget-note {
+            font-size: 1rem;
+            margin: 0;
+            color: #111;
+        } 
+        .summary {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            width: 100%;
+        }
+        .overall-budget, .history {
+            flex: 1;
+            display: flex;
+            flex-direction: row;
+        } 
+        .summary { 
+            padding: 2rem 3.5rem; 
+            background-color: whitesmoke; 
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4); 
+            border: none;
+        }
+    </style>
+</head>
+<body> 
+    <header>
+        <a href="#" title="Notifications">
+            <i class="fa-regular fa-bell"></i>
+        </a>
+        <a href="#" title="Settings">
+            <i class="ri-settings-3-line" style="font-size: 2rem;"></i>
+        </a>
+        <a href="#">
+            <img src="https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png"
+                alt="profilepic">
+        </a>    
+    </header>
+    <main>  
+        <section class="summary">
+            <div>
+                <h2>Overall Budget</h2>
+                <div class="overall-budget">
+                    chart
+                </div>
+            </div>
+            <div>
+                <h2>Historical Summary</h2>
+                <div class="history">
+                    <div class="budget-box">
+                        <p class="budget-text">
+                            Your college’s current budget for this quarter is ₱70,000.00. It is
+                        </p>
+                        <p class="budget-percentage">8%</p>
+                        <p class="budget-note">less than historical mean.</p>
+                    </div> 
+                </div>
+                <div>
+                chart
+                </div>
+                </div>
+            </div>
+        </section>
+        <section>
+            <div class="files-header">
+                <h3>Detailed View</h3>
+                <div style="display: flex; flex-shrink: 3;">
+                    <button class="sort-btn">
+                        <i class="fas fa-arrow-up"></i>
+                    </button>
+                    <div class="dropdown2">
+                        <button class="dropdown-btn2">Sort by ▾</button>
+                        <div class="dropdown-menu2 hidden">
+                            <div class="dropdown-item2">Name</div>
+                            <div class="dropdown-item2">Date Completed</div>
+                            <div class="dropdown-item2">Last Updated</div>
+                            <div class="dropdown-item2">Q4</div>
+                        </div> 
+                    </div>
+                </div> 
+            </div>
+            <div class="table-container">
+                <table> 
+                    <colgroup>
+                        <col style="width: 40%">
+                        <col style="width: 20%">
+                        <col style="width: 20%">
+                        <col style="width: 20%">
+                    </colgroup>
+                    <thead>
+                    <tr>
+                        <th>CCRD/College</th>
+                        <th>Total Assigned</th>
+                        <th>Total Remaining</th>
+                        <th>Total Given</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>English Literacy Training of Santa Monica High School</td>
+                        <td>Imee M. Vito</td>
+                        <td>Ongoing</td>
+                        <td>30%</td>
+                    </tr>
+                    <tr>
+                        <td>Tech-Literacy Training of Santa Monica High School</td>
+                        <td>Aimee M. Vito</td>
+                        <td>Completed</td>
+                        <td>100%</td>
+                    </tr>
+                    <tr>
+                        <td>English Literacy Training of Santa Monica High School</td>
+                        <td>Imee M. Vito</td>
+                        <td>Ongoing</td>
+                        <td>30%</td>
+                    </tr>
+                    <tr>
+                        <td>Tech-Literacy Training of Santa Monica High School</td>
+                        <td>Imee M. Vito</td>
+                        <td>Completed</td>
+                        <td>100%</td>
+                    </tr>
+                    <tr>
+                        <td>English Literacy Training of Santa Monica High School</td>
+                        <td>Imee M. Vito</td>
+                        <td>Ongoing</td>
+                        <td>30%</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section> 
+        <section>
+            <div class="files-header">
+                <h3>External Fundings</h3>
+                <div style="display: flex; flex-shrink: 3;">
+                    <button class="sort-btn">
+                        <i class="fas fa-arrow-up"></i>
+                    </button>
+                    <div class="dropdown2">
+                        <button class="dropdown-btn2">Sort by ▾</button>
+                        <div class="dropdown-menu2 hidden">
+                            <div class="dropdown-item2">Name</div>
+                            <div class="dropdown-item2">Date Completed</div>
+                            <div class="dropdown-item2">Last Updated</div>
+                            <div class="dropdown-item2">Q4</div>
+                        </div> 
+                    </div>
+                </div> 
+            </div>
+            <div class="table-container">
+                <table>  
+                    <colgroup>
+                        <col style="width: 20%">
+                        <col style="width: 40%">
+                        <col style="width: 20%">
+                        <col style="width: 20%">
+                    </colgroup>
+                    <thead>
+                    <tr>
+                        <th>Sponsor</th>
+                        <th>Title</th>
+                        <th>Project Status</th>
+                        <th>Total</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>English Literacy</td>
+                        <td>Imee M. Vito</td>
+                        <td>Ongoing</td>
+                        <td>30%</td>
+                    </tr>
+                    <tr>
+                        <td>Tech-Literacy </td>
+                        <td>Aimee M. Vito</td>
+                        <td>Completed</td>
+                        <td>100%</td>
+                    </tr>
+                    <tr>
+                        <td>English Literacy</td>
+                        <td>Imee M. Vito</td>
+                        <td>Ongoing</td>
+                        <td>30%</td>
+                    </tr>
+                    <tr>
+                        <td>Tech-Literacy</td>
+                        <td>Imee M. Vito</td>
+                        <td>Completed</td>
+                        <td>100%</td>
+                    </tr>
+                    <tr>
+                        <td>English Literacy</td>
+                        <td>Imee M. Vito</td>
+                        <td>Ongoing</td>
+                        <td>30%</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <button class="expand-rev">⤢</button>
+        </section> 
+        <section>
+            <div class="files-header">
+                <h3>History</h3>
+            </div>
+            <div class="table-container">
+                <table>  
+                    <colgroup>
+                        <col style="width: 25%">
+                        <col style="width: 25%">
+                        <col style="width: 25%">
+                        <col style="width: 25%">
+                    </colgroup>
+                    <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Action</th>
+                        <th>Subject</th>
+                        <th>Datetime</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>English Literacy</td>
+                        <td>Imee M. Vito</td>
+                        <td>Ongoing</td>
+                        <td>30%</td>
+                    </tr>
+                    <tr>
+                        <td>Tech-Literacy </td>
+                        <td>Aimee M. Vito</td>
+                        <td>Completed</td>
+                        <td>100%</td>
+                    </tr>
+                    <tr>
+                        <td>English Literacy</td>
+                        <td>Imee M. Vito</td>
+                        <td>Ongoing</td>
+                        <td>30%</td>
+                    </tr>
+                    <tr>
+                        <td>Tech-Literacy</td>
+                        <td>Imee M. Vito</td>
+                        <td>Completed</td>
+                        <td>100%</td>
+                    </tr>
+                    <tr>
+                        <td>English Literacy</td>
+                        <td>Imee M. Vito</td>
+                        <td>Ongoing</td>
+                        <td>30%</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <button class="expand-rev">⤢</button>
+        </section>
+    </main>
+    <footer>
+        <p>test</p>
+    </footer>
+    <script>
+
+    </script>
+</body>
+</html>
