@@ -1,9 +1,12 @@
+{% extends "base_public.html" %}
+{% block content %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Request Endorsed</title>
+<title>Request Status</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,113 +28,6 @@
       width: 100%;
       display: flex;
       flex-direction: column;
-    }
-
-    .top-container {
-      width: 100%;
-      height: 115px;
-      background-color: #F7F3F1;
-      padding: 0 40px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .logo-container {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-    }
-
-    .logo-circle {
-      width: 75px;
-      height: 75px;
-      border-radius: 100%;
-      background-color: #ccc;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-    }
-
-    .logo-circle img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .title {
-      font-family: 'Instrument Sans', sans-serif;
-      font-size: 21px;
-      font-weight: bold;
-      color: #000;
-    }
-
-    .button-container {
-      display: flex;
-      gap: 30px;
-      align-items: center;
-    }
-
-    .nav-button {
-      font-family: 'Inter', sans-serif;
-      color: #404040;
-      font-size: 18px;
-      line-height: 38px;
-      font-weight: 600;
-      padding: 10px 20px;
-      border-radius: 4px;
-      background: none;
-      border: none;
-      cursor: pointer;
-      transition: background-color 0.2s ease, color 0.2s ease;
-    }
-
-    .nav-button:hover {
-      background-color: #000;
-      color: #fff;
-    }
-
-    .profile-circle {
-      width: 50px;
-      height: 50px;
-      border-radius: 100%;
-      background-color: #ddd;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-    }
-
-    .profile-circle img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .bottom-container {
-      background-color: black;
-      display: flex;
-      align-items: center;
-      padding: 0 20px;
-      height: 40px;
-    }
-
-    .bottom-nav-button {
-      font-family: 'Inter', sans-serif;
-      color: #FFFFFF;
-      padding: 0 15px;
-      font-size: 12px;
-      line-height: 20px;
-      font-weight: 600;
-      background: none;
-      border: none;
-      cursor: pointer;
-      transition: background-color 0.2s ease, color 0.2s ease;
-    }
-
-    .bottom-nav-button:hover {
-      background-color: #191919;
     }
 
     /* Main Content Layout */
@@ -241,8 +137,19 @@
       left: 0;
       right: 0;
       height: 2px;
-      background-color: #28a745;
+      background-color: #e0e0e0;
       z-index: 1;
+    }
+
+    .timeline::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0;
+      width: 50%;
+      height: 2px;
+      background-color: #28a745;
+      z-index: 2;
     }
 
     .timeline-step {
@@ -269,6 +176,16 @@
     .timeline-icon.completed {
       background-color: #28a745;
       color: white;
+    }
+
+    .timeline-icon.active {
+      background-color: #28a745;
+      color: white;
+    }
+
+    .timeline-icon.pending {
+      background-color: #e0e0e0;
+      color: #666;
     }
 
     .timeline-label {
@@ -325,35 +242,6 @@
 <body>
 
   <div class="main-container">
-    <!-- Top Container -->
-    <div class="top-container">
-      <!-- Logo Container -->
-      <div class="logo-container">
-        <div class="logo-circle">
-          {% load static %}
-          <img src="{% static 'ueso.png' %}" alt="UESO Logo">
-        </div>
-        <div class="title">University Extensions<br>Services Office</div>
-      </div>
-
-      <!-- Button Container -->
-      <div class="button-container">
-        <button class="nav-button">Home</button>
-        <button class="nav-button">Downloadables</button>
-        <button class="nav-button">Announcements</button>
-        <button class="nav-button">Archives</button>
-        <button class="nav-button">About Us</button>
-        <div class="profile-circle">
-          <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" alt="Profile">
-        </div>
-      </div>
-    </div>
-
-    <!-- Bottom Container -->
-    <div class="bottom-container">
-        <button class="bottom-nav-button">Request</button>
-    </div>
-
     <!-- Main Content Wrapper -->
     <div class="content-wrapper">
       <!-- Left Sidebar -->
@@ -387,7 +275,7 @@
 
       <!-- Main Content Area -->
       <div class="main-content">
-        <a href="{% url 'request_status' %}" class="back-link">← Back to Request Status</a>
+        <a href="{% url 'request_expanded_1' %}" class="back-link">← Back to Request Details</a>
         
         <!-- Request Timeline -->
         <div class="timeline-container">
@@ -397,15 +285,15 @@
               <div class="timeline-label">Received Request</div>
             </div>
             <div class="timeline-step">
-              <div class="timeline-icon completed">📄</div>
+              <div class="timeline-icon active">📄</div>
               <div class="timeline-label">Reviewing Request</div>
             </div>
             <div class="timeline-step">
-              <div class="timeline-icon completed">👍</div>
+              <div class="timeline-icon pending">⏳</div>
               <div class="timeline-label">Waiting for Approval</div>
             </div>
             <div class="timeline-step">
-              <div class="timeline-icon completed">📋</div>
+              <div class="timeline-icon pending">📋</div>
               <div class="timeline-label">Request Endorsed</div>
             </div>
           </div>
@@ -413,11 +301,17 @@
 
         <!-- Request Status Card -->
         <div class="status-card">
-          <h1 class="status-title">STEP 4: Your request has been endorsed</h1>
+          <h1 class="status-title">STEP 2: Your submitted request is under review</h1>
           <div class="status-description">
-            Our office has endorsed your request and your request shall be sent to the President's Office to be officially approved. Your extension proponents will be assigned shortly after.
+            Please be patient as we review the validity and essence of your request. This might take 3-5 business days.
           </div>
           <div class="status-signature">University Extension Services Office</div>
+        </div>
+
+        <!-- Navigation Links -->
+        <div style="display: flex; gap: 20px; margin-top: 20px;">
+          <a href="{% url 'request_approved' %}" class="view-document-link">View Approved Request</a>
+          <a href="{% url 'request_rejected' %}" class="view-document-link">View Rejected Request</a>
         </div>
       </div>
     </div>
@@ -425,3 +319,5 @@
 
 </body>
 </html>
+
+{% endblock %}

@@ -8,6 +8,8 @@
 <title>Pool of Experts</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Top Section Styles -->
 <style>
 	body {
 		background-color: #F9F9F9;
@@ -92,7 +94,15 @@
 		cursor: pointer;
 		border: none;
 	}
+	
+	.view-btn.active {
+        background: #000000;
+        color: #FFFFFF;
+    }
+</style>
 
+<!-- Content Section Styles -->
+<style>
 	/* Expert Cards */
 	.expert-container {
 		display: flex;
@@ -179,6 +189,10 @@
 		background: #eee;
 	}
 
+	.expert-list td:last-child {
+		text-align: center;
+	}
+
 	/* Pagination */
 	.pagination {
 		display: flex;
@@ -194,6 +208,13 @@
 		border-radius: 6px;
 		cursor: pointer;
 	}
+	
+	.expert-list td a {
+		text-decoration: none;
+	}
+
+	.hidden { display: none !important; }
+    .visible { display: flex !important; }
 </style>
 
 </head>
@@ -215,29 +236,25 @@
 			</div>
 
 			<div class="view-buttons">
-
-				<svg class="view-btn" width="28" height="28"> <use href="#icon-grid"></use> </svg>
-				<svg class="view-btn" width="28" height="28"> <use href="#icon-list"></use> </svg>
+				<svg class="view-btn active" id="gridViewBtn" width="28" height="28"><use id="gridIconUse" href="#icon-grid-active"></use></svg>
+				<svg class="view-btn" id="listViewBtn" width="28" height="28"><use id="listIconUse" href="#icon-list"></use></svg>
 			</div>
 		</div>
 
-
-
-
 		<!-- Expert Grid -->
-		<div class="expert-container">
-		<div class="expert-card">
+		<div class="expert-container visible" id="expertGrid">
+		<a href="profile/" class="expert-card" style="text-decoration:none; color:inherit;">
 			<div class="campus-tag">Campus A</div>
 			<div class="college-logo"></div>
 			<div class="profile-icon"></div>
 			<div class="expert-name">John Doe</div>
 			<div class="expert-degree">PhD in Computer Science</div>
 			<div class="expert-projects">Projects: 5</div>
-		</div>
+		</a>
 		</div>
 
 		<!-- Expert List (toggle alternative) -->
-		<table class="expert-list" style="display:none;">
+		<table class="expert-list hidden" id="expertList">
 		<thead>
 			<tr>
 			<th>Name</th>
@@ -249,11 +266,11 @@
 		</thead>
 		<tbody>
 			<tr>
-			<td>John Doe</td>
+			<td><a href="profile/">John Doe</a></td>
 			<td>Campus A</td>
 			<td>Engineering</td>
 			<td>5</td>
-			<td>⚙️</td>
+			<td><svg width="16" height="4"><use href="#icon-settings"></use></svg></td>
 			</tr>
 		</tbody>
 		</table>
@@ -306,7 +323,77 @@
 		<path d="M29.7998 19.0664H19.0664V29.7998H29.7998V19.0664Z" stroke="white" stroke-width="3.04932" stroke-linecap="round" stroke-linejoin="round"/>
 		<path d="M12.9331 19.0664H2.19971V29.7998H12.9331V19.0664Z" stroke="white" stroke-width="3.04932" stroke-linecap="round" stroke-linejoin="round"/>
 	</symbol>
+
+	<!-- Settings (3 dots) -->
+	<symbol id="icon-settings" viewBox="0 0 16 4" fill="none" xmlns="http://www.w3.org/2000/svg">
+		<path d="M2 4C1.45 4 0.979167 3.80417 0.5875 3.4125C0.195833 3.02083 0 2.55 0 2C0 1.45 0.195833 0.979167 0.5875 0.5875C0.979167 0.195833 1.45 0 2 0C2.55 0 3.02083 0.195833 3.4125 0.5875C3.80417 0.979167 4 1.45 4 2C4 2.55 3.80417 3.02083 3.4125 3.4125C3.02083 3.80417 2.55 4 2 4ZM8 4C7.45 4 6.97917 3.80417 6.5875 3.4125C6.19583 3.02083 6 2.55 6 2C6 1.45 6.19583 0.979167 6.5875 0.5875C6.97917 0.195833 7.45 0 8 0C8.55 0 9.02083 0.195833 9.4125 0.5875C9.80417 0.979167 10 1.45 10 2C10 2.55 9.80417 3.02083 9.4125 3.4125C9.02083 3.80417 8.55 4 8 4ZM14 4C13.45 4 12.9792 3.80417 12.5875 3.4125C12.1958 3.02083 12 2.55 12 2C12 1.45 12.1958 0.979167 12.5875 0.5875C12.9792 0.195833 13.45 0 14 0C14.55 0 15.0208 0.195833 15.4125 0.5875C15.8042 0.979167 16 1.45 16 2C16 2.55 15.8042 3.02083 15.4125 3.4125C15.0208 3.80417 14.55 4 14 4Z" fill="#1D1B20"/>
+	</symbol>
+
+	<!-- Settings -->
+	 
 </svg>
+
+<script>
+    // View toggle functionality for experts
+    const gridViewBtn = document.getElementById('gridViewBtn');
+    const listViewBtn = document.getElementById('listViewBtn');
+    const expertGrid = document.getElementById('expertGrid');
+    const expertList = document.getElementById('expertList');
+
+    gridViewBtn.addEventListener('click', function() {
+        gridViewBtn.classList.add('active');
+        listViewBtn.classList.remove('active');
+        expertGrid.classList.remove('hidden');
+        expertGrid.classList.add('visible');
+        expertList.classList.add('hidden');
+    });
+
+    listViewBtn.addEventListener('click', function() {
+        listViewBtn.classList.add('active');
+        gridViewBtn.classList.remove('active');
+        expertGrid.classList.remove('visible');
+        expertGrid.classList.add('hidden');
+        expertList.classList.remove('hidden');
+    });
+
+    // Optionally, set default view on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        gridViewBtn.classList.add('active');
+        expertGrid.classList.add('visible');
+        expertList.classList.add('hidden');
+    });
+
+	const gridIconUse = document.getElementById('gridIconUse');
+	const listIconUse = document.getElementById('listIconUse');
+
+	gridViewBtn.addEventListener('click', function() {
+		gridViewBtn.classList.add('active');
+		listViewBtn.classList.remove('active');
+		expertGrid.classList.remove('hidden');
+		expertGrid.classList.add('visible');
+		expertList.classList.add('hidden');
+		gridIconUse.setAttribute('href', '#icon-grid-active');
+		listIconUse.setAttribute('href', '#icon-list');
+	});
+
+	listViewBtn.addEventListener('click', function() {
+		listViewBtn.classList.add('active');
+		gridViewBtn.classList.remove('active');
+		expertGrid.classList.remove('visible');
+		expertGrid.classList.add('hidden');
+		expertList.classList.remove('hidden');
+		gridIconUse.setAttribute('href', '#icon-grid');
+		listIconUse.setAttribute('href', '#icon-list-active');
+	});
+
+	document.addEventListener('DOMContentLoaded', function() {
+		gridViewBtn.classList.add('active');
+		expertGrid.classList.add('visible');
+		expertList.classList.add('hidden');
+		gridIconUse.setAttribute('href', '#icon-grid-active');
+		listIconUse.setAttribute('href', '#icon-list');
+	});
+</script>
 
 </body>
 </html>

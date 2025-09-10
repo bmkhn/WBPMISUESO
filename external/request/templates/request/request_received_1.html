@@ -1,9 +1,12 @@
+{% extends "base_public.html" %}
+{% block content %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Request Status</title>
+<title>Request Expanded 1</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,113 +28,6 @@
       width: 100%;
       display: flex;
       flex-direction: column;
-    }
-
-    .top-container {
-      width: 100%;
-      height: 115px;
-      background-color: #F7F3F1;
-      padding: 0 40px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .logo-container {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-    }
-
-    .logo-circle {
-      width: 75px;
-      height: 75px;
-      border-radius: 100%;
-      background-color: #ccc;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-    }
-
-    .logo-circle img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .title {
-      font-family: 'Instrument Sans', sans-serif;
-      font-size: 21px;
-      font-weight: bold;
-      color: #000;
-    }
-
-    .button-container {
-      display: flex;
-      gap: 30px;
-      align-items: center;
-    }
-
-    .nav-button {
-      font-family: 'Inter', sans-serif;
-      color: #404040;
-      font-size: 18px;
-      line-height: 38px;
-      font-weight: 600;
-      padding: 10px 20px;
-      border-radius: 4px;
-      background: none;
-      border: none;
-      cursor: pointer;
-      transition: background-color 0.2s ease, color 0.2s ease;
-    }
-
-    .nav-button:hover {
-      background-color: #000;
-      color: #fff;
-    }
-
-    .profile-circle {
-      width: 50px;
-      height: 50px;
-      border-radius: 100%;
-      background-color: #ddd;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-    }
-
-    .profile-circle img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .bottom-container {
-      background-color: black;
-      display: flex;
-      align-items: center;
-      padding: 0 20px;
-      height: 40px;
-    }
-
-    .bottom-nav-button {
-      font-family: 'Inter', sans-serif;
-      color: #FFFFFF;
-      padding: 0 15px;
-      font-size: 12px;
-      line-height: 20px;
-      font-weight: 600;
-      background: none;
-      border: none;
-      cursor: pointer;
-      transition: background-color 0.2s ease, color 0.2s ease;
-    }
-
-    .bottom-nav-button:hover {
-      background-color: #191919;
     }
 
     /* Main Content Layout */
@@ -198,15 +94,6 @@
       margin-bottom: 5px;
     }
 
-    .update-text a {
-      color: #007bff;
-      text-decoration: none;
-    }
-
-    .update-text a:hover {
-      text-decoration: underline;
-    }
-
     .update-time {
       font-size: 12px;
       color: #666;
@@ -245,24 +132,13 @@
       z-index: 1;
     }
 
-    .timeline::after {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 0;
-      width: 50%;
-      height: 2px;
-      background-color: #28a745;
-      z-index: 2;
-    }
-
     .timeline-step {
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 10px;
       position: relative;
-      z-index: 3;
+      z-index: 2;
       background-color: white;
       padding: 0 10px;
     }
@@ -282,11 +158,6 @@
       color: white;
     }
 
-    .timeline-icon.active {
-      background-color: #28a745;
-      color: white;
-    }
-
     .timeline-icon.pending {
       background-color: #e0e0e0;
       color: #666;
@@ -299,8 +170,8 @@
       text-align: center;
     }
 
-    /* Request Status Card */
-    .status-card {
+    /* Request Details Card */
+    .request-card {
       background-color: white;
       border-radius: 12px;
       padding: 30px;
@@ -308,36 +179,40 @@
       margin-bottom: 20px;
     }
 
-    .status-title {
+    .request-title {
       font-size: 24px;
       font-weight: 700;
       color: #2C2C2C;
+      margin-bottom: 10px;
+    }
+
+    .request-subtitle {
+      font-size: 16px;
+      color: #666;
       margin-bottom: 20px;
     }
 
-    .status-description {
+    .request-description {
       font-size: 16px;
       color: #333;
       line-height: 1.6;
       margin-bottom: 20px;
     }
 
-    .status-signature {
+    .request-company {
       font-size: 14px;
       color: #666;
       text-align: right;
     }
 
-    .back-link {
+    .view-document-link {
       color: #007bff;
       text-decoration: none;
       font-size: 16px;
       font-weight: 600;
-      margin-bottom: 20px;
-      display: inline-block;
     }
 
-    .back-link:hover {
+    .view-document-link:hover {
       text-decoration: underline;
     }
 
@@ -346,34 +221,6 @@
 <body>
 
   <div class="main-container">
-    <!-- Top Container -->
-    <div class="top-container">
-      <!-- Logo Container -->
-      <div class="logo-container">
-        <div class="logo-circle">
-          {% load static %}
-          <img src="{% static 'ueso.png' %}" alt="UESO Logo">
-        </div>
-        <div class="title">University Extensions<br>Services Office</div>
-      </div>
-
-      <!-- Button Container -->
-      <div class="button-container">
-        <button class="nav-button">Home</button>
-        <button class="nav-button">Downloadables</button>
-        <button class="nav-button">Announcements</button>
-        <button class="nav-button">Archives</button>
-        <button class="nav-button">About Us</button>
-        <div class="profile-circle">
-          <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" alt="Profile">
-        </div>
-      </div>
-    </div>
-
-    <!-- Bottom Container -->
-    <div class="bottom-container">
-        <button class="bottom-nav-button">Request</button>
-    </div>
 
     <!-- Main Content Wrapper -->
     <div class="content-wrapper">
@@ -384,32 +231,30 @@
         <div class="update-item">
           <div class="update-icon"></div>
           <div class="update-content">
-            <div class="update-text">Your request <a href="#">Pre-Release Psychological Intervention Program for PDL's</a> has had a reply. See attached instructions.</div>
-            <div class="update-time">11:08 A.M. January 01, 2024</div>
+            <div class="update-text">Your request Pre-Release Psychological Intervention Program for PDL's has had a reply. See attached instructions.</div>
+            <div class="update-time">January 01, 2024, 11:08 A.M.</div>
           </div>
         </div>
 
         <div class="update-item">
           <div class="update-icon"></div>
           <div class="update-content">
-            <div class="update-text">Your request <a href="#">Pre-Release Psychological Intervention Program for PDL's</a> has had a reply. See attached notes.</div>
-            <div class="update-time">09:08 P.M. December 30, 2023</div>
+            <div class="update-text">Your request Pre-Release Psychological Intervention Program for PDL's has had a reply. See attached notes.</div>
+            <div class="update-time">December 30, 2023, 09:08 P.M.</div>
           </div>
         </div>
 
         <div class="update-item">
           <div class="update-icon"></div>
           <div class="update-content">
-            <div class="update-text">Your have successfully submitted <a href="#">Pre-Release Psychological Intervention Program for PDL's</a>. Please wait for updates.</div>
-            <div class="update-time">09:08 P.M. December 30, 2023</div>
+            <div class="update-text">Your have successfully submitted Pre-Release Psychological Intervention Program for PDL's. Please wait for updates.</div>
+            <div class="update-time">December 30, 2023, 09:08 P.M.</div>
           </div>
         </div>
       </div>
 
       <!-- Main Content Area -->
       <div class="main-content">
-        <a href="{% url 'request_expanded_1' %}" class="back-link">← Back to Request Details</a>
-        
         <!-- Request Timeline -->
         <div class="timeline-container">
           <div class="timeline">
@@ -418,7 +263,7 @@
               <div class="timeline-label">Received Request</div>
             </div>
             <div class="timeline-step">
-              <div class="timeline-icon active">📄</div>
+              <div class="timeline-icon pending">📄</div>
               <div class="timeline-label">Reviewing Request</div>
             </div>
             <div class="timeline-step">
@@ -432,23 +277,22 @@
           </div>
         </div>
 
-        <!-- Request Status Card -->
-        <div class="status-card">
-          <h1 class="status-title">STEP 2: Your submitted request is under review</h1>
-          <div class="status-description">
-            Please be patient as we review the validity and essence of your request. This might take 3-5 business days.
+        <!-- Request Details Card -->
+        <div class="request-card">
+          <h1 class="request-title">Pre-Release Psychological Intervention Program for PDL's.</h1>
+          <div class="request-subtitle">Fake Place Name.</div>
+          <div class="request-description">
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
           </div>
-          <div class="status-signature">University Extension Services Office</div>
+          <div class="request-company">Fake Company</div>
         </div>
 
-        <!-- Navigation Links -->
-        <div style="display: flex; gap: 20px; margin-top: 20px;">
-          <a href="{% url 'request_approved' %}" class="view-document-link">View Approved Request</a>
-          <a href="{% url 'request_rejected' %}" class="view-document-link">View Rejected Request</a>
-        </div>
+        <a href="{% url 'request_status' %}" class="view-document-link">View Request Status</a>
       </div>
     </div>
   </div>
 
 </body>
 </html>
+
+{% endblock %}

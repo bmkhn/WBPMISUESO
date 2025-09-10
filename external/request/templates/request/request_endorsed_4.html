@@ -1,9 +1,12 @@
+{% extends "base_public.html" %}
+{% block content %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Request Expanded 1</title>
+<title>Request Endorsed</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,113 +28,6 @@
       width: 100%;
       display: flex;
       flex-direction: column;
-    }
-
-    .top-container {
-      width: 100%;
-      height: 115px;
-      background-color: #F7F3F1;
-      padding: 0 40px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .logo-container {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-    }
-
-    .logo-circle {
-      width: 75px;
-      height: 75px;
-      border-radius: 100%;
-      background-color: #ccc;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-    }
-
-    .logo-circle img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .title {
-      font-family: 'Instrument Sans', sans-serif;
-      font-size: 21px;
-      font-weight: bold;
-      color: #000;
-    }
-
-    .button-container {
-      display: flex;
-      gap: 30px;
-      align-items: center;
-    }
-
-    .nav-button {
-      font-family: 'Inter', sans-serif;
-      color: #404040;
-      font-size: 18px;
-      line-height: 38px;
-      font-weight: 600;
-      padding: 10px 20px;
-      border-radius: 4px;
-      background: none;
-      border: none;
-      cursor: pointer;
-      transition: background-color 0.2s ease, color 0.2s ease;
-    }
-
-    .nav-button:hover {
-      background-color: #000;
-      color: #fff;
-    }
-
-    .profile-circle {
-      width: 50px;
-      height: 50px;
-      border-radius: 100%;
-      background-color: #ddd;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-    }
-
-    .profile-circle img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .bottom-container {
-      background-color: black;
-      display: flex;
-      align-items: center;
-      padding: 0 20px;
-      height: 40px;
-    }
-
-    .bottom-nav-button {
-      font-family: 'Inter', sans-serif;
-      color: #FFFFFF;
-      padding: 0 15px;
-      font-size: 12px;
-      line-height: 20px;
-      font-weight: 600;
-      background: none;
-      border: none;
-      cursor: pointer;
-      transition: background-color 0.2s ease, color 0.2s ease;
-    }
-
-    .bottom-nav-button:hover {
-      background-color: #191919;
     }
 
     /* Main Content Layout */
@@ -198,6 +94,15 @@
       margin-bottom: 5px;
     }
 
+    .update-text a {
+      color: #007bff;
+      text-decoration: none;
+    }
+
+    .update-text a:hover {
+      text-decoration: underline;
+    }
+
     .update-time {
       font-size: 12px;
       color: #666;
@@ -232,7 +137,7 @@
       left: 0;
       right: 0;
       height: 2px;
-      background-color: #e0e0e0;
+      background-color: #28a745;
       z-index: 1;
     }
 
@@ -242,7 +147,7 @@
       align-items: center;
       gap: 10px;
       position: relative;
-      z-index: 2;
+      z-index: 3;
       background-color: white;
       padding: 0 10px;
     }
@@ -262,11 +167,6 @@
       color: white;
     }
 
-    .timeline-icon.pending {
-      background-color: #e0e0e0;
-      color: #666;
-    }
-
     .timeline-label {
       font-size: 12px;
       font-weight: 600;
@@ -274,8 +174,8 @@
       text-align: center;
     }
 
-    /* Request Details Card */
-    .request-card {
+    /* Request Status Card */
+    .status-card {
       background-color: white;
       border-radius: 12px;
       padding: 30px;
@@ -283,40 +183,36 @@
       margin-bottom: 20px;
     }
 
-    .request-title {
+    .status-title {
       font-size: 24px;
       font-weight: 700;
       color: #2C2C2C;
-      margin-bottom: 10px;
-    }
-
-    .request-subtitle {
-      font-size: 16px;
-      color: #666;
       margin-bottom: 20px;
     }
 
-    .request-description {
+    .status-description {
       font-size: 16px;
       color: #333;
       line-height: 1.6;
       margin-bottom: 20px;
     }
 
-    .request-company {
+    .status-signature {
       font-size: 14px;
       color: #666;
       text-align: right;
     }
 
-    .view-document-link {
+    .back-link {
       color: #007bff;
       text-decoration: none;
       font-size: 16px;
       font-weight: 600;
+      margin-bottom: 20px;
+      display: inline-block;
     }
 
-    .view-document-link:hover {
+    .back-link:hover {
       text-decoration: underline;
     }
 
@@ -363,30 +259,32 @@
         <div class="update-item">
           <div class="update-icon"></div>
           <div class="update-content">
-            <div class="update-text">Your request Pre-Release Psychological Intervention Program for PDL's has had a reply. See attached instructions.</div>
-            <div class="update-time">January 01, 2024, 11:08 A.M.</div>
+            <div class="update-text">Your request <a href="#">Pre-Release Psychological Intervention Program for PDL's</a> has had a reply. See attached instructions.</div>
+            <div class="update-time">11:08 A.M. January 01, 2024</div>
           </div>
         </div>
 
         <div class="update-item">
           <div class="update-icon"></div>
           <div class="update-content">
-            <div class="update-text">Your request Pre-Release Psychological Intervention Program for PDL's has had a reply. See attached notes.</div>
-            <div class="update-time">December 30, 2023, 09:08 P.M.</div>
+            <div class="update-text">Your request <a href="#">Pre-Release Psychological Intervention Program for PDL's</a> has had a reply. See attached notes.</div>
+            <div class="update-time">09:08 P.M. December 30, 2023</div>
           </div>
         </div>
 
         <div class="update-item">
           <div class="update-icon"></div>
           <div class="update-content">
-            <div class="update-text">Your have successfully submitted Pre-Release Psychological Intervention Program for PDL's. Please wait for updates.</div>
-            <div class="update-time">December 30, 2023, 09:08 P.M.</div>
+            <div class="update-text">Your have successfully submitted <a href="#">Pre-Release Psychological Intervention Program for PDL's</a>. Please wait for updates.</div>
+            <div class="update-time">09:08 P.M. December 30, 2023</div>
           </div>
         </div>
       </div>
 
       <!-- Main Content Area -->
       <div class="main-content">
+        <a href="{% url 'request_status' %}" class="back-link">← Back to Request Status</a>
+        
         <!-- Request Timeline -->
         <div class="timeline-container">
           <div class="timeline">
@@ -395,34 +293,33 @@
               <div class="timeline-label">Received Request</div>
             </div>
             <div class="timeline-step">
-              <div class="timeline-icon pending">📄</div>
+              <div class="timeline-icon completed">📄</div>
               <div class="timeline-label">Reviewing Request</div>
             </div>
             <div class="timeline-step">
-              <div class="timeline-icon pending">⏳</div>
+              <div class="timeline-icon completed">👍</div>
               <div class="timeline-label">Waiting for Approval</div>
             </div>
             <div class="timeline-step">
-              <div class="timeline-icon pending">📋</div>
+              <div class="timeline-icon completed">📋</div>
               <div class="timeline-label">Request Endorsed</div>
             </div>
           </div>
         </div>
 
-        <!-- Request Details Card -->
-        <div class="request-card">
-          <h1 class="request-title">Pre-Release Psychological Intervention Program for PDL's.</h1>
-          <div class="request-subtitle">Fake Place Name.</div>
-          <div class="request-description">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+        <!-- Request Status Card -->
+        <div class="status-card">
+          <h1 class="status-title">STEP 4: Your request has been endorsed</h1>
+          <div class="status-description">
+            Our office has endorsed your request and your request shall be sent to the President's Office to be officially approved. Your extension proponents will be assigned shortly after.
           </div>
-          <div class="request-company">Fake Company</div>
+          <div class="status-signature">University Extension Services Office</div>
         </div>
-
-        <a href="{% url 'request_status' %}" class="view-document-link">View Request Status</a>
       </div>
     </div>
   </div>
 
 </body>
 </html>
+
+{% endblock %}

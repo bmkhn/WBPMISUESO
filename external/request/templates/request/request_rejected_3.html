@@ -1,9 +1,12 @@
+{% extends "base_public.html" %}
+{% block content %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Request Approved</title>
+<title>Request Rejected</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,113 +28,6 @@
       width: 100%;
       display: flex;
       flex-direction: column;
-    }
-
-    .top-container {
-      width: 100%;
-      height: 115px;
-      background-color: #F7F3F1;
-      padding: 0 40px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .logo-container {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-    }
-
-    .logo-circle {
-      width: 75px;
-      height: 75px;
-      border-radius: 100%;
-      background-color: #ccc;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-    }
-
-    .logo-circle img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .title {
-      font-family: 'Instrument Sans', sans-serif;
-      font-size: 21px;
-      font-weight: bold;
-      color: #000;
-    }
-
-    .button-container {
-      display: flex;
-      gap: 30px;
-      align-items: center;
-    }
-
-    .nav-button {
-      font-family: 'Inter', sans-serif;
-      color: #404040;
-      font-size: 18px;
-      line-height: 38px;
-      font-weight: 600;
-      padding: 10px 20px;
-      border-radius: 4px;
-      background: none;
-      border: none;
-      cursor: pointer;
-      transition: background-color 0.2s ease, color 0.2s ease;
-    }
-
-    .nav-button:hover {
-      background-color: #000;
-      color: #fff;
-    }
-
-    .profile-circle {
-      width: 50px;
-      height: 50px;
-      border-radius: 100%;
-      background-color: #ddd;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-    }
-
-    .profile-circle img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .bottom-container {
-      background-color: black;
-      display: flex;
-      align-items: center;
-      padding: 0 20px;
-      height: 40px;
-    }
-
-    .bottom-nav-button {
-      font-family: 'Inter', sans-serif;
-      color: #FFFFFF;
-      padding: 0 15px;
-      font-size: 12px;
-      line-height: 20px;
-      font-weight: 600;
-      background: none;
-      border: none;
-      cursor: pointer;
-      transition: background-color 0.2s ease, color 0.2s ease;
-    }
-
-    .bottom-nav-button:hover {
-      background-color: #191919;
     }
 
     /* Main Content Layout */
@@ -319,6 +215,21 @@
       font-size: 16px;
       color: #333;
       line-height: 1.6;
+      margin-bottom: 15px;
+    }
+
+    .rejection-reason {
+      font-size: 16px;
+      color: #333;
+      line-height: 1.6;
+      margin-bottom: 15px;
+      font-weight: 600;
+    }
+
+    .resubmit-info {
+      font-size: 16px;
+      color: #333;
+      line-height: 1.6;
       margin-bottom: 20px;
     }
 
@@ -346,35 +257,6 @@
 <body>
 
   <div class="main-container">
-    <!-- Top Container -->
-    <div class="top-container">
-      <!-- Logo Container -->
-      <div class="logo-container">
-        <div class="logo-circle">
-          {% load static %}
-          <img src="{% static 'ueso.png' %}" alt="UESO Logo">
-        </div>
-        <div class="title">University Extensions<br>Services Office</div>
-      </div>
-
-      <!-- Button Container -->
-      <div class="button-container">
-        <button class="nav-button">Home</button>
-        <button class="nav-button">Downloadables</button>
-        <button class="nav-button">Announcements</button>
-        <button class="nav-button">Archives</button>
-        <button class="nav-button">About Us</button>
-        <div class="profile-circle">
-          <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" alt="Profile">
-        </div>
-      </div>
-    </div>
-
-    <!-- Bottom Container -->
-    <div class="bottom-container">
-        <button class="bottom-nav-button">Request</button>
-    </div>
-
     <!-- Main Content Wrapper -->
     <div class="content-wrapper">
       <!-- Left Sidebar -->
@@ -400,7 +282,7 @@
         <div class="update-item">
           <div class="update-icon"></div>
           <div class="update-content">
-            <div class="update-text">Your have successfully submitted <a href="#">Pre-Release Psychological Intervention Program for PDL's</a>. Please wait for updates.</div>
+            <div class="update-text">You have successfully submitted <a href="#">Pre-Release Psychological Intervention Program for PDL's</a>. Please wait for updates.</div>
             <div class="update-time">09:08 P.M. December 30, 2023</div>
           </div>
         </div>
@@ -422,7 +304,7 @@
               <div class="timeline-label">Reviewing Request</div>
             </div>
             <div class="timeline-step">
-              <div class="timeline-icon active">👍</div>
+              <div class="timeline-icon active">👎</div>
               <div class="timeline-label">Waiting for Approval</div>
             </div>
             <div class="timeline-step">
@@ -434,16 +316,17 @@
 
         <!-- Request Status Card -->
         <div class="status-card">
-          <h1 class="status-title">STEP 3: Your request has been approved</h1>
+          <h1 class="status-title">STEP 3: Your request has been rejected</h1>
           <div class="status-description">
-            We have reviewed your request and have approved of its contents. Due to protocol, you and your organization must submit your letter of intent to the President's Office at the admin building of Palawan State University's Tiniguiban Campus. The Endorsement process will take a few days, once endorsed your request can be approved by the office.
+            We have reviewed your request and found that it is lacking in a few details:
+          </div>
+          <div class="rejection-reason">
+            1. Not specific in number of providers needed.
+          </div>
+          <div class="resubmit-info">
+            You can submit another request complete with the details asked for above.
           </div>
           <div class="status-signature">University Extension Services Office</div>
-        </div>
-
-        <!-- Navigation Link -->
-        <div style="margin-top: 20px;">
-          <a href="{% url 'request_endorsed' %}" class="view-document-link">View Endorsed Request</a>
         </div>
       </div>
     </div>
@@ -451,3 +334,5 @@
 
 </body>
 </html>
+
+{% endblock %}
