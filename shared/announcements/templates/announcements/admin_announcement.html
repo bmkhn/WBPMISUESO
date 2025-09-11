@@ -1,0 +1,529 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Announcements • UESO</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Global and Header Styles -->
+<style>
+    body {
+        background: #F9F9F9;
+        margin: 0;
+        font-family: 'Inter', Arial, sans-serif;
+    }
+
+    .main-container {
+        margin: 60px;
+        display: flex;
+        flex-direction: column;
+        gap: 30px;
+        min-height: 1440px;
+    }
+
+	/* Announcement Content Styles */
+	.announcement-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
+
+	/* Add Announcement Button */
+	.add-announcement-btn {
+		background: #063A1C;
+		color: white;
+		padding: 15px 45px;
+		border-radius: 8px;
+		font-size: 18px;
+		font-family: 'Inter', Arial, sans-serif;
+        font-weight: 500;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		box-shadow: 0 2px 8px rgba(10, 108, 68, 0.2);
+		text-decoration: none;
+        border-radius: 18px;
+        cursor: pointer;
+        transition: background 0.2s;
+	}
+
+	.add-announcement-btn:hover {
+		background: #04521c;
+		transform: translateY(-2px);
+		box-shadow: 0 4px 12px rgba(10, 108, 68, 0.3);
+		text-decoration: none;
+		color: white;
+	}
+
+	.announce-title {
+        font-family: 'Inter', Arial, sans-serif;
+        font-weight: 400;
+        font-size: 32px;
+		margin: 0;
+	}
+</style>
+
+<!-- Search Bar Styles -->
+<style>
+	.search-container {
+		width: 100%;
+		display: flex;
+		gap: 10px;
+	}
+
+	.search-bar {
+		width: 100%;
+		height: 52px;
+		background: #F2F4F8;
+		display: flex;
+		align-items: center;
+		padding: 0 16px;
+		border-bottom: 1.09px solid #535353;
+		border-radius: 8px;
+		box-sizing: border-box;
+	}
+
+	.search-bar input {
+		flex: 1;
+		border: none;
+		outline: none;
+		background: transparent;
+		font-size: 18px;
+		font-family: 'Inter', sans-serif;
+		font-weight: 400;
+		color: #5A5252;
+		padding: 0 10px;
+	}
+</style>
+
+<!-- Announcement Card Styles -->
+<style>
+	.announce-grid {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 2rem;
+	}
+
+	.announce-card {
+		background: white;
+		border: 0.83px solid rgba(0,0,0,0.5);
+		transition: transform 0.2s ease, box-shadow 0.2s ease;
+		position: relative;
+	}
+
+	.announce-card:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+	}
+
+	.announce-options {
+		position: absolute;
+		top: 0.75rem;
+		right: 0.75rem;
+		z-index: 100;
+	}
+
+	.options-toggle {
+		background: white;
+		border: 2px solid var(--gray-200);
+		cursor: pointer;
+		padding: 0.5rem;
+		border-radius: 50%;
+		transition: all 0.2s ease;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 36px;
+		height: 36px;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+	}
+
+	.options-toggle:hover {
+		background-color: #F3F4F6;
+		border-color: #1f7c57;
+		transform: scale(1.05);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+	}
+
+	.options-toggle svg {
+		width: 20px;
+		height: 20px;
+		color: var(--text-900);
+		font-weight: bold;
+	}
+
+	.options-dropdown {
+		position: absolute;
+		top: calc(100% + 8px);
+		right: 0;
+		background: white;
+		border: 1px solid var(--gray-200);
+		border-radius: 8px;
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+		min-width: 140px;
+		opacity: 0;
+		visibility: hidden;
+		transform: translateY(-10px);
+		transition: all 0.2s ease;
+		z-index: 200;
+	}
+
+	.options-dropdown.show {
+		opacity: 1;
+		visibility: visible;
+		transform: translateY(0);
+	}
+
+	.options-item {
+		padding: 0.75rem 1rem;
+		cursor: pointer;
+		transition: background-color 0.2s ease;
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		font-size: 0.875rem;
+		color: var(--text-700);
+	}
+
+	.options-item:hover {
+		background-color: #F3F4F6;
+	}
+
+	.options-item:first-child {
+		border-radius: 8px 8px 0 0;
+	}
+
+	.options-item:last-child {
+		border-radius: 0 0 8px 8px;
+	}
+
+	.options-item svg {
+		width: 16px;
+		height: 16px;
+	}
+
+	.edit-option {
+		color: #1f7c57;
+	}
+
+	.delete-option {
+		color: #DC2626;
+	}
+
+	.announce-thumb {
+		width: 100%;
+		height: 200px;
+		background: linear-gradient(135deg, #0A6C44, #1f7c57);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		color: white;
+		font-size: 3rem;
+	}
+
+	.announce-text-container {
+		padding: 15px;
+		gap: 10px;
+		display: flex;
+		flex-direction: column;
+	}
+
+	.announce-card h3 {
+		font-size: 18px;
+		margin: 0;
+		font-weight: 600;
+		color: #625C56;
+	}
+
+	.announce-card p {
+		margin: 0;
+		color: #625C56;
+	}
+
+	.announce-meta {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		font-size: 14px;
+		color: #E37910;
+	}
+
+	.announce-date {
+		font-weight: 500;
+	}
+</style>
+
+<!-- Pagination Styles -->
+<style>
+	.pagination-container {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		margin-top: 3rem;
+		gap: 0.5rem;
+	}
+
+	.pagination-button {
+		padding: 0.75rem 1rem;
+		border: 1px solid #E5E7EB;
+		background: white;
+		color: #4B5563;
+		border-radius: 8px;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		font-weight: 500;
+	}
+
+	.pagination-button:hover {
+		background: #F3F4F6;
+		border-color: #0A6C44;
+		color: #0A6C44;
+	}
+
+	.pagination-button.active {
+		background: #0A6C44;
+		color: white;
+		border-color: #0A6C44;
+	}
+
+	.pagination-button:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	.page-info {
+		margin: 0 1rem;
+		color: #4B5563;
+		font-weight: 500;
+	}
+
+	@media (max-width: 900px) {
+		.announce-grid {
+			grid-template-columns: 1fr;
+		}
+		
+		.announce-container {
+			padding: 1rem;
+		}
+
+		.announce-title {
+			font-size: 2rem;
+		}
+
+		.pagination-container {
+			flex-wrap: wrap;
+			gap: 0.25rem;
+		}
+
+		.pagination-button {
+			padding: 0.5rem 0.75rem;
+			font-size: 0.875rem;
+		}
+	}
+</style>
+
+</head>
+<body>
+	<!-- Main Container -->
+	<div class="main-container">
+		<div class="announcement-header">
+			<h1 class="announce-title">Announcements</h1>
+			<!-- Restriction for User Roles Here -->
+			<a href="#" class="add-announcement-btn">Add Announcement</a>
+		</div>
+
+		<!-- Search Bar -->
+		<div class="search-container">
+			<div class="search-bar">
+				<svg width="20" height="20"> <use href="#icon-search"></use> </svg>
+				<input type="text" placeholder="Search"/>
+				<svg width="20" height="20"> <use href="#icon-filter"></use> </svg>
+			</div>
+		</div>
+	
+		<div class="announce-grid">
+			<div class="announce-card">
+				<div class="announce-options">
+					<button class="options-toggle" onclick="toggleOptions(1)" title="More options">
+						<svg viewBox="0 0 24 24" fill="currentColor">
+							<circle cx="12" cy="5" r="2"></circle>
+							<circle cx="12" cy="12" r="2"></circle>
+							<circle cx="12" cy="19" r="2"></circle>
+						</svg>
+					</button>
+					<div class="options-dropdown" id="options-1">
+						<div class="options-item edit-option" onclick="editAnnouncement(1)">
+							<svg viewBox="0 0 24 24" fill="currentColor">
+								<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+								<path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+							</svg>
+							Edit
+						</div>
+						<div class="options-item delete-option" onclick="deleteAnnouncement(1)">
+							<svg viewBox="0 0 24 24" fill="currentColor">
+								<polyline points="3,6 5,6 21,6"></polyline>
+								<path d="m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
+							</svg>
+							Delete
+						</div>
+					</div>
+				</div>
+				<div class="announce-thumb">📢</div>
+				<div class="announce-text-container">
+					<div class="announce-meta"><span class="announce-date">March 15, 2024</span></div>
+					<h3>New Extension Project Guidelines</h3>
+					<p>Updated guidelines for college extension projects for the academic year 2024-2025. All coordinators must review and implement these new standards.</p>
+				</div>
+			</div>
+
+			<div class="announce-card">
+				<div class="announce-options">
+					<button class="options-toggle" onclick="toggleOptions(2)" title="More options">
+						<svg viewBox="0 0 24 24" fill="currentColor">
+							<circle cx="12" cy="5" r="2"></circle>
+							<circle cx="12" cy="12" r="2"></circle>
+							<circle cx="12" cy="19" r="2"></circle>
+						</svg>
+					</button>
+					<div class="options-dropdown" id="options-2">
+						<div class="options-item edit-option" onclick="editAnnouncement(2)">
+							<svg viewBox="0 0 24 24" fill="currentColor">
+								<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+								<path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+							</svg>
+							Edit
+						</div>
+						<div class="options-item delete-option" onclick="deleteAnnouncement(2)">
+							<svg viewBox="0 0 24 24" fill="currentColor"><polyline points="3,6 5,6 21,6"></polyline><path d="m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path></svg>
+							Delete
+						</div>
+					</div>
+				</div>
+				<div class="announce-thumb">🌱</div>
+				<div class="announce-text-container">
+					<div class="announce-meta"><span class="announce-date">March 12, 2024</span></div>
+					<h3>Community Outreach Program</h3>
+					<p>Registration is now open for the upcoming community service programs. Limited slots available for each college.</p>
+				</div>
+			</div>
+		</div>
+
+		<!-- Pagination -->
+		<div class="pagination-container">
+			<button class="pagination-button" onclick="changePage(1)" disabled>Previous</button>
+			<button class="pagination-button active" onclick="changePage(1)">1</button>
+			<button class="pagination-button" onclick="changePage(2)">2</button>
+			<button class="pagination-button" onclick="changePage(3)">3</button>
+			<button class="pagination-button" onclick="changePage(2)">Next</button>
+			<span class="page-info">Page 1 of 3</span>
+		</div>
+	</div>
+
+<!-- SVG Sprite Section -->
+<svg>
+	<!-- Search -->
+	<symbol id="icon-search" viewBox="0 0 21 21" fill="none">
+		<path d="M8.89152 15.9057C9.75056 15.9057 10.6012 15.7365 11.3948 15.4077C12.1885 15.079 12.9096 14.5972 13.5171 13.9897C14.1245 13.3823 14.6064 12.6612 14.9351 11.8675C15.2638 11.0739 15.433 10.2232 15.433 9.36417C15.433 8.50513 15.2638 7.6545 14.9351 6.86084C14.6064 6.06719 14.1245 5.34606 13.5171 4.73862C12.9096 4.13119 12.1885 3.64934 11.3948 3.3206C10.6012 2.99186 9.75056 2.82266 8.89152 2.82266C7.1566 2.82266 5.49274 3.51185 4.26597 4.73862C3.03919 5.9654 2.35 7.62926 2.35 9.36417C2.35 11.0991 3.03919 12.763 4.26597 13.9897C5.49274 15.2165 7.1566 15.9057 8.89152 15.9057V15.9057ZM15.7819 14.713L19.685 18.6161C19.7891 18.7167 19.872 18.8371 19.9291 18.9701C19.9861 19.1032 20.0161 19.2463 20.0173 19.391C20.0184 19.5358 19.9907 19.6793 19.9358 19.8133C19.8809 19.9472 19.7999 20.0689 19.6974 20.1712C19.595 20.2735 19.4732 20.3544 19.3392 20.4091C19.2052 20.4638 19.0616 20.4913 18.9168 20.4899C18.772 20.4886 18.629 20.4584 18.496 20.4012C18.3631 20.3439 18.2428 20.2608 18.1423 20.1566L14.2392 16.2535C12.4866 17.614 10.2814 18.2554 8.07247 18.0472C5.86357 17.839 3.81705 16.7968 2.34951 15.1328C0.881971 13.4688 0.103735 11.308 0.173229 9.09044C0.242723 6.87284 1.15472 4.76508 2.72357 3.19623C4.29242 1.62738 6.40018 0.715379 8.61778 0.645885C10.8354 0.576391 12.9961 1.35463 14.6601 2.82217C16.3241 4.28971 17.3663 6.33623 17.5745 8.54513C17.7827 10.754 17.1413 12.9592 15.7808 14.7119L15.7819 14.713Z" fill="#5A5252"/>
+	</symbol>
+
+	<!-- Filter -->
+	<symbol id="icon-filter" viewBox="0 0 23 22" fill="none">
+		<path opacity="0.9" d="M21.5399 1.92871H1.37988L9.44388 11.4644V18.0567L13.4759 20.0727V11.4644L21.5399 1.92871Z" stroke="#1E1E1E" stroke-width="2.016" stroke-linecap="round" stroke-linejoin="round"/>
+	</symbol>
+</svg>
+
+<script>
+	// Pagination Functionality
+	let currentPage = 1;
+	const totalPages = 3;
+
+	function changePage(page) {
+		if (page < 1 || page > totalPages || page === currentPage) return;
+		
+		currentPage = page;
+		updatePagination();
+		updatePageInfo();
+	}
+
+	function updatePagination() {
+		const buttons = document.querySelectorAll('.pagination-button');
+		const prevButton = buttons[0];
+		const nextButton = buttons[4];
+		
+		// Update Previous button
+		prevButton.disabled = currentPage === 1;
+		
+		// Update page number buttons
+		for (let i = 1; i <= 3; i++) {
+			buttons[i].classList.toggle('active', i === currentPage);
+		}
+		
+		// Update Next button
+		nextButton.disabled = currentPage === totalPages;
+	}
+
+	function updatePageInfo() {
+		const pageInfo = document.querySelector('.page-info');
+		pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+	}
+
+	// Options menu functionality
+	let activeDropdown = null;
+
+	function toggleOptions(id) {
+		console.log(`Toggling options for announcement ${id}`);
+		const dropdown = document.getElementById(`options-${id}`);
+		
+		if (!dropdown) {
+			console.error(`Dropdown with id 'options-${id}' not found`);
+			return;
+		}
+		
+		// Close any other open dropdown
+		if (activeDropdown && activeDropdown !== dropdown) {
+			activeDropdown.classList.remove('show');
+		}
+		
+		// Toggle current dropdown
+		dropdown.classList.toggle('show');
+		activeDropdown = dropdown.classList.contains('show') ? dropdown : null;
+		
+		console.log(`Dropdown ${id} is now ${dropdown.classList.contains('show') ? 'visible' : 'hidden'}`);
+	}
+
+	function editAnnouncement(id) {
+		// Close dropdown
+		document.getElementById(`options-${id}`).classList.remove('show');
+		activeDropdown = null;
+		
+		// Redirect to edit form
+		// window.location.href = `{% url 'all_users:announcement_form' %}?edit=${id}`;
+	}
+
+	function deleteAnnouncement(id) {
+		// Close dropdown
+		document.getElementById(`options-${id}`).classList.remove('show');
+		activeDropdown = null;
+		
+		// Add your delete logic here
+		// if (confirm(`Are you sure you want to delete announcement ${id}?`)) {
+		// 	console.log(`Deleting announcement ${id}`);
+		// 	alert(`Delete functionality for announcement ${id} - Implement your delete logic here`);
+		// }
+	}
+
+	// Close dropdowns when clicking outside
+	document.addEventListener('click', function(event) {
+		if (!event.target.closest('.announce-options')) {
+			if (activeDropdown) {
+				activeDropdown.classList.remove('show');
+				activeDropdown = null;
+			}
+		}
+	});
+</script>
+
+</body>
+</html>

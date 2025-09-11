@@ -1,72 +1,38 @@
-{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>{% if announcement.id %}Edit Announcement{% else %}Add Announcement{% endif %} • UESO</title>
+<title>Add Announcement</title> <!-- Add Announcement | Edit Announcement -->
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
 
 <style>
-	:root { 
-		--green-700: #245F3E; 
-		--green-600: #1f7c57; 
-		--green-500: #0A6C44; 
-		--text-900: #1F2937; 
-		--text-700: #374151; 
-		--text-600: #4B5563; 
-		--gray-100: #F3F4F6; 
-		--gray-200: #E5E7EB; 
-		--gray-250: #EAEAEA; 
-		--brand-accent: #1EC492;
-	}
-
 	* { 
 		margin: 0;
 		padding: 0;
 		box-sizing: border-box;
 	}
 
-	body {
-		margin: 0;
-		font-family: 'Inter', sans-serif;
-		background: #F5F5F5;
-		color: var(--text-900);
-		line-height: 1.55;
-	}
+    body {
+        background: #F9F9F9;
+        margin: 0;
+        font-family: 'Inter', Arial, sans-serif;
+    }
 
-	.container {
-		max-width: 800px;
-		margin: 0 auto;
-		padding: 2rem;
-		background: #F5F5F5;
-		min-height: 100vh;
-	}
-
-	.form-header {
-		margin-bottom: 2rem;
-	}
+    .main-container {
+        margin: 60px;
+        display: flex;
+        flex-direction: column;
+        gap: 30px;
+        min-height: 1440px;
+    }
 
 	.form-title {
-		font-size: 2.5rem;
-		font-weight: 700;
-		color: var(--text-900);
-		margin-bottom: 0.5rem;
-	}
-
-	.form-subtitle {
-		color: var(--text-600);
-		font-size: 1rem;
-	}
-
-	.announcement-form {
-		background: white;
-		border-radius: 12px;
-		padding: 2rem;
-		box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-		border: 1px solid var(--gray-200);
+		font-family: 'Inter', Arial, sans-serif;
+        font-weight: 400;
+        font-size: 32px;
+		margin: 0;
+		color: #000000;
 	}
 
 	.form-group {
@@ -79,7 +45,7 @@
 	.form-label {
 		min-width: 150px;
 		font-weight: 600;
-		color: var(--text-700);
+		color: #374151;
 		padding-top: 0.75rem;
 		font-size: 0.95rem;
 	}
@@ -87,7 +53,7 @@
 	.form-input {
 		flex: 1;
 		padding: 0.75rem 1rem;
-		border: 1px solid var(--gray-200);
+		border: 1px solid #E5E7EB;
 		border-radius: 8px;
 		font-size: 1rem;
 		font-family: 'Inter', sans-serif;
@@ -97,7 +63,7 @@
 
 	.form-input:focus {
 		outline: none;
-		border-color: var(--green-500);
+		border-color: #0A6C44;
 		background: white;
 		box-shadow: 0 0 0 3px rgba(10, 108, 68, 0.1);
 	}
@@ -109,7 +75,7 @@
 
 	.upload-area {
 		flex: 1;
-		border: 2px dashed var(--gray-200);
+		border: 2px dashed #E5E7EB;
 		border-radius: 8px;
 		padding: 2rem;
 		text-align: center;
@@ -123,18 +89,18 @@
 	}
 
 	.upload-area:hover {
-		border-color: var(--green-500);
+		border-color: #0A6C44;
 		background: #F0FDF4;
 	}
 
 	.upload-icon {
 		width: 24px;
 		height: 24px;
-		color: var(--text-600);
+		color: #4B5563;
 	}
 
 	.upload-text {
-		color: var(--text-600);
+		color: #4B5563;
 		font-size: 0.95rem;
 	}
 
@@ -144,24 +110,24 @@
 		align-items: center;
 		gap: 0.5rem;
 		padding: 0.75rem 1rem;
-		border: 1px solid var(--gray-200);
+		border: 1px solid #E5E7EB;
 		border-radius: 8px;
 		background: #F9F9F9;
 		cursor: pointer;
 		transition: all 0.2s ease;
 		font-size: 1rem;
-		color: var(--text-700);
+		color: #374151;
 	}
 
 	.schedule-button:hover {
-		border-color: var(--green-500);
+		border-color: #0A6C44;
 		background: white;
 	}
 
 	.clock-icon {
 		width: 20px;
 		height: 20px;
-		color: var(--text-600);
+		color: #4B5563;
 	}
 
 	.form-actions {
@@ -170,7 +136,7 @@
 		justify-content: flex-end;
 		margin-top: 2rem;
 		padding-top: 1.5rem;
-		border-top: 1px solid var(--gray-200);
+		border-top: 1px solid #E5E7EB;
 	}
 
 	.btn {
@@ -195,18 +161,18 @@
 	}
 
 	.btn-submit {
-		background: var(--green-500);
+		background: #0A6C44;
 		color: white;
 	}
 
 	.btn-submit:hover {
-		background: var(--green-600);
+		background: #1f7c57;
 		transform: translateY(-1px);
 	}
 
 	.btn-submit:disabled {
-		background: var(--gray-200);
-		color: var(--text-600);
+		background: #E5E7EB;
+		color: #4B5563;
 		cursor: not-allowed;
 		transform: none;
 	}
@@ -233,7 +199,7 @@
 		display: flex;
 		align-items: center;
 		gap: 0.5rem;
-		color: var(--green-600);
+		color: #1f7c57;
 		font-size: 0.9rem;
 	}
 
@@ -262,32 +228,23 @@
 		}
 	}
 </style>
-</head>
 
+</head>
 <body>
-	<div class="container">
+	<div class="main-container">
 		<div class="form-header">
-			<h1 class="form-title">{% if announcement.id %}Edit Announcement{% else %}Add Announcement{% endif %}</h1>
-			<p class="form-subtitle">
-				{% if announcement.id %}
-					Update the announcement details below
-				{% else %}
-					Create a new announcement for your organization
-				{% endif %}
-			</p>
+			<h1 class="form-title">Add Announcement</h1> <!-- Add Announcement | Edit Announcement -->
 		</div>
 
-		<form class="announcement-form" method="post" enctype="multipart/form-data">
-			{% csrf_token %}
-			
+		<form class="announcement-form" method="post" enctype="multipart/form-data">	
 			<div class="form-group">
 				<label class="form-label">Title:</label>
 				<input 
 					type="text" 
 					name="title" 
 					class="form-input" 
-					placeholder="New Extension Opportunity for Palawan State University Providers. Seminar at Performing Arts Center"
-					value="{{ announcement.title|default:'' }}"
+					placeholder=""
+					value=""
 					required
 				>
 			</div>
@@ -297,18 +254,15 @@
 				<textarea 
 					name="content" 
 					class="form-input form-textarea" 
-					placeholder="New Extension Opportunity for Palawan State University Providers. Seminar at Performing Arts Center"
+					placeholder=""
 					required
-				>{{ announcement.content|default:'' }}</textarea>
+				></textarea>
 			</div>
 
 			<div class="form-group">
 				<label class="form-label">Attach Cover Photo:</label>
 				<div class="upload-area" onclick="document.getElementById('cover-photo').click()">
-					<svg class="upload-icon" viewBox="0 0 24 24" fill="currentColor">
-						<path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
-						<path d="M12,11L8,15H16L12,11Z" />
-					</svg>
+					<svg class="upload-icon"><use href="#icon-upload"></use></svg>
 					<span class="upload-text">Click to upload</span>
 					<input type="file" id="cover-photo" name="cover_photo" class="file-input" accept="image/*">
 				</div>
@@ -317,9 +271,7 @@
 			<div class="form-group">
 				<label class="form-label">Schedule Post:</label>
 				<div class="schedule-button" onclick="toggleSchedule()">
-					<svg class="clock-icon" viewBox="0 0 24 24" fill="currentColor">
-						<path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M16.2,16.2L11,13V7H12.5V12.2L17,14.9L16.2,16.2Z" />
-					</svg>
+					<svg class="clock-icon"><use href="#icon-clock"></use></svg>
 					<span id="schedule-text">Now</span>
 					<input type="hidden" name="schedule_type" value="now">
 					<input type="datetime-local" name="scheduled_date" style="display: none;">
@@ -328,104 +280,112 @@
 
 			<div class="file-preview" id="file-preview">
 				<div class="file-info">
-					<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-						<path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
-					</svg>
+					<svg width="16" height="16"><use href="#icon-upload"></use></svg>
 					<span id="file-name"></span>
 				</div>
 			</div>
 
 			<div class="form-actions">
 				<button type="button" class="btn btn-preview" onclick="previewAnnouncement()">Preview</button>
-				<button type="submit" class="btn btn-submit" id="submit-btn">
-					{% if announcement.id %}Update Announcement{% else %}Submit{% endif %}
-				</button>
+				<button type="submit" class="btn btn-submit" id="submit-btn">Submit</button> <!-- Edit Announcement | Submit -->
 			</div>
 		</form>
 	</div>
 
-	<script>
-		// File upload handling
-		document.getElementById('cover-photo').addEventListener('change', function(e) {
-			const file = e.target.files[0];
-			if (file) {
-				document.getElementById('file-name').textContent = file.name;
-				document.getElementById('file-preview').classList.add('show');
-			} else {
-				document.getElementById('file-preview').classList.remove('show');
-			}
-		});
+<!-- SVG Sprite Section -->
+<svg style="display:none;">
+	<symbol id="icon-upload" viewBox="0 0 24 24" fill="currentColor">
+		<path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+		<path d="M12,11L8,15H16L12,11Z" />
+	</symbol>
+	<symbol id="icon-clock" viewBox="0 0 24 24" fill="currentColor">
+		<path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M16.2,16.2L11,13V7H12.5V12.2L17,14.9L16.2,16.2Z" />
+	</symbol>
+</svg>
 
-		// Schedule handling
-		function toggleSchedule() {
-			const scheduleText = document.getElementById('schedule-text');
-			const scheduleType = document.querySelector('input[name="schedule_type"]');
-			const scheduleDate = document.querySelector('input[name="scheduled_date"]');
-			
-			if (scheduleType.value === 'now') {
-				scheduleText.textContent = 'Schedule for later';
-				scheduleType.value = 'later';
-				scheduleDate.style.display = 'block';
-				scheduleDate.type = 'datetime-local';
-				scheduleDate.required = true;
-			} else {
-				scheduleText.textContent = 'Now';
-				scheduleType.value = 'now';
-				scheduleDate.style.display = 'none';
-				scheduleDate.required = false;
-			}
+<script>
+	// File upload handling
+	document.getElementById('cover-photo').addEventListener('change', function(e) {
+		const file = e.target.files[0];
+		if (file) {
+			document.getElementById('file-name').textContent = file.name;
+			document.getElementById('file-preview').classList.add('show');
+		} else {
+			document.getElementById('file-preview').classList.remove('show');
 		}
+	});
 
-		// Preview functionality
-		function previewAnnouncement() {
-			const title = document.querySelector('input[name="title"]').value;
-			const content = document.querySelector('textarea[name="content"]').value;
-			
-			if (!title || !content) {
-				alert('Please fill in the title and content before previewing.');
-				return;
-			}
-			
-			// Create preview window
-			const previewWindow = window.open('', '_blank', 'width=800,height=600');
-			previewWindow.document.write(`
-				<!DOCTYPE html>
-				<html>
-				<head>
-					<title>Announcement Preview</title>
-					<style>
-						body { font-family: 'Inter', sans-serif; padding: 2rem; background: #F5F5F5; }
-						.preview-card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-						h1 { color: #245F3E; margin-bottom: 1rem; }
-						p { line-height: 1.6; color: #374151; }
-					</style>
-				</head>
-				<body>
-					<div class="preview-card">
-						<h1>${title}</h1>
-						<p>${content.replace(/\n/g, '<br>')}</p>
-					</div>
-				</body>
-				</html>
-			`);
+	// Schedule handling
+	function toggleSchedule() {
+		const scheduleText = document.getElementById('schedule-text');
+		const scheduleType = document.querySelector('input[name="schedule_type"]');
+		const scheduleDate = document.querySelector('input[name="scheduled_date"]');
+		
+		if (scheduleType.value === 'now') {
+			scheduleText.textContent = 'Schedule for later';
+			scheduleType.value = 'later';
+			scheduleDate.style.display = 'block';
+			scheduleDate.type = 'datetime-local';
+			scheduleDate.required = true;
+		} else {
+			scheduleText.textContent = 'Now';
+			scheduleType.value = 'now';
+			scheduleDate.style.display = 'none';
+			scheduleDate.required = false;
 		}
+	}
 
-		// Form validation
-		document.querySelector('.announcement-form').addEventListener('submit', function(e) {
-			const title = document.querySelector('input[name="title"]').value.trim();
-			const content = document.querySelector('textarea[name="content"]').value.trim();
-			
-			if (!title || !content) {
-				e.preventDefault();
-				alert('Please fill in all required fields.');
-				return;
-			}
-			
-			// Show loading state
-			const submitBtn = document.getElementById('submit-btn');
-			submitBtn.disabled = true;
-			submitBtn.textContent = 'Processing...';
-		});
-	</script>
+	// Preview functionality
+	function previewAnnouncement() {
+		const title = document.querySelector('input[name="title"]').value;
+		const content = document.querySelector('textarea[name="content"]').value;
+		
+		if (!title || !content) {
+			alert('Please fill in the title and content before previewing.');
+			return;
+		}
+		
+		// Create preview window
+		const previewWindow = window.open('', '_blank', 'width=800,height=600');
+		previewWindow.document.write(`
+			<!DOCTYPE html>
+			<html>
+			<head>
+				<title>Announcement Preview</title>
+				<style>
+					body { font-family: 'Inter', sans-serif; padding: 2rem; background: #F5F5F5; }
+					.preview-card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+					h1 { color: #245F3E; margin-bottom: 1rem; }
+					p { line-height: 1.6; color: #374151; }
+				</style>
+			</head>
+			<body>
+				<div class="preview-card">
+					<h1>${title}</h1>
+					<p>${content.replace(/\n/g, '<br>')}</p>
+				</div>
+			</body>
+			</html>
+		`);
+	}
+
+	// Form validation
+	document.querySelector('.announcement-form').addEventListener('submit', function(e) {
+		const title = document.querySelector('input[name="title"]').value.trim();
+		const content = document.querySelector('textarea[name="content"]').value.trim();
+		
+		if (!title || !content) {
+			e.preventDefault();
+			alert('Please fill in all required fields.');
+			return;
+		}
+		
+		// Show loading state
+		const submitBtn = document.getElementById('submit-btn');
+		submitBtn.disabled = true;
+		submitBtn.textContent = 'Processing...';
+	});
+</script>
+
 </body>
 </html>
