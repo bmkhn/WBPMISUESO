@@ -1,18 +1,15 @@
+{% extends "base_internal.html" %}
+{% block content %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>Add Announcement</title> <!-- Add Announcement | Edit Announcement -->
+<title>Add Announcement</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
 
 <style>
-	* { 
-		margin: 0;
-		padding: 0;
-		box-sizing: border-box;
-	}
-
     body {
         background: #F9F9F9;
         margin: 0;
@@ -233,48 +230,44 @@
 <body>
 	<div class="main-container">
 		<div class="form-header">
-			<h1 class="form-title">Add Announcement</h1> <!-- Add Announcement | Edit Announcement -->
+			<h1 class="form-title">Add Announcement</h1>
 		</div>
+		<form class="announcement-form" method="post" enctype="multipart/form-data">
+			{% csrf_token %}
+			{% if form.non_field_errors %}
+				<div class="form-group" style="color: #b91c1c;">
+				{{ form.non_field_errors }}
+				</div>
+			{% endif %}
 
-		<form class="announcement-form" method="post" enctype="multipart/form-data">	
 			<div class="form-group">
-				<label class="form-label">Title:</label>
-				<input 
-					type="text" 
-					name="title" 
-					class="form-input" 
-					placeholder=""
-					value=""
-					required
-				>
+				<label class="form-label" for="id_title">Title:</label>
+				<input class="form-input" type="text" name="title" id="id_title" value="{{ form.title.value|default:'' }}">
+				{% if form.title.errors %}
+					<div style="color: #b91c1c;">{{ form.title.errors }}</div>
+				{% endif %}
 			</div>
 
 			<div class="form-group">
-				<label class="form-label">Body:</label>
-				<textarea 
-					name="content" 
-					class="form-input form-textarea" 
-					placeholder=""
-					required
-				></textarea>
+				<label class="form-label" for="id_body">Body:</label>
+				<textarea class="form-input form-textarea" name="body" id="id_body" value="{{ form.body.value|default:'' }}"></textarea>
 			</div>
 
 			<div class="form-group">
-				<label class="form-label">Attach Cover Photo:</label>
-				<div class="upload-area" onclick="document.getElementById('cover-photo').click()">
+				<label class="form-label" for="id_cover_photo">Attach Cover Photo:</label>
+				<div class="upload-area" onclick="document.getElementById('id_cover_photo').click()">
 					<svg class="upload-icon"><use href="#icon-upload"></use></svg>
 					<span class="upload-text">Click to upload</span>
-					<input type="file" id="cover-photo" name="cover_photo" class="file-input" accept="image/*">
+					<input class="file-input" type="file" name="cover_photo" id="id_cover_photo" accept="image/*" value="{{ form.cover_photo.value|default:'' }}">
 				</div>
 			</div>
 
 			<div class="form-group">
-				<label class="form-label">Schedule Post:</label>
+				<label class="form-label" for="id_scheduled_at">Schedule Post:</label>
 				<div class="schedule-button" onclick="toggleSchedule()">
 					<svg class="clock-icon"><use href="#icon-clock"></use></svg>
 					<span id="schedule-text">Now</span>
-					<input type="hidden" name="schedule_type" value="now">
-					<input type="datetime-local" name="scheduled_date" style="display: none;">
+					{{ form.scheduled_at }}
 				</div>
 			</div>
 
@@ -286,26 +279,29 @@
 			</div>
 
 			<div class="form-actions">
-				<button type="button" class="btn btn-preview" onclick="previewAnnouncement()">Preview</button>
-				<button type="submit" class="btn btn-submit" id="submit-btn">Submit</button> <!-- Edit Announcement | Submit -->
+				<button type="submit" class="btn btn-submit" id="submit-btn">Submit</button>
 			</div>
 		</form>
 	</div>
 
 <!-- SVG Sprite Section -->
 <svg style="display:none;">
+	
+	<!-- Upload Icon -->
 	<symbol id="icon-upload" viewBox="0 0 24 24" fill="currentColor">
 		<path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
 		<path d="M12,11L8,15H16L12,11Z" />
 	</symbol>
+
+	<!-- Clock Icon -->
 	<symbol id="icon-clock" viewBox="0 0 24 24" fill="currentColor">
 		<path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M16.2,16.2L11,13V7H12.5V12.2L17,14.9L16.2,16.2Z" />
 	</symbol>
 </svg>
 
 <script>
-	// File upload handling
-	document.getElementById('cover-photo').addEventListener('change', function(e) {
+	// File Upload Handling
+	document.getElementById('id_cover_photo').addEventListener('change', function(e) {
 		const file = e.target.files[0];
 		if (file) {
 			document.getElementById('file-name').textContent = file.name;
@@ -315,7 +311,7 @@
 		}
 	});
 
-	// Schedule handling
+	// Schedule Handling
 	function toggleSchedule() {
 		const scheduleText = document.getElementById('schedule-text');
 		const scheduleType = document.querySelector('input[name="schedule_type"]');
@@ -335,41 +331,7 @@
 		}
 	}
 
-	// Preview functionality
-	function previewAnnouncement() {
-		const title = document.querySelector('input[name="title"]').value;
-		const content = document.querySelector('textarea[name="content"]').value;
-		
-		if (!title || !content) {
-			alert('Please fill in the title and content before previewing.');
-			return;
-		}
-		
-		// Create preview window
-		const previewWindow = window.open('', '_blank', 'width=800,height=600');
-		previewWindow.document.write(`
-			<!DOCTYPE html>
-			<html>
-			<head>
-				<title>Announcement Preview</title>
-				<style>
-					body { font-family: 'Inter', sans-serif; padding: 2rem; background: #F5F5F5; }
-					.preview-card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-					h1 { color: #245F3E; margin-bottom: 1rem; }
-					p { line-height: 1.6; color: #374151; }
-				</style>
-			</head>
-			<body>
-				<div class="preview-card">
-					<h1>${title}</h1>
-					<p>${content.replace(/\n/g, '<br>')}</p>
-				</div>
-			</body>
-			</html>
-		`);
-	}
-
-	// Form validation
+	// Form Validation
 	document.querySelector('.announcement-form').addEventListener('submit', function(e) {
 		const title = document.querySelector('input[name="title"]').value.trim();
 		const content = document.querySelector('textarea[name="content"]').value.trim();
@@ -389,3 +351,5 @@
 
 </body>
 </html>
+
+{% endblock %}

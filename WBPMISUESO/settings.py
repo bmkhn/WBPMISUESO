@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -40,7 +41,7 @@ INSTALLED_APPS = [
 
     # External Apps
     'external.home',            # Home
-    # 'external.requests',        # Requests
+    'external.request',         # Request
 
     # Internal Apps
     'internal.agenda',          # Agenda
@@ -52,7 +53,7 @@ INSTALLED_APPS = [
 
     # Shared Apps
     # 'shared.about_us',          # About Us
-    # 'shared.announcements',     # Announcements
+    'shared.announcements',     # Announcements
     # 'shared.archive',           # Archive
     'shared.budget',            # Budget
     'shared.event_calendar',    # Calendar
@@ -76,8 +77,6 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'WBPMISUESO.urls'
-
-import os
 
 TEMPLATES = [
     {
@@ -151,19 +150,25 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / "static"]
 
+# Media files (User Uploads)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'users.User'
 
-# Email settings
+
 # Email settings for local testing
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
+# For production, configure SMTP settings as below
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 # EMAIL_HOST = 'smtp.gmail.com'
 # EMAIL_PORT = 587
 # EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = 'your_gmail_address@gmail.com'
-# EMAIL_HOST_PASSWORD = 'your_gmail_app_password'
-# DEFAULT_FROM_EMAIL = 'your_gmail_address@gmail.com'
+# EMAIL_HOST_USER = 'bab.bmkhn@gmail.com'
+# EMAIL_HOST_PASSWORD = 'rkwk islz dvlo mqrx'
+# DEFAULT_FROM_EMAIL = 'bab.bmkhn@gmail.com'

@@ -14,8 +14,10 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib import admin
+
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     # EXTERNAL APPS
@@ -32,7 +34,7 @@ urlpatterns = [
 
     # SHARED APPS
     # About Us (None Yet)
-    # Announcement (None Yet)
+    path('announcements/', include('shared.announcements.urls')), # Announcements
     # Archive (None Yet)
     # Budget (None Yet)
     path('calendar/', include('shared.event_calendar.urls')),       # Calendar
@@ -45,4 +47,7 @@ urlpatterns = [
     # Notifications (None Yet)
     # Settings (None Yet)
     path('', include('system.users.urls')),                         # Users
-]
+] 
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
