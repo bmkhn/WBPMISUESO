@@ -4,6 +4,7 @@ from system.users.models import User
 class Announcement(models.Model):
 	title = models.CharField(max_length=255, blank=False)
 	body = models.TextField(blank=False)
+	is_scheduled = models.BooleanField(default=False)
 	scheduled_at = models.DateTimeField(null=True, blank=True)
 	cover_photo = models.ImageField(upload_to='announcements/', null=True, blank=True)
 	published_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='published_announcements', blank=False)

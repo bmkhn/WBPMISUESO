@@ -5,7 +5,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>Add Announcement</title>
+<title>Edit Announcement</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
 
@@ -230,7 +230,7 @@
 <body>
 	<div class="main-container">
 		<div class="form-header">
-			<h1 class="form-title">Add Announcement</h1>
+			<h1 class="form-title">Edit Announcement</h1>
 		</div>
 		<form class="announcement-form" method="post" enctype="multipart/form-data">
 			{% csrf_token %}
@@ -244,6 +244,7 @@
 				<label class="form-label" for="id_body">Body:</label>
 				<textarea class="form-input form-textarea" name="body" id="id_body">{{ form.body.value|default:'' }}</textarea>
 			</div>
+			
 
 			<div class="form-group">
 				<label class="form-label" for="id_cover_photo">Attach Cover Photo:</label>
@@ -263,16 +264,18 @@
 				<input class="form-input" type="hidden" name="scheduled_at" id="id_scheduled_at" value="{{ form.scheduled_at.value|default:'' }}">
 			</div>
 
-			<div class="file-preview" id="file-preview">
+			{% if announcement.cover_photo %}
+			<div class="file-preview show" id="file-preview">
 				<div class="file-info">
 					<svg width="16" height="16"><use href="#icon-upload"></use></svg>
-					<span id="file-name"></span>
+					<span id="file-name">Current: <a href="{{ announcement.cover_photo.url }}" target="_blank">{{ announcement.cover_photo.name|slice:'-50:' }}</a></span>
 				</div>
 			</div>
+			{% endif %}
 
 			<div class="form-actions">
 				<a href="/announcements/" class="btn btn-preview" style="text-decoration: none;">Back</a>
-				<button type="submit" class="btn btn-submit" id="submit-btn">Submit</button>
+				<button type="submit" class="btn btn-submit" id="submit-btn">Save Changes</button>
 			</div>
 		</form>
 	</div>
@@ -322,22 +325,6 @@
 		}
 	}
 
-	// Form Validation
-	// document.querySelector('.announcement-form').addEventListener('submit', function(e) {
-	// 	const title = document.querySelector('input[name="title"]').value.trim();
-	// 	const content = document.querySelector('textarea[name="content"]').value.trim();
-		
-	// 	if (!title || !content) {
-	// 		e.preventDefault();
-	// 		alert('Please fill in all required fields.');
-	// 		return;
-	// 	}
-		
-	// 	// Show loading state
-	// 	const submitBtn = document.getElementById('submit-btn');
-	// 	submitBtn.disabled = true;
-	// 	submitBtn.textContent = 'Processing...';
-	// });
 </script>
 
 </body>
