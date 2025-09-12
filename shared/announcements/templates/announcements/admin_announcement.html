@@ -126,7 +126,7 @@
 		position: absolute;
 		top: 0.75rem;
 		right: 0.75rem;
-		z-index: 100;
+		z-index: 2;
 	}
 
 	.options-toggle {
@@ -142,6 +142,7 @@
 		width: 36px;
 		height: 36px;
 		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+		z-index: 1;
 	}
 
 	.options-toggle:hover {
@@ -228,7 +229,7 @@
 	}
 
 	.announce-text-container {
-		padding: 15px;
+		padding: 15px 15px 40px 15px;
 		gap: 10px;
 		display: flex;
 		flex-direction: column;
@@ -296,6 +297,7 @@
 		cursor: pointer;
 		transition: all 0.2s ease;
 		font-weight: 500;
+		text-decoration: none;
 	}
 
 	.pagination-button:hover {
@@ -346,6 +348,80 @@
 	}
 </style>
 
+<!-- Sort/Filter Styles -->
+<style>
+	.filter-dropdown {
+		display: none;
+		position: absolute;
+		top: 280px;
+		right: 60px;
+		z-index: 1000;
+		background: white;
+		border: 1px solid #e5e7eb;
+		border-radius: 12px;
+		box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+		padding: 24px 32px;
+		min-width: 340px;
+	}
+	.filter-grid {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		grid-gap: 24px;
+	}
+
+	.filter-dropdown label {
+		font-weight: 500;
+		color: #374151;
+		display: flex;
+		flex-direction: column;
+	}
+
+	.filter-dropdown select,
+	.filter-dropdown input[type="date"] {
+		width: 100%;
+		margin-top: 6px;
+		border: 1px solid #e5e7eb;
+		border-radius: 6px;
+		padding: 6px 10px;
+		font-size: 15px;
+		font-family: 'Inter', Arial, sans-serif;
+		background: #f9f9f9;
+		color: #374151;
+	}
+
+	.filter-actions {
+		display: flex;
+		justify-content: flex-end;
+		gap: 10px;
+		margin-top: 24px;
+	}
+
+	.filter-apply {
+		background: #063A1C;
+		color: white;
+		padding: 10px 28px;
+		border-radius: 8px;
+		font-size: 16px;
+		font-family: 'Inter', Arial, sans-serif;
+		font-weight: 500;
+		cursor: pointer;
+		transition: background 0.2s;
+		border: none;
+	}
+
+	.filter-close {
+		background: #e5e7eb;
+		color: #374151;
+		padding: 10px 18px;
+		border-radius: 8px;
+		font-size: 16px;
+		font-family: 'Inter', Arial, sans-serif;
+		font-weight: 500;
+		cursor: pointer;
+		border: none;
+	}
+</style>
+
 </head>
 <body>
 	<!-- Main Container -->
@@ -358,18 +434,89 @@
 
 		<!-- Search Bar -->
 		<div class="search-container">
-			<div class="search-bar">
-				<svg width="20" height="20"> <use href="#icon-search"></use> </svg>
-				<input type="text" placeholder="Search"/>
-				<svg width="20" height="20"> <use href="#icon-filter"></use> </svg>
-			</div>
+		       <form class="search-bar" method="get" action="">
+					<svg width="20" height="20"> <use href="#icon-search"></use> </svg>
+					<input type="text" name="search" placeholder="Search" value="{{ search_query|default:'' }}"/>
+					<button type="button" id="filterBtn" style="background:none;border:none;padding:0;margin-right:5px;cursor:pointer;">
+						<svg width="20" height="20"> <use href="#icon-filter"></use> </svg>
+					</button>
+				   
+					<div id="filterDropdown" class="filter-dropdown">
+						<div class="filter-grid">
+							
+							<!-- Top Left - Sort By -->
+							<label style="font-weight:500;color:#374151;display:flex;flex-direction:column;">
+								Sort By
+								<select name="sort" style="width:100%;margin-top:6px;">
+									<option value="date" {% if sort_by == 'date' %}selected{% endif %}>Date</option>
+									<option value="title" {% if sort_by == 'title' %}selected{% endif %}>Title</option>
+									<option value="status" {% if sort_by == 'status' %}selected{% endif %}>Status</option>
+									<option value="edited" {% if sort_by == 'edited' %}selected{% endif %}>Edited</option>
+								</select>
+							</label>
+
+							<!-- Top Middle - Order -->
+							<label style="font-weight:500;color:#374151;display:flex;flex-direction:column;">
+								Order
+								<select name="order" style="width:100%;margin-top:6px;">
+									<option value="desc" {% if sort_order == 'desc' %}selected{% endif %}>Descending</option>
+									<option value="asc" {% if sort_order == 'asc' %}selected{% endif %}>Ascending</option>
+								</select>
+							</label>
+
+							<!-- Top Right - Status -->
+							<label style="font-weight:500;color:#374151;display:flex;flex-direction:column;">
+								Status
+								<select name="status" style="width:100%;margin-top:6px;">
+									<option value="">All Status</option>
+									<option value="published" {% if filter_status == 'published' %}selected{% endif %}>Published</option>
+									<option value="scheduled" {% if filter_status == 'scheduled' %}selected{% endif %}>Scheduled</option>
+								</select>
+							</label>
+
+							<!-- Bottom Left - Author -->
+							<label style="font-weight:500;color:#374151;display:flex;flex-direction:column;">
+								Author
+								<select name="author" style="width:100%;margin-top:6px;">
+									<option value="">All Authors</option>
+									{% for author in authors %}
+									<option value="{{ author.id }}" {% if filter_author == author.id|stringformat:'s' %}selected{% endif %}>{{ author.get_full_name|default:author.username }}</option>
+									{% endfor %}
+								</select>
+							</label>
+
+							<!-- Bottom Middle - Edited -->
+							<label style="font-weight:500;color:#374151;display:flex;flex-direction:column;">
+								Edited
+								<select name="edited" style="width:100%;margin-top:6px;">
+									<option value="">All</option>
+									<option value="true" {% if filter_edited == 'true' %}selected{% endif %}>Edited</option>
+									<option value="false" {% if filter_edited == 'false' %}selected{% endif %}>Not Edited</option>
+								</select>
+							</label>
+
+							<!-- Bottom Right - Date -->
+							<label style="font-weight:500;color:#374151;display:flex;flex-direction:column;">
+								Date
+								<input type="date" name="date" value="{{ filter_date|default:'' }}" style="width:90%;margin-top:6px;" />
+							</label>
+						</div>
+
+						<!-- Buttons Row -->
+						<div style="display:flex;justify-content:flex-end;gap:10px;margin-top:24px;">
+						<button type="submit" class="filter-apply">Apply</button>
+						<button type="button" id="closeFilter" class="filter-close">Close</button>
+						</div>
+					</div>
+
+		       </form>
 		</div>
 	
 		<div class="announce-grid">
 
 			<!-- Dynamic Announcements -->
 			{% for announcement in announcements %}
-			<div class="announce-card">
+			<div class="announce-card" style="cursor:pointer;" onclick="cardClick(event, '{{ announcement.id }}')">
 				<div class="announce-options">
 					<button class="options-toggle" onclick="toggleOptions('{{ announcement.id }}')" title="More options">
 						<svg viewBox="0 0 24 24" fill="currentColor">
@@ -404,12 +551,14 @@
 				</div>
 				<div class="announce-text-container">
 					<div class="announce-meta">
-						{% if announcement.is_scheduled and announcement.scheduled_at and announcement.scheduled_at > announcement.published_at %}
-							<span class="announce-date">Scheduled: {{ announcement.scheduled_at|timezone:"Asia/Manila"|date:"F d, Y" }} at {{ announcement.scheduled_at|timezone:"Asia/Manila"|time:"H:i" }}</span>
-						{% elif announcement.published_at and not announcement.edited_at %}
-							<span class="announce-date">Published: {{ announcement.published_at|timezone:"Asia/Manila"|date:"F d, Y" }} at {{ announcement.published_at|timezone:"Asia/Manila"|time:"H:i" }}</span>
-						{% elif announcement.edited_at %}
+						{% if announcement.edited_at and announcement.published_at %}
 							<span class="announce-date">Last Edited: {{ announcement.edited_at|timezone:"Asia/Manila"|date:"F d, Y" }} at {{ announcement.edited_at|timezone:"Asia/Manila"|time:"H:i" }}</span>
+						{% elif not announcement.edited_at and announcement.published_at %}
+							<span class="announce-date">Published: {{ announcement.published_at|timezone:"Asia/Manila"|date:"F d, Y" }} at {{ announcement.published_at|timezone:"Asia/Manila"|time:"H:i" }}</span>
+						{% elif announcement.edited_at and announcement.scheduled_at %}
+							<span class="announce-date">Scheduled (Edited): {{ announcement.scheduled_at|timezone:"Asia/Manila"|date:"F d, Y" }} at {{ announcement.scheduled_at|timezone:"Asia/Manila"|time:"H:i" }}</span>
+						{% elif not announcement.published_at and announcement.scheduled_at %}
+							<span class="announce-date">Scheduled: {{ announcement.scheduled_at|timezone:"Asia/Manila"|date:"F d, Y" }} at {{ announcement.scheduled_at|timezone:"Asia/Manila"|time:"H:i" }}</span>
 						{% endif %}
 					</div>
 					<h3>{{ announcement.title }}</h3>
@@ -431,12 +580,26 @@
 
 		<!-- Pagination -->
 		<div class="pagination-container">
-			<button class="pagination-button" onclick="changePage(1)" disabled>Previous</button>
-			<button class="pagination-button active" onclick="changePage(1)">1</button>
-			<button class="pagination-button" onclick="changePage(2)">2</button>
-			<button class="pagination-button" onclick="changePage(3)">3</button>
-			<button class="pagination-button" onclick="changePage(2)">Next</button>
-			<span class="page-info">Page 1 of 3</span>
+			   {% if page_obj.has_previous %}
+				   <a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a>
+			   {% else %}
+				   <button class="pagination-button" disabled>Previous</button>
+			   {% endif %}
+
+			   {% for num in paginator.page_range %}
+				   {% if num == page_obj.number %}
+					   <button class="pagination-button active" disabled>{{ num }}</button>
+				   {% else %}
+					   <a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ num }}">{{ num }}</a>
+				   {% endif %}
+			   {% endfor %}
+
+			   {% if page_obj.has_next %}
+				   <a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.next_page_number }}">Next</a>
+			   {% else %}
+				   <button class="pagination-button" disabled>Next</button>
+			   {% endif %}
+			   <span class="page-info">Page {{ page_obj.number }} of {{ paginator.num_pages }}</span>
 		</div>
 	</div>
 
@@ -452,78 +615,60 @@
 	<symbol id="icon-filter" viewBox="0 0 23 22" fill="none">
 		<path opacity="0.9" d="M21.5399 1.92871H1.37988L9.44388 11.4644V18.0567L13.4759 20.0727V11.4644L21.5399 1.92871Z" stroke="#1E1E1E" stroke-width="2.016" stroke-linecap="round" stroke-linejoin="round"/>
 	</symbol>
+
 </svg>
 
 <script>
-	// Pagination Functionality
-	let currentPage = 1;
-	const totalPages = 3;
+       // Card click handler that ignores clicks on options
+       function cardClick(event, id) {
+	       if (event.target.closest('.announce-options')) {
+		       return;
+	       }
+	       window.location.href = 'details/' + id + '/';
+       }
 
-	function changePage(page) {
-		if (page < 1 || page > totalPages || page === currentPage) return;
-		
-		currentPage = page;
-		updatePagination();
-		updatePageInfo();
-	}
+       // Options menu functionality
+       let activeDropdown = null;
+       function toggleOptions(id) {
+	       const dropdown = document.getElementById(`options-${id}`);
+	       if (!dropdown) return;
+	       if (activeDropdown && activeDropdown !== dropdown) {
+		       activeDropdown.classList.remove('show');
+	       }
+	       dropdown.classList.toggle('show');
+	       activeDropdown = dropdown.classList.contains('show') ? dropdown : null;
+       }
+       document.addEventListener('click', function(event) {
+	       if (!event.target.closest('.announce-options')) {
+		       if (activeDropdown) {
+			       activeDropdown.classList.remove('show');
+			       activeDropdown = null;
+		       }
+	       }
+       });
 
-	function updatePagination() {
-		const buttons = document.querySelectorAll('.pagination-button');
-		const prevButton = buttons[0];
-		const nextButton = buttons[4];
-		
-		// Update Previous button
-		prevButton.disabled = currentPage === 1;
-		
-		// Update page number buttons
-		for (let i = 1; i <= 3; i++) {
-			buttons[i].classList.toggle('active', i === currentPage);
-		}
-		
-		// Update Next button
-		nextButton.disabled = currentPage === totalPages;
-	}
-
-	function updatePageInfo() {
-		const pageInfo = document.querySelector('.page-info');
-		pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
-	}
-
-	// Options menu functionality
-	let activeDropdown = null;
-
-	function toggleOptions(id) {
-		console.log(`Toggling options for announcement ${id}`);
-		const dropdown = document.getElementById(`options-${id}`);
-		
-		if (!dropdown) {
-			console.error(`Dropdown with id 'options-${id}' not found`);
-			return;
-		}
-		
-		// Close any other open dropdown
-		if (activeDropdown && activeDropdown !== dropdown) {
-			activeDropdown.classList.remove('show');
-		}
-		
-		// Toggle current dropdown
-		dropdown.classList.toggle('show');
-		activeDropdown = dropdown.classList.contains('show') ? dropdown : null;
-		
-		console.log(`Dropdown ${id} is now ${dropdown.classList.contains('show') ? 'visible' : 'hidden'}`);
-	}
-
-
-
-	// Close dropdowns when clicking outside
-	document.addEventListener('click', function(event) {
-		if (!event.target.closest('.announce-options')) {
-			if (activeDropdown) {
-				activeDropdown.classList.remove('show');
-				activeDropdown = null;
-			}
-		}
-	});
+       // Filter dropdown logic
+       const filterBtn = document.getElementById('filterBtn');
+       const filterDropdown = document.getElementById('filterDropdown');
+       const closeFilter = document.getElementById('closeFilter');
+       if (filterBtn && filterDropdown) {
+	       filterBtn.addEventListener('click', function(e) {
+		       e.preventDefault();
+		       filterDropdown.style.display = 'block';
+	       });
+       }
+       if (closeFilter && filterDropdown) {
+	       closeFilter.addEventListener('click', function(e) {
+		       e.preventDefault();
+		       filterDropdown.style.display = 'none';
+	       });
+       }
+       // Hide dropdown when clicking outside
+       document.addEventListener('mousedown', function(e) {
+	       if (filterDropdown && !filterDropdown.contains(e.target) && e.target !== filterBtn) {
+		       filterDropdown.style.display = 'none';
+	       }
+       });
 </script>
 
 </body>

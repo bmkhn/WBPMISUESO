@@ -10,6 +10,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
 
 <style>
+	.error-input {
+		border-color: #E53E3E !important;
+		background: #FFF5F5 !important;
+	}
     body {
         background: #F9F9F9;
         margin: 0;
@@ -260,7 +264,7 @@
 					<svg class="clock-icon"><use href="#icon-clock"></use></svg>
 					<span id="schedule-text">Now</span>
 				</div>
-				<input class="form-input" type="hidden" name="scheduled_at" id="id_scheduled_at" value="{{ form.scheduled_at.value|default:'' }}">
+				<input class="form-input" type="hidden" name="scheduled_at" id="id_scheduled_at" value="{{ now|date:'Y-m-d\\TH:i' }}">
 			</div>
 
 			<div class="file-preview" id="file-preview">
@@ -293,6 +297,46 @@
 </svg>
 
 <script>
+	// Form Validation for required fields
+	document.querySelector('.announcement-form').addEventListener('submit', function(e) {
+		let valid = true;
+		const titleInput = document.getElementById('id_title');
+		const bodyInput = document.getElementById('id_body');
+
+		// Remove previous error states
+		titleInput.classList.remove('error-input');
+		bodyInput.classList.remove('error-input');
+		let titleError = document.getElementById('title-error');
+		let bodyError = document.getElementById('body-error');
+		if (titleError) titleError.remove();
+		if (bodyError) bodyError.remove();
+
+		if (!titleInput.value.trim()) {
+			valid = false;
+			titleInput.classList.add('error-input');
+			const err = document.createElement('div');
+			err.id = 'title-error';
+			err.textContent = 'Title is required.';
+			err.style.color = '#E53E3E';
+			err.style.fontSize = '0.95rem';
+			err.style.marginTop = '0.25rem';
+			titleInput.parentNode.appendChild(err);
+		}
+		if (!bodyInput.value.trim()) {
+			valid = false;
+			bodyInput.classList.add('error-input');
+			const err = document.createElement('div');
+			err.id = 'body-error';
+			err.textContent = 'Body is required.';
+			err.style.color = '#E53E3E';
+			err.style.fontSize = '0.95rem';
+			err.style.marginTop = '0.25rem';
+			bodyInput.parentNode.appendChild(err);
+		}
+		if (!valid) {
+			e.preventDefault();
+		}
+	});
 	// File Upload Handling
 	document.getElementById('id_cover_photo').addEventListener('change', function(e) {
 		const file = e.target.files[0];
@@ -321,23 +365,6 @@
 			scheduleInput.required = false;
 		}
 	}
-
-	// Form Validation
-	// document.querySelector('.announcement-form').addEventListener('submit', function(e) {
-	// 	const title = document.querySelector('input[name="title"]').value.trim();
-	// 	const content = document.querySelector('textarea[name="content"]').value.trim();
-		
-	// 	if (!title || !content) {
-	// 		e.preventDefault();
-	// 		alert('Please fill in all required fields.');
-	// 		return;
-	// 	}
-		
-	// 	// Show loading state
-	// 	const submitBtn = document.getElementById('submit-btn');
-	// 	submitBtn.disabled = true;
-	// 	submitBtn.textContent = 'Processing...';
-	// });
 </script>
 
 </body>

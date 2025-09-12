@@ -4,13 +4,157 @@ from shared.announcements.forms import AnnouncementForm
 from system.users.decorators import role_required
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from .models import Announcement
 
 @login_required
 @role_required(allowed_roles=["VP", "DIRECTOR", "UESO"])
 def announcement_admin_view(request):
     from .models import Announcement
-    announcements = Announcement.objects.order_by('-published_at')
-    return render(request, 'announcements/admin_announcement.html', {'announcements': announcements})
+    from django.core.paginator import Paginator
+    from django.db.models import Q, Case, When, DateTimeField
+    search_query = request.GET.get('search', '').strip()
+    sort_by = request.GET.get('sort')
+    sort_order = request.GET.get('order')
+    if not sort_by:
+        sort_by = 'date'
+    if not sort_order:
+        sort_order = 'desc'
+    filter_status = request.GET.get('status', '')
+    filter_author = request.GET.get('author', '')
+    filter_date = request.GET.get('date', '')
+    filter_edited = request.GET.get('edited', '')
+
+    announcements_qs = Announcement.objects.all()
+
+    # Search
+    if search_query:
+        announcements_qs = announcements_qs.filter(
+            Q(title__icontains=search_query) |
+            Q(body__icontains=search_query)
+        )
+
+    # Filter by status
+    if filter_status:
+        if filter_status == 'published':
+            announcements_qs = announcements_qs.filter(published_at__isnull=False)
+        elif filter_status == 'scheduled':
+            announcements_qs = announcements_qs.filter(is_scheduled=True)
+        elif filter_status == 'draft':
+            announcements_qs = announcements_qs.filter(published_at__isnull=True, is_scheduled=False)
+
+    # Filter by author
+    if filter_author:
+        announcements_qs = announcements_qs.filter(published_by__id=filter_author)
+
+    # Filter by date (published_at or scheduled_at) with timezone awareness
+    if filter_date:
+        try:
+            from datetime import datetime
+            user_date = datetime.strptime(filter_date, "%Y-%m-%d").date()
+            try:
+                import pytz
+                tz = pytz.timezone("Asia/Manila")
+            except ImportError:
+                from django.utils import timezone as djtz
+                tz = djtz.get_fixed_timezone(8 * 60)  # UTC+8 for Manila
+        except Exception:
+            user_date = None
+            tz = None
+        if user_date and tz:
+            filtered_ids = []
+            for ann in announcements_qs:
+                dt = None
+                if ann.published_at:
+                    dt = ann.published_at.astimezone(tz)
+                elif ann.scheduled_at:
+                    dt = ann.scheduled_at.astimezone(tz)
+                if dt and dt.date() == user_date:
+                    filtered_ids.append(ann.id)
+            announcements_qs = announcements_qs.filter(id__in=filtered_ids)
+
+    # Filter by edited
+    if filter_edited == 'true':
+        announcements_qs = announcements_qs.filter(edited_at__isnull=False)
+    elif filter_edited == 'false':
+        announcements_qs = announcements_qs.filter(edited_at__isnull=True)
+
+    # Sorting
+    # Custom sort for date: use published_at, fallback to scheduled_at
+    if sort_by == 'date':
+        if sort_order == 'desc':
+            announcements_qs = announcements_qs.annotate(
+                sort_date=Case(
+                    When(published_at__isnull=False, then='published_at'),
+                    When(published_at__isnull=True, then='scheduled_at'),
+                    default='scheduled_at',
+                    output_field=DateTimeField()
+                )
+            ).order_by('-sort_date')
+        else:
+            announcements_qs = announcements_qs.annotate(
+                sort_date=Case(
+                    When(published_at__isnull=False, then='published_at'),
+                    When(published_at__isnull=True, then='scheduled_at'),
+                    default='scheduled_at',
+                    output_field=DateTimeField()
+                )
+            ).order_by('sort_date')
+    else:
+        sort_map = {
+            'title': 'title',
+            'status': 'is_scheduled',
+            'edited': 'edited_at',
+        }
+        sort_field = sort_map.get(sort_by, 'published_at')
+        if sort_order == 'desc':
+            sort_field = '-' + sort_field
+        announcements_qs = announcements_qs.order_by(sort_field)
+
+    paginator = Paginator(announcements_qs, 6)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+    # For filter dropdowns: get authors
+    from system.users.models import User
+    authors = User.objects.filter(id__in=Announcement.objects.values_list('published_by', flat=True))
+    # Build clean querystring for pagination
+    from urllib.parse import urlencode
+    query_params = {}
+    if search_query:
+        query_params['search'] = search_query
+    if sort_by and sort_by != 'date' and sort_by.strip():
+        query_params['sort'] = sort_by
+    if sort_order and sort_order != 'desc' and sort_order.strip():
+        query_params['order'] = sort_order
+    if filter_status and filter_status.strip():
+        query_params['status'] = filter_status
+    if filter_author and filter_author.strip():
+        query_params['author'] = filter_author
+    if filter_date and filter_date.strip():
+        query_params['date'] = filter_date
+    if filter_edited and filter_edited.strip():
+        query_params['edited'] = filter_edited
+    querystring = urlencode(query_params)
+    return render(request, 'announcements/admin_announcement.html', {
+        'announcements': page_obj.object_list,
+        'page_obj': page_obj,
+        'paginator': paginator,
+        'search_query': search_query,
+        'sort_by': sort_by,
+        'sort_order': sort_order,
+        'filter_status': filter_status,
+        'filter_author': filter_author,
+        'filter_date': filter_date,
+        'filter_edited': filter_edited,
+        'authors': authors,
+        'querystring': querystring,
+    })
+
+@login_required
+@role_required(allowed_roles=["VP", "DIRECTOR", "UESO"])
+def announcement_details_view(request, id):
+    from .models import Announcement
+    announcement = get_object_or_404(Announcement, id=id)
+    return render(request, 'announcements/announcement_details.html', {'announcement': announcement})
 
 
 @login_required
@@ -21,10 +165,13 @@ def add_announcement_view(request):
         if form.is_valid():
             announcement = form.save(commit=False)
             scheduled_at = form.cleaned_data.get('scheduled_at')
-            if scheduled_at and scheduled_at > timezone.now():
+            now = timezone.now()
+            if scheduled_at and scheduled_at > now:
                 announcement.is_scheduled = True
+                announcement.published_at = None
             else:
                 announcement.is_scheduled = False
+                announcement.published_at = now
             announcement.published_by = request.user
             announcement.save()
             return redirect('announcement_admin')
@@ -47,14 +194,28 @@ def delete_announcement_view(request, id):
 @login_required
 @role_required(allowed_roles=["VP", "DIRECTOR", "UESO"])
 def edit_announcement_view(request, id):
-    from .models import Announcement
+
     announcement = get_object_or_404(Announcement, id=id)
     if request.method == 'POST':
         form = AnnouncementForm(request.POST, request.FILES, instance=announcement)
         if form.is_valid():
             edited = form.save(commit=False)
+            scheduled_at = form.cleaned_data.get('scheduled_at')
+            now = timezone.now()
             edited.edited_by = request.user
-            edited.edited_at = timezone.now()
+            edited.edited_at = now
+            # If scheduled_at is empty or in the past, publish now
+            if not scheduled_at or (scheduled_at and scheduled_at <= now):
+                edited.is_scheduled = False
+                edited.published_at = now
+                edited.scheduled_at = None
+                edited.scheduled_by = None
+                edited.edited_by = None
+                edited.edited_at = None
+            else:
+                edited.is_scheduled = True
+                edited.scheduled_at = scheduled_at
+
             edited.save()
             return redirect('announcement_admin')
     else:
