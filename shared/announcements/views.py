@@ -1,3 +1,4 @@
+from django.core.paginator import Paginator
 from django.shortcuts import redirect, render
 from django.contrib.auth.decorators import login_required
 from shared.announcements.forms import AnnouncementForm
@@ -5,7 +6,94 @@ from system.users.decorators import role_required
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from .models import Announcement
+from django.db.models import Q
+from urllib.parse import urlencode
+import pytz
 
+
+# Role-Based Dispatch View
+def announcement_dispatch_view(request):
+    user = request.user
+    if not user.is_authenticated:
+        return user_announcement_view(request)
+    internal_roles = {"VP", "DIRECTOR", "UESO"}
+    role = getattr(user, 'role', None)
+    if role in internal_roles:
+        return announcement_admin_view(request)
+    return user_announcement_view(request)
+
+
+# Announcement Details Dispatch View
+def announcement_details_dispatch_view(request, id):
+    user = request.user
+    from .models import Announcement
+    announcement = get_object_or_404(Announcement, id=id)
+    # If not authenticated, show user details
+    if not user.is_authenticated:
+        return render(request, 'announcements/user_announcement_details.html', {'announcement': announcement})
+    internal_roles = {"VP", "DIRECTOR", "UESO"}
+    role = getattr(user, 'role', None)
+    if role in internal_roles:
+        return render(request, 'announcements/admin_announcement_details.html', {'announcement': announcement})
+    return render(request, 'announcements/user_announcement_details.html', {'announcement': announcement})
+
+
+# User Announcement View
+def user_announcement_view(request):
+    search_query = request.GET.get('search', '').strip()
+    sort_by = request.GET.get('sort')
+    sort_order = request.GET.get('order')
+    if not sort_by:
+        sort_by = 'date'
+    if not sort_order:
+        sort_order = 'desc'
+
+    announcements_qs = Announcement.objects.filter(published_at__isnull=False)
+
+    # Search
+    if search_query:
+        announcements_qs = announcements_qs.filter(
+            Q(title__icontains=search_query) |
+            Q(body__icontains=search_query)
+        )
+
+    # Sorting
+    if sort_by == 'date':
+        if sort_order == 'desc':
+            announcements_qs = announcements_qs.order_by('-published_at')
+        else:
+            announcements_qs = announcements_qs.order_by('published_at')
+    elif sort_by == 'title':
+        announcements_qs = announcements_qs.order_by(f'{"-" if sort_order=="desc" else ""}title')
+    else:
+        announcements_qs = announcements_qs.order_by('-published_at')
+
+    paginator = Paginator(announcements_qs, 3)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+
+    # Build querystring for pagination
+    query_params = {}
+    if search_query:
+        query_params['search'] = search_query
+    if sort_by and sort_by != 'date':
+        query_params['sort'] = sort_by
+    if sort_order and sort_order != 'desc':
+        query_params['order'] = sort_order
+    querystring = urlencode(query_params)
+
+    return render(request, 'announcements/user_announcement.html', {
+        'announcements': page_obj.object_list,
+        'page_obj': page_obj,
+        'paginator': paginator,
+        'search_query': search_query,
+        'sort_by': sort_by,
+        'sort_order': sort_order,
+        'querystring': querystring,
+    })
+
+
+# Admin Announcement View
 @login_required
 @role_required(allowed_roles=["VP", "DIRECTOR", "UESO"])
 def announcement_admin_view(request):
@@ -52,7 +140,6 @@ def announcement_admin_view(request):
             from datetime import datetime
             user_date = datetime.strptime(filter_date, "%Y-%m-%d").date()
             try:
-                import pytz
                 tz = pytz.timezone("Asia/Manila")
             except ImportError:
                 from django.utils import timezone as djtz
@@ -148,13 +235,6 @@ def announcement_admin_view(request):
         'authors': authors,
         'querystring': querystring,
     })
-
-@login_required
-@role_required(allowed_roles=["VP", "DIRECTOR", "UESO"])
-def announcement_details_view(request, id):
-    from .models import Announcement
-    announcement = get_object_or_404(Announcement, id=id)
-    return render(request, 'announcements/announcement_details.html', {'announcement': announcement})
 
 
 @login_required
