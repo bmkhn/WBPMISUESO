@@ -1,0 +1,410 @@
+{% extends "base_internal.html" %}
+{% block content %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Add Agenda</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+    .college-tag {
+        background: #F8F8F8;
+        border: 1px solid #000;
+        border-radius: 5px;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.35rem 0.85rem 0.35rem 0.5rem;
+        font-size: 0.95rem;
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+        font-family: 'Inter', Arial, sans-serif;
+    }
+    
+    .college-tag .remove-x {
+        color: #E53E3E;
+        font-weight: bold;
+        font-size: 1.1rem;
+        margin-left: 3px;
+        margin-right: 1px;
+        cursor: pointer;
+        border: none;
+        background: none;
+        padding: 0;
+    }
+
+    .add-college-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: #F0F0F0;
+        border: 1px solid rgba(0,0,0,0.16);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        margin-bottom: 0.5rem;
+        transition: box-shadow 0.2s;
+        font-family: 'Inter', Arial, sans-serif;
+    }
+
+    .add-college-btn:hover {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .college-select-modal {
+        display: none;
+        position: absolute;
+        z-index: 1000;
+        background: white;
+        border: 1px solid #E5E7EB;
+        border-radius: 8px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+        padding: 1rem;
+        min-width: 220px;
+    }
+
+    .error-input {
+        border-color: #E53E3E !important;
+        background: #FFF5F5 !important;
+    }
+
+    body {
+        background: #F9F9F9;
+        margin: 0;
+        font-family: 'Inter', Arial, sans-serif;
+    }
+
+    .main-container {
+        margin: 60px;
+        display: flex;
+        flex-direction: column;
+        gap: 30px;
+        min-height: 1440px;
+    }
+
+    .form-title {
+        font-family: 'Inter', Arial, sans-serif;
+        font-weight: 400;
+        font-size: 32px;
+        margin: 0;
+        color: #000000;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+    }
+
+    .form-label {
+        min-width: 150px;
+        font-weight: 600;
+        color: #374151;
+        font-size: 0.95rem;
+        font-family: 'Inter', Arial, sans-serif;
+    }
+
+    .form-input {
+        flex: 1;
+        padding: 0.75rem 1rem;
+        border: 1px solid #E5E7EB;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-family: 'Inter', Arial, sans-serif;
+        background: #F9F9F9;
+        transition: all 0.2s ease;
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: #0A6C44;
+        background: white;
+        box-shadow: 0 0 0 3px rgba(10, 108, 68, 0.1);
+    }
+
+    .form-textarea {
+        min-height: 120px;
+        resize: vertical;
+        font-family: 'Inter', Arial, sans-serif;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        padding-top: 1.5rem;
+        border-top: 1px solid #E5E7EB;
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-family: 'Inter', Arial, sans-serif;
+    }
+
+    #college-select-dropdown {
+        font-family: 'Inter', Arial, sans-serif;
+        font-size: 13px;
+        padding: 8px 16px;
+        border-radius: 6px;
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        background: white url('data:image/svg+xml;utf8,<svg fill="none" height="16" viewBox="0 0 16 16" width="16" xmlns="http://www.w3.org/2000/svg"><path d="M4 6L8 10L12 6" stroke="%23374151" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>') no-repeat right 18px center/16px 16px;
+        padding-right: 5px !important;
+    }
+
+    .btn-preview {
+        background: #6B7280;
+        color: white;
+    }
+
+    .btn-preview:hover {
+        background: #4B5563;
+        transform: translateY(-1px);
+    }
+
+    .btn-submit {
+        background: #0A6C44;
+        color: white;
+    }
+
+    .btn-submit:hover {
+        background: #1f7c57;
+        transform: translateY(-1px);
+    }
+
+    .btn-submit:disabled {
+        background: #E5E7EB;
+        color: #4B5563;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
+        .container {
+            padding: 1rem;
+        }
+
+        .form-group {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-label {
+            min-width: auto;
+            padding-top: 0;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+
+        .btn {
+            width: 100%;
+        }
+    }
+</style>
+
+</head>
+<body>
+    <div class="main-container">
+        <div class="form-header">
+            <h1 class="form-title">Add Agenda</h1>
+        </div>
+        {% if success %}
+            <div style="color: green; margin-bottom: 1rem;">Agenda added successfully!</div>
+        {% endif %}
+        <form class="agenda-form" method="post">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label class="form-label" for="id_name">Name:</label>
+                {{ form.name }}
+                {% if form.name.errors %}
+                    <div style="color: #E53E3E;">{{ form.name.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="id_description">Description:</label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                    <div style="color: #E53E3E;">{{ form.description.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Concerned Colleges:</label>
+                <div style="display: flex; align-items: center; flex-wrap: wrap; position: relative;" id="college-tag-row">
+                    <!-- Tags, add button, and hidden inputs will be rendered here by JS -->
+                </div>
+                <select id="college-options-template" style="display:none;">
+                    <option value="">Select College</option>
+                    {% for college in form.fields.concerned_colleges.queryset %}
+                        <option value="{{ college.id }}">{{ college.name }}</option>
+                    {% endfor %}
+                </select>
+                {% if form.concerned_colleges.errors %}
+                    <div style="color: #E53E3E;">{{ form.concerned_colleges.errors.0 }}</div>
+                {% endif %}
+                {% if form.data.concerned_colleges %}
+                <script id="colleges-data" type="application/json">{{ form.data.concerned_colleges|json_script:"colleges-data" }}</script>
+                {% endif %}
+            </div>
+
+            <div class="form-actions">
+                <a href="/agenda/" class="btn btn-preview" style="text-decoration: none;">Back</a>
+                <button type="submit" class="btn btn-submit">Add Agenda</button>
+            </div>
+        </form>
+        
+    </div>
+
+
+<!-- SVG Sprite Section -->
+<svg style="display:none;" xmlns="http://www.w3.org/2000/svg">
+
+    <!-- Add Icon -->
+    <symbol id="icon-add" viewBox="0 0 16 16">
+        <path d="M6.80039 14.4004C6.80039 14.7187 6.92682 15.0239 7.15186 15.2489C7.37691 15.474 7.68213 15.6004 8.00039 15.6004C8.31865 15.6004 8.62388 15.474 8.84892 15.2489C9.07396 15.0239 9.20039 14.7187 9.20039 14.4004V9.20039H14.4004C14.7187 9.20039 15.0239 9.07396 15.2489 8.84892C15.474 8.62388 15.6004 8.31865 15.6004 8.00039C15.6004 7.68213 15.474 7.37691 15.2489 7.15186C15.0239 6.92682 14.7187 6.80039 14.4004 6.80039H9.20039V1.60039C9.20039 1.28213 9.07396 0.976906 8.84892 0.751863C8.62388 0.526819 8.31865 0.400391 8.00039 0.400391C7.68213 0.400391 7.37691 0.526819 7.15186 0.751863C6.92682 0.976906 6.80039 1.28213 6.80039 1.60039V6.80039H1.60039C1.28213 6.80039 0.976906 6.92682 0.751863 7.15186C0.526819 7.37691 0.400391 7.68213 0.400391 8.00039C0.400391 8.31865 0.526819 8.62388 0.751863 8.84892C0.976906 9.07396 1.28213 9.20039 1.60039 9.20039H6.80039V14.4004Z" fill="black"/>
+    </symbol>
+    
+</svg>
+
+
+<script>
+    // Tag UI for concerned colleges
+    const collegeTagRow = document.getElementById('college-tag-row');
+    const collegeOptionsTemplate = document.getElementById('college-options-template');
+    const collegeSelectDropdown = document.createElement('select');
+    collegeSelectDropdown.id = 'college-select-dropdown';
+    collegeSelectDropdown.style.display = 'none';
+    collegeSelectDropdown.style.position = 'absolute';
+    collegeSelectDropdown.style.top = '44px';
+    collegeSelectDropdown.style.left = '0';
+    collegeSelectDropdown.style.minWidth = '220px';
+    collegeSelectDropdown.style.fontFamily = "Inter, Arial, sans-serif";
+    collegeSelectDropdown.style.fontSize = "13px";
+    collegeSelectDropdown.style.padding = "8px 16px";
+    collegeSelectDropdown.style.borderRadius = "6px";
+    collegeSelectDropdown.style.appearance = "none";
+    collegeSelectDropdown.style.background = "white url('data:image/svg+xml;utf8,<svg fill=\"none\" height=\"16\" viewBox=\"0 0 16 16\" width=\"16\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M4 6L8 10L12 6\" stroke=\"%23374151\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>') no-repeat right 18px center/16px 16px";
+    collegeSelectDropdown.style.paddingRight = "5px";
+
+    // Copy options from template
+    Array.from(collegeOptionsTemplate.options).forEach(opt => {
+        collegeSelectDropdown.appendChild(opt.cloneNode(true));
+    });
+
+    // Get colleges from select options
+    const colleges = Array.from(collegeSelectDropdown.options)
+        .filter(opt => opt.value)
+        .map(opt => ({id: opt.value, name: opt.text}));
+
+    let selectedColleges = [];
+    // Load initial value if present (from Django form)
+    const collegesDataScript = document.getElementById('colleges-data');
+    if (collegesDataScript) {
+        selectedColleges = JSON.parse(collegesDataScript.textContent);
+    }
+
+    function renderTags() {
+        collegeTagRow.innerHTML = '';
+        selectedColleges.forEach(id => {
+            const college = colleges.find(c => c.id === id);
+            if (college) {
+                const tag = document.createElement('span');
+                tag.className = 'college-tag';
+                // Red X on left
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'remove-x';
+                removeBtn.innerHTML = '&times;';
+                removeBtn.onclick = function() {
+                    selectedColleges = selectedColleges.filter(cid => cid !== id);
+                    renderTags();
+                };
+                tag.appendChild(removeBtn);
+                tag.appendChild(document.createTextNode(college.name));
+                collegeTagRow.appendChild(tag);
+            }
+        });
+
+        // Add button always after last tag
+        const addCollegeBtn = document.createElement('button');
+        addCollegeBtn.type = 'button';
+        addCollegeBtn.id = 'add-college-btn';
+        addCollegeBtn.className = 'add-college-btn';
+        addCollegeBtn.style.marginLeft = '8px';
+        addCollegeBtn.innerHTML = `<svg width="16" height="16"><use href="#icon-add" /></svg>`;
+        addCollegeBtn.onclick = function(e) {
+            // Position dropdown below the button
+            const btnRect = addCollegeBtn.getBoundingClientRect();
+            collegeSelectDropdown.style.display = 'block';
+            collegeSelectDropdown.style.position = 'fixed';
+            collegeSelectDropdown.style.left = (btnRect.left) + 'px';
+            collegeSelectDropdown.style.top = (btnRect.bottom + 4) + 'px';
+
+            // Remove all options except unselected
+            collegeSelectDropdown.innerHTML = '';
+            const templateOptions = Array.from(document.getElementById('college-options-template').options);
+            templateOptions.forEach(opt => {
+                if (!opt.value || !selectedColleges.includes(opt.value)) {
+                    collegeSelectDropdown.appendChild(opt.cloneNode(true));
+                }
+            });
+
+            collegeSelectDropdown.focus();
+        };
+        collegeTagRow.appendChild(addCollegeBtn);
+        // Attach dropdown to body so it can be positioned absolutely
+        if (!document.body.contains(collegeSelectDropdown)) {
+            document.body.appendChild(collegeSelectDropdown);
+        }
+
+        // Add hidden inputs for each selected college
+        selectedColleges.forEach(cid => {
+            const hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.name = 'concerned_colleges';
+            hidden.value = cid;
+            collegeTagRow.appendChild(hidden);
+        });
+    }
+
+    renderTags();
+
+    collegeSelectDropdown.onchange = function() {
+        const selectedId = collegeSelectDropdown.value;
+        if (selectedId && !selectedColleges.includes(selectedId)) {
+            selectedColleges.push(selectedId);
+            renderTags();
+        }
+        collegeSelectDropdown.value = '';
+        collegeSelectDropdown.style.display = 'none';
+    };
+
+    document.addEventListener('mousedown', function(e) {
+        if (!collegeSelectDropdown.contains(e.target) && e.target.id !== 'add-college-btn') {
+            collegeSelectDropdown.style.display = 'none';
+        }
+    });
+</script>
+
+</body>
+</html>
+
+{% endblock %}

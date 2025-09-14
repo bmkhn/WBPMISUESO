@@ -69,7 +69,74 @@
         position: absolute;
         top: 20px;
         right: 20px;
+        z-index: 2;
         cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .agenda-card-kebab .kebab-svg {
+        width: 20px;
+        height: 20px;
+        color: #1D1B20;
+        transition: background 0.2s, transform 0.2s;
+    }
+
+    .agenda-card-kebab:hover .kebab-svg {
+        transform: scale(1.15);
+        background: none;
+    }
+
+    .options-dropdown {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        min-width: 140px;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-10px);
+        transition: all 0.2s ease;
+        z-index: 200;
+    }
+
+    .options-dropdown.show {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+
+    .options-item {
+        padding: 0.75rem 1rem;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+        color: #374151;
+        text-decoration: none;
+    }
+
+    .options-item svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .options-item:hover {
+        background-color: #F3F4F6;
+    }
+
+    .edit-option {
+        color: #1f7c57;
+    }
+
+    .delete-option {
+        color: #DC2626;
     }
 
     .agenda-card {
@@ -78,13 +145,15 @@
         padding: 40px;
         border-radius: 15px;
         border: 1px solid rgba(0,0,0,0.42);
-        background: linear-gradient(to bottom, #FFB347 0%, #FEFCFC 100%);
+        background: linear-gradient(to bottom, orange 0%, #FEFCFC 100%);
         display: flex;
         flex-direction: column;
-        gap: 50px;
+        gap: 55px;
         align-items: center;
         min-width: 0;
         box-sizing: border-box;
+        vertical-align: top; 
+        min-width: 280px;
     }
 
     .agenda-card-text {
@@ -104,6 +173,12 @@
         text-align: center;
         margin-top: 10px;
         margin-bottom: 40px;
+        word-break: break-word;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        max-height: 4.5em;
     }
 
     .agenda-card-viewlist {
@@ -212,41 +287,163 @@
     }
 </style>
 
+<!-- Agenda Carousel Styles -->
+<style>
+    .agenda-carousel-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        position: relative;
+        margin-bottom: 30px;
+    }
+    .carousel-arrow {
+        background: none;
+        border: none;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background 0.2s, transform 0.2s;
+        z-index: 10;
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    .left-arrow {
+        left: -40px;
+    }
+
+    .right-arrow {
+        right: -40px;
+    }
+    
+    .carousel-arrow:active {
+        background: none;
+        transform: scale(0.95);
+    }
+
+    .carousel-arrow svg {
+        display: block;
+    }
+
+    .agenda-carousel {
+        overflow: hidden;
+        width: 960px;
+        max-width: 100vw;
+        position: relative;
+        margin: 0 auto;
+        display: flex;
+        align-items: flex-start;
+        justify-content: flex-start;
+    }
+
+    .agenda-carousel-track {
+        display: flex;
+        transition: transform 0.4s cubic-bezier(.77,.2,.05,1);
+        gap: 24px;
+        will-change: transform;
+        /* overflow: visible; */
+    }
+
+    .agenda-card {
+        flex: 0 0 calc(((960px - 2 * 24px) / 3) - 7px);
+        width: calc(((960px - 2 * 24px) / 3) - 7px);
+        margin: 0;
+        box-sizing: border-box;
+    }
+
+    @media (max-width: 1100px) {
+        .agenda-carousel {
+            width: 98vw;
+        }
+        .agenda-card {
+            min-width: calc(((98vw - 2 * 24px) / 3) - 7px);
+            max-width: calc(((98vw - 2 * 24px) / 3) - 7px);
+            flex: 0 0 calc(((98vw - 2 * 24px) / 3) - 7px);
+            width: calc(((98vw - 2 * 24px) / 3) - 7px);
+        }
+    }
+    @media (max-width: 900px) {
+        .agenda-carousel {
+            width: 100vw;
+        }
+        .agenda-card {
+            min-width: 95vw;
+            max-width: 95vw;
+            flex: 0 0 95vw;
+        }
+        .agenda-carousel-track {
+            gap: 12px;
+        }
+        .left-arrow {
+            left: -30px;
+        }
+        .right-arrow {
+            right: -30px;
+        }
+    }
+</style>
+
 </head>
 <body>
     <div class="main-container">
         <!-- Container for Page Title and Add Agenda Button -->
         <div class="container-a">
             <div class="container-a-text">Agenda</div>
-            <button class="container-a-button">Add Agenda</button>
+            <a href="{% url 'add_agenda' %}"><button class="container-a-button">Add Agenda</button></a>
         </div>
 
         <!-- Agenda Cards -->
-        <div class="container-b">
-            <div class="agenda-card">
-                <div class="agenda-card-kebab"> <svg class="kebab-svg"><use href="#kebab-icon"/></svg> </div>
-                <div class="agenda-card-text">First Agenda</div>
-                <div class="agenda-card-desc">This is a description of the agenda item. It is centered and uses Inter Regular 15px.</div>
-                <button class="agenda-card-viewlist">View List</button>
+        <div class="agenda-carousel-wrapper">
+            <button class="carousel-arrow left-arrow" type="button" onclick="scrollAgenda(-1)">
+                <svg width="32" height="32" viewBox="0 0 32 32"><path d="M20 8l-8 8 8 8" stroke="#063A1C" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <div class="agenda-carousel">
+                <div class="agenda-carousel-track">
+                    {% for agenda in agendas %}
+                    <div class="agenda-card">
+                        <div class="agenda-card-kebab" onclick="toggleOptions('{{ agenda.id }}')" title="More options">
+                            <svg class="kebab-svg"><use href="#kebab-icon"/></svg>
+                            <div class="options-dropdown" id="options-{{ agenda.id }}">
+                                <a class="options-item edit-option" href="{% url 'edit_agenda' agenda.id %}">
+                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                        <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                    </svg>
+                                    Edit
+                                </a>
+                                <a class="options-item delete-option" href="{% url 'delete_agenda' agenda.id %}" title="Delete Agenda">
+                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                        <polyline points="3,6 5,6 21,6"></polyline>
+                                        <path d="m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
+                                    </svg>
+                                    Delete
+                                </a>
+                            </div>
+                        </div>
+                        <div class="agenda-card-text" onclick="cardClick(event, '{{ agenda.id }}')" style="cursor:pointer;">{{ agenda.name }}</div>
+                        <div class="agenda-card-desc" onclick="cardClick(event, '{{ agenda.id }}')" style="cursor:pointer;">
+                            {% if agenda.description|length > 120 %}
+                                {{ agenda.description|slice:":120" }}&hellip;
+                            {% else %}
+                                {{ agenda.description }}
+                            {% endif %}
+                        </div>
+                        <div style="margin-bottom: 10px;"></div>
+                        <button class="agenda-card-viewlist">View List</button>
+                    </div>
+                    {% empty %}
+                    <div style="color: #888; font-size: 18px; padding: 40px">No agendas found.</div>
+                    {% endfor %}
+                </div>
             </div>
-            <div class="agenda-card" style="background: linear-gradient(to bottom, #6DD5FA 0%, #FEFCFC 100%);">
-                <div class="agenda-card-kebab"> <svg class="kebab-svg"><use href="#kebab-icon"/></svg> </div>
-                <div class="agenda-card-text">Second Agenda</div>
-                <div class="agenda-card-desc">Another description for a different agenda card.</div>
-                <button class="agenda-card-viewlist">View List</button>
-            </div>
-            <div class="agenda-card" style="background: linear-gradient(to bottom, #FF9A9E 0%, #FEFCFC 100%);">
-                <div class="agenda-card-kebab"> <svg class="kebab-svg"><use href="#kebab-icon"/></svg> </div>
-                <div class="agenda-card-text">Third Agenda</div>
-                <div class="agenda-card-desc">Description for the third agenda card goes here.</div>
-                <button class="agenda-card-viewlist">View List</button>
-            </div>
-            <div class="agenda-card" style="background: linear-gradient(to bottom, #A18CD1 0%, #FBC2EB 100%);">
-                <div class="agenda-card-kebab"> <svg class="kebab-svg"><use href="#kebab-icon"/></svg> </div>
-                <div class="agenda-card-text">Fourth Agenda</div>
-                <div class="agenda-card-desc">Description for the fourth agenda card goes here.</div>
-                <button class="agenda-card-viewlist">View List</button>
-            </div>
+            <button class="carousel-arrow right-arrow" type="button" onclick="scrollAgenda(1)">
+                <svg width="32" height="32" viewBox="0 0 32 32"><path d="M12 8l8 8-8 8" stroke="#063A1C" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
         </div>
 
         <!-- Table View -->
@@ -415,23 +612,85 @@
 
 <!-- SVG Sprite Section -->
 <svg style="display:none;">
-
     <!-- Settings -->
     <symbol id="settings-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M2 4C1.45 4 0.979167 3.80417 0.5875 3.4125C0.195833 3.02083 0 2.55 0 2C0 1.45 0.195833 0.979167 0.5875 0.5875C0.979167 0.195833 1.45 0 2 0C2.55 0 3.02083 0.195833 3.4125 0.5875C3.80417 0.979167 4 1.45 4 2C4 2.55 3.80417 3.02083 3.4125 3.4125C3.02083 3.80417 2.55 4 2 4ZM8 4C7.45 4 6.97917 3.80417 6.5875 3.4125C6.19583 3.02083 6 2.55 6 2C6 1.45 6.19583 0.979167 6.5875 0.5875C6.97917 0.195833 7.45 0 8 0C8.55 0 9.02083 0.195833 9.4125 0.5875C9.80417 0.979167 10 1.45 10 2C10 2.55 9.80417 3.02083 9.4125 3.4125C9.02083 3.80417 8.55 4 8 4ZM14 4C13.45 4 12.9792 3.80417 12.5875 3.4125C12.1958 3.02083 12 2.55 12 2C12 1.45 12.1958 0.979167 12.5875 0.5875C12.9792 0.195833 13.45 0 14 0C14.55 0 15.0208 0.195833 15.4125 0.5875C15.8042 0.979167 16 1.45 16 2C16 2.55 15.8042 3.02083 15.4125 3.4125C15.0208 3.80417 14.55 4 14 4Z" fill="#1D1B20"/>
     </symbol>
-
     <!-- Expand -->
     <symbol id="expand-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M14.0661 5.36872V1M14.0661 1H9.98295M14.0661 1L9.16632 6.18043M5.08316 14.9799L1 15V10.6112M5.89979 9.73744L1 14.9799" stroke="black" stroke-width="0.972" stroke-linecap="round" stroke-linejoin="round"/>
     </symbol>
-
     <!-- Kebab -->
     <symbol id="kebab-icon" viewBox="0 0 4 16" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M2 16C1.45 16 0.979167 15.8042 0.5875 15.4125C0.195833 15.0208 0 14.55 0 14C0 13.45 0.195833 12.9792 0.5875 12.5875C0.979167 12.1958 1.45 12 2 12C2.55 12 3.02083 12.1958 3.4125 12.5875C3.80417 12.9792 4 13.45 4 14C4 14.55 3.80417 15.0208 3.4125 15.4125C3.02083 15.8042 2.55 16 2 16ZM2 10C1.45 10 0.979167 9.80417 0.5875 9.4125C0.195833 9.02083 0 8.55 0 8C0 7.45 0.195833 6.97917 0.5875 6.5875C0.979167 6.19583 1.45 6 2 6C2.55 6 3.02083 6.19583 3.4125 6.5875C3.80417 6.97917 4 7.45 4 8C4 8.55 3.80417 9.02083 3.4125 9.4125C3.02083 9.80417 2.55 10 2 10ZM2 4C1.45 4 0.979167 3.80417 0.5875 3.4125C0.195833 3.02083 0 2.55 0 2C0 1.45 0.195833 0.979167 0.5875 0.5875C0.979167 0.195833 1.45 0 2 0C2.55 0 3.02083 0.195833 3.4125 0.5875C3.80417 0.979167 4 1.45 4 2C4 2.55 3.80417 3.02083 3.4125 3.4125C3.02083 3.80417 2.55 4 2 4Z" fill="#1D1B20"/>
     </symbol>
-    
 </svg>
+
+
+<script>
+    // Card click handler that ignores clicks on options
+    function cardClick(event, id) {
+        if (event.target.closest('.agenda-card-kebab')) {
+            return;
+        }
+        window.location.href = '/agenda/details/' + id + '/';
+    }
+
+    // Options menu functionality
+    let activeDropdown = null;
+    function toggleOptions(id) {
+        const dropdown = document.getElementById(`options-${id}`);
+        if (!dropdown) return;
+        if (activeDropdown && activeDropdown !== dropdown) {
+            activeDropdown.classList.remove('show');
+        }
+        dropdown.classList.toggle('show');
+        activeDropdown = dropdown.classList.contains('show') ? dropdown : null;
+    }
+    document.addEventListener('click', function(event) {
+        if (!event.target.closest('.agenda-card-kebab')) {
+            if (activeDropdown) {
+                activeDropdown.classList.remove('show');
+                activeDropdown = null;
+            }
+        }
+    });
+</script>
+
+<script>
+    // Carousel logic
+    let agendaIndex = 0;
+    const cardsToShow = 3;
+    function getAgendaCards() {
+        return document.querySelectorAll('.agenda-carousel-track .agenda-card');
+    }
+    function updateAgendaCarousel() {
+        const track = document.querySelector('.agenda-carousel-track');
+        const cards = getAgendaCards();
+        const totalCards = cards.length;
+        if (!track || totalCards === 0) return;
+        // Clamp index
+        if (agendaIndex < 0) agendaIndex = 0;
+        // Only allow scrolling to last full set of cards
+        if (agendaIndex > totalCards - cardsToShow) agendaIndex = Math.max(totalCards - cardsToShow, 0);
+        const cardWidth = cards[0].offsetWidth;
+        const gap = parseInt(window.getComputedStyle(track).gap) || 24;
+        const offset = agendaIndex * (cardWidth + gap);
+        track.style.transform = `translateX(-${offset}px)`;
+        // Arrow enable/disable
+        document.querySelector('.left-arrow').disabled = agendaIndex === 0;
+        document.querySelector('.right-arrow').disabled = agendaIndex >= totalCards - cardsToShow;
+    }
+    function scrollAgenda(dir) {
+        agendaIndex += dir;
+        updateAgendaCarousel();
+    }
+    window.addEventListener('resize', updateAgendaCarousel);
+    document.addEventListener('DOMContentLoaded', function() {
+        agendaIndex = 0;
+        updateAgendaCarousel();
+    });
+</script>
 
 </body>
 </html>
