@@ -10,7 +10,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
 
 <style>
-	/* ...existing styles from add_agenda.html... */
 	.college-tag {
 		background: #F8F8F8;
 		border: 1px solid #000;
@@ -24,6 +23,7 @@
 		margin-bottom: 0.5rem;
 		font-family: 'Inter', Arial, sans-serif;
 	}
+
 	.college-tag .remove-x {
 		color: #E53E3E;
 		font-weight: bold;
@@ -35,6 +35,7 @@
 		background: none;
 		padding: 0;
 	}
+
 	.add-college-btn {
 		width: 36px;
 		height: 36px;
@@ -49,9 +50,11 @@
 		transition: box-shadow 0.2s;
 		font-family: 'Inter', Arial, sans-serif;
 	}
+
 	.add-college-btn:hover {
 		box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 	}
+
 	.college-select-modal {
 		display: none;
 		position: absolute;
@@ -61,24 +64,26 @@
 		border-radius: 8px;
 		box-shadow: 0 4px 16px rgba(0,0,0,0.08);
 		padding: 1rem;
-		min-width: 220px;
 	}
+
 	.error-input {
 		border-color: #E53E3E !important;
 		background: #FFF5F5 !important;
 	}
+
 	body {
 		background: #F9F9F9;
 		margin: 0;
 		font-family: 'Inter', Arial, sans-serif;
 	}
+
 	.main-container {
 		margin: 60px;
 		display: flex;
 		flex-direction: column;
 		gap: 30px;
-		min-height: 1440px;
 	}
+
 	.form-title {
 		font-family: 'Inter', Arial, sans-serif;
 		font-weight: 400;
@@ -86,6 +91,7 @@
 		margin: 0;
 		color: #000000;
 	}
+
 	.form-group {
 		margin-bottom: 1.5rem;
 		display: flex;
@@ -93,13 +99,14 @@
 		align-items: stretch;
 		gap: 0.5rem;
 	}
+
 	.form-label {
-		min-width: 150px;
 		font-weight: 600;
 		color: #374151;
 		font-size: 0.95rem;
 		font-family: 'Inter', Arial, sans-serif;
 	}
+
 	.form-input {
 		flex: 1;
 		padding: 0.75rem 1rem;
@@ -110,17 +117,20 @@
 		background: #F9F9F9;
 		transition: all 0.2s ease;
 	}
+
 	.form-input:focus {
 		outline: none;
 		border-color: #0A6C44;
 		background: white;
 		box-shadow: 0 0 0 3px rgba(10, 108, 68, 0.1);
 	}
+
 	.form-textarea {
 		min-height: 120px;
 		resize: vertical;
 		font-family: 'Inter', Arial, sans-serif;
 	}
+
 	.form-actions {
 		display: flex;
 		gap: 1rem;
@@ -128,6 +138,7 @@
 		padding-top: 1.5rem;
 		border-top: 1px solid #E5E7EB;
 	}
+
 	.btn {
 		padding: 0.75rem 1.5rem;
 		border: none;
@@ -138,6 +149,7 @@
 		transition: all 0.2s ease;
 		font-family: 'Inter', Arial, sans-serif;
 	}
+
 	#college-select-dropdown {
 		font-family: 'Inter', Arial, sans-serif;
 		font-size: 13px;
@@ -149,46 +161,32 @@
 		background: white url('data:image/svg+xml;utf8,<svg fill="none" height="16" viewBox="0 0 16 16" width="16" xmlns="http://www.w3.org/2000/svg"><path d="M4 6L8 10L12 6" stroke="%23374151" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>') no-repeat right 18px center/16px 16px;
 		padding-right: 5px !important;
 	}
+
 	.btn-preview {
 		background: #6B7280;
 		color: white;
 	}
+
 	.btn-preview:hover {
 		background: #4B5563;
 		transform: translateY(-1px);
 	}
+
 	.btn-submit {
 		background: #0A6C44;
 		color: white;
 	}
+
 	.btn-submit:hover {
 		background: #1f7c57;
 		transform: translateY(-1px);
 	}
+
 	.btn-submit:disabled {
 		background: #E5E7EB;
 		color: #4B5563;
 		cursor: not-allowed;
 		transform: none;
-	}
-	@media (max-width: 768px) {
-		.container {
-			padding: 1rem;
-		}
-		.form-group {
-			flex-direction: column;
-			gap: 0.5rem;
-		}
-		.form-label {
-			min-width: auto;
-			padding-top: 0;
-		}
-		.form-actions {
-			flex-direction: column;
-		}
-		.btn {
-			width: 100%;
-		}
 	}
 </style>
 
@@ -264,7 +262,6 @@
 		collegeSelectDropdown.style.position = 'absolute';
 		collegeSelectDropdown.style.top = '44px';
 		collegeSelectDropdown.style.left = '0';
-		collegeSelectDropdown.style.minWidth = '220px';
 		collegeSelectDropdown.style.fontFamily = "Inter, Arial, sans-serif";
 		collegeSelectDropdown.style.fontSize = "13px";
 		collegeSelectDropdown.style.padding = "8px 16px";

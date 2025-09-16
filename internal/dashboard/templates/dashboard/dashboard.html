@@ -37,7 +37,6 @@
         display: flex;
         flex-direction: column;
         gap: 50px;
-        max-width: 1440px;
     }
 
     .container-1 {
@@ -115,7 +114,6 @@
 <!-- Overview Section -->
 <style>
     .overview-section {
-        max-width: 1440px;
         display: flex;
         flex-direction: column;
         gap: 15px;
@@ -186,7 +184,6 @@
 <!-- Summary Section -->
 <style>
     .summary-section {
-        max-width: 1440px;
         display: flex;
         flex-direction: column;
         gap: 15px;
@@ -202,7 +199,6 @@
         display: flex;
         flex-direction: row;
         gap: 30px;
-        min-height: 300px;
     }
 
     .charts-container-outer {
@@ -210,8 +206,6 @@
         background: #FEFCFC;
         border-radius: 16px;
         border: 1.1px solid rgba(0,0,0,0.4);
-        min-height: 220px;
-        min-width: 0;
         box-sizing: border-box;
         display: flex;
         align-items: stretch;
@@ -247,8 +241,6 @@
         flex: 1;
         background: transparent;
         border-radius: 12px;
-        min-height: 172px;
-        min-width: 0;
         box-sizing: border-box;
     }
 
@@ -257,8 +249,6 @@
         background: #FEFCFC;
         border-radius: 16px;
         border: 1.1px solid rgba(0,0,0,0.4);
-        min-height: 220px;
-        min-width: 0;
         box-sizing: border-box;
         padding: 24px;
         position: relative;
@@ -303,7 +293,7 @@
 
     .project-summary-table .header-row th {
         font-weight: 400;
-        font-size: 20px;
+        font-size: 15px;
         background: transparent;
         text-align: left;
         border-bottom: 1.5px solid #E0E0E0;
@@ -318,7 +308,6 @@
         background: #F8F8F8;
         appearance: none;
         cursor: pointer;
-        min-width: 120px;
         margin-left: 8px;
         position: relative;
     }
@@ -380,7 +369,6 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        min-width: 0;
         border: 1px solid rgba(0, 0, 0, 0.42);
         box-sizing: border-box;
     }
@@ -425,7 +413,17 @@
                     <div class="welcome-text">Welcome</div>
                     <div class="ueso-text">to UESO MIS</div>
                 </div>
-                <div class="viewing-text">You are currently viewing as ???.</div>
+                {% if user.role == "PROGRAM_HEAD" %}
+                    <div class="viewing-text">You are currently viewing as a program head.</div>
+                {% elif user.role == "DEAN" %}
+                    <div class="viewing-text">You are currently viewing as a dean.</div>
+                {% elif user.role == "UESO" %}
+                    <div class="viewing-text">You are currently viewing as a UESO member.</div>
+                {% elif user.role == "VP" %}
+                    <div class="viewing-text">You are currently viewing as a vice president.</div>
+                {% elif user.role == "DIRECTOR" %}
+                    <div class="viewing-text">You are currently viewing as a director.</div>
+                {% endif %}
             </div>
             <div class="container-1B">
                 <div class="quarter-text">This Quarter</div>

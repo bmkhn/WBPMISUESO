@@ -64,7 +64,6 @@
         border-radius: 8px;
         box-shadow: 0 4px 16px rgba(0,0,0,0.08);
         padding: 1rem;
-        min-width: 220px;
     }
 
     .error-input {
@@ -83,7 +82,6 @@
         display: flex;
         flex-direction: column;
         gap: 30px;
-        min-height: 1440px;
     }
 
     .form-title {
@@ -103,7 +101,6 @@
     }
 
     .form-label {
-        min-width: 150px;
         font-weight: 600;
         color: #374151;
         font-size: 0.95rem;
@@ -129,7 +126,6 @@
     }
 
     .form-textarea {
-        min-height: 120px;
         resize: vertical;
         font-family: 'Inter', Arial, sans-serif;
     }
@@ -190,31 +186,6 @@
         color: #4B5563;
         cursor: not-allowed;
         transform: none;
-    }
-
-    /* Responsive design */
-    @media (max-width: 768px) {
-        .container {
-            padding: 1rem;
-        }
-
-        .form-group {
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .form-label {
-            min-width: auto;
-            padding-top: 0;
-        }
-
-        .form-actions {
-            flex-direction: column;
-        }
-
-        .btn {
-            width: 100%;
-        }
     }
 </style>
 
@@ -295,7 +266,6 @@
     collegeSelectDropdown.style.position = 'absolute';
     collegeSelectDropdown.style.top = '44px';
     collegeSelectDropdown.style.left = '0';
-    collegeSelectDropdown.style.minWidth = '220px';
     collegeSelectDropdown.style.fontFamily = "Inter, Arial, sans-serif";
     collegeSelectDropdown.style.fontSize = "13px";
     collegeSelectDropdown.style.padding = "8px 16px";
