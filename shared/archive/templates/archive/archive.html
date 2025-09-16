@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Director Archives</title>
+{% load static %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+	body {
+		margin: 0;
+		font-family: Arial, sans-serif;
+		display: flex;
+		background: #fff;
+		color: #111;
+	}
+
+    .sidebar-container {
+		width: 250px;
+		min-height: 100vh;
+		padding: 20px;
+		background-color: #063A1C;
+		color: white;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+		border-top-right-radius: 20px;
+		border-bottom-right-radius: 20px;
+		transition: width 0.2s ease;
+		overflow: hidden;
+		position: relative;
+		flex-shrink: 0;
+    }
+
+    .sidebar-container.collapsed {
+		width: 55px;
+    }
+
+	/* Drag handle */
+	.resize-handle {
+		position: absolute;
+		top: 0;
+		right: 0;
+		width: 8px;
+		cursor: ew-resize;
+		background: transparent;
+		height: 100%;
+	}
+
+    .sidebar-logo {
+		display: flex;
+		align-items: center;
+		margin-bottom: 15px;
+		white-space: nowrap;
+    }
+
+    .sidebar-logo-circle {
+		width: 40px;
+		height: 40px;
+		background-color: white;
+		border-radius: 50%;
+		margin-left: 7px;
+		margin-right: 15px;
+		flex-shrink: 0;
+		align-items: center;
+    }
+
+    .sidebar-logo-text {
+		font-family: 'Instrument Sans', sans-serif;
+		font-size: 16px;
+		font-weight: 800;
+		display: inline-block;
+    }
+
+    /* Hide elements properly when collapsed */
+    .sidebar-container.collapsed .sidebar-tab-group-label {
+    	visibility: hidden;
+    }
+
+    .sidebar-container.collapsed .sidebar-logo-text,
+	.sidebar-container.collapsed .table-text {
+    	display: none;
+    }
+
+    .sidebar-tab-group-label {
+		font-family: 'Inter', sans-serif;
+		font-size: 16px;
+		padding: 10px 0;
+    }
+
+    .sidebar-tabs {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		gap: 15px;
+    }
+
+    .sidebar-tab {
+		display: flex;
+		align-items: center;
+		text-decoration: none;
+		color: white;
+		padding: 10px;
+		border-radius: 10px;
+		transition: background-color 0.2s ease;
+    }
+
+    .sidebar-tab:hover {
+		background-color: #052C15;
+    }
+
+    .sidebar-tab.active {
+		background-color: #052C15;
+    }
+
+    .sidebar-tab-icon {
+		width: 24px;
+		height: 24px;
+		margin-right: 15px;
+		flex-shrink: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+    }
+
+    .sidebar-tab-icon svg {
+		width: 24px;
+		height: 24px;
+		color: white;
+    }
+
+    .sidebar-logout {
+      	padding-top: 20px;
+    }
+
+    .table-text {
+		font-family: 'Inter', sans-serif;
+		font-size: 22px;
+		font-weight: bold;
+    }
+
+    /* Main content area */
+    .main-content {
+    	flex: 1;
+    	padding: 40px;
+    	overflow-y: auto;
+    }
+
+    /* Top header area */
+    .content-header {
+    	display: flex;
+    	align-items: center;
+    	justify-content: space-between;
+    	margin-bottom: 20px;
+    }
+
+    .header-left {
+    	display: flex;
+    	align-items: center;
+    	gap: 20px;
+    }
+
+    .hamburger {
+    	width: 24px;
+    	height: 18px;
+    	cursor: pointer;
+    	display: flex;
+    	flex-direction: column;
+    	justify-content: space-between;
+    	background: none;
+    	border: none;
+    	padding: 0;
+    }
+
+    .hamburger span {
+    	width: 100%;
+    	height: 2px;
+    	background-color: #333;
+    	border-radius: 1px;
+    	transition: all 0.3s ease;
+    }
+
+    .header-right {
+    	display: flex;
+    	align-items: center;
+    	gap: 15px;
+    }
+
+    .notification-icon, .settings-icon {
+    	width: 24px;
+    	height: 24px;
+    	cursor: pointer;
+    	display: flex;
+    	align-items: center;
+    	justify-content: center;
+    	color: #333;
+    }
+
+    .notification-icon svg, .settings-icon svg {
+    	width: 20px;
+    	height: 20px;
+    }
+
+    .user-avatar {
+    	width: 50px;
+    	height: 50px;
+    	border-radius: 50%;
+    	background-color: #4A90E2;
+    	display: flex;
+    	align-items: center;
+    	justify-content: center;
+    	color: white;
+    	font-weight: bold;
+    	font-size: 18px;
+    	border: 2px solid #fff;
+    	box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    /* Search row */
+    .search-section {
+    	margin: 20px 0;
+    	display: flex;
+    	align-items: center;
+    	gap: 12px;
+    }
+
+    .search {
+    	flex: 1;
+    	display: flex;
+    	align-items: center;
+    	gap: 10px;
+    	background: #f2f4f8;
+    	border: 1px solid #e6e9ef;
+    	border-radius: 12px;
+    	padding: 14px 16px;
+    }
+
+    .search svg { width: 18px; height: 18px; color: #666; }
+    .search input {
+    	flex: 1;
+    	border: none;
+    	outline: none;
+    	background: transparent;
+    	font-size: 14px;
+    	color: #111;
+    }
+
+    /* Sort Arrow */
+    .sort-arrow {
+    	display: flex;
+    	align-items: center;
+    	justify-content: center;
+    	width: 40px;
+    	height: 40px;
+    	border: 1px solid #e6e9ef;
+    	border-radius: 8px;
+    	background: #fff;
+    	cursor: pointer;
+    	font-size: 18px;
+    }
+
+    /* Dropdown */
+    .dropdown { position: relative; }
+    .dropdown-toggle {
+    	background: #f4f2f1;
+    	border: 1px solid #dad6d3;
+    	color: #111;
+    	padding: 10px 14px;
+    	border-radius: 10px;
+    	cursor: pointer;
+    	font-weight: 600;
+    	min-width: 150px;
+    	text-align: left;
+    }
+    .dropdown-toggle .caret { float: right; }
+    .dropdown-menu {
+    	position: absolute;
+    	right: 0;
+    	top: calc(100% + 6px);
+    	background: #fff;
+    	border: 1px solid #e6e6e6;
+    	border-radius: 10px;
+    	min-width: 180px;
+    	box-shadow: 0 8px 18px rgba(0,0,0,.06);
+    	display: none;
+    	padding: 8px 0;
+    	z-index: 1000;
+    }
+    .dropdown:hover .dropdown-menu { display: block; }
+    .dropdown-header {
+    	padding: 8px 16px 4px 16px;
+    	font-size: 12px;
+    	font-weight: 600;
+    	color: #666;
+    	text-transform: uppercase;
+    	letter-spacing: 0.5px;
+    	border-bottom: 1px solid #f0f0f0;
+    	margin-bottom: 4px;
+    }
+    .dropdown-item {
+    	padding: 10px 16px;
+    	cursor: default;
+    	color: #333;
+    	font-size: 14px;
+    	border-radius: 0;
+    }
+    .dropdown-item:hover { background: #f4f6f8; }
+
+    /* Page title */
+    .page-title {
+    	margin: 20px 0;
+    }
+    .page-title h1 {
+    	font-size: 32px;
+    	font-weight: 700;
+    	letter-spacing: .2px;
+    	color: #000;
+    	margin: 0;
+    }
+
+    /* Archive grid */
+    .archive-grid {
+    	display: grid;
+    	grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    	gap: 18px;
+    	margin-top: 20px;
+    }
+
+    .archive-card {
+    	border: 1px solid #ececec;
+    	border-radius: 14px;
+    	padding: 28px;
+    	background: #fff;
+    	min-height: 260px;
+    	display: flex;
+    	flex-direction: column;
+    	justify-content: center;
+    	align-items: center;
+    	text-decoration: none;
+    	color: inherit;
+    	transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .archive-card:hover {
+    	transform: translateY(-2px);
+    	box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .year {
+    	font-size: 72px;
+    	font-weight: 800;
+    	letter-spacing: 2px;
+    	background: linear-gradient(90deg, #db8b28, #45b16f);
+    	-webkit-background-clip: text;
+    	background-clip: text;
+    	color: transparent;
+    }
+
+    .projects-info {
+    	margin-top: 28px;
+    	font-size: 18px;
+    	color: #222;
+    	text-align: center;
+    }
+
+    .projects-count {
+    	font-weight: 800;
+    }
+</style>
+</head>
+
+<body>
+	<div class="sidebar-container" id="sidebar">
+		<!-- Drag handle -->
+		<div class="resize-handle"></div>
+
+		<!-- Logo Container -->
+		<div class="sidebar-logo">
+			<div class="sidebar-logo-circle">
+				<img src="{% static 'ueso.png' %}" alt="UESO Logo" style="width: 100%; height: 100%; object-fit: contain; border-radius: 50%;">
+			</div>
+			<span class="sidebar-logo-text">University Extension<br>Services Office</span>
+		</div>
+
+		<!-- Tabs -->
+		<div class="sidebar-tabs">
+			<!-- General -->
+			<div class="sidebar-tab-group-label">GENERAL</div>
+
+			<a href="/director/" class="sidebar-tab">
+				<div class="sidebar-tab-icon">
+					<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+						<rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+						<rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+						<rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+					</svg>
+				</div>
+				<span class="table-text">Dashboard</span>
+			</a>
+			<a href="#" class="sidebar-tab">
+				<div class="sidebar-tab-icon">
+					<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+					</svg>
+				</div>
+				<span class="table-text">Projects</span>
+			</a>
+			<a href="#" class="sidebar-tab">
+				<div class="sidebar-tab-icon">
+					<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+						<polyline points="14,2 14,8 20,8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+						<path d="M12 18v-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+						<path d="M9 15l3-3 3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+					</svg>
+				</div>
+				<span class="table-text">Submission</span>
+			</a>
+			<a href="#" class="sidebar-tab">
+				<div class="sidebar-tab-icon">
+					<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+						<circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+						<polyline points="16,11 18,13 22,9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+					</svg>
+				</div>
+				<span class="table-text">Experts</span>
+			</a>
+			<a href="#" class="sidebar-tab">
+				<div class="sidebar-tab-icon">
+					<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<rect x="3" y="4" width="18" height="18" rx="2" ry="2" stroke="currentColor" stroke-width="2"/>
+						<line x1="16" y1="2" x2="16" y2="6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+						<line x1="8" y1="2" x2="8" y2="6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+						<line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+					</svg>
+				</div>
+				<span class="table-text">Calendar</span>
+			</a>
+			<a href="#" class="sidebar-tab">
+				<div class="sidebar-tab-icon">
+					<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<!-- Chart bars -->
+						<rect x="3" y="16" width="2" height="6" rx="1" fill="currentColor"/>
+						<rect x="7" y="12" width="2" height="10" rx="1" fill="currentColor"/>
+						<rect x="11" y="14" width="2" height="8" rx="1" fill="currentColor"/>
+						<rect x="15" y="10" width="2" height="12" rx="1" fill="currentColor"/>
+						<rect x="19" y="8" width="2" height="14" rx="1" fill="currentColor"/>
+						<!-- Trending line -->
+						<path d="M3 17 L8 13 L12 15 L16 11 L21 9" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+					</svg>
+				</div>
+				<span class="table-text">Analytics</span>
+			</a>
+			<a href="#" class="sidebar-tab">
+				<div class="sidebar-tab-icon">
+					<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<!-- Outer target circle -->
+						<circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none"/>
+						<!-- Middle target circle -->
+						<circle cx="12" cy="12" r="6" stroke="currentColor" stroke-width="2" fill="none"/>
+						<!-- Inner target circle -->
+						<circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none"/>
+						<!-- Play button triangle -->
+						<path d="M10 8l6 4-6 4V8z" fill="currentColor"/>
+					</svg>
+				</div>
+				<span class="table-text">Goals</span>
+			</a>
+
+			<!-- Content -->
+			<div class="sidebar-tab-group-label">CONTENT</div>
+
+			<a href="#" class="sidebar-tab">
+				<div class="sidebar-tab-icon">
+					<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<!-- Megaphone/Speaker cone -->
+						<path d="M3 11v2c0 1.1.9 2 2 2h2l4 4V7l-4 4H5c-1.1 0-2 .9-2 2z" fill="currentColor"/>
+						<!-- Speaker opening -->
+						<path d="M15.5 6.5C17 8 17 10 17 12s0 4-1.5 5.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+						<path d="M19 4C21 6 21 10 21 12s0 6-2 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+					</svg>
+				</div>
+				<span class="table-text">Announcements</span>
+			</a>
+			<a href="/director/archives/" class="sidebar-tab active">
+				<div class="sidebar-tab-icon">
+					<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<!-- Archive box container -->
+						<rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2" fill="none"/>
+						<!-- Archive box lid/top section -->
+						<rect x="3" y="3" width="18" height="5" rx="2" fill="currentColor"/>
+						<!-- Archive handle/tab -->
+						<rect x="8" y="6" width="8" height="2" rx="1" fill="white"/>
+					</svg>
+				</div>
+				<span class="table-text">Archive</span>
+			</a>
+			<a href="#" class="sidebar-tab">
+				<div class="sidebar-tab-icon">
+					<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<line x1="12" y1="1" x2="12" y2="23" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+						<path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+					</svg>
+				</div>
+				<span class="table-text">Budget</span>
+			</a>
+			<a href="#" class="sidebar-tab">
+				<div class="sidebar-tab-icon">
+					<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+						<circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+						<path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+						<path d="M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+					</svg>
+				</div>
+				<span class="table-text">About Us</span>
+			</a>
+			<a href="#" class="sidebar-tab">
+				<div class="sidebar-tab-icon">
+					<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+						<polyline points="7,10 12,15 17,10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+						<line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+					</svg>
+				</div>
+				<span class="table-text">Downloadables</span>
+			</a>
+
+			<!-- Other -->
+			<div class="sidebar-tab-group-label">OTHER</div>
+			<a href="#" class="sidebar-tab">
+				<div class="sidebar-tab-icon">
+					<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+						<polyline points="22,6 12,13 2,6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+					</svg>
+				</div>
+				<span class="table-text">Inbox</span>
+			</a>
+			<a href="#" class="sidebar-tab">
+				<div class="sidebar-tab-icon">
+					<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+						<path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+					</svg>
+				</div>
+				<span class="table-text">Notification</span>
+			</a>
+			<a href="#" class="sidebar-tab">
+				<div class="sidebar-tab-icon">
+					<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+						<path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" stroke-width="2"/>
+					</svg>
+				</div>
+				<span class="table-text">Settings</span>
+			</a>
+		</div>
+
+		<!-- Logout -->
+		<div class="sidebar-logout">
+			<a href="#" class="sidebar-tab">
+				<div class="sidebar-tab-icon">
+					<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+						<polyline points="16,17 21,12 16,7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+						<line x1="21" y1="12" x2="9" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+					</svg>
+				</div>
+				<span class="table-text">Log Out</span>
+			</a>
+		</div>
+	</div>
+
+	<!-- Main Content -->
+	<div class="main-content">
+		<!-- Top header -->
+		<div class="content-header">
+			<div class="header-left">
+				<button class="hamburger" onclick="toggleSidebar()">
+					<span></span>
+					<span></span>
+					<span></span>
+				</button>
+			</div>
+			<div class="header-right">
+				<div class="notification-icon" title="Notifications">
+					<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" fill="currentColor"/>
+					</svg>
+				</div>
+				<div class="settings-icon" title="Settings">
+					<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.82,11.69,4.82,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z" fill="currentColor"/>
+					</svg>
+				</div>
+				<div class="user-avatar">DR</div>
+			</div>
+		</div>
+
+		<!-- Search section -->
+		<div class="search-section">
+			<div class="search">
+				<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+				<input type="text" placeholder="Search" />
+			</div>
+			<div class="sort-arrow" onclick="toggleSort()" title="Sort by Year Started">
+				<span id="sortIcon">▾</span>
+			</div>
+			<div class="dropdown">
+				<button class="dropdown-toggle">Year Started <span class="caret">▾</span></button>
+				<div class="dropdown-menu">
+					<div class="dropdown-header">Filter By</div>
+					<div class="dropdown-item">Year Started</div>
+					<div class="dropdown-item">Year Ended</div>
+					<div class="dropdown-item">Agenda</div>
+					<div class="dropdown-item">College/CCRD</div>
+					<div class="dropdown-item">Location</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Page title -->
+		<div class="page-title">
+			<h1>Archive</h1>
+		</div>
+
+		<!-- Archive grid -->
+		<div class="archive-grid" id="yearGrid">
+			<a href="/director/archives/2025/" class="archive-card" data-year="2025">
+				<div class="year">2025</div>
+				<div class="projects-info">No. of Projects: <span class="projects-count">3</span></div>
+			</a>
+			<a href="/director/archives/2024/" class="archive-card" data-year="2024">
+				<div class="year">2024</div>
+				<div class="projects-info">No. of Projects: <span class="projects-count">10</span></div>
+			</a>
+			<a href="/director/archives/2023/" class="archive-card" data-year="2023">
+				<div class="year">2023</div>
+				<div class="projects-info">No. of Projects: <span class="projects-count">23</span></div>
+			</a>
+			<a href="/director/archives/2022/" class="archive-card" data-year="2022">
+				<div class="year">2022</div>
+				<div class="projects-info">No. of Projects: <span class="projects-count">15</span></div>
+			</a>
+			<a href="/director/archives/2021/" class="archive-card" data-year="2021">
+				<div class="year">2021</div>
+				<div class="projects-info">No. of Projects: <span class="projects-count">9</span></div>
+			</a>
+		</div>
+	</div>
+
+	<script>
+		// Sidebar functionality
+		const sidebar = document.getElementById("sidebar");
+		const handle = sidebar.querySelector(".resize-handle");
+
+		let isDragging = false;
+		let startX = 0;
+		let startWidth = 0;
+
+		const expandedWidth = 250;
+		const collapsedWidth = 55;
+		const dragTolerance = 10;
+
+		handle.addEventListener("mousedown", (e) => {
+			isDragging = true;
+			startX = e.clientX;
+			startWidth = sidebar.offsetWidth;
+			document.body.style.cursor = "ew-resize";
+		});
+
+		document.addEventListener("mouseup", (e) => {
+			if (!isDragging) return;
+			isDragging = false;
+			document.body.style.cursor = "default";
+
+			const diff = e.clientX - startX;
+
+			if (Math.abs(diff) < dragTolerance) {
+				if (sidebar.classList.contains("collapsed")) {
+					sidebar.classList.remove("collapsed");
+					sidebar.style.width = expandedWidth + "px";
+				} else {
+					sidebar.classList.add("collapsed");
+					sidebar.style.width = collapsedWidth + "px";
+				}
+				return;
+			}
+
+			if (e.clientX < 150) {
+				sidebar.classList.add("collapsed");
+				sidebar.style.width = collapsedWidth + "px";
+			} else {
+				sidebar.classList.remove("collapsed");
+				sidebar.style.width = expandedWidth + "px";
+			}
+		});
+
+		// Toggle sidebar function for hamburger menu
+		function toggleSidebar() {
+			if (sidebar.classList.contains("collapsed")) {
+				sidebar.classList.remove("collapsed");
+				sidebar.style.width = expandedWidth + "px";
+			} else {
+				sidebar.classList.add("collapsed");
+				sidebar.style.width = collapsedWidth + "px";
+			}
+		}
+
+		// Sort functionality
+		let isAscending = true;
+
+		function toggleSort() {
+			const grid = document.getElementById('yearGrid');
+			const cards = Array.from(grid.children);
+			const sortIcon = document.getElementById('sortIcon');
+
+			isAscending = !isAscending;
+			sortIcon.textContent = isAscending ? '▾' : '▴';
+
+			cards.sort((a, b) => {
+				const yearA = parseInt(a.getAttribute('data-year'));
+				const yearB = parseInt(b.getAttribute('data-year'));
+				return isAscending ? yearA - yearB : yearB - yearA;
+			});
+
+			cards.forEach(card => grid.appendChild(card));
+		}
+	</script>
+</body>
+</html>
