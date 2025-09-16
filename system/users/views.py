@@ -43,6 +43,8 @@ def role_redirect(request):
         return redirect("home")
     elif role in ["VP", "DIRECTOR", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD"]:
         return redirect("dashboard")
+    else:
+        return redirect("home")
 
 @login_required
 def home(request):

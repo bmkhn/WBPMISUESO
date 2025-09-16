@@ -52,7 +52,7 @@ INSTALLED_APPS = [
     # 'internal.submissions',     # Submissions
 
     # Shared Apps
-    # 'shared.about_us',          # About Us
+    'shared.about_us',          # About Us
     'shared.announcements',     # Announcements
     # 'shared.archive',           # Archive
     'shared.budget',            # Budget

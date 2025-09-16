@@ -1,4 +1,7 @@
+{% extends "base_internal.html" %}
+{% block content %}
 {% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,248 +13,65 @@
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
 
 <style>
-	:root { 
-		--green-700: #245F3E; 
-		--green-600: #1f7c57; 
-		--green-500: #0A6C44; 
-		--text-900: #1F2937; 
-		--text-700: #374151; 
-		--text-600: #4B5563; 
-		--gray-100: #F3F4F6; 
-		--gray-200: #E5E7EB; 
-		--gray-250: #EAEAEA; 
-		--brand-accent: #1EC492;
-	}
-
-	* { 
-		margin: 0;
-		padding: 0;
-		box-sizing: border-box;
-	}
-
 	body {
-		margin: 0;
+		margin: 60;
 		font-family: Helvetica, Arial, sans-serif;
 		display: flex;
-		color: var(--text-900);
+		flex-direction: column;
+		color: #1F2937;
 		background: #FBFBFB;
-		line-height: 1.55;
 	}
 
-    .sidebar-container {
-		width: 300px;
-		min-height: 100vh;
-		padding: 20px;
-		background-color: #063A1C;
-		color: white;
+	.about-container {
+		margin: 60px;
 		display: flex;
 		flex-direction: column;
-		justify-content: space-between;
-		border-top-right-radius: 20px;
-		border-bottom-right-radius: 20px;
-		transition: width 0.2s ease;
-		overflow: hidden;
-		position: relative;
-		z-index: 20;
-    }
-
-    .sidebar-container.collapsed {
-		width: 55px;
-    }
-
-	/* Drag handle */
-	.resize-handle {
-		position: absolute;
-		top: 0;
-		right: 0;
-		width: 8px;
-		cursor: ew-resize;
-		background: transparent;
-		height: 100%;
-	}
-
-    .sidebar-logo {
-		display: flex;
-		align-items: center;
-		margin-bottom: 15px;
-		white-space: nowrap;
-    }
-
-    .sidebar-logo-circle  {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background-image: url('https://lh3.googleusercontent.com/a-/ALV-UjW99iqFex7Sa1zb5jVXju1zAvBPofTlEYSBpdzsxCrV7WcS0m4=s240-p-k-rw-no');
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-    }
-
-    .sidebar-logo-text {
-		font-family: 'Instrument Sans', sans-serif;
-		font-size: 16px;
-		font-weight: 800;
-		display: inline-block;
-    }
-
-    /* Hide elements properly when collapsed */
-    .sidebar-container.collapsed .sidebar-tab-group-label {
-    	visibility: hidden;
-    }
-
-    .sidebar-container.collapsed .sidebar-logo-text,
-	.sidebar-container.collapsed .table-text {
-    	display: none;
-    }
-
-    .sidebar-tab-group-label {
-		font-family: 'Inter', sans-serif;
-		font-size: 16px;
-		padding: 10px 0;
-    }
-
-    .sidebar-tabs {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
-		gap: 15px;
-    }
-
-    .sidebar-tab {
-		display: flex;
-		align-items: center;
-		text-decoration: none;
-		color: white;
-		padding: 10px;
-		border-radius: 10px;
-		transition: background-color 0.2s ease;
-    }
-
-    .sidebar-tab:hover {
-		background-color: #052C15;
-    }
-
-    .sidebar-tab-icon {
-		width: 35px;
-		height: 35px;
-		background-color: white;
-		border-radius: 50%;
-		margin-right: 15px;
-		flex-shrink: 0;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-    }
-
-    .sidebar-tab-icon svg {
-		width: 20px;
-		height: 20px;
-		color: #063A1C;
-    }
-
-    .sidebar-logout {
-      	padding-top: 20px;
-    }
-
-    .table-text {
-		font-family: 'Inter', sans-serif;
-		font-size: 22px;
-		font-weight: bold;
-    }
-
-		/* Top Bar */
-	.topbar {
-		position: fixed;
-		top: 0;
-		left: 250px; 
-		right: 0;
-		height: 80px;
-		background-color: #F9F9F9;
-		border-bottom: 1px solid rgba(0, 0, 0, 0.3);
-		display: flex;
-		align-items: center;
-		justify-content: flex-end;
-		padding: 0 30px;
-		box-sizing: border-box;
 		gap: 30px;
-		transition: left 0.2s ease;
-		z-index: 10;
 	}
 
-	.sidebar-container.collapsed ~ .topbar {
-		left: 55px; 
-	}
-
-	.topbar button {
-		width: 45px;
-		height: 45px;
-		border-radius: 50%;
-		background-color: #063A1C;
-		border: none;
-		cursor: pointer;
-		transition: background 0.2s;
-	}
-
-	.topbar button:hover {
-		background-color: #052C15;
-	}
-
-	.sidebar-tab.active {
-		background-color: #052C15;
-	}
-
-	/* Main content area */
-	.main-content {
-		margin-left: 250px;
-		padding: 20px;
-		background: #FBFBFB;
-		min-height: 100vh;
-		transition: margin-left 0.2s ease;
-	}
-
-	.sidebar-container.collapsed ~ .main-content {
-		margin-left: 55px;
-	}
-
-	/* Hero */
 	.hero {
-		max-width: 1200px;
 		margin: 0 auto;
-    margin-top: 100px;
 		display: grid;
 		grid-template-columns: 1.5fr 1fr;
 		gap: 2rem;
 		padding: 2.25rem 1rem 3rem;
 	}
+
 	.hero h1 {
 		margin: 0;
 		font-size: 1.9rem;
 		line-height: 1.35;
 	}
-	.hero p { color: var(--text-700); }
+
+	.hero p {
+		color: #374151;
+	}
+
 	.seal {
 		display: flex;
 		align-items: center;
 		justify-content: center;
 	}
+
 	.seal img {
 		width: 260px;
-		max-width: 100%;
 	}
 
-	/* Section separator */
 	.section-gray {
 		background: #F4F4F4;
-		border-top: 1px solid var(--gray-200);
-		border-bottom: 1px solid var(--gray-200);
+		border-top: 1px solid #E5E7EB;
+		border-bottom: 1px solid #E5E7EB;
 		padding: 2rem 0 2.5rem;
 	}
 
-	.container { max-width: 1200px; margin: 0 auto; padding: 0 1rem; }
+	.container {
+		margin: 0 auto;
+		padding: 0 1rem;
+	}
 
 	.section-title {
 		text-align: center;
-		color: var(--green-700);
+		color: #245F3E;
 		font-size: 1.5rem;
 		font-weight: 800;
 		margin: 0 0 1.75rem;
@@ -262,72 +82,93 @@
 		grid-template-columns: 1fr 1fr;
 		gap: 2rem;
 	}
+
 	.card {
 		background: #fff;
-		border: 1px solid var(--gray-200);
+		border: 1px solid #E5E7EB;
 		border-radius: 8px;
 		padding: 1.25rem 1.25rem 1.5rem;
 		text-align: center;
 	}
-	.card h3 { margin: 0 0 0.75rem; font-size: 1.05rem; font-weight: 700; }
-	.card p { margin: 0; color: var(--text-700); font-size: 0.95rem; }
 
-	/* Thrust and Priorities */
+	.card h3 {
+		margin: 0 0 0.75rem;
+		font-size: 1.05rem;
+		font-weight: 700;
+	}
+
+	.card p {
+		margin: 0;
+		color: #374151;
+		font-size: 0.95rem;
+	}
+
 	.section {
-		max-width: 1200px;
 		margin: 0 auto;
 		padding: 2rem 1rem 3rem;
 	}
-	.section h2 { font-size: 1.4rem; margin: 0 0 0.75rem; }
-	.lead { color: var(--text-700); }
 
-	/* Leadership Section */
+	.section h2 {
+		font-size: 1.4rem;
+		margin: 0 0 0.75rem;
+	}
+
+	.lead {
+		color: #374151;
+	}
+
 	.leadership-section {
 		display: grid;
 		grid-template-columns: 1fr 2fr;
 		gap: 2rem;
 		align-items: start;
 	}
+
 	.profile-image {
 		text-align: center;
 	}
+
 	.image-placeholder {
 		width: 200px;
 		height: 250px;
 		background: #fff;
-		border: 1px solid var(--gray-200);
+		border: 1px solid #E5E7EB;
 		border-radius: 8px;
 		margin: 0 auto 1rem;
 	}
+
 	.profile-info h3 {
 		margin: 0 0 0.5rem;
-		color: var(--text-900);
+		color: #1F2937;
 		font-size: 1.1rem;
 	}
+
 	.profile-info p {
 		margin: 0;
-		color: var(--text-700);
+		color: #374151;
 		font-size: 0.95rem;
 	}
+
 	.leadership-content h2 {
-		color: var(--green-700);
+		color: #245F3E;
 		margin: 0 0 1rem;
 		font-size: 1.4rem;
 	}
 
-	/* Organizational Chart */
 	.org-chart {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		gap: 2rem;
 	}
+
 	.chart-level {
 		display: flex;
 		justify-content: center;
 		gap: 3rem;
 		position: relative;
 	}
+
 	.chart-level::before {
 		content: '';
 		position: absolute;
@@ -335,11 +176,13 @@
 		left: 50%;
 		width: 2px;
 		height: 1rem;
-		background: var(--gray-200);
+		background: #E5E7EB;
 	}
+
 	.chart-level:first-child::before {
 		display: none;
 	}
+
 	.chart-node {
 		width: 80px;
 		height: 80px;
@@ -349,187 +192,26 @@
 		justify-content: center;
 		position: relative;
 	}
-	.chart-node.orange { background: #FF8C42; }
-	.chart-node.yellow { background: #FFD93D; }
-	.chart-node.green { background: #6BCF7F; }
-	.chart-node.blue { background: #4DABF7; }
+
 	.person-icon {
 		font-size: 2rem;
 		color: #fff;
 	}
+
+	.chart-node.orange { background: #FF8C42; }
+	.chart-node.yellow { background: #FFD93D; }
+	.chart-node.green { background: #6BCF7F; }
+	.chart-node.blue { background: #4DABF7; }
+
 	.chart-level.level-1 .chart-node { width: 100px; height: 100px; }
 	.chart-level.level-2 .chart-node { width: 90px; height: 90px; }
 	.chart-level.level-3 .chart-node { width: 80px; height: 80px; }
 	.chart-level.level-4 .chart-node { width: 70px; height: 70px; }
-
-	@media (max-width: 900px) {
-		.hero { grid-template-columns: 1fr; }
-		.two-col { grid-template-columns: 1fr; }
-		.seal { order: -1; }
-		.leadership-section { grid-template-columns: 1fr; gap: 1.5rem; }
-		.chart-level { gap: 1.5rem; }
-		.chart-node { width: 60px; height: 60px; }
-		.chart-level.level-1 .chart-node { width: 80px; height: 80px; }
-		.chart-level.level-2 .chart-node { width: 70px; height: 70px; }
-		.chart-level.level-3 .chart-node { width: 60px; height: 60px; }
-		.chart-level.level-4 .chart-node { width: 50px; height: 50px; }
-	}
-
 </style>
+
 </head>
-
 <body>
-	<div class="sidebar-container" id="sidebar">
-		<!-- Drag handle -->
-		<div class="resize-handle"></div>
-
-		<!-- Logo Container -->
-		<div class="sidebar-logo">
-			<div class="sidebar-logo-circle"></div>
-			<span class="sidebar-logo-text">University Extension<br>Services Office</span>
-		</div>
-
-		<!-- Tabs -->
-		<div class="sidebar-tabs">
-			<!-- General -->
-			<div class="sidebar-tab-group-label">GENERAL</div>
-
-			<a href="#" class="sidebar-tab">
-				<div class="sidebar-tab-icon">
-					<img src="{% static 'icons/dashboard.svg' %}" alt="Dashboard" width="24" height="24">
-				</div>
-				<span class="table-text">Dashboard</span>
-			</a>
-			<a href="#" class="sidebar-tab">
-				<div class="sidebar-tab-icon">
-					<img src="{% static 'icons/projects.svg' %}" alt="Projects" width="24" height="24">
-				</div>
-				<span class="table-text">Projects</span>
-			</a>
-			<a href="#" class="sidebar-tab">
-				<div class="sidebar-tab-icon">
-					<img src="{% static 'icons/submission.svg' %}" alt="Submission" width="24" height="24">
-				</div>
-				<span class="table-text">Submission</span>
-			</a>
-			<a href="#" class="sidebar-tab">
-				<div class="sidebar-tab-icon">
-					<img src="{% static 'icons/experts.svg' %}" alt="Experts" width="24" height="24">
-				</div>
-				<span class="table-text">Experts</span>
-			</a>
-			<a href="#" class="sidebar-tab">
-				<div class="sidebar-tab-icon">
-					<img src="{% static 'icons/calendar.svg' %}" alt="Calendar" width="24" height="24">
-				</div>
-				<span class="table-text">Calendar</span>
-			</a>
-			<a href="#" class="sidebar-tab">
-				<div class="sidebar-tab-icon">
-					<img src="{% static 'icons/analytics.svg' %}" alt="Analytics" width="24" height="24">
-				</div>
-				<span class="table-text">Analytics</span>
-			</a>
-			<a href="#" class="sidebar-tab">
-				<div class="sidebar-tab-icon">
-					<img src="{% static 'icons/agenda.svg' %}" alt="Analytics" width="24" height="24">
-				</div>
-				<span class="table-text">Agenda</span>
-			</a>
-			<a href="#" class="sidebar-tab">
-				<div class="sidebar-tab-icon">
-					<img src="{% static 'icons/goals.svg' %}" alt="Goals" width="24" height="24">
-				</div>
-				<span class="table-text">Goals</span>
-			</a>
-
-			<!-- Content -->
-			<div class="sidebar-tab-group-label">CONTENT</div>
-
-			<a href="#" class="sidebar-tab">
-				<div class="sidebar-tab-icon">
-					<img src="{% static 'icons/announce.svg' %}" alt="Announcements" width="24" height="24">
-				</div>
-				<span class="table-text">Announcements</span>
-			</a>
-			<a href="#" class="sidebar-tab">
-				<div class="sidebar-tab-icon">
-					<img src="{% static 'icons/archive.svg' %}" alt="Archive" width="24" height="24">
-				</div>
-				<span class="table-text">Archive</span>
-			</a>
-			<a href="#" class="sidebar-tab">
-				<div class="sidebar-tab-icon">
-					<img src="{% static 'icons/budget.svg' %}" alt="Budget" width="24" height="24">
-				</div>
-				<span class="table-text">Budget</span>
-			</a>
-			<a href="{% url 'all_users:about_index' %}" class="sidebar-tab">
-				<div class="sidebar-tab-icon">
-					<img src="{% static 'icons/aboutus.svg' %}" alt="About Us" width="24" height="24">
-				</div>
-				<span class="table-text">About Us</span>
-			</a>
-			<a href="#" class="sidebar-tab">
-				<div class="sidebar-tab-icon">
-					<img src="{% static 'icons/downloads.svg' %}" alt="Downloadables" width="24" height="24">
-				</div>
-				<span class="table-text">Downloads</span>
-			</a>
-
-			<!-- Other -->
-			<div class="sidebar-tab-group-label">OTHER</div>
-			<a href="#" class="sidebar-tab">
-				<div class="sidebar-tab-icon">
-					<img src="{% static 'icons/manageuser.svg' %}" alt="Inbox" width="24" height="24">
-				</div>
-				<span class="table-text">Manage User</span>
-			</a>
-			<a href="#" class="sidebar-tab">
-				<div class="sidebar-tab-icon">
-					<img src="{% static 'icons/logs.svg' %}" alt="Inbox" width="24" height="24">
-				</div>
-				<span class="table-text">Logs</span>
-			</a>
-			<a href="#" class="sidebar-tab">
-				<div class="sidebar-tab-icon">
-					<img src="{% static 'icons/inbox.svg' %}" alt="Inbox" width="24" height="24">
-				</div>
-				<span class="table-text">Inbox</span>
-			</a>
-			<a href="#" class="sidebar-tab">
-				<div class="sidebar-tab-icon">
-					<img src="{% static 'icons/notification.svg' %}" alt="Notification" width="24" height="24">
-				</div>
-				<span class="table-text">Notification</span>
-			</a>
-			<a href="#" class="sidebar-tab">
-				<div class="sidebar-tab-icon">
-					<img src="{% static 'icons/settings.svg' %}" alt="Settings" width="24" height="24">
-				</div>
-				<span class="table-text">Settings</span>
-			</a>
-		</div>
-
-		<!-- Logout -->
-		<div class="sidebar-logout">
-			<a href="#" class="sidebar-tab">
-				<div class="sidebar-tab-icon">
-					<img src="{% static 'icons/logout.svg' %}" alt="Log Out" width="24" height="24">
-				</div>
-				<span class="table-text">Log Out</span>
-			</a>
-		</div>
-	</div>
-
-	<!-- 🔹 Topbar -->
-	<div class="topbar">
-		<button></button>
-		<button></button>
-		<button></button>
-	</div>
-
-	<div class="main-content">
+	<div class="about-container">
 		<section class="hero">
 			<div>
 				<h1 contenteditable="true">Palawan State University<br>University Extension Services Office</h1>
@@ -665,6 +347,7 @@
 				</div>
 			</div>
 		</section>
+
 	</div>
 </body>
 
@@ -741,3 +424,5 @@
 </script>
 
 </html>
+
+{% endblock %}

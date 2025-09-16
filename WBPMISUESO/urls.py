@@ -33,12 +33,12 @@ urlpatterns = [
     # Submission (None Yet)
 
     # SHARED APPS
-    # About Us (None Yet)
-    path('announcements/', include('shared.announcements.urls')), # Announcements
+    path('about-us/', include('shared.about_us.urls')),             # About Us
+    path('announcements/', include('shared.announcements.urls')),   # Announcements
     # Archive (None Yet)
     # Budget (None Yet)
     path('calendar/', include('shared.event_calendar.urls')),       # Calendar
-    # path('downloadables/', include('shared.downloadables.urls')),   # Downloadables
+    path('downloadables/', include('shared.downloadables.urls')),   # Downloadables
     # Projects (None Yet)
 
     # SYSTEM APPS

@@ -1,0 +1,362 @@
+{% extends "base_public.html" %}
+{% block content %}
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>About Us</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+	body {
+		margin: 20;
+		font-family: Helvetica, Arial, sans-serif;
+		color: #1F2937;
+		background: #FBFBFB;
+		line-height: 1.55;
+	}
+
+	.about-container {
+		margin: 60px;
+		display: flex;
+		flex-direction: column;
+		gap: 30px;
+	}
+
+	.hero {
+		margin: 0 auto;
+		display: grid;
+		grid-template-columns: 1.5fr 1fr;
+		gap: 2rem;
+		padding: 2.25rem 1rem 3rem;
+	}
+
+	.hero h1 {
+		margin: 0;
+		font-size: 1.9rem;
+		line-height: 1.35;
+	}
+
+	.hero p {
+		color: #374151;
+	}
+
+	.seal {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.seal img {
+		width: 260px;
+	}
+
+	.section-gray {
+		background: #F4F4F4;
+		border-top: 1px solid #E5E7EB;
+		border-bottom: 1px solid #E5E7EB;
+		padding: 2rem 0 2.5rem;
+	}
+
+	.container {
+		margin: 0 auto;
+		padding: 0 1rem;
+	}
+
+	.section-title {
+		text-align: center;
+		color: #245F3E;
+		font-size: 1.5rem;
+		font-weight: 800;
+		margin: 0 0 1.75rem;
+	}
+
+	.two-col {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 2rem;
+	}
+
+	.card {
+		background: #fff;
+		border: 1px solid #E5E7EB;
+		border-radius: 8px;
+		padding: 1.25rem 1.25rem 1.5rem;
+		text-align: center;
+	}
+
+	.card h3 {
+		margin: 0 0 0.75rem;
+		font-size: 1.05rem;
+		font-weight: 700;
+	}
+
+	.card p {
+		margin: 0;
+		color: #374151;
+		font-size: 0.95rem;
+	}
+
+	.section {
+		margin: 0 auto;
+		padding: 2rem 1rem 3rem;
+	}
+
+	.section h2 {
+		font-size: 1.4rem;
+		margin: 0 0 0.75rem;
+	}
+
+	.lead {
+		color: #374151;
+	}
+
+	footer {
+		background: #245F3E;
+		color: #fff;
+		padding: 2rem 1rem;
+		text-align: center;
+	}
+
+	.leadership-section {
+		display: grid;
+		grid-template-columns: 1fr 2fr;
+		gap: 2rem;
+		align-items: start;
+	}
+
+	.profile-image {
+		text-align: center;
+	}
+
+	.image-placeholder {
+		width: 200px;
+		height: 250px;
+		background: #fff;
+		border: 1px solid #E5E7EB;
+		border-radius: 8px;
+		margin: 0 auto 1rem;
+	}
+
+	.profile-info h3 {
+		margin: 0 0 0.5rem;
+		color: #1F2937;
+		font-size: 1.1rem;
+	}
+
+	.profile-info p {
+		margin: 0;
+		color: #374151;
+		font-size: 0.95rem;
+	}
+
+	.leadership-content h2 {
+		color: #245F3E;
+		margin: 0 0 1rem;
+		font-size: 1.4rem;
+	}
+
+	.org-chart {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 2rem;
+	}
+
+	.chart-level {
+		display: flex;
+		justify-content: center;
+		gap: 3rem;
+		position: relative;
+	}
+
+	.chart-level::before {
+		content: '';
+		position: absolute;
+		top: -1rem;
+		left: 50%;
+		width: 2px;
+		height: 1rem;
+		background: #E5E7EB;
+	}
+
+	.chart-level:first-child::before {
+		display: none;
+	}
+
+	.chart-node {
+		width: 80px;
+		height: 80px;
+		border-radius: 50%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		position: relative;
+	}
+
+	.person-icon {
+		font-size: 2rem;
+		color: #fff;
+	}
+
+	.chart-node.orange { background: #FF8C42; }
+	.chart-node.yellow { background: #FFD93D; }
+	.chart-node.green { background: #6BCF7F; }
+	.chart-node.blue { background: #4DABF7; }
+
+	.chart-level.level-1 .chart-node { width: 100px; height: 100px; }
+	.chart-level.level-2 .chart-node { width: 90px; height: 90px; }
+	.chart-level.level-3 .chart-node { width: 80px; height: 80px; }
+	.chart-level.level-4 .chart-node { width: 70px; height: 70px; }
+</style>
+
+</head>
+<body>
+	<div class="about-container">
+		<section class="hero">
+			<div>
+				<h1>Palawan State University<br>University Extension Services Office</h1>
+				<p>
+					Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum consequat id tellus at hendrerit. 
+					In dapibus magna id faucibus lobortis. Morbi non libero in libero egestas laoreet. Ut commodo lacus turpis, 
+					non consectetur ex pulvinar sit amet. Morbi consequat nisi a aliquet interdum. Aliquam erat volutpat. 
+					Cras ultricies ligula lorem, sit amet euismod lectus placerat eu. Pellentesque venenatis nunc vitae imperdiet ultrices.
+				</p>
+			</div>
+			<div class="seal">
+				<img alt="Palawan State University Seal" src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Palawan_State_University_seal.png">
+			</div>
+		</section>
+
+		<div class="section-gray">
+			<div class="container">
+				<h2 class="section-title">UESO Mission and Vision</h2>
+				<div class="two-col">
+					<div class="card">
+						<h3>UESO Vision</h3>
+						<p>
+							Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum consequat id tellus at hendrerit. 
+							In dapibus magna id faucibus lobortis. Morbi non libero in libero egestas laoreet. Ut commodo lacus turpis, 
+							non consectetur ex pulvinar sit amet. Morbi consequat nisi a aliquet interdum. Aliquam erat volutpat. 
+							Cras ultricies ligula lorem, sit amet euismod lectus placerat eu. Pellentesque venenatis nunc vitae imperdiet ultrices.
+						</p>
+					</div>
+					<div class="card">
+						<h3>UESO Mission</h3>
+						<p>
+							Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum consequat id tellus at hendrerit. 
+							In dapibus magna id faucibus lobortis. Morbi non libero in libero egestas laoreet. Ut commodo lacus turpis, 
+							non consectetur ex pulvinar sit amet. Morbi consequat nisi a aliquet interdum. Aliquam erat volutpat. 
+							Cras ultricies ligula lorem, sit amet euismod lectus placerat eu. Pellentesque venenatis nunc vitae imperdiet ultrices.
+						</p>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<section class="section">
+			<h2>UESO Thrust and Priorities</h2>
+			<p class="lead">
+				Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum consequat id tellus at hendrerit. 
+				In dapibus magna id faucibus lobortis. Morbi non libero in libero egestas laoreet. Ut commodo lacus turpis, 
+				non consectetur ex pulvinar sit amet. Morbi consequat nisi a aliquet interdum. Aliquam erat volutpat. 
+				Cras ultricies ligula lorem, sit amet euismod lectus placerat eu. Pellentesque venenatis nunc vitae imperdiet ultrices.
+				Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum consequat id tellus at hendrerit. 
+				In dapibus magna id faucibus lobortis. Morbi non libero in libero egestas laoreet. Ut commodo lacus turpis, 
+				non consectetur ex pulvinar sit amet. Morbi consequat nisi a aliquet interdum. Aliquam erat volutpat.
+			</p>
+			<p class="lead">
+				Cras ultricies ligula lorem, sit amet euismod lectus placerat eu. Pellentesque venenatis nunc vitae imperdiet ultrices.
+				Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum consequat id tellus at hendrerit. 
+				In dapibus magna id faucibus lobortis. Morbi non libero in libero egestas laoreet. Ut commodo lacus turpis, 
+				non consectetur ex pulvinar sit amet. Morbi consequat nisi a aliquet interdum. Aliquam erat volutpat.
+			</p>
+		</section>
+
+		<div class="section-gray">
+			<div class="container">
+				<div class="leadership-section">
+					<div class="profile-image">
+						<div class="image-placeholder"></div>
+						<div class="profile-info">
+							<h3>NAME</h3>
+							<p>Director, Extension Services Office</p>
+						</div>
+					</div>
+					<div class="leadership-content">
+						<h2>Leadership & Administration</h2>
+						<p>
+							Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum consequat id tellus at hendrerit. 
+							In dapibus magna id faucibus lobortis. Morbi non libero in libero egestas laoreet. Ut commodo lacus turpis, 
+							non consectetur ex pulvinar sit amet. Morbi consequat nisi a aliquet interdum. Aliquam erat volutpat. 
+							Cras ultricies ligula lorem, sit amet euismod lectus placerat eu. Pellentesque venenatis nunc vitae imperdiet ultrices.
+						</p>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<section class="section">
+			<h2 class="section-title">Organizational Chart</h2>
+			<div class="org-chart">
+				<div class="chart-level level-1">
+					<div class="chart-node orange">
+						<div class="person-icon">👤</div>
+					</div>
+				</div>
+				<div class="chart-level level-2">
+					<div class="chart-node yellow">
+						<div class="person-icon">👤</div>
+					</div>
+					<div class="chart-node yellow">
+						<div class="person-icon">👤</div>
+					</div>
+					<div class="chart-node yellow"></div>
+						<div class="person-icon">👤</div>
+					</div>
+				</div>
+				<div class="chart-level level-3">
+					<div class="chart-node green">
+						<div class="person-icon">👤</div>
+					</div>
+					<div class="chart-node green">
+						<div class="person-icon">👤</div>
+					</div>
+					<div class="chart-node green">
+						<div class="person-icon">👤</div>
+					</div>
+					<div class="chart-node green">
+						<div class="person-icon">👤</div>
+					</div>
+					<div class="chart-node green">
+						<div class="person-icon">👤</div>
+					</div>
+				</div>
+				<div class="chart-level level-4">
+					<div class="chart-node blue">
+						<div class="person-icon">👤</div>
+					</div>
+					<div class="chart-node blue">
+						<div class="person-icon">👤</div>
+					</div>
+					<div class="chart-node blue">
+						<div class="person-icon">👤</div>
+					</div>
+					<div class="chart-node blue">
+						<div class="person-icon">👤</div>
+					</div>
+				</div>
+
+		</section>
+		
+	</div>
+</body>
+</html> 
+
+{% endblock %}

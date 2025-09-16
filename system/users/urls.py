@@ -2,7 +2,6 @@ from django.urls import path
 from .views import login_view, logout_view, register_view, quick_login, role_redirect, home, dashboard, manage_user, forgot_password_view
 from .views import registration_client_view, registration_faculty_view, registration_implementer_view, client_verify_view, faculty_verify_view, implementer_verify_view, thank_you_view
 from .views import not_authenticated_view, no_permission_view, not_confirmed_view
-from external.home.views import home_view
 
 urlpatterns = [
     # User Authentication URLs
@@ -25,7 +24,6 @@ urlpatterns = [
     path('not-authenticated/', not_authenticated_view, name='not_authenticated'),   # 403 Not Authenticated
     path('no-permission/', no_permission_view, name='no_permission'),               # 403 No Permission
     path('not-confirmed/', not_confirmed_view, name='not_confirmed'),               # 403 Not Confirmed
-
 
     path('home/', home, name='home'),                           # Home (User)
     path('dashboard/', dashboard, name='dashboard'),            # Dashboard (Admin)

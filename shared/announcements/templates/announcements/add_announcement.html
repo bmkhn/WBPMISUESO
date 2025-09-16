@@ -14,6 +14,7 @@
 		border-color: #E53E3E !important;
 		background: #FFF5F5 !important;
 	}
+
     body {
         background: #F9F9F9;
         margin: 0;
@@ -25,7 +26,6 @@
         display: flex;
         flex-direction: column;
         gap: 30px;
-        min-height: 1440px;
     }
 
 	.form-title {
@@ -44,7 +44,6 @@
 	}
 
 	.form-label {
-		min-width: 150px;
 		font-weight: 600;
 		color: #374151;
 		padding-top: 0.75rem;
@@ -178,7 +177,6 @@
 		transform: none;
 	}
 
-	/* File upload styling */
 	.file-input {
 		display: none;
 	}
@@ -202,31 +200,6 @@
 		gap: 0.5rem;
 		color: #1f7c57;
 		font-size: 0.9rem;
-	}
-
-	/* Responsive design */
-	@media (max-width: 768px) {
-		.container {
-			padding: 1rem;
-		}
-
-		.form-group {
-			flex-direction: column;
-			gap: 0.5rem;
-		}
-
-		.form-label {
-			min-width: auto;
-			padding-top: 0;
-		}
-
-		.form-actions {
-			flex-direction: column;
-		}
-
-		.btn {
-			width: 100%;
-		}
 	}
 </style>
 
@@ -294,6 +267,7 @@
 	<symbol id="icon-clock" viewBox="0 0 24 24" fill="currentColor">
 		<path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M16.2,16.2L11,13V7H12.5V12.2L17,14.9L16.2,16.2Z" />
 	</symbol>
+	
 </svg>
 
 <script>
