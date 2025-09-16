@@ -1,0 +1,434 @@
+{% extends "base_public.html" %}
+{% block content %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Downloadables</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<!-- Downloadables Styles -->
+<style>
+	body{
+		margin: 0;
+		background: #F9F9F9;
+		font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+	}
+
+	.downloadable-container{
+        display: flex;
+        flex-direction: row;
+        gap: 30px;
+        margin: 70px;
+	}
+
+	.left{
+        display: flex;
+        flex-direction: column;
+        gap: 40px;
+        flex: 2;
+	}
+
+	.left__title{
+		font-size: 33px;   
+		font-weight: 500;
+		color: #000000;     
+		line-height: 1.25;
+		margin: 0;
+	}
+
+	.item-group {
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		grid-template-rows: repeat(2, 1fr);
+		gap: 40px;
+		align-items: stretch;
+		justify-items: stretch;
+		width: 100%;
+	}
+
+	.item {
+		display: flex;
+		flex-direction: column;
+		gap: 15px;
+		width: 100%;
+		box-sizing: border-box;
+		background: #fff;
+		border-radius: 12px;
+		box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+		padding: 18px;
+		transition: box-shadow 0.2s;
+	}
+
+	.item:hover {
+		box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+	}
+
+	.item__thumb{
+		width: 100%;
+		aspect-ratio: 16 / 9;
+		background: #E9E9E9;
+		border-radius: 12px;
+	}
+
+	.item__title{
+		font-weight: 600;
+		font-size: 18px;
+		margin: 0;
+	}
+
+	.item__desc{
+		font-size: 14px;
+		margin: 0;
+		color: #333;
+	}
+</style>
+
+<!-- Announcement Section -->
+<style>
+    .right-container {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        flex: 1;
+    }
+
+    .announce-text {
+        font-family: 'Inter', sans-serif;
+        font-weight: 400;
+        font-size: 28px;
+    }
+
+    .announce-box {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .announce-item {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        border: 0.7px solid #DDE1E6;
+    }
+
+    .announce-pic {
+        background: #ECECEC;
+        height: 200px;
+        border-bottom: 0.7px solid #DDE1E6;
+    }
+
+    .announce-date {
+        padding: 0 20px 20px 20px;
+        font-family: 'Inter', sans-serif;
+        font-weight: 500;
+        font-size: 14px;
+        color: #E37910;
+    }
+
+    .announce-title {
+        padding: 0 20px 20px 20px;
+        font-family: 'Inter', sans-serif;
+        font-weight: 700;
+        font-size: 20px;
+        color: #625C56;
+    }
+
+    .announce-more {
+        font-family: 'Inter', sans-serif;
+        font-weight: 400;
+        font-size: 20px;
+        color: #2EA8FF;
+        margin-top: 10px;
+        cursor: pointer;
+    }
+</style>
+
+<!-- Search Bar Styles -->
+<style>
+	.search-container {
+		width: 100%;
+		display: flex;
+		gap: 10px;
+	}
+
+	.search-bar {
+		width: 100%;
+		height: 52px;
+		background: #F2F4F8;
+		display: flex;
+		align-items: center;
+		padding: 0 16px;
+		border-bottom: 1.09px solid #535353;
+		border-radius: 8px;
+		box-sizing: border-box;
+	}
+
+	.search-bar input {
+		flex: 1;
+		border: none;
+		outline: none;
+		background: transparent;
+		font-size: 18px;
+		font-family: 'Inter', sans-serif;
+		font-weight: 400;
+		color: #5A5252;
+		padding: 0 10px;
+	}
+</style>
+
+<!-- Sort/Filter Styles -->
+<style>
+	.filter-dropdown {
+		z-index: 1000;
+		background: white;
+		border: 1px solid #e5e7eb;
+		border-radius: 12px;
+		box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+		padding: 24px 32px;
+		display: none;
+		position: absolute;
+		top: 330px;
+		right: 36.5%;
+	}
+	
+	.filter-grid {
+		display: grid;
+		grid-gap: 24px;
+		grid-template-columns: repeat(2, 1fr); 
+		grid-template-rows: repeat(2, 1fr);
+	}
+
+	.filter-dropdown label {
+		font-weight: 500;
+		color: #374151;
+		display: flex;
+		flex-direction: column;
+	}
+
+	.filter-dropdown select,
+	.filter-dropdown input[type="date"] {
+		width: 100%;
+		margin-top: 6px;
+		border: 1px solid #e5e7eb;
+		border-radius: 6px;
+		padding: 6px 10px;
+		font-size: 15px;
+		font-family: 'Inter', Arial, sans-serif;
+		background: #f9f9f9;
+		color: #374151;
+	}
+
+	.filter-dropdown select {
+		appearance: none;
+		-webkit-appearance: none;
+		-moz-appearance: none;
+		padding-right: 2rem;
+		background: url("data:image/svg+xml;utf8,<svg width='16' height='11' viewBox='0 0 16 11' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M7.99976 7.19417L13.9025 1.29147C14.0125 1.17758 14.144 1.08674 14.2895 1.02424C14.435 0.961746 14.5915 0.92885 14.7498 0.927474C14.9082 0.926098 15.0652 0.95627 15.2117 1.01623C15.3583 1.07619 15.4914 1.16473 15.6034 1.27669C15.7153 1.38866 15.8039 1.5218 15.8638 1.66835C15.9238 1.8149 15.954 1.97192 15.9526 2.13026C15.9512 2.28859 15.9183 2.44506 15.8558 2.59055C15.7933 2.73604 15.7025 2.86762 15.5886 2.97762L8.84283 9.72339C8.61921 9.94694 8.31596 10.0725 7.99976 10.0725C7.68356 10.0725 7.38031 9.94694 7.15669 9.72339L0.41092 2.97762C0.297028 2.86762 0.206183 2.73604 0.143687 2.59055C0.0811915 2.44506 0.0482959 2.28859 0.04692 2.13026C0.0455441 1.97192 0.0757155 1.8149 0.135674 1.66835C0.195632 1.5218 0.284176 1.38866 0.39614 1.27669C0.508103 1.16473 0.641244 1.07619 0.787794 1.01623C0.934343 0.95627 1.09137 0.926098 1.2497 0.927474C1.40804 0.92885 1.56451 0.961746 1.71 1.02424C1.85548 1.08674 1.98706 1.17758 2.09706 1.29147L7.99976 7.19417Z' fill='%23374151'/></svg>")
+        		no-repeat right 0.75rem center;
+  		background-size: 13px 8px;
+	}
+
+	.filter-actions {
+		display: flex;
+		justify-content: flex-end;
+		gap: 10px;
+		margin-top: 24px;
+	}
+
+	.filter-apply {
+		background: #063A1C;
+		color: white;
+		padding: 10px 28px;
+		border-radius: 8px;
+		font-size: 16px;
+		font-family: 'Inter', Arial, sans-serif;
+		font-weight: 500;
+		cursor: pointer;
+		transition: background 0.2s;
+		border: none;
+	}
+
+	.filter-close {
+		background: #e5e7eb;
+		color: #374151;
+		padding: 10px 18px;
+		border-radius: 8px;
+		font-size: 16px;
+		font-family: 'Inter', Arial, sans-serif;
+		font-weight: 500;
+		cursor: pointer;
+		border: none;
+	}
+</style>
+
+
+</head>
+<body>
+	<div class="downloadable-container">
+		<div class="left">
+			<h1 class="left__title">Downloadables</h1>
+			<!-- Search Bar -->
+			<div class="search-container">
+				<form class="search-bar" method="get" action="">
+						<svg width="20" height="20"> <use href="#icon-search"></use> </svg>
+						<input type="text" name="search" placeholder="Search" value="{{ search_query|default:'' }}"/>
+						<button type="button" id="filterBtn" style="background:none;border:none;padding:0;margin-right:5px;cursor:pointer;">
+							<svg width="20" height="20"> <use href="#icon-filter"></use> </svg>
+						</button>
+					
+						<div id="filterDropdown" class="filter-dropdown">
+							<div class="filter-grid">
+								<!-- Top Left - Sort By -->
+								<label>
+									Sort By
+									<select name="sort" style="width:100%;margin-top:6px;">
+										<option value="name" {% if sort_by == 'name' %}selected{% endif %}>Name</option>
+										<option value="size" {% if sort_by == 'size' %}selected{% endif %}>File Size</option>
+										<option value="type" {% if sort_by == 'type' %}selected{% endif %}>File Type</option>
+										<option value="date" {% if sort_by == 'date' %}selected{% endif %}>Date</option>
+									</select>
+								</label>
+
+								<!-- Top Right - Order By -->
+								<label>
+									Order By
+									<select name="order" style="width:100%;margin-top:6px;">
+										<option value="asc" {% if sort_order == 'asc' %}selected{% endif %}>Ascending</option>
+										<option value="desc" {% if sort_order == 'desc' %}selected{% endif %}>Descending</option>
+									</select>
+								</label>
+
+								<!-- Bottom Left - File Type -->
+								<label>
+									File Type
+									<select name="filetype" style="width:100%;margin-top:6px;">
+										<option value="">All Types</option>
+										<option value="pdf" {% if filter_filetype == 'pdf' %}selected{% endif %}>PDF</option>
+										<option value="docx" {% if filter_filetype == 'docx' %}selected{% endif %}>DOCX</option>
+										<option value="xlsx" {% if filter_filetype == 'xlsx' %}selected{% endif %}>XLSX</option>
+										<option value="pptx" {% if filter_filetype == 'pptx' %}selected{% endif %}>PPTX</option>
+										<option value="zip" {% if filter_filetype == 'zip' %}selected{% endif %}>ZIP</option>
+										<option value="other" {% if filter_filetype == 'other' %}selected{% endif %}>Other</option>
+									</select>
+								</label>
+
+								<!-- Bottom Right - Date -->
+								<label>
+									Date
+									<input type="date" name="date" value="{{ filter_date|default:'' }}" style="width:100%;margin-top:6px;" />
+								</label>
+							</div>
+
+							<!-- Buttons Row -->
+							<div style="display:flex;justify-content:flex-end;gap:10px;margin-top:24px;">
+							<button type="submit" class="filter-apply">Apply</button>
+							<button type="button" id="closeFilter" class="filter-close">Close</button>
+							</div>
+						</div>
+				</form>
+			</div>
+
+			<div class="item-group">
+				{% for downloadable in page_obj %}
+				<article class="item">
+					<div class="item__thumb"></div>
+					<h2 class="item__title">{{ downloadable.name }}</h2>
+					<p class="item__desc">{{ downloadable.extension|upper }} File <strong>{{ downloadable.size }}</strong></p>
+				</article>
+				{% empty %}
+				<div style="color:#888;font-size:18px;padding:40px">No downloadables found.</div>
+				{% endfor %}
+			</div>
+			{% if page_obj.has_other_pages %}
+			<div style="display:flex;justify-content:center;margin-top:32px;gap:12px;">
+				{% if page_obj.has_previous %}
+					<a href="?page={{ page_obj.previous_page_number }}" style="padding:8px 18px;border-radius:8px;background:#F3F4F6;color:#333;text-decoration:none;font-weight:500;">Previous</a>
+				{% endif %}
+				{% for num in page_obj.paginator.page_range %}
+					{% if page_obj.number == num %}
+						<span style="padding:8px 18px;border-radius:8px;background:#063A1C;color:#fff;font-weight:600;">{{ num }}</span>
+					{% else %}
+						<a href="?page={{ num }}" style="padding:8px 18px;border-radius:8px;background:#F3F4F6;color:#333;text-decoration:none;font-weight:500;">{{ num }}</a>
+					{% endif %}
+				{% endfor %}
+				{% if page_obj.has_next %}
+					<a href="?page={{ page_obj.next_page_number }}" style="padding:8px 18px;border-radius:8px;background:#F3F4F6;color:#333;text-decoration:none;font-weight:500;">Next</a>
+				{% endif %}
+			</div>
+			{% endif %}
+		</div>
+
+		<!-- Right Container -->
+        <div class="right-container">
+            <div class="announce-text">Latest Announcements</div>
+            <div class="announce-box">
+                <div class="announce-item">
+                    <div class="announce-pic"></div>
+                    <div class="announce-details">
+                        <div class="announce-date">March 10, 2025</div>
+                        <div class="announce-title">Office will be closed for between January 03, 2025 to January 05, 2025</div>
+                    </div>
+                </div>
+
+                <div class="announce-item">
+                    <div class="announce-pic"></div>
+                    <div class="announce-details">
+                        <div class="announce-date">March 10, 2025</div>
+                        <div class="announce-title">Office will be closed for between January 03, 2025 to January 05, 2025</div>
+                    </div>
+                </div>
+            </div>
+            <div class="announce-more">View More Announcements →</div>
+        </div>
+	</div>
+
+<!-- SVG Sprite Section -->
+<svg style="display:none;">
+
+	<!-- Search -->
+	<symbol id="icon-search" viewBox="0 0 21 21" fill="none">
+		<path d="M8.89152 15.9057C9.75056 15.9057 10.6012 15.7365 11.3948 15.4077C12.1885 15.079 12.9096 14.5972 13.5171 13.9897C14.1245 13.3823 14.6064 12.6612 14.9351 11.8675C15.2638 11.0739 15.433 10.2232 15.433 9.36417C15.433 8.50513 15.2638 7.6545 14.9351 6.86084C14.6064 6.06719 14.1245 5.34606 13.5171 4.73862C12.9096 4.13119 12.1885 3.64934 11.3948 3.3206C10.6012 2.99186 9.75056 2.82266 8.89152 2.82266C7.1566 2.82266 5.49274 3.51185 4.26597 4.73862C3.03919 5.9654 2.35 7.62926 2.35 9.36417C2.35 11.0991 3.03919 12.763 4.26597 13.9897C5.49274 15.2165 7.1566 15.9057 8.89152 15.9057V15.9057ZM15.7819 14.713L19.685 18.6161C19.7891 18.7167 19.872 18.8371 19.9291 18.9701C19.9861 19.1032 20.0161 19.2463 20.0173 19.391C20.0184 19.5358 19.9907 19.6793 19.9358 19.8133C19.8809 19.9472 19.7999 20.0689 19.6974 20.1712C19.595 20.2735 19.4732 20.3544 19.3392 20.4091C19.2052 20.4638 19.0616 20.4913 18.9168 20.4899C18.772 20.4886 18.629 20.4584 18.496 20.4012C18.3631 20.3439 18.2428 20.2608 18.1423 20.1566L14.2392 16.2535C12.4866 17.614 10.2814 18.2554 8.07247 18.0472C5.86357 17.839 3.81705 16.7968 2.34951 15.1328C0.881971 13.4688 0.103735 11.308 0.173229 9.09044C0.242723 6.87284 1.15472 4.76508 2.72357 3.19623C4.29242 1.62738 6.40018 0.715379 8.61778 0.645885C10.8354 0.576391 12.9961 1.35463 14.6601 2.82217C16.3241 4.28971 17.3663 6.33623 17.5745 8.54513C17.7827 10.754 17.1413 12.9592 15.7808 14.7119L15.7819 14.713Z" fill="#5A5252"/>
+	</symbol>
+
+	<!-- Filter -->
+	<symbol id="icon-filter" viewBox="0 0 23 22" fill="none">
+		<path opacity="0.9" d="M21.5399 1.92871H1.37988L9.44388 11.4644V18.0567L13.4759 20.0727V11.4644L21.5399 1.92871Z" stroke="#1E1E1E" stroke-width="2.016" stroke-linecap="round" stroke-linejoin="round"/>
+	</symbol>
+</svg>
+
+<script>
+	const filterBtn = document.getElementById('filterBtn');
+	const filterDropdown = document.getElementById('filterDropdown');
+	const closeFilter = document.getElementById('closeFilter');
+
+	if (filterBtn && filterDropdown) {
+		filterBtn.addEventListener('click', function(e) {
+			e.preventDefault();
+			filterDropdown.style.display = 'block';
+		});
+	}
+
+	if (closeFilter && filterDropdown) {
+		closeFilter.addEventListener('click', function(e) {
+			e.preventDefault();
+			filterDropdown.style.display = 'none';
+		});
+	}
+
+	// Hide dropdown when clicking outside
+	document.addEventListener('mousedown', function(e) {
+		if (filterDropdown && !filterDropdown.contains(e.target) && e.target !== filterBtn) {
+			filterDropdown.style.display = 'none';
+		}
+	});
+</script>
+
+</body>
+</html>
+
+{% endblock %}
