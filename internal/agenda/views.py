@@ -1,7 +1,10 @@
+
 from .forms import AgendaForm
 from .models import Agenda
 from system.users.decorators import role_required
 from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseRedirect
+from django.urls import reverse
 
 
 # Agenda View
@@ -47,7 +50,6 @@ def edit_agenda_view(request, agenda_id):
                 'selected_college_ids': selected_college_ids if selected_college_ids else [],
             })
         else:
-            # If form is invalid, try to get from POST data
             selected_college_ids = request.POST.getlist('concerned_colleges')
     else:
         form = AgendaForm(instance=agenda)
@@ -70,7 +72,7 @@ def delete_agenda_view(request, agenda_id):
 
     if request.method == 'POST':
         agenda.delete()
-        return render(request, 'agenda/agenda.html', {'agendas': Agenda.objects.all(), 'success': 'Agenda deleted successfully.'})
+        return HttpResponseRedirect(reverse('agenda'))
     else:
         # Show confirmation dialog
         return render(request, 'agenda/delete_agenda.html', {'agenda': agenda})

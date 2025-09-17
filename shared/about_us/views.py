@@ -30,4 +30,3 @@ def superuser_about_us(request):
 @role_required(allowed_roles=["UESO", "DIRECTOR", "VP"])
 def admin_about_us(request):
 	return render(request, 'about_us/admin_about_us.html')
-
