@@ -1,7 +1,6 @@
 {% extends "base_public.html" %}
 {% block content %}
 {% load static %}
-{% load tz %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -9,8 +8,7 @@
 <meta charset="UTF-8" />
 <title>Announcements</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:700&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
 
 <!-- Global and Header Styles -->
 <style>
@@ -494,7 +492,7 @@
 				<div class="announce-text-container">
 					<div class="announce-meta">
 						{% if announcement.published_at %}
-							<span class="announce-date">Published: {{ announcement.published_at|timezone:"Asia/Manila"|date:"F d, Y" }} at {{ announcement.published_at|timezone:"Asia/Manila"|time:"H:i" }}</span>
+							<span class="announce-date">Published: {{ announcement.published_at|date:"F d, Y" }} at {{ announcement.published_at|time:"H:i" }}</span>
 						{% endif %}
 					</div>
 					<h3>{{ announcement.title }}</h3>
@@ -512,29 +510,33 @@
 			{% endfor %}
 		</div>
 
-
 		<!-- Pagination -->
 		<div class="pagination-container">
-			   {% if page_obj.has_previous %}
-				   <a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a>
-			   {% else %}
-				   <button class="pagination-button" disabled>Previous</button>
-			   {% endif %}
+			{% if page_obj.has_previous %}
+				<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page=1">First</a>
+				<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a>
+			{% else %}
+				<button class="pagination-button" disabled>First</button>
+				<button class="pagination-button" disabled>Previous</button>
+			{% endif %}
 
-			   {% for num in paginator.page_range %}
-				   {% if num == page_obj.number %}
-					   <button class="pagination-button active" disabled>{{ num }}</button>
-				   {% else %}
-					   <a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ num }}">{{ num }}</a>
-				   {% endif %}
-			   {% endfor %}
+			{% for num in page_range %}
+				{% if num == page_obj.number %}
+					<button class="pagination-button active" disabled>{{ num }}</button>
+				{% else %}
+					<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ num }}">{{ num }}</a>
+				{% endif %}
+			{% endfor %}
 
-			   {% if page_obj.has_next %}
-				   <a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.next_page_number }}">Next</a>
-			   {% else %}
-				   <button class="pagination-button" disabled>Next</button>
-			   {% endif %}
-			   <span class="page-info">Page {{ page_obj.number }} of {{ paginator.num_pages }}</span>
+			{% if page_obj.has_next %}
+				<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.next_page_number }}">Next</a>
+				<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ paginator.num_pages }}">Last</a>
+			{% else %}
+				<button class="pagination-button" disabled>Next</button>
+				<button class="pagination-button" disabled>Last</button>
+			{% endif %}
+
+			<span class="page-info">Page {{ page_obj.number }} of {{ paginator.num_pages }}</span>
 		</div>
 	</div>
 

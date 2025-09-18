@@ -1,5 +1,6 @@
 {% extends "base_internal.html" %}
 {% block content %}
+{% load tz %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -201,6 +202,11 @@
 		color: #1f7c57;
 		font-size: 0.9rem;
 	}
+
+	.success-message {
+		color: green; 
+		margin-bottom: 1rem;
+	}
 </style>
 
 </head>
@@ -209,6 +215,11 @@
 		<div class="form-header">
 			<h1 class="form-title">Add Announcement</h1>
 		</div>
+
+		{% if success %}
+            <div class="success-message">Announcement added successfully!</div>
+        {% endif %}
+
 		<form class="announcement-form" method="post" enctype="multipart/form-data">
 			{% csrf_token %}
 
@@ -248,7 +259,7 @@
 			</div>
 
 			<div class="form-actions">
-				<a href="/announcements/" class="btn btn-preview" style="text-decoration: none;">Back</a>
+				<a href="{% url 'announcement_dispatch' %}" class="btn btn-preview" style="text-decoration: none;">Back</a>
 				<button type="submit" class="btn btn-submit" id="submit-btn">Submit</button>
 			</div>
 		</form>
@@ -271,19 +282,23 @@
 </svg>
 
 <script>
-	// Form Validation for required fields
+	// Form Validation for required fields and scheduled_at
 	document.querySelector('.announcement-form').addEventListener('submit', function(e) {
 		let valid = true;
 		const titleInput = document.getElementById('id_title');
 		const bodyInput = document.getElementById('id_body');
+		const scheduledInput = document.getElementById('id_scheduled_at');
 
 		// Remove previous error states
 		titleInput.classList.remove('error-input');
 		bodyInput.classList.remove('error-input');
+		if (scheduledInput) scheduledInput.classList.remove('error-input');
 		let titleError = document.getElementById('title-error');
 		let bodyError = document.getElementById('body-error');
+		let scheduledError = document.getElementById('scheduled-error');
 		if (titleError) titleError.remove();
 		if (bodyError) bodyError.remove();
+		if (scheduledError) scheduledError.remove();
 
 		if (!titleInput.value.trim()) {
 			valid = false;
@@ -307,10 +322,26 @@
 			err.style.marginTop = '0.25rem';
 			bodyInput.parentNode.appendChild(err);
 		}
+		if (scheduledInput && scheduledInput.type !== 'hidden' && scheduledInput.value) {
+			const scheduledDate = new Date(scheduledInput.value);
+			const now = new Date();
+			if (scheduledDate < now) {
+				valid = false;
+				scheduledInput.classList.add('error-input');
+				const err = document.createElement('div');
+				err.id = 'scheduled-error';
+				err.textContent = 'You cannot select a past date/time for scheduling.';
+				err.style.color = '#E53E3E';
+				err.style.fontSize = '0.95rem';
+				err.style.marginTop = '0.25rem';
+				scheduledInput.parentNode.appendChild(err);
+			}
+		}
 		if (!valid) {
 			e.preventDefault();
 		}
 	});
+
 	// File Upload Handling
 	document.getElementById('id_cover_photo').addEventListener('change', function(e) {
 		const file = e.target.files[0];

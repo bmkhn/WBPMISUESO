@@ -23,7 +23,6 @@
         display: flex;
         flex-direction: column;
         gap: 30px;
-        min-height: 1440px;
     }
 
 	/* Announcement Content Styles */
@@ -361,9 +360,10 @@
 		padding: 24px 32px;
 		min-width: 340px;
 	}
+    
 	.filter-grid {
 		display: grid;
-		grid-template-columns: repeat(3, 1fr);
+		grid-template-columns: 1fr 1fr 1fr;
 		grid-gap: 24px;
 	}
 
@@ -426,8 +426,6 @@
 	<div class="main-container">
 		<div class="announcement-header">
 			<h1 class="announce-title">Announcements</h1>
-			<!-- Restriction for User Roles Here -->
-			<a href="{% url 'announcement_add' %}" class="add-announcement-btn">Add Announcement</a>
 		</div>
 
 		<!-- Search Bar -->
@@ -441,19 +439,17 @@
 				   
 					<div id="filterDropdown" class="filter-dropdown">
 						<div class="filter-grid">
-							
-							<!-- Top Left - Sort By -->
+
+							<!-- Left: Sort By -->
 							<label style="font-weight:500;color:#374151;display:flex;flex-direction:column;">
 								Sort By
 								<select name="sort" style="width:100%;margin-top:6px;">
 									<option value="date" {% if sort_by == 'date' %}selected{% endif %}>Date</option>
 									<option value="title" {% if sort_by == 'title' %}selected{% endif %}>Title</option>
-									<option value="status" {% if sort_by == 'status' %}selected{% endif %}>Status</option>
-									<option value="edited" {% if sort_by == 'edited' %}selected{% endif %}>Edited</option>
 								</select>
 							</label>
 
-							<!-- Top Middle - Order -->
+							<!-- Middle: Order -->
 							<label style="font-weight:500;color:#374151;display:flex;flex-direction:column;">
 								Order
 								<select name="order" style="width:100%;margin-top:6px;">
@@ -462,41 +458,10 @@
 								</select>
 							</label>
 
-							<!-- Top Right - Status -->
-							<label style="font-weight:500;color:#374151;display:flex;flex-direction:column;">
-								Status
-								<select name="status" style="width:100%;margin-top:6px;">
-									<option value="">All Status</option>
-									<option value="published" {% if filter_status == 'published' %}selected{% endif %}>Published</option>
-									<option value="scheduled" {% if filter_status == 'scheduled' %}selected{% endif %}>Scheduled</option>
-								</select>
-							</label>
-
-							<!-- Bottom Left - Author -->
-							<label style="font-weight:500;color:#374151;display:flex;flex-direction:column;">
-								Author
-								<select name="author" style="width:100%;margin-top:6px;">
-									<option value="">All Authors</option>
-									{% for author in authors %}
-									<option value="{{ author.id }}" {% if filter_author == author.id|stringformat:'s' %}selected{% endif %}>{{ author.get_full_name|default:author.username }}</option>
-									{% endfor %}
-								</select>
-							</label>
-
-							<!-- Bottom Middle - Edited -->
-							<label style="font-weight:500;color:#374151;display:flex;flex-direction:column;">
-								Edited
-								<select name="edited" style="width:100%;margin-top:6px;">
-									<option value="">All</option>
-									<option value="true" {% if filter_edited == 'true' %}selected{% endif %}>Edited</option>
-									<option value="false" {% if filter_edited == 'false' %}selected{% endif %}>Not Edited</option>
-								</select>
-							</label>
-
-							<!-- Bottom Right - Date -->
+							<!-- Right: Date -->
 							<label style="font-weight:500;color:#374151;display:flex;flex-direction:column;">
 								Date
-								<input type="date" name="date" value="{{ filter_date|default:'' }}" style="width:90%;margin-top:6px;" />
+								<input type="date" name="date" value="{{ filter_date|default:'' }}" style="width:100%;margin-top:6px;" />
 							</label>
 						</div>
 
@@ -515,31 +480,7 @@
 			<!-- Dynamic Announcements -->
 			{% for announcement in announcements %}
 			<div class="announce-card" style="cursor:pointer;" onclick="cardClick(event, '{{ announcement.id }}')">
-				<div class="announce-options">
-					<button class="options-toggle" onclick="toggleOptions('{{ announcement.id }}')" title="More options">
-						<svg viewBox="0 0 24 24" fill="currentColor">
-							<circle cx="12" cy="5" r="2"></circle>
-							<circle cx="12" cy="12" r="2"></circle>
-							<circle cx="12" cy="19" r="2"></circle>
-						</svg>
-					</button>
-					<div class="options-dropdown" id="options-{{ announcement.id }}">
-						<a class="options-item edit-option" href="{% url 'announcement_edit' announcement.id %}" style="text-decoration: none;">
-							<svg viewBox="0 0 24 24" fill="currentColor">
-								<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-								<path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-							</svg>
-							Edit
-						</a>
-						<a class="options-item delete-option" href="{% url 'announcement_delete' announcement.id %}" style="text-decoration: none;">
-							<svg viewBox="0 0 24 24" fill="currentColor">
-								<polyline points="3,6 5,6 21,6"></polyline>
-								<path d="m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
-							</svg>
-							Delete
-						</a>
-					</div>
-				</div>
+				<!-- No options for non-admin users -->
 				<div class="announce-thumb">
 					{% if announcement.cover_photo %}
 						<img src="{{ announcement.cover_photo.url }}" alt="Cover Photo" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" />
@@ -549,14 +490,8 @@
 				</div>
 				<div class="announce-text-container">
 					<div class="announce-meta">
-						{% if announcement.edited_at and announcement.published_at %}
-							<span class="announce-date">Last Edited: {{ announcement.edited_at|date:"F d, Y" }} at {{ announcement.edited_at|time:"H:i" }}</span>
-						{% elif not announcement.edited_at and announcement.published_at %}
+						{% if announcement.published_at %}
 							<span class="announce-date">Published: {{ announcement.published_at|date:"F d, Y" }} at {{ announcement.published_at|time:"H:i" }}</span>
-						{% elif announcement.edited_at and announcement.scheduled_at %}
-							<span class="announce-date">Scheduled (Edited): {{ announcement.scheduled_at|date:"F d, Y" }} at {{ announcement.scheduled_at|time:"H:i" }}</span>
-						{% elif not announcement.published_at and announcement.scheduled_at %}
-							<span class="announce-date">Scheduled: {{ announcement.scheduled_at|date:"F d, Y" }} at {{ announcement.scheduled_at|time:"H:i" }}</span>
 						{% endif %}
 					</div>
 					<h3>{{ announcement.title }}</h3>
@@ -565,7 +500,6 @@
 					{% else %}
 						<p>{{ announcement.body }}</p>
 					{% endif %}
-					<p class="announce-author">by: {{ announcement.published_by.get_full_name|default:announcement.published_by.username }}</p>
 				</div>
 			</div>
 			{% empty %}	
@@ -607,7 +541,7 @@
 
 <!-- SVG Sprite Section -->
 <svg>
-
+	
 	<!-- Search -->
 	<symbol id="icon-search" viewBox="0 0 21 21" fill="none">
 		<path d="M8.89152 15.9057C9.75056 15.9057 10.6012 15.7365 11.3948 15.4077C12.1885 15.079 12.9096 14.5972 13.5171 13.9897C14.1245 13.3823 14.6064 12.6612 14.9351 11.8675C15.2638 11.0739 15.433 10.2232 15.433 9.36417C15.433 8.50513 15.2638 7.6545 14.9351 6.86084C14.6064 6.06719 14.1245 5.34606 13.5171 4.73862C12.9096 4.13119 12.1885 3.64934 11.3948 3.3206C10.6012 2.99186 9.75056 2.82266 8.89152 2.82266C7.1566 2.82266 5.49274 3.51185 4.26597 4.73862C3.03919 5.9654 2.35 7.62926 2.35 9.36417C2.35 11.0991 3.03919 12.763 4.26597 13.9897C5.49274 15.2165 7.1566 15.9057 8.89152 15.9057V15.9057ZM15.7819 14.713L19.685 18.6161C19.7891 18.7167 19.872 18.8371 19.9291 18.9701C19.9861 19.1032 20.0161 19.2463 20.0173 19.391C20.0184 19.5358 19.9907 19.6793 19.9358 19.8133C19.8809 19.9472 19.7999 20.0689 19.6974 20.1712C19.595 20.2735 19.4732 20.3544 19.3392 20.4091C19.2052 20.4638 19.0616 20.4913 18.9168 20.4899C18.772 20.4886 18.629 20.4584 18.496 20.4012C18.3631 20.3439 18.2428 20.2608 18.1423 20.1566L14.2392 16.2535C12.4866 17.614 10.2814 18.2554 8.07247 18.0472C5.86357 17.839 3.81705 16.7968 2.34951 15.1328C0.881971 13.4688 0.103735 11.308 0.173229 9.09044C0.242723 6.87284 1.15472 4.76508 2.72357 3.19623C4.29242 1.62738 6.40018 0.715379 8.61778 0.645885C10.8354 0.576391 12.9961 1.35463 14.6601 2.82217C16.3241 4.28971 17.3663 6.33623 17.5745 8.54513C17.7827 10.754 17.1413 12.9592 15.7808 14.7119L15.7819 14.713Z" fill="#5A5252"/>

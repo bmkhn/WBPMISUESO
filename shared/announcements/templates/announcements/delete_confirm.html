@@ -1,12 +1,43 @@
 {% extends "base_internal.html" %}
 {% block content %}
-<div style="margin:80px auto;max-width:500px;background:#fff;padding:40px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);text-align:center;">
+
+<style>
+    .delete-container {
+        margin: 80px auto;
+        max-width: 500px;
+        background: #fff;
+        padding: 40px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+
+    .delete-btn {
+        background: #DC2626;
+        color: white;
+        padding: 12px 32px;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        cursor: pointer;
+    }
+
+    .cancel-link {
+        margin-left: 20px;
+        color: #374151;
+        text-decoration: none;
+        font-size: 16px;
+    }
+</style>
+
+<div class="delete-container">
     <h2>Delete Announcement</h2>
     <p>Are you sure you want to delete the announcement <strong>{{ announcement.title }}</strong>?</p>
     <form method="post">
         {% csrf_token %}
-        <button type="submit" style="background:#DC2626;color:white;padding:12px 32px;border:none;border-radius:8px;font-size:16px;cursor:pointer;">Delete</button>
-        <a href="{% url 'announcement_admin' %}" style="margin-left:20px;color:#374151;text-decoration:none;font-size:16px;">Cancel</a>
+        <button type="submit" class="delete-btn">Delete</button>
+        <a href="{% url 'announcement_admin' %}" class="cancel-link">Cancel</a>
     </form>
 </div>
+
 {% endblock %}
