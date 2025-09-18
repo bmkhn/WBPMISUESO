@@ -44,7 +44,6 @@
 	.item-group {
 		display: grid;
 		grid-template-columns: repeat(2, 1fr);
-		grid-template-rows: repeat(2, 1fr);
 		gap: 40px;
 		align-items: stretch;
 		justify-items: stretch;
@@ -266,12 +265,58 @@
 	}
 </style>
 
+<!-- Pagination Styles -->
+<style>
+	.pagination-container {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		margin-top: 3rem;
+		gap: 0.5rem;
+	}
+
+	.pagination-button {
+		padding: 0.75rem 1rem;
+		border: 1px solid #E5E7EB;
+		background: white;
+		color: #4B5563;
+		border-radius: 8px;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		font-weight: 500;
+		text-decoration: none;
+	}
+
+	.pagination-button:hover {
+		background: #F3F4F6;
+		border-color: #0A6C44;
+		color: #0A6C44;
+	}
+
+	.pagination-button.active {
+		background: #0A6C44;
+		color: white;
+		border-color: #0A6C44;
+	}
+
+	.pagination-button:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	.page-info {
+		margin: 0 1rem;
+		color: #4B5563;
+		font-weight: 500;
+	}
+</style>
 
 </head>
 <body>
 	<div class="downloadable-container">
 		<div class="left">
 			<h1 class="left__title">Downloadables</h1>
+
 			<!-- Search Bar -->
 			<div class="search-container">
 				<form class="search-bar" method="get" action="">
@@ -333,34 +378,71 @@
 				</form>
 			</div>
 
+			<!-- Downloadable Items Grid -->
 			<div class="item-group">
 				{% for downloadable in page_obj %}
-				<article class="item">
-					<div class="item__thumb"></div>
-					<h2 class="item__title">{{ downloadable.name }}</h2>
-					<p class="item__desc">{{ downloadable.extension|upper }} File <strong>{{ downloadable.size }}</strong></p>
+				<article class="item" style="position:relative;">
+					<a href="{% url 'downloadable_download' downloadable.id %}" style="position:absolute;bottom:35px;right:35px;z-index:2;" title="Download">
+						<svg width="24" height="24"><use href="#download-icon" /></svg>
+					</a>
+					<div class="item__thumb" style="display:flex;align-items:center;justify-content:center;overflow:hidden;background:#E9E9E9;">
+						{% if downloadable.thumbnail %}
+							<img src="{{ downloadable.thumbnail.url }}" alt="Thumbnail" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:12px;" />
+						{% else %}
+							<span class="no-preview" data-file-url="{{ downloadable.file.url }}" data-file-type="{{ downloadable.file_type }}" style="color:#aaa;font-size:2rem;">No Preview</span>
+						{% endif %}
+					</div>
+					<h2 class="item__title">
+						<a href="{{ downloadable.file.url }}" target="_blank" style="color:#0A6C44;text-decoration:underline;">
+							{{ downloadable.name }}
+						</a>
+					</h2>
+					<p class="item__desc">{{ downloadable.file_type|title|upper }} File <strong>{{ downloadable.file.size|filesizeformat }}</strong></p>
 				</article>
 				{% empty %}
-				<div style="color:#888;font-size:18px;padding:40px">No downloadables found.</div>
+				<style>
+					.item-group {
+						display: grid;
+						grid-template-columns: repeat(1, 1fr);
+						grid-template-rows: repeat(1, 1fr);
+						gap: 40px;
+						align-items: stretch;
+						justify-items: stretch;
+						width: 100%;
+					}
+				</style>
+				<p style="text-align: center;">No downloadable files found.</p>
 				{% endfor %}
 			</div>
-			{% if page_obj.has_other_pages %}
-			<div style="display:flex;justify-content:center;margin-top:32px;gap:12px;">
+
+			<!-- Pagination -->
+			<div class="pagination-container">
 				{% if page_obj.has_previous %}
-					<a href="?page={{ page_obj.previous_page_number }}" style="padding:8px 18px;border-radius:8px;background:#F3F4F6;color:#333;text-decoration:none;font-weight:500;">Previous</a>
+					<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page=1">First</a>
+					<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a>
+				{% else %}
+					<button class="pagination-button" disabled>First</button>
+					<button class="pagination-button" disabled>Previous</button>
 				{% endif %}
-				{% for num in page_obj.paginator.page_range %}
-					{% if page_obj.number == num %}
-						<span style="padding:8px 18px;border-radius:8px;background:#063A1C;color:#fff;font-weight:600;">{{ num }}</span>
+
+				{% for num in page_range %}
+					{% if num == page_obj.number %}
+						<button class="pagination-button active" disabled>{{ num }}</button>
 					{% else %}
-						<a href="?page={{ num }}" style="padding:8px 18px;border-radius:8px;background:#F3F4F6;color:#333;text-decoration:none;font-weight:500;">{{ num }}</a>
+						<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ num }}">{{ num }}</a>
 					{% endif %}
 				{% endfor %}
+
 				{% if page_obj.has_next %}
-					<a href="?page={{ page_obj.next_page_number }}" style="padding:8px 18px;border-radius:8px;background:#F3F4F6;color:#333;text-decoration:none;font-weight:500;">Next</a>
+					<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.next_page_number }}">Next</a>
+					<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ paginator.num_pages }}">Last</a>
+				{% else %}
+					<button class="pagination-button" disabled>Next</button>
+					<button class="pagination-button" disabled>Last</button>
 				{% endif %}
+
+				<span class="page-info">Page {{ page_obj.number }} of {{ paginator.num_pages }}</span>
 			</div>
-			{% endif %}
 		</div>
 
 		<!-- Right Container -->
@@ -399,6 +481,13 @@
 	<symbol id="icon-filter" viewBox="0 0 23 22" fill="none">
 		<path opacity="0.9" d="M21.5399 1.92871H1.37988L9.44388 11.4644V18.0567L13.4759 20.0727V11.4644L21.5399 1.92871Z" stroke="#1E1E1E" stroke-width="2.016" stroke-linecap="round" stroke-linejoin="round"/>
 	</symbol>
+
+	<!-- Download -->
+    <symbol id="download-icon" viewBox="0 0 18 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M1 14V16C1 16.5304 1.21071 17.0391 1.58579 17.4142C1.96086 17.7893 2.46957 18 3 18H15C15.5304 18 16.0391 17.7893 16.4142 17.4142C16.7893 17.0391 17 16.5304 17 16V14M4 8L9 13M9 13L14 8M9 13V1" stroke="#0A6C44" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+
+
 </svg>
 
 <script>
@@ -426,6 +515,65 @@
 			filterDropdown.style.display = 'none';
 		}
 	});
+</script>
+
+<!-- PDF.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+	document.querySelectorAll('.no-preview').forEach(function(span) {
+		const fileUrl = span.getAttribute('data-file-url');
+		const fileType = span.getAttribute('data-file-type').toLowerCase();
+		const thumbContainer = span.parentElement;
+		// Clear container and create a flex column so preview hugs the top
+		thumbContainer.innerHTML = '';
+		thumbContainer.style.display = 'flex';
+		thumbContainer.style.flexDirection = 'column';
+		thumbContainer.style.justifyContent = 'flex-start';
+		thumbContainer.style.alignItems = 'center';
+		if (["jpg", "jpeg", "png", "gif", "bmp", "webp"].includes(fileType)) {
+			const img = document.createElement('img');
+			img.src = fileUrl;
+			img.alt = 'Preview';
+			img.style.maxWidth = '100%';
+			img.style.objectFit = 'contain';
+			img.style.borderRadius = '12px';
+			thumbContainer.appendChild(img);
+		} else if (fileType === "pdf") {
+			const canvas = document.createElement('canvas');
+			canvas.style.maxWidth = '100%';
+			canvas.style.borderRadius = '12px';
+			canvas.style.background = '#eee';
+			thumbContainer.appendChild(canvas);
+			fetch(fileUrl)
+				.then(response => response.arrayBuffer())
+				.then(data => {
+					if (window['pdfjsLib']) {
+						const loadingTask = pdfjsLib.getDocument({data: data});
+						loadingTask.promise.then(function(pdf) {
+							pdf.getPage(1).then(function(page) {
+								const scale = 1.2;
+								const viewport = page.getViewport({scale: scale});
+								canvas.width = viewport.width;
+								canvas.height = viewport.height;
+								page.render({canvasContext: canvas.getContext('2d'), viewport: viewport});
+							});
+						});
+					} else {
+						thumbContainer.innerHTML = '<span style="color:#aaa;">PDF preview not available</span>';
+					}
+				})
+				.catch(() => {
+					thumbContainer.innerHTML = '<span style="color:#aaa;">PDF preview not available</span>';
+				});
+		} else {
+				thumbContainer.style.justifyContent = 'center';
+				thumbContainer.innerHTML = '<span style="color:#aaa;font-size:1.2rem;display:flex;align-items:center;justify-content:center;height:100%;">No preview available</span>';
+			}
+	});
+});
 </script>
 
 </body>
