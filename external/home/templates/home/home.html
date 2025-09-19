@@ -159,7 +159,7 @@
     }
 
     .announce-date {
-        padding: 0 20px 20px 20px;
+        padding: 20px 20px 20px 20px;
         font-family: 'Inter', sans-serif;
         font-weight: 500;
         font-size: 14px;
@@ -179,10 +179,10 @@
         font-weight: 400;
         font-size: 20px;
         color: #2EA8FF;
+        text-decoration: none;
         margin-top: 10px;
         cursor: pointer;
     }
-
 </style>
 
 </head>
@@ -231,27 +231,29 @@
             </div>
         </div>
 
-        <!-- Right Container -->
+		<!-- Right Container -->
         <div class="right-container">
-            <div class="announce-text">Latest Announcements</div>
-            <div class="announce-box">
-                <div class="announce-item">
-                    <div class="announce-pic"></div>
-                    <div class="announce-details">
-                        <div class="announce-date">March 10, 2025</div>
-                        <div class="announce-title">Office will be closed for between January 03, 2025 to January 05, 2025</div>
-                    </div>
-                </div>
-
-                <div class="announce-item">
-                    <div class="announce-pic"></div>
-                    <div class="announce-details">
-                        <div class="announce-date">March 10, 2025</div>
-                        <div class="announce-title">Office will be closed for between January 03, 2025 to January 05, 2025</div>
-                    </div>
-                </div>
-            </div>
-            <div class="announce-more">View More Announcements →</div>
+			<div class="announce-text">Latest Announcements</div>
+			<div class="announce-box">
+				{% for announcement in latest_announcements %}
+				<div class="announce-item">
+					<a href="{% url 'announcement_details' announcement.id %}" style="text-decoration:none;color:inherit;display:block;">
+						<div class="announce-pic">
+							{% if announcement.cover_photo %}
+								<img src="{{ announcement.cover_photo.url }}" alt="Cover Photo" style="width:100%;height:100%;object-fit:cover;" />
+							{% endif %}
+						</div>
+						<div class="announce-details">
+							<div class="announce-date">{{ announcement.published_at|date:"F d, Y" }}</div>
+							<div class="announce-title">{{ announcement.title }}</div>
+						</div>
+					</a>
+				</div>
+				{% empty %}
+				<div class="announce-item"><div class="announce-title">No announcements found.</div></div>
+				{% endfor %}
+			</div>
+			<a href="{% url 'announcement_dispatcher' %}" class="announce-more">View More Announcements →</a>
         </div>
     </div>
 </body>

@@ -3,12 +3,14 @@ from .forms import AgendaForm
 from .models import Agenda
 from system.users.decorators import role_required
 from django.contrib.auth.decorators import login_required
+from system.users.decorators import user_confirmed
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 
 
 # Agenda View
 @login_required
+@user_confirmed
 @role_required(allowed_roles=["VP", "DIRECTOR"])
 def agenda_view(request):
     agendas = Agenda.objects.prefetch_related('concerned_colleges').all()
@@ -17,6 +19,7 @@ def agenda_view(request):
 
 # Add Agenda View
 @login_required
+@user_confirmed
 @role_required(allowed_roles=["VP", "DIRECTOR"])
 def add_agenda_view(request):
     if request.method == 'POST':
@@ -32,6 +35,7 @@ from django.shortcuts import render
 
 # Edit Agenda View
 @login_required
+@user_confirmed
 @role_required(allowed_roles=["VP", "DIRECTOR"])
 def edit_agenda_view(request, agenda_id):
     try:
@@ -63,6 +67,7 @@ def edit_agenda_view(request, agenda_id):
 
 # Delete Agenda View
 @login_required
+@user_confirmed
 @role_required(allowed_roles=["VP", "DIRECTOR"])
 def delete_agenda_view(request, agenda_id):
     try:

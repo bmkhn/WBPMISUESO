@@ -409,7 +409,9 @@
                     <div class="welcome-text">Welcome</div>
                     <div class="ueso-text">to UESO MIS</div>
                 </div>
-                {% if user.role == "PROGRAM_HEAD" %}
+                {% if user.role == "COORDINATOR" %}
+                    <div class="viewing-text">You are currently viewing as a coordinator.</div>
+                {% elif user.role == "PROGRAM_HEAD" %}
                     <div class="viewing-text">You are currently viewing as a program head.</div>
                 {% elif user.role == "DEAN" %}
                     <div class="viewing-text">You are currently viewing as a dean.</div>

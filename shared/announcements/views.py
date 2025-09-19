@@ -1,13 +1,12 @@
 from django.core.paginator import Paginator
 from django.shortcuts import redirect, render
 from django.contrib.auth.decorators import login_required
-from internal.agenda.forms import AgendaForm
 from shared.announcements.forms import AnnouncementForm
 from system.users.decorators import role_required
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from .models import Announcement
-from django.db.models import Q
+from django.db.models import Q, Case, When, DateTimeField
 from urllib.parse import urlencode
 import pytz
 
@@ -236,9 +235,6 @@ def announcement_superuser_view(request):
 @login_required
 @role_required(allowed_roles=["VP", "DIRECTOR", "UESO"])
 def announcement_admin_view(request):
-    from .models import Announcement
-    from django.core.paginator import Paginator
-    from django.db.models import Q, Case, When, DateTimeField
     search_query = request.GET.get('search', '').strip()
     sort_by = request.GET.get('sort')
     sort_order = request.GET.get('order')
@@ -393,6 +389,7 @@ def add_announcement_view(request):
                 announcement.is_scheduled = True
                 announcement.published_at = None
                 announcement.scheduled_at = scheduled_at
+                announcement.scheduled_by = request.user
             else:                                               # If scheduled_at is empty, publish now
                 announcement.is_scheduled = False
                 announcement.published_at = now
@@ -426,6 +423,7 @@ def edit_announcement_view(request, id):
             else:                                               # If scheduled_at is provided, it is scheduled
                 edited.is_scheduled = True
                 edited.scheduled_at = scheduled_at
+                edited.scheduled_by = request.user
 
             edited.save()
             return render(request, 'announcements/edit_announcement.html', {'form': form, 'success': True, 'posted': True})

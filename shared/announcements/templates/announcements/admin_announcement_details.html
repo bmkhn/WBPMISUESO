@@ -99,6 +99,11 @@
 </head>
 <body>
     <div class="main-container">
+        <a href="{% url 'announcement_dispatcher' %}" style="color: #2563eb; text-decoration: none; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; margin-bottom: 18px; font-size: 1.08rem;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 20 20"><path stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M15 10H5m0 0l4-4m-4 4l4 4"/></svg>
+            Back to Announcements
+        </a>
+        
         <div class="details-card">
             <div class="details-thumb">
                 {% if announcement.cover_photo %}
@@ -111,7 +116,7 @@
             <div class="details-meta" style="gap: 12px;">
                 {% if announcement.published_at %}
                     <div style="display: flex; gap: 8px; align-items: center;">
-                        <span class="details-date">Published: {{ announcement.published_at|date:"F d, Y H:i" }}</span>
+                        <span class="details-date">Published: {{ announcement.published_at|date:"F d, Y" }} at {{ announcement.published_at|date:"H:i" }}</span>
                         {% if announcement.published_by %}
                             <span class="details-author">by: {{ announcement.published_by.get_full_name|default:announcement.published_by.username }}</span>
                         {% endif %}
@@ -120,7 +125,7 @@
 
                 {% if announcement.is_scheduled and announcement.scheduled_at %}
                     <div style="display: flex; gap: 8px; align-items: center;">
-                        <span class="details-date orange-text">Scheduled: {{ announcement.scheduled_at|date:"F d, Y H:i" }}</span>
+                        <span class="details-date orange-text">Scheduled: {{ announcement.scheduled_at|date:"F d, Y" }} at {{ announcement.scheduled_at|date:"H:i" }}</span>
                         {% if announcement.scheduled_by %}
                             <span class="details-author">by: {{ announcement.scheduled_by.get_full_name|default:announcement.scheduled_by.username }}</span>
                         {% endif %}
@@ -129,7 +134,7 @@
 
                 {% if announcement.edited_at %}
                     <div style="display: flex; gap: 8px; align-items: center;">
-                        <span class="details-date green-text">Last Edited: {{ announcement.edited_at|date:"F d, Y H:i" }}</span>
+                        <span class="details-date green-text">Last Edited: {{ announcement.edited_at|date:"F d, Y" }} at {{ announcement.edited_at|date:"H:i" }}</span>
                         {% if announcement.edited_by %}
                             <span class="details-author">by: {{ announcement.edited_by.get_full_name|default:announcement.edited_by.username }}</span>
                         {% endif %}
