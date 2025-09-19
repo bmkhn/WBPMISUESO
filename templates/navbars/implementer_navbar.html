@@ -139,20 +139,20 @@
 
 		<!-- Button Container -->
 		<div class="button-container">
-			<a href="/home/" class="nav-button {% if request.path == '/home/' %}active{% endif %}">Home</a>
-			<a href="/downloadables/" class="nav-button {% if request.path == '/downloadables/' %}active{% endif %}">Downloadables</a>
-			<a href="/announcements/" class="nav-button {% if request.path == '/announcements/' %}active{% endif %}">Announcements</a>
-			<a href="/archives/" class="nav-button {% if request.path == '/archives/' %}active{% endif %}">Archives</a>
-			<a href="/about-us/" class="nav-button {% if request.path == '/about-us/' %}active{% endif %}">About Us</a>
+			<a href="{% url 'home' %}" class="nav-button {% if '/home/' in request.path %}active{% endif %}">Home</a>
+			<a href="{% url 'downloadable_dispatcher' %}" class="nav-button {% if '/downloadables/' in request.path %}active{% endif %}">Downloadables</a>
+			<a href="{% url 'announcement_dispatcher' %}" class="nav-button {% if '/announcements/' in request.path %}active{% endif %}">Announcements</a>
+			<a href="/archives/" class="nav-button {% if '/archives/' in request.path %}active{% endif %}">Archives</a>
+			<a href="/about-us/" class="nav-button {% if '/about-us/' in request.path %}active{% endif %}">About Us</a>
 			<div class="logo-circle"></div>
 		</div>
 		</div>
 
 		<!-- Bottom Container -->
 		<div class="bottom-container">
-			<a href="/projects/" class="bottom-nav-button {% if request.path == '/projects/' %}active{% endif %}">Projects</a>
-			<a href="/calendar/" class="bottom-nav-button {% if request.path == '/calendar/' %}active{% endif %}">Calendar</a>
-			<a href="/budget/" class="bottom-nav-button {% if request.path == '/budget/' %}active{% endif %}">Budget</a>
+			<a href="/projects/" class="bottom-nav-button {% if '/projects/' in request.path %}active{% endif %}">Projects</a>
+			<a href="{% url 'calendar' %}" class="bottom-nav-button {% if '/calendar/' in request.path %}active{% endif %}">Calendar</a>
+			<a href="/budget/" class="bottom-nav-button {% if '/budget/' in request.path %}active{% endif %}">Budget</a>
 		</div>
 
 	</div>
