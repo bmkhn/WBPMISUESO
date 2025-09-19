@@ -12,6 +12,7 @@ class Announcement(models.Model):
 	published_at = models.DateTimeField(null=True, blank=True)
 	edited_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='edited_announcements')
 	edited_at = models.DateTimeField(null=True, blank=True)
+	archived = models.BooleanField(default=False)
 
 	def __str__(self):
 		return self.title

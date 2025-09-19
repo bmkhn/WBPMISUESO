@@ -97,7 +97,10 @@ def user_downloadable(request):
         page_range = range(current - 2, current + 3)
   
     from shared.announcements.models import Announcement
-    latest_announcements = Announcement.objects.filter(published_at__isnull=False).order_by('-published_at')[:2]
+    latest_announcements = Announcement.objects.filter(
+        published_at__isnull=False,
+        archived=False
+    ).order_by('-published_at')[:2]
 
     return render(request, 'downloadables/user_downloadable.html', {
         'search': search,

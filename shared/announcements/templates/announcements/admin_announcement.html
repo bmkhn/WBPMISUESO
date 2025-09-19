@@ -361,6 +361,7 @@
 		padding: 24px 32px;
 		min-width: 340px;
 	}
+
 	.filter-grid {
 		display: grid;
 		grid-template-columns: repeat(3, 1fr);
@@ -385,6 +386,16 @@
 		font-family: 'Inter', Arial, sans-serif;
 		background: #f9f9f9;
 		color: #374151;
+	}
+
+	.filter-dropdown select {
+		appearance: none;
+		-webkit-appearance: none;
+		-moz-appearance: none;
+		padding-right: 2rem;
+		background: url("data:image/svg+xml;utf8,<svg width='16' height='11' viewBox='0 0 16 11' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M7.99976 7.19417L13.9025 1.29147C14.0125 1.17758 14.144 1.08674 14.2895 1.02424C14.435 0.961746 14.5915 0.92885 14.7498 0.927474C14.9082 0.926098 15.0652 0.95627 15.2117 1.01623C15.3583 1.07619 15.4914 1.16473 15.6034 1.27669C15.7153 1.38866 15.8039 1.5218 15.8638 1.66835C15.9238 1.8149 15.954 1.97192 15.9526 2.13026C15.9512 2.28859 15.9183 2.44506 15.8558 2.59055C15.7933 2.73604 15.7025 2.86762 15.5886 2.97762L8.84283 9.72339C8.61921 9.94694 8.31596 10.0725 7.99976 10.0725C7.68356 10.0725 7.38031 9.94694 7.15669 9.72339L0.41092 2.97762C0.297028 2.86762 0.206183 2.73604 0.143687 2.59055C0.0811915 2.44506 0.0482959 2.28859 0.04692 2.13026C0.0455441 1.97192 0.0757155 1.8149 0.135674 1.66835C0.195632 1.5218 0.284176 1.38866 0.39614 1.27669C0.508103 1.16473 0.641244 1.07619 0.787794 1.01623C0.934343 0.95627 1.09137 0.926098 1.2497 0.927474C1.40804 0.92885 1.56451 0.961746 1.71 1.02424C1.85548 1.08674 1.98706 1.17758 2.09706 1.29147L7.99976 7.19417Z' fill='%23374151'/></svg>")
+        		no-repeat right 0.75rem center;
+  		background-size: 13px 8px;
 	}
 
 	.filter-actions {
@@ -469,6 +480,8 @@
 									<option value="">All Status</option>
 									<option value="published" {% if filter_status == 'published' %}selected{% endif %}>Published</option>
 									<option value="scheduled" {% if filter_status == 'scheduled' %}selected{% endif %}>Scheduled</option>
+									<option value="archived" {% if filter_status == 'archived' %}selected{% endif %}>Archived</option>
+									<option value="unarchived" {% if filter_status == 'unarchived' %}selected{% endif %}>Unarchived</option>
 								</select>
 							</label>
 
@@ -496,7 +509,7 @@
 							<!-- Bottom Right - Date -->
 							<label style="font-weight:500;color:#374151;display:flex;flex-direction:column;">
 								Date
-								<input type="date" name="date" value="{{ filter_date|default:'' }}" style="width:90%;margin-top:6px;" />
+								<input type="date" name="date" value="{{ filter_date|default:'' }}" style="width:87%;margin-top:6px;" />
 							</label>
 						</div>
 
@@ -509,65 +522,68 @@
 
 		       </form>
 		</div>
-	
-		<div class="announce-grid">
 
-			<!-- Dynamic Announcements -->
+		<!-- Announcements Grid -->
+		<div class="announce-grid">
 			{% for announcement in announcements %}
-			<div class="announce-card" style="cursor:pointer;" onclick="cardClick(event, '{{ announcement.id }}')">
-				<div class="announce-options">
-					<button class="options-toggle" onclick="toggleOptions('{{ announcement.id }}')" title="More options">
-						<svg viewBox="0 0 24 24" fill="currentColor">
-							<circle cx="12" cy="5" r="2"></circle>
-							<circle cx="12" cy="12" r="2"></circle>
-							<circle cx="12" cy="19" r="2"></circle>
-						</svg>
-					</button>
-					<div class="options-dropdown" id="options-{{ announcement.id }}">
-						<a class="options-item edit-option" href="{% url 'announcement_edit' announcement.id %}" style="text-decoration: none;">
+				{% if announcement.archived %}
+				<div class="announce-card" style="cursor:pointer;" onclick="cardClick(event, '{{ announcement.id }}')">
+					<span style="position:absolute;top:12px;left:12px;background:#F4A261;color:white;padding:4px 12px;border-radius:12px;font-size:0.95rem;font-weight:500;z-index:3;box-shadow:0 2px 8px rgba(220,38,38,0.12);">Archived</span>
+				{% else %}
+				<div class="announce-card" style="cursor:pointer;" onclick="cardClick(event, '{{ announcement.id }}')">
+				{% endif %}
+					<div class="announce-options">
+						<button class="options-toggle" onclick="toggleOptions('{{ announcement.id }}')" title="More options">
 							<svg viewBox="0 0 24 24" fill="currentColor">
-								<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-								<path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+								<circle cx="12" cy="5" r="2"></circle>
+								<circle cx="12" cy="12" r="2"></circle>
+								<circle cx="12" cy="19" r="2"></circle>
 							</svg>
-							Edit
-						</a>
-						<a class="options-item delete-option" href="{% url 'announcement_delete' announcement.id %}" style="text-decoration: none;">
-							<svg viewBox="0 0 24 24" fill="currentColor">
-								<polyline points="3,6 5,6 21,6"></polyline>
-								<path d="m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
-							</svg>
-							Delete
-						</a>
+						</button>
+						<div class="options-dropdown" id="options-{{ announcement.id }}">
+							<a class="options-item edit-option" href="{% url 'announcement_edit' announcement.id %}" style="text-decoration: none;">
+								<svg width="16" height="16"><use href="#edit-icon"></use></svg>Edit</a>
+							<a class="options-item delete-option" href="{% url 'announcement_delete' announcement.id %}" style="text-decoration: none;">
+								<svg width="16" height="16"><use href="#delete-icon"></use></svg>Delete</a>
+							{% if not announcement.archived %}
+							<a class="options-item" href="{% url 'announcement_archive' announcement.id %}" style="color:#F4A261;text-decoration:none;">
+								<svg width="16" height="16"><use href="#archive-icon"></use></svg>Archive
+							</a>
+							{% else %}
+							<a class="options-item" href="{% url 'announcement_unarchive' announcement.id %}" style="color:#F4A261;text-decoration:none;">
+								<svg width="16" height="16"><use href="#archive-icon"></use></svg>Unarchive
+							</a>
+							{% endif %}
+						</div>
 					</div>
-				</div>
-				<div class="announce-thumb">
-					{% if announcement.cover_photo %}
-						<img src="{{ announcement.cover_photo.url }}" alt="Cover Photo" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" />
-					{% else %}
-						📢
-					{% endif %}
-				</div>
-				<div class="announce-text-container">
-					<div class="announce-meta">
-						{% if announcement.edited_at and announcement.published_at %}
-							<span class="announce-date">Last Edited: {{ announcement.edited_at|date:"F d, Y" }} at {{ announcement.edited_at|time:"H:i" }}</span>
-						{% elif not announcement.edited_at and announcement.published_at %}
-							<span class="announce-date">Published: {{ announcement.published_at|date:"F d, Y" }} at {{ announcement.published_at|time:"H:i" }}</span>
-						{% elif announcement.edited_at and announcement.scheduled_at %}
-							<span class="announce-date">Scheduled (Edited): {{ announcement.scheduled_at|date:"F d, Y" }} at {{ announcement.scheduled_at|time:"H:i" }}</span>
-						{% elif not announcement.published_at and announcement.scheduled_at %}
-							<span class="announce-date">Scheduled: {{ announcement.scheduled_at|date:"F d, Y" }} at {{ announcement.scheduled_at|time:"H:i" }}</span>
+					<div class="announce-thumb">
+						{% if announcement.cover_photo %}
+							<img src="{{ announcement.cover_photo.url }}" alt="Cover Photo" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" />
+						{% else %}
+							📢
 						{% endif %}
 					</div>
-					<h3>{{ announcement.title }}</h3>
-					{% if announcement.body|length > 75 %}
-						<p>{{ announcement.body|slice:":75" }}&hellip;</p>
-					{% else %}
-						<p>{{ announcement.body }}</p>
-					{% endif %}
-					<p class="announce-author">by: {{ announcement.published_by.get_full_name|default:announcement.published_by.username }}</p>
+					<div class="announce-text-container">
+						<div class="announce-meta">
+							{% if announcement.edited_at and announcement.published_at %}
+								<span class="announce-date">Last Edited: {{ announcement.edited_at|date:"F d, Y" }} at {{ announcement.edited_at|time:"H:i" }}</span>
+							{% elif not announcement.edited_at and announcement.published_at %}
+								<span class="announce-date">Published: {{ announcement.published_at|date:"F d, Y" }} at {{ announcement.published_at|time:"H:i" }}</span>
+							{% elif announcement.edited_at and announcement.scheduled_at %}
+								<span class="announce-date">Scheduled (Edited): {{ announcement.scheduled_at|date:"F d, Y" }} at {{ announcement.scheduled_at|time:"H:i" }}</span>
+							{% elif not announcement.published_at and announcement.scheduled_at %}
+								<span class="announce-date">Scheduled: {{ announcement.scheduled_at|date:"F d, Y" }} at {{ announcement.scheduled_at|time:"H:i" }}</span>
+							{% endif %}
+						</div>
+						<h3>{{ announcement.title }}</h3>
+						{% if announcement.body|length > 75 %}
+							<p>{{ announcement.body|slice:":75" }}&hellip;</p>
+						{% else %}
+							<p>{{ announcement.body }}</p>
+						{% endif %}
+						<p class="announce-author">by: {{ announcement.published_by.get_full_name|default:announcement.published_by.username }}</p>
+					</div>
 				</div>
-			</div>
 			{% empty %}	
 				<p></p>
 				<p style="text-align:center">No announcements found.</p>
@@ -617,6 +633,24 @@
 	<symbol id="icon-filter" viewBox="0 0 23 22" fill="none">
 		<path opacity="0.9" d="M21.5399 1.92871H1.37988L9.44388 11.4644V18.0567L13.4759 20.0727V11.4644L21.5399 1.92871Z" stroke="#1E1E1E" stroke-width="2.016" stroke-linecap="round" stroke-linejoin="round"/>
 	</symbol>
+
+	<!-- Edit -->
+	<symbol id="edit-icon" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+		<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+		<path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+	</symbol>
+
+	<!-- Delete -->
+    <symbol id="delete-icon" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <polyline points="3,6 5,6 21,6"></polyline>
+        <path d="m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
+    </symbol>
+
+    <!-- Archive/Unarchive -->
+    <symbol id="archive-icon" viewBox="0 0 20 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0 2C0 1.46957 0.210714 0.960859 0.585786 0.585786C0.960859 0.210714 1.46957 0 2 0H18C18.5304 0 19.0391 0.210714 19.4142 0.585786C19.7893 0.960859 20 1.46957 20 2C20 2.53043 19.7893 3.03914 19.4142 3.41421C19.0391 3.78929 18.5304 4 18 4H2C1.46957 4 0.960859 3.78929 0.585786 3.41421C0.210714 3.03914 0 2.53043 0 2ZM17 6C17.513 6 17.936 6.463 17.993 7.06L18 7.2V14.4C18 16.317 16.751 17.884 15.176 17.994L15 18H5C3.402 18 2.096 16.501 2.005 14.612L2 14.4V7.2C2 6.537 2.448 6 3 6H17ZM12 8H8L7.883 8.007C7.63995 8.03591 7.41594 8.15296 7.25341 8.33597C7.09088 8.51897 7.00111 8.75524 7.00111 9C7.00111 9.24476 7.09088 9.48103 7.25341 9.66403C7.41594 9.84704 7.63995 9.96409 7.883 9.993L8 10H12L12.117 9.993C12.36 9.96409 C12.5841,9 .84704,12.7466 9.66403C12.9091 9.48103 12.9989 9.24476 12.9989 9C12.9989 8.75524 12.9091 8.51897 12.7466 8.33597C12.5841 8.15296 12.36 8.03591 12.117 8.007L12 8Z" fill="#F4A261"/>
+    </symbol>
+
 
 </svg>
 

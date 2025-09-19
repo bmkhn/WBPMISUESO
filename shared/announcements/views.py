@@ -1,3 +1,4 @@
+from django.http import HttpResponseRedirect
 from django.core.paginator import Paginator
 from django.shortcuts import redirect, render
 from django.contrib.auth.decorators import login_required
@@ -58,7 +59,7 @@ def user_announcement_view(request):
     if not sort_order:
         sort_order = 'desc'
 
-    announcements_qs = Announcement.objects.filter(published_at__isnull=False)
+    announcements_qs = Announcement.objects.filter(published_at__isnull=False, archived=False)
 
     if search_query:
         announcements_qs = announcements_qs.filter(
@@ -150,7 +151,7 @@ def announcement_superuser_view(request):
     if not sort_order:
         sort_order = 'desc'
 
-    announcements_qs = Announcement.objects.filter(published_at__isnull=False)
+    announcements_qs = Announcement.objects.filter(published_at__isnull=False, archived=False)
 
     if search_query:
         announcements_qs = announcements_qs.filter(
@@ -260,8 +261,10 @@ def announcement_admin_view(request):
             announcements_qs = announcements_qs.filter(published_at__isnull=False)
         elif filter_status == 'scheduled':
             announcements_qs = announcements_qs.filter(is_scheduled=True)
-        elif filter_status == 'draft':
-            announcements_qs = announcements_qs.filter(published_at__isnull=True, is_scheduled=False)
+        elif filter_status == 'archived':
+            announcements_qs = announcements_qs.filter(archived=True)
+        elif filter_status == 'unarchived':
+            announcements_qs = announcements_qs.filter(archived=False)
 
     if filter_author:
         announcements_qs = announcements_qs.filter(published_by__id=filter_author)
@@ -376,6 +379,7 @@ def announcement_admin_view(request):
     })
 
 
+# Add Announcement View
 @login_required
 @role_required(allowed_roles=["VP", "DIRECTOR", "UESO"])
 def add_announcement_view(request):
@@ -402,6 +406,7 @@ def add_announcement_view(request):
     return render(request, 'announcements/add_announcement.html', {"form": form})
 
 
+# Edit Announcement View
 @login_required
 @role_required(allowed_roles=["VP", "DIRECTOR", "UESO"])
 def edit_announcement_view(request, id):
@@ -432,6 +437,7 @@ def edit_announcement_view(request, id):
     return render(request, 'announcements/edit_announcement.html', {"form": form, "announcement": announcement})
 
 
+# Delete Announcement View
 @login_required
 @role_required(allowed_roles=["VP", "DIRECTOR", "UESO"])
 def delete_announcement_view(request, id):
@@ -441,3 +447,27 @@ def delete_announcement_view(request, id):
         announcement.delete()
         return redirect('announcement_admin')
     return render(request, 'announcements/delete_confirm.html', {"announcement": announcement})
+
+
+# Archive Announcement View
+@login_required
+@role_required(allowed_roles=["VP", "DIRECTOR", "UESO"])
+def archive_announcement_view(request, id):
+    announcement = get_object_or_404(Announcement, id=id)
+    if request.method == 'POST' or request.method == 'GET':
+        announcement.archived = True
+        announcement.save()
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+    return redirect('announcement_admin')
+
+
+# Unarchive Announcement View
+@login_required
+@role_required(allowed_roles=["VP", "DIRECTOR", "UESO"])
+def unarchive_announcement_view(request, id):
+    announcement = get_object_or_404(Announcement, id=id)
+    if request.method == 'POST' or request.method == 'GET':
+        announcement.archived = False
+        announcement.save()
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+    return redirect('announcement_admin')
