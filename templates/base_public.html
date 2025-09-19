@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title></title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -28,7 +27,7 @@
     <div class="app-container">
         <div class="navbar">
             {% if user.is_authenticated %}
-                {% include "navbars/"|add:user.role|add:"_navbar.html" %}
+                {% include "navbars/"|add:request.user.role|add:"_navbar.html" %}
             {% else %}
                 {% include "navbars/public_navbar.html" %}
             {% endif %}

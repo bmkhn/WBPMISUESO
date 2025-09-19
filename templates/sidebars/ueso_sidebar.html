@@ -4,7 +4,6 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>Internal Sidebar</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -226,7 +225,7 @@
 				<span class="table-text">Analytics</span>
 			</a>
 
-			<a href="{% url 'goals' %}" class="sidebar-tab {% if '/goals/' in request.path %}active{% endif %}">
+			<a href="{% url 'goal' %}" class="sidebar-tab {% if '/goals/' in request.path %}active{% endif %}">
 				<svg class="sidebar-tab-icon" width="22" height="24"><use href="#icon-goals"/></svg>
 				<span class="table-text">Goals</span>
 			</a>

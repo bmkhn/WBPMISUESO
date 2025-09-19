@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>EZ</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;700&family=Inter:wght@300;400;700&display=swap" rel="stylesheet">
 
@@ -37,7 +36,7 @@
 <body>
     <div class="app-container">
         <div class="sidebar">
-            {% include "sidebars/"|add:user.role|add:"_sidebar.html" %}
+            {% include "sidebars/"|add:request.user.role|add:"_sidebar.html" %}
         </div>
         
         <div class="main-content">
