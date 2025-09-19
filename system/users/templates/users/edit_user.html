@@ -1,0 +1,302 @@
+{% extends "base_internal.html" %}
+{% block content %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Edit User</title>
+
+<link href="https://fonts.googleapis.com/css?family=Inter:400,500,700&display=swap" rel="stylesheet">
+
+<style>
+    body {
+        background: #F9F9F9;
+        margin: 0;
+        font-family: 'Inter', Arial, sans-serif;
+    }
+
+    .user-details-container {
+        margin: 60px;
+        display: flex;
+        flex-direction: column;
+        gap: 32px;
+    }
+
+    .user-details-title {
+        font-size: 32px;
+        font-weight: 400;
+        color: #000;
+        font-family: 'Inter', Arial, sans-serif;
+    }
+
+    .user-details-section {
+        padding-bottom: 16px;
+        border-bottom: 1px solid #E5E7EB;
+    }
+
+    .user-details-grid {
+        display: grid;
+        gap: 20px;
+    }
+
+    .user-details-row {
+        display: grid;
+        gap: 20px;
+    }
+
+    .user-details-row.cols-4 {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .user-details-row.cols-3 {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .user-details-row.cols-2 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .user-details-label {
+        font-weight: 500;
+        color: #374151;
+        font-size: 1.08rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .user-details-value {
+        font-weight: 500;
+        color: #374151;
+        font-size: 1.08rem;
+        word-break: break-word;
+        background: #f7f7f7;
+        border-radius: 0.5rem;
+        padding: 8px 14px;
+        border: 1px solid #e5e7eb;
+        margin-bottom: 1rem;
+
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .user-details-picture {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        border: 2px solid #e4c600;
+        object-fit: cover;
+        margin-left: 12px;
+    }
+
+    .user-details-category {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #000;
+        margin-bottom: 1rem;
+    }
+
+	.form-actions {
+		display: flex;
+		gap: 1rem;
+		justify-content: flex-end;
+	}
+
+    .btn {
+		padding: 0.75rem 1.5rem;
+		border: none;
+		border-radius: 8px;
+		font-size: 1rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		font-family: 'Inter', sans-serif;
+        text-decoration: none;
+    }
+
+    .back {
+		background: #6B7280;
+		color: white;
+    }
+
+    .back:hover {
+		background: #4B5563;
+		transform: translateY(-1px);
+    }
+
+    .save {
+		background: #0A6C44;
+		color: white;
+    }
+
+    .save:hover {
+		background: #1f7c57;
+		transform: translateY(-1px);
+    }
+</style>
+</head>
+
+<body>
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="user-details-container">
+        <div class="user-details-title">Edit User</div>
+        <div class="user-details-section">
+            <div class="user-details-category">User Profile</div>
+            <div class="user-details-row cols-4">
+                <div>
+                    <div class="user-details-label">Last Name</div>
+                    <input type="text" name="last_name" class="user-details-value" value="{{ user.last_name }}" required>
+                </div>
+                <div>
+                    <div class="user-details-label">Given Name</div>
+                    <input type="text" name="given_name" class="user-details-value" value="{{ user.given_name }}" required>
+                </div>
+                <div>
+                    <div class="user-details-label">M.I.</div>
+                    <input type="text" name="middle_initial" class="user-details-value" value="{{ user.middle_initial }}">
+                </div>
+                <div>
+                    <div class="user-details-label">Suffix</div>
+                    <input type="text" name="suffix" class="user-details-value" value="{{ user.suffix }}">
+                </div>
+            </div>
+            <div class="user-details-row cols-3">
+                <div>
+                    <div class="user-details-label">Sex</div>
+                    <select name="sex" class="user-details-value">
+                        <option value="Male" {% if user.sex == 'Male' %}selected{% endif %}>Male</option>
+                        <option value="Female" {% if user.sex == 'Female' %}selected{% endif %}>Female</option>
+                    </select>
+                </div>
+                <div>
+                    <div class="user-details-label">Email</div>
+                    <input type="email" name="email" class="user-details-value" value="{{ user.email }}" required>
+                </div>
+                <div>
+                    <div class="user-details-label">Contact Number</div>
+                    <input type="text" name="contact_no" class="user-details-value" value="{{ user.contact_no }}">
+                </div>
+            </div>
+            <div style="margin-top: 1rem;">
+                <div class="user-details-label">Profile Picture</div>
+                {% if user.profile_picture %}
+                    <img src="{{ user.profile_picture.url }}" alt="Profile Picture" class="user-details-picture">
+                {% endif %}
+                <input type="file" name="profile_picture" class="user-details-value" style="margin-top:0.5rem;">
+            </div>
+        </div>
+        <div class="user-details-section">
+            <div class="user-details-category">Account Info</div>
+            <div class="user-details-row cols-2">
+                <div>
+                    <div class="user-details-label">Role</div>
+                    <select name="role" class="user-details-value">
+                        <option value="UESO" {% if user.role == 'UESO' %}selected{% endif %}>UESO</option>
+                        <option value="COORDINATOR" {% if user.role == 'COORDINATOR' %}selected{% endif %}>College Coordinator</option>
+                        <option value="DEAN" {% if user.role == 'DEAN' %}selected{% endif %}>College Dean</option>
+                        <option value="PROGRAM_HEAD" {% if user.role == 'PROGRAM_HEAD' %}selected{% endif %}>Program Head</option>
+                        <option value="VP" {% if user.role == 'VP' %}selected{% endif %}>VP</option>
+                        <option value="IMPLEMENTER" {% if user.role == 'IMPLEMENTER' %}selected{% endif %}>Implementer</option>
+                        <option value="FACULTY" {% if user.role == 'FACULTY' %}selected{% endif %}>Faculty</option>
+                        <option value="CLIENT" {% if user.role == 'CLIENT' %}selected{% endif %}>Client</option>
+                    </select>
+                </div>
+                <div>
+                    <div class="user-details-label">Joined</div>
+                    <input type="text" class="user-details-value" value="{{ user.date_joined|date:'F d, Y' }}" disabled>
+                </div>
+            </div>
+        </div>
+        {% if user.role == 'IMPLEMENTER' %}
+        <div class="user-details-section">
+            <div class="user-details-category">Implementer Info</div>
+            <div class="user-details-row cols-2">
+                <div>
+                    <div class="user-details-label">Degree</div>
+                    <input type="text" name="degree" class="user-details-value" value="{{ user.degree }}">
+                </div>
+                <div>
+                    <div class="user-details-label">Expertise</div>
+                    <input type="text" name="expertise" class="user-details-value" value="{{ user.expertise }}">
+                </div>
+            </div>
+        </div>
+        {% elif user.role == 'FACULTY' %}
+        <div class="user-details-section">
+            <div class="user-details-category">Faculty Info</div>
+            <div class="user-details-row cols-2">
+                <div>
+                    <div class="user-details-label">College</div>
+                    <input type="text" name="college" class="user-details-value" value="{{ user.college }}">
+                </div>
+                <div>
+                    <div class="user-details-label">Campus</div>
+                    <input type="text" name="campus" class="user-details-value" value="{{ user.campus }}">
+                </div>
+            </div>
+            <div class="user-details-row cols-2">
+                <div>
+                    <div class="user-details-label">Degree</div>
+                    <input type="text" name="degree" class="user-details-value" value="{{ user.degree }}">
+                </div>
+                <div>
+                    <div class="user-details-label">Expertise</div>
+                    <input type="text" name="expertise" class="user-details-value" value="{{ user.expertise }}">
+                </div>
+            </div>
+        </div>
+        {% elif user.role == 'CLIENT' %}
+        <div class="user-details-section">
+            <div class="user-details-category">Client Info</div>
+            <div class="user-details-row cols-2">
+                <div>
+                    <div class="user-details-label">Company</div>
+                    <input type="text" name="company" class="user-details-value" value="{{ user.company }}">
+                </div>
+                <div>
+                    <div class="user-details-label">Industry</div>
+                    <input type="text" name="industry" class="user-details-value" value="{{ user.industry }}">
+                </div>
+            </div>
+        </div>
+        {% elif user.role == 'DEAN' %}
+        <div class="user-details-section">
+            <div class="user-details-category">Dean Info</div>
+            <div class="user-details-row cols-2">
+                <div>
+                    <div class="user-details-label">College</div>
+                    <input type="text" name="college" class="user-details-value" value="{{ user.college }}">
+                </div>
+                <div>
+                    <div class="user-details-label">Campus</div>
+                    <input type="text" name="campus" class="user-details-value" value="{{ user.campus }}">
+                </div>
+            </div>
+        </div>
+        {% elif user.role == 'PROGRAM_HEAD' %}
+        <div class="user-details-section">
+            <div class="user-details-category">Program Head Info</div>
+            <div class="user-details-row cols-2">
+                <div>
+                    <div class="user-details-label">College</div>
+                    <input type="text" name="college" class="user-details-value" value="{{ user.college }}">
+                </div>
+                <div>
+                    <div class="user-details-label">Campus</div>
+                    <input type="text" name="campus" class="user-details-value" value="{{ user.campus }}">
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        <div class="form-actions">
+            <a href="{% url 'manage_user' %}" class="back btn">Back</a>
+            <button type="submit" class="save btn">Save Changes</button>
+        </div>
+    </div>
+</form>
+
+</body>
+</html>
+
+{% endblock %}

@@ -1,0 +1,289 @@
+{% extends "base_internal.html" %}
+{% block content %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>User Details</title>
+
+<link href="https://fonts.googleapis.com/css?family=Inter:400,500,700&display=swap" rel="stylesheet">
+
+<style>
+    body {
+        background: #F9F9F9;
+        margin: 0;
+        font-family: 'Inter', Arial, sans-serif;
+    }
+
+    .user-details-container {
+        margin: 60px;
+        display: flex;
+        flex-direction: column;
+        gap: 32px;
+    }
+
+    .user-details-title {
+        font-size: 32px;
+        font-weight: 400;
+        color: #000;
+        font-family: 'Inter', Arial, sans-serif;
+    }
+
+    .user-details-section {
+        padding-bottom: 16px;
+        border-bottom: 1px solid #E5E7EB;
+    }
+
+    .user-details-grid {
+        display: grid;
+        gap: 20px;
+    }
+
+    .user-details-row {
+        display: grid;
+        gap: 20px;
+    }
+
+    .user-details-row.cols-4 {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .user-details-row.cols-3 {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .user-details-row.cols-2 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .user-details-label {
+        font-weight: 500;
+        color: #374151;
+        font-size: 1.08rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .user-details-value {
+        font-weight: 500;
+        color: #374151;
+        font-size: 1.08rem;
+        word-break: break-word;
+        background: #f7f7f7;
+        border-radius: 0.5rem;
+        padding: 8px 14px;
+        border: 1px solid #e5e7eb;
+        margin-bottom: 1rem;
+    }
+
+    .user-details-picture {
+        width: 80px;
+        height: 80px;
+        border: 2px solid #e4c600;
+        object-fit: cover;
+        margin-left: 12px;
+    }
+
+    .user-details-category {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #000;
+        margin-bottom: 1rem;
+    }
+
+	.form-actions {
+		display: flex;
+		gap: 1rem;
+		justify-content: flex-end;
+	}
+
+    .btn {
+		padding: 0.75rem 1.5rem;
+		border: none;
+		border-radius: 8px;
+		font-size: 1rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		font-family: 'Inter', sans-serif;
+        text-decoration: none;
+    }
+
+    .back {
+		background: #6B7280;
+		color: white;
+    }
+
+    .back:hover {
+		background: #4B5563;
+		transform: translateY(-1px);
+    }
+
+    .edit {
+		background: #0A6C44;
+		color: white;
+    }
+
+    .edit:hover {
+		background: #1f7c57;
+		transform: translateY(-1px);
+    }
+</style>
+</head>
+
+<body>
+    <div class="user-details-container">
+        <div class="user-details-title">User Details</div>
+        <div class="user-details-section">
+            <div class="user-details-category">User Profile</div>
+            <div class="user-details-row cols-4">
+                <div>
+                    <div class="user-details-label">Last Name</div>
+                    <div class="user-details-value">{{ user.last_name }}</div>
+                </div>
+                <div>
+                    <div class="user-details-label">Given Name</div>
+                    <div class="user-details-value">{{ user.given_name }}</div>
+                </div>
+                <div>
+                    <div class="user-details-label">M.I.</div>
+                    <div class="user-details-value">{{ user.middle_initial }}</div>
+                </div>
+                <div>
+                    <div class="user-details-label">Suffix</div>
+                    <div class="user-details-value">{{ user.suffix }}</div>
+                </div>
+            </div>
+            <div class="user-details-row cols-3">
+                <div>
+                    <div class="user-details-label">Sex</div>
+                    <div class="user-details-value">{{ user.get_sex_display }}</div>
+                </div>
+                <div>
+                    <div class="user-details-label">Email</div>
+                    <div class="user-details-value">{{ user.email }}</div>
+                </div>
+                <div>
+                    <div class="user-details-label">Contact Number</div>
+                    <div class="user-details-value">{{ user.contact_no }}</div>
+                </div>
+            </div>
+            {% if user.valid_id %}
+            <div style="margin-top: 1rem;">
+                <div class="user-details-label">Valid ID ({{ user.get_preferred_id_display }})</div>
+                <img src="{{ user.valid_id.url }}" alt="Valid ID" class="user-details-picture">
+            </div>
+            {% else %}
+            <div style="margin-top: 1rem;">
+                <div class="user-details-label">Valid ID</div>
+                <div class="user-details-value">No valid ID uploaded.</div>
+            </div>    
+            {% endif %}
+
+        </div>
+        <div class="user-details-section">
+            <div class="user-details-category">Account Info</div>
+            <div class="user-details-row cols-2">
+                <div>
+                    <div class="user-details-label">Role</div>
+                    <div class="user-details-value">
+                        {{ user.get_role_display }}
+                    </div>
+                </div>
+                <div>
+                    <div class="user-details-label">Joined</div>
+                    <div class="user-details-value">{{ user.date_joined|date:"F d, Y" }}</div>
+                </div>
+            </div>
+        </div>
+        {% if user.role == 'IMPLEMENTER' %}
+        <div class="user-details-section">
+            <div class="user-details-category">Implementer Info</div>
+            <div class="user-details-row cols-2">
+                <div>
+                    <div class="user-details-label">Degree</div>
+                    <div class="user-details-value">{{ user.degree }}</div>
+                </div>
+                <div>
+                    <div class="user-details-label">Expertise</div>
+                    <div class="user-details-value">{{ user.expertise }}</div>
+                </div>
+            </div>
+        </div>
+        {% elif user.role == 'FACULTY' %}
+        <div class="user-details-section">
+            <div class="user-details-category">Faculty Info</div>
+            <div class="user-details-row cols-2">
+                <div>
+                    <div class="user-details-label">College</div>
+                    <div class="user-details-value">{{ user.college }}</div>
+                </div>
+                <div>
+                    <div class="user-details-label">Campus</div>
+                    <div class="user-details-value">{{ user.campus }}</div>
+                </div>
+            </div>
+            <div class="user-details-row cols-2">
+                <div>
+                    <div class="user-details-label">Degree</div>
+                    <div class="user-details-value">{{ user.degree }}</div>
+                </div>
+                <div>
+                    <div class="user-details-label">Expertise</div>
+                    <div class="user-details-value">{{ user.expertise }}</div>
+                </div>
+            </div>
+        </div>
+        {% elif user.role == 'CLIENT' %}
+        <div class="user-details-section">
+            <div class="user-details-category">Client Info</div>
+            <div class="user-details-row cols-2">
+                <div>
+                    <div class="user-details-label">Company</div>
+                    <div class="user-details-value">{{ user.company }}</div>
+                </div>
+                <div>
+                    <div class="user-details-label">Industry</div>
+                    <div class="user-details-value">{{ user.industry }}</div>
+                </div>
+            </div>
+        </div>
+        {% elif user.role == 'DEAN' %}
+        <div class="user-details-section">
+            <div class="user-details-category">Dean Info</div>
+            <div class="user-details-row cols-2">
+                <div>
+                    <div class="user-details-label">College</div>
+                    <div class="user-details-value">{{ user.college }}</div>
+                </div>
+                <div>
+                    <div class="user-details-label">Campus</div>
+                    <div class="user-details-value">{{ user.campus }}</div>
+                </div>
+            </div>
+        </div>
+        {% elif user.role == 'PROGRAM_HEAD' %}
+        <div class="user-details-section">
+            <div class="user-details-category">Program Head Info</div>
+            <div class="user-details-row cols-2">
+                <div>
+                    <div class="user-details-label">College</div>
+                    <div class="user-details-value">{{ user.college }}</div>
+                </div>
+                <div>
+                    <div class="user-details-label">Campus</div>
+                    <div class="user-details-value">{{ user.campus }}</div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        <div class="form-actions">
+            <a href="{% url 'manage_user' %}" class="back btn">Back</a>
+            <a href="{% url 'edit_user' user.id %}" class="edit btn">Edit</a>
+        </div>
+    </div>
+    
+</body>
+</html>
+
+{% endblock %}

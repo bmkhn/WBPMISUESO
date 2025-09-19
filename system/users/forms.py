@@ -13,8 +13,8 @@ class ClientRegistrationForm(forms.ModelForm):
     class Meta:
         model = User
         fields = [
-            'given_name', 'middle_initial', 'last_name', 'sex', 'email', 'contact_no',
-            'company', 'industry', 'password', 'confirm_password' # Add Valid ID later on
+            'given_name', 'middle_initial', 'last_name', 'suffix', 'sex', 'email', 'contact_no',
+            'company', 'industry', 'password', 'confirm_password', 'preferred_id', 'valid_id'  
         ]
 
     def clean(self):
@@ -32,8 +32,8 @@ class FacultyRegistrationForm(forms.ModelForm):
     class Meta:
         model = User
         fields = [
-            'given_name', 'middle_initial', 'last_name', 'sex', 'email', 'contact_no',
-            'campus', 'college', 'degree', 'expertise', 'password', 'confirm_password'  # Add Valid ID later on
+            'given_name', 'middle_initial', 'last_name', 'suffix', 'sex', 'email', 'contact_no',
+            'campus', 'college', 'degree', 'expertise', 'password', 'confirm_password', 'preferred_id', 'valid_id'  
         ]
 
     def clean(self):
@@ -51,8 +51,8 @@ class ImplementerRegistrationForm(forms.ModelForm):
     class Meta:
         model = User
         fields = [
-            'given_name', 'middle_initial', 'last_name', 'sex', 'email', 'contact_no',
-            'degree', 'expertise', 'password', 'confirm_password'  # Add Valid ID later on
+            'given_name', 'middle_initial', 'last_name', 'suffix', 'sex', 'email', 'contact_no',
+            'degree', 'expertise', 'password', 'confirm_password', 'preferred_id', 'valid_id'
         ]
 
     def clean(self):

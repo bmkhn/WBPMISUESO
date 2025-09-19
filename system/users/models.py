@@ -45,6 +45,15 @@ class User(AbstractUser):
         DUMARAN = 'DUMARAN', 'Dumaran'
         BATARAZA = 'BATARAZA', 'Bataraza'
 
+    class PreferenceID(models.TextChoices):
+        PASSPORT = 'PASSPORT', 'Passport'
+        DRIVERS_LICENSE = 'DRIVERS_LICENSE', "Driver's License"
+        UMID = 'UMID', 'UMID'
+        SSS = 'SSS', 'SSS'
+        GSIS = 'GSIS', 'GSIS'
+        PRC = 'PRC', 'PRC'
+        OTHERS = 'OTHERS', 'Others'
+
     # User fields
     given_name = models.CharField(max_length=150)
     middle_initial = models.CharField(max_length=1, blank=True, null=True)
@@ -61,8 +70,9 @@ class User(AbstractUser):
     company = models.CharField(max_length=255, blank=True, null=True)
     industry = models.CharField(max_length=255, blank=True, null=True)
     is_expert = models.BooleanField(default=False)
-    profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, null=True)
-    # valid_id = models.ImageField(upload_to='valid_ids/', blank=False, null=False) 
+    profile_picture = models.ImageField(upload_to='users/profile_pictures/', blank=True, null=True)
+    preferred_id = models.CharField(max_length=50, blank=True, null=True, choices=PreferenceID.choices)  # e.g., Passport, Driver's License
+    valid_id = models.ImageField(upload_to='users/valid_ids/', blank=True, null=True)       # Required Logic will be backend
     created_by = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='created_users')
     created_at = models.DateTimeField(auto_now_add=True)
     is_confirmed = models.BooleanField(default=False, null=False)

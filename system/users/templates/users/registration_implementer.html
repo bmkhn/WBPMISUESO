@@ -1,193 +1,249 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Implementer Registration</title>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #FBFBFB;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh; 
-            overflow: hidden;
-            box-sizing: border-box;
-        }
+<title>Implementer Registration</title>
+<meta charset="UTF-8">
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+<style>
+    body {
+        font-family: 'Inter', sans-serif;
+        background-color: #FBFBFB;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh; 
+        overflow: hidden;
+        box-sizing: border-box;
+    }
+
+    .card {
+        background: #fff;
+        width: 800px;
+        min-height: 410px;
+        height: auto;
+        padding: 40px 40px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+        font-family: 'Inter', sans-serif;
+        font-weight: 600;
+        text-align: center;
+        font-size: 32px;
+        margin-bottom: 5px;
+        margin-top: 10px;
+    }
+
+    p.subtitle {
+        font-family: 'Inter', sans-serif;
+        text-align: center;
+        color: #666;
+        margin-bottom: 25px;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    label {
+        font-family: 'Inter', sans-serif;
+        font-size: 14px;
+        font-weight: 400;
+        margin-bottom: 6px;
+    }
+
+    input, select {
+        font-family: 'Inter', sans-serif;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 14px;
+        background: #f6f7f9;
+    }
+
+    select {
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        padding: 12px 32px 12px 12px;
+        background: #f6f7f9 url('data:image/svg+xml;utf8,<svg fill="none" height="16" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5" stroke="%238F8F8F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>') no-repeat right 12px center/16px 16px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 14px;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: absolute;
+        left: 40px;
+        right: 40px;
+        bottom: 40px;
+    }
+
+    .back {
+        font-family: 'Inter', sans-serif;
+        height: 40px;
+        text-decoration: none;
+        font-size: 14px;
+        color: #007bff;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+    }
+
+    .back:hover {
+        text-decoration: underline;
+        color: black;
+    }
+
+    .button {
+        font-family: 'Inter', sans-serif;
+        padding: 12px 20px;
+        border: none;
+        background: #2c2c2c;
+        color: white;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+    }
     
-        .card {
-            background: #fff;
-            width: 800px;
-            min-height: 410px;
-            height: auto;
-            padding: 40px 40px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
+    .button:hover {
+        background-color: black;
+    }
 
-        h2 {
-            font-family: 'Inter', sans-serif;
-            font-weight: 600;
-            text-align: center;
-            font-size: 32px;
-            margin-bottom: 5px;
-            margin-top: 10px;
-        }
+    .required {
+        color: red;
+    }
 
-        p.subtitle {
-            font-family: 'Inter', sans-serif;
-            text-align: center;
-            color: #666;
-            margin-bottom: 25px;
-        }
+    .checkbox {
+        font-family: 'Inter', sans-serif;
+        display: flex;
+        margin-top: 5px;
+        font-size: 10px;
+        color: #555;
+        white-space: pre;
+        align-items: center;
+    }
 
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
+    .checkbox input {
+        margin-right: 8px;
+        width: 15px;
+        height: 15px;
+        cursor: pointer;
+    }
 
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
+    .id-options {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+    
+    .id-options button {
+        font-family: 'Inter', sans-serif;
+        padding: 20px;
+        border: none;
+        border-bottom: 1px solid gray;
+        border-radius: 1px;
+        background: #fffafa;
+        font-size: 16px;
+        cursor: pointer;
+        text-align: left;
+    }
 
-        label {
-            font-family: 'Inter', sans-serif;
-            font-size: 14px;
-            font-weight: 400;
-            margin-bottom: 6px;
-        }
+    .id-options button:hover {
+        background: darkgray;
+    }
 
-        input, select {
-            font-family: 'Inter', sans-serif;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-            background: #f6f7f9;
-        }
+    a {
+        font-family: 'Inter', sans-serif;
+        color: #007bff;
+    }
 
-        select {
-            appearance: none;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            padding: 12px 32px 12px 12px;
-            background: #f6f7f9 url('data:image/svg+xml;utf8,<svg fill="none" height="16" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5" stroke="%238F8F8F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>') no-repeat right 12px center/16px 16px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-            font-family: 'Inter', sans-serif;
-        }
+    a:hover {
+        color: purple;
+    }
 
-        .actions {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: absolute;
-            left: 40px;
-            right: 40px;
-            bottom: 40px;
-        }
+    .drive:hover {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    }
 
-        .back {
-            font-family: 'Inter', sans-serif;
-            height: 40px;
-            text-decoration: none;
-            font-size: 14px;
-            color: #007bff;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-        }
+    .upload-area {
+        flex: 1;
+        border: 2px dashed #E5E7EB;
+        border-radius: 8px;
+        padding: 2rem;
+        text-align: center;
+        background: #F9F9F9;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+    }
 
-        .back:hover {
-            text-decoration: underline;
-            color: black;
-        }
+    .upload-area:hover {
+        border-color: #0A6C44;
+        background: #F0FDF4;
+    }
 
-        .button {
-            font-family: 'Inter', sans-serif;
-            padding: 12px 20px;
-            border: none;
-            background: #2c2c2c;
-            color: white;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        
-        .button:hover {
-            background-color: black;
-        }
+    .upload-icon {
+        width: 24px;
+        height: 24px;
+        color: #4B5563;
+    }
 
-        .required {
-            color: red;
-        }
+    .upload-text {
+        color: #4B5563;
+        font-size: 0.95rem;
+    }
 
-        .checkbox {
-            font-family: 'Inter', sans-serif;
-            display: flex;
-            margin-top: 5px;
-            font-size: 10px;
-            color: #555;
-            white-space: pre;
-            align-items: center;
-        }
+    .file-input {
+        display: none;
+    }
 
-        .checkbox input {
-            margin-right: 8px;
-            width: 15px;
-            height: 15px;
-            cursor: pointer;
-        }
+    .file-preview {
+        margin-top: 1rem;
+        padding: 1rem;
+        background: #F0FDF4;
+        border: 1px solid #BBF7D0;
+        border-radius: 8px;
+        display: none;
+    }
 
-        .id-options {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
-        
-        .id-options button {
-            font-family: 'Inter', sans-serif;
-            padding: 20px;
-            border: none;
-            border-bottom: 1px solid gray;
-            border-radius: 1px;
-            background: #fffafa;
-            font-size: 16px;
-            cursor: pointer;
-            text-align: left;
-        }
+    .file-preview.show {
+        display: block;
+    }
 
-        .id-options button:hover {
-            background: darkgray;
-        }
-
-        a {
-            font-family: 'Inter', sans-serif;
-            color: #007bff;
-        }
-
-        a:hover {
-            color: purple;
-        }
-
-        .drive:hover {
-            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
-        }
-    </style>
+    .file-info {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #1f7c57;
+        font-size: 0.9rem;
+    }
+</style>
 </head>
 
 <body>
-    <form method="post" autocomplete="off" enctype="multipart/form-data" id="registrationForm">
+    <!-- Step 1 - [Implementer Personal Details] -->
+    <form id="form-step1" autocomplete="off" style="display:block;" onsubmit="event.preventDefault(); nextStep(1);">
         {% csrf_token %}
-        <input type="hidden" name="step" value="registration">
-        <!-- Step 1 - [Implementer Personal Details] -->
         <div class="card" id="step1">
             <h2>Create New Account</h2>
             <p class="subtitle">Personal Details</p>
@@ -199,10 +255,19 @@
                 <div class="form-group">
                     <div>{{ form.email.label_tag }}<span class="required"> *</span></div>
                     {{ form.email }}
+                    <div id="email-error" style="color:red; font-size:13px; margin-top:4px; display:none;"></div>
                 </div>
-                <div class="form-group">
-                    {{ form.middle_initial.label_tag }}
-                    {{ form.middle_initial }}
+                <div class="form-group" style="display: flex; gap: 12px; align-items: flex-end;">
+                    <div style="flex:1; display: flex; flex-direction: row; gap: 12px; align-items: flex-end;">
+                        <div style="flex:1;">
+                            {{ form.middle_initial.label_tag }}
+                            {{ form.middle_initial }}
+                        </div>
+                        <div style="flex:1;">
+                            {{ form.suffix.label_tag }}
+                            {{ form.suffix }}
+                        </div>
+                    </div>
                 </div>
                 <div class="form-group">
                     <div>{{ form.contact_no.label_tag }}<span class="required"> *</span></div>
@@ -218,13 +283,16 @@
                 </div>
             </div>
             <div class="actions">
-                <a href="/register/" class="back">← Back to Sign In</a>
-                <button class="button" type="button" onclick="nextStep(1)">Proceed →</button>
+                <a href="{% url 'register' %}" class="back">← Back to Sign In</a>
+                <button class="button" type="submit">Proceed →</button>
             </div>
         </div>
+    </form>
 
-        <!-- Step 2 - [Implementer Professional Details] -->
-        <div class="card" id="step2" style="display:none;">
+    <!-- Step 2 - [Implementer Professional Details] -->
+    <form id="form-step2" autocomplete="off" style="display:none;" onsubmit="event.preventDefault(); nextStep(2);">
+        {% csrf_token %}
+        <div class="card" id="step2">
             <h2>Create New Account</h2>
             <p class="subtitle">Professional Details</p>
             <div class="form-grid">
@@ -244,121 +312,237 @@
                     <div>{{ form.confirm_password.label_tag }}<span class="required"> *</span></div>
                     {{ form.confirm_password }}
                 </div>
-                <div class="form-group"></div>
+                <div></div>
                 <div class="checkbox">
                     <input type="checkbox"> I have read & agree with the <a href="#">Terms and Conditions</a> and the <a href="#">Privacy Policy</a>.
                 </div>
             </div>
             <div class="actions">
                 <a class="back" onclick="prevStep(2)">← Back</a>
-                <button class="button" type="button" onclick="nextStep(2)">Proceed →</button>
-            </div>
-        </div>
-
-        <!-- Step 3 - [Implementer Preferred ID] -->
-        <div class="card" id="step3" style="display:none;">
-            <h2>Create New Account</h2>
-            <p class="subtitle">Select Your ID</p>
-            <label>Preferred IDs <span class="required">*</span></label>
-            <div class="id-options">
-                <button type="button" onclick="selectID('PhilID (PhilSys)')">PhilID (PhilSys)</button>
-                <button type="button" onclick="selectID('Postal ID')">Postal ID</button>
-                <button type="button" onclick="selectID('Driver’s License')">Driver’s License</button>
-                <button type="button" onclick="selectID('Voter’s ID')">Voter’s ID</button>
-                <button type="button" onclick="selectID('Unified Multipurpose ID (UMID)')">Unified Multipurpose ID (UMID)</button>
-                <button type="button" onclick="selectID('Philippine Passport')">Philippine Passport</button>
-            </div>
-            <input type="hidden" name="preferred_id" id="preferred_id">
-            <div class="actions">
-                <a class="back" onclick="prevStep(3)">← Back</a>
-            </div>
-        </div>
-
-        <!-- Step 4 - [Upload ID Placeholder] -->
-        <div class="card" id="step4" style="display:none;">
-            <h2>Upload Your ID</h2>
-            <p class="subtitle">This step will allow you to upload your valid ID for verification.</p>
-            <div style="margin: 40px 0; text-align: center;">
-                <div style="font-size: 18px; color: #888; margin-bottom: 10px;">
-                    <strong>File upload not yet implemented.</strong>
-                </div>
-            </div>
-            <div class="actions">
-                <a class="back" onclick="prevStep(4)">← Back</a>
                 <button class="button" type="submit">Proceed →</button>
             </div>
         </div>
     </form>
 
-    <script>
-        function validateRequiredFields(fields) {
-            let valid = true;
-            fields.forEach(function(fieldId) {
-                const field = document.getElementById(fieldId);
-                if (field && !field.value.trim()) {
-                    valid = false;
-                    field.style.borderColor = "red";
-                } else if (field) {
-                    field.style.borderColor = "#ddd";
+    <!-- Step 3+4 - [Select and Upload ID] -->
+    <form method="post" autocomplete="off" enctype="multipart/form-data" id="form-step3" style="display:none;" onsubmit="event.preventDefault(); submitStep3();">
+        {% csrf_token %}
+        <div class="card" id="step3">
+            <h2>Upload Your ID</h2>
+            <p class="subtitle">Select your ID type and upload your valid ID for verification.</p>
+            <div style="margin-bottom: 1.5rem;">
+                <label for="preferred_id">Preferred ID <span class="required">*</span></label>
+                <select name="preferred_id" id="preferred_id" style="width:100%;padding:12px;border-radius:6px;border:1px solid #ddd;font-size:1rem;">
+                    <option value="">Select an ID</option>
+                    {% for value, label in form.fields.preferred_id.choices %}
+                        <option value="{{ value }}" {% if form.preferred_id.value == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="margin: 20px 0; text-align: center;">
+                <div style="font-size: 18px; color: #888; margin-bottom: 10px;">
+                    <div class="upload-area" onclick="document.getElementById('id_valid_id').click()">
+                        <svg class="upload-icon"><use href="#icon-upload"></use></svg>
+                        <span class="upload-text">Click to upload</span>
+                        <input class="file-input" type="file" name="valid_id" id="id_valid_id" accept="image/*" value="{{ form.valid_id.value|default:'' }}">
+                    </div>
+                    <div id="file-error" class="error-message"></div>
+                    <div class="file-preview" id="file-preview">
+                        <div class="file-info">
+                            <svg width="16" height="16"><use href="#icon-upload"></use></svg>
+                            <span id="file-name"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="actions">
+                <a class="back" onclick="prevStep(3)">← Back</a>
+                <button type="submit" class="button">Submit</button>
+            </div>
+        </div>
+    </form>
+
+<!-- SVG Sprite Section -->
+<svg style="display:none;">
+	
+	<!-- Upload Icon -->
+	<symbol id="icon-upload" viewBox="0 0 24 24" fill="currentColor">
+		<path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+		<path d="M12,11L8,15H16L12,11Z" />
+	</symbol>
+	
+</svg>
+
+
+<script>
+    // Email uniqueness check
+    document.addEventListener('DOMContentLoaded', function() {
+        var emailInput = document.getElementById('id_email');
+        var emailError = document.getElementById('email-error');
+        if (emailInput) {
+            emailInput.addEventListener('blur', function() {
+                var email = emailInput.value.trim();
+                if (!email) return;
+                fetch('/check-email/?email=' + encodeURIComponent(email))
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.exists) {
+                            emailError.textContent = 'This email is already registered.';
+                            emailError.style.display = 'block';
+                        } else {
+                            emailError.textContent = '';
+                            emailError.style.display = 'none';
+                        }
+                    })
+                    .catch(() => {
+                        emailError.textContent = 'Error checking email.';
+                        emailError.style.display = 'block';
+                    });
+            });
+        }
+    });
+    function validateRequiredFields(fields) {
+        let valid = true;
+        fields.forEach(function(fieldId) {
+            const field = document.getElementById(fieldId);
+            if (field && !field.value.trim()) {
+                valid = false;
+                field.style.borderColor = "red";
+            } else if (field) {
+                field.style.borderColor = "#ddd";
+            }
+        });
+        return valid;
+    }
+
+    // File Upload Handling
+    document.addEventListener('DOMContentLoaded', function() {
+        var fileInput = document.getElementById('id_valid_id');
+        if (fileInput) {
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    document.getElementById('file-name').textContent = file.name;
+                    document.getElementById('file-preview').classList.add('show');
+                } else {
+                    document.getElementById('file-preview').classList.remove('show');
                 }
             });
-            return valid;
         }
+    });
 
-        function nextStep(current) {
-            // Step 1 Validation
-            if (current === 1) {
-                // List all required field names for step 1
-                const requiredFields = ['id_given_name', 'id_email', 'id_last_name', 'id_contact_no', 'id_sex'];
-                const valid = validateRequiredFields(requiredFields);
-                if (!valid) {
-                    alert("Please fill out all required fields.");
-                    return;
-                }
+    // Custom popup modal for alerts
+    function showPopup(message) {
+        let modal = document.getElementById('custom-modal');
+        let modalMsg = document.getElementById('custom-modal-message');
+        modalMsg.textContent = message;
+        modal.style.display = 'flex';
+    }
+    function closePopup() {
+        document.getElementById('custom-modal').style.display = 'none';
+    }
+
+    function nextStep(current) {
+        // Step 1 Validation
+        if (current === 1) {
+            const requiredFields = ['id_given_name', 'id_email', 'id_last_name', 'id_contact_no', 'id_sex'];
+            const valid = validateRequiredFields(requiredFields);
+            if (!valid) {
+                showPopup("Please fill out all required fields.");
+                return;
             }
-
-            // Step 2 Validation
-            if (current === 2) {
-                // List all required field names for step 2
-                const requiredFields = ['id_degree', 'id_college', 'id_expertise', 'id_password', 'id_confirm_password', 'id_campus'];
-                const valid = validateRequiredFields(requiredFields);
-                if (!valid) {
-                    alert("Please fill out all required fields.");
-                    return;
-                }
-
-                // Password Match Check
-                const password = document.getElementById('id_password').value;
-                const confirmPassword = document.getElementById('id_confirm_password').value;
-                if (password !== confirmPassword) {
-                    alert("Passwords do not match.");
-                    return;
-                }
-
-
-                // Terms and Conditions Checkbox Check (Must Be Checked To Proceed)
-                const termsCheckbox = document.querySelector('#step2 .checkbox input[type="checkbox"]');
-                if (!termsCheckbox.checked) {
-                    alert("You must agree to the Terms and Conditions and Privacy Policy before proceeding.");
-                    return;
-                }
+        }
+        // Step 2 Validation
+        if (current === 2) {
+            const requiredFields = ['id_degree', 'id_expertise', 'id_password', 'id_confirm_password'];
+            const valid = validateRequiredFields(requiredFields);
+            if (!valid) {
+                showPopup("Please fill out all required fields.");
+                return;
             }
-
-            document.getElementById("step" + current).style.display = "none";
-            document.getElementById("step" + (current + 1)).style.display = "block";
+            const password = document.getElementById('id_password').value;
+            const confirmPassword = document.getElementById('id_confirm_password').value;
+            if (password !== confirmPassword) {
+                showPopup("Passwords do not match.");
+                return;
+            }
+            const termsCheckbox = document.querySelector('#step2 .checkbox input[type="checkbox"]');
+            if (!termsCheckbox.checked) {
+                showPopup("You must agree to the Terms and Conditions and Privacy Policy before proceeding.");
+                return;
+            }
         }
-
-        function prevStep(current) {
-            document.getElementById("step" + current).style.display = "none";
-            document.getElementById("step" + (current - 1)).style.display = "block";
+        // Before showing merged step, copy all values to hidden fields in form-step3
+        if (current === 2) {
+            // Get all values from previous steps
+            // Map field IDs to form field names
+            const fieldMap = {
+                'id_given_name': 'given_name',
+                'id_middle_initial': 'middle_initial',
+                'id_last_name': 'last_name',
+                'id_sex': 'sex',
+                'id_email': 'email',
+                'id_contact_no': 'contact_no',
+                'id_degree': 'degree',
+                'id_expertise': 'expertise',
+                'id_password': 'password',
+                'id_confirm_password': 'confirm_password'
+            };
+            const form3 = document.getElementById('form-step3');
+            // Remove old hidden fields
+            Array.from(form3.querySelectorAll('.step-hidden')).forEach(e => e.remove());
+            Object.entries(fieldMap).forEach(([fieldId, fieldName]) => {
+                let field = document.getElementById(fieldId);
+                if (field) {
+                    let input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = fieldName;
+                    input.value = field.value;
+                    input.className = 'step-hidden';
+                    form3.appendChild(input);
+                }
+            });
         }
+        // Hide current step, show next
+        document.getElementById("form-step" + current).style.display = "none";
+        document.getElementById("form-step" + (current + 1)).style.display = "block";
+    }
 
-        function selectID(idName) {
-            document.getElementById("step3").style.display = "none";
-            document.getElementById("step4").style.display = "block";
-            document.getElementById("selectedID").innerText = "Selected ID: " + idName;
+    function prevStep(current) {
+        document.getElementById("form-step" + current).style.display = "none";
+        document.getElementById("form-step" + (current - 1)).style.display = "block";
+    }
+
+    function submitStep3() {
+        // Validation for merged step
+        const fileInput = document.getElementById('id_valid_id');
+        const fileError = document.getElementById('file-error');
+        const preferredId = document.getElementById('preferred_id').value;
+        let valid = true;
+        if (!preferredId) {
+            showPopup("Please select a preferred ID to proceed.");
+            valid = false;
         }
-    </script>
+        if (!fileInput.files || fileInput.files.length === 0) {
+            fileError.style.display = 'block';
+            showPopup("Please upload a valid ID to proceed.");
+            valid = false;
+        } else {
+            fileError.style.display = 'none';
+        }
+        if (valid) {
+            document.getElementById('form-step3').submit();
+        }
+    }
+</script>
     
+    <!-- Custom Modal Popup -->
+    <div id="custom-modal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(36,95,62,0.18);z-index:9999;align-items:center;justify-content:center;">
+        <div style="background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(36,95,62,0.18);padding:32px 40px;max-width:400px;text-align:center;position:relative;">
+            <div style="font-size:1.25rem;font-weight:600;color:#0A6C44;margin-bottom:18px;">Notice</div>
+            <div id="custom-modal-message" style="font-size:1.08rem;color:#333;margin-bottom:24px;"></div>
+            <button onclick="closePopup()" style="background:#0A6C44;color:#fff;border:none;border-radius:8px;padding:10px 32px;font-size:1rem;font-weight:500;cursor:pointer;">OK</button>
+        </div>
+    </div>
 </body>
 </html>

@@ -1,3 +1,4 @@
+from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout, authenticate, get_user_model
 from django.contrib.auth.decorators import login_required
@@ -54,14 +55,17 @@ def home(request):
 def dashboard(request):
     return render(request, 'base_internal.html')  # extends base_internal.html
 
-@login_required
-@role_required(allowed_roles=["VP", "DIRECTOR"])
-def manage_user(request):
-    return render(request, 'users/manage_user.html')
-
 ####################################################################################################
 
 # Registration Views for Different User Types
+
+def check_email_view(request):
+    email = request.GET.get('email', '').strip()
+    exists = False
+    if email:
+        User = get_user_model()
+        exists = User.objects.filter(email=email).exists()
+    return JsonResponse({'exists': exists})
 
 def register_view(request):
     logout(request)
@@ -72,7 +76,7 @@ def registration_client_view(request):
     email = None
 
     if request.method == 'POST':
-        form = ClientRegistrationForm(request.POST)
+        form = ClientRegistrationForm(request.POST, request.FILES)
 
         if form.is_valid() and not error:
             code = str(random.randint(100000, 999999))
@@ -85,8 +89,14 @@ def registration_client_view(request):
                 fail_silently=False,
             )
 
-            registration_data = form.cleaned_data.copy()
-            request.session['registration_data'] = registration_data
+            # Create user with is_confirmed=False
+            user = form.save(commit=False)
+            user.is_confirmed = False
+            user.username = user.email
+            user.save()
+
+            # Store only user id and 2fa code in session
+            request.session['pending_user_id'] = user.id
             request.session['2fa_code'] = code
             return redirect('verify_client')
         else:
@@ -108,26 +118,19 @@ def client_verify_view(request):
     if request.method == 'POST':
         code_entered = request.POST.get('verification_code')
         code_sent = request.session.get('2fa_code')
-        registration_data = request.session.get('registration_data')
+        pending_user_id = request.session.get('pending_user_id')
 
-        if code_entered == code_sent and registration_data:
+        if code_entered == code_sent and pending_user_id:
             User = get_user_model()
-            user = User.objects.create_user(
-                username=registration_data['email'],
-                email=registration_data['email'],
-                password=registration_data['password'],
-                given_name=registration_data['given_name'],
-                middle_initial=registration_data.get('middle_initial', ''),
-                last_name=registration_data['last_name'],
-                sex=registration_data['sex'],
-                contact_no=registration_data['contact_no'],
-                company=registration_data['company'],
-                industry=registration_data['industry'],
-                role=User.Role.CLIENT,
-                is_confirmed=False,
-            )
+            try:
+                user = User.objects.get(id=pending_user_id)
+                user.role = User.Role.CLIENT
+                user.save()
+            except User.DoesNotExist:
+                error = "User not found. Please register again."
+                return render(request, 'users/verify_client.html', {'error': error})
             # Optionally clear session data
-            request.session.pop('registration_data', None)
+            request.session.pop('pending_user_id', None)
             request.session.pop('2fa_code', None)
             return redirect('thank_you')
         else:
@@ -140,8 +143,8 @@ def registration_faculty_view(request):
     email = None
 
     if request.method == 'POST':
-        form = FacultyRegistrationForm(request.POST)
-        
+        form = FacultyRegistrationForm(request.POST, request.FILES)
+
         if form.is_valid() and not error:
             code = str(random.randint(100000, 999999))
             email = form.cleaned_data['email']
@@ -152,11 +155,15 @@ def registration_faculty_view(request):
                 [email],
                 fail_silently=False,
             )
-            # Save all registration data and preferred_id in session for later verification
-            registration_data = form.cleaned_data.copy()
-            college_instance = form.cleaned_data['college']
-            registration_data['college'] = college_instance.id  # Store the ID instead of the instance
-            request.session['registration_data'] = registration_data
+
+            # Create user with is_confirmed=False
+            user = form.save(commit=False)
+            user.is_confirmed = False
+            user.username = user.email
+            user.save()
+
+            # Store only user id and 2fa code in session
+            request.session['pending_user_id'] = user.id
             request.session['2fa_code'] = code
             return redirect('verify_faculty')
         else:
@@ -171,7 +178,7 @@ def registration_faculty_view(request):
             'form': form,
             'error': error,
             'email': email,
-        })
+        })  
 
 
 def faculty_verify_view(request):
@@ -179,29 +186,19 @@ def faculty_verify_view(request):
     if request.method == 'POST':
         code_entered = request.POST.get('verification_code')
         code_sent = request.session.get('2fa_code')
-        registration_data = request.session.get('registration_data')
-        college_obj = College.objects.get(pk=registration_data['college'])
+        pending_user_id = request.session.get('pending_user_id')
 
-        if code_entered == code_sent and registration_data:
+        if code_entered == code_sent and pending_user_id:
             User = get_user_model()
-            user = User.objects.create_user(
-                username=registration_data['email'],
-                email=registration_data['email'],
-                password=registration_data['password'],
-                given_name=registration_data['given_name'],
-                middle_initial=registration_data.get('middle_initial', ''),
-                last_name=registration_data['last_name'],
-                sex=registration_data['sex'],
-                contact_no=registration_data['contact_no'],
-                campus=registration_data['campus'],
-                college=college_obj,
-                degree=registration_data['degree'],
-                expertise=registration_data['expertise'],
-                role=User.Role.FACULTY,
-                is_confirmed=False,
-            )
+            try:
+                user = User.objects.get(id=pending_user_id)
+                user.role = User.Role.FACULTY
+                user.save()
+            except User.DoesNotExist:
+                error = "User not found. Please register again."
+                return render(request, 'users/verify_faculty.html', {'error': error})
             # Optionally clear session data
-            request.session.pop('registration_data', None)
+            request.session.pop('pending_user_id', None)
             request.session.pop('2fa_code', None)
             return redirect('thank_you')
         else:
@@ -214,8 +211,8 @@ def registration_implementer_view(request):
     email = None
 
     if request.method == 'POST':
-        form = ImplementerRegistrationForm(request.POST)
-        
+        form = ImplementerRegistrationForm(request.POST, request.FILES)
+
         if form.is_valid() and not error:
             code = str(random.randint(100000, 999999))
             email = form.cleaned_data['email']
@@ -226,9 +223,16 @@ def registration_implementer_view(request):
                 [email],
                 fail_silently=False,
             )
-            # Save all registration data and preferred_id in session for later verification
-            registration_data = form.cleaned_data.copy()
-            request.session['registration_data'] = registration_data
+
+            # Create user with is_confirmed=False
+            user = form.save(commit=False)
+            user.is_confirmed = False
+            user.username = user.email
+            user.role = user.Role.IMPLEMENTER
+            user.save()
+
+            # Store only user id and 2fa code in session
+            request.session['pending_user_id'] = user.id
             request.session['2fa_code'] = code
             return redirect('verify_implementer')
         else:
@@ -251,26 +255,19 @@ def implementer_verify_view(request):
     if request.method == 'POST':
         code_entered = request.POST.get('verification_code')
         code_sent = request.session.get('2fa_code')
-        registration_data = request.session.get('registration_data')
+        pending_user_id = request.session.get('pending_user_id')
 
-        if code_entered == code_sent and registration_data:
+        if code_entered == code_sent and pending_user_id:
             User = get_user_model()
-            user = User.objects.create_user(
-                username=registration_data['email'],
-                email=registration_data['email'],
-                password=registration_data['password'],
-                given_name=registration_data['given_name'],
-                middle_initial=registration_data.get('middle_initial', ''),
-                last_name=registration_data['last_name'],
-                sex=registration_data['sex'],
-                contact_no=registration_data['contact_no'],
-                degree=registration_data['degree'],
-                expertise=registration_data['expertise'],
-                role=User.Role.IMPLEMENTER,
-                is_confirmed=False,
-            )
+            try:
+                user = User.objects.get(id=pending_user_id)
+                user.role = User.Role.IMPLEMENTER
+                user.save()
+            except User.DoesNotExist:
+                error = "User not found. Please register again."
+                return render(request, 'users/verify_implementer.html', {'error': error})
             # Optionally clear session data
-            request.session.pop('registration_data', None)
+            request.session.pop('pending_user_id', None)
             request.session.pop('2fa_code', None)
             return redirect('thank_you')
         else:
@@ -292,8 +289,145 @@ def no_permission_view(request):
 def not_confirmed_view(request):
     return render(request, 'users/403_not_confirmed.html', status=403)
 
+####################################################################################################
+
+from django.core.paginator import Paginator
+from django.shortcuts import get_object_or_404
+
+@login_required
+@role_required(allowed_roles=["VP", "DIRECTOR"])
+def manage_user(request):
+    User = get_user_model()
+    users = User.objects.all()
+
+    paginator = Paginator(users, 10)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+
+    current = page_obj.number
+    total = paginator.num_pages
+    if total <= 5:
+        page_range = range(1, total + 1)
+    elif current <= 3:
+        page_range = range(1, 6)
+    elif current >= total - 2:
+        page_range = range(total - 4, total + 1)
+    else:
+        page_range = range(current - 2, current + 3)
+
+    return render(request, 'users/manage_user.html', {
+        'users': users, 
+        'users': page_obj.object_list,
+        'page_obj': page_obj, 
+        'paginator': paginator,
+        'page_range': page_range
+        # 'querystring': querystring,
+        # 'search': search,
+        # 'sort_by': sort_by,
+        # 'order': order,
+    })
 
 
+@login_required
+def user_details_view(request, id):
+    User = get_user_model()
+    user = get_object_or_404(User, id=id)
+    return render(request, 'users/user_details.html', {'user': user})
+
+
+
+@login_required
+@role_required(allowed_roles=["VP", "DIRECTOR"])
+def add_user(request):
+    User = get_user_model()
+    error = None
+    if request.method == 'POST':
+        data = request.POST
+        files = request.FILES
+        try:
+            user = User()
+            user.last_name = data.get('last_name', '')
+            user.given_name = data.get('given_name', '')
+            user.middle_initial = data.get('middle_initial', '')
+            user.suffix = data.get('suffix', '')
+            user.sex = data.get('sex', '')
+            user.email = data.get('email', '')
+            user.contact_no = data.get('contact_no', '')
+            user.role = data.get('role', '')
+            user.username = data.get('email', '')
+            if files.get('profile_picture'):
+                user.profile_picture = files['profile_picture']
+            # Role-specific fields
+            if user.role == 'IMPLEMENTER':
+                user.degree = data.get('degree', '')
+                user.expertise = data.get('expertise', '')
+            elif user.role == 'FACULTY':
+                user.college = data.get('college', '')
+                user.campus = data.get('campus', '')
+                user.degree = data.get('degree', '')
+                user.expertise = data.get('expertise', '')
+            elif user.role == 'CLIENT':
+                user.company = data.get('company', '')
+                user.industry = data.get('industry', '')
+            elif user.role == 'DEAN' or user.role == 'PROGRAM_HEAD':
+                user.college = data.get('college', '')
+                user.campus = data.get('campus', '')
+            # Set password
+            password = data.get('password', '')
+            if password:
+                user.set_password(password)
+            user.save()
+            return redirect('manage_user')
+        except Exception as e:
+            error = str(e)
+    return render(request, 'users/add_user.html', {'error': error})
+
+# Edit user view
+@login_required
+@role_required(allowed_roles=["VP", "DIRECTOR"])
+def edit_user(request, id):
+    User = get_user_model()
+    user = get_object_or_404(User, id=id)
+    error = None
+    if request.method == 'POST':
+        data = request.POST
+        files = request.FILES
+        try:
+            user.last_name = data.get('last_name', user.last_name)
+            user.given_name = data.get('given_name', user.given_name)
+            user.middle_initial = data.get('middle_initial', user.middle_initial)
+            user.suffix = data.get('suffix', user.suffix)
+            user.sex = data.get('sex', user.sex)
+            user.email = data.get('email', user.email)
+            user.contact_no = data.get('contact_no', user.contact_no)
+            user.role = data.get('role', user.role)
+            user.username = data.get('email', user.username)
+            if files.get('profile_picture'):
+                user.profile_picture = files['profile_picture']
+            # Role-specific fields
+            if user.role == 'IMPLEMENTER':
+                user.degree = data.get('degree', user.degree)
+                user.expertise = data.get('expertise', user.expertise)
+            elif user.role == 'FACULTY':
+                user.college = data.get('college', user.college)
+                user.campus = data.get('campus', user.campus)
+                user.degree = data.get('degree', user.degree)
+                user.expertise = data.get('expertise', user.expertise)
+            elif user.role == 'CLIENT':
+                user.company = data.get('company', user.company)
+                user.industry = data.get('industry', user.industry)
+            elif user.role == 'DEAN' or user.role == 'PROGRAM_HEAD':
+                user.college = data.get('college', user.college)
+                user.campus = data.get('campus', user.campus)
+            # Password update (optional)
+            password = data.get('password', '')
+            if password:
+                user.set_password(password)
+            user.save()
+            return redirect('manage_user')
+        except Exception as e:
+            error = str(e)
+    return render(request, 'users/edit_user.html', {'user': user, 'error': error})
 
 
 ####################################################################################################
@@ -313,7 +447,4 @@ def quick_login(request, role):
         login(request, user)
         return redirect("role_redirect")
     else:
-        return redirect("login")  # or error page
-
-
-
+        return redirect("login") 
