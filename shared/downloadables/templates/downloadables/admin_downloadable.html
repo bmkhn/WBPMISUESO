@@ -263,9 +263,11 @@
 		padding: 24px 32px;
 		min-width: 340px;
 	}
+
 	.filter-grid {
 		display: grid;
 		grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: repeat(2, 1fr);
 		grid-gap: 24px;
 	}
 
@@ -479,7 +481,7 @@
                         </label>
                         <!-- Bottom Right - Date Filter -->
                         <label>Date
-                            <input type="date" name="date" value="{{ date|default:'' }}" />
+                            <input type="date" name="date" value="{{ date|default:'' }}" style="width: 87%"/>
                         </label>
                     </div>
                     <div class="filter-actions">

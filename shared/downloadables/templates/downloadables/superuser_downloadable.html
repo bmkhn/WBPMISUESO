@@ -139,8 +139,9 @@
 	
 	.filter-grid {
 		display: grid;
-		grid-template-columns: repeat(2, 1fr);
 		grid-gap: 24px;
+		grid-template-columns: repeat(2, 1fr); 
+		grid-template-rows: repeat(2, 1fr);
 	}
 
 	.filter-dropdown label {
@@ -257,6 +258,14 @@
 	<div class="downloadable-container">
 		<div class="left">
 			<h1 class="left__title">Downloadables</h1>
+
+			{% if user.role == 'FACULTY' or user.role == 'IMPLEMENTER' or user.role == 'CLIENT' %}
+			<style>
+				.filter-grid {
+					grid-template-columns: repeat(3, 1fr); 
+				}
+			</style>
+			{% endif %}
 			
 			<!-- Search Bar -->
 			<div class="search-container">
@@ -297,10 +306,21 @@
 										{% endfor %}
 									</select>
 								</label>
+
+								{% if user.role == 'FACULTY' or user.role == 'IMPLEMENTER' or user.role == 'CLIENT' %}
+								<label>Available for Public
+									<select name="public">
+										<option value="">All</option>
+										<option value="true" {% if public == 'true' %}selected{% endif %}>Yes</option>
+										<option value="false" {% if public == 'false' %}selected{% endif %}>No</option>
+									</select>
+								</label>
+								{% endif %}
+
 								<!-- Bottom Right - Date -->
 								<label>
 									Date
-									<input type="date" name="date" value="{{ date|default:'' }}" style="width:88%;margin-top:6px;" />
+									<input type="date" name="date" value="{{ date|default:'' }}" style="width:87%;" />
 								</label>
 							</div>
 

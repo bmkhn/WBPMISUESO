@@ -8,6 +8,7 @@ from django.core.paginator import Paginator
 from .models import Downloadable
 import mimetypes
 import os
+from urllib.parse import urlencode
 
 
 def downloadable_dispatcher(request):
@@ -25,54 +26,59 @@ def downloadable_dispatcher(request):
 
 def user_downloadable(request):
     user = request.user
+    query_params = {}
+
     if user.is_authenticated:
         # Faculty/Client: see all published files except archived
         qs = Downloadable.objects.filter(status='published')
     else:
-        # Non-users: only see files available for public
+        # Non-Users: only see files available for public
         qs = Downloadable.objects.filter(status='published', available_for_non_users=True)
+        query_params['public'] = 'true'
 
-    # Search by file name
+    # Search by
     search = request.GET.get('search', '').strip()
     if search:
         qs = qs.filter(file__icontains=search)
-
-    # File Type Filter
-    file_type = request.GET.get('file_type', '')
-    if file_type:
-        qs = qs.filter(file_type=file_type)
-
-    # Date Filter
-    date = request.GET.get('date', '')
-    if date:
-        qs = qs.filter(uploaded_at__date=date)
+        query_params['search'] = search
 
     # Sort By
     sort_by = request.GET.get('sort_by', 'file')
     if sort_by not in ['file', 'file_type', 'size', 'uploaded_at']:
         sort_by = 'file'
+    query_params['sort_by'] = sort_by
 
     # Order By
     order = request.GET.get('order', 'desc')
     if order == 'asc':
         qs = qs.order_by(sort_by)
+        query_params['order'] = order
     else:
         qs = qs.order_by('-' + sort_by)
+        query_params['order'] = order
 
-    # Build querystring for pagination/filter links
-    query_params = {}
-    if search:
-        query_params['search'] = search
+    # File Type Filter
+    file_type = request.GET.get('file_type', '')
     if file_type:
+        qs = qs.filter(file_type=file_type)
         query_params['file_type'] = file_type
-    if date:
-        query_params['date'] = date
-    query_params['sort_by'] = sort_by
-    query_params['order'] = order
-    from urllib.parse import urlencode
-    querystring = urlencode(query_params)
 
-    # Get all file types for filter dropdown
+    # Public Filter
+    public = request.GET.get('public', '')
+    if public == 'true':
+        qs = qs.filter(available_for_non_users=True)
+        query_params['public'] = 'true'
+    elif public == 'false':
+        qs = qs.filter(available_for_non_users=False)
+        query_params['public'] = 'false'
+
+    # Date Filter
+    date = request.GET.get('date', '')
+    if date:
+        qs = qs.filter(uploaded_at__date=date)
+        query_params['date'] = date
+
+    querystring = urlencode(query_params)
     file_types = Downloadable.objects.values_list('file_type', flat=True).distinct()
 
     paginator = Paginator(qs, 2)
@@ -89,18 +95,18 @@ def user_downloadable(request):
         page_range = range(total - 4, total + 1)
     else:
         page_range = range(current - 2, current + 3)
-
-    # Get 2 most recent announcements
+  
     from shared.announcements.models import Announcement
     latest_announcements = Announcement.objects.filter(published_at__isnull=False).order_by('-published_at')[:2]
 
     return render(request, 'downloadables/user_downloadable.html', {
         'search': search,
-        'file_type': file_type,
-        'file_types': file_types,
-        'date': date,
         'sort_by': sort_by,
         'order': order,
+        'file_type': file_type,
+        'file_types': file_types,
+        'public': public,
+        'date': date,
         'downloadables': page_obj.object_list,
         'page_obj': page_obj,
         'paginator': paginator,
@@ -113,49 +119,52 @@ def user_downloadable(request):
 @login_required
 @role_required(allowed_roles=["PROGRAM_HEAD", "DEAN", "COORDINATOR"])
 def superuser_downloadable(request):
+    query_params = {}
     qs = Downloadable.objects.filter(status='published')
 
-    # Search by file name
+    # Search
     search = request.GET.get('search', '').strip()
     if search:
         qs = qs.filter(file__icontains=search)
-
-    # File Type Filter
-    file_type = request.GET.get('file_type', '')
-    if file_type:
-        qs = qs.filter(file_type=file_type)
-
-    # Date Filter
-    date = request.GET.get('date', '')
-    if date:
-        qs = qs.filter(uploaded_at__date=date)
+        query_params['search'] = search
 
     # Sort By
     sort_by = request.GET.get('sort_by', 'file')
     if sort_by not in ['file', 'file_type', 'size', 'uploaded_at']:
         sort_by = 'file'
+    query_params['sort_by'] = sort_by
 
     # Order By
     order = request.GET.get('order', 'desc')
     if order == 'asc':
         qs = qs.order_by(sort_by)
+        query_params['order'] = order
     else:
         qs = qs.order_by('-' + sort_by)
+        query_params['order'] = order
 
-    # Build querystring for pagination/filter links
-    query_params = {}
-    if search:
-        query_params['search'] = search
+    # File Type Filter
+    file_type = request.GET.get('file_type', '')
     if file_type:
+        qs = qs.filter(file_type=file_type)
         query_params['file_type'] = file_type
-    if date:
-        query_params['date'] = date
-    query_params['sort_by'] = sort_by
-    query_params['order'] = order
-    from urllib.parse import urlencode
-    querystring = urlencode(query_params)
 
-    # Get all file types for filter dropdown
+    # Public Filter
+    public = request.GET.get('public', '')
+    if public == 'true':
+        qs = qs.filter(available_for_non_users=True)
+        query_params['public'] = 'true'
+    elif public == 'false':
+        qs = qs.filter(available_for_non_users=False)
+        query_params['public'] = 'false'
+
+    # Date Filter
+    date = request.GET.get('date', '')
+    if date:
+        qs = qs.filter(uploaded_at__date=date)
+        query_params['date'] = date
+
+    querystring = urlencode(query_params)
     file_types = Downloadable.objects.values_list('file_type', flat=True).distinct()
 
     paginator = Paginator(qs, 4)
@@ -175,11 +184,12 @@ def superuser_downloadable(request):
 
     return render(request, 'downloadables/superuser_downloadable.html', {
         'search': search,
-        'file_type': file_type,
-        'file_types': file_types,
-        'date': date,
         'sort_by': sort_by,
         'order': order,
+        'file_type': file_type,
+        'file_types': file_types,
+        'public': public,
+        'date': date,
         'downloadables': page_obj.object_list,
         'page_obj': page_obj,
         'paginator': paginator,
@@ -191,30 +201,44 @@ def superuser_downloadable(request):
 @login_required
 @role_required(allowed_roles=["UESO", "DIRECTOR", "VP"])
 def admin_downloadable(request):
+    query_params = {}
     qs = Downloadable.objects.all().order_by('-id')
+
+    # Search
     search = request.GET.get('search', '').strip()
     if search:
         qs = qs.filter(file__icontains=search)
-
-    # Collect query params for querystring
-    query_params = {}
+        query_params['search'] = search
+    
+    # Sort By
     sort_by = request.GET.get('sort_by', 'uploaded_at')
     if sort_by not in ['file', 'file_type', 'size', 'uploaded_at']:
         sort_by = 'uploaded_at'
     query_params['sort_by'] = sort_by
 
+    # Order By
     order = request.GET.get('order', 'desc')
     query_params['order'] = order
     if order == 'asc':
         qs = qs.order_by(sort_by)
+        query_params['order'] = order
     else:
         qs = qs.order_by('-' + sort_by)
+        query_params['order'] = order
 
+    # Status Filter
     status = request.GET.get('status', '')
     if status:
         qs = qs.filter(status=status)
         query_params['status'] = status
 
+    # File Type Filter
+    file_type = request.GET.get('file_type', '')
+    if file_type:
+        qs = qs.filter(file_type=file_type)
+        query_params['file_type'] = file_type
+
+    # Public Filter
     public = request.GET.get('public', '')
     if public == 'true':
         qs = qs.filter(available_for_non_users=True)
@@ -223,29 +247,18 @@ def admin_downloadable(request):
         qs = qs.filter(available_for_non_users=False)
         query_params['public'] = 'false'
 
-    # File Type Filter
-    file_type = request.GET.get('file_type', '')
-    if file_type:
-        qs = qs.filter(file_type=file_type)
-        query_params['file_type'] = file_type
-
+    # Date Filter
     date = request.GET.get('date', '')
     if date:
         qs = qs.filter(uploaded_at__date=date)
         query_params['date'] = date
-
-    if search:
-        query_params['search'] = search
-
-    # Build querystring for pagination/filter links
-    from urllib.parse import urlencode
+        
     querystring = urlencode(query_params)
 
-    # Get all file types for filter dropdown
     file_types = Downloadable.objects.values_list('file_type', flat=True).distinct()
 
     paginator = Paginator(qs, 5)
-    page_number = request.GET.get('page')
+    page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
 
     current = page_obj.number

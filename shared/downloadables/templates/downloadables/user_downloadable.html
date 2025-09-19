@@ -317,6 +317,15 @@
 	<div class="downloadable-container">
 		<div class="left">
 			<h1 class="left__title">Downloadables</h1>
+			
+			{% if user.role == 'FACULTY' or user.role == 'IMPLEMENTER' or user.role == 'CLIENT' %}
+			<style>
+				.filter-grid {
+					grid-template-columns: repeat(3, 1fr); 
+				}
+			</style>
+			{% endif %}
+
 
 			<!-- Search Bar -->
 			<div class="search-container">
@@ -352,21 +361,28 @@
 								<!-- Bottom Left - File Type -->
 								<label>
 									File Type
-									<select name="filetype" style="width:100%;margin-top:6px;">
+									<select name="file_type" style="width:100%;margin-top:6px;">
 										<option value="">All Types</option>
-										<option value="pdf" {% if filter_filetype == 'pdf' %}selected{% endif %}>PDF</option>
-										<option value="docx" {% if filter_filetype == 'docx' %}selected{% endif %}>DOCX</option>
-										<option value="xlsx" {% if filter_filetype == 'xlsx' %}selected{% endif %}>XLSX</option>
-										<option value="pptx" {% if filter_filetype == 'pptx' %}selected{% endif %}>PPTX</option>
-										<option value="zip" {% if filter_filetype == 'zip' %}selected{% endif %}>ZIP</option>
-										<option value="other" {% if filter_filetype == 'other' %}selected{% endif %}>Other</option>
+										{% for ext in file_types %}
+										<option value="{{ ext }}" {% if file_type == ext %}selected{% endif %}>{{ ext|upper }}</option>
+										{% endfor %}
 									</select>
 								</label>
+
+								{% if user.role == 'FACULTY' or user.role == 'IMPLEMENTER' or user.role == 'CLIENT' %}
+								<label>Available for Public
+									<select name="public">
+										<option value="">All</option>
+										<option value="true" {% if public == 'true' %}selected{% endif %}>Yes</option>
+										<option value="false" {% if public == 'false' %}selected{% endif %}>No</option>
+									</select>
+								</label>
+								{% endif %}
 
 								<!-- Bottom Right - Date -->
 								<label>
 									Date
-									<input type="date" name="date" value="{{ filter_date|default:'' }}" style="width:100%;margin-top:6px;" />
+									<input type="date" name="date" value="{{ filter_date|default:'' }}" style="width:100%;" />
 								</label>
 							</div>
 
