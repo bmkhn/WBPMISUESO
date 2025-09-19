@@ -7,7 +7,8 @@
 <head>
 <meta charset="UTF-8">
 <title>Downloadables</title>
-<link href="https://fonts.googleapis.com/css?family=Inter:400,500,700&display=swap" rel="stylesheet">
+
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:700&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
 
 <!-- Top Section -->
 <style>
@@ -44,46 +45,6 @@
         color: #000000;
     }
 
-    .admin-downloadable-sort-container {
-        display: flex;
-        flex-direction: row;
-        gap: 10px;
-        align-items: center;
-    }
-
-    .sort-icon {
-        border-radius: 14px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 40px;
-        height: 40px;
-    }
-
-    .dropdown-container {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        gap: 8px;
-        padding: 10px 13px;
-        border-radius: 12px;
-    }
-
-    .dropdown-name {
-        font-family: 'Inter', sans-serif;
-        font-weight: 400;
-        font-size: 16px;
-        color: #000;
-    }
-
-    .dropdown-icon {
-        width: 15px;
-        height: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
     .admin-downloadable-button-container {
         display: flex;
         flex-direction: row;
@@ -92,20 +53,28 @@
     }
 
     .add-downloadable-btn {
-        background: #063A1C;
-        border-radius: 20px;
-        padding: 15px 40px;
-        color: #fff;
-        font-family: 'Inter', sans-serif;
+		background: #063A1C;
+		color: white;
+		padding: 15px 45px;
+		border-radius: 8px;
+		font-size: 20px;
+		font-family: 'Inter', sans-serif;
         font-weight: 500;
-        font-size: 20px;
-        border: none;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		box-shadow: 0 2px 8px rgba(10, 108, 68, 0.2);
+		text-decoration: none;
+        border-radius: 18px;
         cursor: pointer;
-        text-decoration: none;
+        transition: background 0.2s;
     }
 
     .add-downloadable-btn:hover {
-        background: #0A6C44;
+        background: #04521c;
+		transform: translateY(-2px);
+		box-shadow: 0 4px 12px rgba(10, 108, 68, 0.3);
+		text-decoration: none;
+		color: white;
     }
 </style>
 
@@ -411,17 +380,6 @@
         <div class="admin-downloadable-header">
             <div class="admin-downloadable-text-sort">
                 <div class="admin-downloadable-title">Downloadables</div>
-                <div class="admin-downloadable-sort-container">
-                    <div class="sort-icon">
-                        <svg width="20" height="20"><use href="#sort-icon"/></svg>
-                    </div>
-                    <div class="dropdown-container">
-                        <span class="dropdown-name">Sort by</span>
-                        <span class="dropdown-icon">
-                            <svg width="15" height="10"><use href="#dropdown-icon"/></svg>
-                        </span>
-                    </div>
-                </div>
             </div>
             <div class="admin-downloadable-button-container">
                 <a href="{% url 'add_downloadable' %}" class="add-downloadable-btn">Add Downloadable</a>
