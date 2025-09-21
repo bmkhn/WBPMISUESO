@@ -1,0 +1,12 @@
+{% extends "base_internal.html" %}
+{% block content %}
+<div style="max-width: 480px; margin: 80px auto; background: #fff; border-radius: 16px; box-shadow: 0 4px 24px rgba(36,95,62,0.18); padding: 32px 40px; text-align: center;">
+    <h2 style="color:#E53E3E; font-size:2rem; font-weight:600; margin-bottom:18px;">Confirm Delete</h2>
+    <p style="font-size:1.08rem; color:#333; margin-bottom:24px;">Are you sure you want to delete user <strong>{{ user.get_full_name|default:user.username }}</strong>? This action cannot be undone.</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" style="background:#E53E3E;color:#fff;border:none;border-radius:8px;padding:10px 32px;font-size:1rem;font-weight:500;cursor:pointer;">Delete</button>
+        <a href="{% url 'manage_user' %}" style="margin-left:18px;background:#e5e7eb;color:#374151;border:none;border-radius:8px;padding:10px 32px;font-size:1rem;font-weight:500;text-decoration:none;">Cancel</a>
+    </form>
+</div>
+{% endblock %}

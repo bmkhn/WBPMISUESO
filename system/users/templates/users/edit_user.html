@@ -16,6 +16,11 @@
         font-family: 'Inter', Arial, sans-serif;
     }
 
+    input, select, textarea {
+        font-family: 'Inter', Arial, sans-serif;
+        font-weight: 400;
+    }
+
     .user-details-container {
         margin: 60px;
         display: flex;
@@ -74,17 +79,27 @@
         padding: 8px 14px;
         border: 1px solid #e5e7eb;
         margin-bottom: 1rem;
+        min-height: 21px;
 
         display: block;
         width: 100%;
         box-sizing: border-box;
     }
 
+    select.user-details-value {
+		appearance: none;
+		-webkit-appearance: none;
+		-moz-appearance: none;
+		padding-right: 2rem;
+		background: url("data:image/svg+xml;utf8,<svg width='16' height='11' viewBox='0 0 16 11' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M7.99976 7.19417L13.9025 1.29147C14.0125 1.17758 14.144 1.08674 14.2895 1.02424C14.435 0.961746 14.5915 0.92885 14.7498 0.927474C14.9082 0.926098 15.0652 0.95627 15.2117 1.01623C15.3583 1.07619 15.4914 1.16473 15.6034 1.27669C15.7153 1.38866 15.8039 1.5218 15.8638 1.66835C15.9238 1.8149 15.954 1.97192 15.9526 2.13026C15.9512 2.28859 15.9183 2.44506 15.8558 2.59055C15.7933 2.73604 15.7025 2.86762 15.5886 2.97762L8.84283 9.72339C8.61921 9.94694 8.31596 10.0725 7.99976 10.0725C7.68356 10.0725 7.38031 9.94694 7.15669 9.72339L0.41092 2.97762C0.297028 2.86762 0.206183 2.73604 0.143687 2.59055C0.0811915 2.44506 0.0482959 2.28859 0.04692 2.13026C0.0455441 1.97192 0.0757155 1.8149 0.135674 1.66835C0.195632 1.5218 0.284176 1.38866 0.39614 1.27669C0.508103 1.16473 0.641244 1.07619 0.787794 1.01623C0.934343 0.95627 1.09137 0.926098 1.2497 0.927474C1.40804 0.92885 1.56451 0.961746 1.71 1.02424C1.85548 1.08674 1.98706 1.17758 2.09706 1.29147L7.99976 7.19417Z' fill='%23374151'/></svg>")
+        		no-repeat right 0.75rem center;
+  		background-size: 13px 8px;
+    }
+
     .user-details-picture {
         width: 80px;
         height: 80px;
-        border-radius: 50%;
-        border: 2px solid #e4c600;
+        border: 2px solid #000;
         object-fit: cover;
         margin-left: 12px;
     }
@@ -134,13 +149,85 @@
 		transform: translateY(-1px);
     }
 </style>
-</head>
 
+<style>
+    .form-group {
+		display: flex;
+		align-items: flex-start;
+		gap: 1rem;
+	}
+
+	.form-label {
+		font-weight: 600;
+		color: #374151;
+		padding-top: 0.75rem;
+		font-size: 0.95rem;
+	}
+
+	.upload-area {
+		flex: 1;
+		border: 2px dashed #E5E7EB;
+		border-radius: 8px;
+		padding: 2rem;
+		text-align: center;
+		background: #F9F9F9;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+    .upload-area:hover {
+        border-color: #0A6C44;
+        background: #F0FDF4;
+    }
+
+    .upload-icon {
+        width: 24px;
+        height: 24px;
+        color: #4B5563;
+    }
+
+    .upload-text {
+        color: #4B5563;
+        font-size: 0.95rem;
+    }
+
+    .file-preview {
+        margin-top: 1rem;
+        padding: 1rem;
+        background: #F0FDF4;
+        border: 1px solid #BBF7D0;
+        border-radius: 8px;
+        display: none;
+    }
+
+    .file-info {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #1f7c57;
+        font-size: 0.95rem;
+    }
+</style>
+
+</head>
 <body>
 <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
     <div class="user-details-container">
-        <div class="user-details-title">Edit User</div>
+        <div class="user-details-title" style="display:flex;justify-content:space-between;align-items:center;">
+            <div>Edit User</div>
+            <div>
+                {% if user.is_confirmed %}
+                    <a href="{% url 'unverify_user' user.id %}" style="text-decoration:none;color:#1f7c57;font-weight:600;font-size:1em;background:#eafbe7;padding:6px 16px;border-radius:8px; cursor: pointer;">Verified</a>
+                {% else %}
+                    <a href="{% url 'verify_user' user.id %}" style="text-decoration:none;color:#E53E3E;font-weight:600;font-size:1em;background:#fdeaea;padding:6px 16px;border-radius:8px; cursor: pointer;">Unverified</a>
+                {% endif %}
+            </div>
+        </div>
         <div class="user-details-section">
             <div class="user-details-category">User Profile</div>
             <div class="user-details-row cols-4">
@@ -158,7 +245,7 @@
                 </div>
                 <div>
                     <div class="user-details-label">Suffix</div>
-                    <input type="text" name="suffix" class="user-details-value" value="{{ user.suffix }}">
+                    <input type="text" name="suffix" class="user-details-value" value="{{ user.suffix|default_if_none:'' }}">
                 </div>
             </div>
             <div class="user-details-row cols-3">
@@ -178,13 +265,41 @@
                     <input type="text" name="contact_no" class="user-details-value" value="{{ user.contact_no }}">
                 </div>
             </div>
-            <div style="margin-top: 1rem;">
-                <div class="user-details-label">Profile Picture</div>
-                {% if user.profile_picture %}
-                    <img src="{{ user.profile_picture.url }}" alt="Profile Picture" class="user-details-picture">
-                {% endif %}
-                <input type="file" name="profile_picture" class="user-details-value" style="margin-top:0.5rem;">
+            {% if user.valid_id %}
+            <div>
+
+                <!-- Valid ID Upload -->
+                <div class="form-group">
+                    <div>
+                        <div class="user-details-label">Valid ID</div>
+                        <div style="display:flex;align-items:center;">
+                        <img id="preview-img" src="{{ user.valid_id.url }}" alt="Valid ID" class="user-details-picture">
+                        <a id="preview-link" href="{{ user.valid_id.url }}" style="font-size:18px;color:#00538E;margin-left:18px;vertical-align:middle;text-decoration:none;">View ID</a>
+                        </div>
+                    </div>
+
+                    <div class="upload-area" onclick="document.getElementById('id_valid_id').click()">
+                        <svg class="upload-icon"><use href="#icon-upload"></use></svg>
+                        <span class="upload-text">Click to upload</span>
+                        <input class="file-input" type="file" name="valid_id" id="id_valid_id" style="display:none;" accept="image/*">
+                    </div>
+                    <div id="file-error" class="error-message" style="display:none;">File is required.</div>    
+                </div>
+
+                <div class="file-preview" id="file-preview">
+                <div class="file-info">
+                    <svg width="16" height="16"><use href="#icon-upload"></use></svg>
+                    <span id="file-name"></span>
+                </div>
+                </div>
+
             </div>
+            {% else %}
+            <div>
+                <div class="user-details-label">Valid ID</div>
+                <div class="user-details-value">No valid ID uploaded.</div>
+            </div>
+            {% endif %}
         </div>
         <div class="user-details-section">
             <div class="user-details-category">Account Info</div>
@@ -208,93 +323,239 @@
                 </div>
             </div>
         </div>
-        {% if user.role == 'IMPLEMENTER' %}
-        <div class="user-details-section">
-            <div class="user-details-category">Implementer Info</div>
-            <div class="user-details-row cols-2">
-                <div>
-                    <div class="user-details-label">Degree</div>
-                    <input type="text" name="degree" class="user-details-value" value="{{ user.degree }}">
-                </div>
-                <div>
-                    <div class="user-details-label">Expertise</div>
-                    <input type="text" name="expertise" class="user-details-value" value="{{ user.expertise }}">
-                </div>
-            </div>
-        </div>
-        {% elif user.role == 'FACULTY' %}
-        <div class="user-details-section">
-            <div class="user-details-category">Faculty Info</div>
-            <div class="user-details-row cols-2">
-                <div>
-                    <div class="user-details-label">College</div>
-                    <input type="text" name="college" class="user-details-value" value="{{ user.college }}">
-                </div>
-                <div>
-                    <div class="user-details-label">Campus</div>
-                    <input type="text" name="campus" class="user-details-value" value="{{ user.campus }}">
-                </div>
-            </div>
-            <div class="user-details-row cols-2">
-                <div>
-                    <div class="user-details-label">Degree</div>
-                    <input type="text" name="degree" class="user-details-value" value="{{ user.degree }}">
-                </div>
-                <div>
-                    <div class="user-details-label">Expertise</div>
-                    <input type="text" name="expertise" class="user-details-value" value="{{ user.expertise }}">
+
+        <!-- Implementer Info -->
+        <div id="role-info-IMPLEMENTER" class="role-info-block" {% if user.role == 'IMPLEMENTER' %}style="display:block;"{% else %}style="display:none;"{% endif %}>
+            <div class="user-details-section">
+                <div class="user-details-category">Implementer Info</div>
+                <div class="user-details-row cols-2">
+                    <div>
+                        <div class="user-details-label">Degree</div>
+                        <input type="text" name="degree" class="user-details-value" value="{{ user.degree }}">
+                    </div>
+                    <div>
+                        <div class="user-details-label">Expertise</div>
+                        <input type="text" name="expertise" class="user-details-value" value="{{ user.expertise }}">
+                    </div>
                 </div>
             </div>
         </div>
-        {% elif user.role == 'CLIENT' %}
-        <div class="user-details-section">
-            <div class="user-details-category">Client Info</div>
-            <div class="user-details-row cols-2">
-                <div>
-                    <div class="user-details-label">Company</div>
-                    <input type="text" name="company" class="user-details-value" value="{{ user.company }}">
+
+        <!-- Faculty Info -->
+        <div id="role-info-FACULTY" class="role-info-block" {% if user.role == 'FACULTY' %}style="display:block;"{% else %}style="display:none;"{% endif %}>
+            <div class="user-details-section">
+                <div class="user-details-category">Faculty Info</div>
+                <div class="user-details-row cols-2">
+                    <div>
+                        <div class="user-details-label">College</div>
+                        <select name="college" class="user-details-value">
+                            <option value="">Select College</option>
+                            {% for college in colleges %}
+                                <option value="{{ college.id }}" {% if user.college and user.college.id == college.id %}selected{% endif %}>{{ college.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <div class="user-details-label">Campus</div>
+                        <select name="campus" class="user-details-value">
+                            <option value="">Select Campus</option>
+                            {% for value, label in campus_choices %}
+                                <option value="{{ value }}" {% if user.campus == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
                 </div>
-                <div>
-                    <div class="user-details-label">Industry</div>
-                    <input type="text" name="industry" class="user-details-value" value="{{ user.industry }}">
-                </div>
-            </div>
-        </div>
-        {% elif user.role == 'DEAN' %}
-        <div class="user-details-section">
-            <div class="user-details-category">Dean Info</div>
-            <div class="user-details-row cols-2">
-                <div>
-                    <div class="user-details-label">College</div>
-                    <input type="text" name="college" class="user-details-value" value="{{ user.college }}">
-                </div>
-                <div>
-                    <div class="user-details-label">Campus</div>
-                    <input type="text" name="campus" class="user-details-value" value="{{ user.campus }}">
-                </div>
-            </div>
-        </div>
-        {% elif user.role == 'PROGRAM_HEAD' %}
-        <div class="user-details-section">
-            <div class="user-details-category">Program Head Info</div>
-            <div class="user-details-row cols-2">
-                <div>
-                    <div class="user-details-label">College</div>
-                    <input type="text" name="college" class="user-details-value" value="{{ user.college }}">
-                </div>
-                <div>
-                    <div class="user-details-label">Campus</div>
-                    <input type="text" name="campus" class="user-details-value" value="{{ user.campus }}">
+                <div class="user-details-row cols-2">
+                    <div>
+                        <div class="user-details-label">Degree</div>
+                        <input type="text" name="degree" class="user-details-value" value="{{ user.degree }}">
+                    </div>
+                    <div>
+                        <div class="user-details-label">Expertise</div>
+                        <input type="text" name="expertise" class="user-details-value" value="{{ user.expertise }}">
+                    </div>
                 </div>
             </div>
         </div>
-        {% endif %}
+
+        <!-- Client Info -->
+        <div id="role-info-CLIENT" class="role-info-block" {% if user.role == 'CLIENT' %}style="display:block;"{% else %}style="display:none;"{% endif %}>
+            <div class="user-details-section">
+                <div class="user-details-category">Client Info</div>
+                <div class="user-details-row cols-2">
+                    <div>
+                        <div class="user-details-label">Company</div>
+                        <input type="text" name="company" class="user-details-value" value="{{ user.company }}">
+                    </div>
+                    <div>
+                        <div class="user-details-label">Industry</div>
+                        <input type="text" name="industry" class="user-details-value" value="{{ user.industry }}">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dean Info -->
+        <div id="role-info-DEAN" class="role-info-block" {% if user.role == 'DEAN' %}style="display:block;"{% else %}style="display:none;"{% endif %}>
+            <div class="user-details-section">
+                <div class="user-details-category">Dean Info</div>
+                <div class="user-details-row cols-2">
+                    <div>
+                        <div class="user-details-label">College</div>
+                        <select name="college" class="user-details-value">
+                            <option value="">Select College</option>
+                            {% for college in colleges %}
+                                <option value="{{ college.id }}" {% if user.college and user.college.id == college.id %}selected{% endif %}>{{ college.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <div class="user-details-label">Campus</div>
+                        <select name="campus" class="user-details-value">
+                            <option value="">Select Campus</option>
+                            {% for value, label in campus_choices %}
+                                <option value="{{ value }}" {% if user.campus == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Program Head Info -->
+        <div id="role-info-PROGRAM_HEAD" class="role-info-block" {% if user.role == 'PROGRAM_HEAD' %}style="display:block;"{% else %}style="display:none;"{% endif %}>
+            <div class="user-details-section">
+                <div class="user-details-category">Program Head Info</div>
+                <div class="user-details-row cols-2">
+                    <div>
+                        <div class="user-details-label">College</div>
+                        <select name="college" class="user-details-value">
+                            <option value="">Select College</option>
+                            {% for college in colleges %}
+                                <option value="{{ college.id }}" {% if user.college and user.college.id == college.id %}selected{% endif %}>{{ college.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <div class="user-details-label">Campus</div>
+                        <select name="campus" class="user-details-value">
+                            <option value="">Select Campus</option>
+                            {% for value, label in campus_choices %}
+                                <option value="{{ value }}" {% if user.campus == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Coordinator Info -->
+        <div id="role-info-COORDINATOR" class="role-info-block" {% if user.role == 'COORDINATOR' %}style="display:block;"{% else %}style="display:none;"{% endif %}>
+            <div class="user-details-section">
+                <div class="user-details-category">College Coordinator Info</div>
+                <div class="user-details-row cols-2">
+                    <div>
+                        <div class="user-details-label">College</div>
+                        <select name="college" class="user-details-value">
+                            <option value="">Select College</option>
+                            {% for college in colleges %}
+                                <option value="{{ college.id }}" {% if user.college and user.college.id == college.id %}selected{% endif %}>{{ college.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <div class="user-details-label">Campus</div>
+                        <select name="campus" class="user-details-value">
+                            <option value="">Select Campus</option>
+                            {% for value, label in campus_choices %}
+                                <option value="{{ value }}" {% if user.campus == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="form-actions">
             <a href="{% url 'manage_user' %}" class="back btn">Back</a>
             <button type="submit" class="save btn">Save Changes</button>
         </div>
+
     </div>
 </form>
+
+<!-- SVG Sprite Section -->
+<svg style="display:none;">
+
+    <!-- Upload Icon -->
+    <symbol id="icon-upload" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+        <path d="M12,11L8,15H16L12,11Z" />
+    </symbol>
+
+</svg>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var roleSelect = document.querySelector('select[name="role"]');
+        var roleBlocks = {
+            'IMPLEMENTER': document.getElementById('role-info-IMPLEMENTER'),
+            'FACULTY': document.getElementById('role-info-FACULTY'),
+            'CLIENT': document.getElementById('role-info-CLIENT'),
+            'DEAN': document.getElementById('role-info-DEAN'),
+            'PROGRAM_HEAD': document.getElementById('role-info-PROGRAM_HEAD'),
+        };
+        function updateRoleBlocks() {
+            var selected = roleSelect.value;
+            Object.keys(roleBlocks).forEach(function(role) {
+                if (role === selected) {
+                    roleBlocks[role].style.display = 'block';
+                } else {
+                    roleBlocks[role].style.display = 'none';
+                }
+            });
+        }
+        roleSelect.addEventListener('change', updateRoleBlocks);
+        updateRoleBlocks();
+    });
+
+    // File Input Change Handler
+    document.getElementById('id_valid_id').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            document.getElementById('file-name').textContent = file.name;
+            document.getElementById('file-preview').style.display = 'block';
+            document.getElementById('file-error').style.display = 'none';
+        } else {
+            document.getElementById('file-preview').style.display = 'none';
+        }
+    });
+
+    // Image Preview
+    document.getElementById('id_valid_id').addEventListener('change', function(e) {
+        var file = e.target.files[0];
+        var previewImg = document.getElementById('preview-img');
+        var previewLink = document.getElementById('preview-link');
+        var fileNameSpan = document.getElementById('file-name');
+        if (file) {
+            var reader = new FileReader();
+            reader.onload = function(evt) {
+                previewImg.src = evt.target.result;
+                previewLink.href = evt.target.result;
+                previewLink.style.opacity = '0.5';
+                previewLink.style.pointerEvents = 'none';
+                previewLink.style.cursor = 'not-allowed';
+            };
+            reader.readAsDataURL(file);
+            fileNameSpan.textContent = file.name;
+        } else {
+            // Reset to original
+            previewImg.src = "{{ user.valid_id.url }}";
+            previewLink.href = "{{ user.valid_id.url }}";
+            fileNameSpan.textContent = '';
+        }
+    });
+</script>
 
 </body>
 </html>

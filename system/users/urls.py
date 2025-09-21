@@ -2,7 +2,7 @@ from django.urls import path
 from .views import login_view, logout_view, register_view, quick_login, role_redirect, home, dashboard, forgot_password_view
 from .views import registration_client_view, registration_faculty_view, registration_implementer_view, client_verify_view, faculty_verify_view, implementer_verify_view, thank_you_view
 from .views import not_authenticated_view, no_permission_view, not_confirmed_view
-from .views import manage_user, add_user, user_details_view, edit_user, check_email_view
+from .views import manage_user, add_user, user_details_view, edit_user, check_email_view, verify_user, unverify_user, delete_user
 
 urlpatterns = [
 
@@ -35,7 +35,9 @@ urlpatterns = [
     path('users/details/<int:id>/', user_details_view, name='user_details'),    # User Details
     path('users/add/', add_user, name='add_user'),                              # Add User
     path('users/edit/<int:id>/', edit_user, name='edit_user'),                  # Edit User
-    # path('users/delete/<int:user_id>/', manage_user, name='delete_user'),       # Delete User
+    path('users/delete/<int:id>/', delete_user, name='delete_user'),            # Delete User
+    path('users/verify/<int:id>/', verify_user, name='verify_user'),            # Verify User
+    path('users/unverify/<int:id>/', unverify_user, name='unverify_user'),      # Unverify User
 
     path('', role_redirect, name='role_redirect'),              # Default Redirector
 

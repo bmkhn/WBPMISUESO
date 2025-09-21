@@ -74,12 +74,13 @@
         padding: 8px 14px;
         border: 1px solid #e5e7eb;
         margin-bottom: 1rem;
+        min-height: 21px;
     }
 
     .user-details-picture {
         width: 80px;
         height: 80px;
-        border: 2px solid #e4c600;
+        border: 2px solid #000;
         object-fit: cover;
         margin-left: 12px;
     }
@@ -133,7 +134,16 @@
 
 <body>
     <div class="user-details-container">
-        <div class="user-details-title">User Details</div>
+        <div class="user-details-title" style="display:flex;justify-content:space-between;align-items:center;">
+            <div>User Details</div>
+            <div>
+                {% if user.is_confirmed %}
+                    <span style="color:#1f7c57;font-weight:600;font-size:1em;background:#eafbe7;padding:6px 16px;border-radius:8px;">Verified</span>
+                {% else %}
+                    <span style="color:#E53E3E;font-weight:600;font-size:1em;background:#fdeaea;padding:6px 16px;border-radius:8px;">Unverified</span>
+                {% endif %}
+            </div>
+        </div>
         <div class="user-details-section">
             <div class="user-details-category">User Profile</div>
             <div class="user-details-row cols-4">
@@ -169,12 +179,15 @@
                 </div>
             </div>
             {% if user.valid_id %}
-            <div style="margin-top: 1rem;">
+            <div>
                 <div class="user-details-label">Valid ID ({{ user.get_preferred_id_display }})</div>
-                <img src="{{ user.valid_id.url }}" alt="Valid ID" class="user-details-picture">
+                <div style="display:flex;align-items:center;">
+                    <img src="{{ user.valid_id.url }}" alt="Valid ID" class="user-details-picture">
+                    <a href="{{ user.valid_id.url }}" style="font-size:18px;color:#00538E;margin-left:28px;vertical-align:middle;text-decoration:none;">View ID</a>
+                </div>
             </div>
             {% else %}
-            <div style="margin-top: 1rem;">
+            <div>
                 <div class="user-details-label">Valid ID</div>
                 <div class="user-details-value">No valid ID uploaded.</div>
             </div>    
@@ -220,7 +233,7 @@
                 </div>
                 <div>
                     <div class="user-details-label">Campus</div>
-                    <div class="user-details-value">{{ user.campus }}</div>
+                    <div class="user-details-value">{{ user.get_campus_display }}</div>
                 </div>
             </div>
             <div class="user-details-row cols-2">
@@ -258,7 +271,7 @@
                 </div>
                 <div>
                     <div class="user-details-label">Campus</div>
-                    <div class="user-details-value">{{ user.campus }}</div>
+                    <div class="user-details-value">{{ user.get_campus_display }}</div>
                 </div>
             </div>
         </div>
@@ -272,17 +285,34 @@
                 </div>
                 <div>
                     <div class="user-details-label">Campus</div>
-                    <div class="user-details-value">{{ user.campus }}</div>
+                    <div class="user-details-value">{{ user.get_campus_display }}</div>
                 </div>
             </div>
         </div>
+        {% elif user.role == 'COORDINATOR' %}
+        <div class="user-details-section">
+            <div class="user-details-category">College Coordinator Info</div>
+            <div class="user-details-row cols-2">
+                <div>
+                    <div class="user-details-label">College</div>
+                    <div class="user-details-value">{{ user.college }}</div>
+                </div>
+                <div>
+                    <div class="user-details-label">Campus</div>
+                    <div class="user-details-value">{{ user.get_campus_display }}</div>
+                </div>
+            </div>
         {% endif %}
+
+
         <div class="form-actions">
             <a href="{% url 'manage_user' %}" class="back btn">Back</a>
             <a href="{% url 'edit_user' user.id %}" class="edit btn">Edit</a>
         </div>
     </div>
     
+
+
 </body>
 </html>
 

@@ -128,7 +128,6 @@
         border-collapse: collapse;
         background: #FEFCFC;
         border: 1px solid rgba(0,0,0,0.18);
-        overflow: hidden;
     }
 
     .user-table th {
@@ -219,12 +218,12 @@
 		min-width: 340px;
 	}
 
-	.filter-grid {
-		display: grid;
-		grid-template-columns: repeat(3, 1fr);
+    .filter-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
         grid-template-rows: repeat(2, 1fr);
-		grid-gap: 24px;
-	}
+        grid-gap: 24px;
+    }
 
 	.filter-dropdown label {
 		font-weight: 500;
@@ -235,7 +234,7 @@
 
 	.filter-dropdown select,
 	.filter-dropdown input[type="date"] {
-		width: 100%;
+		width: 150px;
 		margin-top: 6px;
 		border: 1px solid #e5e7eb;
 		border-radius: 6px;
@@ -359,6 +358,48 @@
 	}
 </style>
 
+<!-- Settings Dropdown Styles -->
+<style>
+    .settings-dropdown-container {
+        position: relative;
+        display: inline-block;
+        overflow: visible;
+    }
+
+    .settings-dropdown-toggle {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+    }
+
+    .settings-dropdown-menu {
+        display: none;
+        position: absolute;
+        right: 0;
+        top: 28px;
+        min-width: 160px;
+        background: #fff;
+        border: 1px solid #E5E7EB;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        z-index: 10;
+    }
+
+    .settings-dropdown-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 18px;
+        text-decoration: none;
+        font-size: 1rem;
+    }
+
+    .settings-dropdown-item:hover {
+        background: #F3F4F6;
+    }
+</style>
+
 </head>
 <body>
 	<div class="main-container">
@@ -383,51 +424,57 @@
                 </button>
                 <div id="filterDropdown" class="filter-dropdown">
                     <div class="filter-grid">
-                        <!-- Top Left - Sort By -->
+                        <!-- Row 1 -->
                         <label>Sort By
                             <select name="sort_by">
-                                <option value="file" {% if sort_by == 'file' %}selected{% endif %}>File Name</option>
-                                <option value="file_type" {% if sort_by == 'file_type' %}selected{% endif %}>File Type</option>
-                                <option value="size" {% if sort_by == 'size' %}selected{% endif %}>Size</option>
-                                <option value="uploaded_at" {% if sort_by == 'uploaded_at' %}selected{% endif %}>Date</option>
+                                <option value="name" {% if sort_by == 'name' %}selected{% endif %}>Name</option>
+                                <option value="email" {% if sort_by == 'email' %}selected{% endif %}>Email</option>
+                                <option value="date" {% if sort_by == 'date' %}selected{% endif %}>Date</option>
+                                <option value="role" {% if sort_by == 'role' %}selected{% endif %}>Role</option>
                             </select>
                         </label>
-                        <!-- Top Middle - Order By -->
                         <label>Order By
                             <select name="order">
                                 <option value="desc" {% if order == 'desc' %}selected{% endif %}>Descending</option>
                                 <option value="asc" {% if order == 'asc' %}selected{% endif %}>Ascending</option>
                             </select>
                         </label>
-                        <!-- Top Right - Status Filter -->
-                        <label>Status
-                            <select name="status">
-                                <option value="">All Status</option>
-                                <option value="published" {% if status == 'published' %}selected{% endif %}>Published</option>
-                                <option value="archived" {% if status == 'archived' %}selected{% endif %}>Archived</option>
-                            </select>
-                        </label>
-                        <!-- Bottom Left - Available for Public Filter -->
-                        <label>Available for Public
-                            <select name="public">
-                                <option value="">All</option>
-                                <option value="true" {% if public == 'true' %}selected{% endif %}>Yes</option>
-                                <option value="false" {% if public == 'false' %}selected{% endif %}>No</option>
-                            </select>
-                        </label>
-                        <!-- Bottom Middle - File Type Filter -->
-                        <label>File Type
-                            <select name="file_type">
-                                <option value="">All Types</option>
-                                {% for ext in file_types %}
-                                <option value="{{ ext }}" {% if file_type == ext %}selected{% endif %}>{{ ext|upper }}</option>
+                        <label>Role
+                            <select name="role">
+                                <option value="">All Roles</option>
+                                {% for r in roles %}
+                                <option value="{{ r.0 }}" {% if role == r.0 %}selected{% endif %}>{{ r.1 }}</option>
                                 {% endfor %}
                             </select>
                         </label>
-                        <!-- Bottom Right - Date Filter -->
+                        <label>Verified
+                            <select name="verified">
+                                <option value="">All</option>
+                                <option value="true" {% if verified == 'true' %}selected{% endif %}>Verified</option>
+                                <option value="false" {% if verified == 'false' %}selected{% endif %}>Unverified</option>
+                            </select>
+                        </label>
+                        <!-- Row 2 -->
+                        <label>College
+                            <select name="college">
+                                <option value="">All Colleges</option>
+                                {% for c in colleges %}
+                                <option value="{{ c.id }}" {% if college == c.id|stringformat:'s' %}selected{% endif %}>{{ c.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                        <label>Campus
+                            <select name="campus">
+                                <option value="">All Campuses</option>
+                                {% for c in campuses %}
+                                <option value="{{ c.0 }}" {% if campus == c.0 %}selected{% endif %}>{{ c.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
                         <label>Date
                             <input type="date" name="date" value="{{ date|default:'' }}" style="width: 87%"/>
                         </label>
+                        <div></div>
                     </div>
                     <div class="filter-actions">
                         <button type="submit" class="filter-apply">Apply</button>
@@ -441,11 +488,11 @@
         <table class="user-table">
             <thead>
                 <tr>
-                    <th>User Name</th>
+                    <th>Name</th>
                     <th>Email</th>
                     <th>Joined</th>
                     <th>Role</th>
-                    <th>Verified</th>
+                    <th style="text-align:center">Verified</th>
                     <th class="settings-col">Settings</th>
                 </tr>
             </thead>
@@ -454,7 +501,7 @@
                 <tr>
                     <td>
                         <a href="{% url 'user_details' user.id %}" class="name-link">
-                            {{ user.get_full_name|default:user.username }}
+                            {{ user.last_name }}, {{ user.given_name }}{% if user.middle_initial %} {{ user.middle_initial }}. {{ user.suffix|default_if_none:'' }}{% endif %}
                         </a>
                     </td>
                     <td>{{ user.email }}</td>
@@ -469,7 +516,33 @@
                             <span class="crossmark-icon">&#10007;</span>
                         {% endif %}
                     </td>
-                    <td class="settings-col"><span class="settings-icon"><svg class="settings-icon"><use href="#settings-icon"/></svg></span></td>
+                    <td class="settings-col">
+                        <div class="settings-dropdown-container" style="position:relative;">
+                            <button class="settings-dropdown-toggle" style="background:none;border:none;padding:0;cursor:pointer;">
+                                <svg width="20" height="20" class="settings-icon"><use href="#settings-icon"/></svg>
+                            </button>
+                            <div class="settings-dropdown-menu">
+                                <a href="{% url 'edit_user' user.id %}" class="settings-dropdown-item" style="color:#0A6C44;">
+                                    <svg width="18" height="19" style="vertical-align:middle;"><use href="#edit-icon" /></svg> Edit
+                                </a>
+                                <a href="{% url 'user_details' user.id %}" class="settings-dropdown-item" style="color:#00538E;">
+                                    <svg width="18" height="19" style="vertical-align:middle;"><use href="#info-icon" /></svg> View Details
+                                </a>
+                                {% if user.is_confirmed %}
+                                    <a href="{% url 'unverify_user' user.id %}" class="settings-dropdown-item" style="color:#E53E3E;">
+                                        <span class="crossmark-icon" style="vertical-align:middle;">&#10007;</span> Unverify
+                                    </a>
+                                {% else %}
+                                    <a href="{% url 'verify_user' user.id %}" class="settings-dropdown-item" style="color:#245F3E;">
+                                        <span class="checkmark-icon" style="vertical-align:middle;">&#10003;</span> Verify
+                                    </a>
+                                {% endif %}
+                                <a href="{% url 'delete_user' user.id %}" class="settings-dropdown-item" style="color:#E53E3E;">
+                                    <svg width="18" height="22" style="vertical-align:middle;"><use href="#delete-icon" /></svg> Delete
+                                </a>
+                            </div>
+                        </div>
+                    </td>
                 </tr>
                 {% empty %}
                 <tr><td colspan="5" style="text-align:center;">No users found.</td></tr>
@@ -511,6 +584,12 @@
 <!-- SVG Sprite Section -->
 <svg style="display:none;">
 
+    <!-- Delete -->
+    <symbol id="delete-icon" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <polyline points="3,6 5,6 21,6"></polyline>
+        <path d="m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
+    </symbol>
+
     <!-- Settings -->
     <symbol id="settings-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M2 4C1.45 4 0.979167 3.80417 0.5875 3.4125C0.195833 3.02083 0 2.55 0 2C0 1.45 0.195833 0.979167 0.5875 0.5875C0.979167 0.195833 1.45 0 2 0C2.55 0 3.02083 0.195833 3.4125 0.5875C3.80417 0.979167 4 1.45 4 2C4 2.55 3.80417 3.02083 3.4125 3.4125C3.02083 3.80417 2.55 4 2 4ZM8 4C7.45 4 6.97917 3.80417 6.5875 3.4125C6.19583 3.02083 6 2.55 6 2C6 1.45 6.19583 0.979167 6.5875 0.5875C6.97917 0.195833 7.45 0 8 0C8.55 0 9.02083 0.195833 9.4125 0.5875C9.80417 0.979167 10 1.45 10 2C10 2.55 9.80417 3.02083 9.4125 3.4125C9.02083 3.80417 8.55 4 8 4ZM14 4C13.45 4 12.9792 3.80417 12.5875 3.4125C12.1958 3.02083 12 2.55 12 2C12 1.45 12.1958 0.979167 12.5875 0.5875C12.9792 0.195833 13.45 0 14 0C14.55 0 15.0208 0.195833 15.4125 0.5875C15.8042 0.979167 16 1.45 16 2C16 2.55 15.8042 3.02083 15.4125 3.4125C15.0208 3.80417 14.55 4 14 4Z" fill="#1D1B20"/>
@@ -536,9 +615,43 @@
 		<path opacity="0.9" d="M21.5399 1.92871H1.37988L9.44388 11.4644V18.0567L13.4759 20.0727V11.4644L21.5399 1.92871Z" stroke="#1E1E1E" stroke-width="2.016" stroke-linecap="round" stroke-linejoin="round"/>
 	</symbol>
 
+    <!-- Info Icon -->
+    <symbol id="info-icon" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M11 9V17M11 5V7M11 21C16.523 21 21 16.523 21 11C21 5.477 16.523 1 11 1C5.477 1 1 5.477 1 11C1 16.523 5.477 21 11 21Z" stroke="#00538E" stroke-width="2"/>
+    </symbol>
+
+	<!-- Edit -->
+	<symbol id="edit-icon" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+		<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+		<path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+	</symbol>
+
 </svg>
 
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.settings-dropdown-toggle').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                // Hide all other dropdowns
+                document.querySelectorAll('.settings-dropdown-menu').forEach(function(menu) {
+                    menu.style.display = 'none';
+                });
+                // Show this dropdown
+                var menu = btn.parentElement.querySelector('.settings-dropdown-menu');
+                if (menu) {
+                    menu.style.display = 'block';
+                }
+            });
+        });
+        // Hide dropdown when clicking outside
+        document.addEventListener('click', function() {
+            document.querySelectorAll('.settings-dropdown-menu').forEach(function(menu) {
+                menu.style.display = 'none';
+            });
+        });
+    });
+
     // Filter dropdown logic
     const filterBtn = document.getElementById('filterBtn');
     const filterDropdown = document.getElementById('filterDropdown');

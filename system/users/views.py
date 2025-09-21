@@ -297,8 +297,68 @@ from django.shortcuts import get_object_or_404
 @login_required
 @role_required(allowed_roles=["VP", "DIRECTOR"])
 def manage_user(request):
+    query_params = {}
     User = get_user_model()
     users = User.objects.all()
+
+    search = request.GET.get('search', '').strip()
+    if search:
+        # Search by full name (given_name, middle_initial, last_name, suffix)
+        from django.db.models import Q
+        users = users.filter(
+            Q(given_name__icontains=search) |
+            Q(last_name__icontains=search) |
+            Q(middle_initial__icontains=search) |
+            Q(suffix__icontains=search) |
+            Q(email__icontains=search)
+        )
+        query_params['search'] = search
+
+    # Filters
+    sort_by = request.GET.get('sort_by', 'date')
+    order = request.GET.get('order', 'desc')
+    role = request.GET.get('role', '')
+    verified = request.GET.get('verified', '')
+    date = request.GET.get('date', '')
+    college = request.GET.get('college', '')
+    campus = request.GET.get('campus', '')
+
+    if sort_by:
+        query_params['sort_by'] = sort_by
+    if order:
+        query_params['order'] = order
+    if role:
+        users = users.filter(role=role)
+        query_params['role'] = role
+    if verified == 'true':
+        users = users.filter(is_confirmed=True)
+        query_params['verified'] = 'true'
+    elif verified == 'false':
+        users = users.filter(is_confirmed=False)
+        query_params['verified'] = 'false'
+    if date:
+        users = users.filter(date_joined__date=date)
+        query_params['date'] = date
+    if college:
+        users = users.filter(college_id=college)
+        query_params['college'] = college
+    if campus:
+        users = users.filter(campus=campus)
+        query_params['campus'] = campus
+
+    # Sorting
+    if sort_by == 'name':
+        sort_field = ['last_name', 'given_name', 'middle_initial', 'suffix']
+    else:
+        sort_map = {
+            'email': 'email',
+            'date': 'date_joined',
+            'role': 'role',
+        }
+        sort_field = [sort_map.get(sort_by, 'last_name')]
+    if order == 'desc':
+        sort_field = ['-' + f for f in sort_field]
+    users = users.order_by(*sort_field)
 
     paginator = Paginator(users, 10)
     page_number = request.GET.get('page', 1)
@@ -315,16 +375,32 @@ def manage_user(request):
     else:
         page_range = range(current - 2, current + 3)
 
+    # Roles for dropdown
+    roles = list(User.Role.choices)
+    colleges = College.objects.all()
+    campuses = list(User.Campus.choices)
+
+    # Build querystring for pagination/filter links
+    from urllib.parse import urlencode
+    querystring = urlencode(query_params)
+
     return render(request, 'users/manage_user.html', {
-        'users': users, 
         'users': page_obj.object_list,
-        'page_obj': page_obj, 
+        'page_obj': page_obj,
         'paginator': paginator,
-        'page_range': page_range
-        # 'querystring': querystring,
-        # 'search': search,
-        # 'sort_by': sort_by,
-        # 'order': order,
+        'page_range': page_range,
+        'sort_by': sort_by,
+        'order': order,
+        'role': role,
+        'verified': verified,
+        'date': date,
+        'college': college,
+        'campus': campus,
+        'roles': roles,
+        'colleges': colleges,
+        'campuses': campuses,
+        'search': search,
+        'querystring': querystring,
     })
 
 
@@ -341,46 +417,68 @@ def user_details_view(request, id):
 def add_user(request):
     User = get_user_model()
     error = None
+    roles = list(User.Role.choices)
+    colleges = College.objects.all()
+    campus_choices = User.Campus.choices
+
     if request.method == 'POST':
         data = request.POST
         files = request.FILES
-        try:
-            user = User()
-            user.last_name = data.get('last_name', '')
-            user.given_name = data.get('given_name', '')
-            user.middle_initial = data.get('middle_initial', '')
-            user.suffix = data.get('suffix', '')
-            user.sex = data.get('sex', '')
-            user.email = data.get('email', '')
-            user.contact_no = data.get('contact_no', '')
-            user.role = data.get('role', '')
-            user.username = data.get('email', '')
-            if files.get('profile_picture'):
-                user.profile_picture = files['profile_picture']
-            # Role-specific fields
-            if user.role == 'IMPLEMENTER':
-                user.degree = data.get('degree', '')
-                user.expertise = data.get('expertise', '')
-            elif user.role == 'FACULTY':
-                user.college = data.get('college', '')
-                user.campus = data.get('campus', '')
-                user.degree = data.get('degree', '')
-                user.expertise = data.get('expertise', '')
-            elif user.role == 'CLIENT':
-                user.company = data.get('company', '')
-                user.industry = data.get('industry', '')
-            elif user.role == 'DEAN' or user.role == 'PROGRAM_HEAD':
-                user.college = data.get('college', '')
-                user.campus = data.get('campus', '')
-            # Set password
-            password = data.get('password', '')
-            if password:
+        required_fields = ['last_name', 'given_name', 'email', 'role', 'sex', 'password']
+        missing = [f for f in required_fields if not data.get(f)]
+        if missing:
+            error = f"Missing required fields: {', '.join(missing)}"
+        elif User.objects.filter(email=data.get('email')).exists():
+            error = "Email already exists."
+        else:
+            try:
+                user = User()
+                user.last_name = data.get('last_name', '')
+                user.given_name = data.get('given_name', '')
+                user.middle_initial = data.get('middle_initial', '')
+                user.suffix = data.get('suffix', '')
+                user.sex = data.get('sex', '')
+                user.email = data.get('email', '')
+                user.contact_no = data.get('contact_no', '')
+                user.role = data.get('role', '')
+                user.username = data.get('email', '')
+
+                password = data.get('password', '')
                 user.set_password(password)
-            user.save()
-            return redirect('manage_user')
-        except Exception as e:
-            error = str(e)
-    return render(request, 'users/add_user.html', {'error': error})
+
+                if files.get('valid_id'):
+                    user.valid_id = files['valid_id']
+                
+                user.is_confirmed = True
+
+                # Role-specific fields
+                if user.role == 'IMPLEMENTER':
+                    user.degree = data.get('degree', '')
+                    user.expertise = data.get('expertise', '')
+                elif user.role == 'FACULTY':
+                    college_id = data.get('college')
+                    user.college = College.objects.get(id=college_id) if college_id else None
+                    user.campus = data.get('campus', '')
+                    user.degree = data.get('degree', '')
+                    user.expertise = data.get('expertise', '')
+                elif user.role == 'CLIENT':
+                    user.company = data.get('company', '')
+                    user.industry = data.get('industry', '')
+                elif user.role == 'DEAN' or user.role == 'PROGRAM_HEAD' or user.role == 'COORDINATOR':
+                    college_id = data.get('college')
+                    user.college = College.objects.get(id=college_id) if college_id else None
+                    user.campus = data.get('campus', '')
+
+                user.save()
+                return redirect('manage_user')
+            except Exception as e:
+                error = str(e)
+    return render(request, 'users/add_user.html', {
+        'error': error,
+        'roles': roles,
+        'colleges': colleges,
+        'campus_choices': campus_choices,
+    })
 
 # Edit user view
 @login_required
@@ -402,14 +500,15 @@ def edit_user(request, id):
             user.contact_no = data.get('contact_no', user.contact_no)
             user.role = data.get('role', user.role)
             user.username = data.get('email', user.username)
-            if files.get('profile_picture'):
-                user.profile_picture = files['profile_picture']
+            if files.get('valid_id'):
+                user.valid_id = files['valid_id']
             # Role-specific fields
             if user.role == 'IMPLEMENTER':
                 user.degree = data.get('degree', user.degree)
                 user.expertise = data.get('expertise', user.expertise)
             elif user.role == 'FACULTY':
-                user.college = data.get('college', user.college)
+                college_id = data.get('college')
+                user.college = College.objects.get(id=college_id) if college_id else None
                 user.campus = data.get('campus', user.campus)
                 user.degree = data.get('degree', user.degree)
                 user.expertise = data.get('expertise', user.expertise)
@@ -417,7 +516,12 @@ def edit_user(request, id):
                 user.company = data.get('company', user.company)
                 user.industry = data.get('industry', user.industry)
             elif user.role == 'DEAN' or user.role == 'PROGRAM_HEAD':
-                user.college = data.get('college', user.college)
+                college_id = data.get('college')
+                user.college = College.objects.get(id=college_id) if college_id else None
+                user.campus = data.get('campus', user.campus)
+            elif user.role == 'COORDINATOR':
+                college_id = data.get('college')
+                user.college = College.objects.get(id=college_id) if college_id else None
                 user.campus = data.get('campus', user.campus)
             # Password update (optional)
             password = data.get('password', '')
@@ -427,8 +531,48 @@ def edit_user(request, id):
             return redirect('manage_user')
         except Exception as e:
             error = str(e)
-    return render(request, 'users/edit_user.html', {'user': user, 'error': error})
+    colleges = College.objects.all()
+    campus_choices = User.Campus.choices
+    return render(request, 'users/edit_user.html', {
+        'user': user,
+        'error': error,
+        'colleges': colleges,
+        'campus_choices': campus_choices,
+    })
 
+
+# Verify/Unverify user views
+from django.http import HttpResponseRedirect
+
+@login_required
+@role_required(allowed_roles=["VP", "DIRECTOR"])
+def verify_user(request, id):
+    User = get_user_model()
+    user = get_object_or_404(User, id=id)
+    user.is_confirmed = True
+    user.save()
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+
+@login_required
+@role_required(allowed_roles=["VP", "DIRECTOR"])
+def unverify_user(request, id):
+    User = get_user_model()
+    user = get_object_or_404(User, id=id)
+    user.is_confirmed = False
+    user.save()
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+
+
+# Delete user view with confirmation
+@login_required
+@role_required(allowed_roles=["VP", "DIRECTOR"])
+def delete_user(request, id):
+    User = get_user_model()
+    user = get_object_or_404(User, id=id)
+    if request.method == "POST":
+        user.delete()
+        return redirect('manage_user')
+    return render(request, 'users/confirm_delete_user.html', {'user': user})
 
 ####################################################################################################
 
