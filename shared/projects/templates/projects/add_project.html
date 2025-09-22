@@ -1,0 +1,715 @@
+{% extends "base_internal.html" %}
+{% block content %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Add Project</title>
+
+<link href="https://fonts.googleapis.com/css?family=Inter:400,500,700&display=swap" rel="stylesheet">
+
+<style>
+    body {
+        background: #F9F9F9;
+        margin: 0;
+        font-family: 'Inter', Arial, sans-serif;
+    }
+
+    input, select, textarea {
+        font-family: 'Inter', Arial, sans-serif;
+        font-weight: 400;
+    }
+
+    .user-details-container {
+        margin: 60px;
+        display: flex;
+        flex-direction: column;
+        gap: 32px;
+    }
+
+    .user-details-title {
+        font-size: 32px;
+        font-weight: 400;
+        color: #000;
+        font-family: 'Inter', Arial, sans-serif;
+    }
+
+    .user-details-section {
+        padding-bottom: 16px;
+        border-bottom: 1px solid #E5E7EB;
+    }
+
+    .user-details-grid {
+        display: grid;
+        gap: 20px;
+    }
+
+    .user-details-row {
+        display: grid;
+        gap: 20px;
+    }
+
+    .user-details-row.cols-4 {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .user-details-row.cols-3 {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .user-details-row.cols-2 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .user-details-label {
+        font-weight: 500;
+        color: #374151;
+        font-size: 1.08rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .user-details-value {
+        font-weight: 500;
+        color: #374151;
+        font-size: 1.08rem;
+        word-break: break-word;
+        background: #f7f7f7;
+        border-radius: 0.5rem;
+        padding: 8px 14px;
+        border: 1px solid #e5e7eb;
+        margin-bottom: 1rem;
+        min-height: 21px;
+
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    select.user-details-value {
+		appearance: none;
+		-webkit-appearance: none;
+		-moz-appearance: none;
+		padding-right: 2rem;
+		background: url("data:image/svg+xml;utf8,<svg width='16' height='11' viewBox='0 0 16 11' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M7.99976 7.19417L13.9025 1.29147C14.0125 1.17758 14.144 1.08674 14.2895 1.02424C14.435 0.961746 14.5915 0.92885 14.7498 0.927474C14.9082 0.926098 15.0652 0.95627 15.2117 1.01623C15.3583 1.07619 15.4914 1.16473 15.6034 1.27669C15.7153 1.38866 15.8039 1.5218 15.8638 1.66835C15.9238 1.8149 15.954 1.97192 15.9526 2.13026C15.9512 2.28859 15.9183 2.44506 15.8558 2.59055C15.7933 2.73604 15.7025 2.86762 15.5886 2.97762L8.84283 9.72339C8.61921 9.94694 8.31596 10.0725 7.99976 10.0725C7.68356 10.0725 7.38031 9.94694 7.15669 9.72339L0.41092 2.97762C0.297028 2.86762 0.206183 2.73604 0.143687 2.59055C0.0811915 2.44506 0.0482959 2.28859 0.04692 2.13026C0.0455441 1.97192 0.0757155 1.8149 0.135674 1.66835C0.195632 1.5218 0.284176 1.38866 0.39614 1.27669C0.508103 1.16473 0.641244 1.07619 0.787794 1.01623C0.934343 0.95627 1.09137 0.926098 1.2497 0.927474C1.40804 0.92885 1.56451 0.961746 1.71 1.02424C1.85548 1.08674 1.98706 1.17758 2.09706 1.29147L7.99976 7.19417Z' fill='%23374151'/></svg>")
+        		no-repeat right 0.75rem center;
+  		background-size: 13px 8px;
+    }
+
+    .user-details-picture {
+        width: 80px;
+        height: 80px;
+        border: 2px solid #000;
+        object-fit: cover;
+        margin-left: 12px;
+    }
+
+    .user-details-category {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #000;
+        margin-bottom: 1rem;
+    }
+
+	.form-actions {
+		display: flex;
+		gap: 1rem;
+		justify-content: flex-end;
+	}
+
+    .btn {
+		padding: 0.75rem 1.5rem;
+		border: none;
+		border-radius: 8px;
+		font-size: 1rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		font-family: 'Inter', sans-serif;
+        text-decoration: none;
+    }
+
+    .back {
+		background: #6B7280;
+		color: white;
+    }
+
+    .back:hover {
+		background: #4B5563;
+		transform: translateY(-1px);
+    }
+
+    .save {
+		background: #0A6C44;
+		color: white;
+    }
+
+    .save:hover {
+		background: #1f7c57;
+		transform: translateY(-1px);
+    }
+</style>
+
+
+<style>
+    .form-group {
+		display: flex;
+		align-items: flex-start;
+		gap: 1rem;
+	}
+
+	.form-label {
+		font-weight: 600;
+		color: #374151;
+		padding-top: 0.75rem;
+		font-size: 0.95rem;
+	}
+
+	.upload-area {
+		flex: 1;
+		border: 2px dashed #E5E7EB;
+		border-radius: 8px;
+		padding: 2rem;
+		text-align: center;
+		background: #F9F9F9;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+    .upload-area:hover {
+        border-color: #0A6C44;
+        background: #F0FDF4;
+    }
+
+    .upload-icon {
+        width: 24px;
+        height: 24px;
+        color: #4B5563;
+    }
+
+    .upload-text {
+        color: #4B5563;
+        font-size: 0.95rem;
+    }
+
+    .file-preview {
+        margin-top: 1rem;
+        padding: 1rem;
+        background: #F0FDF4;
+        border: 1px solid #BBF7D0;
+        border-radius: 8px;
+        display: none;
+    }
+
+    .file-info {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #1f7c57;
+        font-size: 0.95rem;
+    }
+</style>
+
+
+<style>
+    .college-tag {
+        background: #F8F8F8;
+        border: 1px solid #000;
+        border-radius: 5px;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.35rem 0.85rem 0.35rem 0.5rem;
+        font-size: 0.95rem;
+        font-family: 'Inter', Arial, sans-serif;
+        vertical-align: middle;
+    }
+    
+    .college-tag .remove-x {
+        color: #E53E3E;
+        font-weight: bold;
+        font-size: 1.1rem;
+        margin-left: 3px;
+        margin-right: 1px;
+        cursor: pointer;
+        border: none;
+        background: none;
+        padding: 0;
+    }
+
+    .add-college-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: #F0F0F0;
+        border: 1px solid rgba(0,0,0,0.16);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: box-shadow 0.2s;
+        font-family: 'Inter', Arial, sans-serif;
+    }
+
+    .add-college-btn:hover {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .college-select-modal {
+        display: none;
+        position: absolute;
+        z-index: 1000;
+        background: white;
+        border: 1px solid #E5E7EB;
+        border-radius: 8px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+        padding: 1rem;
+    }
+
+    .college-row {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        position: relative;
+        gap: 10px;
+        margin-bottom: 5px;
+        margin-top: 5px;
+    }
+
+    #college-select-dropdown {
+        font-family: 'Inter', Arial, sans-serif;
+        font-size: 13px;
+        padding: 8px 16px;
+        border-radius: 6px;
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        background: white url('data:image/svg+xml;utf8,<svg fill="none" height="16" viewBox="0 0 16 16" width="16" xmlns="http://www.w3.org/2000/svg"><path d="M4 6L8 10L12 6" stroke="%23374151" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>') no-repeat right 18px center/16px 16px;
+        padding-right: 5px !important;
+    }
+</style>
+
+</head>
+
+<body>
+<form method="post" enctype="multipart/form-data" id="addProjectForm">
+    {% csrf_token %}
+    <div class="user-details-container">
+        <div class="user-details-title" style="display:flex;justify-content:space-between;align-items:center;">
+            <div>Add Project</div>
+        </div>
+        <div class="user-details-section">
+            <div class="user-details-category">Project Profile</div>
+            <div class="user-details-row cols-1">
+                <div>
+                    <div class="user-details-label">Title</div>
+                    <input type="text" name="title" class="user-details-value" required>
+                </div>
+            </div>
+
+            <div class="user-details-row cols-2">
+                <div>
+                    <div class="user-details-label">Project Leader</div>
+                    <div id="project-leader-tag-row" class="college-row"></div>
+                    <select id="project-leader-options-template" style="display:none;">
+                        <option value="">Select Leader</option>
+                        {% for user in users %}
+                        <option value="{{ user.id }}">{{ user.get_full_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <div class="user-details-label">Provider/s (Members)</div>
+                    <div id="providers-tag-row" class="college-row"></div>
+                    <select id="providers-options-template" style="display:none;" multiple>
+                        <option value="">Select Provider</option>
+                        {% for user in users %}
+                        <option value="{{ user.id }}">{{ user.get_full_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="user-details-row cols-1">
+                <div>
+                    <div class="user-details-label">Agenda</div>
+                    <select name="agenda" class="user-details-value">
+                        <option value="" selected disabled>Select Agenda</option>
+                        {% for agenda in agendas %}
+                        <option value="{{ agenda }}">{{ agenda }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="user-details-row cols-2">
+                <div>
+                    <div class="user-details-label">Campus</div>
+                    <select name="campus" class="user-details-value">
+                        <option value="" selected disabled>Select Campus</option>
+                        {% for value, label in campus_choices %}
+                            <option value="{{ value }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <div class="user-details-label">Project Type</div>
+                    <select name="project_type" class="user-details-value">
+                        <option value="" selected disabled>Select Type</option>
+                        <option value="NEEDS_BASED">Needs Based</option>
+                        <option value="RESEARCH_BASED">Research Based</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="user-details-row cols-1">
+                <div>
+                    <div class="user-details-label">Sustainable Development Goals</div>
+                    <div id="sdgs-tag-row" class="college-row"></div>
+                    <select id="sdgs-options-template" style="display:none;" multiple>
+                        <option value="">Select SDG</option>
+                        {% for sdg in sdgs %}
+                        <option value="{{ sdg.id }}">{{ sdg.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="user-details-section">
+            <div class="user-details-category">Beneficiary</div>
+            <div class="user-details-row cols-2">
+                <div>
+                    <div class="user-details-label">Primary Beneficiary</div>
+                    <input type="text" name="primary_beneficiary" class="user-details-value">
+                </div>
+                <div>
+                    <div class="user-details-label">No. of Estimated Events</div>
+                    <input type="number" name="estimated_events" class="user-details-value" min="0">
+                </div>
+            </div>
+
+            <div class="user-details-row cols-2">
+                <div>
+                    <div class="user-details-label">Primary Location</div>
+                    <input type="text" name="primary_location" class="user-details-value">
+                </div>
+                <div>
+                    <div class="user-details-label">No. of Estimated Trainees</div>
+                    <input type="number" name="estimated_trainees" class="user-details-value" min="0">
+                </div>
+            </div>
+        </div>
+
+
+        <!-- BOTH -->
+        <div id="logistics-both" {% if project.logistics_type == 'BOTH' %}style="display:block;"{% else %}style="display:none;"{% endif %}>
+            <div class="user-details-section">
+                <div class="user-details-category">Logistics</div>
+                <div class="user-details-row cols-1">
+                    <div>
+                        <div class="user-details-label">Type</div>
+                        <select name="logistics_type" class="user-details-value">
+                            <option value="BOTH">Both</option>
+                            <option value="INTERNAL">Internal</option>
+                            <option value="EXTERNAL">External</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="user-details-row cols-2">
+                    <div>
+                        <div class="user-details-label">Internal Budget Assigned</div>
+                        <input type="number" name="internal_budget" class="user-details-value" min="0" step="0.01">
+                    </div>
+                    <div>
+                        <div class="user-details-label">External Budget Assigned</div>
+                        <input type="number" name="external_budget" class="user-details-value" min="0" step="0.01">
+                    </div>
+                </div>
+
+                <div class="user-details-row cols-1">
+                    <div>
+                        <div class="user-details-label">Sponsor Name</div>
+                        <input type="text" name="sponsor_name" class="user-details-value">
+                    </div>
+                </div>
+
+                <div class="user-details-row cols-2">
+                    <div>
+                        <div class="user-details-label">Start Date</div>
+                        <input type="date" name="start_date" class="user-details-value">
+                    </div>
+                    <div>
+                        <div class="user-details-label">Estimated End Date</div>
+                        <input type="date" name="estimated_end_date" class="user-details-value">
+                    </div>
+                </div>
+
+                <div class="user-details-row cols-2">
+                    <div>
+                        <div class="user-details-label">Proposal Document</div>
+                        <input type="file" name="proposal_document" class="user-details-value" accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+                    </div>
+                    <div>
+                        <div class="user-details-label">Additional Documents</div>
+                        <input type="file" name="additional_documents" class="user-details-value" multiple>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Internal -->
+        <div id="logistics-internal" {% if project.logistics_type == 'INTERNAL' %}style="display:block;"{% else %}style="display:none;"{% endif %}>
+            <div class="user-details-section">
+                <div class="user-details-category">Logistics</div>
+                <div class="user-details-row cols-1">
+                    <div>
+                        <div class="user-details-label">Type</div>
+                        <select name="logistics_type" class="user-details-value">
+                            <option value="INTERNAL">Internal</option>
+                            <option value="EXTERNAL">External</option>
+                            <option value="BOTH">Both</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="user-details-row cols-2">
+                    <div>
+                        <div class="user-details-label">Internal Budget Assigned</div>
+                        <input type="number" name="internal_budget" class="user-details-value" min="0" step="0.01">
+                    </div>
+                    <div>
+                        <div class="user-details-label">Sponsor Name</div>
+                        <input type="text" name="sponsor_name" class="user-details-value">
+                    </div>
+                </div>
+
+                <div class="user-details-row cols-2">
+                    <div>
+                        <div class="user-details-label">Start Date</div>
+                        <input type="date" name="start_date" class="user-details-value">
+                    </div>
+                    <div>
+                        <div class="user-details-label">Estimated End Date</div>
+                        <input type="date" name="estimated_end_date" class="user-details-value">
+                    </div>
+                </div>
+
+                <div class="user-details-row cols-2">
+                    <div>
+                        <div class="user-details-label">Proposal Document</div>
+                        <input type="file" name="proposal_document" class="user-details-value" accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+                    </div>
+                    <div>
+                        <div class="user-details-label">Additional Documents</div>
+                        <input type="file" name="additional_documents" class="user-details-value" multiple>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+        <!-- External -->
+        <div id="logistics-external" {% if project.logistics_type == 'EXTERNAL' %}style="display:block;"{% else %}style="display:none;"{% endif %}>
+            <div class="user-details-section">
+                <div class="user-details-category">Logistics</div>
+                <div class="user-details-row cols-1">
+                    <div>
+                        <div class="user-details-label">Type</div>
+                        <select name="logistics_type" class="user-details-value">
+                            <option value="INTERNAL">Internal</option>
+                            <option value="EXTERNAL">External</option>
+                            <option value="BOTH">Both</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="user-details-row cols-2">
+                    <div>
+                        <div class="user-details-label">External Budget Assigned</div>
+                        <input type="number" name="external_budget" class="user-details-value" min="0" step="0.01">
+                    </div>
+                    <div>
+                        <div class="user-details-label">Sponsor Name</div>
+                        <input type="text" name="sponsor_name" class="user-details-value">
+                    </div>
+                </div>
+
+                <div class="user-details-row cols-2">
+                    <div>
+                        <div class="user-details-label">Start Date</div>
+                        <input type="date" name="start_date" class="user-details-value">
+                    </div>
+                    <div>
+                        <div class="user-details-label">Estimated End Date</div>
+                        <input type="date" name="estimated_end_date" class="user-details-value">
+                    </div>
+                </div>
+
+                <div class="user-details-row cols-2">
+                    <div>
+                        <div class="user-details-label">Proposal Document</div>
+                        <input type="file" name="proposal_document" class="user-details-value" accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+                    </div>
+                    <div>
+                        <div class="user-details-label">Additional Documents</div>
+                        <input type="file" name="additional_documents" class="user-details-value" multiple>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <a href="#" class="back btn">Back</a>
+            <button type="submit" class="save btn">Add Project</button>
+        </div>
+    </div>
+</form>
+
+
+<!-- SVG Sprite Section -->
+<svg style="display:none;" xmlns="http://www.w3.org/2000/svg">
+
+    <symbol id="icon-add" viewBox="0 0 16 16">
+        <path d="M6.80039 14.4004C6.80039 14.7187 6.92682 15.0239 7.15186 15.2489C7.37691 15.474 7.68213 15.6004 8.00039 15.6004C8.31865 15.6004 8.62388 15.474 8.84892 15.2489C9.07396 15.0239 9.20039 14.7187 9.20039 14.4004V9.20039H14.4004C14.7187 9.20039 15.0239 9.07396 15.2489 8.84892C15.474 8.62388 15.6004 8.31865 15.6004 8.00039C15.6004 7.68213 15.474 7.37691 15.2489 7.15186C15.0239 6.92682 14.7187 6.80039 14.4004 6.80039H9.20039V1.60039C9.20039 1.28213 9.07396 0.976906 8.84892 0.751863C8.62388 0.526819 8.31865 0.400391 8.00039 0.400391C7.68213 0.400391 7.37691 0.526819 7.15186 0.751863C6.92682 0.976906 6.80039 1.28213 6.80039 1.60039V6.80039H1.60039C1.28213 6.80039 0.976906 6.92682 0.751863 7.15186C0.526819 7.37691 0.400391 7.68213 0.400391 8.00039C0.400391 8.31865 0.526819 8.62388 0.751863 8.84892C0.976906 9.07396 1.28213 9.20039 1.60039 9.20039H6.80039V14.4004Z" fill="black"/>
+    </symbol>
+
+</svg>
+
+
+<script>
+    // Tag UI logic for Project Leader, Providers, SDGs
+    function setupTagUI(rowId, optionsTemplateId, inputName, single=false) {
+        const tagRow = document.getElementById(rowId);
+        const optionsTemplate = document.getElementById(optionsTemplateId);
+        const selectDropdown = document.createElement('select');
+        selectDropdown.id = rowId + '-dropdown';
+        selectDropdown.style.display = 'none';
+        selectDropdown.style.position = 'absolute';
+        selectDropdown.style.fontFamily = "Inter, Arial, sans-serif";
+        selectDropdown.style.fontSize = "13px";
+        selectDropdown.style.padding = "8px 16px";
+        selectDropdown.style.borderRadius = "6px";
+        selectDropdown.style.appearance = "none";
+        selectDropdown.style.background = "white url('data:image/svg+xml;utf8,<svg fill=\"none\" height=\"16\" viewBox=\"0 0 16 16\" width=\"16\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M4 6L8 10L12 6\" stroke=\"%23374151\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>') no-repeat right 18px center/16px 16px";
+        selectDropdown.style.paddingRight = "5px";
+
+        Array.from(optionsTemplate.options).forEach(opt => {
+            selectDropdown.appendChild(opt.cloneNode(true));
+        });
+
+        // Get options
+        const options = Array.from(selectDropdown.options)
+            .filter(opt => opt.value)
+            .map(opt => ({id: opt.value, name: opt.text}));
+
+        let selected = [];
+        function renderTags() {
+            tagRow.innerHTML = '';
+            selected.forEach(id => {
+                const obj = options.find(o => o.id === id);
+                if (obj) {
+                    const tag = document.createElement('span');
+                    tag.className = 'college-tag';
+                    const removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.className = 'remove-x';
+                    removeBtn.innerHTML = '&times;';
+                    removeBtn.onclick = function() {
+                        selected = selected.filter(cid => cid !== id);
+                        renderTags();
+                    };
+                    tag.appendChild(removeBtn);
+                    tag.appendChild(document.createTextNode(obj.name));
+                    tagRow.appendChild(tag);
+                }
+            });
+            const addBtn = document.createElement('button');
+            addBtn.type = 'button';
+            addBtn.id = rowId + '-add-btn';
+            addBtn.className = 'add-college-btn';
+            addBtn.style.marginLeft = '8px';
+            addBtn.innerHTML = `<svg width="16" height="16"><use href="#icon-add" /></svg>`;
+            addBtn.onclick = function(e) {
+                const btnRect = addBtn.getBoundingClientRect();
+                selectDropdown.style.display = 'block';
+                selectDropdown.style.position = 'fixed';
+                selectDropdown.style.left = (btnRect.left) + 'px';
+                selectDropdown.style.top = (btnRect.bottom + 4) + 'px';
+                selectDropdown.innerHTML = '';
+                const templateOptions = Array.from(optionsTemplate.options);
+                templateOptions.forEach(opt => {
+                    if (!opt.value || !selected.includes(opt.value)) {
+                        selectDropdown.appendChild(opt.cloneNode(true));
+                    }
+                });
+                selectDropdown.focus();
+            };
+            tagRow.appendChild(addBtn);
+            if (!document.body.contains(selectDropdown)) {
+                document.body.appendChild(selectDropdown);
+            }
+            selected.forEach(cid => {
+                const hidden = document.createElement('input');
+                hidden.type = 'hidden';
+                hidden.name = inputName + (single ? '' : '[]');
+                hidden.value = cid;
+                tagRow.appendChild(hidden);
+            });
+        }
+        renderTags();
+        selectDropdown.onchange = function() {
+            const selectedId = selectDropdown.value;
+            if (selectedId && !selected.includes(selectedId)) {
+                if (single) {
+                    selected = [selectedId];
+                } else {
+                    selected.push(selectedId);
+                }
+                renderTags();
+            }
+            selectDropdown.value = '';
+            selectDropdown.style.display = 'none';
+        };
+        document.addEventListener('mousedown', function(e) {
+            if (!selectDropdown.contains(e.target) && e.target.id !== rowId + '-add-btn') {
+                selectDropdown.style.display = 'none';
+            }
+        });
+    }
+
+    setupTagUI('project-leader-tag-row', 'project-leader-options-template', 'project_leader', true);
+    setupTagUI('providers-tag-row', 'providers-options-template', 'providers');
+    setupTagUI('sdgs-tag-row', 'sdgs-options-template', 'sdgs');
+
+    // Logistics block logic (unchanged)
+    document.addEventListener('DOMContentLoaded', function() {
+        var logisticsSelects = document.querySelectorAll('select[name="logistics_type"]');
+        var blockInternal = document.getElementById('logistics-internal');
+        var blockExternal = document.getElementById('logistics-external');
+        var blockBoth = document.getElementById('logistics-both');
+        function updateLogisticsBlocks() {
+            var selected = null;
+            logisticsSelects.forEach(function(sel) {
+                if (sel.value) selected = sel.value;
+            });
+            blockInternal.style.display = 'none';
+            blockExternal.style.display = 'none';
+            blockBoth.style.display = 'none';
+            if (selected === 'INTERNAL') blockInternal.style.display = 'block';
+            else if (selected === 'EXTERNAL') blockExternal.style.display = 'block';
+            else if (selected === 'BOTH') blockBoth.style.display = 'block';
+        }
+        logisticsSelects.forEach(function(sel) {
+            sel.addEventListener('change', updateLogisticsBlocks);
+        });
+        updateLogisticsBlocks();
+    });
+</script>
+
+{% endblock %}

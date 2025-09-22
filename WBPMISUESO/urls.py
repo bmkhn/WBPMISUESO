@@ -39,7 +39,7 @@ urlpatterns = [
     # Budget (None Yet)
     path('calendar/', include('shared.event_calendar.urls')),       # Calendar
     path('downloadables/', include('shared.downloadables.urls')),   # Downloadables
-    # Projects (None Yet)
+    path('projects/', include('shared.projects.urls')),             # Projects
 
     # SYSTEM APPS
     path('inbox/', include('system.inbox.urls')),                   # Inbox

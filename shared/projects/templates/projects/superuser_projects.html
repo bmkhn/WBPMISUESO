@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Projects</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.css' rel='stylesheet'/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.js'></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0rem;
+            padding: 0rem;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            font-family: Helvetica, Arial, sans-serif;
+            background-color: #f9f9f9;
+        }
+        main {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start; 
+            align-items: stretch;
+            margin: 0 2rem 2rem 2rem;
+            gap: 0.5rem; 
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo-text {
+            font-size: 1rem;
+            color: white;
+        }
+
+        .sidebar {
+            width: 230px;
+            background: #004225;
+            color: white;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            padding: 20px 15px;
+            border-radius: 0 0 12px 0;
+            font-family: "Segoe UI", sans-serif;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;  
+            overflow-x: hidden;
+        }
+
+        .sidebar img {
+            width: 55px;
+            margin: 0 auto 5px auto;
+            display: block;
+            border-radius: 50%;
+        }
+
+        .sidebar h2 {
+            font-size: 12px;
+            font-weight: 600;
+            color: #ccc;  /* gray headings */
+            margin: 20px 0 10px 10px;
+            letter-spacing: 1px;
+        }
+
+        .sidebar a {
+            display: flex;
+            align-items: center;
+            padding: 10px 12px;
+            margin: 4px 0;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: background 0.2s;
+        }
+
+        .sidebar a i {
+            margin-right: 12px;
+            font-size: 16px;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        .sidebar a:hover, .sidebar a.active {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        header {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 1.25rem; 
+            margin: 0;
+            padding: 0.75rem 1.25rem;
+            top: 0;
+            z-index: 100;
+            width: 100%;
+        }
+        
+        header a {
+            color: #111;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        header i {
+            font-size: 1.75rem;
+            line-height: 1;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        header i:hover {
+            transform: scale(1.1);
+        }
+
+        header img {
+            border-radius: 50%; 
+            border: 4px solid #e4c600;
+            margin-right: 0.75rem;
+            width: 3.25rem;
+            height: 3.25rem;
+            object-fit: cover;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        header-img:hover {
+            transform: scale(1.1);
+        }
+
+        .content {
+            margin-left: 240px;
+            padding: 0 20px 20px 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+
+        .page-header h1 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        .page-header .actions {
+            display: flex;
+            gap: 0.75rem;
+        }
+        
+        .actions button:hover {
+            background: #006633;
+        }
+
+        .page-header select {
+            padding: 6px 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        .page-header button {
+            background: #004225;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .page-header h1 {
+            font-size: 1.75rem;
+            font-weight: 500;
+            margin: 10 0 1.25rem 0;
+        }
+
+        .search-bar {
+            display: flex;
+            justify-content: center;
+            margin-top: 1rem;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+
+        .search-bar input {
+            width: 97%;
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background-color: #f2f4f8;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.2rem;
+            margin-bottom: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .card {
+            background: #fff;
+            border: 1px solid grey;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .card table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .card th, .card td {
+            text-align: left;
+            padding: 20px 20px;
+            border-bottom: 1px solid grey;
+            font-size: 0.8rem;
+            background-color: #f7f7f7;
+        }
+
+
+        .card th {
+            background: lightgrey;
+            font-weight: 600;
+            padding: 10px 20px;
+            border-top: 1px solid grey;
+        }
+
+        .card h3 {
+            margin: 0;
+            padding: 12px 20px;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .progress-red { color: #d9534f; font-weight: 600;}
+        .progress-green { color: #28a745; font-weight: 600; }
+        .progress-blue { color: #0077B6; font-weight: 600}
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;           
+        }
+
+        .expand-btn {
+            font-size: 20px;    
+            border: none;
+            background: none;
+            cursor: pointer;
+            padding: 0 20px;         
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .expand-btn:hover {
+            scale: 1.5;
+        }
+    </style>
+</head> 
+<body>
+    <div class="sidebar">
+        <div class="logo-container">
+            <img src="https://c8.alamy.com/comp/2EW36BC/temporary-green-round-grunge-button-stamp-2EW36BC.jpg"  alt="Logo">
+            <span class="logo-text">University Extension Services Office</span>
+        </div>
+        <h2>GENERAL</h2>
+        <a href="#"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
+        <a href="#" class="active"><i class="fa-solid fa-clipboard-list"></i> Projects</a>
+        <a href="#"><i class="fa-solid fa-upload"></i> Submission</a>
+        <a href="#"><i class="fa-solid fa-user-tie"></i> Experts</a>
+        <a href="#"><i class="fa-regular fa-calendar"></i> Calendar</a>
+        <a href="#"><i class="fa-solid fa-chart-pie"></i> Analytics</a>
+        <a href="#"><i class="fa-regular fa-circle-check"></i> Goals</a>
+
+        <h2>CONTENT</h2>
+        <a href="#"><i class="fa-regular fa-paper-plane"></i> Announce</a>
+        <a href="#"><i class="fa-solid fa-box-archive"></i> Archive</a>
+        <a href="#"><i class="fa-solid fa-coins"></i> Budget</a>
+        <a href="#"><i class="fa-regular fa-address-card"></i> About Us</a>
+        <a href="#"><i class="fa-solid fa-download"></i> Downloads</a>
+
+        <h2>OTHER</h2>
+        <a href="#"><i class="fa-regular fa-envelope"></i> Inbox</a>
+        <a href="#"><i class="fa-regular fa-bell"></i> Notification</a>
+        <a href="#"><i class="fa-solid fa-gear"></i> Settings</a>
+        <a href="#"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+    </div>
+
+    <div class="content">
+    <header>
+        <a href="#" title="Notifications">
+            <i class="fa-regular fa-bell"></i>
+        </a>
+        <a href="#" title="Settings">
+            <i class="ri-settings-3-line" style="font-size: 2rem;"></i>
+        </a>
+        <a href="#">
+            <img src="https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png"
+                alt="profilepic">
+        </a>    
+    </header>   
+
+    <main>
+        <div class="page-header">
+            <h1>Projects</h1>
+            <div class="actions">
+                <select>
+                    <option>This Year</option>
+                    <option>Last Year</option>
+                <select>
+                <button>Add Project</button>
+            </div>
+        </div>
+        <div class="search-bar">
+            <input type="text" placeholder="Search">
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <div class="table-header">
+                    <h3>View All</h3>
+                    <button class="expand-btn">⤢</button>
+                </div>
+                <table>
+                    <tr>
+                        <th>Title</th>
+                        <th>Progress</th>
+                    </tr>
+                    <tr><td>English Literacy Training of Santa Monica High School</td><td class="progress-red">30%</td></tr>
+                    <tr><td>English Literacy Training of Santa Monica High School</td><td class="progress-red">50%</td></tr>
+                    <tr><td>English Literacy Training of Santa Monica High School</td><td>0%</td></tr>
+                    <tr><td>English Literacy Training of Santa Monica High School</td><td class="progress-red">75%</td></tr>
+                    <tr><td>English Literacy Training of Santa Monica High School</td><td class="progress-red">55%</td></tr>
+                    <tr><td>English Literacy Training of Santa Monica High School</td><td class="progress-green">100%</td></tr>
+                    <tr><td>English Literacy Training of Santa Monica High School</td><td class="progress-green">100%</td></tr>
+                    <tr><td>English Literacy Training of Santa Monica High School</td><td class="progress-green">100%</td></tr>
+                </table>
+            </div>
+
+            <div class="card">
+                <div class="table-header">
+                    <h3>Submissions</h3>
+                    <button class="expand-btn">⤢</button>
+                </div>
+                <table>
+                    <tr><th>Title</th><th>Requirements</th></tr>
+                    <tr><td>English Literacy Training of Santa Monica High School</td><td>Event Update</td></tr>
+                    <tr><td>English Literacy Training of Santa Monica High School</td><td>Attendance Form</td></tr>
+                    <tr><td>English Literacy Training of Santa Monica High School</td><td>Accomplishment Report</td></tr>
+                    <tr><td>English Literacy Training of Santa Monica High School</td><td>Needs Assessment Form</td></tr>
+                    <tr><td>English Literacy Training of Santa Monica High School</td><td>Training Evaluation</td></tr>
+                    <tr><td>English Literacy Training of Santa Monica High School</td><td>Attendance Form</td></tr>
+                    <tr><td>English Literacy Training of Santa Monica High School</td><td>Event Update</td></tr>
+                    <tr><td>English Literacy Training of Santa Monica High School</td><td>Attendance Form</td></tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="table-header">
+                <h3>Newly Added Porjects</h3>
+                <button class="expand-btn">⤢</button>
+            </div>
+            <table>
+                <tr>
+                    <th>Title</th><th>Team Leader</th><th>Last Updated</th>
+                    <th>Start Date</th><th>Progress</th><th>Status</th>
+                </tr>
+                <tr>
+                    <td>English Literacy Training of Santa Monica High School</td>
+                    <td>Imee M. Vito</td>
+                    <td>01-20-24</td>
+                    <td>01-20-24</td>
+                    <td class="progress-blue">0%</td>
+                    <td>Ongoing</td>
+                </tr>
+                <tr>
+                    <td>English Literacy Training of Santa Monica High School</td>
+                    <td>Imee M. Vito</td>
+                    <td>01-20-24</td>
+                    <td>01-20-24</td>
+                    <td class="progress-blue">0%</td>
+                    <td>Ongoing</td>
+                </tr>
+                <tr>
+                    <td>English Literacy Training of Santa Monica High School</td>
+                    <td>Imee M. Vito</td>
+                    <td>01-20-24</td>
+                    <td>01-20-24</td>
+                    <td class="progress-blue">0%</td>
+                    <td>Ongoing</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <main>
+</body>
+</html> 
