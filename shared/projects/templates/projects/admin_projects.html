@@ -1,419 +1,657 @@
+{% extends "base_internal.html" %}
+{% block content %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Projects</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.css' rel='stylesheet'/>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
-    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.js'></script>
+<meta charset="UTF-8">
+<title>Projects</title>
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0rem;
-            padding: 0rem;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            font-family: Helvetica, Arial, sans-serif;
-            background-color: #f9f9f9;
-        }
-        main {
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start; 
-            align-items: stretch;
-            margin: 0 2rem 2rem 2rem;
-            gap: 0.5rem; 
-        }
+<link href="https://fonts.googleapis.com/css?family=Inter:400,500,700&display=swap" rel="stylesheet">
 
-        .logo-container {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
+<!-- Top Section -->
+<style>
+    body {
+        background: #F9F9F9;
+        margin: 0;
+        font-family: 'Inter', sans-serif;
+    }
 
-        .logo-text {
-            font-size: 1rem;
-            color: white;
-        }
+    .main-container {
+        margin: 60px;
+        display: flex;
+        flex-direction: column;
+        gap: 30px;
+    }
 
-        .sidebar {
-            width: 230px;
-            background: #004225;
-            color: white;
-            position: fixed;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            padding: 20px 15px;
-            border-radius: 0 0 12px 0;
-            font-family: "Segoe UI", sans-serif;
-            display: flex;
-            flex-direction: column;
-            overflow-y: auto;  
-            overflow-x: hidden;
-        }
+    .container-a {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
 
-        .sidebar img {
-            width: 55px;
-            margin: 0 auto 5px auto;
-            display: block;
-            border-radius: 50%;
-        }
+    .text-sort-container {
+        display: flex;
+        flex-direction: row;
+        gap: 60px;
+        align-items: center;
+    }
 
-        .sidebar h2 {
-            font-size: 12px;
-            font-weight: 600;
-            color: #ccc;  /* gray headings */
-            margin: 20px 0 10px 10px;
-            letter-spacing: 1px;
-        }
+    .project-text {
+        font-family: 'Inter', sans-serif;
+        font-weight: 400;
+        font-size: 32px;
+        color: #000000;
+    }
 
-        .sidebar a {
-            display: flex;
-            align-items: center;
-            padding: 10px 12px;
-            margin: 4px 0;
-            color: white;
-            text-decoration: none;
-            border-radius: 8px;
-            font-size: 15px;
-            transition: background 0.2s;
-        }
+    .button-container {
+        display: flex;
+        flex-direction: row;
+        gap: 20px;
+        align-items: center;
+    }
 
-        .sidebar a i {
-            margin-right: 12px;
-            font-size: 16px;
-            min-width: 20px;
-            text-align: center;
-        }
+    .add-user-btn {
+        background: #063A1C;
+        color: white;
+        padding: 15px 45px;
+        border-radius: 8px;
+        font-size: 20px;
+        font-family: 'Inter', sans-serif;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 8px rgba(10, 108, 68, 0.2);
+        text-decoration: none;
+        border-radius: 18px;
+        cursor: pointer;
+        transition: background 0.2s;
+        border: none;
+    }
 
-        .sidebar a:hover, .sidebar a.active {
-            background: rgba(255, 255, 255, 0.15);
-        }
+    .add-user-btn:hover {
+        background: #04521c;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(10, 108, 68, 0.3);
+        text-decoration: none;
+        color: white;
+    }
+    
+    .export-btn {
+        background: #00538E;
+        color: white;
+        padding: 15px 45px;
+        border-radius: 8px;
+        font-size: 20px;
+        font-family: 'Inter', sans-serif;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 8px rgba(0, 83, 142, 0.2); 
+        text-decoration: none;
+        border-radius: 18px;
+        cursor: pointer;
+        transition: background 0.2s;
+        border: none;
+    }
 
-        header {
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-            gap: 1.25rem; 
-            margin: 0;
-            padding: 0.75rem 1.25rem;
-            top: 0;
-            z-index: 100;
-            width: 100%;
-        }
-        
-        header a {
-            color: #111;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-        }
+    .export-btn:hover {
+        background: #003f66;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 83, 142, 0.3);
+        text-decoration: none;
+        color: white;
+    }
+</style>
 
-        header i {
-            font-size: 1.75rem;
-            line-height: 1;
-            cursor: pointer;
-            transition: transform 0.2s ease;
-        }
+<!-- Table Section -->
+<style>
+    .name-link {
+        color:#0A6C44;
+        text-decoration:underline;
+    }
 
-        header i:hover {
-            transform: scale(1.1);
-        }
+    .checkmark-icon {
+        color:#1f7c57;
+        font-size:1.2em;
+        text-align: center;
+    }
 
-        header img {
-            border-radius: 50%; 
-            border: 4px solid #e4c600;
-            margin-right: 0.75rem;
-            width: 3.25rem;
-            height: 3.25rem;
-            object-fit: cover;
-            cursor: pointer;
-            transition: transform 0.2s ease;
-        }
+    .crossmark-icon {
+        color:#E53E3E;
+        font-size:1.2em;
+        text-align: center;
+    }
 
-        header-img:hover {
-            transform: scale(1.1);
-        }
+    .user-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #FEFCFC;
+        border: 1px solid rgba(0,0,0,0.18);
+    }
 
-        .content {
-            margin-left: 240px;
-            padding: 0 20px 20px 20px;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
+    .user-table th {
+        font-size: 16px;
+        font-weight: 500;
+        background: rgba(217, 217, 217, 0.2);
+        border-bottom: 1px solid rgba(0,0,0,0.18);
+        padding: 14px 12px;
+        text-align: left;
+        font-family: 'Inter', Arial, sans-serif;
+    }
 
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 1rem;
-        }
+    .user-table td {
+        font-size: 15px;
+        font-weight: 400;
+        border: none;
+        border-bottom: 1px solid rgba(0,0,0,0.18);
+        padding: 14px 12px;
+        text-align: left;
+        font-family: 'Inter', Arial, sans-serif;
+    }
 
-        .page-header h1 {
-            margin: 0;
-            font-size: 1.5rem;
-        }
+    .user-table tr:last-child td {
+        border-bottom: none;
+    }
 
-        .page-header .actions {
-            display: flex;
-            gap: 0.75rem;
-        }
-        
-        .actions button:hover {
-            background: #006633;
-        }
+    .settings-icon {
+        width: 16px;
+        height: 16px;
+        align-items: center;
+        justify-content: center;
+        display: inline-block;
+        vertical-align: middle;
+        cursor: pointer;
+    }
 
-        .page-header select {
-            padding: 6px 10px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-        }
+    .user-table th.settings-col, .user-table td.settings-col {
+        text-align: center !important;
+    }
+</style>
 
-        .page-header button {
-            background: #004225;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 8px;
-            cursor: pointer;
-        }
+<!-- Search Bar Styles -->
+<style>
+	.search-container {
+		width: 100%;
+		display: flex;
+		gap: 10px;
+	}
 
-        .page-header h1 {
-            font-size: 1.75rem;
-            font-weight: 500;
-            margin: 10 0 1.25rem 0;
-        }
+	.search-bar {
+		width: 100%;
+		height: 52px;
+		background: #F2F4F8;
+		display: flex;
+		align-items: center;
+		padding: 0 16px;
+		border-bottom: 1.09px solid #535353;
+		border-radius: 8px;
+		box-sizing: border-box;
+	}
 
-        .search-bar {
-            display: flex;
-            justify-content: center;
-            margin-top: 1rem;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            border-radius: 8px;
-        }
+	.search-bar input {
+		flex: 1;
+		border: none;
+		outline: none;
+		background: transparent;
+		font-size: 18px;
+		font-family: 'Inter', sans-serif;
+		font-weight: 400;
+		color: #5A5252;
+		padding: 0 10px;
+	}
+</style>
 
-        .search-bar input {
-            width: 97%;
-            padding: 8px 12px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            background-color: #f2f4f8;
-        }
+<!-- Sort/Filter Styles -->
+<style>
+	.filter-dropdown {
+		display: none;
+		position: absolute;
+		top: 280px;
+		right: 60px;
+		z-index: 1000;
+		background: white;
+		border: 1px solid #e5e7eb;
+		border-radius: 12px;
+		box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+		padding: 24px 32px;
+		min-width: 340px;
+	}
 
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 1.2rem;
-            margin-bottom: 1.5rem;
-            margin-top: 1.5rem;
-        }
+    .filter-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        grid-template-rows: repeat(2, 1fr);
+        grid-gap: 24px;
+    }
 
-        .card {
-            background: #fff;
-            border: 1px solid grey;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        }
+	.filter-dropdown label {
+		font-weight: 500;
+		color: #374151;
+		display: flex;
+		flex-direction: column;
+	}
 
-        .card table {
-            width: 100%;
-            border-collapse: collapse;
-        }
+	.filter-dropdown select,
+	.filter-dropdown input[type="date"] {
+		width: 150px;
+		margin-top: 6px;
+		border: 1px solid #e5e7eb;
+		border-radius: 6px;
+		padding: 6px 10px;
+		font-size: 15px;
+		font-family: 'Inter', Arial, sans-serif;
+		background: #f9f9f9;
+		color: #374151;
+	}
 
-        .card th, .card td {
-            text-align: left;
-            padding: 20px 20px;
-            border-bottom: 1px solid grey;
-            font-size: 0.8rem;
-            background-color: #f7f7f7;
-        }
+	.filter-dropdown select {
+		appearance: none;
+		-webkit-appearance: none;
+		-moz-appearance: none;
+		padding-right: 2rem;
+		background: url("data:image/svg+xml;utf8,<svg width='16' height='11' viewBox='0 0 16 11' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M7.99976 7.19417L13.9025 1.29147C14.0125 1.17758 14.144 1.08674 14.2895 1.02424C14.435 0.961746 14.5915 0.92885 14.7498 0.927474C14.9082 0.926098 15.0652 0.95627 15.2117 1.01623C15.3583 1.07619 15.4914 1.16473 15.6034 1.27669C15.7153 1.38866 15.8039 1.5218 15.8638 1.66835C15.9238 1.8149 15.954 1.97192 15.9526 2.13026C15.9512 2.28859 15.9183 2.44506 15.8558 2.59055C15.7933 2.73604 15.7025 2.86762 15.5886 2.97762L8.84283 9.72339C8.61921 9.94694 8.31596 10.0725 7.99976 10.0725C7.68356 10.0725 7.38031 9.94694 7.15669 9.72339L0.41092 2.97762C0.297028 2.86762 0.206183 2.73604 0.143687 2.59055C0.0811915 2.44506 0.0482959 2.28859 0.04692 2.13026C0.0455441 1.97192 0.0757155 1.8149 0.135674 1.66835C0.195632 1.5218 0.284176 1.38866 0.39614 1.27669C0.508103 1.16473 0.641244 1.07619 0.787794 1.01623C0.934343 0.95627 1.09137 0.926098 1.2497 0.927474C1.40804 0.92885 1.56451 0.961746 1.71 1.02424C1.85548 1.08674 1.98706 1.17758 2.09706 1.29147L7.99976 7.19417Z' fill='%23374151'/></svg>")
+        		no-repeat right 0.75rem center;
+  		background-size: 13px 8px;
+	}
 
+	.filter-actions {
+		display: flex;
+		justify-content: flex-end;
+		gap: 10px;
+		margin-top: 24px;
+	}
 
-        .card th {
-            background: lightgrey;
-            font-weight: 600;
-            padding: 10px 20px;
-            border-top: 1px solid grey;
-        }
+	.filter-apply {
+		background: #063A1C;
+		color: white;
+		padding: 10px 28px;
+		border-radius: 8px;
+		font-size: 16px;
+		font-family: 'Inter', Arial, sans-serif;
+		font-weight: 500;
+		cursor: pointer;
+		transition: background 0.2s;
+		border: none;
+	}
 
-        .card h3 {
-            margin: 0;
-            padding: 12px 20px;
-            font-size: 1rem;
-            font-weight: 500;
-        }
+	.filter-close {
+		background: #e5e7eb;
+		color: #374151;
+		padding: 10px 18px;
+		border-radius: 8px;
+		font-size: 16px;
+		font-family: 'Inter', Arial, sans-serif;
+		font-weight: 500;
+		cursor: pointer;
+		border: none;
+	}
+</style>
 
-        .progress-red { color: #d9534f; font-weight: 600;}
-        .progress-green { color: #28a745; font-weight: 600; }
-        .progress-blue { color: #0077B6; font-weight: 600}
+<!-- Pagination Styles -->
+<style>
+	.pagination-container {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		margin-top: 3rem;
+		gap: 0.5rem;
+	}
 
-        .table-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;           
-        }
+	.pagination-button {
+		padding: 0.75rem 1rem;
+		border: 1px solid #E5E7EB;
+		background: white;
+		color: #4B5563;
+		border-radius: 8px;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		font-weight: 500;
+		text-decoration: none;
+	}
 
-        .expand-btn {
-            font-size: 20px;    
-            border: none;
-            background: none;
-            cursor: pointer;
-            padding: 0 20px;         
-            line-height: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+	.pagination-button:hover {
+		background: #F3F4F6;
+		border-color: #0A6C44;
+		color: #0A6C44;
+	}
 
-        .expand-btn:hover {
-            scale: 1.5;
-        }
-    </style>
-</head> 
+	.pagination-button.active {
+		background: #0A6C44;
+		color: white;
+		border-color: #0A6C44;
+	}
+
+	.pagination-button:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	.page-info {
+		margin: 0 1rem;
+		color: #4B5563;
+		font-weight: 500;
+	}
+
+	@media (max-width: 900px) {
+		.announce-grid {
+			grid-template-columns: 1fr;
+		}
+		
+		.announce-container {
+			padding: 1rem;
+		}
+
+		.announce-title {
+			font-size: 2rem;
+		}
+
+		.pagination-container {
+			flex-wrap: wrap;
+			gap: 0.25rem;
+		}
+
+		.pagination-button {
+			padding: 0.5rem 0.75rem;
+			font-size: 0.875rem;
+		}
+	}
+</style>
+
+<!-- Settings Dropdown Styles -->
+<style>
+    .settings-dropdown-container {
+        position: relative;
+        display: inline-block;
+        overflow: visible;
+    }
+
+    .settings-dropdown-toggle {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+    }
+
+    .settings-dropdown-menu {
+        display: none;
+        position: absolute;
+        right: 0;
+        top: 28px;
+        min-width: 160px;
+        background: #fff;
+        border: 1px solid #E5E7EB;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        z-index: 10;
+    }
+
+    .settings-dropdown-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 18px;
+        text-decoration: none;
+        font-size: 1rem;
+    }
+
+    .settings-dropdown-item:hover {
+        background: #F3F4F6;
+    }
+</style>
+
+</head>
 <body>
-    <div class="sidebar">
-        <div class="logo-container">
-            <img src="https://c8.alamy.com/comp/2EW36BC/temporary-green-round-grunge-button-stamp-2EW36BC.jpg"  alt="Logo">
-            <span class="logo-text">University Extension Services Office</span>
-        </div>
-        <h2>GENERAL</h2>
-        <a href="#"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
-        <a href="#" class="active"><i class="fa-solid fa-clipboard-list"></i> Projects</a>
-        <a href="#"><i class="fa-solid fa-upload"></i> Submission</a>
-        <a href="#"><i class="fa-solid fa-user-tie"></i> Experts</a>
-        <a href="#"><i class="fa-regular fa-calendar"></i> Calendar</a>
-        <a href="#"><i class="fa-solid fa-chart-pie"></i> Analytics</a>
-        <a href="#"><i class="fa-regular fa-circle-check"></i> Goals</a>
-
-        <h2>CONTENT</h2>
-        <a href="#"><i class="fa-regular fa-paper-plane"></i> Announce</a>
-        <a href="#"><i class="fa-solid fa-box-archive"></i> Archive</a>
-        <a href="#"><i class="fa-solid fa-coins"></i> Budget</a>
-        <a href="#"><i class="fa-regular fa-address-card"></i> About Us</a>
-        <a href="#"><i class="fa-solid fa-download"></i> Downloads</a>
-
-        <h2>OTHER</h2>
-        <a href="#"><i class="fa-regular fa-envelope"></i> Inbox</a>
-        <a href="#"><i class="fa-regular fa-bell"></i> Notification</a>
-        <a href="#"><i class="fa-solid fa-gear"></i> Settings</a>
-        <a href="#"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
-    </div>
-
-    <div class="content">
-    <header>
-        <a href="#" title="Notifications">
-            <i class="fa-regular fa-bell"></i>
-        </a>
-        <a href="#" title="Settings">
-            <i class="ri-settings-3-line" style="font-size: 2rem;"></i>
-        </a>
-        <a href="#">
-            <img src="https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png"
-                alt="profilepic">
-        </a>    
-    </header>   
-
-    <main>
-        <div class="page-header">
-            <h1>Projects</h1>
-            <div class="actions">
-                <select>
-                    <option>This Year</option>
-                    <option>Last Year</option>
-                <select>
-                <button>Add Project</button>
+	<div class="main-container">
+        <!-- Top Section -->
+		<div class="container-a">
+            <div class="text-sort-container">
+                <div class="project-text">Projects</div>
             </div>
-        </div>
-        <div class="search-bar">
-            <input type="text" placeholder="Search">
-        </div>
+            <div class="button-container">
+                <a class="add-user-btn" href="{% url 'add_project' %}">Add Project</a>
+                <!-- <button class="export-btn">Export</button> -->
+            </div>
+		</div>
 
-        <div class="grid">
-            <div class="card">
-                <div class="table-header">
-                    <h3>View All</h3>
-                    <button class="expand-btn">⤢</button>
+        <!-- Search Bar & Filter (4x2 Grid) -->
+        <div class="search-container">
+            <form class="search-bar" method="get" action="">
+                <svg width="20" height="20"> <use href="#icon-search"></use> </svg>
+                <input type="text" name="search" placeholder="Search by project title..." value="{{ search|default:'' }}"/>
+                <button type="button" id="filterBtn" style="background:none;border:none;padding:0;margin-right:5px;cursor:pointer;">
+                    <svg width="20" height="20"> <use href="#icon-filter"></use> </svg>
+                </button>
+                <div id="filterDropdown" class="filter-dropdown">
+                    <div class="filter-grid">
+                        <!-- Row 1 -->
+                        <label>Sort By
+                            <select name="sort_by">
+                                <option value="title" {% if sort_by == 'title' %}selected{% endif %}>Title</option>
+                                <option value="last_updated" {% if sort_by == 'last_updated' %}selected{% endif %}>Last Updated</option>
+                                <option value="start_date" {% if sort_by == 'start_date' %}selected{% endif %}>Start Date</option>
+                                <option value="progress" {% if sort_by == 'progress' %}selected{% endif %}>Progress</option>
+                            </select>
+                        </label>
+                        <label>Order By
+                            <select name="order">
+                                <option value="asc" {% if order == 'asc' %}selected{% endif %}>Ascending</option>
+                                <option value="desc" {% if order == 'desc' %}selected{% endif %}>Descending</option>
+                            </select>
+                        </label>
+                        <label>College (Team Leader)
+                            <select name="college">
+                                <option value="">All Colleges</option>
+                                {% for c in colleges %}
+                                <option value="{{ c.id }}" {% if college == c.id|stringformat:'s' %}selected{% endif %}>{{ c.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                        <label>Campus (Team Leader)
+                            <select name="campus">
+                                <option value="">All Campuses</option>
+                                {% for c in campuses %}
+                                <option value="{{ c.0 }}" {% if campus == c.0 %}selected{% endif %}>{{ c.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                        <!-- Row 2 -->
+                        <label>Status
+                            <select name="status">
+                                <option value="">All Statuses</option>
+                                {% for s in status_choices %}
+                                <option value="{{ s.0 }}" {% if status == s.0 %}selected{% endif %}>{{ s.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                        <label>Year
+                            <select name="year">
+                                <option value="">All Years</option>
+                                {% for y in years %}
+                                <option value="{{ y }}" {% if year == y|stringformat:'s' %}selected{% endif %}>{{ y }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                        <label>Quarter
+                            <select name="quarter">
+                                <option value="">All Quarters</option>
+                                <option value="1" {% if quarter == '1' %}selected{% endif %}>Q1</option>
+                                <option value="2" {% if quarter == '2' %}selected{% endif %}>Q2</option>
+                                <option value="3" {% if quarter == '3' %}selected{% endif %}>Q3</option>
+                                <option value="4" {% if quarter == '4' %}selected{% endif %}>Q4</option>
+                            </select>
+                        </label>
+                        <label>Date
+                            <input type="date" name="date" value="{{ date|default:'' }}" style="width: 87%"/>
+                        </label>
+                    </div>
+                    <div class="filter-actions">
+                        <button type="submit" class="filter-apply">Apply</button>
+                        <button type="button" id="closeFilter" class="filter-close">Close</button>
+                    </div>
                 </div>
-                <table>
-                    <tr>
-                        <th>Title</th>
-                        <th>Progress</th>
-                    </tr>
-                    <tr><td>English Literacy Training of Santa Monica High School</td><td class="progress-red">30%</td></tr>
-                    <tr><td>English Literacy Training of Santa Monica High School</td><td class="progress-red">50%</td></tr>
-                    <tr><td>English Literacy Training of Santa Monica High School</td><td>0%</td></tr>
-                    <tr><td>English Literacy Training of Santa Monica High School</td><td class="progress-red">75%</td></tr>
-                    <tr><td>English Literacy Training of Santa Monica High School</td><td class="progress-red">55%</td></tr>
-                    <tr><td>English Literacy Training of Santa Monica High School</td><td class="progress-green">100%</td></tr>
-                    <tr><td>English Literacy Training of Santa Monica High School</td><td class="progress-green">100%</td></tr>
-                    <tr><td>English Literacy Training of Santa Monica High School</td><td class="progress-green">100%</td></tr>
-                </table>
-            </div>
-
-            <div class="card">
-                <div class="table-header">
-                    <h3>Submissions</h3>
-                    <button class="expand-btn">⤢</button>
-                </div>
-                <table>
-                    <tr><th>Title</th><th>Requirements</th></tr>
-                    <tr><td>English Literacy Training of Santa Monica High School</td><td>Event Update</td></tr>
-                    <tr><td>English Literacy Training of Santa Monica High School</td><td>Attendance Form</td></tr>
-                    <tr><td>English Literacy Training of Santa Monica High School</td><td>Accomplishment Report</td></tr>
-                    <tr><td>English Literacy Training of Santa Monica High School</td><td>Needs Assessment Form</td></tr>
-                    <tr><td>English Literacy Training of Santa Monica High School</td><td>Training Evaluation</td></tr>
-                    <tr><td>English Literacy Training of Santa Monica High School</td><td>Attendance Form</td></tr>
-                    <tr><td>English Literacy Training of Santa Monica High School</td><td>Event Update</td></tr>
-                    <tr><td>English Literacy Training of Santa Monica High School</td><td>Attendance Form</td></tr>
-                </table>
-            </div>
+            </form>
         </div>
 
-        <div class="card">
-            <div class="table-header">
-                <h3>Newly Added Porjects</h3>
-                <button class="expand-btn">⤢</button>
-            </div>
-            <table>
+        <!-- Table Section -->
+        <table class="user-table">
+            <thead>
                 <tr>
-                    <th>Title</th><th>Team Leader</th><th>Last Updated</th>
-                    <th>Start Date</th><th>Progress</th><th>Status</th>
+                    <th>Title</th>
+                    <th>Team Leader</th>
+                    <th>Last Updated</th>
+                    <th>Start Date</th>
+                    <th>Progress</th>
+                    <th>Status</th>
                 </tr>
+            </thead>
+            <tbody>
+                {% for project in projects %}
                 <tr>
-                    <td>English Literacy Training of Santa Monica High School</td>
-                    <td>Imee M. Vito</td>
-                    <td>01-20-24</td>
-                    <td>01-20-24</td>
-                    <td class="progress-blue">0%</td>
-                    <td>Ongoing</td>
+                    <td>
+                        <a href="{% url 'project_details' project.id %}" class="name-link">
+                            {{ project.title }}
+                        </a>
+                    </td>
+                    <td>{{ project.team_leader.get_full_name }}</td>
+                    <td>{{ project.last_updated|date:"Y-m-d H:i" }}</td>
+                    <td>{{ project.start_date|date:"Y-m-d" }}</td>
+                    <td>{{ project.progress_display }}</td>
+                    <td>{{ project.get_status_display }}</td>
                 </tr>
-                <tr>
-                    <td>English Literacy Training of Santa Monica High School</td>
-                    <td>Imee M. Vito</td>
-                    <td>01-20-24</td>
-                    <td>01-20-24</td>
-                    <td class="progress-blue">0%</td>
-                    <td>Ongoing</td>
-                </tr>
-                <tr>
-                    <td>English Literacy Training of Santa Monica High School</td>
-                    <td>Imee M. Vito</td>
-                    <td>01-20-24</td>
-                    <td>01-20-24</td>
-                    <td class="progress-blue">0%</td>
-                    <td>Ongoing</td>
-                </tr>
-            </table>
-        </div>
-    </div>
-    <main>
+                {% empty %}
+                <tr><td colspan="6" style="text-align:center;">No projects found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Pagination -->
+		<div class="pagination-container">
+			{% if page_obj.has_previous %}
+				<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page=1">First</a>
+				<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a>
+			{% else %}
+				<button class="pagination-button" disabled>First</button>
+				<button class="pagination-button" disabled>Previous</button>
+			{% endif %}
+
+			{% for num in page_range %}
+				{% if num == page_obj.number %}
+					<button class="pagination-button active" disabled>{{ num }}</button>
+				{% else %}
+					<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ num }}">{{ num }}</a>
+				{% endif %}
+			{% endfor %}
+
+			{% if page_obj.has_next %}
+				<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.next_page_number }}">Next</a>
+				<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ paginator.num_pages }}">Last</a>
+			{% else %}
+				<button class="pagination-button" disabled>Next</button>
+				<button class="pagination-button" disabled>Last</button>
+			{% endif %}
+
+			<span class="page-info">Page {{ page_obj.number }} of {{ paginator.num_pages }}</span>
+		</div>
+
+	</div>
+
+<!-- SVG Sprite Section -->
+<svg style="display:none;">
+
+    <!-- Delete -->
+    <symbol id="delete-icon" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <polyline points="3,6 5,6 21,6"></polyline>
+        <path d="m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
+    </symbol>
+
+    <!-- Settings -->
+    <symbol id="settings-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M2 4C1.45 4 0.979167 3.80417 0.5875 3.4125C0.195833 3.02083 0 2.55 0 2C0 1.45 0.195833 0.979167 0.5875 0.5875C0.979167 0.195833 1.45 0 2 0C2.55 0 3.02083 0.195833 3.4125 0.5875C3.80417 0.979167 4 1.45 4 2C4 2.55 3.80417 3.02083 3.4125 3.4125C3.02083 3.80417 2.55 4 2 4ZM8 4C7.45 4 6.97917 3.80417 6.5875 3.4125C6.19583 3.02083 6 2.55 6 2C6 1.45 6.19583 0.979167 6.5875 0.5875C6.97917 0.195833 7.45 0 8 0C8.55 0 9.02083 0.195833 9.4125 0.5875C9.80417 0.979167 10 1.45 10 2C10 2.55 9.80417 3.02083 9.4125 3.4125C9.02083 3.80417 8.55 4 8 4ZM14 4C13.45 4 12.9792 3.80417 12.5875 3.4125C12.1958 3.02083 12 2.55 12 2C12 1.45 12.1958 0.979167 12.5875 0.5875C12.9792 0.195833 13.45 0 14 0C14.55 0 15.0208 0.195833 15.4125 0.5875C15.8042 0.979167 16 1.45 16 2C16 2.55 15.8042 3.02083 15.4125 3.4125C15.0208 3.80417 14.55 4 14 4Z" fill="#1D1B20"/>
+    </symbol>
+
+    <!-- Sort -->
+    <symbol id="sort-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M9.97066 18.8067V1.13672M9.97066 1.13672L18.8057 9.97172M9.97066 1.13672L1.13566 9.97172" stroke="black" stroke-width="1.97904" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+
+    <!-- Dropdown -->
+    <symbol id="dropdown-icon" viewBox="0 0 15 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M7.11427 6.46831L12.3293 1.25327C12.4265 1.15265 12.5427 1.07239 12.6713 1.01717C12.7998 0.961959 12.9381 0.932896 13.0779 0.93168C13.2178 0.930465 13.3566 0.957121 13.486 1.01009C13.6155 1.06307 13.7331 1.1413 13.8321 1.24022C13.931 1.33914 14.0092 1.45677 14.0622 1.58624C14.1152 1.71572 14.1418 1.85445 14.1406 1.99434C14.1394 2.13423 14.1103 2.27247 14.0551 2.40101C13.9999 2.52954 13.9196 2.6458 13.819 2.74298L7.85912 8.70287C7.66155 8.90038 7.39363 9.01133 7.11427 9.01133C6.8349 9.01133 6.56698 8.90038 6.36941 8.70287L0.409525 2.74298C0.308901 2.6458 0.228639 2.52954 0.173424 2.40101C0.118209 2.27247 0.089146 2.13423 0.0879304 1.99434C0.0867148 1.85445 0.113371 1.71572 0.166344 1.58624C0.219317 1.45677 0.297546 1.33914 0.396466 1.24022C0.495386 1.1413 0.613016 1.06307 0.742492 1.01009C0.871969 0.957121 1.0107 0.930465 1.15059 0.93168C1.29048 0.932896 1.42872 0.961959 1.55726 1.01717C1.68579 1.07239 1.80205 1.15265 1.89923 1.25327L7.11427 6.46831Z" fill="black"/>
+    </symbol>
+
+    <!-- Search -->
+	<symbol id="icon-search" viewBox="0 0 21 21" fill="none">
+		<path d="M8.89152 15.9057C9.75056 15.9057 10.6012 15.7365 11.3948 15.4077C12.1885 15.079 12.9096 14.5972 13.5171 13.9897C14.1245 13.3823 14.6064 12.6612 14.9351 11.8675C15.2638 11.0739 15.433 10.2232 15.433 9.36417C15.433 8.50513 15.2638 7.6545 14.9351 6.86084C14.6064 6.06719 14.1245 5.34606 13.5171 4.73862C12.9096 4.13119 12.1885 3.64934 11.3948 3.3206C10.6012 2.99186 9.75056 2.82266 8.89152 2.82266C7.1566 2.82266 5.49274 3.51185 4.26597 4.73862C3.03919 5.9654 2.35 7.62926 2.35 9.36417C2.35 11.0991 3.03919 12.763 4.26597 13.9897C5.49274 15.2165 7.1566 15.9057 8.89152 15.9057V15.9057ZM15.7819 14.713L19.685 18.6161C19.7891 18.7167 19.872 18.8371 19.9291 18.9701C19.9861 19.1032 20.0161 19.2463 20.0173 19.391C20.0184 19.5358 19.9907 19.6793 19.9358 19.8133C19.8809 19.9472 19.7999 20.0689 19.6974 20.1712C19.595 20.2735 19.4732 20.3544 19.3392 20.4091C19.2052 20.4638 19.0616 20.4913 18.9168 20.4899C18.772 20.4886 18.629 20.4584 18.496 20.4012C18.3631 20.3439 18.2428 20.2608 18.1423 20.1566L14.2392 16.2535C12.4866 17.614 10.2814 18.2554 8.07247 18.0472C5.86357 17.839 3.81705 16.7968 2.34951 15.1328C0.881971 13.4688 0.103735 11.308 0.173229 9.09044C0.242723 6.87284 1.15472 4.76508 2.72357 3.19623C4.29242 1.62738 6.40018 0.715379 8.61778 0.645885C10.8354 0.576391 12.9961 1.35463 14.6601 2.82217C16.3241 4.28971 17.3663 6.33623 17.5745 8.54513C17.7827 10.754 17.1413 12.9592 15.7808 14.7119L15.7819 14.713Z" fill="#5A5252"/>
+	</symbol>
+
+	<!-- Filter -->
+	<symbol id="icon-filter" viewBox="0 0 23 22" fill="none">
+		<path opacity="0.9" d="M21.5399 1.92871H1.37988L9.44388 11.4644V18.0567L13.4759 20.0727V11.4644L21.5399 1.92871Z" stroke="#1E1E1E" stroke-width="2.016" stroke-linecap="round" stroke-linejoin="round"/>
+	</symbol>
+
+    <!-- Info Icon -->
+    <symbol id="info-icon" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M11 9V17M11 5V7M11 21C16.523 21 21 16.523 21 11C21 5.477 16.523 1 11 1C5.477 1 1 5.477 1 11C1 16.523 5.477 21 11 21Z" stroke="#00538E" stroke-width="2"/>
+    </symbol>
+
+	<!-- Edit -->
+	<symbol id="edit-icon" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+		<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+		<path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+	</symbol>
+
+</svg>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.settings-dropdown-toggle').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                // Hide all other dropdowns
+                document.querySelectorAll('.settings-dropdown-menu').forEach(function(menu) {
+                    menu.style.display = 'none';
+                });
+                // Show this dropdown
+                var menu = btn.parentElement.querySelector('.settings-dropdown-menu');
+                if (menu) {
+                    menu.style.display = 'block';
+                }
+            });
+        });
+        // Hide dropdown when clicking outside
+        document.addEventListener('click', function() {
+            document.querySelectorAll('.settings-dropdown-menu').forEach(function(menu) {
+                menu.style.display = 'none';
+            });
+        });
+    });
+
+    // Filter dropdown logic
+    const filterBtn = document.getElementById('filterBtn');
+    const filterDropdown = document.getElementById('filterDropdown');
+    const closeFilter = document.getElementById('closeFilter');
+    if (filterBtn && filterDropdown) {
+        filterBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            filterDropdown.style.display = 'block';
+        });
+    }
+    if (closeFilter && filterDropdown) {
+        closeFilter.addEventListener('click', function(e) {
+            e.preventDefault();
+            filterDropdown.style.display = 'none';
+        });
+    }
+    // Hide dropdown when clicking outside
+    document.addEventListener('mousedown', function(e) {
+        if (filterDropdown && !filterDropdown.contains(e.target) && e.target !== filterBtn) {
+            filterDropdown.style.display = 'none';
+        }
+    });
+</script>
+
 </body>
-</html> 
+</html>
+
+{% endblock %}

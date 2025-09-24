@@ -90,5 +90,34 @@ class Project(models.Model):
 	updated_at = models.DateTimeField(auto_now=True)
 	updated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='updated_projects')
 
+	STATUS_CHOICES = [
+		("NOT_STARTED", "Not Started"),
+		("IN_PROGRESS", "In Progress"),
+		("COMPLETED", "Completed"),
+		("ON_HOLD", "On Hold"),
+		("CANCELLED", "Cancelled"),
+	]
+
+	status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="NOT_STARTED")
+
+	def get_status_display(self):
+		return dict(self.STATUS_CHOICES).get(self.status, self.status)
+
+	@property
+	def progress(self):
+		# Placeholder: replace with real event logic
+		# Example: done_events = self.events.filter(status='DONE').count()
+		# total_events = self.events.count()
+		# return (done_events, total_events)
+		return (0, self.estimated_events or 0)
+
+	@property
+	def progress_display(self):
+		done, total = self.progress
+		if total:
+			percent = int((done / total) * 100)
+			return f"{done}/{total} ({percent}%)"
+		return "0/0 (0%)"
+
 	def __str__(self):
 		return self.title

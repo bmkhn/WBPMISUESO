@@ -26,7 +26,88 @@ def superuser_project(request):
     return render(request, 'projects/superuser_projects.html')
 
 def admin_projects(request):
-    return render(request, 'projects/admin_projects.html')
+    # Filters
+    sort_by = request.GET.get('sort_by', 'title')
+    order = request.GET.get('order', 'asc')
+    college = request.GET.get('college', '')
+    campus = request.GET.get('campus', '')
+    status = request.GET.get('status', '')
+    year = request.GET.get('year', '')
+    quarter = request.GET.get('quarter', '')
+    date = request.GET.get('date', '')
+    search = request.GET.get('search', '')
+
+    projects = Project.objects.all()
+
+    # Filter by college/campus via team leader
+    if college:
+        projects = projects.filter(project_leader__college__id=college)
+    if campus:
+        projects = projects.filter(project_leader__campus=campus)
+    if status:
+        projects = projects.filter(status=status)
+    if year:
+        projects = projects.filter(start_date__year=year)
+    if quarter:
+        # Q1: Jan-Mar, Q2: Apr-Jun, Q3: Jul-Sep, Q4: Oct-Dec
+        qmap = {'1': (1,3), '2': (4,6), '3': (7,9), '4': (10,12)}
+        if quarter in qmap:
+            start, end = qmap[quarter]
+            projects = projects.filter(start_date__month__gte=start, start_date__month__lte=end)
+    if date:
+        projects = projects.filter(start_date=date)
+    if search:
+        projects = projects.filter(title__icontains=search)
+
+    # Sorting
+    sort_map = {
+        'title': 'title',
+        'last_updated': 'updated_at',
+        'start_date': 'start_date',
+        'progress': '', # Placeholder, not supported in DB sort
+    }
+    sort_field = sort_map.get(sort_by, 'title')
+    if sort_field:
+        if order == 'desc':
+            sort_field = '-' + sort_field
+        projects = projects.order_by(sort_field)
+    # If progress sort, sort in Python
+    elif sort_by == 'progress':
+        projects = sorted(projects, key=lambda p: (p.progress[0] / p.progress[1]) if p.progress[1] else 0, reverse=(order=='desc'))
+
+    # Filter options
+    colleges = College.objects.all()
+    campuses = User.Campus.choices
+    status_choices = Project.STATUS_CHOICES
+    years = [d.year for d in projects.dates('start_date', 'year')]
+
+    # Pagination (optional, mimic old logic if needed)
+    from django.core.paginator import Paginator
+    paginator = Paginator(projects, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    page_range = paginator.get_elided_page_range(page_obj.number)
+
+    return render(request, 'projects/admin_projects.html', {
+        'projects': page_obj,
+        'colleges': colleges,
+        'campuses': campuses,
+        'status_choices': status_choices,
+        'years': years,
+        'sort_by': sort_by,
+        'order': order,
+        'college': college,
+        'campus': campus,
+        'status': status,
+        'year': year,
+        'quarter': quarter,
+        'date': date,
+        'search': search,
+        'page_obj': page_obj,
+        'paginator': paginator,
+        'page_range': page_range,
+        'querystring': request.GET.urlencode().replace('&page='+str(page_obj.number), '') if page_obj else '',
+    })
 
 
 User = get_user_model()
@@ -35,20 +116,23 @@ User = get_user_model()
 @role_required(allowed_roles=["VP", "DIRECTOR"])
 def add_project_view(request):
     error = None
-    users = User.objects.all()
+    faculty_users = User.objects.filter(role=User.Role.FACULTY)
+    provider_users = User.objects.filter(role__in=[User.Role.FACULTY, User.Role.IMPLEMENTER])
     agendas = Agenda.objects.all()
     sdgs = SustainableDevelopmentGoal.objects.all()
     colleges = College.objects.all()
     campus_choices = User.Campus.choices
 
+    logistics_type = 'BOTH'
     if request.method == 'POST':
         form = ProjectForm(request.POST, request.FILES)
         if form.is_valid():
             try:
                 project = form.save(commit=False)
                 project.created_by = request.user
+                project.status = 'NOT_STARTED'
                 project.logistics_type = form.cleaned_data['logistics_type']
-
+                logistics_type = form.cleaned_data['logistics_type']
 
                 project.save()
                 form.save_m2m()
@@ -70,20 +154,22 @@ def add_project_view(request):
                 for f in files:
                     project.additional_documents.create(file=f)
 
-
                 return projects_dispatcher(request)
             except Exception as e:
                 error = str(e)
         else:
             error = "Please correct the errors below."
+        logistics_type = request.POST.get('logistics_type', 'BOTH')
     else:
         form = ProjectForm()
     return render(request, 'projects/add_project.html', {
         'form': form,
         'error': error,
-        'users': users,
+        'faculty_users': faculty_users,
+        'provider_users': provider_users,
         'agendas': agendas,
         'sdgs': sdgs,
         'colleges': colleges,
         'campus_choices': campus_choices,
+        'logistics_type': logistics_type,
     })
