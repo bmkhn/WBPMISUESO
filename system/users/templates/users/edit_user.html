@@ -211,32 +211,62 @@
         color: #1f7c57;
         font-size: 0.95rem;
     }
+
+    span.required {
+        color: #e53e3e;
+    }
+
+    .error-message {
+        color: #e53e3e;
+        font-size: 0.9rem;
+        margin-top: -0.5rem;
+        margin-bottom: 0.5rem;
+    }
 </style>
+
 
 </head>
 <body>
 <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
     <div class="user-details-container">
-        <div class="user-details-title" style="display:flex;justify-content:space-between;align-items:center;">
-            <div>Edit User</div>
-            <div>
-                {% if user.is_confirmed %}
-                    <a href="{% url 'unverify_user' user.id %}" style="text-decoration:none;color:#1f7c57;font-weight:600;font-size:1em;background:#eafbe7;padding:6px 16px;border-radius:8px; cursor: pointer;">Verified</a>
-                {% else %}
-                    <a href="{% url 'verify_user' user.id %}" style="text-decoration:none;color:#E53E3E;font-weight:600;font-size:1em;background:#fdeaea;padding:6px 16px;border-radius:8px; cursor: pointer;">Unverified</a>
-                {% endif %}
+        <div class="user-details-title" style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span>Edit User</span>
+            </div>
+
+            {% if success %}
+            <div id="add-success-msg" style="color:#16a34a;font-size:1.1rem;font-weight:500;">User edited successfully.</div>
+            {% endif %}
+            {% if form.errors %}
+            <div id="add-error-msg" style="color:#e53e3e;font-size:1.05rem;font-weight:500;">
+                {% for field, errors in form.errors.items %}
+                    {% for error in errors %}
+                        <div>{{ error }}</div>
+                    {% endfor %}
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div style="position: absolute; top: 140px; right: 60px;">
+            {% if user.is_confirmed %}
+                <a href="{% url 'unverify_user' user.id %}" style="text-decoration:none;color:#1f7c57;font-weight:600;font-size:1em;background:#eafbe7;padding:6px 16px;border-radius:8px; cursor: pointer;">Verified</a>
+            {% else %}
+                <a href="{% url 'verify_user' user.id %}" style="text-decoration:none;color:#E53E3E;font-weight:600;font-size:1em;background:#fdeaea;padding:6px 16px;border-radius:8px; cursor: pointer;">Unverified</a>
+            {% endif %}
             </div>
         </div>
+    
+
         <div class="user-details-section">
             <div class="user-details-category">User Profile</div>
             <div class="user-details-row cols-4">
                 <div>
-                    <div class="user-details-label">Last Name</div>
+                    <div class="user-details-label">Last Name <span class="required">*</span></div>
                     <input type="text" name="last_name" class="user-details-value" value="{{ user.last_name }}" required>
                 </div>
                 <div>
-                    <div class="user-details-label">Given Name</div>
+                    <div class="user-details-label">Given Name <span class="required">*</span></div>
                     <input type="text" name="given_name" class="user-details-value" value="{{ user.given_name }}" required>
                 </div>
                 <div>
@@ -250,18 +280,18 @@
             </div>
             <div class="user-details-row cols-3">
                 <div>
-                    <div class="user-details-label">Sex</div>
+                    <div class="user-details-label">Sex <span class="required">*</span></div>
                     <select name="sex" class="user-details-value">
                         <option value="Male" {% if user.sex == 'Male' %}selected{% endif %}>Male</option>
                         <option value="Female" {% if user.sex == 'Female' %}selected{% endif %}>Female</option>
                     </select>
                 </div>
                 <div>
-                    <div class="user-details-label">Email</div>
+                    <div class="user-details-label">Email <span class="required">*</span></div>
                     <input type="email" name="email" class="user-details-value" value="{{ user.email }}" required>
                 </div>
                 <div>
-                    <div class="user-details-label">Contact Number</div>
+                    <div class="user-details-label">Contact Number <span class="required">*</span></div>
                     <input type="text" name="contact_no" class="user-details-value" value="{{ user.contact_no }}">
                 </div>
             </div>
@@ -301,6 +331,8 @@
             </div>
             {% endif %}
         </div>
+
+        <!-- Account Info Section -->
         <div class="user-details-section">
             <div class="user-details-category">Account Info</div>
             <div class="user-details-row cols-2">
@@ -330,12 +362,12 @@
                 <div class="user-details-category">Implementer Info</div>
                 <div class="user-details-row cols-2">
                     <div>
-                        <div class="user-details-label">Degree</div>
-                        <input type="text" name="degree" class="user-details-value" value="{{ user.degree }}">
+                        <div class="user-details-label">Degree <span class="required">*</span></div>
+                        <input type="text" name="degree" class="user-details-value" value="{{ user.degree }}" data-role-required>
                     </div>
                     <div>
-                        <div class="user-details-label">Expertise</div>
-                        <input type="text" name="expertise" class="user-details-value" value="{{ user.expertise }}">
+                        <div class="user-details-label">Expertise <span class="required">*</span></div>
+                        <input type="text" name="expertise" class="user-details-value" value="{{ user.expertise }}" data-role-required>
                     </div>
                 </div>
             </div>
@@ -347,8 +379,8 @@
                 <div class="user-details-category">Faculty Info</div>
                 <div class="user-details-row cols-2">
                     <div>
-                        <div class="user-details-label">College</div>
-                        <select name="college" class="user-details-value">
+                        <div class="user-details-label">College <span class="required">*</span></div>
+                        <select name="college" class="user-details-value" data-role-required>
                             <option value="">Select College</option>
                             {% for college in colleges %}
                                 <option value="{{ college.id }}" {% if user.college and user.college.id == college.id %}selected{% endif %}>{{ college.name }}</option>
@@ -356,8 +388,8 @@
                         </select>
                     </div>
                     <div>
-                        <div class="user-details-label">Campus</div>
-                        <select name="campus" class="user-details-value">
+                        <div class="user-details-label">Campus <span class="required">*</span></div>
+                        <select name="campus" class="user-details-value" data-role-required>
                             <option value="">Select Campus</option>
                             {% for value, label in campus_choices %}
                                 <option value="{{ value }}" {% if user.campus == value %}selected{% endif %}>{{ label }}</option>
@@ -367,12 +399,12 @@
                 </div>
                 <div class="user-details-row cols-2">
                     <div>
-                        <div class="user-details-label">Degree</div>
-                        <input type="text" name="degree" class="user-details-value" value="{{ user.degree }}">
+                        <div class="user-details-label">Degree <span class="required">*</span></div>
+                        <input type="text" name="degree" class="user-details-value" value="{{ user.degree }}" data-role-required>
                     </div>
                     <div>
-                        <div class="user-details-label">Expertise</div>
-                        <input type="text" name="expertise" class="user-details-value" value="{{ user.expertise }}">
+                        <div class="user-details-label">Expertise <span class="required">*</span></div>
+                        <input type="text" name="expertise" class="user-details-value" value="{{ user.expertise }}" data-role-required>
                     </div>
                 </div>
             </div>
@@ -384,12 +416,12 @@
                 <div class="user-details-category">Client Info</div>
                 <div class="user-details-row cols-2">
                     <div>
-                        <div class="user-details-label">Company</div>
-                        <input type="text" name="company" class="user-details-value" value="{{ user.company }}">
+                        <div class="user-details-label">Company <span class="required">*</span></div>
+                        <input type="text" name="company" class="user-details-value" value="{{ user.company }}" data-role-required>
                     </div>
                     <div>
-                        <div class="user-details-label">Industry</div>
-                        <input type="text" name="industry" class="user-details-value" value="{{ user.industry }}">
+                        <div class="user-details-label">Industry <span class="required">*</span></div>
+                        <input type="text" name="industry" class="user-details-value" value="{{ user.industry }}" data-role-required>
                     </div>
                 </div>
             </div>
@@ -401,8 +433,8 @@
                 <div class="user-details-category">Dean Info</div>
                 <div class="user-details-row cols-2">
                     <div>
-                        <div class="user-details-label">College</div>
-                        <select name="college" class="user-details-value">
+                        <div class="user-details-label">College <span class="required">*</span></div>
+                        <select name="college" class="user-details-value" data-role-required>
                             <option value="">Select College</option>
                             {% for college in colleges %}
                                 <option value="{{ college.id }}" {% if user.college and user.college.id == college.id %}selected{% endif %}>{{ college.name }}</option>
@@ -410,8 +442,8 @@
                         </select>
                     </div>
                     <div>
-                        <div class="user-details-label">Campus</div>
-                        <select name="campus" class="user-details-value">
+                        <div class="user-details-label">Campus <span class="required">*</span></div>
+                        <select name="campus" class="user-details-value" data-role-required>
                             <option value="">Select Campus</option>
                             {% for value, label in campus_choices %}
                                 <option value="{{ value }}" {% if user.campus == value %}selected{% endif %}>{{ label }}</option>
@@ -428,8 +460,8 @@
                 <div class="user-details-category">Program Head Info</div>
                 <div class="user-details-row cols-2">
                     <div>
-                        <div class="user-details-label">College</div>
-                        <select name="college" class="user-details-value">
+                        <div class="user-details-label">College <span class="required">*</span></div>
+                        <select name="college" class="user-details-value" data-role-required>
                             <option value="">Select College</option>
                             {% for college in colleges %}
                                 <option value="{{ college.id }}" {% if user.college and user.college.id == college.id %}selected{% endif %}>{{ college.name }}</option>
@@ -437,8 +469,8 @@
                         </select>
                     </div>
                     <div>
-                        <div class="user-details-label">Campus</div>
-                        <select name="campus" class="user-details-value">
+                        <div class="user-details-label">Campus <span class="required">*</span></div>
+                        <select name="campus" class="user-details-value" data-role-required>
                             <option value="">Select Campus</option>
                             {% for value, label in campus_choices %}
                                 <option value="{{ value }}" {% if user.campus == value %}selected{% endif %}>{{ label }}</option>
@@ -455,8 +487,8 @@
                 <div class="user-details-category">College Coordinator Info</div>
                 <div class="user-details-row cols-2">
                     <div>
-                        <div class="user-details-label">College</div>
-                        <select name="college" class="user-details-value">
+                        <div class="user-details-label">College <span class="required">*</span></div>
+                        <select name="college" class="user-details-value" data-role-required>
                             <option value="">Select College</option>
                             {% for college in colleges %}
                                 <option value="{{ college.id }}" {% if user.college and user.college.id == college.id %}selected{% endif %}>{{ college.name }}</option>
@@ -464,8 +496,8 @@
                         </select>
                     </div>
                     <div>
-                        <div class="user-details-label">Campus</div>
-                        <select name="campus" class="user-details-value">
+                        <div class="user-details-label">Campus <span class="required">*</span></div>
+                        <select name="campus" class="user-details-value" data-role-required>
                             <option value="">Select Campus</option>
                             {% for value, label in campus_choices %}
                                 <option value="{{ value }}" {% if user.campus == value %}selected{% endif %}>{{ label }}</option>
@@ -480,7 +512,6 @@
             <a href="{% url 'manage_user' %}" class="back btn">Back</a>
             <button type="submit" class="save btn">Save Changes</button>
         </div>
-
     </div>
 </form>
 
@@ -496,29 +527,6 @@
 </svg>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        var roleSelect = document.querySelector('select[name="role"]');
-        var roleBlocks = {
-            'IMPLEMENTER': document.getElementById('role-info-IMPLEMENTER'),
-            'FACULTY': document.getElementById('role-info-FACULTY'),
-            'CLIENT': document.getElementById('role-info-CLIENT'),
-            'DEAN': document.getElementById('role-info-DEAN'),
-            'PROGRAM_HEAD': document.getElementById('role-info-PROGRAM_HEAD'),
-        };
-        function updateRoleBlocks() {
-            var selected = roleSelect.value;
-            Object.keys(roleBlocks).forEach(function(role) {
-                if (role === selected) {
-                    roleBlocks[role].style.display = 'block';
-                } else {
-                    roleBlocks[role].style.display = 'none';
-                }
-            });
-        }
-        roleSelect.addEventListener('change', updateRoleBlocks);
-        updateRoleBlocks();
-    });
-
     // File Input Change Handler
     document.getElementById('id_valid_id').addEventListener('change', function(e) {
         const file = e.target.files[0];
@@ -531,7 +539,86 @@
         }
     });
 
+
+    // Role-Based Info Display
+    document.addEventListener('DOMContentLoaded', function() {
+        var roleSelect = document.querySelector('select[name="role"]');
+        var roleBlocks = {
+            'IMPLEMENTER': document.getElementById('role-info-IMPLEMENTER'),
+            'FACULTY': document.getElementById('role-info-FACULTY'),
+            'CLIENT': document.getElementById('role-info-CLIENT'),
+            'DEAN': document.getElementById('role-info-DEAN'),
+            'PROGRAM_HEAD': document.getElementById('role-info-PROGRAM_HEAD'),
+            'COORDINATOR': document.getElementById('role-info-COORDINATOR'),
+        };
+        function updateRoleBlocks() {
+            var selected = roleSelect.value;
+            Object.keys(roleBlocks).forEach(function(role) {
+                var block = roleBlocks[role];
+                if (role === selected) {
+                    block.style.display = 'block';
+                    // Add required to all inputs/selects in this block
+                    Array.from(block.querySelectorAll('input,select,textarea')).forEach(function(el) {
+                        if (el.hasAttribute('data-role-required')) {
+                            el.required = true;
+                        }
+                    });
+                } else {
+                    block.style.display = 'none';
+                    // Remove required from all inputs/selects in this block
+                    Array.from(block.querySelectorAll('input,select,textarea')).forEach(function(el) {
+                        if (el.hasAttribute('data-role-required')) {
+                            el.required = false;
+                        }
+                    });
+                }
+            });
+        }
+        roleSelect.addEventListener('change', updateRoleBlocks);
+        updateRoleBlocks();
+        // AJAX email uniqueness check (uses registration endpoint)
+        var emailInput = document.getElementById('email-input');
+        var emailError = document.getElementById('email-error');
+        function checkEmailAjax() {
+            var email = emailInput.value.trim();
+            if (!email) {
+                emailError.textContent = '';
+                emailError.style.display = 'none';
+                return;
+            }
+            fetch('/check-email/?email=' + encodeURIComponent(email))
+                .then(response => response.json())
+                .then(data => {
+                    if (data.exists) {
+                        emailError.textContent = 'This email is already registered.';
+                        emailError.style.display = 'block';
+                    } else {
+                        emailError.textContent = '';
+                        emailError.style.display = 'none';
+                    }
+                })
+                .catch(() => {
+                    emailError.textContent = 'Error checking email.';
+                    emailError.style.display = 'block';
+                });
+        }
+        if (emailInput) {
+            emailInput.addEventListener('blur', checkEmailAjax);
+            emailInput.addEventListener('input', checkEmailAjax);
+        }
+        document.getElementById('addUserForm').addEventListener('submit', function(e) {
+            var email = emailInput.value.trim();
+            if (email && emailError.style.display === 'block') {
+                e.preventDefault();
+                emailInput.focus();
+            }
+        });
+    });
+
+
     // Image Preview
+    // Set valid_id_url from template, fallback to empty string
+    var valid_id_url = "{% if user.valid_id and user.valid_id.name %}{{ user.valid_id.url }}{% else %}{% endif %}";
     document.getElementById('id_valid_id').addEventListener('change', function(e) {
         var file = e.target.files[0];
         var previewImg = document.getElementById('preview-img');
@@ -550,8 +637,8 @@
             fileNameSpan.textContent = file.name;
         } else {
             // Reset to original
-            previewImg.src = "{{ user.valid_id.url }}";
-            previewLink.href = "{{ user.valid_id.url }}";
+            previewImg.src = valid_id_url;
+            previewLink.href = valid_id_url ? valid_id_url : "#";
             fileNameSpan.textContent = '';
         }
     });

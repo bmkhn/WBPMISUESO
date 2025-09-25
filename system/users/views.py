@@ -421,6 +421,7 @@ def add_user(request):
     colleges = College.objects.all()
     campus_choices = User.Campus.choices
 
+    success = False
     if request.method == 'POST':
         data = request.POST
         files = request.FILES
@@ -448,7 +449,6 @@ def add_user(request):
 
                 if files.get('valid_id'):
                     user.valid_id = files['valid_id']
-                
                 user.is_confirmed = True
 
                 # Role-specific fields
@@ -470,11 +470,12 @@ def add_user(request):
                     user.campus = data.get('campus', '')
 
                 user.save()
-                return redirect('manage_user')
+                success = True
             except Exception as e:
                 error = str(e)
     return render(request, 'users/add_user.html', {
         'error': error,
+        'success': success,
         'roles': roles,
         'colleges': colleges,
         'campus_choices': campus_choices,
@@ -487,6 +488,7 @@ def edit_user(request, id):
     User = get_user_model()
     user = get_object_or_404(User, id=id)
     error = None
+    success = False
     if request.method == 'POST':
         data = request.POST
         files = request.FILES
@@ -528,7 +530,7 @@ def edit_user(request, id):
             if password:
                 user.set_password(password)
             user.save()
-            return redirect('manage_user')
+            success = True
         except Exception as e:
             error = str(e)
     colleges = College.objects.all()
@@ -536,6 +538,7 @@ def edit_user(request, id):
     return render(request, 'users/edit_user.html', {
         'user': user,
         'error': error,
+        'success': success,
         'colleges': colleges,
         'campus_choices': campus_choices,
     })

@@ -40,12 +40,9 @@ def project_proposal_upload_to(instance, filename):
 	return f"projects/unknown/proposals/{filename}"
 
 def project_additional_document_upload_to(instance, filename):
-	# Try to get project id from related projects
-	if hasattr(instance, 'projects') and instance.projects.exists():
-		project_id = instance.projects.first().id
-	else:
-		project_id = 'unknown'
-	return f"projects/{project_id}/additional_documents/{filename}"
+	if instance.id:
+		return f"projects/{instance.id}/additional_documents/{filename}"
+	return f"projects/unknown/additional_documents/{filename}"
 
 class ProjectDocument(models.Model):
 	file = models.FileField(upload_to=project_additional_document_upload_to)
@@ -78,9 +75,9 @@ class Project(models.Model):
 	primary_beneficiary = models.CharField(max_length=255)
 	primary_location = models.CharField(max_length=255)
 	logistics_type = models.CharField(max_length=10, choices=LOGISTICS_TYPE_CHOICES)
-	internal_budget = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-	external_budget = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-	sponsor_name = models.CharField(max_length=255, blank=True)
+	internal_budget = models.DecimalField(max_digits=12, decimal_places=2, default=0, blank=True, null=True)
+	external_budget = models.DecimalField(max_digits=12, decimal_places=2, default=0, blank=True, null=True)
+	sponsor_name = models.CharField(max_length=255,  blank=True, null=True)
 	start_date = models.DateField()
 	estimated_end_date = models.DateField()
 	proposal_document = models.FileField(upload_to=project_proposal_upload_to)

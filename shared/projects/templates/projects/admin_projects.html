@@ -509,12 +509,12 @@
                 {% for project in projects %}
                 <tr>
                     <td>
-                        <a href="{% url 'project_details' project.id %}" class="name-link">
-                            {{ project.title }}
+                        <a href="{% url 'project_details' project.id %}" class="name-link" title="{{ project.title }}">
+                            {{ project.title|truncatechars:20 }}
                         </a>
                     </td>
-                    <td>{{ project.team_leader.get_full_name }}</td>
-                    <td>{{ project.last_updated|date:"Y-m-d H:i" }}</td>
+                    <td>{{ project.project_leader.get_full_name }}</td>
+                    <td>{{ project.updated_at|date:"Y-m-d H:i" }}</td>
                     <td>{{ project.start_date|date:"Y-m-d" }}</td>
                     <td>{{ project.progress_display }}</td>
                     <td>{{ project.get_status_display }}</td>

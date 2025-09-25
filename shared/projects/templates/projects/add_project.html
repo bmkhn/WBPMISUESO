@@ -148,6 +148,17 @@
 		background: #1f7c57;
 		transform: translateY(-1px);
     }
+
+    span.required {
+        color: #e53e3e;
+    }
+
+    .error-message {
+        color: #e53e3e;
+        font-size: 0.9rem;
+        margin-top: -0.5rem;
+        margin-bottom: 0.5rem;
+    }
 </style>
 
 <!-- File Upload -->
@@ -166,7 +177,7 @@
 	}
 
 	.upload-area {
-		flex: 1;
+        flex: 1;
 		border: 2px dashed #E5E7EB;
 		border-radius: 8px;
 		padding: 2rem;
@@ -197,12 +208,15 @@
     }
 
     .file-preview {
-        margin-top: 1rem;
         padding: 1rem;
         background: #F0FDF4;
         border: 1px solid #BBF7D0;
         border-radius: 8px;
         display: none;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 15px;
     }
 
     .file-info {
@@ -211,6 +225,19 @@
         gap: 0.5rem;
         color: #1f7c57;
         font-size: 0.95rem;
+        flex: 1;
+    }
+
+    .remove-x {
+        color: #E53E3E;
+        font-weight: 400;
+        font-size: 1.1rem;
+        margin-left: auto;
+        cursor: pointer;
+        border: none;
+        background: none;
+        padding: 0 6px;
+        align-self: center;
     }
 </style>
 
@@ -299,21 +326,36 @@
 <form method="post" enctype="multipart/form-data" id="addProjectForm">
     {% csrf_token %}
     <div class="user-details-container">
-        <div class="user-details-title" style="display:flex;justify-content:space-between;align-items:center;">
-            <div>Add Project</div>
+        <div class="user-details-title" style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span>Add Project</span>
+            </div>
         </div>
+        {% if success %}
+        <div id="add-success-msg" style="color:#16a34a;font-size:1.1rem;font-weight:500;">Project added successfully.</div>
+        {% endif %}
+        {% if form.errors %}
+            <div id="add-error-msg" style="color:#e53e3e;font-size:1.05rem;font-weight:500;">
+                {% for field, errors in form.errors.items %}
+                    {% for error in errors %}
+                        <div><strong>{{ field|capfirst }}:</strong> {{ error }}</div>
+                    {% endfor %}
+                {% endfor %}
+            </div>
+        {% endif %}
+
         <div class="user-details-section">
             <div class="user-details-category">Project Profile</div>
             <div class="user-details-row cols-1">
                 <div>
-                    <div class="user-details-label">Title</div>
+                    <div class="user-details-label">Title <span class="required">*</span></div>
                     <input type="text" name="title" class="user-details-value" required>
                 </div>
             </div>
 
             <div class="user-details-row cols-2">
                 <div>
-                    <div class="user-details-label">Project Leader</div>
+                    <div class="user-details-label">Project Leader <span class="required">*</span></div>
                     <div id="project-leader-tag-row" class="college-row"></div>
                     <select id="project-leader-options-template" style="display:none;">
                         <option value="">Select Leader</option>
@@ -336,8 +378,8 @@
 
             <div class="user-details-row cols-2">
                 <div>
-                    <div class="user-details-label">Agenda</div>
-                    <select name="agenda" class="user-details-value">
+                    <div class="user-details-label">Agenda <span class="required">*</span></div>
+                    <select name="agenda" class="user-details-value" required>
                         <option value="" selected disabled>Select Agenda</option>
                         {% for agenda in agendas %}
                         <option value="{{ agenda }}">{{ agenda }}</option>
@@ -345,8 +387,8 @@
                     </select>
                 </div>
                 <div>
-                    <div class="user-details-label">Project Type</div>
-                    <select name="project_type" class="user-details-value">
+                    <div class="user-details-label">Project Type <span class="required">*</span></div>
+                    <select name="project_type" class="user-details-value" required>
                         <option value="" selected disabled>Select Type</option>
                         <option value="NEEDS_BASED">Needs Based</option>
                         <option value="RESEARCH_BASED">Research Based</option>
@@ -356,7 +398,7 @@
 
             <div class="user-details-row cols-1">
                 <div>
-                    <div class="user-details-label">Sustainable Development Goals</div>
+                    <div class="user-details-label">Sustainable Development Goals <span class="required">*</span></div>
                     <div id="sdgs-tag-row" class="college-row"></div>
                     <select id="sdgs-options-template" style="display:none;" multiple>
                         <option value="">Select SDG</option>
@@ -372,23 +414,23 @@
             <div class="user-details-category">Beneficiary</div>
             <div class="user-details-row cols-2">
                 <div>
-                    <div class="user-details-label">Primary Beneficiary</div>
-                    <input type="text" name="primary_beneficiary" class="user-details-value">
+                    <div class="user-details-label">Primary Beneficiary <span class="required">*</span></div>
+                    <input type="text" name="primary_beneficiary" class="user-details-value" required>
                 </div>
                 <div>
-                    <div class="user-details-label">No. of Estimated Events</div>
-                    <input type="number" name="estimated_events" class="user-details-value" min="0">
+                    <div class="user-details-label">No. of Estimated Events <span class="required">*</span></div>
+                    <input type="number" name="estimated_events" class="user-details-value" min="0" required>
                 </div>
             </div>
 
             <div class="user-details-row cols-2">
                 <div>
-                    <div class="user-details-label">Primary Location</div>
-                    <input type="text" name="primary_location" class="user-details-value">
+                    <div class="user-details-label">Primary Location <span class="required">*</span></div>
+                    <input type="text" name="primary_location" class="user-details-value" required>
                 </div>
                 <div>
-                    <div class="user-details-label">No. of Estimated Trainees</div>
-                    <input type="number" name="estimated_trainees" class="user-details-value" min="0">
+                    <div class="user-details-label">No. of Estimated Trainees <span class="required">*</span></div>
+                    <input type="number" name="estimated_trainees" class="user-details-value" min="0" required>
                 </div>
             </div>
         </div>
@@ -399,8 +441,8 @@
             <!-- Logistics Type -->
             <div class="user-details-row cols-1">
                 <div>
-                    <div class="user-details-label">Type</div>
-                    <select name="logistics_type" class="user-details-value">
+                    <div class="user-details-label">Type <span class="required">*</span></div>
+                    <select name="logistics_type" class="user-details-value" required>
                         <option value="BOTH">Both</option>
                         <option value="INTERNAL">Internal</option>
                         <option value="EXTERNAL">External</option>
@@ -412,19 +454,19 @@
             <div id="logistics-both" {% if logistics_type == 'BOTH' %}style="display:block;"{% else %}style="display:none;"{% endif %}>
                 <div class="user-details-row cols-2">
                     <div>
-                        <div class="user-details-label">Internal Budget Assigned</div>
-                        <input type="number" name="internal_budget" class="user-details-value" min="0" step="0.01">
+                        <div class="user-details-label">Internal Budget Assigned <span class="required">*</span></div>
+                        <input type="number" name="internal_budget" class="user-details-value" min="0" step="0.01" data-logistics-required>
                     </div>
                     <div>
-                        <div class="user-details-label">External Budget Assigned</div>
-                        <input type="number" name="external_budget" class="user-details-value" min="0" step="0.01">
+                        <div class="user-details-label">External Budget Assigned <span class="required">*</span></div>
+                        <input type="number" name="external_budget" class="user-details-value" min="0" step="0.01" data-logistics-required>
                     </div>
                 </div>
 
                 <div class="user-details-row cols-1">
                     <div>
-                        <div class="user-details-label">Sponsor Name</div>
-                        <input type="text" name="sponsor_name" class="user-details-value">
+                        <div class="user-details-label">Sponsor Name <span class="required">*</span></div>
+                        <input type="text" name="sponsor_name" class="user-details-value" data-logistics-required>
                     </div>
                 </div>
             </div>
@@ -433,8 +475,8 @@
             <div id="logistics-internal" {% if project.logistics_type == 'INTERNAL' %}style="display:block;"{% else %}style="display:none;"{% endif %}>
                 <div class="user-details-row cols-2">
                     <div>
-                        <div class="user-details-label">Internal Budget Assigned</div>
-                        <input type="number" name="internal_budget" class="user-details-value" min="0" step="0.01">
+                        <div class="user-details-label">Internal Budget Assigned <span class="required">*</span></div>
+                        <input type="number" name="internal_budget" class="user-details-value" min="0" step="0.01" data-logistics-required>
                     </div>
                     <div></div>
                 </div>
@@ -444,12 +486,12 @@
             <div id="logistics-external" {% if project.logistics_type == 'EXTERNAL' %}style="display:block;"{% else %}style="display:none;"{% endif %}>
                 <div class="user-details-row cols-2">
                     <div>
-                        <div class="user-details-label">External Budget Assigned</div>
-                        <input type="number" name="external_budget" class="user-details-value" min="0" step="0.01">
+                        <div class="user-details-label">External Budget Assigned <span class="required">*</span></div>
+                        <input type="number" name="external_budget" class="user-details-value" min="0" step="0.01" data-logistics-required>
                     </div>
                     <div>
-                        <div class="user-details-label">Sponsor Name</div>
-                        <input type="text" name="sponsor_name" class="user-details-value">
+                        <div class="user-details-label">Sponsor Name <span class="required">*</span></div>
+                        <input type="text" name="sponsor_name" class="user-details-value" data-logistics-required>
                     </div>
                 </div>
             </div>
@@ -457,23 +499,43 @@
             <!-- Date and Document Upload -->
             <div class="user-details-row cols-2">
                 <div>
-                    <div class="user-details-label">Start Date</div>
-                    <input type="date" name="start_date" class="user-details-value">
+                    <div class="user-details-label">Start Date <span class="required">*</span></div>
+                    <input type="date" name="start_date" class="user-details-value" required>
                 </div>
                 <div>
-                    <div class="user-details-label">Estimated End Date</div>
-                    <input type="date" name="estimated_end_date" class="user-details-value">
+                    <div class="user-details-label">Estimated End Date <span class="required">*</span></div>
+                    <input type="date" name="estimated_end_date" class="user-details-value" required>
                 </div>
             </div>
 
             <div class="user-details-row cols-2">
                 <div>
-                    <div class="user-details-label">Proposal Document</div>
-                    <input type="file" name="proposal_document" class="user-details-value" accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <div class="user-details-label">Proposal Document <span class="required">*</span></div>
+                        <div class="upload-area" onclick="document.getElementById('id_proposal_document').click()">
+                            <svg class="upload-icon"><use href="#icon-upload"></use></svg>
+                            <span class="upload-text">Click to upload</span>
+                            <input class="file-input" type="file" name="proposal_document" id="id_proposal_document" style="display:none;" accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+                        </div>
+                    </div>
+                    <div class="file-preview" id="proposal-file-preview" style="display:none;">
+                        <div class="file-info" style="flex:1;">
+                            <svg width="16" height="16"><use href="#icon-upload"></use></svg>
+                            <span id="proposal-file-name"></span>
+                        </div>
+                        <button type="button" id="remove-proposal-file" class="remove-x">✕</button>
+                    </div>
                 </div>
                 <div>
-                    <div class="user-details-label">Additional Documents</div>
-                    <input type="file" name="additional_documents" class="user-details-value" multiple>
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <div class="user-details-label">Additional Documents <span class="required">*</span></div>
+                        <div class="upload-area" onclick="document.getElementById('id_additional_documents').click()">
+                            <svg class="upload-icon"><use href="#icon-upload"></use></svg>
+                            <span class="upload-text">Click to upload</span>
+                            <input class="file-input" type="file" name="additional_documents" id="id_additional_documents" style="display:none;" multiple accept="*/*">
+                        </div>
+                    </div>
+                    <div id="additional-files-list"></div>
                 </div>
             </div>
         </div>
@@ -489,18 +551,200 @@
 <!-- SVG Sprite Section -->
 <svg style="display:none;" xmlns="http://www.w3.org/2000/svg">
 
+    <!-- Add Icon -->
     <symbol id="icon-add" viewBox="0 0 16 16">
         <path d="M6.80039 14.4004C6.80039 14.7187 6.92682 15.0239 7.15186 15.2489C7.37691 15.474 7.68213 15.6004 8.00039 15.6004C8.31865 15.6004 8.62388 15.474 8.84892 15.2489C9.07396 15.0239 9.20039 14.7187 9.20039 14.4004V9.20039H14.4004C14.7187 9.20039 15.0239 9.07396 15.2489 8.84892C15.474 8.62388 15.6004 8.31865 15.6004 8.00039C15.6004 7.68213 15.474 7.37691 15.2489 7.15186C15.0239 6.92682 14.7187 6.80039 14.4004 6.80039H9.20039V1.60039C9.20039 1.28213 9.07396 0.976906 8.84892 0.751863C8.62388 0.526819 8.31865 0.400391 8.00039 0.400391C7.68213 0.400391 7.37691 0.526819 7.15186 0.751863C6.92682 0.976906 6.80039 1.28213 6.80039 1.60039V6.80039H1.60039C1.28213 6.80039 0.976906 6.92682 0.751863 7.15186C0.526819 7.37691 0.400391 7.68213 0.400391 8.00039C0.400391 8.31865 0.526819 8.62388 0.751863 8.84892C0.976906 9.07396 1.28213 9.20039 1.60039 9.20039H6.80039V14.4004Z" fill="black"/>
     </symbol>
 
+    <!-- Edit Icon -->
     <symbol id="icon-edit" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M2 16H3.425L13.2 6.225L11.775 4.8L2 14.575V16ZM1 18C0.716667 18 0.479333 17.904 0.288 17.712C0.0966668 17.52 0.000666667 17.2827 0 17V14.575C0 14.3083 0.0500001 14.054 0.15 13.812C0.25 13.57 0.391667 13.3577 0.575 13.175L13.2 0.575C13.4 0.391667 13.621 0.25 13.863 0.15C14.105 0.0500001 14.359 0 14.625 0C14.891 0 15.1493 0.0500001 15.4 0.15C15.6507 0.25 15.8673 0.4 16.05 0.6L17.425 2C17.625 2.18333 17.7707 2.4 17.862 2.65C17.9533 2.9 17.9993 3.15 18 3.4C18 3.66667 17.954 3.921 17.862 4.163C17.77 4.405 17.6243 4.62567 17.425 4.825L4.825 17.425C4.64167 17.6083 4.429 17.75 4.187 17.85C3.945 17.95 3.691 18 3.425 18H1ZM12.475 5.525L11.775 4.8L13.2 6.225L12.475 5.525Z" fill="black"/>
+    </symbol>
+
+    <!-- Upload Icon -->
+    <symbol id="icon-upload" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+        <path d="M12,11L8,15H16L12,11Z" />
     </symbol>
 
 </svg>
 
 
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Global error catcher for form submission
+        var form = document.getElementById('addProjectForm');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                var errorDiv = document.getElementById('form-error-message');
+                if (errorDiv) errorDiv.style.display = 'none';
+                errorDiv.textContent = '';
+                // Custom required validation for tag UIs
+                var leaderTagRow = document.getElementById('project-leader-tag-row');
+                var sdgsTagRow = document.getElementById('sdgs-tag-row');
+                var providersTagRow = document.getElementById('providers-tag-row');
+                var leaderSelected = leaderTagRow && leaderTagRow.querySelectorAll('.college-tag').length > 0;
+                var sdgsSelected = sdgsTagRow && sdgsTagRow.querySelectorAll('.college-tag').length > 0;
+                var errorMessages = [];
+                if (!leaderSelected) {
+                    errorMessages.push('Project Leader is required.');
+                }
+                if (!sdgsSelected) {
+                    errorMessages.push('At least one SDG is required.');
+                }
+                if (errorMessages.length > 0) {
+                    e.preventDefault();
+                    if (errorDiv) {
+                        errorDiv.innerHTML = errorMessages.map(msg => `<div>${msg}</div>`).join('');
+                        errorDiv.style.display = 'block';
+                    }
+                    return;
+                }
+
+                // Guarantee hidden inputs for all selected providers and SDGs
+                function ensureHiddenInputs(tagRow, inputName, single) {
+                    if (!tagRow) return;
+                    // Remove any existing hidden inputs for this field
+                    Array.from(tagRow.querySelectorAll('input[name^="' + inputName + '"]')).forEach(function(input) {
+                        input.remove();
+                    });
+                    // Add hidden inputs for each selected tag
+                    var tags = tagRow.querySelectorAll('.college-tag');
+                    tags.forEach(function(tag) {
+                        var value = tag.getAttribute('data-id');
+                        if (!value) {
+                            // Try to find the value from a child input if present
+                            var hidden = tag.querySelector('input[type="hidden"]');
+                            if (hidden) value = hidden.value;
+                        }
+                        if (value) {
+                            var hiddenInput = document.createElement('input');
+                            hiddenInput.type = 'hidden';
+                            hiddenInput.name = inputName + (single ? '' : '[]');
+                            hiddenInput.value = value;
+                            tagRow.appendChild(hiddenInput);
+                        }
+                    });
+                }
+                ensureHiddenInputs(providersTagRow, 'providers', false);
+                ensureHiddenInputs(sdgsTagRow, 'sdgs', false);
+
+                // Guarantee all files in additional documents input are present
+                var additionalInput = document.getElementById('id_additional_documents');
+                if (additionalInput && typeof additionalFiles !== 'undefined' && additionalFiles.length > 0) {
+                    // Update input's files property to match additionalFiles array
+                    var dt = new DataTransfer();
+                    additionalFiles.forEach(function(file) { dt.items.add(file); });
+                    additionalInput.files = dt.files;
+                }
+
+                try {
+                    // You can add other custom validation here if needed
+                } catch (err) {
+                    if (errorDiv) {
+                        errorDiv.textContent = 'Form submission error: ' + (err.message || err);
+                        errorDiv.style.display = 'block';
+                    }
+                    e.preventDefault();
+                }
+            });
+        }
+    });
+
+    // Catch any uncaught JS errors and display them
+    window.addEventListener('error', function(event) {
+        var errorDiv = document.getElementById('form-error-message');
+        if (errorDiv) {
+            errorDiv.textContent = 'JavaScript error: ' + event.message;
+            if (errorDiv) errorDiv.style.display = 'block';
+        }
+    });
+    // File Input Change Handler
+    // Proposal Document Preview
+    const proposalInput = document.getElementById('id_proposal_document');
+    const proposalPreview = document.getElementById('proposal-file-preview');
+    const proposalNameSpan = document.getElementById('proposal-file-name');
+    const removeProposalBtn = document.getElementById('remove-proposal-file');
+
+    proposalInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            proposalNameSpan.textContent = file.name;
+            if (proposalPreview) proposalPreview.style.display = 'flex';
+            if (removeProposalBtn) removeProposalBtn.style.display = 'inline-block';
+        } else {
+            proposalNameSpan.textContent = '';
+            if (proposalPreview) proposalPreview.style.display = 'none';
+            if (removeProposalBtn) removeProposalBtn.style.display = 'none';
+        }
+    });
+
+    removeProposalBtn.addEventListener('click', function() {
+        proposalInput.value = '';
+        proposalNameSpan.textContent = '';
+    if (proposalPreview) proposalPreview.style.display = 'none';
+    if (removeProposalBtn) removeProposalBtn.style.display = 'none';
+    });
+
+    // Additional Documents Preview (show all file names with remove buttons)
+    const additionalInput = document.getElementById('id_additional_documents');
+    const additionalPreview = document.getElementById('additional-file-preview');
+    const additionalFilesList = document.getElementById('additional-files-list');
+    let additionalFiles = [];
+
+    // Allow adding more files to the list, not replacing
+    additionalInput.addEventListener('change', function(e) {
+        const newFiles = Array.from(e.target.files);
+        // Only add files that aren't already present (by name and size)
+        newFiles.forEach(f => {
+            if (!additionalFiles.some(existing => existing.name === f.name && existing.size === f.size)) {
+                additionalFiles.push(f);
+            }
+        });
+        updateAdditionalInput();
+        renderAdditionalFiles();
+    });
+
+    function renderAdditionalFiles() {
+        additionalFilesList.innerHTML = '';
+        if (additionalFiles.length > 0) {
+            additionalFiles.forEach((file, idx) => {
+                // Create a separate file-preview block for each file
+                const preview = document.createElement('div');
+                preview.className = 'file-preview';
+                if (preview) preview.style.display = 'flex';
+                preview.style.alignItems = 'center';
+                preview.style.justifyContent = 'space-between';
+                const info = document.createElement('div');
+                info.className = 'file-info';
+                info.innerHTML = `<svg width="16" height="16"><use href="#icon-upload"></use></svg> <span>${file.name}</span>`;
+                const removeBtn = document.createElement('button');
+                removeBtn.textContent = '✕';
+                removeBtn.type = 'button';
+                removeBtn.className = 'remove-x';
+                removeBtn.onclick = function() {
+                    additionalFiles.splice(idx, 1);
+                    updateAdditionalInput();
+                    renderAdditionalFiles();
+                };
+                preview.appendChild(info);
+                preview.appendChild(removeBtn);
+                additionalFilesList.appendChild(preview);
+            });
+            if (additionalPreview) additionalPreview.style.display = 'block';
+        } else {
+            if (additionalPreview) additionalPreview.style.display = 'none';
+        }
+    }
+
+    function updateAdditionalInput() {
+        // Create a new DataTransfer to update the input's files
+        const dt = new DataTransfer();
+        additionalFiles.forEach(file => dt.items.add(file));
+        additionalInput.files = dt.files;
+    }
+
+
     // Tag UI logic for Project Leader, Providers, SDGs
 
     // Enhanced Tag UI logic for Project Leader, Providers, SDGs
@@ -509,7 +753,7 @@
         const optionsTemplate = document.getElementById(optionsTemplateId);
         const selectDropdown = document.createElement('select');
         selectDropdown.id = rowId + '-dropdown';
-        selectDropdown.style.display = 'none';
+    if (selectDropdown) selectDropdown.style.display = 'none';
         selectDropdown.style.position = 'fixed';
         selectDropdown.style.fontFamily = "Inter, Arial, sans-serif";
         selectDropdown.style.fontSize = "13px";
@@ -574,7 +818,7 @@
                 addBtn.innerHTML = `<svg width="16" height="16"><use href="#icon-add" /></svg>`;
                 addBtn.onclick = function(e) {
                     const btnRect = addBtn.getBoundingClientRect();
-                    selectDropdown.style.display = 'block';
+                    if (selectDropdown) selectDropdown.style.display = 'block';
                     selectDropdown.style.position = 'fixed';
                     selectDropdown.style.left = (btnRect.left) + 'px';
                     selectDropdown.style.top = (btnRect.bottom + 4) + 'px';
@@ -619,7 +863,7 @@
                 editBtn.title = 'Change';
                 editBtn.onclick = function() {
                     const btnRect = editBtn.getBoundingClientRect();
-                    selectDropdown.style.display = 'block';
+                    if (selectDropdown) selectDropdown.style.display = 'block';
                     selectDropdown.style.position = 'fixed';
                     selectDropdown.style.left = (btnRect.left) + 'px';
                     selectDropdown.style.top = (btnRect.bottom + 4) + 'px';
@@ -677,12 +921,12 @@
                 renderTags();
             }
             selectDropdown.value = '';
-            selectDropdown.style.display = 'none';
+            if (selectDropdown) selectDropdown.style.display = 'none';
                 // If project leader changed, update providers (handled in renderTags now)
         };
         document.addEventListener('mousedown', function(e) {
-            if (!selectDropdown.contains(e.target) && e.target.id !== rowId + '-add-btn' && e.target.id !== rowId + '-edit-btn') {
-                selectDropdown.style.display = 'none';
+            if (selectDropdown && !selectDropdown.contains(e.target) && e.target.id !== rowId + '-add-btn' && e.target.id !== rowId + '-edit-btn') {
+                if (selectDropdown) selectDropdown.style.display = 'none';
             }
         });
         return {
@@ -703,7 +947,7 @@
         }
     }
 
-    // Logistics Block Logic
+    // Logistics Block Logic with custom required
     document.addEventListener('DOMContentLoaded', function() {
         var logisticsSelects = document.querySelector('select[name="logistics_type"]');
         var logisticsBlock = {
@@ -712,17 +956,34 @@
             'EXTERNAL': document.getElementById('logistics-external'),
         };
         function updateLogisticsBlocks() {
+            if (!logisticsSelects) return;
             var selected = logisticsSelects.value;
             Object.keys(logisticsBlock).forEach(function(logistics_type) {
+                var block = logisticsBlock[logistics_type];
+                if (!block) return;
                 if (logistics_type === selected) {
-                    logisticsBlock[logistics_type].style.display = 'block';
+                    if (block) block.style.display = 'block';
+                    // Add required to all inputs/selects in this block with data-logistics-required
+                    Array.from(block.querySelectorAll('input,select,textarea')).forEach(function(el) {
+                        if (el.hasAttribute('data-logistics-required')) {
+                            el.required = true;
+                        }
+                    });
                 } else {
-                    logisticsBlock[logistics_type].style.display = 'none';
+                    if (block) block.style.display = 'none';
+                    // Remove required from all inputs/selects in this block with data-logistics-required
+                    Array.from(block.querySelectorAll('input,select,textarea')).forEach(function(el) {
+                        if (el.hasAttribute('data-logistics-required')) {
+                            el.required = false;
+                        }
+                    });
                 }
             });
         }
-        logisticsSelects.addEventListener('change', updateLogisticsBlocks);
-        updateLogisticsBlocks();
+        if (logisticsSelects) {
+            logisticsSelects.addEventListener('change', updateLogisticsBlocks);
+            updateLogisticsBlocks();
+        }
     });
 </script>
 

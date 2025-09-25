@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 from system.users.decorators import role_required
 from django.contrib.auth.decorators import login_required
 from system.users.models import College, User
@@ -135,8 +135,25 @@ def add_project_view(request):
                 logistics_type = form.cleaned_data['logistics_type']
 
                 project.save()
-                form.save_m2m()
 
+                # Set many-to-many fields explicitly from POST (hidden inputs)
+                provider_ids = request.POST.getlist('providers[]')
+                if provider_ids:
+                    project.providers.set(provider_ids)
+                else:
+                    providers = form.cleaned_data.get('providers')
+                    if providers:
+                        project.providers.set(providers)
+
+                sdg_ids = request.POST.getlist('sdgs[]')
+                if sdg_ids:
+                    project.sdgs.set(sdg_ids)
+                else:
+                    sdgs = form.cleaned_data.get('sdgs')
+                    if sdgs:
+                        project.sdgs.set(sdgs)
+
+                # Set logistics fields
                 if project.logistics_type == 'BOTH':
                     project.internal_budget = form.cleaned_data['internal_budget']
                     project.external_budget = form.cleaned_data['external_budget']
@@ -149,12 +166,14 @@ def add_project_view(request):
                     project.internal_budget = 0
                     project.external_budget = form.cleaned_data['external_budget']
                     project.sponsor_name = form.cleaned_data['sponsor_name']
+                project.save()
 
+                # Save additional documents robustly
+                from .models import ProjectDocument
                 files = request.FILES.getlist('additional_documents')
                 for f in files:
-                    project.additional_documents.create(file=f)
-
-                return projects_dispatcher(request)
+                    doc = ProjectDocument.objects.create(file=f)
+                    project.additional_documents.add(doc)
             except Exception as e:
                 error = str(e)
         else:
@@ -173,3 +192,9 @@ def add_project_view(request):
         'campus_choices': campus_choices,
         'logistics_type': logistics_type,
     })
+
+
+def project_details(request, pk):
+    project = get_object_or_404(Project, pk=pk)
+    # Pass all fields to the template for inspection
+    return render(request, 'projects/project_details.html', {'project': project})

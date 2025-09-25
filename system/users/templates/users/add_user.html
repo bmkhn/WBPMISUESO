@@ -5,7 +5,6 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Edit User</title>
 <title>Add User</title>
 
 <link href="https://fonts.googleapis.com/css?family=Inter:400,500,700&display=swap" rel="stylesheet">
@@ -151,7 +150,6 @@
     }
 </style>
 
-
 <style>
     .form-group {
 		display: flex;
@@ -213,6 +211,17 @@
         color: #1f7c57;
         font-size: 0.95rem;
     }
+
+    span.required {
+        color: #e53e3e;
+    }
+
+    .error-message {
+        color: #e53e3e;
+        font-size: 0.9rem;
+        margin-top: -0.5rem;
+        margin-bottom: 0.5rem;
+    }
 </style>
 
 </head>
@@ -221,18 +230,35 @@
 <form method="post" enctype="multipart/form-data" id="addUserForm">
     {% csrf_token %}
     <div class="user-details-container">
-        <div class="user-details-title" style="display:flex;justify-content:space-between;align-items:center;">
-            <div>Add User</div>
+        <div class="user-details-title" style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span>Add User</span>
+            </div>
+
+            {% if success %}
+            <div id="add-success-msg" style="color:#16a34a;font-size:1.1rem;font-weight:500;">User added successfully.</div>
+            {% endif %}
+            {% if form.errors %}
+            <div id="add-error-msg" style="color:#e53e3e;font-size:1.05rem;font-weight:500;">
+                {% for field, errors in form.errors.items %}
+                    {% for error in errors %}
+                        <div>{{ error }}</div>
+                    {% endfor %}
+                {% endfor %}
+            </div>
+            {% endif %}
         </div>
+
+        <!-- User Details Section -->
         <div class="user-details-section">
             <div class="user-details-category">User Profile</div>
             <div class="user-details-row cols-4">
                 <div>
-                    <div class="user-details-label">Last Name</div>
+                    <div class="user-details-label">Last Name <span class="required">*</span></div>
                     <input type="text" name="last_name" class="user-details-value" value="" required>
                 </div>
                 <div>
-                    <div class="user-details-label">Given Name</div>
+                    <div class="user-details-label">Given Name <span class="required">*</span></div>
                     <input type="text" name="given_name" class="user-details-value" value="" required>
                 </div>
                 <div>
@@ -246,7 +272,7 @@
             </div>
             <div class="user-details-row cols-3">
                 <div>
-                    <div class="user-details-label">Sex</div>
+                    <div class="user-details-label">Sex <span class="required">*</span></div>
                     <select name="sex" class="user-details-value">
                         <option value="" selected disabled>Select Sex</option>
                         <option value="Male">Male</option>
@@ -254,12 +280,13 @@
                     </select>
                 </div>
                 <div>
-                    <div class="user-details-label">Email</div>
-                    <input type="email" name="email" class="user-details-value" value="" required>
+                    <div class="user-details-label">Email <span class="required">*</span></div>
+                    <input type="email" name="email" class="user-details-value" value="" required id="email-input">
+                    <div id="email-error" class="error-message"></div>
                 </div>
                 <div>
-                    <div class="user-details-label">Contact Number</div>
-                    <input type="text" name="contact_no" class="user-details-value" value="">
+                    <div class="user-details-label">Contact Number <span class="required">*</span></div>
+                    <input type="text" name="contact_no" class="user-details-value" value="" required>
                 </div>
             </div>
             <div>
@@ -270,9 +297,8 @@
                     <div class="upload-area" onclick="document.getElementById('id_valid_id').click()">
                         <svg class="upload-icon"><use href="#icon-upload"></use></svg>
                         <span class="upload-text">Click to upload</span>
-                        <input class="file-input" type="file" name="valid_id" id="id_valid_id" style="display:none;" accept="*/*" required>
+                        <input class="file-input" type="file" name="valid_id" id="id_valid_id" style="display:none;" accept="*/*">
                     </div>
-                    <div id="file-error" class="error-message" style="display:none;">File is required.</div>
                 </div>
                 <div class="file-preview" id="file-preview">
                     <div class="file-info">
@@ -283,11 +309,13 @@
 
             </div>
         </div>
+
+        <!-- Account Info Section -->
         <div class="user-details-section">
             <div class="user-details-category">Account Info</div>
             <div class="user-details-row cols-2">
                 <div>
-                    <div class="user-details-label">Role</div>
+                    <div class="user-details-label">Role <span class="required">*</span></div>
                     <select name="role" class="user-details-value">
                         <option value="" selected disabled>Select Role</option>
                         {% for r in roles %}
@@ -296,10 +324,9 @@
                     </select>
                 </div>
                 <div>
-                    <div class="user-details-label">Password</div>
+                    <div class="user-details-label">Password <span class="required">*</span></div>
                     <input type="password" name="password" class="user-details-value" value="" required>
                 </div>
-                <!-- No joined date for add user -->
             </div>
         </div>
 
@@ -309,12 +336,12 @@
                 <div class="user-details-category">Implementer Info</div>
                 <div class="user-details-row cols-2">
                     <div>
-                        <div class="user-details-label">Degree</div>
-                        <input type="text" name="degree" class="user-details-value" value="">
+                        <div class="user-details-label">Degree <span class="required">*</span></div>
+                        <input type="text" name="degree" class="user-details-value" value="" data-role-required>
                     </div>
                     <div>
-                        <div class="user-details-label">Expertise</div>
-                        <input type="text" name="expertise" class="user-details-value" value="">
+                        <div class="user-details-label">Expertise <span class="required">*</span></div>
+                        <input type="text" name="expertise" class="user-details-value" value="" data-role-required>
                     </div>
                 </div>
             </div>
@@ -326,17 +353,18 @@
                 <div class="user-details-category">Faculty Info</div>
                 <div class="user-details-row cols-2">
                     <div>
-                        <div class="user-details-label">College</div>
-                        <select name="college" class="user-details-value">
+                        <div class="user-details-label">College <span class="required">*</span></div>
+                        <select name="college" class="user-details-value" data-role-required>
                             <option value="">Select College</option>
                             {% for college in colleges %}
                                 <option value="{{ college.id }}">{{ college.name }}</option>
                             {% endfor %}
                         </select>
+                        </select>
                     </div>
                     <div>
-                        <div class="user-details-label">Campus</div>
-                        <select name="campus" class="user-details-value">
+                        <div class="user-details-label">Campus <span class="required">*</span></div>
+                        <select name="campus" class="user-details-value" data-role-required>
                             <option value="">Select Campus</option>
                             {% for value, label in campus_choices %}
                                 <option value="{{ value }}">{{ label }}</option>
@@ -346,12 +374,12 @@
                 </div>
                 <div class="user-details-row cols-2">
                     <div>
-                        <div class="user-details-label">Degree</div>
-                        <input type="text" name="degree" class="user-details-value" value="">
+                        <div class="user-details-label">Degree <span class="required">*</span></div>
+                        <input type="text" name="degree" class="user-details-value" value="" data-role-required>
                     </div>
                     <div>
-                        <div class="user-details-label">Expertise</div>
-                        <input type="text" name="expertise" class="user-details-value" value="">
+                        <div class="user-details-label">Expertise <span class="required">*</span></div>
+                        <input type="text" name="expertise" class="user-details-value" value="" data-role-required>
                     </div>
                 </div>
             </div>
@@ -360,15 +388,15 @@
         <!-- Client Info -->
         <div id="role-info-CLIENT" class="role-info-block" {% if user.role == 'CLIENT' %}style="display:block;"{% else %}style="display:none;"{% endif %}>
             <div class="user-details-section">
-                <div class="user-details-category">Client Info</div>
+                <div class="user-details-category">Faculty Info</div>
                 <div class="user-details-row cols-2">
                     <div>
-                        <div class="user-details-label">Company</div>
-                        <input type="text" name="company" class="user-details-value" value="">
+                        <div class="user-details-label">Company <span class="required">*</span></div>
+                        <input type="text" name="company" class="user-details-value" value="" data-role-required>
                     </div>
                     <div>
-                        <div class="user-details-label">Industry</div>
-                        <input type="text" name="industry" class="user-details-value" value="">
+                        <div class="user-details-label">Industry <span class="required">*</span></div>
+                        <input type="text" name="industry" class="user-details-value" value="" data-role-required>
                     </div>
                 </div>
             </div>
@@ -380,8 +408,8 @@
                 <div class="user-details-category">Dean Info</div>
                 <div class="user-details-row cols-2">
                     <div>
-                        <div class="user-details-label">College</div>
-                        <select name="college" class="user-details-value">
+                        <div class="user-details-label">College <span class="required">*</span></div>
+                        <select name="college" class="user-details-value" data-role-required>
                             <option value="">Select College</option>
                             {% for college in colleges %}
                                 <option value="{{ college.id }}">{{ college.name }}</option>
@@ -390,8 +418,8 @@
                         </select>
                     </div>
                     <div>
-                        <div class="user-details-label">Campus</div>
-                        <select name="campus" class="user-details-value">
+                        <div class="user-details-label">Campus <span class="required">*</span></div>
+                        <select name="campus" class="user-details-value" data-role-required>
                             <option value="">Select Campus</option>
                             {% for value, label in campus_choices %}
                                 <option value="{{ value }}">{{ label }}</option>
@@ -408,8 +436,8 @@
                 <div class="user-details-category">Program Head Info</div>
                 <div class="user-details-row cols-2">
                     <div>
-                        <div class="user-details-label">College</div>
-                        <select name="college" class="user-details-value">
+                        <div class="user-details-label">College <span class="required">*</span></div>
+                        <select name="college" class="user-details-value" data-role-required>
                             <option value="">Select College</option>
                             {% for college in colleges %}
                                 <option value="{{ college.id }}" {% if user.college and user.college.id == college.id %}selected{% endif %}>{{ college.name }}</option>
@@ -417,8 +445,8 @@
                         </select>
                     </div>
                     <div>
-                        <div class="user-details-label">Campus</div>
-                        <select name="campus" class="user-details-value">
+                        <div class="user-details-label">Campus <span class="required">*</span></div>
+                        <select name="campus" class="user-details-value" data-role-required>
                             <option value="">Select Campus</option>
                             {% for value, label in campus_choices %}
                                 <option value="{{ value }}" {% if user.campus == value %}selected{% endif %}>{{ label }}</option>
@@ -436,7 +464,7 @@
                 <div class="user-details-row cols-2">
                     <div>
                         <div class="user-details-label">College</div>
-                        <select name="college" class="user-details-value">
+                        <select name="college" class="user-details-value" data-role-required>
                             <option value="">Select College</option>
                             {% for college in colleges %}
                                 <option value="{{ college.id }}" {% if user.college and user.college.id == college.id %}selected{% endif %}>{{ college.name }}</option>
@@ -445,7 +473,7 @@
                     </div>
                     <div>
                         <div class="user-details-label">Campus</div>
-                        <select name="campus" class="user-details-value">
+                        <select name="campus" class="user-details-value" data-role-required>
                             <option value="">Select Campus</option>
                             {% for value, label in campus_choices %}
                                 <option value="{{ value }}" {% if user.campus == value %}selected{% endif %}>{{ label }}</option>
@@ -476,6 +504,20 @@
 
 
 <script>
+    // File Input Change Handler
+    document.getElementById('id_valid_id').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            document.getElementById('file-name').textContent = file.name;
+            document.getElementById('file-preview').style.display = 'block';
+            document.getElementById('file-error').style.display = 'none';
+        } else {
+            document.getElementById('file-preview').style.display = 'none';
+        }
+    });
+
+
+    // Role-Based Info Display
     document.addEventListener('DOMContentLoaded', function() {
         var roleSelect = document.querySelector('select[name="role"]');
         var roleBlocks = {
@@ -489,27 +531,65 @@
         function updateRoleBlocks() {
             var selected = roleSelect.value;
             Object.keys(roleBlocks).forEach(function(role) {
+                var block = roleBlocks[role];
                 if (role === selected) {
-                    roleBlocks[role].style.display = 'block';
+                    block.style.display = 'block';
+                    // Add required to all inputs/selects in this block
+                    Array.from(block.querySelectorAll('input,select,textarea')).forEach(function(el) {
+                        if (el.hasAttribute('data-role-required')) {
+                            el.required = true;
+                        }
+                    });
                 } else {
-                    roleBlocks[role].style.display = 'none';
+                    block.style.display = 'none';
+                    // Remove required from all inputs/selects in this block
+                    Array.from(block.querySelectorAll('input,select,textarea')).forEach(function(el) {
+                        if (el.hasAttribute('data-role-required')) {
+                            el.required = false;
+                        }
+                    });
                 }
             });
         }
         roleSelect.addEventListener('change', updateRoleBlocks);
         updateRoleBlocks();
-    });
-
-    // File Input Change Handler
-    document.getElementById('id_valid_id').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            document.getElementById('file-name').textContent = file.name;
-            document.getElementById('file-preview').style.display = 'block';
-            document.getElementById('file-error').style.display = 'none';
-        } else {
-            document.getElementById('file-preview').style.display = 'none';
+        // AJAX email uniqueness check (uses registration endpoint)
+        var emailInput = document.getElementById('email-input');
+        var emailError = document.getElementById('email-error');
+        function checkEmailAjax() {
+            var email = emailInput.value.trim();
+            if (!email) {
+                emailError.textContent = '';
+                emailError.style.display = 'none';
+                return;
+            }
+            fetch('/check-email/?email=' + encodeURIComponent(email))
+                .then(response => response.json())
+                .then(data => {
+                    if (data.exists) {
+                        emailError.textContent = 'This email is already registered.';
+                        emailError.style.display = 'block';
+                    } else {
+                        emailError.textContent = '';
+                        emailError.style.display = 'none';
+                    }
+                })
+                .catch(() => {
+                    emailError.textContent = 'Error checking email.';
+                    emailError.style.display = 'block';
+                });
         }
+        if (emailInput) {
+            emailInput.addEventListener('blur', checkEmailAjax);
+            emailInput.addEventListener('input', checkEmailAjax);
+        }
+        document.getElementById('addUserForm').addEventListener('submit', function(e) {
+            var email = emailInput.value.trim();
+            if (email && emailError.style.display === 'block') {
+                e.preventDefault();
+                emailInput.focus();
+            }
+        });
     });
 </script>
 
