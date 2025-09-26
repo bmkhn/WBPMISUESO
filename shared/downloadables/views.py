@@ -291,19 +291,24 @@ def admin_downloadable(request):
         'querystring': querystring,
     })
 
+
 @login_required
 @role_required(allowed_roles=["UESO", "DIRECTOR", "VP"])
 def add_downloadable(request):
-    success = False
-    error = ''
-    form = DownloadableForm(request.POST or None, request.FILES or None)
+    error = None
     if request.method == 'POST':
+        form = DownloadableForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
-            return HttpResponseRedirect(reverse('downloadable_dispatcher'))
+            try:
+                form.save()
+                return render(request, 'downloadables/add_downloadable.html', {'form': DownloadableForm(), 'success': True})
+            except Exception as e:
+                error = str(e)
         else:
             error = form.errors.get('file', [''])[0] or 'Please correct the errors below.'
-    return render(request, 'downloadables/add_downloadable.html', {'form': form, 'success': success, 'error': error})
+    else:
+        form = DownloadableForm()
+    return render(request, 'downloadables/add_downloadable.html', {'form': form, 'error': error})
 
 
 # Download file

@@ -10,6 +10,20 @@
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:700&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
 
 <style>
+    .success-message {
+		color: green; 
+		margin-bottom: 1rem;
+	}
+
+    .error-input {
+        border-color: #E53E3E !important;
+        background: #FFF5F5 !important;
+    }
+
+    span.required {
+        color: #e53e3e;
+    }
+
     body {
         background: #F9F9F9;
         margin: 0;
@@ -152,13 +166,6 @@
 		transform: translateY(-1px);
     }
 
-    .success-message {
-        color: #10B981;
-        font-size: 1rem;
-        margin-bottom: 1rem;
-        text-align: center;
-    }
-
     .error-message {
         color: #E53E3E;
         font-size: 1rem;
@@ -182,15 +189,14 @@
         <form class="downloadable-form" method="post" enctype="multipart/form-data" id="downloadable-form" action="{% url 'add_downloadable' %}">
             {% csrf_token %}
             <div class="form-group">
-                <label class="form-label" for="id_file">Attach File:</label>
+                <label class="form-label" for="id_file">Attach File <span class="required">*</span></label>
                 <div class="upload-area" onclick="document.getElementById('id_file').click()">
                     <svg class="upload-icon"><use href="#icon-upload"></use></svg>
                     <span class="upload-text">Click to upload</span>
-                    <input class="file-input" type="file" name="file" id="id_file" style="display:none;" accept="*/*" required>
+                    <input class="file-input" type="file" name="file" id="id_file" style="display:none;" accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
                 </div>
-                <div id="file-error" class="error-message" style="display:none;">File is required.</div>
             </div>
-            <div class="file-preview" id="file-preview">
+            <div class="file-preview" id="file-preview" style="display:none;">
                 <div class="file-info">
                     <svg width="16" height="16"><use href="#icon-upload"></use></svg>
                     <span id="file-name"></span>
@@ -209,40 +215,71 @@
 
 <!-- SVG Sprite Section -->
 <svg style="display:none;">
+
     <!-- Upload Icon -->
     <symbol id="icon-upload" viewBox="0 0 24 24" fill="currentColor">
         <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
         <path d="M12,11L8,15H16L12,11Z" />
     </symbol>
+
 </svg>
 
 <script>
     // File Input Change Handler
     document.getElementById('id_file').addEventListener('change', function(e) {
         const file = e.target.files[0];
+        const fileInput = document.getElementById('id_file');
+        const fileError = document.getElementById('file-error');
+        fileInput.classList.remove('error-input');
         if (file) {
             document.getElementById('file-name').textContent = file.name;
             document.getElementById('file-preview').style.display = 'block';
-            document.getElementById('file-error').style.display = 'none';
+            fileError.style.display = 'none';
         } else {
             document.getElementById('file-preview').style.display = 'none';
         }
     });
 
-    // Form Validation
-    document.getElementById('downloadable-form').addEventListener('submit', function(e) {
-        let valid = true;
-        const fileInput = document.getElementById('id_file');
-        const fileError = document.getElementById('file-error');
-        if (!fileInput.files || fileInput.files.length === 0) {
-            fileError.style.display = 'block';
-            valid = false;
-        } else {
-            fileError.style.display = 'none';
-        }
+    document.addEventListener('DOMContentLoaded', function() {
+        // Global error catcher for form submission
+        var form = document.getElementById('downloadable-form');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                let valid = true;
+                const fields = Array.from(form.querySelectorAll('input'));
+                fields.forEach(field => {
+                    field.classList.remove('error-input');
+                    let err = document.getElementById(field.name + '-error');
+                    if (err) err.remove();
+                });
 
-        if (!valid) {
-            e.preventDefault();
+                function removeError(tagRow, errorId) {
+                    let err = document.getElementById(errorId);
+                    if (err) err.remove();
+                    if (tagRow) tagRow.classList.remove('error-input');
+                }
+
+                removeError(document.getElementById('file-error'), 'file-error');
+
+                var fileInput = document.getElementById('id_file');
+                var fileSelected = fileInput && fileInput.files && fileInput.files.length > 0;
+                if (!fileSelected) {
+                    valid = false;
+                    fileInput.classList.add('error-input');
+                    let err = document.createElement('div');
+                    err.id = 'file-error';
+                    err.textContent = 'File is required.';
+                    err.style.color = '#E53E3E';
+                    err.style.fontSize = '0.95rem';
+                    err.style.marginTop = '0.25rem';
+                    fileInput.parentNode.appendChild(err);
+                }
+
+                if (!valid) {
+                    e.preventDefault();
+                    return;
+                }
+            });
         }
     });
 </script>

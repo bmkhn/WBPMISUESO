@@ -10,6 +10,25 @@
 <link href="https://fonts.googleapis.com/css?family=Inter:400,500,700&display=swap" rel="stylesheet">
 
 <style>
+    .success-message {
+		color: green; 
+		margin-bottom: 1rem;
+	}
+
+    .error-input {
+        border-color: #E53E3E !important;
+        background: #FFF5F5 !important;
+    }
+
+    .error-select {
+        border-color: #E53E3E !important;
+        background: 
+            #FFF5F5 /* background color */
+            url("data:image/svg+xml;utf8,<svg width='16' height='11' viewBox='0 0 16 11' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M7.99976 7.19417L13.9025 1.29147C14.0125 1.17758 14.144 1.08674 14.2895 1.02424C14.435 0.961746 14.5915 0.92885 14.7498 0.927474C14.9082 0.926098 15.0652 0.95627 15.2117 1.01623C15.3583 1.07619 15.4914 1.16473 15.6034 1.27669C15.7153 1.38866 15.8039 1.5218 15.8638 1.66835C15.9238 1.8149 15.954 1.97192 15.9526 2.13026C15.9512 2.28859 15.9183 2.44506 15.8558 2.59055C15.7933 2.73604 15.7025 2.86762 15.5886 2.97762L8.84283 9.72339C8.61921 9.94694 8.31596 10.0725 7.99976 10.0725C7.68356 10.0725 7.38031 9.94694 7.15669 9.72339L0.41092 2.97762C0.297028 2.86762 0.206183 2.73604 0.143687 2.59055C0.0811915 2.44506 0.0482959 2.28859 0.04692 2.13026C0.0455441 1.97192 0.0757155 1.8149 0.135674 1.66835C0.195632 1.5218 0.284176 1.38866 0.39614 1.27669C0.508103 1.16473 0.641244 1.07619 0.787794 1.01623C0.934343 0.95627 1.09137 0.926098 1.2497 0.927474C1.40804 0.92885 1.56451 0.961746 1.71 1.02424C1.85548 1.08674 1.98706 1.17758 2.09706 1.29147L7.99976 7.19417Z' fill='%23374151'/></svg>") 
+            no-repeat right 0.75rem center !important;
+    }
+
+
     body {
         background: #F9F9F9;
         margin: 0;
@@ -62,11 +81,18 @@
         grid-template-columns: repeat(2, 1fr);
     }
     
+    .user-details-category {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #000;
+    }
+
     .user-details-label {
         font-weight: 500;
         color: #374151;
         font-size: 1.08rem;
         margin-bottom: 0.25rem;
+        margin-top: 1rem;
     }
 
     .user-details-value {
@@ -78,9 +104,7 @@
         border-radius: 0.5rem;
         padding: 8px 14px;
         border: 1px solid #e5e7eb;
-        margin-bottom: 1rem;
         min-height: 21px;
-
         display: block;
         width: 100%;
         box-sizing: border-box;
@@ -102,13 +126,6 @@
         border: 2px solid #000;
         object-fit: cover;
         margin-left: 12px;
-    }
-
-    .user-details-category {
-        font-size: 1.15rem;
-        font-weight: 700;
-        color: #000;
-        margin-bottom: 1rem;
     }
 
 	.form-actions {
@@ -164,6 +181,8 @@
 <!-- File Upload -->
 <style>
     .form-group {
+        margin-top: 1rem;
+        margin-bottom: 1rem;
 		display: flex;
 		align-items: flex-start;
 		gap: 1rem;
@@ -331,17 +350,9 @@
                 <span>Add Project</span>
             </div>
         </div>
+
         {% if success %}
-        <div id="add-success-msg" style="color:#16a34a;font-size:1.1rem;font-weight:500;">Project added successfully.</div>
-        {% endif %}
-        {% if form.errors %}
-            <div id="add-error-msg" style="color:#e53e3e;font-size:1.05rem;font-weight:500;">
-                {% for field, errors in form.errors.items %}
-                    {% for error in errors %}
-                        <div><strong>{{ field|capfirst }}:</strong> {{ error }}</div>
-                    {% endfor %}
-                {% endfor %}
-            </div>
+        <div id="add-success-msg" class="success-message">Project added successfully.</div>
         {% endif %}
 
         <div class="user-details-section">
@@ -349,7 +360,7 @@
             <div class="user-details-row cols-1">
                 <div>
                     <div class="user-details-label">Title <span class="required">*</span></div>
-                    <input type="text" name="title" class="user-details-value" required>
+                    <input type="text" name="title" class="user-details-value">
                 </div>
             </div>
 
@@ -379,7 +390,7 @@
             <div class="user-details-row cols-2">
                 <div>
                     <div class="user-details-label">Agenda <span class="required">*</span></div>
-                    <select name="agenda" class="user-details-value" required>
+                    <select name="agenda" class="user-details-value">
                         <option value="" selected disabled>Select Agenda</option>
                         {% for agenda in agendas %}
                         <option value="{{ agenda }}">{{ agenda }}</option>
@@ -388,7 +399,7 @@
                 </div>
                 <div>
                     <div class="user-details-label">Project Type <span class="required">*</span></div>
-                    <select name="project_type" class="user-details-value" required>
+                    <select name="project_type" class="user-details-value">
                         <option value="" selected disabled>Select Type</option>
                         <option value="NEEDS_BASED">Needs Based</option>
                         <option value="RESEARCH_BASED">Research Based</option>
@@ -415,22 +426,22 @@
             <div class="user-details-row cols-2">
                 <div>
                     <div class="user-details-label">Primary Beneficiary <span class="required">*</span></div>
-                    <input type="text" name="primary_beneficiary" class="user-details-value" required>
+                    <input type="text" name="primary_beneficiary" class="user-details-value">
                 </div>
                 <div>
                     <div class="user-details-label">No. of Estimated Events <span class="required">*</span></div>
-                    <input type="number" name="estimated_events" class="user-details-value" min="0" required>
+                    <input type="number" name="estimated_events" class="user-details-value" min="0">
                 </div>
             </div>
 
             <div class="user-details-row cols-2">
                 <div>
                     <div class="user-details-label">Primary Location <span class="required">*</span></div>
-                    <input type="text" name="primary_location" class="user-details-value" required>
+                    <input type="text" name="primary_location" class="user-details-value">
                 </div>
                 <div>
                     <div class="user-details-label">No. of Estimated Trainees <span class="required">*</span></div>
-                    <input type="number" name="estimated_trainees" class="user-details-value" min="0" required>
+                    <input type="number" name="estimated_trainees" class="user-details-value" min="0">
                 </div>
             </div>
         </div>
@@ -442,7 +453,7 @@
             <div class="user-details-row cols-1">
                 <div>
                     <div class="user-details-label">Type <span class="required">*</span></div>
-                    <select name="logistics_type" class="user-details-value" required>
+                    <select name="logistics_type" class="user-details-value">
                         <option value="BOTH">Both</option>
                         <option value="INTERNAL">Internal</option>
                         <option value="EXTERNAL">External</option>
@@ -455,18 +466,18 @@
                 <div class="user-details-row cols-2">
                     <div>
                         <div class="user-details-label">Internal Budget Assigned <span class="required">*</span></div>
-                        <input type="number" name="internal_budget" class="user-details-value" min="0" step="0.01" data-logistics-required>
+                        <input type="number" name="internal_budget" class="user-details-value" min="0" step="0.01">
                     </div>
                     <div>
                         <div class="user-details-label">External Budget Assigned <span class="required">*</span></div>
-                        <input type="number" name="external_budget" class="user-details-value" min="0" step="0.01" data-logistics-required>
+                        <input type="number" name="external_budget" class="user-details-value" min="0" step="0.01">
                     </div>
                 </div>
 
                 <div class="user-details-row cols-1">
                     <div>
                         <div class="user-details-label">Sponsor Name <span class="required">*</span></div>
-                        <input type="text" name="sponsor_name" class="user-details-value" data-logistics-required>
+                        <input type="text" name="sponsor_name" class="user-details-value">
                     </div>
                 </div>
             </div>
@@ -476,7 +487,7 @@
                 <div class="user-details-row cols-2">
                     <div>
                         <div class="user-details-label">Internal Budget Assigned <span class="required">*</span></div>
-                        <input type="number" name="internal_budget" class="user-details-value" min="0" step="0.01" data-logistics-required>
+                        <input type="number" name="internal_budget" class="user-details-value" min="0" step="0.01">
                     </div>
                     <div></div>
                 </div>
@@ -487,11 +498,11 @@
                 <div class="user-details-row cols-2">
                     <div>
                         <div class="user-details-label">External Budget Assigned <span class="required">*</span></div>
-                        <input type="number" name="external_budget" class="user-details-value" min="0" step="0.01" data-logistics-required>
+                        <input type="number" name="external_budget" class="user-details-value" min="0" step="0.01">
                     </div>
                     <div>
                         <div class="user-details-label">Sponsor Name <span class="required">*</span></div>
-                        <input type="text" name="sponsor_name" class="user-details-value" data-logistics-required>
+                        <input type="text" name="sponsor_name" class="user-details-value">
                     </div>
                 </div>
             </div>
@@ -500,17 +511,17 @@
             <div class="user-details-row cols-2">
                 <div>
                     <div class="user-details-label">Start Date <span class="required">*</span></div>
-                    <input type="date" name="start_date" class="user-details-value" required>
+                    <input type="date" name="start_date" class="user-details-value">
                 </div>
                 <div>
                     <div class="user-details-label">Estimated End Date <span class="required">*</span></div>
-                    <input type="date" name="estimated_end_date" class="user-details-value" required>
+                    <input type="date" name="estimated_end_date" class="user-details-value">
                 </div>
             </div>
 
             <div class="user-details-row cols-2">
                 <div>
-                    <div class="form-group" style="margin-bottom: 1rem;">
+                    <div class="form-group">
                         <div class="user-details-label">Proposal Document <span class="required">*</span></div>
                         <div class="upload-area" onclick="document.getElementById('id_proposal_document').click()">
                             <svg class="upload-icon"><use href="#icon-upload"></use></svg>
@@ -527,7 +538,7 @@
                     </div>
                 </div>
                 <div>
-                    <div class="form-group" style="margin-bottom: 1rem;">
+                    <div class="form-group">
                         <div class="user-details-label">Additional Documents <span class="required">*</span></div>
                         <div class="upload-area" onclick="document.getElementById('id_additional_documents').click()">
                             <svg class="upload-icon"><use href="#icon-upload"></use></svg>
@@ -576,44 +587,134 @@
         var form = document.getElementById('addProjectForm');
         if (form) {
             form.addEventListener('submit', function(e) {
-                var errorDiv = document.getElementById('form-error-message');
-                if (errorDiv) errorDiv.style.display = 'none';
-                errorDiv.textContent = '';
-                // Custom required validation for tag UIs
-                var leaderTagRow = document.getElementById('project-leader-tag-row');
-                var sdgsTagRow = document.getElementById('sdgs-tag-row');
-                var providersTagRow = document.getElementById('providers-tag-row');
-                var leaderSelected = leaderTagRow && leaderTagRow.querySelectorAll('.college-tag').length > 0;
-                var sdgsSelected = sdgsTagRow && sdgsTagRow.querySelectorAll('.college-tag').length > 0;
-                var errorMessages = [];
-                if (!leaderSelected) {
-                    errorMessages.push('Project Leader is required.');
+                // Remove previous error states and messages
+                let valid = true;
+                // Remove all previous error states/messages for inputs, selects, textareas
+                const fields = Array.from(form.querySelectorAll('input, select, textarea'));
+                fields.forEach(field => {
+                    field.classList.remove('error-input');
+                    let err = field.parentNode.querySelector('.field-error');
+                    if (err) err.remove();
+                });
+                // Remove custom errors for tag UIs and files
+                function removeError(tagRow, errorId) {
+                    let err = document.getElementById(errorId);
+                    if (err) err.remove();
+                    if (tagRow) tagRow.classList.remove('error-input');
                 }
-                if (!sdgsSelected) {
-                    errorMessages.push('At least one SDG is required.');
-                }
-                if (errorMessages.length > 0) {
-                    e.preventDefault();
-                    if (errorDiv) {
-                        errorDiv.innerHTML = errorMessages.map(msg => `<div>${msg}</div>`).join('');
-                        errorDiv.style.display = 'block';
+                removeError(document.getElementById('project-leader-tag-row'), 'leader-error');
+                removeError(document.getElementById('sdgs-tag-row'), 'sdgs-error');
+                removeError(document.getElementById('id_proposal_document'), 'proposal-error');
+                removeError(document.getElementById('id_additional_documents'), 'additional-error');
+
+                // Validate all required fields except providers and logistics-dependent
+                // For logistics-dependent, only validate if visible
+                fields.forEach(field => {
+                    if (field.name === 'providers' || field.name === 'providers[]') return;
+                    // Only validate visible fields
+                    if (field.offsetParent === null) return;
+                    // Validate required fields
+                    if ((field.tagName === 'INPUT' || field.tagName === 'TEXTAREA') && !field.value.trim()) {
+                        valid = false;
+                        field.classList.add('error-input');
+                        let err = document.createElement('div');
+                        err.className = 'field-error';
+                        err.textContent = 'This field is required.';
+                        err.style.color = '#E53E3E';
+                        err.style.fontSize = '0.95rem';
+                        err.style.marginTop = '0.25rem';
+                        field.parentNode.appendChild(err);
                     }
+                    if (field.tagName === 'SELECT' && (!field.value || field.value === '' || field.value === field.querySelector('option[disabled]')?.value)) {
+                        valid = false;
+                        field.classList.add('error-select');
+                        let err = document.createElement('div');
+                        err.className = 'field-error';
+                        err.textContent = 'This field is required.';
+                        err.style.color = '#E53E3E';
+                        err.style.fontSize = '0.95rem';
+                        err.style.marginTop = '0.25rem';
+                        field.parentNode.appendChild(err);
+                    }
+                });
+
+                // Validate Project Leader
+                var leaderTagRow = document.getElementById('project-leader-tag-row');
+                var leaderSelected = leaderTagRow && leaderTagRow.querySelectorAll('.college-tag').length > 0;
+                if (!leaderSelected) {
+                    valid = false;
+                    leaderTagRow.classList.add('error-input');
+                    let err = document.createElement('div');
+                    err.id = 'leader-error';
+                    err.textContent = 'Project Leader is required.';
+                    err.style.color = '#E53E3E';
+                    err.style.fontSize = '0.95rem';
+                    err.style.marginTop = '0.25rem';
+                    leaderTagRow.appendChild(err);
+                }
+
+                // Validate SDGs
+                var sdgsTagRow = document.getElementById('sdgs-tag-row');
+                var sdgsSelected = sdgsTagRow && sdgsTagRow.querySelectorAll('.college-tag').length > 0;
+                if (!sdgsSelected) {
+                    valid = false;
+                    sdgsTagRow.classList.add('error-input');
+                    let err = document.createElement('div');
+                    err.id = 'sdgs-error';
+                    err.textContent = 'At least one SDG is required.';
+                    err.style.color = '#E53E3E';
+                    err.style.fontSize = '0.95rem';
+                    err.style.marginTop = '0.25rem';
+                    sdgsTagRow.appendChild(err);
+                }
+
+                // Validate Proposal Document
+                var proposalInput = document.getElementById('id_proposal_document');
+                var proposalSelected = proposalInput && proposalInput.files && proposalInput.files.length > 0;
+                if (!proposalSelected) {
+                    valid = false;
+                    proposalInput.classList.add('error-input');
+                    let err = document.createElement('div');
+                    err.id = 'proposal-error';
+                    err.textContent = 'Proposal Document is required.';
+                    err.style.color = '#E53E3E';
+                    err.style.fontSize = '0.95rem';
+                    err.style.marginTop = '0.25rem';
+                    proposalInput.parentNode.appendChild(err);
+                }
+
+                // Validate Additional Documents
+                var additionalInput = document.getElementById('id_additional_documents');
+                var additionalSelected = additionalInput && typeof additionalFiles !== 'undefined' && additionalFiles.length > 0;
+                if (!additionalSelected) {
+                    valid = false;
+                    additionalInput.classList.add('error-input');
+                    let err = document.createElement('div');
+                    err.id = 'additional-error';
+                    err.textContent = 'At least one Additional Document is required.';
+                    err.style.color = '#E53E3E';
+                    err.style.fontSize = '0.95rem';
+                    err.style.marginTop = '0.25rem';
+                    additionalInput.parentNode.appendChild(err);
+                }
+
+                // Providers is optional, so no error for that
+
+                if (!valid) {
+                    e.preventDefault();
                     return;
                 }
 
                 // Guarantee hidden inputs for all selected providers and SDGs
                 function ensureHiddenInputs(tagRow, inputName, single) {
                     if (!tagRow) return;
-                    // Remove any existing hidden inputs for this field
                     Array.from(tagRow.querySelectorAll('input[name^="' + inputName + '"]')).forEach(function(input) {
                         input.remove();
                     });
-                    // Add hidden inputs for each selected tag
                     var tags = tagRow.querySelectorAll('.college-tag');
                     tags.forEach(function(tag) {
                         var value = tag.getAttribute('data-id');
                         if (!value) {
-                            // Try to find the value from a child input if present
                             var hidden = tag.querySelector('input[type="hidden"]');
                             if (hidden) value = hidden.value;
                         }
@@ -626,13 +727,11 @@
                         }
                     });
                 }
-                ensureHiddenInputs(providersTagRow, 'providers', false);
-                ensureHiddenInputs(sdgsTagRow, 'sdgs', false);
+                ensureHiddenInputs(document.getElementById('providers-tag-row'), 'providers', false);
+                ensureHiddenInputs(document.getElementById('sdgs-tag-row'), 'sdgs', false);
 
                 // Guarantee all files in additional documents input are present
-                var additionalInput = document.getElementById('id_additional_documents');
                 if (additionalInput && typeof additionalFiles !== 'undefined' && additionalFiles.length > 0) {
-                    // Update input's files property to match additionalFiles array
                     var dt = new DataTransfer();
                     additionalFiles.forEach(function(file) { dt.items.add(file); });
                     additionalInput.files = dt.files;
@@ -641,10 +740,6 @@
                 try {
                     // You can add other custom validation here if needed
                 } catch (err) {
-                    if (errorDiv) {
-                        errorDiv.textContent = 'Form submission error: ' + (err.message || err);
-                        errorDiv.style.display = 'block';
-                    }
                     e.preventDefault();
                 }
             });

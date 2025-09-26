@@ -27,8 +27,8 @@ def superuser_project(request):
 
 def admin_projects(request):
     # Filters
-    sort_by = request.GET.get('sort_by', 'title')
-    order = request.GET.get('order', 'asc')
+    sort_by = request.GET.get('sort_by', 'last_updated')
+    order = request.GET.get('order', 'desc')
     college = request.GET.get('college', '')
     campus = request.GET.get('campus', '')
     status = request.GET.get('status', '')
@@ -174,6 +174,19 @@ def add_project_view(request):
                 for f in files:
                     doc = ProjectDocument.objects.create(file=f)
                     project.additional_documents.add(doc)
+
+                return render(request, 'projects/add_project.html', {
+                    'form': ProjectForm(),
+                    'success': True,
+                    'error': error,
+                    'faculty_users': faculty_users,
+                    'provider_users': provider_users,
+                    'agendas': agendas,
+                    'sdgs': sdgs,
+                    'colleges': colleges,
+                    'campus_choices': campus_choices,
+                    'logistics_type': logistics_type,
+                })
             except Exception as e:
                 error = str(e)
         else:

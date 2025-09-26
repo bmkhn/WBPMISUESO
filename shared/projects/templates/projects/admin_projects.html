@@ -131,7 +131,7 @@
     }
 
     .user-table th {
-        font-size: 16px;
+        font-size: 14px;
         font-weight: 500;
         background: rgba(217, 217, 217, 0.2);
         border-bottom: 1px solid rgba(0,0,0,0.18);
@@ -141,7 +141,7 @@
     }
 
     .user-table td {
-        font-size: 15px;
+        font-size: 12px;
         font-weight: 400;
         border: none;
         border-bottom: 1px solid rgba(0,0,0,0.18);
@@ -439,7 +439,7 @@
                                 <option value="desc" {% if order == 'desc' %}selected{% endif %}>Descending</option>
                             </select>
                         </label>
-                        <label>College (Team Leader)
+                        <label>College (Leader)
                             <select name="college">
                                 <option value="">All Colleges</option>
                                 {% for c in colleges %}
@@ -447,7 +447,7 @@
                                 {% endfor %}
                             </select>
                         </label>
-                        <label>Campus (Team Leader)
+                        <label>Campus (Leader)
                             <select name="campus">
                                 <option value="">All Campuses</option>
                                 {% for c in campuses %}
@@ -498,7 +498,8 @@
             <thead>
                 <tr>
                     <th>Title</th>
-                    <th>Team Leader</th>
+                    <th>Leader</th>
+                    <th>College/Unit</th>
                     <th>Last Updated</th>
                     <th>Start Date</th>
                     <th>Progress</th>
@@ -514,7 +515,8 @@
                         </a>
                     </td>
                     <td>{{ project.project_leader.get_full_name }}</td>
-                    <td>{{ project.updated_at|date:"Y-m-d H:i" }}</td>
+                    <td>{% if project.project_leader.college %}{{ project.project_leader.college.name }}{% else %}<em>-</em>{% endif %}</td>
+                    <td>{{ project.updated_at|date:"Y-m-d" }}</td>
                     <td>{{ project.start_date|date:"Y-m-d" }}</td>
                     <td>{{ project.progress_display }}</td>
                     <td>{{ project.get_status_display }}</td>

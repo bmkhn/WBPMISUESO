@@ -10,6 +10,24 @@
 <link href="https://fonts.googleapis.com/css?family=Inter:400,500,700&display=swap" rel="stylesheet">
 
 <style>
+    .success-message {
+		color: green; 
+		margin-bottom: 1rem;
+	}
+
+    .error-input {
+        border-color: #E53E3E !important;
+        background: #FFF5F5 !important;
+    }
+
+    .error-select {
+        border-color: #E53E3E !important;
+        background: 
+            #FFF5F5 /* background color */
+            url("data:image/svg+xml;utf8,<svg width='16' height='11' viewBox='0 0 16 11' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M7.99976 7.19417L13.9025 1.29147C14.0125 1.17758 14.144 1.08674 14.2895 1.02424C14.435 0.961746 14.5915 0.92885 14.7498 0.927474C14.9082 0.926098 15.0652 0.95627 15.2117 1.01623C15.3583 1.07619 15.4914 1.16473 15.6034 1.27669C15.7153 1.38866 15.8039 1.5218 15.8638 1.66835C15.9238 1.8149 15.954 1.97192 15.9526 2.13026C15.9512 2.28859 15.9183 2.44506 15.8558 2.59055C15.7933 2.73604 15.7025 2.86762 15.5886 2.97762L8.84283 9.72339C8.61921 9.94694 8.31596 10.0725 7.99976 10.0725C7.68356 10.0725 7.38031 9.94694 7.15669 9.72339L0.41092 2.97762C0.297028 2.86762 0.206183 2.73604 0.143687 2.59055C0.0811915 2.44506 0.0482959 2.28859 0.04692 2.13026C0.0455441 1.97192 0.0757155 1.8149 0.135674 1.66835C0.195632 1.5218 0.284176 1.38866 0.39614 1.27669C0.508103 1.16473 0.641244 1.07619 0.787794 1.01623C0.934343 0.95627 1.09137 0.926098 1.2497 0.927474C1.40804 0.92885 1.56451 0.961746 1.71 1.02424C1.85548 1.08674 1.98706 1.17758 2.09706 1.29147L7.99976 7.19417Z' fill='%23374151'/></svg>") 
+            no-repeat right 0.75rem center !important;
+    }
+
     body {
         background: #F9F9F9;
         margin: 0;
@@ -62,11 +80,18 @@
         grid-template-columns: repeat(2, 1fr);
     }
     
+    .user-details-category {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #000;
+    }
+
     .user-details-label {
         font-weight: 500;
         color: #374151;
         font-size: 1.08rem;
         margin-bottom: 0.25rem;
+        margin-top: 1rem;
     }
 
     .user-details-value {
@@ -78,9 +103,7 @@
         border-radius: 0.5rem;
         padding: 8px 14px;
         border: 1px solid #e5e7eb;
-        margin-bottom: 1rem;
         min-height: 21px;
-
         display: block;
         width: 100%;
         box-sizing: border-box;
@@ -102,13 +125,6 @@
         border: 2px solid #000;
         object-fit: cover;
         margin-left: 12px;
-    }
-
-    .user-details-category {
-        font-size: 1.15rem;
-        font-weight: 700;
-        color: #000;
-        margin-bottom: 1rem;
     }
 
 	.form-actions {
@@ -150,8 +166,11 @@
     }
 </style>
 
+<!-- File Upload -->
 <style>
     .form-group {
+        margin-top: 1rem;
+        margin-bottom: 1rem;
 		display: flex;
 		align-items: flex-start;
 		gap: 1rem;
@@ -224,6 +243,30 @@
     }
 </style>
 
+<!-- Verification -->
+<style>
+    .verification-badge {
+        background: #E6FFFA;
+        border: 1px solid #1F7C57;
+        color: #1F7C57;
+        font-weight: 600;
+        font-size: 32px;
+        padding: 6px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+    .verification-badge.unverified {
+        background: #FFF5F5;
+        border: 1px solid #E53E3E;
+        color: #E53E3E;
+    }
+
+    .verification-badge:hover {
+        opacity: 0.9;
+    }
+</style>
 
 </head>
 <body>
@@ -234,48 +277,38 @@
             <div style="display:flex;justify-content:space-between;align-items:center;">
                 <span>Edit User</span>
             </div>
-
-            {% if success %}
-            <div id="add-success-msg" style="color:#16a34a;font-size:1.1rem;font-weight:500;">User edited successfully.</div>
-            {% endif %}
-            {% if form.errors %}
-            <div id="add-error-msg" style="color:#e53e3e;font-size:1.05rem;font-weight:500;">
-                {% for field, errors in form.errors.items %}
-                    {% for error in errors %}
-                        <div>{{ error }}</div>
-                    {% endfor %}
-                {% endfor %}
-            </div>
-            {% endif %}
-
-            <div style="position: absolute; top: 140px; right: 60px;">
-            {% if user.is_confirmed %}
-                <a href="{% url 'unverify_user' user.id %}" style="text-decoration:none;color:#1f7c57;font-weight:600;font-size:1em;background:#eafbe7;padding:6px 16px;border-radius:8px; cursor: pointer;">Verified</a>
-            {% else %}
-                <a href="{% url 'verify_user' user.id %}" style="text-decoration:none;color:#E53E3E;font-weight:600;font-size:1em;background:#fdeaea;padding:6px 16px;border-radius:8px; cursor: pointer;">Unverified</a>
-            {% endif %}
-            </div>
         </div>
-    
+
+        {% if success %}
+        <div id="add-success-msg" style="color:#16a34a;font-size:1.1rem;font-weight:500;">User edited successfully.</div>
+        {% endif %}
+
+        <div style="position: absolute; top: 140px; right: 60px;">
+        {% if user.is_confirmed %}
+            <a href="{% url 'unverify_user' user.id %}" class="verification-badge">Verified</a>
+        {% else %}
+            <a href="{% url 'verify_user' user.id %}" class="verification-badge unverified">Unverified</a>
+        {% endif %}
+        </div>
 
         <div class="user-details-section">
             <div class="user-details-category">User Profile</div>
             <div class="user-details-row cols-4">
                 <div>
                     <div class="user-details-label">Last Name <span class="required">*</span></div>
-                    <input type="text" name="last_name" class="user-details-value" value="{{ user.last_name }}" required>
+                    <input type="text" name="last_name" class="user-details-value" value="{{ user.last_name }}">
                 </div>
                 <div>
                     <div class="user-details-label">Given Name <span class="required">*</span></div>
-                    <input type="text" name="given_name" class="user-details-value" value="{{ user.given_name }}" required>
+                    <input type="text" name="given_name" class="user-details-value" value="{{ user.given_name }}">
                 </div>
                 <div>
                     <div class="user-details-label">M.I.</div>
-                    <input type="text" name="middle_initial" class="user-details-value" value="{{ user.middle_initial }}">
+                    <input type="text" name="middle_initial" class="user-details-value" value="{{ user.middle_initial }}" data-optional>
                 </div>
                 <div>
                     <div class="user-details-label">Suffix</div>
-                    <input type="text" name="suffix" class="user-details-value" value="{{ user.suffix|default_if_none:'' }}">
+                    <input type="text" name="suffix" class="user-details-value" value="{{ user.suffix|default_if_none:'' }}" data-optional>
                 </div>
             </div>
             <div class="user-details-row cols-3">
@@ -288,7 +321,7 @@
                 </div>
                 <div>
                     <div class="user-details-label">Email <span class="required">*</span></div>
-                    <input type="email" name="email" class="user-details-value" value="{{ user.email }}" required>
+                    <input type="email" name="email" class="user-details-value" value="{{ user.email }}" id="email-input">
                 </div>
                 <div>
                     <div class="user-details-label">Contact Number <span class="required">*</span></div>
@@ -527,20 +560,28 @@
 </svg>
 
 <script>
-    // File Input Change Handler
+    // File Input Change Handler (robust)
     document.getElementById('id_valid_id').addEventListener('change', function(e) {
         const file = e.target.files[0];
+        const fileInput = document.getElementById('id_valid_id');
+        let fileError = document.getElementById('file-error');
+        if (!fileError) {
+            fileError = document.createElement('div');
+            fileError.id = 'file-error';
+            fileError.className = 'error-message';
+            fileInput.parentNode.appendChild(fileError);
+        }
+        fileInput.classList.remove('error-input');
         if (file) {
             document.getElementById('file-name').textContent = file.name;
             document.getElementById('file-preview').style.display = 'block';
-            document.getElementById('file-error').style.display = 'none';
+            fileError.style.display = 'none';
         } else {
             document.getElementById('file-preview').style.display = 'none';
         }
     });
 
-
-    // Role-Based Info Display
+    // Role-Based Info Display (unchanged)
     document.addEventListener('DOMContentLoaded', function() {
         var roleSelect = document.querySelector('select[name="role"]');
         var roleBlocks = {
@@ -557,26 +598,15 @@
                 var block = roleBlocks[role];
                 if (role === selected) {
                     block.style.display = 'block';
-                    // Add required to all inputs/selects in this block
-                    Array.from(block.querySelectorAll('input,select,textarea')).forEach(function(el) {
-                        if (el.hasAttribute('data-role-required')) {
-                            el.required = true;
-                        }
-                    });
                 } else {
                     block.style.display = 'none';
-                    // Remove required from all inputs/selects in this block
-                    Array.from(block.querySelectorAll('input,select,textarea')).forEach(function(el) {
-                        if (el.hasAttribute('data-role-required')) {
-                            el.required = false;
-                        }
-                    });
                 }
             });
         }
         roleSelect.addEventListener('change', updateRoleBlocks);
         updateRoleBlocks();
-        // AJAX email uniqueness check (uses registration endpoint)
+
+        // AJAX email uniqueness check (unchanged)
         var emailInput = document.getElementById('email-input');
         var emailError = document.getElementById('email-error');
         function checkEmailAjax() {
@@ -606,11 +636,78 @@
             emailInput.addEventListener('blur', checkEmailAjax);
             emailInput.addEventListener('input', checkEmailAjax);
         }
-        document.getElementById('addUserForm').addEventListener('submit', function(e) {
+
+        // Robust form validation for all required fields
+        document.querySelector('form').addEventListener('submit', function(e) {
+            let valid = true;
+            // Remove previous error states/messages for inputs, selects, textareas
+            const fields = Array.from(document.querySelector('form').querySelectorAll('input, select, textarea'));
+            fields.forEach(field => {
+                field.classList.remove('error-input');
+                let err = field.parentNode.querySelector('.field-error');
+                if (err) err.remove();
+            });
+            // Remove file error
+            let fileInput = document.getElementById('id_valid_id');
+            let fileError = document.getElementById('file-error');
+            if (fileError) fileError.style.display = 'none';
+            fileInput.classList.remove('error-input');
+
+            // Validate all visible required fields
+            fields.forEach(field => {
+                // Only validate visible fields
+                if (field.offsetParent === null) return;
+                // Skip optional fields
+                if (field.hasAttribute('data-optional')) return;
+                // Validate required fields
+                if ((field.tagName === 'INPUT' || field.tagName === 'TEXTAREA') && field.type !== 'file' && !field.value.trim()) {
+                    valid = false;
+                    field.classList.add('error-input');
+                    let err = document.createElement('div');
+                    err.className = 'field-error';
+                    err.textContent = 'This field is required.';
+                    err.style.color = '#E53E3E';
+                    err.style.fontSize = '0.95rem';
+                    err.style.marginTop = '0.25rem';
+                    field.parentNode.appendChild(err);
+                }
+                if (field.tagName === 'SELECT' && (!field.value || field.value === '' || field.value === field.querySelector('option[disabled]')?.value)) {
+                    valid = false;
+                    field.classList.add('error-input');
+                    let err = document.createElement('div');
+                    err.className = 'field-error';
+                    err.textContent = 'This field is required.';
+                    err.style.color = '#E53E3E';
+                    err.style.fontSize = '0.95rem';
+                    err.style.marginTop = '0.25rem';
+                    field.parentNode.appendChild(err);
+                }
+            });
+
+            // Validate file upload
+            if (!fileInput.files || fileInput.files.length === 0) {
+                valid = false;
+                fileInput.classList.add('error-input');
+                if (!fileError) {
+                    fileError = document.createElement('div');
+                    fileError.id = 'file-error';
+                    fileError.className = 'error-message';
+                    fileInput.parentNode.appendChild(fileError);
+                }
+                fileError.textContent = 'Valid ID is required.';
+                fileError.style.display = 'block';
+            }
+
+            // Email uniqueness error
             var email = emailInput.value.trim();
-            if (email && emailError.style.display === 'block') {
-                e.preventDefault();
+            if (email && emailError && emailError.style.display === 'block') {
+                valid = false;
+                emailInput.classList.add('error-input');
                 emailInput.focus();
+            }
+
+            if (!valid) {
+                e.preventDefault();
             }
         });
     });
