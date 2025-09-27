@@ -68,6 +68,11 @@
         margin-top: 10px;
         cursor: pointer;
     }
+
+    .empty {
+        padding-top: 20px;
+        text-align: center;
+    }
 </style>
 
 <!-- Left Section -->
@@ -251,7 +256,7 @@
 					</a>
 				</div>
 				{% empty %}
-				<div class="announce-item"><div class="announce-title">No announcements found.</div></div>
+				<div class="announce-item"><div class="announce-title empty">No announcements found.</div></div>
 				{% endfor %}
 			</div>
 			<a href="{% url 'announcement_dispatcher' %}" class="announce-more">View More Announcements →</a>

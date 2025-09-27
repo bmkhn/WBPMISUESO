@@ -445,7 +445,7 @@ def delete_announcement_view(request, id):
     announcement = get_object_or_404(Announcement, id=id)
     if request.method == 'POST':
         announcement.delete()
-        return redirect('announcement_admin')
+        return redirect('announcement_dispatcher')
     return render(request, 'announcements/delete_confirm.html', {"announcement": announcement})
 
 
@@ -458,7 +458,7 @@ def archive_announcement_view(request, id):
         announcement.archived = True
         announcement.save()
         return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
-    return redirect('announcement_admin')
+    return redirect('announcement_dispatcher')
 
 
 # Unarchive Announcement View
@@ -470,4 +470,4 @@ def unarchive_announcement_view(request, id):
         announcement.archived = False
         announcement.save()
         return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
-    return redirect('announcement_admin')
+    return redirect('announcement_dispatcher')

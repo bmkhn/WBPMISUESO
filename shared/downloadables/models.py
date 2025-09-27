@@ -3,6 +3,15 @@ from django.conf import settings
 import os
 
 class Downloadable(models.Model):
+    def delete(self, *args, **kwargs):
+        # Delete associated file and thumbnail from storage
+        storage = self.file.storage if self.file else None
+        if self.file and storage and storage.exists(self.file.name):
+            storage.delete(self.file.name)
+        if self.thumbnail and self.thumbnail.storage and self.thumbnail.storage.exists(self.thumbnail.name):
+            self.thumbnail.storage.delete(self.thumbnail.name)
+        super().delete(*args, **kwargs)
+
     STATUS_CHOICES = [
         ('published', 'Published'),
         ('archived', 'Archived'),

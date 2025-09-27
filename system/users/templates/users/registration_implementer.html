@@ -6,6 +6,7 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
+<!-- General Styles -->
 <style>
     body {
         font-family: 'Inter', sans-serif;
@@ -46,43 +47,16 @@
         margin-bottom: 25px;
     }
 
-    .form-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 20px;
-    }
-
-    .form-group {
-        display: flex;
-        flex-direction: column;
-    }
-
-    label {
-        font-family: 'Inter', sans-serif;
-        font-size: 14px;
-        font-weight: 400;
-        margin-bottom: 6px;
-    }
-
-    input, select {
-        font-family: 'Inter', sans-serif;
-        padding: 12px;
-        border: 1px solid #ddd;
-        border-radius: 6px;
-        font-size: 14px;
-        background: #f6f7f9;
-    }
-
     select {
-        appearance: none;
-        -webkit-appearance: none;
-        -moz-appearance: none;
-        padding: 12px 32px 12px 12px;
-        background: #f6f7f9 url('data:image/svg+xml;utf8,<svg fill="none" height="16" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5" stroke="%238F8F8F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>') no-repeat right 12px center/16px 16px;
-        border: 1px solid #ddd;
-        border-radius: 6px;
-        font-size: 14px;
-        font-family: 'Inter', sans-serif;
+		appearance: none;
+		-webkit-appearance: none;
+		-moz-appearance: none;
+		padding-right: 2rem;
+		background: 
+            #F9F9F9 /* background color */
+            url("data:image/svg+xml;utf8,<svg width='16' height='11' viewBox='0 0 16 11' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M7.99976 7.19417L13.9025 1.29147C14.0125 1.17758 14.144 1.08674 14.2895 1.02424C14.435 0.961746 14.5915 0.92885 14.7498 0.927474C14.9082 0.926098 15.0652 0.95627 15.2117 1.01623C15.3583 1.07619 15.4914 1.16473 15.6034 1.27669C15.7153 1.38866 15.8039 1.5218 15.8638 1.66835C15.9238 1.8149 15.954 1.97192 15.9526 2.13026C15.9512 2.28859 15.9183 2.44506 15.8558 2.59055C15.7933 2.73604 15.7025 2.86762 15.5886 2.97762L8.84283 9.72339C8.61921 9.94694 8.31596 10.0725 7.99976 10.0725C7.68356 10.0725 7.38031 9.94694 7.15669 9.72339L0.41092 2.97762C0.297028 2.86762 0.206183 2.73604 0.143687 2.59055C0.0811915 2.44506 0.0482959 2.28859 0.04692 2.13026C0.0455441 1.97192 0.0757155 1.8149 0.135674 1.66835C0.195632 1.5218 0.284176 1.38866 0.39614 1.27669C0.508103 1.16473 0.641244 1.07619 0.787794 1.01623C0.934343 0.95627 1.09137 0.926098 1.2497 0.927474C1.40804 0.92885 1.56451 0.961746 1.71 1.02424C1.85548 1.08674 1.98706 1.17758 2.09706 1.29147L7.99976 7.19417Z' fill='%23374151'/></svg>")
+        	no-repeat right 1.25rem center !important;
+  		background-size: 13px 8px;
     }
 
     .actions {
@@ -177,11 +151,74 @@
     a:hover {
         color: purple;
     }
+</style>
 
-    .drive:hover {
-        box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+<!-- Form Styles -->
+<style>
+    .error-input {
+        border-color: #E53E3E !important;
+        background: #FFF5F5 !important;
     }
 
+    .error-select {
+        border-color: #E53E3E !important;
+        background: 
+            #FFF5F5 /* background color */
+            url("data:image/svg+xml;utf8,<svg width='16' height='11' viewBox='0 0 16 11' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M7.99976 7.19417L13.9025 1.29147C14.0125 1.17758 14.144 1.08674 14.2895 1.02424C14.435 0.961746 14.5915 0.92885 14.7498 0.927474C14.9082 0.926098 15.0652 0.95627 15.2117 1.01623C15.3583 1.07619 15.4914 1.16473 15.6034 1.27669C15.7153 1.38866 15.8039 1.5218 15.8638 1.66835C15.9238 1.8149 15.954 1.97192 15.9526 2.13026C15.9512 2.28859 15.9183 2.44506 15.8558 2.59055C15.7933 2.73604 15.7025 2.86762 15.5886 2.97762L8.84283 9.72339C8.61921 9.94694 8.31596 10.0725 7.99976 10.0725C7.68356 10.0725 7.38031 9.94694 7.15669 9.72339L0.41092 2.97762C0.297028 2.86762 0.206183 2.73604 0.143687 2.59055C0.0811915 2.44506 0.0482959 2.28859 0.04692 2.13026C0.0455441 1.97192 0.0757155 1.8149 0.135674 1.66835C0.195632 1.5218 0.284176 1.38866 0.39614 1.27669C0.508103 1.16473 0.641244 1.07619 0.787794 1.01623C0.934343 0.95627 1.09137 0.926098 1.2497 0.927474C1.40804 0.92885 1.56451 0.961746 1.71 1.02424C1.85548 1.08674 1.98706 1.17758 2.09706 1.29147L7.99976 7.19417Z' fill='%23374151'/></svg>")
+        	no-repeat right 1.25rem center !important;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+	.form-label {
+		font-weight: 600;
+		color: #374151;
+		font-size: 0.95rem;
+	}
+
+	.form-input {
+		padding: 0.75rem 1rem;
+		border: 1px solid #E5E7EB;
+		border-radius: 8px;
+		font-size: 1rem;
+		font-family: 'Inter', sans-serif;
+		background: #F9F9F9;
+		transition: all 0.2s ease;
+        width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+	}
+
+    select.form-input {
+        appearance: none;
+    }
+
+	.form-input:focus {
+		outline: none;
+		border-color: #0A6C44;
+		background: white;
+		box-shadow: 0 0 0 3px rgba(10, 108, 68, 0.1);
+	}
+
+    .email-error {
+        color: red;
+        font-size: 13px;
+        margin-top: 4px;
+        display: none;
+    }
+</style>
+
+<!-- Valid ID Section -->
+<style>
     .upload-area {
         flex: 1;
         border: 2px dashed #E5E7EB;
@@ -238,6 +275,7 @@
         font-size: 0.9rem;
     }
 </style>
+
 </head>
 
 <body>
@@ -249,37 +287,41 @@
             <p class="subtitle">Personal Details</p>
             <div class="form-grid">
                 <div class="form-group">
-                    <div>{{ form.given_name.label_tag }}<span class="required"> *</span></div> 
-                    {{ form.given_name }}
+                    <div class="form-label">Given Name:<span class="required"> *</span></div> 
+                    <input class="form-input" type="text" name="given_name" id="id_given_name" value="{{ form.given_name.value|default:'' }}">
                 </div>
                 <div class="form-group">
-                    <div>{{ form.email.label_tag }}<span class="required"> *</span></div>
-                    {{ form.email }}
-                    <div id="email-error" style="color:red; font-size:13px; margin-top:4px; display:none;"></div>
+                    <div class="form-label">Email:<span class="required"> *</span></div>
+                    <input class="form-input" type="email" name="email" id="id_email" value="{{ form.email.value|default:'' }}">
+                    <div id="email-error" class="email-error"></div>
                 </div>
-                <div class="form-group" style="display: flex; gap: 12px; align-items: flex-end;">
-                    <div style="flex:1; display: flex; flex-direction: row; gap: 12px; align-items: flex-end;">
-                        <div style="flex:1;">
-                            {{ form.middle_initial.label_tag }}
-                            {{ form.middle_initial }}
+                <div class="form-group">
+                    <div style="display: flex; flex-direction: row; gap: 12px;">
+                        <div>
+                            <div class="form-label">Middle Initial:</div>
+                            <input class="form-input" type="text" name="middle_initial" id="id_middle_initial" value="{{ form.middle_initial.value|default:'' }}">
                         </div>
-                        <div style="flex:1;">
-                            {{ form.suffix.label_tag }}
-                            {{ form.suffix }}
+                        <div>
+                            <div class="form-label">Suffix:</div>
+                            <input class="form-input" type="text" name="suffix" id="id_suffix" value="{{ form.suffix.value|default:'' }}">
                         </div>
                     </div>
                 </div>
                 <div class="form-group">
-                    <div>{{ form.contact_no.label_tag }}<span class="required"> *</span></div>
-                    {{ form.contact_no }}
+                    <div class="form-label">Contact Number:<span class="required"> *</span></div>
+                    <input class="form-input" type="text" name="contact_no" id="id_contact_no" value="{{ form.contact_no.value|default:'' }}">
                 </div>
                 <div class="form-group">
-                    <div>{{ form.last_name.label_tag }}<span class="required"> *</span></div>
-                    {{ form.last_name }}
+                    <div class="form-label">Last Name:<span class="required"> *</span></div>
+                    <input class="form-input" type="text" name="last_name" id="id_last_name" value="{{ form.last_name.value|default:'' }}">
                 </div>
                 <div class="form-group">
-                    <div>{{ form.sex.label_tag }}<span class="required"> *</span></div>
-                    {{ form.sex }}
+                    <div class="form-label">Sex:<span class="required"> *</span></div>
+                    <select class="form-input" name="sex" id="id_sex">
+                        <option value="">Select Sex</option>
+                        <option value="MALE" {% if form.sex.value == "MALE" %}selected{% endif %}>Male</option>
+                        <option value="FEMALE" {% if form.sex.value == "FEMALE" %}selected{% endif %}>Female</option>
+                    </select>
                 </div>
             </div>
             <div class="actions">
@@ -297,24 +339,35 @@
             <p class="subtitle">Professional Details</p>
             <div class="form-grid">
                 <div class="form-group">
-                    <div>{{ form.degree.label_tag }}<span class="required"> *</span></div>
-                    {{ form.degree }}
+                    <div class="form-label">Degree:<span class="required"> *</span></div>
+                    <input class="form-input" type="text" name="degree" id="id_degree" value="{{ form.degree.value|default:'' }}">
                 </div>
+
                 <div class="form-group">
-                    <div>{{ form.password.label_tag }}<span class="required"> *</span></div>
-                    {{ form.password }}
+                    <div class="form-label">Expertise:<span class="required"> *</span></div>
+                    <input class="form-input" type="text" name="expertise" id="id_expertise" value="{{ form.expertise.value|default:'' }}">
                 </div>
+
                 <div class="form-group">
-                    <div>{{ form.expertise.label_tag }}<span class="required"> *</span></div>
-                    {{ form.expertise }}
+                    <div class="form-label">Password:<span class="required"> *</span></div>
+                    <input class="form-input" type="password" name="password" id="id_password">
                 </div>
+
                 <div class="form-group">
-                    <div>{{ form.confirm_password.label_tag }}<span class="required"> *</span></div>
-                    {{ form.confirm_password }}
+                    <div class="form-label">Confirm Password:<span class="required"> *</span></div>
+                    <input class="form-input" type="password" name="confirm_password" id="id_confirm_password">
                 </div>
+                
                 <div></div>
-                <div class="checkbox">
-                    <input type="checkbox"> I have read & agree with the <a href="#">Terms and Conditions</a> and the <a href="#">Privacy Policy</a>.
+                
+                <div class="checkbox" id="terms-checkbox-row">
+                    <div style="display: flex; flex-direction: column;">
+                        <div style="display: flex; flex-direction: row; align-items: center;">
+                            <input type="checkbox" id="terms_checkbox">
+                            <div>I have read & agree with the <a href="#">Terms and Conditions</a> and the <a href="#">Privacy Policy</a>.</div>
+                        </div>
+                        <div id="terms-error-container"></div>
+                    </div>
                 </div>
             </div>
             <div class="actions">
@@ -325,29 +378,31 @@
     </form>
 
     <!-- Step 3+4 - [Select and Upload ID] -->
-    <form method="post" autocomplete="off" enctype="multipart/form-data" id="form-step3" style="display:none;" onsubmit="event.preventDefault(); submitStep3();">
+    <form method="post" autocomplete="off" enctype="multipart/form-data" id="form-step3" style="display:none;">
         {% csrf_token %}
         <div class="card" id="step3">
             <h2>Upload Your ID</h2>
             <p class="subtitle">Select your ID type and upload your valid ID for verification.</p>
             <div style="margin-bottom: 1.5rem;">
-                <label for="preferred_id">Preferred ID <span class="required">*</span></label>
-                <select name="preferred_id" id="preferred_id" style="width:100%;padding:12px;border-radius:6px;border:1px solid #ddd;font-size:1rem;">
-                    <option value="">Select an ID</option>
+                <div class="form-label">Preferred ID <span class="required">*</span></div>
+                <select class="form-input" name="preferred_id" id="preferred_id">
                     {% for value, label in form.fields.preferred_id.choices %}
                         <option value="{{ value }}" {% if form.preferred_id.value == value %}selected{% endif %}>{{ label }}</option>
                     {% endfor %}
                 </select>
+                <div id="preferred-id-error-container"></div>
             </div>
             <div style="margin: 20px 0; text-align: center;">
                 <div style="font-size: 18px; color: #888; margin-bottom: 10px;">
-                    <div class="upload-area" onclick="document.getElementById('id_valid_id').click()">
-                        <svg class="upload-icon"><use href="#icon-upload"></use></svg>
-                        <span class="upload-text">Click to upload</span>
-                        <input class="file-input" type="file" name="valid_id" id="id_valid_id" accept="image/*" value="{{ form.valid_id.value|default:'' }}">
+                    <div class="form-group">
+                        <div class="upload-area" onclick="document.getElementById('id_valid_id').click()">
+                            <svg class="upload-icon"><use href="#icon-upload"></use></svg>
+                            <span class="upload-text">Click to upload</span>
+                            <input class="file-input" type="file" name="valid_id" id="id_valid_id" style="display:none;" accept="image/*,.pdf">
+                        </div>
                     </div>
-                    <div id="file-error" class="error-message"></div>
-                    <div class="file-preview" id="file-preview">
+
+                    <div class="file-preview" id="file-preview" style="display:none;">
                         <div class="file-info">
                             <svg width="16" height="16"><use href="#icon-upload"></use></svg>
                             <span id="file-name"></span>
@@ -401,6 +456,22 @@
             });
         }
     });
+
+   // File Input Change Handler
+    document.getElementById('id_valid_id').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        const fileInput = document.getElementById('id_valid_id');
+        const fileError = document.getElementById('file-error');
+        fileInput.classList.remove('error-input');
+        if (file) {
+            document.getElementById('file-name').textContent = file.name;
+            document.getElementById('file-preview').style.display = 'block';
+            fileError.style.display = 'none';
+        } else {
+            document.getElementById('file-preview').style.display = 'none';
+        }
+    });
+
     function validateRequiredFields(fields) {
         let valid = true;
         fields.forEach(function(fieldId) {
@@ -415,23 +486,7 @@
         return valid;
     }
 
-    // File Upload Handling
-    document.addEventListener('DOMContentLoaded', function() {
-        var fileInput = document.getElementById('id_valid_id');
-        if (fileInput) {
-            fileInput.addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (file) {
-                    document.getElementById('file-name').textContent = file.name;
-                    document.getElementById('file-preview').classList.add('show');
-                } else {
-                    document.getElementById('file-preview').classList.remove('show');
-                }
-            });
-        }
-    });
-
-    // Custom popup modal for alerts
+    // Custom Popup Modal
     function showPopup(message) {
         let modal = document.getElementById('custom-modal');
         let modalMsg = document.getElementById('custom-modal-message');
@@ -442,11 +497,47 @@
         document.getElementById('custom-modal').style.display = 'none';
     }
 
+    // Custom Validation For Fields
+    function showFieldError(fieldId, message) {
+        const field = document.getElementById(fieldId);
+        if (!field) return;
+        if (field.tagName === 'SELECT') {
+            field.classList.add('error-select');
+        } else {
+            field.classList.add('error-input');
+        }
+        let err = document.createElement('div');
+        err.className = 'field-error';
+        err.textContent = message;
+        err.style.color = '#E53E3E';
+        err.style.fontSize = '0.75rem';
+        err.style.marginTop = '0.25rem';
+        field.parentNode.appendChild(err);
+    }
+
+    // Clear All Field Errors
+    function clearFieldErrors() {
+        document.querySelectorAll('.error-input').forEach(e => e.classList.remove('error-input'));
+        document.querySelectorAll('.error-select').forEach(e => e.classList.remove('error-select'));
+        document.querySelectorAll('.field-error').forEach(e => e.remove());
+        let termsErr = document.getElementById('terms-error');
+        if (termsErr) termsErr.remove();
+    }
+
+    // Next Step
     function nextStep(current) {
+        clearFieldErrors();
+        let valid = true;
         // Step 1 Validation
         if (current === 1) {
             const requiredFields = ['id_given_name', 'id_email', 'id_last_name', 'id_contact_no', 'id_sex'];
-            const valid = validateRequiredFields(requiredFields);
+            requiredFields.forEach(function(fieldId) {
+                const field = document.getElementById(fieldId);
+                if (field && !field.value.trim()) {
+                    valid = false;
+                    showFieldError(fieldId, 'This field is required.');
+                }
+            });
             if (!valid) {
                 showPopup("Please fill out all required fields.");
                 return;
@@ -454,28 +545,42 @@
         }
         // Step 2 Validation
         if (current === 2) {
-            const requiredFields = ['id_degree', 'id_expertise', 'id_password', 'id_confirm_password'];
-            const valid = validateRequiredFields(requiredFields);
-            if (!valid) {
-                showPopup("Please fill out all required fields.");
-                return;
-            }
+            const requiredFields = ['id_degree', 'id_expertise', 'id_college', 'id_campus', 'id_password', 'id_confirm_password'];
+            requiredFields.forEach(function(fieldId) {
+                const field = document.getElementById(fieldId);
+                if (field && !field.value.trim()) {
+                    valid = false;
+                    showFieldError(fieldId, 'This field is required.');
+                }
+            });
             const password = document.getElementById('id_password').value;
             const confirmPassword = document.getElementById('id_confirm_password').value;
             if (password !== confirmPassword) {
-                showPopup("Passwords do not match.");
-                return;
+                valid = false;
+                showFieldError('id_confirm_password', 'Passwords do not match.');
             }
-            const termsCheckbox = document.querySelector('#step2 .checkbox input[type="checkbox"]');
+            const termsCheckbox = document.getElementById('terms_checkbox');
             if (!termsCheckbox.checked) {
-                showPopup("You must agree to the Terms and Conditions and Privacy Policy before proceeding.");
+                valid = false;
+
+                let err = document.getElementById('terms-error');
+                if (err) err.remove();
+                let errDiv = document.createElement('div');
+                errDiv.id = 'terms-error';
+                errDiv.className = 'field-error';
+                errDiv.textContent = 'You must agree to the Terms and Conditions and Privacy Policy.';
+                errDiv.style.color = '#E53E3E';
+                errDiv.style.fontSize = '0.7rem';
+                errDiv.style.marginTop = '0.25rem';
+                document.getElementById('terms-error-container').appendChild(errDiv);
+            }
+            if (!valid) {
+                showPopup("Please correct the errors before proceeding.");
                 return;
             }
         }
-        // Before showing merged step, copy all values to hidden fields in form-step3
+
         if (current === 2) {
-            // Get all values from previous steps
-            // Map field IDs to form field names
             const fieldMap = {
                 'id_given_name': 'given_name',
                 'id_middle_initial': 'middle_initial',
@@ -485,11 +590,13 @@
                 'id_contact_no': 'contact_no',
                 'id_degree': 'degree',
                 'id_expertise': 'expertise',
+                'id_college': 'college',
+                'id_campus': 'campus',
                 'id_password': 'password',
                 'id_confirm_password': 'confirm_password'
             };
             const form3 = document.getElementById('form-step3');
-            // Remove old hidden fields
+
             Array.from(form3.querySelectorAll('.step-hidden')).forEach(e => e.remove());
             Object.entries(fieldMap).forEach(([fieldId, fieldName]) => {
                 let field = document.getElementById(fieldId);
@@ -503,37 +610,94 @@
                 }
             });
         }
-        // Hide current step, show next
+
         document.getElementById("form-step" + current).style.display = "none";
         document.getElementById("form-step" + (current + 1)).style.display = "block";
     }
 
+    // Previous Step
     function prevStep(current) {
         document.getElementById("form-step" + current).style.display = "none";
         document.getElementById("form-step" + (current - 1)).style.display = "block";
     }
 
-    function submitStep3() {
-        // Validation for merged step
-        const fileInput = document.getElementById('id_valid_id');
-        const fileError = document.getElementById('file-error');
-        const preferredId = document.getElementById('preferred_id').value;
-        let valid = true;
-        if (!preferredId) {
-            showPopup("Please select a preferred ID to proceed.");
-            valid = false;
+    // Valid ID and Preferred ID Validation
+    document.addEventListener('DOMContentLoaded', function() {
+        var form = document.getElementById('form-step3');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                // Always copy all required fields from steps 1 and 2 to step 3 as hidden inputs
+                const fieldMap = {
+                    'id_given_name': 'given_name',
+                    'id_middle_initial': 'middle_initial',
+                    'id_last_name': 'last_name',
+                    'id_sex': 'sex',
+                    'id_email': 'email',
+                    'id_contact_no': 'contact_no',
+                    'id_degree': 'degree',
+                    'id_expertise': 'expertise',
+                    'id_college': 'college',
+                    'id_campus': 'campus',
+                    'id_password': 'password',
+                    'id_confirm_password': 'confirm_password'
+                };
+                // Remove old hidden fields
+                Array.from(form.querySelectorAll('.step-hidden')).forEach(e => e.remove());
+                Object.entries(fieldMap).forEach(([fieldId, fieldName]) => {
+                    let field = document.getElementById(fieldId);
+                    if (field) {
+                        let input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = fieldName;
+                        input.value = field.value;
+                        input.className = 'step-hidden';
+                        form.appendChild(input);
+                    }
+                });
+                let valid = true;
+                const fileInput = document.getElementById('id_valid_id');
+                const preferredIdSelect = document.getElementById('preferred_id');
+
+                fileInput.classList.remove('error-input');
+                let err = document.getElementById('file-error');
+                if (err) err.remove();
+                preferredIdSelect.classList.remove('error-select');
+                let pidErr = document.getElementById('preferred-id-error');
+                if (pidErr) pidErr.remove();
+
+                var fileSelected = fileInput && fileInput.files && fileInput.files.length > 0;
+                var preferredIdValue = preferredIdSelect && preferredIdSelect.value;
+                if (!preferredIdValue) {
+                    valid = false;
+                    preferredIdSelect.classList.add('error-select');
+                    let errDiv = document.createElement('div');
+                    errDiv.id = 'preferred-id-error';
+                    errDiv.className = 'field-error';
+                    errDiv.textContent = 'Preferred ID is required.';
+                    errDiv.style.color = '#E53E3E';
+                    errDiv.style.fontSize = '0.95rem';
+                    errDiv.style.marginTop = '0.25rem';
+                    document.getElementById('preferred-id-error-container').appendChild(errDiv);
+                }
+                if (!fileSelected) {
+                    valid = false;
+                    fileInput.classList.add('error-input');
+                    let errDiv = document.createElement('div');
+                    errDiv.id = 'file-error';
+                    errDiv.textContent = 'Valid ID file is required.';
+                    errDiv.style.color = '#E53E3E';
+                    errDiv.style.fontSize = '0.95rem';
+                    errDiv.style.marginTop = '0.25rem';
+                    fileInput.parentNode.appendChild(errDiv);
+                }
+                if (!valid) {
+                    e.preventDefault();
+                    showPopup("Please upload a valid ID and select a preferred ID to proceed.");
+                    return;
+                }
+            });
         }
-        if (!fileInput.files || fileInput.files.length === 0) {
-            fileError.style.display = 'block';
-            showPopup("Please upload a valid ID to proceed.");
-            valid = false;
-        } else {
-            fileError.style.display = 'none';
-        }
-        if (valid) {
-            document.getElementById('form-step3').submit();
-        }
-    }
+    });
 </script>
     
     <!-- Custom Modal Popup -->

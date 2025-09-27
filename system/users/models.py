@@ -3,6 +3,12 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 class College(models.Model):
+    def delete(self, *args, **kwargs):
+        # Delete associated logo from storage
+        if self.logo and self.logo.storage and self.logo.storage.exists(self.logo.name):
+            self.logo.storage.delete(self.logo.name)
+        super().delete(*args, **kwargs)
+
     name = models.CharField(max_length=255)
     logo = models.ImageField(upload_to='colleges/logos/', blank=True, null=True)
 
@@ -11,6 +17,14 @@ class College(models.Model):
 
 
 class User(AbstractUser):
+    def delete(self, *args, **kwargs):
+        # Delete associated profile picture and valid ID from storage
+        if self.profile_picture and self.profile_picture.storage and self.profile_picture.storage.exists(self.profile_picture.name):
+            self.profile_picture.storage.delete(self.profile_picture.name)
+        if self.valid_id and self.valid_id.storage and self.valid_id.storage.exists(self.valid_id.name):
+            self.valid_id.storage.delete(self.valid_id.name)
+        super().delete(*args, **kwargs)
+        
     class Role(models.TextChoices):
         FACULTY = 'FACULTY', 'Faculty'
         IMPLEMENTER = 'IMPLEMENTER', 'Implementer'

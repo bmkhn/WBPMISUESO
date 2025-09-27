@@ -24,6 +24,12 @@ def project_document_upload_to(instance, filename):
 
 
 class ProjectDocument(models.Model):
+	def delete(self, *args, **kwargs):
+		# Delete associated file from storage
+		if self.file and self.file.storage and self.file.storage.exists(self.file.name):
+			self.file.storage.delete(self.file.name)
+		super().delete(*args, **kwargs)
+		
 	DOCUMENT_TYPE_CHOICES = [
 		('PROPOSAL', 'Proposal'),
 		('ADDITIONAL', 'Additional'),

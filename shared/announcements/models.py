@@ -2,6 +2,12 @@ from django.db import models
 from system.users.models import User
 
 class Announcement(models.Model):
+	def delete(self, *args, **kwargs):
+		# Delete associated cover photo from storage
+		if self.cover_photo and self.cover_photo.storage and self.cover_photo.storage.exists(self.cover_photo.name):
+			self.cover_photo.storage.delete(self.cover_photo.name)
+		super().delete(*args, **kwargs)
+		
 	title = models.CharField(max_length=255, blank=False)
 	body = models.TextField(blank=False)
 	is_scheduled = models.BooleanField(default=False)
