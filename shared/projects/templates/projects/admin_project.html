@@ -510,7 +510,7 @@
                 {% for project in projects %}
                 <tr>
                     <td>
-                        <a href="{% url 'project_details' project.id %}" class="name-link" title="{{ project.title }}">
+                        <a href="{% url 'project_profile_dispatcher' project.id %}" class="name-link" title="{{ project.title }}">
                             {{ project.title|truncatechars:20 }}
                         </a>
                     </td>
@@ -522,7 +522,7 @@
                     <td>{{ project.get_status_display }}</td>
                 </tr>
                 {% empty %}
-                <tr><td colspan="6" style="text-align:center;">No projects found.</td></tr>
+                <tr><td colspan="7" style="text-align:center;">No projects found.</td></tr>
                 {% endfor %}
             </tbody>
         </table>

@@ -10,46 +10,56 @@ class SustainableDevelopmentGoal(models.Model):
 	def __str__(self):
 		return f"SDG {self.goal_number}: {self.name}"
 
-	@staticmethod
-	def get_default_sdg_data():
-		return [
-			{'goal_number': 1, 'name': 'No Poverty'},
-			{'goal_number': 2, 'name': 'Zero Hunger'},
-			{'goal_number': 3, 'name': 'Good Health and Well-being'},
-			{'goal_number': 4, 'name': 'Quality Education'},
-			{'goal_number': 5, 'name': 'Gender Equality'},
-			{'goal_number': 6, 'name': 'Clean Water and Sanitation'},
-			{'goal_number': 7, 'name': 'Affordable and Clean Energy'},
-			{'goal_number': 8, 'name': 'Decent Work and Economic Growth'},
-			{'goal_number': 9, 'name': 'Industry, Innovation and Infrastructure'},
-			{'goal_number': 10, 'name': 'Reduced Inequality'},
-			{'goal_number': 11, 'name': 'Sustainable Cities and Communities'},
-			{'goal_number': 12, 'name': 'Responsible Consumption and Production'},
-			{'goal_number': 13, 'name': 'Climate Action'},
-			{'goal_number': 14, 'name': 'Life Below Water'},
-			{'goal_number': 15, 'name': 'Life on Land'},
-			{'goal_number': 16, 'name': 'Peace, Justice and Strong Institutions'},
-			{'goal_number': 17, 'name': 'Partnerships for the Goals'},
-		]
+def project_document_upload_to(instance, filename):
+	# instance.project may not be set until after save, so use a placeholder if needed
+	project_id = getattr(instance.project, 'id', None)
+	if instance.document_type == 'PROPOSAL':
+		if project_id:
+			return f"projects/{project_id}/proposals/{filename}"
+		return f"projects/unknown/proposals/{filename}"
+	else:
+		if project_id:
+			return f"projects/{project_id}/additional_documents/{filename}"
+		return f"projects/unknown/additional_documents/{filename}"
 
-
-def project_proposal_upload_to(instance, filename):
-	# instance.id may not be set until after save, so use a placeholder if needed
-	if instance.id:
-		return f"projects/{instance.id}/proposals/{filename}"
-	return f"projects/unknown/proposals/{filename}"
-
-def project_additional_document_upload_to(instance, filename):
-	if instance.id:
-		return f"projects/{instance.id}/additional_documents/{filename}"
-	return f"projects/unknown/additional_documents/{filename}"
 
 class ProjectDocument(models.Model):
-	file = models.FileField(upload_to=project_additional_document_upload_to)
+	DOCUMENT_TYPE_CHOICES = [
+		('PROPOSAL', 'Proposal'),
+		('ADDITIONAL', 'Additional'),
+	]
+	project = models.ForeignKey('Project', on_delete=models.CASCADE, related_name='documents')
+	file = models.FileField(upload_to=project_document_upload_to)
+	document_type = models.CharField(max_length=12, choices=DOCUMENT_TYPE_CHOICES)
 	uploaded_at = models.DateTimeField(auto_now_add=True)
 	description = models.CharField(max_length=255, blank=True)
+
+	@property
+	def name(self):
+		import os
+		if self.file:
+			base = os.path.basename(self.file.name)
+			return os.path.splitext(base)[0]
+		return ""
+
+	@property
+	def size(self):
+		if self.file and hasattr(self.file, 'size'):
+			mb = self.file.size / (1024 * 1024)
+			return f"{mb:.1f} MB"
+		return "0.0 MB"
+
+	@property
+	def extension(self):
+		import os
+		if self.file:
+			ext = os.path.splitext(self.file.name)[1]
+			return ext[1:].lower() if ext else ""
+		return ""
+
 	def __str__(self):
-		return self.file.name
+		return f"{self.name} ({self.document_type})"
+
 
 
 class Project(models.Model):
@@ -80,8 +90,10 @@ class Project(models.Model):
 	sponsor_name = models.CharField(max_length=255,  blank=True, null=True)
 	start_date = models.DateField()
 	estimated_end_date = models.DateField()
-	proposal_document = models.FileField(upload_to=project_proposal_upload_to)
-	additional_documents = models.ManyToManyField(ProjectDocument, blank=True, related_name='projects')
+
+	proposal_document = models.OneToOneField('ProjectDocument', on_delete=models.SET_NULL, null=True, blank=True, related_name='proposal_for_project')
+	additional_documents = models.ManyToManyField('ProjectDocument', blank=True, related_name='additional_for_projects')
+	
 	created_at = models.DateTimeField(auto_now_add=True)
 	created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='created_projects')
 	updated_at = models.DateTimeField(auto_now=True)

@@ -4,6 +4,7 @@ from django.db import models
 
 class College(models.Model):
     name = models.CharField(max_length=255)
+    logo = models.ImageField(upload_to='colleges/logos/', blank=True, null=True)
 
     def __str__(self):
         return self.name
@@ -71,6 +72,22 @@ class User(AbstractUser):
     industry = models.CharField(max_length=255, blank=True, null=True)
     is_expert = models.BooleanField(default=False)
     profile_picture = models.ImageField(upload_to='users/profile_pictures/', blank=True, null=True)
+    @property
+    def profile_picture_or_initial(self):
+        """
+        Returns the profile picture URL if set, otherwise returns an SVG data URI with the user's first initial.
+        """
+        if self.profile_picture:
+            try:
+                return self.profile_picture.url
+            except Exception:
+                pass
+        initial = (self.given_name or self.last_name or self.email or "?")[0].upper()
+        # SVG circle with initial, dark green background
+        svg = f'<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><circle cx="20" cy="20" r="20" fill="#245F3E"/><text x="50%" y="55%" text-anchor="middle" fill="#fff" font-size="22" font-family="Arial" dy=".3em">{initial}</text></svg>'
+        import base64
+        svg_b64 = base64.b64encode(svg.encode('utf-8')).decode('utf-8')
+        return f'data:image/svg+xml;base64,{svg_b64}'
     preferred_id = models.CharField(max_length=50, blank=True, null=True, choices=PreferenceID.choices)  # e.g., Passport, Driver's License
     valid_id = models.ImageField(upload_to='users/valid_ids/', blank=True, null=True)       # Required Logic will be backend
     created_by = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='created_users')

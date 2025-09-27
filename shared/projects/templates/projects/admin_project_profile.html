@@ -1,0 +1,1385 @@
+{% extends "base_internal.html" %}
+{% block content %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project</title> 
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"> 
+    
+<!-- Top Section -->
+<style>
+    body {
+        background: #F9F9F9;
+        margin: 0;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .project_detail_main_container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: stretch;
+        gap: 1rem;
+    }
+    
+    .top_section { 
+        padding: 3rem 4rem 0 4rem;
+        background-color: whitesmoke;
+        box-shadow: 0 6px 0.5rem rgba(0, 0, 0, 0.2); 
+    } 
+
+
+    .title {
+        font-size: 1.5rem;
+        font-weight: 500;
+        margin: 0.25rem 0 1rem 0;
+        color: #222; 
+        text-decoration: none;
+    } 
+
+    .title:hover {
+        color: #007bff; 
+        text-decoration: none;
+    }
+
+    .tags {
+        display: flex; 
+        justify-content: space-between; 
+        width: 100%; 
+        margin-bottom: 2.25rem;
+    }
+
+    .campus {
+        background-color: #ff9f10; 
+        color: rgb(55, 39, 0);
+        border: 0.08rem solid #ff9f10;
+        font-weight: 600; 
+        padding: 0.35rem 0.6rem;
+        margin-right: 0.5rem;
+        cursor: pointer;
+    } 
+
+    .agenda {
+        background: linear-gradient(90deg, white, #00ff6e3d); 
+        color: #313131;
+        border: 0.08rem solid #313131;
+        font-weight: 500; 
+        padding: 0.35rem 0.6rem;
+        margin-right: 0.5rem;
+        cursor: pointer;
+    } 
+
+    .status {
+        background-color: whitesmoke; 
+        color: #1CB889;
+        border: 0.08rem solid #1CB889;
+        font-weight: 500; 
+        padding: 0.35rem 0.6rem;
+        margin-right: 0.5rem;
+        cursor: pointer;
+    }  
+
+    h5 {
+        font-size: 0.9rem;
+        color: #666;
+        margin: 1rem 0 2rem 0; 
+        font-weight: 300; 
+    }
+
+    .project-authors {
+        display: flex; 
+        flex-direction: row; 
+        align-items: center;
+        gap: 1.5rem;
+        margin: 1rem 0 2rem 0;
+    } 
+
+    .project-authors content {
+        display: flex; 
+        flex-direction: row; 
+        align-items: center; 
+        gap: 0.75rem;
+    }
+
+    .project-authors img {
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 50%;
+        object-fit: cover; 
+        border: 0.08rem solid #ccc;
+    } 
+
+    .project-authors a { 
+        font-size: 0.9rem;
+        color: #000000;
+        text-decoration: none;
+    } 
+
+    .project-authors a:hover { 
+        color: #007bff;
+    }
+</style>
+
+<!-- General Content Section -->
+<style>
+    .card {
+        background: #fff;
+        border-radius: 0.75rem;
+        padding: 2.5rem;
+        justify-content: space-between;
+        box-shadow: 0 0 0 1px rgba(0,0,0,0.4);
+    }
+
+    .tab-contents-section {
+        padding: 2rem 4rem 4rem 4rem;
+        margin-bottom: 0; 
+        box-shadow: 0 0 0 rgba(0, 0, 0, 0.2);
+    }
+
+    .tab-content {
+        display: none;
+    }
+
+    .tab-content.active {
+        display: block;
+    }
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem; 
+        height: 50px;
+    }
+
+    .card-header h3 {
+        margin:0;
+        font-size: 1.25rem;
+        font-weight: 500;
+        color: #222; 
+        flex: 1;
+    }
+
+    .card-body {
+        text-align: center;
+        color: #555;
+        font-size: 0.95rem;
+    }
+
+    .card-header .dropdown {
+        flex-shrink: 0;
+    }
+
+    .admin-button {
+        border-radius: 18px;
+        font-family: 'Roboto', sans-serif;
+        font-weight: 500;
+        font-size: 20px;
+        color: #FFF;
+        background-color: #0A6C44;
+        padding: 0.75rem 2rem;
+        transition: background 0.2s;
+        border: none;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        text-decoration: none;
+    }
+
+    .admin-button:hover {
+        background-color: #1f7c57;
+    }
+</style>
+
+<!-- Information Section -->
+<style>
+    .infoseg {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr 1fr;
+        gap: 1.25rem 2rem; 
+        align-items: start;
+        font-size: 0.95rem;
+        text-align: left;
+    }
+
+    .infoseg div {
+        display: flex;
+        align-items: center;
+    }
+
+    .infoseg strong {
+        margin-left: 0.4rem;
+        font-weight: 600;
+    }
+
+    .infoseg div:nth-child(2n) {
+        justify-content: left;
+        text-align: left;
+    }
+</style>
+
+<!-- Event Section -->
+<style>
+    .event-card {
+        display: grid;
+        grid-auto-rows: auto;
+        gap: 2rem; 
+    } 
+
+    .events-section {
+        display: flex;  
+        flex-direction: column;
+        margin: 1rem; 
+        align-items: center; 
+        justify-content: center; 
+    } 
+
+    .event-card > section {
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+    } 
+
+    .event-card img {
+        max-width: 25rem;
+        aspect-ratio: 16 / 9;  
+        object-fit: cover;
+        border-radius: 0.75rem;
+        cursor: pointer;  
+        border: 0.08rem solid #525252;
+    }
+
+    .events-section > h3,
+    .tab-content > section > h3 {
+        top: 0; 
+        padding: 0.5rem 0;
+        z-index: 5;
+    }
+
+    .event-details {
+        display: flex; 
+        align-items: center;
+    }
+
+    .event-info { 
+        width: 30rem; 
+        padding-right: 2.5rem;
+        text-align: justify;
+        max-height: 15rem;
+        overflow-y: auto;
+    } 
+
+    .status-text {
+        font-weight: bold; 
+        margin-bottom: 1rem;
+    }
+
+    .status-text span {
+        font-weight: normal;
+    } 
+
+    .progress { 
+        display: inline-block; 
+        width: 75%;
+        height: 0.5rem;
+        background-color: #ddd;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-top: 1rem;
+    }
+
+    .progress-bar {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, #0a8927, #17f058);
+        transition: width 0.5s ease;
+    }
+
+    .overlay {
+        display: none; 
+        position: fixed; 
+        top: 0; left: 0; 
+        width: 100vw; 
+        height: 100vh; 
+        background: rgba(0, 0, 0, 0.8); 
+        justify-content: center; 
+        align-items: center; 
+        z-index: 1000;
+    }
+
+    .overlay img {
+        max-width: 90%; 
+        max-height: 90%;
+        border-radius: 0.5rem; 
+        object-fit: contain;
+    } 
+
+    .events-row {
+        display: flex;
+        justify-content: space-evenly;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .event {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        font-size: 1rem;
+    }
+
+    #com {
+        font-size: 5.5rem; 
+        color: #076e3e; 
+        vertical-align: middle; 
+        padding: 1rem 0;
+    } 
+
+    #incom {
+        font-size: 5.5rem; 
+        color: #6e0707; 
+        vertical-align: middle; 
+        padding: 1rem 0;
+    } 
+
+    .tracker-box { 
+        background-color: whitesmoke;
+        border: 1px solid #ccc;
+        border-radius: 2rem;
+        justify-content: center; 
+        align-items: center;
+        text-align: center;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+</style>
+
+<!-- Miscellaneous Styles -->
+<style>
+    .dropdown {
+        position: relative;
+        width: 9.5rem;
+    }
+
+    .dropdown-btn { 
+        margin: 0.75rem; 
+        border: none;
+        width: 100%;
+        padding: 0.5rem;
+        border-radius: 0.75rem;
+        background: none;
+        text-align: center;
+        cursor: pointer;
+        font-family: Helvetica, Arial, sans-serif;
+        font-weight: 400;
+        font-size: 1rem; 
+        border: 0.08rem solid whitesmoke;
+    } 
+
+    .dropdown-btn:hover {
+        border: 0.08rem solid #000000;
+    }
+
+    .dropdown-menu {
+        position: absolute;
+        top: calc(100%);
+        left: 0;
+        margin: 0;
+        right: 0; 
+        width: 100%;
+        background: white;
+        border: 0.08rem solid #ccc;
+        border-radius: 0.75rem; 
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        z-index: 10;
+        overflow: hidden;
+    }
+
+    .dropdown-item {
+        padding: 0.75rem;
+        cursor: pointer;
+        transition: background 0.2s;
+        font-family: Helvetica, Arial, sans-serif;
+        font-weight: 400;
+        text-align: center;
+        border-bottom: 1px solid rgb(196, 196, 196);
+    }
+
+    .dropdown-item:hover {
+        background-color: #000000;
+        color: white;
+    }
+
+    .hidden {
+        display: none;
+    }
+    
+    .view {
+        display: inline-block;
+        margin-top: 0.75rem;
+        font-size: 0.9rem;
+        color: #007bff;
+        text-decoration: none;
+    }
+
+    .view:hover {
+        text-decoration: underline;
+    } 
+
+    .tabs { 
+        margin-top: 1rem;
+        display: flex; 
+    }
+
+    .tabs button {
+        background: none;
+        border: none;
+        width: 9rem; 
+        height: 4rem;
+        font-size: 1rem;
+        font-weight: 400;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border-bottom: 4px solid transparent;
+    }
+
+    .tabs button:hover {
+        border-bottom: 4px solid #245F3E;
+    }
+
+    .tabs button.active {
+        border-bottom: 4px solid #245F3E;
+    } 
+
+    .sort-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+        color: #333;
+        margin-left: 0.5rem;
+    }  
+
+    .dropdown {
+        position: relative;
+        width: 14.5rem;
+    }
+
+    .dropdown-btn { 
+        margin: 0; 
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 0.08rem solid #b6b6b6;
+        border-radius: 0.75rem;
+        background: #f9f9f9;
+        text-align: center;
+        cursor: pointer;
+        font-family: Helvetica, Arial, sans-serif;
+        font-weight: 400;
+        font-size: 1rem;
+    }
+
+    .dropdown-btn:hover{
+        background-color: #000000;
+        color: white;
+    }
+
+    .dropdown-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        margin: 0;
+        right: 0;
+        background: white;
+        border: 0.08rem solid #ccc;
+        border-radius: 0.75rem;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        z-index: 10;
+        overflow: hidden;
+    }
+
+    .dropdown-item {
+        padding: 0.75rem;
+        cursor: pointer;
+        transition: background 0.2s;
+        font-family: Helvetica, Arial, sans-serif;
+        font-weight: 400;
+        text-align: center;
+        border-bottom: 1px solid rgb(196, 196, 196);
+    }
+
+    .dropdown-item:hover {
+        background-color: #000000;
+        color: white;
+    }
+
+    .dropdown2 {
+        position: relative;
+        width: 9.5rem;
+    }
+
+    .dropdown-btn2 { 
+        margin: 0.75rem; 
+        border: none;
+        width: 100%;
+        padding: 0.5rem;
+        border-radius: 0.75rem;
+        background: none;
+        text-align: center;
+        cursor: pointer;
+        font-family: Helvetica, Arial, sans-serif;
+        font-weight: 400;
+        font-size: 1rem; 
+        border: 0.08rem solid #e9e9e9;
+    } 
+
+    .dropdown-btn2:hover {
+        border: 0.08rem solid #000000;
+    }
+
+    .dropdown-menu2 {
+        position: absolute;
+        top: calc(100% - 0.7rem);
+        left: 0.8rem;
+        margin: 0;
+        right: 0; 
+        width: 100%;
+        background: white;
+        border: 0.08rem solid #ccc;
+        border-radius: 0.75rem; 
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        z-index: 10;
+        overflow: hidden;
+    }
+
+    .dropdown-item2 {
+        padding: 0.75rem;
+        cursor: pointer;
+        transition: background 0.2s;
+        font-family: Helvetica, Arial, sans-serif;
+        font-weight: 400;
+        text-align: center;
+        border-bottom: 1px solid rgb(196, 196, 196);
+    }
+
+    .dropdown-item2:hover {
+        background-color: #000000;
+        color: white;
+    } 
+</style>
+
+<!-- Providers Section -->
+<style>
+    .providers {
+        display: flex;
+        flex-wrap: wrap; 
+        justify-content: center; 
+        gap: 2rem; 
+    }
+
+    .providers > * {
+        box-sizing: border-box;
+    }
+
+    .providers > div {
+        border: 0.08rem solid #a9a9a9;
+        border-radius: 2rem;
+        width: 20rem;
+        height: 24rem;
+    }
+
+    .providers > div h5 {
+        margin: 0;
+        font-weight: 600;
+    }
+    
+    .providers > div h3 {
+        font-weight: 500;
+        margin: 0.25rem 0;
+    }
+
+    .prov-seg-sec {
+        padding: 1rem;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .prov-seg-sec img {
+        width: 5rem;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-bottom: -3rem;
+    }
+
+    .prof {
+        width: 12rem;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+        margin: 0rem 1rem 1rem 1rem;
+    }
+</style>
+
+<!-- Files Section -->
+<style>
+    .files-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 1rem 0;
+    }
+
+    .files-header h3 {
+        margin: 0;
+        font-size: 1.2rem; 
+        font-weight: 500;
+    }
+
+    .file-list {
+        margin-top: -1rem;
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+    }
+
+    .file-card {
+        padding: 0.75rem;
+    }
+
+    .file-card img {
+        max-height: 10rem;
+        border: 1px solid #000000;
+        border-radius: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .file-card h4 {
+        font-size: 1rem;
+        margin: 0.3rem 0;
+        font-weight: 500;
+    }
+
+    .file-card p {
+        font-size: 0.75rem;
+        margin-top: 0.5rem;
+        color: #555;
+    }
+</style>
+
+<!-- Submission Section -->
+<style>
+    .submission-content {
+        text-align: center;
+        color: #0b0b0b;
+        font-size: 0.95rem;
+        grid-auto-rows: auto;
+    } 
+
+    .submission-content section {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 2.25rem;
+        background-color: rgb(255, 156, 156);
+        border: 0.08rem solid #ccc;
+        border-radius: 2rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .submission-content section div h3 {
+        margin-right: -2rem;
+    }
+
+    .submission-content section div h5 {
+        font-weight: 600;
+        color: #160202;
+    }
+</style>
+
+<!-- ######################################################################################################################################################## -->
+
+<!-- Search Bar Styles -->
+<style>
+	.search-container {
+		width: 100%;
+		display: flex;
+		gap: 10px;
+	}
+
+	.search-bar {
+		width: 100%;
+		height: 52px;
+		background: #F2F4F8;
+		display: flex;
+		align-items: center;
+		padding: 0 16px;
+		border-bottom: 1.09px solid #535353;
+		border-radius: 8px;
+		box-sizing: border-box;
+	}
+
+	.search-bar input {
+		flex: 1;
+		border: none;
+		outline: none;
+		background: transparent;
+		font-size: 18px;
+		font-family: 'Inter', sans-serif;
+		font-weight: 400;
+		color: #5A5252;
+		padding: 0 10px;
+	}
+</style>
+
+<!-- Sort/Filter Styles -->
+<style>
+	.filter-dropdown {
+		display: none;
+		position: absolute;
+		top: 280px;
+		right: 60px;
+		z-index: 1000;
+		background: white;
+		border: 1px solid #e5e7eb;
+		border-radius: 12px;
+		box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+		padding: 24px 32px;
+		min-width: 340px;
+	}
+
+	.filter-grid {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: repeat(2, 1fr);
+		grid-gap: 24px;
+	}
+
+	.filter-dropdown label {
+		font-weight: 500;
+		color: #374151;
+		display: flex;
+		flex-direction: column;
+	}
+
+	.filter-dropdown select,
+	.filter-dropdown input[type="date"] {
+		width: 100%;
+		margin-top: 6px;
+		border: 1px solid #e5e7eb;
+		border-radius: 6px;
+		padding: 6px 10px;
+		font-size: 15px;
+		font-family: 'Inter', Arial, sans-serif;
+		background: #f9f9f9;
+		color: #374151;
+	}
+
+	.filter-dropdown select {
+		appearance: none;
+		-webkit-appearance: none;
+		-moz-appearance: none;
+		padding-right: 2rem;
+		background: url("data:image/svg+xml;utf8,<svg width='16' height='11' viewBox='0 0 16 11' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M7.99976 7.19417L13.9025 1.29147C14.0125 1.17758 14.144 1.08674 14.2895 1.02424C14.435 0.961746 14.5915 0.92885 14.7498 0.927474C14.9082 0.926098 15.0652 0.95627 15.2117 1.01623C15.3583 1.07619 15.4914 1.16473 15.6034 1.27669C15.7153 1.38866 15.8039 1.5218 15.8638 1.66835C15.9238 1.8149 15.954 1.97192 15.9526 2.13026C15.9512 2.28859 15.9183 2.44506 15.8558 2.59055C15.7933 2.73604 15.7025 2.86762 15.5886 2.97762L8.84283 9.72339C8.61921 9.94694 8.31596 10.0725 7.99976 10.0725C7.68356 10.0725 7.38031 9.94694 7.15669 9.72339L0.41092 2.97762C0.297028 2.86762 0.206183 2.73604 0.143687 2.59055C0.0811915 2.44506 0.0482959 2.28859 0.04692 2.13026C0.0455441 1.97192 0.0757155 1.8149 0.135674 1.66835C0.195632 1.5218 0.284176 1.38866 0.39614 1.27669C0.508103 1.16473 0.641244 1.07619 0.787794 1.01623C0.934343 0.95627 1.09137 0.926098 1.2497 0.927474C1.40804 0.92885 1.56451 0.961746 1.71 1.02424C1.85548 1.08674 1.98706 1.17758 2.09706 1.29147L7.99976 7.19417Z' fill='%23374151'/></svg>")
+        		no-repeat right 0.75rem center;
+  		background-size: 13px 8px;
+	}
+
+	.filter-actions {
+		display: flex;
+		justify-content: flex-end;
+		gap: 10px;
+		margin-top: 24px;
+	}
+
+	.filter-apply {
+		background: #063A1C;
+		color: white;
+		padding: 10px 28px;
+		border-radius: 8px;
+		font-size: 16px;
+		font-family: 'Inter', Arial, sans-serif;
+		font-weight: 500;
+		cursor: pointer;
+		transition: background 0.2s;
+		border: none;
+	}
+
+	.filter-close {
+		background: #e5e7eb;
+		color: #374151;
+		padding: 10px 18px;
+		border-radius: 8px;
+		font-size: 16px;
+		font-family: 'Inter', Arial, sans-serif;
+		font-weight: 500;
+		cursor: pointer;
+		border: none;
+	}
+</style>
+
+<!-- Pagination Styles -->
+<style>
+	.pagination-container {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		margin-top: 3rem;
+		gap: 0.5rem;
+	}
+
+	.pagination-button {
+		padding: 0.75rem 1rem;
+		border: 1px solid #E5E7EB;
+		background: white;
+		color: #4B5563;
+		border-radius: 8px;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		font-weight: 500;
+		text-decoration: none;
+	}
+
+	.pagination-button:hover {
+		background: #F3F4F6;
+		border-color: #0A6C44;
+		color: #0A6C44;
+	}
+
+	.pagination-button.active {
+		background: #0A6C44;
+		color: white;
+		border-color: #0A6C44;
+	}
+
+	.pagination-button:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	.page-info {
+		margin: 0 1rem;
+		color: #4B5563;
+		font-weight: 500;
+	}
+</style>
+
+</head>
+
+<body>   
+    <div class="project_detail_main_container">  
+
+        <!-- Top Section -->
+        <div class="top_section"> 
+            <div class="tags"> 
+                <content style="flex-grow: 2;"> 
+                    <button class="campus">{{ project.project_leader.get_campus_display }}</button>
+                    <button class="agenda">{{ project.agenda }}</button> 
+                </content> 
+                <content style="flex-grow: 0;"> 
+                    <button class="status">{{ project.get_status_display }}</button> 
+                </content>
+            </div> 
+            <div>
+                <div style="flex-direction: row; justify-content: space-between; display: flex; align-items: center; align-items: center;">
+                    <a href="#" class="title">{{ project.title }}</a>
+                    <a class="admin-button">Mark Cancelled</a>
+                </div>
+                
+                <h5>{{ project.start_date|date:'F d, Y' }} - {{ project.estimated_end_date|date:'F d, Y' }}</h5>
+            </div> 
+            <div class="project-authors"> 
+                <content>
+                    {% if project.project_leader %}
+                        <img src="{{ project.project_leader.profile_picture_or_initial }}" alt="">
+                        <a href="#">{{ project.project_leader.get_full_name|default:project.project_leader.username }}</a>
+                    {% endif %}
+                </content> 
+                {% for provider in project.providers.all %}
+                <content>
+                    <img src="{{ provider.profile_picture_or_initial }}" alt="">
+                    <a href="#">{{ provider.get_full_name|default:provider.username }}</a> 
+                </content> 
+                {% empty %}
+                {% endfor %}
+            </div> 
+            <div class="tabs">  
+                <button type="button" data-tab="overview"> Information</button>
+                <button type="button" data-tab="providers">Providers</button>
+                <button type="button" data-tab="events">Events</button>
+                <button type="button" data-tab="files">Files</button> 
+                <button type="button" data-tab="submissions">Submissions</button>
+                <button type="button" data-tab="evaluations">Evaluations</button>
+            </div>
+        </div> 
+
+        <section class="tab-contents-section"> 
+            <div> 
+
+                <!-- Information Tab -->
+                <div class="tab-content active" id="overview">
+                    <div class="card-header">
+                        <h3>Information</h3>
+                        <a class="admin-button">Edit</a>
+                    </div>
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="infoseg">
+                                <div><i class="fa-regular fa-circle-question"></i> <strong>Last Update</strong></div>
+                                <div>{{ project.updated_at|date:'F d, Y' }}</div>
+
+                                <div><i class="fa-regular fa-circle-question"></i> <strong>Date Added</strong></div>
+                                <div>{{ project.created_at|date:'F d, Y' }}</div>
+
+                                <div><i class="fa-regular fa-circle-question"></i> <strong>Project ID</strong></div>
+                                <div>{{ project.id }}</div>
+
+                                <div><i class="fa-regular fa-circle-question"></i> <strong>Estimated End</strong></div>
+                                <div>{{ project.estimated_end_date|date:'F d, Y' }}</div>
+
+                                <div><i class="fa-regular fa-circle-question"></i> <strong>Agenda</strong></div>
+                                <div>{{ project.agenda }}</div>
+
+                                <div><i class="fa-regular fa-circle-question"></i> <strong>Project Status</strong></div>
+                                <div>{{ project.get_status_display }}</div>
+
+                                <div><i class="fa-regular fa-circle-question"></i> <strong>Beneficiary</strong></div>
+                                <div>{{ project.primary_beneficiary }}</div>
+
+                                <div><i class="fa-regular fa-circle-question"></i> <strong>Project Type</strong></div>
+                                <div>{{ project.get_project_type_display|default:project.project_type }}</div>
+
+                                <div><i class="fa-regular fa-circle-question"></i> <strong>Expected Events</strong></div>
+                                <div>{{ project.estimated_events }}</div>
+
+                                <div><i class="fa-regular fa-circle-question"></i> <strong>Location</strong></div>
+                                <div>{{ project.primary_location }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Providers Tab -->
+                <div class="tab-content" id="providers">
+                    <div class="card-header">
+                        <h3>Providers</h3>
+                        <a class="admin-button">Add Provider</a>
+                    </div>
+
+                    <div class="providers">
+                        {% for provider in project.providers.all %}
+                        <div style="border-radius: 15px;">
+                            <section class="prov-seg-sec">
+                                <button class="campus">{{ provider.get_campus_display }}</button>
+                                {% if provider.college and provider.college.logo %}
+                                    <img src="{{ provider.college.logo.url }}" alt="college logo" style="width: 3.5rem; height: 100%;">
+                                {% else %}
+                                    <img src="/media/colleges/logos/Default.png" alt="college logo" style="width: 3.5rem; height: 100%;">
+                                {% endif %}
+                            </section>
+                            <section style="text-align: center;">
+                                <img src="{{ provider.profile_picture_or_initial }}" alt="profile" class="prof">
+                            </section>
+                            <section style="text-align: center;">
+                                <h3>{{ provider.get_full_name|default:provider.username }}</h3>
+                                <h5>{{ provider.degree }}</h5>
+                            </section>
+                        </div>
+                        {% empty %}
+                        <p>No providers found.</p>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Pagination -->
+                    <div class="pagination-container">
+                        {% if page_obj.has_previous %}
+                            <a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page=1">First</a>
+                            <a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a>
+                        {% else %}
+                            <button class="pagination-button" disabled>First</button>
+                            <button class="pagination-button" disabled>Previous</button>
+                        {% endif %}
+
+                        {% for num in page_range %}
+                            {% if num == page_obj.number %}
+                                <button class="pagination-button active" disabled>{{ num }}</button>
+                            {% else %}
+                                <a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ num }}">{{ num }}</a>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                            <a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.next_page_number }}">Next</a>
+                            <a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ paginator.num_pages }}">Last</a>
+                        {% else %}
+                            <button class="pagination-button" disabled>Next</button>
+                            <button class="pagination-button" disabled>Last</button>
+                        {% endif %}
+
+                        <span class="page-info">Page {{ page_obj.number }} of {{ paginator.num_pages }}</span>
+                    </div>
+
+                </div>
+
+                <!-- Events Tab -->
+                <div class="tab-content" id="events">
+                    <div class="card-header">
+                        <h3>Events Pipeline Status</h3>
+                        <a class="admin-button">Edit</a>
+                    </div>
+                    <div class="card-body">
+                        <div class="tracker-box">
+                            <div class="progress">
+                                <div class="progress-bar" id="progressBar"></div>
+                            </div>
+                            <p class="status-text" id="statusText"></p>
+                        </div>
+                    </div>
+                    <section class="events-section">
+                        <div class="event-card">
+                            <section> 
+                                <div class="event-details"> 
+                                    <div class="event-info">
+                                        <h4>Every Single Night</h4>
+                                        <p><strong>Release Date:</strong> April 23, 2012</p>
+                                        <p><strong>Album:</strong> The Idler Wheel Is Wiser Than the Driver of the Screw and Whipping Cords Will Serve You More Than Ropes Will</p>
+                                        <p><strong>Description:</strong> The lead single from Fiona Apple’s fourth studio album, the song reflects her inner struggles, anxieties, and nightly battles with overwhelming thoughts. It features sparse but intense instrumentation with a hypnotic, almost chant-like vocal delivery.</p>
+                                    </div>
+                                    <div> 
+                                        <img src="https://i.scdn.co/image/ab67616d0000b2731443bd487a471868735f050b" alt="Event Photo" onclick="openOverlay(this)">
+                                    </div> 
+                                    <div class="overlay" id="overlay" onclick="closeOverlay()">
+                                        <img id="overlayImg" src="" alt="Full Image">
+                                    </div> 
+                                </div> 
+                            </section> 
+                                   <section> 
+                                <div class="event-details"> 
+                                    <div class="event-info">
+                                        <h4>Every Single Night</h4>
+                                        <p><strong>Release Date:</strong> April 23, 2012</p>
+                                        <p><strong>Album:</strong> The Idler Wheel Is Wiser Than the Driver of the Screw and Whipping Cords Will Serve You More Than Ropes Will</p>
+                                        <p><strong>Description:</strong> The lead single from Fiona Apple’s fourth studio album, the song reflects her inner struggles, anxieties, and nightly battles with overwhelming thoughts. It features sparse but intense instrumentation with a hypnotic, almost chant-like vocal delivery.</p>
+                                    </div>
+                                    <div> 
+                                        <img src="https://i.scdn.co/image/ab67616d0000b2731443bd487a471868735f050b" alt="Event Photo" onclick="openOverlay(this)">
+                                    </div> 
+                                    <div class="overlay" id="overlay" onclick="closeOverlay()">
+                                        <img id="overlayImg" src="" alt="Full Image">
+                                    </div> 
+                                </div> 
+                            </section>     
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Files Tab -->
+                <div class="tab-content" id="files">
+                    <div class="card-header" style="margin-bottom: 1rem;">
+                        <h3>Files</h3>
+                    </div>
+
+                    <!-- Search Bar & Filter (3x2 Grid) -->
+                    <div class="search-container">
+                        <form class="search-bar" method="get" action="">
+                            <svg width="20" height="20"> <use href="#icon-search"></use> </svg>
+                            <input type="text" name="search" placeholder="Search by file name..." value="{{ search|default:'' }}"/>
+                            <button type="button" id="filterBtn" style="background:none;border:none;padding:0;margin-right:5px;cursor:pointer;">
+                                <svg width="20" height="20"> <use href="#icon-filter"></use> </svg>
+                            </button>
+                            <div id="filterDropdown" class="filter-dropdown">
+                                <div class="filter-grid">
+                                    <!-- Top Left - Sort By -->
+                                    <label>Sort By
+                                        <select name="sort_by">
+                                            <option value="file" {% if sort_by == 'file' %}selected{% endif %}>File Name</option>
+                                            <option value="file_type" {% if sort_by == 'file_type' %}selected{% endif %}>File Type</option>
+                                            <option value="size" {% if sort_by == 'size' %}selected{% endif %}>Size</option>
+                                            <option value="uploaded_at" {% if sort_by == 'uploaded_at' %}selected{% endif %}>Date</option>
+                                        </select>
+                                    </label>
+                                    <!-- Top Middle - Order By -->
+                                    <label>Order By
+                                        <select name="order">
+                                            <option value="desc" {% if order == 'desc' %}selected{% endif %}>Descending</option>
+                                            <option value="asc" {% if order == 'asc' %}selected{% endif %}>Ascending</option>
+                                        </select>
+                                    </label>
+                                    <!-- Top Right - Status Filter -->
+                                    <label>Status
+                                        <select name="status">
+                                            <option value="">All Status</option>
+                                            <option value="published" {% if status == 'published' %}selected{% endif %}>Published</option>
+                                            <option value="archived" {% if status == 'archived' %}selected{% endif %}>Archived</option>
+                                        </select>
+                                    </label>
+                                    <!-- Bottom Left - Available for Public Filter -->
+                                    <label>Available for Public
+                                        <select name="public">
+                                            <option value="">All</option>
+                                            <option value="true" {% if public == 'true' %}selected{% endif %}>Yes</option>
+                                            <option value="false" {% if public == 'false' %}selected{% endif %}>No</option>
+                                        </select>
+                                    </label>
+                                    <!-- Bottom Middle - File Type Filter -->
+                                    <label>File Type
+                                        <select name="file_type">
+                                            <option value="">All Types</option>
+                                            {% for ext in file_types %}
+                                            <option value="{{ ext }}" {% if file_type == ext %}selected{% endif %}>{{ ext|upper }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </label>
+                                    <!-- Bottom Right - Date Filter -->
+                                    <label>Date
+                                        <input type="date" name="date" value="{{ date|default:'' }}" style="width: 87%"/>
+                                    </label>
+                                </div>
+                                <div class="filter-actions">
+                                    <button type="submit" class="filter-apply">Apply</button>
+                                    <button type="button" id="closeFilter" class="filter-close">Close</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Files Data (Proposal Document, Addtional Documents)-->
+                <div style="margin-top:2rem;">
+                    <h4>Proposal Document</h4>
+                    {% if project.proposal_document and project.proposal_document.file %}
+                        <a href="{{ project.proposal_document.file.url }}" target="_blank">{{ project.proposal_document.file.name }}</a>
+                    {% else %}
+                        <em>None</em>
+                    {% endif %}
+                    <h4 style="margin-top:1.5rem;">Additional Documents</h4>
+                    {% if project.additional_documents.all %}
+                        <ul>
+                        {% for doc in project.additional_documents.all %}
+                            {% if doc.file %}
+                                <li><a href="{{ doc.file.url }}" target="_blank">{{ doc.file.name }}</a></li>
+                            {% endif %}
+                        {% empty %}
+                            <li><em>None</em></li>
+                        {% endfor %}
+                        </ul>
+                    {% else %}
+                        <em>None</em>
+                    {% endif %}
+                </div>
+
+                <!-- Submissions Tab -->
+                <div class="tab-content" id="submissions">
+                    <div class="card-header">
+                        <h3>Submissions</h3>
+                        <a class="admin-button">Add Submission</a>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Due Submissions</h3>
+                            <div class="dropdown">
+                                <button class="dropdown-btn">All ▾</button>
+                                <div class="dropdown-menu hidden">
+                                    <div class="dropdown-item" data-target="all">All</div>
+                                    <div class="dropdown-item" data-target="assigned">Assigned</div>
+                                    <div class="dropdown-item" data-target="late">Late</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-body">
+                        <div class="submission-content active" id="submissions-all">
+                            <p>No items for All.</p>
+                        </div>
+                        <div class="submission-content hidden" id="submissions-assigned">
+                            <p>No items for Assigned.</p>
+                        </div>
+                        <div class="submission-content hidden" id="submissions-late">
+                            <section>
+                                <div>
+                                    <h3>Assessment Form</h3>
+                                    <p>January 01, 2024<p>
+                                    <a href="#" class="view">No notes attached</a>
+                                </div>
+                                <div>
+                                    <h5>Overdue by 2 days</h5>
+                                </div>
+                            </section>
+                            <section>
+                                <div>
+                                    <h3>Assessment Form</h3>
+                                    <p>January 01, 2024<p>
+                                    <a href="#" class="view">No notes attached</a>
+                                </div>
+                                <div>
+                                    <h5>Overdue by 2 days</h5>
+                                </div>
+                            </section>
+                        </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Evaluations Tab -->
+                <div class="tab-content" id="evaluations">
+                    <div class="card-header">
+                        <h3>Evaluations</h3>
+                        <a class="admin-button">Add Evaluation</a>
+                    </div>
+                    <div class="card">
+                        <div class="card-body">
+                            <p>No items.</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section> 
+    </div> 
+
+<!-- SVG Icons -->
+<svg style="display: none;">
+    <!-- Search -->
+	<symbol id="icon-search" viewBox="0 0 21 21" fill="none">
+		<path d="M8.89152 15.9057C9.75056 15.9057 10.6012 15.7365 11.3948 15.4077C12.1885 15.079 12.9096 14.5972 13.5171 13.9897C14.1245 13.3823 14.6064 12.6612 14.9351 11.8675C15.2638 11.0739 15.433 10.2232 15.433 9.36417C15.433 8.50513 15.2638 7.6545 14.9351 6.86084C14.6064 6.06719 14.1245 5.34606 13.5171 4.73862C12.9096 4.13119 12.1885 3.64934 11.3948 3.3206C10.6012 2.99186 9.75056 2.82266 8.89152 2.82266C7.1566 2.82266 5.49274 3.51185 4.26597 4.73862C3.03919 5.9654 2.35 7.62926 2.35 9.36417C2.35 11.0991 3.03919 12.763 4.26597 13.9897C5.49274 15.2165 7.1566 15.9057 8.89152 15.9057V15.9057ZM15.7819 14.713L19.685 18.6161C19.7891 18.7167 19.872 18.8371 19.9291 18.9701C19.9861 19.1032 20.0161 19.2463 20.0173 19.391C20.0184 19.5358 19.9907 19.6793 19.9358 19.8133C19.8809 19.9472 19.7999 20.0689 19.6974 20.1712C19.595 20.2735 19.4732 20.3544 19.3392 20.4091C19.2052 20.4638 19.0616 20.4913 18.9168 20.4899C18.772 20.4886 18.629 20.4584 18.496 20.4012C18.3631 20.3439 18.2428 20.2608 18.1423 20.1566L14.2392 16.2535C12.4866 17.614 10.2814 18.2554 8.07247 18.0472C5.86357 17.839 3.81705 16.7968 2.34951 15.1328C0.881971 13.4688 0.103735 11.308 0.173229 9.09044C0.242723 6.87284 1.15472 4.76508 2.72357 3.19623C4.29242 1.62738 6.40018 0.715379 8.61778 0.645885C10.8354 0.576391 12.9961 1.35463 14.6601 2.82217C16.3241 4.28971 17.3663 6.33623 17.5745 8.54513C17.7827 10.754 17.1413 12.9592 15.7808 14.7119L15.7819 14.713Z" fill="#5A5252"/>
+	</symbol>
+
+	<!-- Filter -->
+	<symbol id="icon-filter" viewBox="0 0 23 22" fill="none">
+		<path opacity="0.9" d="M21.5399 1.92871H1.37988L9.44388 11.4644V18.0567L13.4759 20.0727V11.4644L21.5399 1.92871Z" stroke="#1E1E1E" stroke-width="2.016" stroke-linecap="round" stroke-linejoin="round"/>
+	</symbol>
+</svg>  
+
+<script>
+
+
+    function doSearch(event) {
+        event.preventDefault(); 
+        const query = document.getElementById("searchInput").value.trim();
+        if(query){
+        
+        }
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+        const tabs = document.querySelectorAll('.tabs button');
+        const tabContents = document.querySelectorAll('.tab-content');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                tabs.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                tabContents.forEach(content => content.classList.remove('active'));
+                const target = this.getAttribute('data-tab');
+                document.getElementById(target).classList.add('active');
+            });
+        });
+        if (tabs.length > 0) {
+            tabs[0].classList.add('active');
+            const firstTab = tabs[0].getAttribute('data-tab');
+            document.getElementById(firstTab).classList.add('active');
+        }
+    });  
+    function openOverlay(imgElement) {
+        document.getElementById("overlayImg").src = imgElement.src;
+        document.getElementById("overlay").style.display = "flex";
+    }
+
+    function closeOverlay() {
+        document.getElementById("overlay").style.display = "none";
+    }
+    // Select all dropdown buttons
+    document.querySelectorAll('.dropdown-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+            e.stopPropagation(); // stop document click
+            const menu = btn.nextElementSibling;
+            // Close other open menus
+            document.querySelectorAll('.dropdown-menu').forEach(m => {
+                if (m !== menu) m.classList.add('hidden');
+            });
+            menu.classList.toggle('hidden');
+        });
+    });
+    // Dropdown item click
+    document.querySelectorAll('.dropdown-item').forEach(item => {
+        item.addEventListener('click', e => {
+            e.stopPropagation();
+            const menu = item.parentElement;
+            const btn = menu.previousElementSibling;
+            btn.textContent = e.target.textContent;
+            menu.classList.add('hidden');
+        });
+    });
+    // Click outside closes all menus
+    document.addEventListener('click', () => {
+        document.querySelectorAll('.dropdown-menu').forEach(menu => {
+            menu.classList.add('hidden');
+        });
+    });
+    // Select all dropdown buttons
+    document.querySelectorAll('.dropdown-btn2').forEach(btn => {
+        btn.addEventListener('click', e => {
+            e.stopPropagation(); // stop document click
+            const menu = btn.nextElementSibling;
+            // Close other open menus
+            document.querySelectorAll('.dropdown-menu2').forEach(m => {
+                if (m !== menu) m.classList.add('hidden');
+            });
+            menu.classList.toggle('hidden');
+        });
+    });
+    // Dropdown item click
+    document.querySelectorAll('.dropdown-item2').forEach(item => {
+        item.addEventListener('click', e => {
+            e.stopPropagation();
+            const menu = item.parentElement;
+            const btn = menu.previousElementSibling;
+            btn.textContent = e.target.textContent;
+            menu.classList.add('hidden');
+        });
+    });
+    // Click outside closes all menus
+    document.addEventListener('click', () => {
+        document.querySelectorAll('.dropdown-menu2').forEach(menu => {
+            menu.classList.add('hidden');
+        });
+    });
+    // Dropdown item click
+    document.querySelectorAll('.dropdown-item').forEach(item => {
+    item.addEventListener('click', e => {
+        e.stopPropagation();
+        const menu = item.parentElement;
+        const btn = menu.previousElementSibling;
+
+        // Update button text
+        btn.textContent = e.target.textContent + " ▾";
+
+        // Hide menu
+        menu.classList.add('hidden');
+
+        // Show corresponding content
+        const target = e.target.getAttribute("data-target");
+        document.querySelectorAll('.submission-content').forEach(c => c.classList.add("hidden"));
+        document.getElementById("submissions-" + target).classList.remove("hidden");
+    });
+    }); 
+    function updateEventProgress() {
+        const completed = document.querySelectorAll('#com').length; 
+        const total = document.querySelectorAll('.event').length; 
+        const percentage = (completed / total) * 100;
+
+        // Update progress bar
+        document.getElementById('progressBar').style.width = percentage + "%";
+
+        // Update status text
+        document.getElementById('statusText').textContent =
+            `${completed} out of ${total} events completed`;
+    }
+
+    // Run once on page load
+    updateEventProgress();
+</script>
+
+</body>
+</html>
+
+{% endblock %}

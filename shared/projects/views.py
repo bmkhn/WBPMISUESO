@@ -7,6 +7,8 @@ from .models import SustainableDevelopmentGoal, Project
 from django.contrib.auth import get_user_model
 from .forms import ProjectForm
 
+User = get_user_model()
+
 def projects_dispatcher(request):
     user = request.user
     if hasattr(user, 'role'):
@@ -19,12 +21,17 @@ def projects_dispatcher(request):
             return user_projects(request)
     return user_projects(request)
 
+
 def user_projects(request):
-    return render(request, 'projects/user_projects.html')
+    return render(request, 'projects/user_project.html')
+
 
 def superuser_project(request):
-    return render(request, 'projects/superuser_projects.html')
+    return render(request, 'projects/superuser_project.html')
 
+
+@login_required
+@role_required(allowed_roles=["VP", "DIRECTOR", "UESO"])
 def admin_projects(request):
     # Filters
     sort_by = request.GET.get('sort_by', 'last_updated')
@@ -88,7 +95,7 @@ def admin_projects(request):
     page_obj = paginator.get_page(page_number)
     page_range = paginator.get_elided_page_range(page_obj.number)
 
-    return render(request, 'projects/admin_projects.html', {
+    return render(request, 'projects/admin_project.html', {
         'projects': page_obj,
         'colleges': colleges,
         'campuses': campuses,
@@ -110,7 +117,40 @@ def admin_projects(request):
     })
 
 
-User = get_user_model()
+########################################################################################################################
+
+def projects_profile_dispatcher(request, pk):
+    user = request.user
+    if hasattr(user, 'role'):
+        role = user.role
+        if role in ["UESO", "DIRECTOR", "VP"]:
+            return admin_project_profile(request, pk)
+        elif role in ["PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
+            return superuser_project_profile(request, pk)
+        else:
+            return user_project_profile(request, pk)
+    return user_project_profile(request, pk)
+
+
+def user_project_profile(request, pk):
+    project = get_object_or_404(Project, pk=pk)
+    return render(request, 'projects/user_project_profile.html', {'project': project})
+
+
+def superuser_project_profile(request, pk):
+    project = get_object_or_404(Project, pk=pk)
+    return render(request, 'projects/superuser_project_profile.html', {'project': project})
+
+
+@login_required
+@role_required(allowed_roles=["VP", "DIRECTOR", "UESO"])
+def admin_project_profile(request, pk):
+    project = get_object_or_404(Project, pk=pk)
+    return render(request, 'projects/admin_project_profile.html', {'project': project})
+
+
+########################################################################################################################
+
 
 @login_required
 @role_required(allowed_roles=["VP", "DIRECTOR"])
@@ -205,9 +245,3 @@ def add_project_view(request):
         'campus_choices': campus_choices,
         'logistics_type': logistics_type,
     })
-
-
-def project_details(request, pk):
-    project = get_object_or_404(Project, pk=pk)
-    # Pass all fields to the template for inspection
-    return render(request, 'projects/project_details.html', {'project': project})
