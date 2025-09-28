@@ -1,0 +1,93 @@
+{% extends "projects/base_project_profile.html" %}
+{% block profile_content %}
+<style>
+    .providers {
+        display: flex;
+        flex-wrap: wrap; 
+        justify-content: center; 
+        gap: 2rem; 
+    }
+
+    .providers > * {
+        box-sizing: border-box;
+    }
+
+    .tiles {
+        border: 0.08rem solid #a9a9a9;
+        border-radius: 15px;
+        width: 20rem;
+        height: 24rem;
+    }
+
+    .providers > div h5 {
+        margin: 0;
+        font-weight: 600;
+    }
+    
+    .providers > div h3 {
+        font-weight: 500;
+        margin: 0.25rem 0;
+    }
+
+    .prov-seg-sec {
+        padding: 1rem;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .prov-seg-sec img {
+        width: 5rem;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-bottom: -3rem;
+    }
+
+    .prof {
+        width: 12rem;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+        margin: 0rem 1rem 1rem 1rem;
+    }
+
+    .blank {
+        opacity: 0;
+    }
+</style>
+
+<div class="card-header">
+    <h3>Providers</h3>
+    {% if request.user.role in ADMIN_ROLES %}
+    <a class="admin-button">Add Provider</a>
+    {% endif %}
+</div>
+<div class="providers">
+    {% for provider in project.providers.all %}
+    <div class="tiles">
+        <section class="prov-seg-sec">
+            {% if provider.role == 'IMPLEMENTER' %}
+                <button class="campus blank">&nbsp;</button>
+                <img src="/media/colleges/logos/Default.png" alt="college logo" class="blank">
+            {% else %}
+                <button class="campus">{{ provider.get_campus_display }}</button>
+                {% if provider.college and provider.college.logo %}
+                    <img src="{{ provider.college.logo.url }}" alt="college logo" style="width: 3.5rem; height: 100%;">
+                {% else %}
+                    <img src="/media/colleges/logos/Default.png" alt="college logo" style="width: 3.5rem; height: 100%;">
+                {% endif %}
+            {% endif %}
+        </section>
+        <section style="text-align: center;">
+            <img src="{{ provider.profile_picture_or_initial }}" alt="profile" class="prof">
+        </section>
+        <section style="text-align: center;">
+            <h3>{{ provider.get_full_name|default:provider.username }}</h3>
+            <h5>{{ provider.degree }}</h5>
+        </section>
+    </div>
+    {% empty %}
+    <p>No providers found.</p>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,80 @@
+{% extends "projects/base_project_profile.html" %}
+{% block profile_content %}
+
+
+<!-- Table Section -->
+<style>
+    .expenses-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #FEFCFC;
+        border: 1px solid rgba(0,0,0,0.18);
+        overflow: visible;
+    }
+
+    .expenses-table th {
+        font-size: 16px;
+        font-weight: 500;
+        background: rgba(217, 217, 217, 0.2);
+        border-bottom: 1px solid rgba(0,0,0,0.18);
+        padding: 14px 12px;
+        text-align: left;
+        font-family: 'Inter', Arial, sans-serif;
+    }
+
+    .expenses-table td {
+        font-size: 15px;
+        font-weight: 400;
+        border: none;
+        border-bottom: 1px solid rgba(0,0,0,0.18);
+        padding: 14px 12px;
+        text-align: left;
+        font-family: 'Inter', Arial, sans-serif;
+        position: relative;
+        overflow: visible;
+    }
+
+    .expenses-table tr:last-child td {
+        border-bottom: none;
+    }
+</style>
+
+<div class="card-header">
+    <h3>Expenses</h3>
+</div>
+<div class="card-body">
+    <div class="table-container">
+        <table class="expenses-table">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Reason(s)</th>
+                    <th style="text-align: center;">Amount</th>
+                    <th style="text-align: center;">Date</th>
+                    <th style="text-align: center;">Receipt</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for expense in expenses %}
+                <tr>
+                    <td>{{ expense.title }}</td>
+                    <td>{{ expense.reason }}</td>
+                    <td style="text-align: center;">₱{{ expense.amount|floatformat:2 }}</td>
+                    <td style="text-align: center;">{{ expense.date|date:'M d, Y' }}</td>
+                    <td style="text-align: center;">
+                        {% if expense.receipt %}
+                            <a href="{{ expense.receipt.url }}" target="_blank" style="text-decoration: none;"> View</a>
+                        {% else %}
+                            <span style="color:#aaa;font-size:0.95rem;">No receipt</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" style="text-align:center;color:#888;font-size:1.1rem;">No expenses found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

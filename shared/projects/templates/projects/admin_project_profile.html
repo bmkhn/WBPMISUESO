@@ -8,7 +8,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Project</title> 
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"> 
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"> 
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
 <!-- Top Section -->
 <style>
@@ -443,6 +444,7 @@
         cursor: pointer;
         transition: all 0.3s ease;
         border-bottom: 4px solid transparent;
+        font-family: 'Inter', sans-serif;
     }
 
     .tabs button:hover {
@@ -739,7 +741,7 @@
 	.filter-dropdown {
 		display: none;
 		position: absolute;
-		top: 280px;
+		top: 620px;
 		right: 60px;
 		z-index: 1000;
 		background: white;
@@ -912,6 +914,7 @@
                 <button type="button" data-tab="files">Files</button> 
                 <button type="button" data-tab="submissions">Submissions</button>
                 <button type="button" data-tab="evaluations">Evaluations</button>
+                <button type="button" data-tab="expenses">Expenses</button>
             </div>
         </div> 
 
@@ -969,14 +972,18 @@
                     </div>
 
                     <div class="providers">
-                        {% for provider in project.providers.all %}
+                        {% for provider in providers_page_obj %}
                         <div style="border-radius: 15px;">
                             <section class="prov-seg-sec">
-                                <button class="campus">{{ provider.get_campus_display }}</button>
-                                {% if provider.college and provider.college.logo %}
-                                    <img src="{{ provider.college.logo.url }}" alt="college logo" style="width: 3.5rem; height: 100%;">
+                                {% if provider.role == 'IMPLEMENTER' %}
+                                    <button class="campus" style="background:#fff;color:#fff; border: #fff">&nbsp;</button>
                                 {% else %}
-                                    <img src="/media/colleges/logos/Default.png" alt="college logo" style="width: 3.5rem; height: 100%;">
+                                    <button class="campus">{{ provider.get_campus_display }}</button>
+                                    {% if provider.college and provider.college.logo %}
+                                        <img src="{{ provider.college.logo.url }}" alt="college logo" style="width: 3.5rem; height: 100%;">
+                                    {% else %}
+                                        <img src="/media/colleges/logos/Default.png" alt="college logo" style="width: 3.5rem; height: 100%;">
+                                    {% endif %}
                                 {% endif %}
                             </section>
                             <section style="text-align: center;">
@@ -994,31 +1001,31 @@
 
                     <!-- Pagination -->
                     <div class="pagination-container">
-                        {% if page_obj.has_previous %}
-                            <a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page=1">First</a>
-                            <a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a>
+                        {% if providers_page_obj.has_previous %}
+                            <a class="pagination-button" href="?providers_page=1">First</a>
+                            <a class="pagination-button" href="?providers_page={{ providers_page_obj.previous_page_number }}">Previous</a>
                         {% else %}
                             <button class="pagination-button" disabled>First</button>
                             <button class="pagination-button" disabled>Previous</button>
                         {% endif %}
 
-                        {% for num in page_range %}
-                            {% if num == page_obj.number %}
+                        {% for num in providers_page_obj.paginator.page_range %}
+                            {% if num == providers_page_obj.number %}
                                 <button class="pagination-button active" disabled>{{ num }}</button>
                             {% else %}
-                                <a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ num }}">{{ num }}</a>
+                                <a class="pagination-button" href="?providers_page={{ num }}">{{ num }}</a>
                             {% endif %}
                         {% endfor %}
 
-                        {% if page_obj.has_next %}
-                            <a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.next_page_number }}">Next</a>
-                            <a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ paginator.num_pages }}">Last</a>
+                        {% if providers_page_obj.has_next %}
+                            <a class="pagination-button" href="?providers_page={{ providers_page_obj.next_page_number }}">Next</a>
+                            <a class="pagination-button" href="?providers_page={{ providers_page_obj.paginator.num_pages }}">Last</a>
                         {% else %}
                             <button class="pagination-button" disabled>Next</button>
                             <button class="pagination-button" disabled>Last</button>
                         {% endif %}
 
-                        <span class="page-info">Page {{ page_obj.number }} of {{ paginator.num_pages }}</span>
+                        <span class="page-info">Page {{ providers_page_obj.number }} of {{ providers_page_obj.paginator.num_pages }}</span>
                     </div>
 
                 </div>
@@ -1081,49 +1088,34 @@
                         <h3>Files</h3>
                     </div>
 
-                    <!-- Search Bar & Filter (3x2 Grid) -->
+                    <!-- Search Bar & Filter (2x2 Grid) -->
                     <div class="search-container">
                         <form class="search-bar" method="get" action="">
                             <svg width="20" height="20"> <use href="#icon-search"></use> </svg>
                             <input type="text" name="search" placeholder="Search by file name..." value="{{ search|default:'' }}"/>
+                            <input type="hidden" name="tab" id="activeTabInput" value="files" />
                             <button type="button" id="filterBtn" style="background:none;border:none;padding:0;margin-right:5px;cursor:pointer;">
                                 <svg width="20" height="20"> <use href="#icon-filter"></use> </svg>
                             </button>
                             <div id="filterDropdown" class="filter-dropdown">
-                                <div class="filter-grid">
+                                <div class="filter-grid" style="grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; grid-gap: 24px;">
                                     <!-- Top Left - Sort By -->
                                     <label>Sort By
                                         <select name="sort_by">
-                                            <option value="file" {% if sort_by == 'file' %}selected{% endif %}>File Name</option>
+                                            <option value="name" {% if sort_by == 'name' %}selected{% endif %}>File Name</option>
                                             <option value="file_type" {% if sort_by == 'file_type' %}selected{% endif %}>File Type</option>
                                             <option value="size" {% if sort_by == 'size' %}selected{% endif %}>Size</option>
-                                            <option value="uploaded_at" {% if sort_by == 'uploaded_at' %}selected{% endif %}>Date</option>
+                                            <option value="date" {% if sort_by == 'date' %}selected{% endif %}>Date</option>
                                         </select>
                                     </label>
-                                    <!-- Top Middle - Order By -->
+                                    <!-- Top Right - Order By -->
                                     <label>Order By
                                         <select name="order">
-                                            <option value="desc" {% if order == 'desc' %}selected{% endif %}>Descending</option>
                                             <option value="asc" {% if order == 'asc' %}selected{% endif %}>Ascending</option>
+                                            <option value="desc" {% if order == 'desc' %}selected{% endif %}>Descending</option>
                                         </select>
                                     </label>
-                                    <!-- Top Right - Status Filter -->
-                                    <label>Status
-                                        <select name="status">
-                                            <option value="">All Status</option>
-                                            <option value="published" {% if status == 'published' %}selected{% endif %}>Published</option>
-                                            <option value="archived" {% if status == 'archived' %}selected{% endif %}>Archived</option>
-                                        </select>
-                                    </label>
-                                    <!-- Bottom Left - Available for Public Filter -->
-                                    <label>Available for Public
-                                        <select name="public">
-                                            <option value="">All</option>
-                                            <option value="true" {% if public == 'true' %}selected{% endif %}>Yes</option>
-                                            <option value="false" {% if public == 'false' %}selected{% endif %}>No</option>
-                                        </select>
-                                    </label>
-                                    <!-- Bottom Middle - File Type Filter -->
+                                    <!-- Bottom Left - File Type Filter -->
                                     <label>File Type
                                         <select name="file_type">
                                             <option value="">All Types</option>
@@ -1145,28 +1137,66 @@
                         </form>
                     </div>
 
-                    <!-- Files Data (Proposal Document, Addtional Documents)-->
-                <div style="margin-top:2rem;">
-                    <h4>Proposal Document</h4>
-                    {% if project.proposal_document and project.proposal_document.file %}
-                        <a href="{{ project.proposal_document.file.url }}" target="_blank">{{ project.proposal_document.file.name }}</a>
-                    {% else %}
-                        <em>None</em>
-                    {% endif %}
-                    <h4 style="margin-top:1.5rem;">Additional Documents</h4>
-                    {% if project.additional_documents.all %}
-                        <ul>
-                        {% for doc in project.additional_documents.all %}
-                            {% if doc.file %}
-                                <li><a href="{{ doc.file.url }}" target="_blank">{{ doc.file.name }}</a></li>
+                    <div style="margin-top:2rem;">
+                        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:2rem;">
+                            {% for file in files_page_obj %}
+                            <div class="file-card" style="background:#fff;border-radius:0.75rem;padding:1rem;box-shadow:0 0 0 1px #e5e7eb;display:flex;flex-direction:column;align-items:center;">
+                                <a href="{{ file.file.url }}" target="_blank" style="width:100%;display:flex;justify-content:center; background:#f3f3f3;border-radius:0.5rem;border:1px solid #ccc; height: 8rem;">
+                                    {% if file.extension in 'jpg jpeg png gif bmp webp' %}
+                                        <img src="{{ file.file.url }}" alt="Image Preview" style="max-width:100%;height:8rem;border-radius:0.5rem;border:1px solid #ccc;object-fit:cover;">
+                                    {% elif file.extension == 'pdf' %}
+                                        <div style="width:100%;height:8rem;display:flex;align-items:center;justify-content:center;">
+                                           <i class="fa-regular fa-file-pdf" style="font-size:3rem;color:#d32f2f;"></i>
+                                        </div>
+                                    {% else %}
+                                        <div style="width:100%;height:8rem;display:flex;align-items:center;justify-content:center;">
+                                            <i class="fa-regular fa-file" style="font-size:3rem;color:#aaa;"></i>
+                                        </div>
+                                    {% endif %}
+                                </a>
+                                <div style="margin-top:0.3rem;font-weight:500;font-size:1rem;text-align:center;word-break:break-all;">{{ file.name }}</div>
+                                <div style="display:flex;justify-content:space-between;width:100%;margin-top:0.5rem;font-size:0.95rem;">
+                                    <div style="text-align:left; display:flex;">
+                                        <span style="font-weight:600; font-size: 0.75rem;">{{ file.extension|upper }}</span>
+                                        <span style="margin-left:0.15rem;color:#666; font-size: 0.75rem;">{{ file.size }}</span>
+                                    </div>
+                                    <div style="text-align:right;color:#666; font-size: 0.75rem; display:flex;">{{ file.uploaded_at|date:'M d, Y' }}</div>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div style="grid-column:1/-1;text-align:center;color:#888;font-size:1.1rem;">No files found.</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div class="pagination-container">
+                        {% if files_page_obj.has_previous %}
+                            <a class="pagination-button" href="?files_page=1">First</a>
+                            <a class="pagination-button" href="?files_page={{ files_page_obj.previous_page_number }}">Previous</a>
+                        {% else %}
+                            <button class="pagination-button" disabled>First</button>
+                            <button class="pagination-button" disabled>Previous</button>
+                        {% endif %}
+
+                        {% for num in files_page_obj.paginator.page_range %}
+                            {% if num == files_page_obj.number %}
+                                <button class="pagination-button active" disabled>{{ num }}</button>
+                            {% else %}
+                                <a class="pagination-button" href="?files_page={{ num }}">{{ num }}</a>
                             {% endif %}
-                        {% empty %}
-                            <li><em>None</em></li>
                         {% endfor %}
-                        </ul>
-                    {% else %}
-                        <em>None</em>
-                    {% endif %}
+
+                        {% if files_page_obj.has_next %}
+                            <a class="pagination-button" href="?files_page={{ files_page_obj.next_page_number }}">Next</a>
+                            <a class="pagination-button" href="?files_page={{ files_page_obj.paginator.num_pages }}">Last</a>
+                        {% else %}
+                            <button class="pagination-button" disabled>Next</button>
+                            <button class="pagination-button" disabled>Last</button>
+                        {% endif %}
+
+                        <span class="page-info">Page {{ files_page_obj.number }} of {{ files_page_obj.paginator.num_pages }}</span>
+                    </div>
                 </div>
 
                 <!-- Submissions Tab -->
@@ -1264,21 +1294,43 @@
     document.addEventListener('DOMContentLoaded', function() {
         const tabs = document.querySelectorAll('.tabs button');
         const tabContents = document.querySelectorAll('.tab-content');
+        function getQueryParam(name) {
+            const url = new URL(window.location.href);
+            return url.searchParams.get(name);
+        }
+        let activeTab = getQueryParam('tab') || 'overview';
+        // Remove active from all tab contents first
+        tabContents.forEach(content => content.classList.remove('active'));
+        let foundActive = false;
         tabs.forEach(tab => {
+            tab.classList.remove('active');
             tab.addEventListener('click', function() {
                 tabs.forEach(t => t.classList.remove('active'));
-                this.classList.add('active');
                 tabContents.forEach(content => content.classList.remove('active'));
+                this.classList.add('active');
                 const target = this.getAttribute('data-tab');
                 document.getElementById(target).classList.add('active');
+                const tabInput = document.getElementById('activeTabInput');
+                if (tabInput) tabInput.value = target;
             });
+            if (tab.getAttribute('data-tab') === activeTab) {
+                tab.classList.add('active');
+                document.getElementById(activeTab).classList.add('active');
+                const tabInput = document.getElementById('activeTabInput');
+                if (tabInput) tabInput.value = activeTab;
+                foundActive = true;
+            }
         });
-        if (tabs.length > 0) {
+        // If no tab param or not found, default to first tab
+        if (!foundActive && tabs.length > 0) {
             tabs[0].classList.add('active');
+            tabContents.forEach(content => content.classList.remove('active'));
             const firstTab = tabs[0].getAttribute('data-tab');
             document.getElementById(firstTab).classList.add('active');
+            const tabInput = document.getElementById('activeTabInput');
+            if (tabInput) tabInput.value = firstTab;
         }
-    });  
+    });
     function openOverlay(imgElement) {
         document.getElementById("overlayImg").src = imgElement.src;
         document.getElementById("overlay").style.display = "flex";
@@ -1377,6 +1429,32 @@
 
     // Run once on page load
     updateEventProgress();
+
+
+
+
+    // Filter dropdown logic
+    const filterBtn = document.getElementById('filterBtn');
+    const filterDropdown = document.getElementById('filterDropdown');
+    const closeFilter = document.getElementById('closeFilter');
+    if (filterBtn && filterDropdown) {
+        filterBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            filterDropdown.style.display = 'block';
+        });
+    }
+    if (closeFilter && filterDropdown) {
+        closeFilter.addEventListener('click', function(e) {
+            e.preventDefault();
+            filterDropdown.style.display = 'none';
+        });
+    }
+    // Hide dropdown when clicking outside
+    document.addEventListener('mousedown', function(e) {
+        if (filterDropdown && !filterDropdown.contains(e.target) && e.target !== filterBtn) {
+            filterDropdown.style.display = 'none';
+        }
+    });
 </script>
 
 </body>

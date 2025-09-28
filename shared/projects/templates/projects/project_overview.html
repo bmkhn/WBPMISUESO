@@ -1,0 +1,61 @@
+{% extends "projects/base_project_profile.html" %}
+{% block profile_content %}
+
+<style>
+    .infoseg {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr 1fr;
+        gap: 1.25rem 2rem;
+        align-items: start;
+        font-size: 0.95rem;
+        text-align: left;
+    }
+
+    .infoseg div {
+        display: flex;
+        align-items: center;
+    }
+
+    .infoseg strong {
+        margin-left: 0.4rem;
+        font-weight: 600;
+    }
+
+    .infoseg div:nth-child(2n) {
+        justify-content: left;
+        text-align: left;
+    }
+</style>
+
+<div class="card-header">
+    <h3>Overview</h3>
+    <a class="admin-button">Edit</a>
+</div>
+<div class="card">
+    <div class="card-body">
+        <div class="infoseg">
+            <div><i class="fa-regular fa-circle-question"></i> <strong>Last Update</strong></div>
+            <div>{{ project.updated_at|date:'F d, Y' }}</div>
+            <div><i class="fa-regular fa-circle-question"></i> <strong>Date Added</strong></div>
+            <div>{{ project.created_at|date:'F d, Y' }}</div>
+            <div><i class="fa-regular fa-circle-question"></i> <strong>Project ID</strong></div>
+            <div>{{ project.id }}</div>
+            <div><i class="fa-regular fa-circle-question"></i> <strong>Estimated End</strong></div>
+            <div>{{ project.estimated_end_date|date:'F d, Y' }}</div>
+            <div><i class="fa-regular fa-circle-question"></i> <strong>Agenda</strong></div>
+            <div>{{ project.agenda }}</div>
+            <div><i class="fa-regular fa-circle-question"></i> <strong>Project Status</strong></div>
+            <div>{{ project.get_status_display }}</div>
+            <div><i class="fa-regular fa-circle-question"></i> <strong>Beneficiary</strong></div>
+            <div>{{ project.primary_beneficiary }}</div>
+            <div><i class="fa-regular fa-circle-question"></i> <strong>Project Type</strong></div>
+            <div>{{ project.get_project_type_display|default:project.project_type }}</div>
+            <div><i class="fa-regular fa-circle-question"></i> <strong>Expected Events</strong></div>
+            <div>{{ project.estimated_events }}</div>
+            <div><i class="fa-regular fa-circle-question"></i> <strong>Location</strong></div>
+            <div>{{ project.primary_location }}</div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

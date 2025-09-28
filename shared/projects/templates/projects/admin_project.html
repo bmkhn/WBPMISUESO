@@ -409,7 +409,9 @@
                 <div class="project-text">Projects</div>
             </div>
             <div class="button-container">
+                {% if request.user.role in ADMIN_ROLES %}
                 <a class="add-user-btn" href="{% url 'add_project' %}">Add Project</a>
+                {% endif %}
                 <!-- <button class="export-btn">Export</button> -->
             </div>
 		</div>
@@ -510,7 +512,7 @@
                 {% for project in projects %}
                 <tr>
                     <td>
-                        <a href="{% url 'project_profile_dispatcher' project.id %}" class="name-link" title="{{ project.title }}">
+                        <a href="{% url 'project_profile' project.id %}" class="name-link" title="{{ project.title }}">
                             {{ project.title|truncatechars:20 }}
                         </a>
                     </td>

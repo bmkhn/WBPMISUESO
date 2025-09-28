@@ -1,0 +1,120 @@
+{% extends "projects/base_project_profile.html" %}
+{% block profile_content %}
+
+<style>
+    .file-list {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 2rem;
+    }
+
+    .file-card {
+        background: #fff;
+        border-radius: 0.75rem;
+        padding: 1rem;
+        box-shadow: 0 0 0 1px #e5e7eb;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .file-card img {
+        max-width: 100%;
+        max-height: 8rem;
+        border-radius: 0.5rem;
+        border: 1px solid #ccc;
+        object-fit: cover;
+    }
+
+    .file-card h4 {
+        margin-top: 0.3rem;
+        font-weight: 500;
+        font-size: 1.1rem;
+        text-align: center;
+        word-break: break-all;
+    }
+
+    .file-card p {
+        margin-top: 0.5rem;
+        font-size: 0.95rem;
+        color: #666;
+        text-align: center;
+    }
+</style>
+
+<div class="card-header">
+    <h3>Files</h3>
+</div>
+<!-- Search Bar & Filter (2x2 Grid) -->
+<div class="search-container">
+    <form class="search-bar" method="get" action="">
+        <svg width="20" height="20"> <use href="#icon-search"></use> </svg>
+        <input type="text" name="search" placeholder="Search by file name..." value="{{ request.GET.search|default:'' }}"/>
+        <button type="button" id="filterBtn" style="background:none;border:none;padding:0;margin-right:5px;cursor:pointer;">
+            <svg width="20" height="20"> <use href="#icon-filter"></use> </svg>
+        </button>
+        <div id="filterDropdown" class="filter-dropdown">
+            <div class="filter-grid" style="grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; grid-gap: 24px;">
+                <!-- Top Left - Sort By -->
+                <label>Sort By
+                    <select name="sort_by">
+                        <option value="name" {% if request.GET.sort_by == 'name' %}selected{% endif %}>File Name</option>
+                        <option value="file_type" {% if request.GET.sort_by == 'file_type' %}selected{% endif %}>File Type</option>
+                        <option value="size" {% if request.GET.sort_by == 'size' %}selected{% endif %}>Size</option>
+                        <option value="date" {% if request.GET.sort_by == 'date' %}selected{% endif %}>Date</option>
+                    </select>
+                </label>
+                <!-- Top Right - Order By -->
+                <label>Order By
+                    <select name="order">
+                        <option value="asc" {% if request.GET.order == 'asc' %}selected{% endif %}>Ascending</option>
+                        <option value="desc" {% if request.GET.order == 'desc' %}selected{% endif %}>Descending</option>
+                    </select>
+                </label>
+                <!-- Bottom Left - File Type Filter -->
+                <label>File Type
+                    <select name="file_type">
+                        <option value="">All Types</option>
+                        {% for ext in file_types %}
+                        <option value="{{ ext }}" {% if request.GET.file_type == ext %}selected{% endif %}>{{ ext|upper }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <!-- Bottom Right - Date Filter -->
+                <label>Date
+                    <input type="date" name="date" value="{{ request.GET.date|default:'' }}" style="width: 87%"/>
+                </label>
+            </div>
+            <div class="filter-actions">
+                <button type="submit" class="filter-apply">Apply</button>
+                <button type="button" id="closeFilter" class="filter-close">Close</button>
+            </div>
+        </div>
+    </form>
+</div>
+<div style="margin-top:2rem;">
+    <div class="file-list">
+        {% for file in files %}
+        <div class="file-card">
+            <a href="{{ file.file.url }}" target="_blank">
+                {% if file.extension in 'jpg jpeg png gif bmp webp' %}
+                    <img src="{{ file.file.url }}" alt="Image Preview">
+                {% elif file.extension == 'pdf' %}
+                    <div style="width:100%;height:8rem;display:flex;align-items:center;justify-content:center;">
+                       <i class="fa-regular fa-file-pdf" style="font-size:3rem;color:#d32f2f;"></i>
+                    </div>
+                {% else %}
+                    <div style="width:100%;height:8rem;display:flex;align-items:center;justify-content:center;">
+                        <i class="fa-regular fa-file" style="font-size:3rem;color:#aaa;"></i>
+                    </div>
+                {% endif %}
+            </a>
+            <h4>{{ file.name }}</h4>
+            <p>{{ file.extension|upper }} &bull; {{ file.size }} &bull; {{ file.uploaded_at|date:'M d, Y' }}</p>
+        </div>
+        {% empty %}
+        <div style="grid-column:1/-1;text-align:center;color:#888;font-size:1.1rem;">No files found.</div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

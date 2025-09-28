@@ -1,3 +1,4 @@
+import os
 from django.db import models
 from django.conf import settings
 
@@ -9,6 +10,8 @@ class SustainableDevelopmentGoal(models.Model):
 
 	def __str__(self):
 		return f"SDG {self.goal_number}: {self.name}"
+
+####################################################################################################################################################################
 
 def project_document_upload_to(instance, filename):
 	# instance.project may not be set until after save, so use a placeholder if needed
@@ -24,12 +27,45 @@ def project_document_upload_to(instance, filename):
 
 
 class ProjectDocument(models.Model):
+	file_type = models.CharField(max_length=10, blank=True)
+	thumbnail = models.ImageField(upload_to='project_thumbnails/', blank=True, null=True)
+
+	def save(self, *args, **kwargs):
+		if self.file:
+			ext = os.path.splitext(self.file.name)[1].lower()
+			self.file_type = ext[1:] if ext else ''
+
+			# Generate thumbnail for images and PDFs
+			try:
+				from PIL import Image
+				from pdf2image import convert_from_path
+				import io
+				from django.core.files.base import ContentFile
+				if self.file_type in ['jpg', 'jpeg', 'png', 'gif']:
+					self.file.seek(0)  # Reset file pointer
+					img = Image.open(self.file)
+					img.thumbnail((300, 200))
+					thumb_io = io.BytesIO()
+					img.save(thumb_io, format='PNG')
+					self.thumbnail.save(f"thumb_{os.path.basename(self.file.name)}.png", ContentFile(thumb_io.getvalue()), save=False)
+				elif self.file_type == 'pdf':
+					pdf_path = self.file.path
+					pages = convert_from_path(pdf_path, first_page=1, last_page=1, size=(300, 200))
+					if pages:
+						thumb_io = io.BytesIO()
+						pages[0].save(thumb_io, format='PNG')
+						self.thumbnail.save(f"thumb_{os.path.basename(self.file.name)}.png", ContentFile(thumb_io.getvalue()), save=False)
+			except Exception as e:
+				import logging
+				logging.error(f"Thumbnail generation failed for {self.file.name}: {e}")
+		super().save(*args, **kwargs)
+		
 	def delete(self, *args, **kwargs):
 		# Delete associated file from storage
 		if self.file and self.file.storage and self.file.storage.exists(self.file.name):
 			self.file.storage.delete(self.file.name)
 		super().delete(*args, **kwargs)
-		
+
 	DOCUMENT_TYPE_CHOICES = [
 		('PROPOSAL', 'Proposal'),
 		('ADDITIONAL', 'Additional'),
@@ -63,12 +99,26 @@ class ProjectDocument(models.Model):
 			return ext[1:].lower() if ext else ""
 		return ""
 
+
+
 	def __str__(self):
 		return f"{self.name} ({self.document_type})"
 
-
+####################################################################################################################################################################
 
 class Project(models.Model):
+	def delete(self, *args, **kwargs):
+		# Delete proposal document file if set
+		if self.proposal_document:
+			self.proposal_document.delete()
+		# Delete all additional document files
+		for doc in self.additional_documents.all():
+			doc.delete()
+		# Delete all related ProjectDocument via FK (should be handled by CASCADE, but ensure file deletion)
+		for doc in self.documents.all():
+			doc.delete()
+		super().delete(*args, **kwargs)
+
 	PROJECT_TYPE_CHOICES = [
 		('NEEDS_BASED', 'Needs Based'),
 		('RESEARCH_BASED', 'Research Based'),
@@ -83,7 +133,6 @@ class Project(models.Model):
 	project_leader = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='led_projects')
 	providers = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='member_projects')
 	agenda = models.CharField(max_length=255)
-	campus = models.CharField(max_length=255)
 	project_type = models.CharField(max_length=20, choices=PROJECT_TYPE_CHOICES)
 	sdgs = models.ManyToManyField(SustainableDevelopmentGoal, related_name='projects')
 	estimated_events = models.PositiveIntegerField()
@@ -136,3 +185,16 @@ class Project(models.Model):
 
 	def __str__(self):
 		return self.title
+
+
+#############################################################################################################################################################################################################
+
+class ProjectEvaluation(models.Model):
+	project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='evaluations')
+	evaluated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='project_evaluations')
+	created_at = models.DateField(auto_now_add=True)
+	comment = models.TextField()
+	rating = models.PositiveSmallIntegerField()  # e.g., 1-5 scale
+
+	def __str__(self):
+		return f"Evaluation of {self.project.title} by {self.evaluated_by.username if self.evaluated_by else 'Unknown'} on {self.created_at}"

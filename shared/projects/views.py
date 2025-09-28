@@ -1,38 +1,222 @@
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, render, redirect
 from system.users.decorators import role_required
 from django.contrib.auth.decorators import login_required
 from system.users.models import College, User
 from internal.agenda.models import Agenda
-from .models import SustainableDevelopmentGoal, Project
+from .models import SustainableDevelopmentGoal, Project, ProjectEvaluation
 from django.contrib.auth import get_user_model
 from .forms import ProjectForm
+from django.core.paginator import Paginator
 
 User = get_user_model()
+
+
+def project_profile(request, pk):
+    return redirect('project_overview', pk=pk)
+
+# Modular project profile views
+def project_overview(request, pk):
+    ADMIN_ROLES = ["VP", "DIRECTOR", "UESO"]
+    SUPERUSER_ROLES = ["PROGRAM_HEAD", "DEAN", "COORDINATOR"]
+    FACULTY_ROLE = "FACULTY"
+
+    project = get_object_or_404(Project, pk=pk)
+    return render(request, 'projects/project_overview.html', {
+        'project': project,
+        "ADMIN_ROLES": ADMIN_ROLES,
+        "SUPERUSER_ROLES": SUPERUSER_ROLES,
+        "FACULTY_ROLE": FACULTY_ROLE
+    })
+
+def project_providers(request, pk):
+    ADMIN_ROLES = ["VP", "DIRECTOR", "UESO"]
+    SUPERUSER_ROLES = ["PROGRAM_HEAD", "DEAN", "COORDINATOR"]
+    FACULTY_ROLE = "FACULTY"
+
+    project = get_object_or_404(Project, pk=pk)
+    return render(request, 'projects/project_providers.html', {
+        'project': project,
+        "ADMIN_ROLES": ADMIN_ROLES,
+        "SUPERUSER_ROLES": SUPERUSER_ROLES,
+        "FACULTY_ROLE": FACULTY_ROLE
+    })
+
+def project_events(request, pk):
+    ADMIN_ROLES = ["VP", "DIRECTOR", "UESO"]
+    SUPERUSER_ROLES = ["PROGRAM_HEAD", "DEAN", "COORDINATOR"]
+    FACULTY_ROLE = "FACULTY"
+
+    project = get_object_or_404(Project, pk=pk)
+    return render(request, 'projects/project_events.html', {
+        'project': project,
+        "ADMIN_ROLES": ADMIN_ROLES,
+        "SUPERUSER_ROLES": SUPERUSER_ROLES,
+        "FACULTY_ROLE": FACULTY_ROLE
+    })
+
+def project_files(request, pk):
+    ADMIN_ROLES = ["VP", "DIRECTOR", "UESO"]
+    SUPERUSER_ROLES = ["PROGRAM_HEAD", "DEAN", "COORDINATOR"]
+    FACULTY_ROLE = "FACULTY"
+
+    import os
+    project = get_object_or_404(Project, pk=pk)
+    documents = project.documents.all()
+    search = request.GET.get('search', '')
+    sort_by = request.GET.get('sort_by', 'name')
+    order = request.GET.get('order', 'asc')
+    file_type = request.GET.get('file_type', '')
+    date = request.GET.get('date', '')
+    # Get all extensions present
+    extensions = set(documents.values_list('file', flat=True))
+    extensions = set([os.path.splitext(f)[1][1:].lower() for f in extensions if f])
+    # Filter by extension
+    if file_type:
+        documents = [doc for doc in documents if doc.extension == file_type]
+    if date:
+        documents = [doc for doc in documents if str(doc.uploaded_at.date()) == date]
+    if search:
+        documents = [doc for doc in documents if search.lower() in doc.name.lower()]
+    # Sorting
+    sort_map = {
+        'name': lambda x: x.name,
+        'file_type': lambda x: x.extension,
+        'size': lambda x: x.size,
+        'date': lambda x: x.uploaded_at,
+    }
+    sort_func = sort_map.get(sort_by, lambda x: x.name)
+    documents = sorted(documents, key=sort_func, reverse=(order=='desc'))
+    files_page_number = int(request.GET.get('files_page', 1))
+    files_paginator = Paginator(documents, 4)
+    files_page_obj = files_paginator.get_page(files_page_number)
+    file_types = sorted(list(extensions))
+    return render(request, 'projects/project_files.html', {
+        'project': project,
+        'files': files_page_obj,
+        'file_types': file_types,
+        'sort_by': sort_by,
+        'order': order,
+
+        "ADMIN_ROLES": ADMIN_ROLES,
+        "SUPERUSER_ROLES": SUPERUSER_ROLES,
+        "FACULTY_ROLE": FACULTY_ROLE,
+    })
+
+def project_submissions(request, pk):
+    ADMIN_ROLES = ["VP", "DIRECTOR", "UESO"]
+    SUPERUSER_ROLES = ["PROGRAM_HEAD", "DEAN", "COORDINATOR"]
+    FACULTY_ROLE = "FACULTY"
+
+    project = get_object_or_404(Project, pk=pk)
+    submissions = getattr(project, 'submissions', None)
+    if submissions is None and hasattr(project, 'submission_set'):
+        submissions = project.submission_set.all()
+    elif submissions is None:
+        submissions = []
+    return render(request, 'projects/project_submissions.html', {
+        'project': project, 
+        'submissions': submissions,
+        "ADMIN_ROLES": ADMIN_ROLES,
+        "SUPERUSER_ROLES": SUPERUSER_ROLES,
+        "FACULTY_ROLE": FACULTY_ROLE,
+    })
+
+def project_expenses(request, pk):
+    ADMIN_ROLES = ["VP", "DIRECTOR", "UESO"]
+    SUPERUSER_ROLES = ["PROGRAM_HEAD", "DEAN", "COORDINATOR"]
+    FACULTY_ROLE = "FACULTY"
+
+    project = get_object_or_404(Project, pk=pk)
+    # Placeholder expenses data
+    expenses = [
+        {
+            'title': 'Venue Rental',
+            'reason': 'Rented hall for event',
+            'amount': 5000.00,
+            'date': '2025-09-20',
+            'receipt': 'https://via.placeholder.com/120x120.png?text=Receipt',
+        },
+        {
+            'title': 'Food & Catering',
+            'reason': 'Lunch for participants',
+            'amount': 3200.50,
+            'date': '2025-09-21',
+            'receipt': '',
+        },
+        {
+            'title': 'Materials',
+            'reason': 'Printed handouts and supplies',
+            'amount': 1500.75,
+            'date': '2025-09-22',
+            'receipt': 'https://via.placeholder.com/120x120.png?text=Receipt',
+        },
+    ]
+    return render(request, 'projects/project_expenses.html', {
+        'project': project, 
+        'expenses': expenses,
+        "ADMIN_ROLES": ADMIN_ROLES,
+        "SUPERUSER_ROLES": SUPERUSER_ROLES,
+        "FACULTY_ROLE": FACULTY_ROLE
+    })
+
+def project_evaluations(request, pk):
+    ADMIN_ROLES = ["VP", "DIRECTOR", "UESO"]
+    SUPERUSER_ROLES = ["PROGRAM_HEAD", "DEAN", "COORDINATOR"]
+    FACULTY_ROLE = "FACULTY"
+
+
+    project = get_object_or_404(Project, pk=pk)
+    User = get_user_model()
+    if request.method == 'POST':
+        rating = request.POST.get('rating')
+        comment = request.POST.get('comment', '')
+        evaluated_by = request.user
+        if rating and evaluated_by:
+            ProjectEvaluation.objects.create(
+                project=project,
+                evaluated_by=evaluated_by,
+                comment=comment,
+                rating=int(rating)
+            )
+        # After POST, redirect to GET to avoid resubmission
+        from django.shortcuts import redirect
+        return redirect(request.path)
+    evaluations = project.evaluations.select_related('evaluated_by').order_by('-created_at')
+    return render(request, 'projects/project_evaluations.html', {
+        'project': project, 
+        'evaluations': evaluations,
+        "ADMIN_ROLES": ADMIN_ROLES,
+        "SUPERUSER_ROLES": SUPERUSER_ROLES,
+        "FACULTY_ROLE": FACULTY_ROLE
+    })
+
+
+########################################################################################################################
+
 
 def projects_dispatcher(request):
     user = request.user
     if hasattr(user, 'role'):
         role = user.role
-        if role in ["UESO", "DIRECTOR", "VP"]:
-            return admin_projects(request)
-        elif role in ["PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
-            return superuser_project(request)
+        if role in ["UESO", "DIRECTOR", "VP", "PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
+            return admin_project(request)
         else:
             return user_projects(request)
     return user_projects(request)
 
 
+@login_required
+@role_required(allowed_roles=["FACULTY"])
 def user_projects(request):
     return render(request, 'projects/user_project.html')
 
 
-def superuser_project(request):
-    return render(request, 'projects/superuser_project.html')
-
-
 @login_required
-@role_required(allowed_roles=["VP", "DIRECTOR", "UESO"])
-def admin_projects(request):
+@role_required(allowed_roles=["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"])
+def admin_project(request):
+    ADMIN_ROLES = ["VP", "DIRECTOR", "UESO"]
+    SUPERUSER_ROLES = ["PROGRAM_HEAD", "DEAN", "COORDINATOR"]
+
     # Filters
     sort_by = request.GET.get('sort_by', 'last_updated')
     order = request.GET.get('order', 'desc')
@@ -89,7 +273,6 @@ def admin_projects(request):
     years = [d.year for d in projects.dates('start_date', 'year')]
 
     # Pagination (optional, mimic old logic if needed)
-    from django.core.paginator import Paginator
     paginator = Paginator(projects, 20)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -114,39 +297,9 @@ def admin_projects(request):
         'paginator': paginator,
         'page_range': page_range,
         'querystring': request.GET.urlencode().replace('&page='+str(page_obj.number), '') if page_obj else '',
+        "ADMIN_ROLES": ADMIN_ROLES,
+        "SUPERUSER_ROLES": SUPERUSER_ROLES,
     })
-
-
-########################################################################################################################
-
-def projects_profile_dispatcher(request, pk):
-    user = request.user
-    if hasattr(user, 'role'):
-        role = user.role
-        if role in ["UESO", "DIRECTOR", "VP"]:
-            return admin_project_profile(request, pk)
-        elif role in ["PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
-            return superuser_project_profile(request, pk)
-        else:
-            return user_project_profile(request, pk)
-    return user_project_profile(request, pk)
-
-
-def user_project_profile(request, pk):
-    project = get_object_or_404(Project, pk=pk)
-    return render(request, 'projects/user_project_profile.html', {'project': project})
-
-
-def superuser_project_profile(request, pk):
-    project = get_object_or_404(Project, pk=pk)
-    return render(request, 'projects/superuser_project_profile.html', {'project': project})
-
-
-@login_required
-@role_required(allowed_roles=["VP", "DIRECTOR", "UESO"])
-def admin_project_profile(request, pk):
-    project = get_object_or_404(Project, pk=pk)
-    return render(request, 'projects/admin_project_profile.html', {'project': project})
 
 
 ########################################################################################################################
@@ -156,8 +309,8 @@ def admin_project_profile(request, pk):
 @role_required(allowed_roles=["VP", "DIRECTOR"])
 def add_project_view(request):
     error = None
-    faculty_users = User.objects.filter(role=User.Role.FACULTY)
-    provider_users = User.objects.filter(role__in=[User.Role.FACULTY, User.Role.IMPLEMENTER])
+    faculty_users = User.objects.filter(role=User.Role.FACULTY, is_confirmed=True)
+    provider_users = User.objects.filter(role__in=[User.Role.FACULTY, User.Role.IMPLEMENTER], is_confirmed=True)
     agendas = Agenda.objects.all()
     sdgs = SustainableDevelopmentGoal.objects.all()
     colleges = College.objects.all()
@@ -168,15 +321,15 @@ def add_project_view(request):
         form = ProjectForm(request.POST, request.FILES)
         if form.is_valid():
             try:
+                # Save project (basic fields)
                 project = form.save(commit=False)
                 project.created_by = request.user
                 project.status = 'NOT_STARTED'
                 project.logistics_type = form.cleaned_data['logistics_type']
                 logistics_type = form.cleaned_data['logistics_type']
-
                 project.save()
 
-                # Set many-to-many fields explicitly from POST (hidden inputs)
+                # Set many-to-many fields
                 provider_ids = request.POST.getlist('providers[]')
                 if provider_ids:
                     project.providers.set(provider_ids)
@@ -208,12 +361,29 @@ def add_project_view(request):
                     project.sponsor_name = form.cleaned_data['sponsor_name']
                 project.save()
 
-                # Save additional documents robustly
-                from .models import ProjectDocument
-                files = request.FILES.getlist('additional_documents')
-                for f in files:
-                    doc = ProjectDocument.objects.create(file=f)
-                    project.additional_documents.add(doc)
+                # Handle proposal document
+                proposal_file = request.FILES.get('proposal_document')
+                if proposal_file:
+                    from .models import ProjectDocument
+                    proposal_doc = ProjectDocument.objects.create(
+                        project=project,
+                        file=proposal_file,
+                        document_type='PROPOSAL'
+                    )
+                    project.proposal_document = proposal_doc
+                    project.save()
+
+                # Handle additional documents
+                additional_files = request.FILES.getlist('additional_documents')
+                for add_file in additional_files:
+                    from .models import ProjectDocument
+                    add_doc = ProjectDocument.objects.create(
+                        project=project,
+                        file=add_file,
+                        document_type='ADDITIONAL'
+                    )
+                    project.additional_documents.add(add_doc)
+                project.save()
 
                 return render(request, 'projects/add_project.html', {
                     'form': ProjectForm(),

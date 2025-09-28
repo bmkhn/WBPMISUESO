@@ -1,0 +1,135 @@
+{% extends "projects/base_project_profile.html" %}
+{% block profile_content %}
+<style>
+    .event-card {
+        display: grid;
+        grid-auto-rows: auto;
+        gap: 2rem;
+    }
+
+    .events-section {
+        display: flex;
+        flex-direction: column;
+        margin: 1rem;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .event-card > section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .event-card img {
+        max-width: 25rem;
+        aspect-ratio: 16 / 9;
+        object-fit: cover;
+        border-radius: 0.75rem;
+        cursor: pointer;
+        border: 0.08rem solid #525252;
+    }
+
+    .event-details {
+        display: flex;
+        align-items: center;
+    }
+
+    .event-info {
+        width: 30rem;
+        padding-right: 2.5rem;
+        text-align: justify;
+        max-height: 15rem;
+        overflow-y: auto;
+    }
+
+    .status-text {
+        font-weight: bold;
+        margin-bottom: 1rem;
+    }
+
+    .status-text span {
+        font-weight: normal;
+    }
+
+    .progress {
+        display: inline-block;
+        width: 75%;
+        height: 0.5rem;
+        background-color: #ddd;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-top: 1rem;
+    }
+
+    .progress-bar {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, #0a8927, #17f058);
+        transition: width 0.5s ease;
+    }
+
+    .overlay {
+        display: none;
+        position: fixed;
+        top: 0; left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.8);
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+
+    .overlay img {
+        max-width: 90%;
+        max-height: 90%;
+        border-radius: 0.5rem;
+        object-fit: contain;
+    }
+</style>
+
+<div class="card-header">
+    <h3>Events Pipeline Status</h3>
+    {% if request.user.role in ADMIN_ROLES %}
+    <a class="admin-button">Edit</a>
+    {% endif %}
+</div>
+<div class="card-body">
+    <div class="tracker-box">
+        <div class="progress">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <p class="status-text" id="statusText"></p>
+    </div>
+</div>
+<section class="events-section">
+    <div class="event-card">
+        <!-- Example event, replace with real data -->
+        <section>
+            <div class="event-details">
+                <div class="event-info">
+                    <h4>Event Title</h4>
+                    <p><strong>Date:</strong> {{ project.start_date|date:'F d, Y' }}</p>
+                    <p><strong>Description:</strong> Event description goes here.</p>
+                </div>
+                <div>
+                    <img src="https://via.placeholder.com/400x225.png?text=Event+Image" alt="Event Photo" onclick="openOverlay(this)">
+                </div>
+                <div class="overlay" id="overlay" onclick="closeOverlay()">
+                    <img id="overlayImg" src="" alt="Full Image">
+                </div>
+            </div>
+        </section>
+    </div>
+</section>
+<script>
+function openOverlay(imgElement) {
+    document.getElementById("overlayImg").src = imgElement.src;
+    document.getElementById("overlay").style.display = "flex";
+}
+function closeOverlay() {
+    document.getElementById("overlay").style.display = "none";
+}
+</script>
+{% endblock %}

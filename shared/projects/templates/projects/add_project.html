@@ -355,6 +355,18 @@
         <div id="add-success-msg" class="success-message">Project added successfully.</div>
         {% endif %}
 
+        {% if form and form.errors %}
+        <div class="error-message">
+            <ul>
+            {% for field, errors in form.errors.items %}
+                {% for err in errors %}
+                    <li><strong>{{ field|capfirst }}:</strong> {{ err }}</li>
+                {% endfor %}
+            {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
         <div class="user-details-section">
             <div class="user-details-category">Project Profile</div>
             <div class="user-details-row cols-1">
@@ -526,7 +538,7 @@
                         <div class="upload-area" onclick="document.getElementById('id_proposal_document').click()">
                             <svg class="upload-icon"><use href="#icon-upload"></use></svg>
                             <span class="upload-text">Click to upload</span>
-                            <input class="file-input" type="file" name="proposal_file" id="id_proposal_file" style="display:none;" accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+                            <input class="file-input" type="file" name="proposal_document" id="id_proposal_document" style="display:none;" accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
                         </div>
                     </div>
                     <div class="file-preview" id="proposal-file-preview" style="display:none;">
@@ -698,64 +710,15 @@
                     additionalInput.parentNode.appendChild(err);
                 }
 
-                // Providers is optional, so no error for that
-
                 if (!valid) {
                     e.preventDefault();
                     return;
-                }
-
-                // Guarantee hidden inputs for all selected providers and SDGs
-                function ensureHiddenInputs(tagRow, inputName, single) {
-                    if (!tagRow) return;
-                    Array.from(tagRow.querySelectorAll('input[name^="' + inputName + '"]')).forEach(function(input) {
-                        input.remove();
-                    });
-                    var tags = tagRow.querySelectorAll('.college-tag');
-                    tags.forEach(function(tag) {
-                        var value = tag.getAttribute('data-id');
-                        if (!value) {
-                            var hidden = tag.querySelector('input[type="hidden"]');
-                            if (hidden) value = hidden.value;
-                        }
-                        if (value) {
-                            var hiddenInput = document.createElement('input');
-                            hiddenInput.type = 'hidden';
-                            hiddenInput.name = inputName + (single ? '' : '[]');
-                            hiddenInput.value = value;
-                            tagRow.appendChild(hiddenInput);
-                        }
-                    });
-                }
-                ensureHiddenInputs(document.getElementById('providers-tag-row'), 'providers', false);
-                ensureHiddenInputs(document.getElementById('sdgs-tag-row'), 'sdgs', false);
-
-                // Guarantee all files in additional documents input are present
-                if (additionalInput && typeof additionalFiles !== 'undefined' && additionalFiles.length > 0) {
-                    var dt = new DataTransfer();
-                    additionalFiles.forEach(function(file) { dt.items.add(file); });
-                    additionalInput.files = dt.files;
-                }
-
-                try {
-                    // You can add other custom validation here if needed
-                } catch (err) {
-                    e.preventDefault();
                 }
             });
         }
     });
 
-    // Catch any uncaught JS errors and display them
-    window.addEventListener('error', function(event) {
-        var errorDiv = document.getElementById('form-error-message');
-        if (errorDiv) {
-            errorDiv.textContent = 'JavaScript error: ' + event.message;
-            if (errorDiv) errorDiv.style.display = 'block';
-        }
-    });
     // File Input Change Handler
-    // Proposal Document Preview
     const proposalInput = document.getElementById('id_proposal_document');
     const proposalPreview = document.getElementById('proposal-file-preview');
     const proposalNameSpan = document.getElementById('proposal-file-name');
@@ -838,9 +801,6 @@
         additionalFiles.forEach(file => dt.items.add(file));
         additionalInput.files = dt.files;
     }
-
-
-    // Tag UI logic for Project Leader, Providers, SDGs
 
     // Enhanced Tag UI logic for Project Leader, Providers, SDGs
     function setupTagUI(rowId, optionsTemplateId, inputName, single=false, excludeIds=[]) {

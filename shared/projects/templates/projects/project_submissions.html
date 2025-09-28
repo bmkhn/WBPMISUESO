@@ -1,0 +1,61 @@
+{% extends "projects/base_project_profile.html" %}
+{% block profile_content %}
+
+<style>
+    .submission-list {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2rem;
+    }
+
+    .submission-card {
+        background: #fff;
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+        box-shadow: 0 0 0 1px #e5e7eb;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .submission-card h4 {
+        margin: 0 0 0.5rem 0;
+        font-weight: 500;
+        font-size: 1.1rem;
+    }
+
+    .submission-card p {
+        margin: 0.2rem 0;
+        font-size: 0.95rem;
+        color: #555;
+    }
+
+    .submission-card .admin-button {
+        margin-top: 1rem;
+        font-size: 0.95rem;
+        padding: 0.5rem 1.5rem;
+    }
+</style>
+
+<div class="card-header">
+    <h3>Submissions</h3>
+</div>
+<div class="card-body">
+    {% if submissions %}
+        <div class="submission-list">
+            {% for submission in submissions %}
+            <div class="submission-card">
+                <h4>{{ submission.title }}</h4>
+                <p>Submitted by: <strong>{{ submission.submitter.get_full_name|default:submission.submitter.username }}</strong></p>
+                <p>Date: {{ submission.submitted_at|date:'M d, Y' }}</p>
+                <p>Status: <span>{{ submission.get_status_display }}</span></p>
+                <a href="{{ submission.file.url }}" target="_blank" class="admin-button">View File</a>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p style="color:#888;font-size:1.1rem;">No submissions found.</p>
+    {% endif %}
+</div>
+
+{% endblock %}
