@@ -9,9 +9,34 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>About Us</title>
 
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
 
 <style>
+	.edit-btn {
+		background: #063A1C;
+		color: white;
+		padding: 15px 45px;
+		border-radius: 8px;
+		font-size: 20px;
+		font-family: 'Inter', sans-serif;
+        font-weight: 500;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		box-shadow: 0 2px 8px rgba(10, 108, 68, 0.2);
+		text-decoration: none;
+        border-radius: 18px;
+        cursor: pointer;
+        transition: background 0.2s;
+	}
+
+	.edit-btn:hover {
+		background: #04521c;
+		transform: translateY(-2px);
+		box-shadow: 0 4px 12px rgba(10, 108, 68, 0.3);
+		text-decoration: none;
+		color: white;
+	}
 	body {
 		margin: 0;
 		font-family: Helvetica, Arial, sans-serif;
@@ -220,12 +245,7 @@
 		<section class="hero">
 			<div>
 				<h1>Palawan State University<br>University Extension Services Office</h1>
-				<p>
-					Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum consequat id tellus at hendrerit. 
-					In dapibus magna id faucibus lobortis. Morbi non libero in libero egestas laoreet. Ut commodo lacus turpis, 
-					non consectetur ex pulvinar sit amet. Morbi consequat nisi a aliquet interdum. Aliquam erat volutpat. 
-					Cras ultricies ligula lorem, sit amet euismod lectus placerat eu. Pellentesque venenatis nunc vitae imperdiet ultrices.
-				</p>
+				<p>{{ about.hero_text|linebreaksbr }}</p>
 			</div>
 			<div class="seal">
 				<img alt="Palawan State University Seal" src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Palawan_State_University_seal.png">
@@ -238,21 +258,11 @@
 				<div class="two-col">
 					<div class="card">
 						<h3>UESO Vision</h3>
-						<p>
-							Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum consequat id tellus at hendrerit. 
-							In dapibus magna id faucibus lobortis. Morbi non libero in libero egestas laoreet. Ut commodo lacus turpis, 
-							non consectetur ex pulvinar sit amet. Morbi consequat nisi a aliquet interdum. Aliquam erat volutpat. 
-							Cras ultricies ligula lorem, sit amet euismod lectus placerat eu. Pellentesque venenatis nunc vitae imperdiet ultrices.
-						</p>
+						<p>{{ about.vision_text|linebreaksbr }}</p>
 					</div>
 					<div class="card">
 						<h3>UESO Mission</h3>
-						<p>
-							Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum consequat id tellus at hendrerit. 
-							In dapibus magna id faucibus lobortis. Morbi non libero in libero egestas laoreet. Ut commodo lacus turpis, 
-							non consectetur ex pulvinar sit amet. Morbi consequat nisi a aliquet interdum. Aliquam erat volutpat. 
-							Cras ultricies ligula lorem, sit amet euismod lectus placerat eu. Pellentesque venenatis nunc vitae imperdiet ultrices.
-						</p>
+						<p>{{ about.mission_text|linebreaksbr }}</p>
 					</div>
 				</div>
 			</div>
@@ -260,41 +270,26 @@
 
 		<section class="section">
 			<h2>UESO Thrust and Priorities</h2>
-			<p class="lead">
-				Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum consequat id tellus at hendrerit. 
-				In dapibus magna id faucibus lobortis. Morbi non libero in libero egestas laoreet. Ut commodo lacus turpis, 
-				non consectetur ex pulvinar sit amet. Morbi consequat nisi a aliquet interdum. Aliquam erat volutpat. 
-				Cras ultricies ligula lorem, sit amet euismod lectus placerat eu. Pellentesque venenatis nunc vitae imperdiet ultrices.
-				Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum consequat id tellus at hendrerit. 
-				In dapibus magna id faucibus lobortis. Morbi non libero in libero egestas laoreet. Ut commodo lacus turpis, 
-				non consectetur ex pulvinar sit amet. Morbi consequat nisi a aliquet interdum. Aliquam erat volutpat.
-			</p>
-			<p class="lead">
-				Cras ultricies ligula lorem, sit amet euismod lectus placerat eu. Pellentesque venenatis nunc vitae imperdiet ultrices.
-				Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum consequat id tellus at hendrerit. 
-				In dapibus magna id faucibus lobortis. Morbi non libero in libero egestas laoreet. Ut commodo lacus turpis, 
-				non consectetur ex pulvinar sit amet. Morbi consequat nisi a aliquet interdum. Aliquam erat volutpat.
-			</p>
+			<p class="lead">{{ about.thrust_text|linebreaksbr }}</p>
 		</section>
 
 		<div class="section-gray">
 			<div class="container">
 				<div class="leadership-section">
 					<div class="profile-image">
-						<div class="image-placeholder"></div>
+						{% if about.director_image %}
+							<img src="{{ about.director_image.url }}" alt="Director Image" style="max-width:200px; margin-bottom:8px;">
+						{% else %}
+							<div class="image-placeholder"></div>
+						{% endif %}
 						<div class="profile-info">
-							<h3>NAME</h3>
+							<h3>{{ about.director_name }}</h3>
 							<p>Director, Extension Services Office</p>
 						</div>
 					</div>
 					<div class="leadership-content">
 						<h2>Leadership & Administration</h2>
-						<p>
-							Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum consequat id tellus at hendrerit. 
-							In dapibus magna id faucibus lobortis. Morbi non libero in libero egestas laoreet. Ut commodo lacus turpis, 
-							non consectetur ex pulvinar sit amet. Morbi consequat nisi a aliquet interdum. Aliquam erat volutpat. 
-							Cras ultricies ligula lorem, sit amet euismod lectus placerat eu. Pellentesque venenatis nunc vitae imperdiet ultrices.
-						</p>
+						<p>{{ about.leadership_description|linebreaksbr }}</p>
 					</div>
 				</div>
 			</div>
@@ -303,54 +298,11 @@
 		<section class="section">
 			<h2 class="section-title">Organizational Chart</h2>
 			<div class="org-chart">
-				<div class="chart-level level-1">
-					<div class="chart-node orange">
-						<div class="person-icon">👤</div>
-					</div>
-				</div>
-				<div class="chart-level level-2">
-					<div class="chart-node yellow">
-						<div class="person-icon">👤</div>
-					</div>
-					<div class="chart-node yellow">
-						<div class="person-icon">👤</div>
-					</div>
-					<div class="chart-node yellow"></div>
-						<div class="person-icon">👤</div>
-					</div>
-				</div>
-				<div class="chart-level level-3">
-					<div class="chart-node green">
-						<div class="person-icon">👤</div>
-					</div>
-					<div class="chart-node green">
-						<div class="person-icon">👤</div>
-					</div>
-					<div class="chart-node green">
-						<div class="person-icon">👤</div>
-					</div>
-					<div class="chart-node green">
-						<div class="person-icon">👤</div>
-					</div>
-					<div class="chart-node green">
-						<div class="person-icon">👤</div>
-					</div>
-				</div>
-				<div class="chart-level level-4">
-					<div class="chart-node blue">
-						<div class="person-icon">👤</div>
-					</div>
-					<div class="chart-node blue">
-						<div class="person-icon">👤</div>
-					</div>
-					<div class="chart-node blue">
-						<div class="person-icon">👤</div>
-					</div>
-					<div class="chart-node blue">
-						<div class="person-icon">👤</div>
-					</div>
-				</div>
-			
+				{% if about.org_chart_image %}
+					<img src="{{ about.org_chart_image.url }}" alt="Org Chart Image" style="max-width: 100%; margin-bottom: 16px;">
+				{% endif %}
+				<p class="lead">{{ about.org_chart_description|linebreaksbr }}</p>
+			</div>
 		</section>
 	</div>
 </body>

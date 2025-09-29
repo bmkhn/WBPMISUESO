@@ -172,3 +172,21 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # EMAIL_HOST_USER = 'bab.bmkhn@gmail.com'
 # EMAIL_HOST_PASSWORD = 'rkwk islz dvlo mqrx'
 # DEFAULT_FROM_EMAIL = 'bab.bmkhn@gmail.com'
+
+
+# Celery configuration
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'Asia/Manila'
+
+# Celery Beat schedule
+from celery.schedules import crontab
+CELERY_BEAT_SCHEDULE = {
+    'publish-scheduled-announcements-every-minute': {
+        'task': 'shared.announcements.tasks.publish_scheduled_announcements',
+        'schedule': crontab(),  # every minute
+    },
+}

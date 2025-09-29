@@ -1,0 +1,173 @@
+{% extends "base_internal.html" %}
+{% block content %}
+{% load static %}
+
+<style>
+    .main-container {
+        margin: 60px;
+        display: flex;
+        flex-direction: column;
+        gap: 30px;
+    }
+
+	.form-title {
+		font-family: 'Inter', sans-serif;
+        font-weight: 400;
+        font-size: 32px;
+		margin: 0;
+		color: #000000;
+	}
+
+	.form-group {
+		margin-bottom: 1.5rem;
+		display: flex;
+		align-items: flex-start;
+		gap: 1rem;
+	}
+
+	.form-label {
+		font-weight: 600;
+		color: #374151;
+		padding-top: 0.75rem;
+		font-size: 0.95rem;
+	}
+
+	.form-input {
+		flex: 1;
+		padding: 0.75rem 1rem;
+		border: 1px solid #E5E7EB;
+		border-radius: 8px;
+		font-size: 1rem;
+		font-family: 'Inter', sans-serif;
+		background: #F9F9F9;
+		transition: all 0.2s ease;
+	}
+
+	.form-input:focus {
+		outline: none;
+		border-color: #0A6C44;
+		background: white;
+		box-shadow: 0 0 0 3px rgba(10, 108, 68, 0.1);
+	}
+
+	.form-textarea {
+		min-height: 120px;
+		resize: vertical;
+	}
+
+	.form-actions {
+		display: flex;
+		gap: 1rem;
+		justify-content: flex-end;
+		margin-top: 2rem;
+		padding-top: 1.5rem;
+		border-top: 1px solid #E5E7EB;
+	}
+
+	.btn {
+		padding: 0.75rem 1.5rem;
+		border: none;
+		border-radius: 8px;
+		font-size: 1rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		font-family: 'Inter', sans-serif;
+	}
+
+	.btn-preview {
+		background: #6B7280;
+		color: white;
+	}
+
+	.btn-preview:hover {
+		background: #4B5563;
+		transform: translateY(-1px);
+	}
+
+	.btn-submit {
+		background: #0A6C44;
+		color: white;
+	}
+
+	.btn-submit:hover {
+		background: #1f7c57;
+		transform: translateY(-1px);
+	}
+</style>
+
+
+
+<div class="main-container">
+	<div class="form-header">
+		<h1 class="form-title">Edit About Us</h1>
+	</div>
+
+	{% if form.errors %}
+		<div style="background:#ffeaea; color:#b91c1c; border:1px solid #fca5a5; border-radius:8px; padding:16px; margin-bottom:24px;">
+			<strong>There were errors in your submission:</strong>
+			<ul style="margin:8px 0 0 16px;">
+				{% for field in form %}
+					{% for error in field.errors %}
+						<li>{{ field.label }}: {{ error }}</li>
+					{% endfor %}
+				{% endfor %}
+				{% for error in form.non_field_errors %}
+					<li>{{ error }}</li>
+				{% endfor %}
+			</ul>
+		</div>
+	{% endif %}
+
+	<form method="post" enctype="multipart/form-data">
+		{% csrf_token %}
+		<div class="form-group">
+			<label for="hero_text" class="form-label">Hero Description</label>
+			<input type="text" id="hero_text" name="hero_text" value="{{ form.hero_text.value }}" class="form-input">
+		</div>
+		<div class="form-group">
+			<label for="vision_text" class="form-label">Vision</label>
+			<textarea id="vision_text" name="vision_text" class="form-input form-textarea" rows="3">{{ form.vision_text.value|default:'' }}</textarea>
+		</div>
+		<div class="form-group">
+			<label for="mission_text" class="form-label">Mission</label>
+			<textarea id="mission_text" name="mission_text" class="form-input form-textarea" rows="3">{{ form.mission_text.value }}</textarea>
+		</div>
+		<div class="form-group">
+			<label for="thrust_text" class="form-label">Thrust and Priorities</label>
+			<textarea id="thrust_text" name="thrust_text" class="form-input form-textarea" rows="3">{{ form.thrust_text.value|default:'' }}</textarea>
+		</div>
+		<div class="form-group">
+			<label for="leadership_description" class="form-label">Leadership Description</label>
+			<textarea id="leadership_description" name="leadership_description" class="form-input form-textarea" rows="3">{{ form.leadership_description.value|default:'' }}</textarea>
+		</div>
+		<div class="form-group">
+			<label for="director_name" class="form-label">Director Name</label>
+			<input type="text" id="director_name" name="director_name" value="{{ form.director_name.value }}" class="form-input">
+		</div>
+		<div class="form-group">
+			<label for="director_image" class="form-label">Director Image</label>
+			<div style="flex:1;">
+				{% if about.director_image %}
+					<img src="{{ about.director_image.url }}" alt="Director Image" style="max-width: 200px; display:block; margin-bottom:8px;">
+				{% endif %}
+				<input type="file" id="director_image" name="director_image" class="form-input">
+			</div>
+		</div>
+		<div class="form-group">
+			<label for="org_chart_image" class="form-label">Organization Chart Image</label>
+			<div style="flex:1;">
+				{% if about.org_chart_image %}
+					<img src="{{ about.org_chart_image.url }}" alt="Org Chart Image" style="max-width: 200px; display:block; margin-bottom:8px;">
+				{% endif %}
+				<input type="file" id="org_chart_image" name="org_chart_image" class="form-input">
+			</div>
+		</div>
+		<div class="form-actions">
+			<a href="{% url 'about_us_dispatcher' %}" class="btn btn-preview" style="text-decoration: none;">Back</a>
+			<button type="submit" class="btn btn-submit">Save Changes</button>
+		</div>
+	</form>
+</div>
+
+{% endblock %}
