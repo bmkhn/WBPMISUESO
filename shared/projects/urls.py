@@ -1,7 +1,8 @@
 from django.urls import path
 from .views import (
     add_project_view, projects_dispatcher, project_profile,
-    project_overview, project_providers, project_events, project_files, project_submissions, project_expenses, project_evaluations
+    project_overview, project_providers, project_events, project_files, project_submissions, project_expenses, project_evaluations,
+    cancel_project, undo_cancel_project,
 )
 
 urlpatterns = [
@@ -16,4 +17,7 @@ urlpatterns = [
     path('<int:pk>/submissions/', project_submissions, name='project_submissions'),
     path('<int:pk>/expenses/', project_expenses, name='project_expenses'),
     path('<int:pk>/evaluations/', project_evaluations, name='project_evaluations'),
+
+    path('<int:pk>/cancel/', cancel_project, name='cancel_project'),
+    path('<int:pk>/undo_cancel/', undo_cancel_project, name='undo_cancel_project'),
 ]

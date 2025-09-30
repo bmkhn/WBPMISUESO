@@ -1,8 +1,6 @@
 from django import forms
-from .models import Project, ProjectDocument, SustainableDevelopmentGoal
-from django.contrib.auth import get_user_model
+from .models import Project, ProjectEvent
 
-User = get_user_model()
 
 class ProjectForm(forms.ModelForm):
     class Meta:
@@ -13,3 +11,8 @@ class ProjectForm(forms.ModelForm):
             'logistics_type', 'internal_budget', 'external_budget', 'sponsor_name',
             'start_date', 'estimated_end_date'
         ]
+
+class ProjectEventForm(forms.ModelForm):
+    class Meta:
+        model = ProjectEvent
+        fields = ['title', 'description', 'datetime', 'location', 'image']

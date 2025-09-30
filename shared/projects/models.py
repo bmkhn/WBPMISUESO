@@ -1,6 +1,7 @@
 import os
 from django.db import models
 from django.conf import settings
+from internal.agenda.models import Agenda
 
 
 
@@ -106,15 +107,13 @@ class ProjectDocument(models.Model):
 
 ####################################################################################################################################################################
 
+
 class Project(models.Model):
 	def delete(self, *args, **kwargs):
-		# Delete proposal document file if set
 		if self.proposal_document:
 			self.proposal_document.delete()
-		# Delete all additional document files
 		for doc in self.additional_documents.all():
 			doc.delete()
-		# Delete all related ProjectDocument via FK (should be handled by CASCADE, but ensure file deletion)
 		for doc in self.documents.all():
 			doc.delete()
 		super().delete(*args, **kwargs)
@@ -132,7 +131,7 @@ class Project(models.Model):
 	title = models.CharField(max_length=255)
 	project_leader = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='led_projects')
 	providers = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='member_projects')
-	agenda = models.CharField(max_length=255)
+	agenda = models.ForeignKey(Agenda, on_delete=models.SET_NULL, null=True, blank=True, related_name='projects')
 	project_type = models.CharField(max_length=20, choices=PROJECT_TYPE_CHOICES)
 	sdgs = models.ManyToManyField(SustainableDevelopmentGoal, related_name='projects')
 	estimated_events = models.PositiveIntegerField()
@@ -148,7 +147,7 @@ class Project(models.Model):
 
 	proposal_document = models.OneToOneField('ProjectDocument', on_delete=models.SET_NULL, null=True, blank=True, related_name='proposal_for_project')
 	additional_documents = models.ManyToManyField('ProjectDocument', blank=True, related_name='additional_for_projects')
-	
+    
 	created_at = models.DateTimeField(auto_now_add=True)
 	created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='created_projects')
 	updated_at = models.DateTimeField(auto_now=True)
@@ -194,7 +193,46 @@ class ProjectEvaluation(models.Model):
 	evaluated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='project_evaluations')
 	created_at = models.DateField(auto_now_add=True)
 	comment = models.TextField()
-	rating = models.PositiveSmallIntegerField()  # e.g., 1-5 scale
+	rating = models.PositiveSmallIntegerField() 
 
 	def __str__(self):
 		return f"Evaluation of {self.project.title} by {self.evaluated_by.username if self.evaluated_by else 'Unknown'} on {self.created_at}"
+	
+
+#############################################################################################################################################################################################################
+
+
+def project_event_image_upload_to(instance, filename):
+	project_id = getattr(instance.project, 'id', None)
+	if project_id:
+		return f"projects/{project_id}/events/{filename}"
+	return f"projects/unknown/events/{filename}"
+
+class ProjectEvent(models.Model):
+	def delete(self, using = ..., keep_parents = ...):
+		return super().delete(using, keep_parents)
+
+	project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='events')
+	title = models.CharField(max_length=255)
+	description = models.TextField(blank=True)
+	datetime = models.DateTimeField()
+	location = models.CharField(max_length=255, blank=True)
+	created_at = models.DateTimeField(auto_now_add=True)
+	created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='created_project_events')
+	updated_at = models.DateTimeField(auto_now=True)
+	updated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='updated_project_events')
+	image = models.ImageField(upload_to=project_event_image_upload_to, blank=True, null=True)
+
+	STATUS_CHOICES = [
+		("SCHEDULED", "Scheduled"),
+		("COMPLETED", "Completed"),
+		("CANCELLED", "Cancelled"),
+	]
+
+	status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="SCHEDULED")
+
+	def get_status_display(self):
+		return dict(self.STATUS_CHOICES).get(self.status, self.status)
+
+	def __str__(self):
+		return f"{self.title} ({self.project.title})"

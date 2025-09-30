@@ -214,6 +214,11 @@
     document.getElementById('cancel-eval-modal').addEventListener('click', function() {
         document.getElementById('eval-modal').style.display = 'none';
     });
+    document.getElementById('eval-modal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            this.style.display = 'none';
+        }
+    });
 
     // Interactive star rating
     const starContainer = document.getElementById('star-rating');

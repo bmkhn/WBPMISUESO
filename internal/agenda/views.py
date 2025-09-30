@@ -6,6 +6,7 @@ from django.contrib.auth.decorators import login_required
 from system.users.decorators import user_confirmed
 from django.http import HttpResponseRedirect
 from django.urls import reverse
+from shared.projects.models import Project
 
 
 # Agenda View
@@ -13,8 +14,13 @@ from django.urls import reverse
 @user_confirmed
 @role_required(allowed_roles=["VP", "DIRECTOR"])
 def agenda_view(request):
-    agendas = Agenda.objects.prefetch_related('concerned_colleges').all()
-    return render(request, 'agenda/agenda.html', {'agendas': agendas})
+    agendas = Agenda.objects.prefetch_related('concerned_colleges', 'projects').all()
+    # Use the related_name 'projects' to get all projects for each agenda
+    agenda_projects = {agenda.id: agenda.projects.all() for agenda in agendas}
+    return render(request, 'agenda/agenda.html', {
+        'agendas': agendas,
+        'agenda_projects': agenda_projects,
+    })
 
 
 # Add Agenda View

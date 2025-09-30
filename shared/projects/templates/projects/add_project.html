@@ -405,7 +405,7 @@
                     <select name="agenda" class="user-details-value">
                         <option value="" selected disabled>Select Agenda</option>
                         {% for agenda in agendas %}
-                        <option value="{{ agenda }}">{{ agenda }}</option>
+                        <option value="{{ agenda.id }}">{{ agenda.name }}</option>
                         {% endfor %}
                     </select>
                 </div>

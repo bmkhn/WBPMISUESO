@@ -505,26 +505,13 @@ def edit_user(request, id):
             if files.get('valid_id'):
                 user.valid_id = files['valid_id']
             # Role-specific fields
-            if user.role == 'IMPLEMENTER':
-                user.degree = data.get('degree', user.degree)
-                user.expertise = data.get('expertise', user.expertise)
-            elif user.role == 'FACULTY':
-                college_id = data.get('college')
-                user.college = College.objects.get(id=college_id) if college_id else None
-                user.campus = data.get('campus', user.campus)
-                user.degree = data.get('degree', user.degree)
-                user.expertise = data.get('expertise', user.expertise)
-            elif user.role == 'CLIENT':
-                user.company = data.get('company', user.company)
-                user.industry = data.get('industry', user.industry)
-            elif user.role == 'DEAN' or user.role == 'PROGRAM_HEAD':
-                college_id = data.get('college')
-                user.college = College.objects.get(id=college_id) if college_id else None
-                user.campus = data.get('campus', user.campus)
-            elif user.role == 'COORDINATOR':
-                college_id = data.get('college')
-                user.college = College.objects.get(id=college_id) if college_id else None
-                user.campus = data.get('campus', user.campus)
+            college_id = data.get('college')
+            user.college = College.objects.get(id=college_id) if college_id else None
+            user.campus = data.get('campus', user.campus) if data.get('campus') else user.campus
+            user.degree = data.get('degree', user.degree) if data.get('degree') else user.degree
+            user.expertise = data.get('expertise', user.expertise) if data.get('expertise') else user.expertise
+            user.company = data.get('company', user.company) if data.get('company') else user.company
+            user.industry = data.get('industry', user.industry) if data.get('industry') else user.industry
             # Password update (optional)
             password = data.get('password', '')
             if password:

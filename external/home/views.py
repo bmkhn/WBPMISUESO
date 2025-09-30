@@ -1,7 +1,14 @@
 from django.shortcuts import render
 from shared.announcements.models import Announcement
 
+def get_role_constants():
+    PUBLIC_ROLES = [None, 'CLIENT']
+    FACULTY_ROLES = ['FACULTY']
+    return PUBLIC_ROLES, FACULTY_ROLES
+
 def home_view(request):
+    PUBLIC_ROLES, FACULTY_ROLES = get_role_constants()
+
     latest_announcements = Announcement.objects.filter(
         published_at__isnull=False,
         archived=False
@@ -13,4 +20,6 @@ def home_view(request):
     return render(request, 'home/home.html', {
         'context': context,
         'latest_announcements': latest_announcements,
+        'PUBLIC_ROLES': PUBLIC_ROLES,
+        'FACULTY_ROLES': FACULTY_ROLES
     }) 

@@ -1,6 +1,13 @@
 {% extends "projects/base_project_profile.html" %}
 {% block profile_content %}
+
 <style>
+    .card-body {
+        text-align: center;
+        color: #555;
+        font-size: 0.95rem;
+    }
+
     .event-card {
         display: grid;
         grid-auto-rows: auto;
@@ -8,11 +15,7 @@
     }
 
     .events-section {
-        display: flex;
-        flex-direction: column;
-        margin: 1rem;
-        align-items: center;
-        justify-content: center;
+        margin-top: 1.5rem;
     }
 
     .event-card > section {
@@ -22,7 +25,7 @@
     }
 
     .event-card img {
-        max-width: 25rem;
+        max-width: 30rem;
         aspect-ratio: 16 / 9;
         object-fit: cover;
         border-radius: 0.75rem;
@@ -33,14 +36,26 @@
     .event-details {
         display: flex;
         align-items: center;
+        justify-content: space-between;
+        flex-direction: row;
+        width: 100%;
     }
 
     .event-info {
-        width: 30rem;
-        padding-right: 2.5rem;
+        min-width: 20rem;
+        max-width: 30rem;
         text-align: justify;
         max-height: 15rem;
         overflow-y: auto;
+        word-break: break-word;
+        white-space: normal;
+    }
+
+    .event-info p {
+        margin: 0.5rem 0;
+        overflow-wrap: break-word;  
+        word-break: break-word;     
+        white-space: normal;    
     }
 
     .status-text {
@@ -64,7 +79,6 @@
 
     .progress-bar {
         height: 100%;
-        width: 0%;
         background: linear-gradient(90deg, #0a8927, #17f058);
         transition: width 0.5s ease;
     }
@@ -87,49 +101,318 @@
         border-radius: 0.5rem;
         object-fit: contain;
     }
+
+    .tracker-box { 
+        background-color: whitesmoke;
+        border: 1px solid #ccc;
+        border-radius: 2rem;
+        justify-content: center; 
+        align-items: center;
+        text-align: center;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
 </style>
+
+<style>
+    .form-group {
+		display: flex;
+		align-items: flex-start;
+		gap: 1rem;
+        margin-bottom: 0.5rem;
+	}
+
+	.form-label {
+		font-weight: 600;
+		color: #374151;
+		font-size: 0.95rem;
+	}
+
+    .required {
+        color: #DC2626;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    .submit-btn {
+        background-color: #0A6C44;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+
+    .submit-btn:hover {
+        background-color: #07532F;
+    }
+
+    .back-btn {
+        background-color: #E5E7EB;
+        color: #374151;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+
+    .back-btn:hover {
+        background-color: #D1D5DB;
+    }
+
+    textarea {
+        resize: none;
+    }
+
+    input[type="text"], input[type="date"], textarea, input[type="file"], input[type="datetime-local"] {
+        flex: 1;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+        padding: 0.75rem;
+        font-size: 1rem;
+        font-family: 'Inter', sans-serif;
+    }
+</style>
+
+<style>
+    .event-modal {
+        position: fixed;
+        z-index: 9999;
+        left: 0; top: 0; width: 100vw; height: 100vh;
+        background: rgba(0,0,0,0.25);
+        display: none; align-items: center; justify-content: center;
+    }
+    
+    .event-modal-content {
+        background: #fff;
+        border-radius: 12px;
+        padding: 2rem 2rem 2rem 2rem;
+        min-width: 400px;
+        max-width: 95vw;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+        position: relative;
+    }
+
+    .event-modal-content h2 { margin-top:0; font-size:1.5rem; color:#000; font-weight: 400; }
+    .event-modal-content .close {
+        position: absolute; right: 1.5rem; top: 1.25rem;
+        font-size: 1.5rem; color: #888; cursor: pointer;
+    }
+</style>
+
 
 <div class="card-header">
     <h3>Events Pipeline Status</h3>
     {% if request.user.role in ADMIN_ROLES %}
-    <a class="admin-button">Edit</a>
+    <button class="admin-button" onclick="openEventModal()">Add Event</button>
     {% endif %}
 </div>
+
 <div class="card-body">
     <div class="tracker-box">
         <div class="progress">
-            <div class="progress-bar" id="progressBar"></div>
+            {% if total > 0 %}
+                <!-- <div class="progress-bar" style="width:{{ percent }}%;"></div> -->
+            {% else %}
+                <div class="progress-bar" style="width:0%;"></div>
+            {% endif %}
         </div>
-        <p class="status-text" id="statusText"></p>
+        <p class="status-text">{{ completed }}/{{ total }} events completed ({{ percent }}%)</p>
     </div>
 </div>
-<section class="events-section">
-    <div class="event-card">
-        <!-- Example event, replace with real data -->
-        <section>
-            <div class="event-details">
+    <section class="events-section">
+        <div class="event-card">
+            {% for event in events %}
+            <div class="event-details" {% if event.status == 'SCHEDULED' %}style="opacity:0.5;filter:grayscale(1);"{% endif %}>
                 <div class="event-info">
-                    <h4>Event Title</h4>
-                    <p><strong>Date:</strong> {{ project.start_date|date:'F d, Y' }}</p>
-                    <p><strong>Description:</strong> Event description goes here.</p>
+                    <div style="display:flex;align-items:center;gap:0.5rem;">
+                        <h4 style="margin:0;">{{ event.title }}</h4>
+                        <button class="edit-btn" title="Edit Event" style="background:none;border:none;cursor:pointer;padding:0;" onclick="openEventModal('{{ event.id }}', '{{ event.title|escapejs }}', '{{ event.description|escapejs }}', '{{ event.datetime }}', '{{ event.location|escapejs }}')">
+                            <i class="fa-solid fa-pen-to-square" onclick="event.stopPropagation();openEditEventModal('{{ event.id }}', '{{ event.title|escapejs }}', '{{ event.description|escapejs }}', '{{ event.datetime }}', '{{ event.location|escapejs }}', '{{ event.image.name|escapejs }}')"></i>
+                        </button>
+                    </div>
+                    <p>{{ event.datetime|date:'F d, Y' }} at {{ event.datetime|date:'g:i A' }}</p>
+                    <p>{{ event.description|default:'No description.' }}</p>
+                    {% if event.location %}<p><strong>Location:</strong> {{ event.location }}</p>{% endif %}
                 </div>
-                <div>
-                    <img src="https://via.placeholder.com/400x225.png?text=Event+Image" alt="Event Photo" onclick="openOverlay(this)">
-                </div>
-                <div class="overlay" id="overlay" onclick="closeOverlay()">
-                    <img id="overlayImg" src="" alt="Full Image">
+                <div style="height:15rem;display:flex; text-align: center; align-items: center;">
+                {% if event.image %}
+                    <img src="{{ event.image.url }}" alt="Event Photo" style="width:100%;height:100%;object-fit:cover;border-radius:0.75rem;border:0.08rem solid #525252;">
+                {% else %}
+                    <img src="https://via.placeholder.com/300x200.png?text=No+Image" alt="No Image Available" style="width:100%;height:100%;">
+                {% endif %}
                 </div>
             </div>
-        </section>
+            <div class="overlay" id="overlay" onclick="closeOverlay()">
+                <img id="overlayImg" src="" alt="Full Image">
+            </div>
+
+            {% empty %}
+            <style>.event-details { display: flex; flex-direction: column; align-items: center; }</style>
+            <section><div class="event-details"><div class="event-info" style="width: auto;"><h4 style="text-align: center;">No events scheduled.</h4></div></div></section>
+            {% endfor %}
+        </div>
     </div>
 </section>
+
+<!-- Add Event Modal -->
+<div id="event-modal" class="event-modal">
+    <div class="event-modal-content">
+        <span class="close" id="close-event-modal">&times;</span>
+        <h2 id="event-modal-title">Add Event</h2>
+        <form id="event-form" method="post" enctype="multipart/form-data" action="/projects/{{ project.id }}/events/">
+            {% csrf_token %}
+            <input type="hidden" name="event_id" id="event_id" value="">
+            <div class="form-group">
+                <label class="form-label">Title <span class="required">*</span></label>
+                <input type="text" name="title" id="event_title" required style="flex:1;">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Description <span class="required">*</span></label>
+                <textarea name="description" id="event_description" rows="2" required style="flex:1;border-radius:8px;border:1px solid #e5e7eb;padding:0.75rem;font-size:1rem;"></textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Date <span class="required">*</span></label>
+                <input type="datetime-local" name="datetime" id="datetime" required style="flex:1;">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Location <span class="required">*</span></label>
+                <input type="text" name="location" id="event_location" required style="flex:1;">
+            </div>
+            <!-- Status field removed: always set to SCHEDULED in backend -->
+            <div class="form-group">
+                <label class="form-label">Image</label>
+                <input type="file" name="image" id="event_image" style="flex:1;">
+            </div>
+            <div class="form-actions" style="justify-content:flex-end;">
+                <button type="button" class="back-btn" id="cancel-event-modal">Cancel</button>
+                <button type="submit" class="submit-btn">Submit</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Event Modal -->
+<div id="edit-event-modal" class="event-modal">
+    <div class="event-modal-content">
+        <span class="close" id="close-edit-event-modal">&times;</span>
+        <h2 id="edit-event-modal-title">Edit Event</h2>
+        <form id="edit-event-form" method="post" enctype="multipart/form-data" action="/projects/{{ project.id }}/events/">
+            {% csrf_token %}
+            <input type="hidden" name="event_id" id="edit_event_id" value="">
+            <div class="form-group">
+                <label class="form-label">Title <span class="required">*</span></label>
+                <input type="text" name="title" id="edit_event_title" required style="flex:1;">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Description <span class="required">*</span></label>
+                <textarea name="description" id="edit_event_description" rows="2" required style="flex:1;border-radius:8px;border:1px solid #e5e7eb;padding:0.75rem;font-size:1rem;"></textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Date <span class="required">*</span></label>
+                <input type="datetime-local" name="datetime" id="edit_datetime" style="flex:1;">
+                <span id="edit-datetime-display" style="margin-left:1rem;color:#888;font-size:0.95rem;margin-top: auto;margin-bottom: auto;"></span>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Location <span class="required">*</span></label>
+                <input type="text" name="location" id="edit_event_location" required style="flex:1;">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Image</label>
+                <input type="file" name="image" id="edit_event_image" style="flex:1;">
+                <span id="edit-file-name" style="margin-left:1rem;color:#888;font-size:0.95rem;margin-top: auto;margin-bottom: auto;"></span>
+                <div id="edit-image-preview" style="margin-top:0.5rem;"></div>
+            </div>
+            <div class="form-actions" style="justify-content:flex-end;">
+                <button type="button" class="back-btn" id="cancel-edit-event-modal">Cancel</button>
+                <button type="submit" class="submit-btn">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
-function openOverlay(imgElement) {
-    document.getElementById("overlayImg").src = imgElement.src;
-    document.getElementById("overlay").style.display = "flex";
-}
-function closeOverlay() {
-    document.getElementById("overlay").style.display = "none";
-}
+    // Edit modal logic
+    function openEditEventModal(id, title, description, date, location, imageUrl) {
+        document.getElementById('edit-event-modal').style.display = 'flex';
+        var today = new Date().toISOString().split('T')[0];
+        document.getElementById('edit_datetime').setAttribute('min', today);
+        document.getElementById('edit_event_id').value = id;
+        document.getElementById('edit_event_title').value = title || '';
+        document.getElementById('edit_event_description').value = description || '';
+
+        // Format date for input
+        var formattedDate = '';
+        if (date) {
+            // If already in ISO format, use as is
+            if (date.length >= 16 && date.includes('T')) {
+                formattedDate = date;
+            } else if (date.length === 8) {
+                var d = date.substring(0,2);
+                var m = date.substring(2,4);
+                var y = date.substring(4,8);
+                formattedDate = y + '-' + m + '-' + d;
+            } else {
+                formattedDate = date;
+            }
+        }
+        document.getElementById('edit_datetime').value = formattedDate;
+        document.getElementById('edit-datetime-display').innerText = formattedDate ? 'Current: ' + formattedDate.replace('T', ' ') : '';
+        
+        document.getElementById('edit_event_location').value = location || '';
+
+        var formattedURL = '';
+        if (imageUrl) {
+            // imageUrl gets just the file name now
+            formattedURL = 'Current Image: ' + imageUrl.split('/').pop().split('?')[0];
+        } else {
+            formattedURL = 'No Image Uploaded';
+        }
+
+        document.getElementById('edit-file-name').innerHTML = formattedURL || '';
+
+        // Always show previous file name, do not update on file input change
+        var fileInput = document.getElementById('edit_event_image');
+
+        document.getElementById('edit_event_image').innerText = imageUrl ? imageUrl.split('/').pop().split('?')[0] : '';
+    }
+    document.getElementById('close-edit-event-modal').onclick = function() {
+        document.getElementById('edit-event-modal').style.display = 'none';
+    };
+    document.getElementById('cancel-edit-event-modal').onclick = function() {
+        document.getElementById('edit-event-modal').style.display = 'none';
+    };
+    document.getElementById('edit-event-modal').onclick = function(e) {
+        if (e.target === this) {
+            this.style.display = 'none';
+        }
+    };
+    // Modal open/close logic
+    function openEventModal() {
+        document.getElementById('event-modal').style.display = 'flex';
+        document.getElementById('event-form-errors').innerText = '';
+        // Prevent past dates
+        var today = new Date().toISOString().split('T')[0];
+        document.getElementById('datetime').setAttribute('min', today);
+    }
+    document.getElementById('close-event-modal').onclick = function() {
+        document.getElementById('event-modal').style.display = 'none';
+    };
+    document.getElementById('cancel-event-modal').onclick = function() {
+        document.getElementById('event-modal').style.display = 'none';
+    };
+    document.getElementById('event-modal').onclick = function(e) {
+        if (e.target === this) {
+            this.style.display = 'none';
+        }
+    };
 </script>
+
 {% endblock %}

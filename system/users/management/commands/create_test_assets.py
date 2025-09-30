@@ -65,36 +65,16 @@ class Command(BaseCommand):
     help = "Populate test users, colleges, and SDGs for the system."
 
     def handle(self, *args, **kwargs):
+        import random
         User = get_user_model()
-
-        # Create test users for each role
-        roles = [choice[0] for choice in User.Role.choices]
-        default_password = "test1234"
-        for role in roles:
-            email = f"{role.lower()}@example.com"
-            if not User.objects.filter(email=email).exists():
-                user = User.objects.create_user(
-                    username=role.lower(),
-                    email=email,
-                    password=default_password,
-                    given_name=role.capitalize(),
-                    middle_initial="T",
-                    last_name="User",
-                    sex=User.Sex.MALE,
-                    contact_no="0999999999",
-                    campus=User.Campus.MAIN,
-                    role=role,
-                    is_confirmed=True,
-                )
-                self.stdout.write(self.style.SUCCESS(f"Created {role} user: {email} / {default_password}"))
-            else:
-                self.stdout.write(self.style.WARNING(f"{role} user already exists."))
 
         # Populate College table (only create if missing, do not overwrite logos)
         logo_dir = os.path.join(settings.MEDIA_ROOT, 'colleges', 'logos')
         created = 0
+        college_objs = []
         for name in COLLEGES:
             obj, was_created = College.objects.get_or_create(name=name)
+            college_objs.append(obj)
             if was_created:
                 logo_set = False
                 for ext in ['.png', '.jpg', '.jpeg', '.svg']:
@@ -113,8 +93,74 @@ class Command(BaseCommand):
                 created += 1
         self.stdout.write(self.style.SUCCESS(f'Successfully populated {created} new colleges and set logos.'))
 
+        # Create test users for each role
+        roles = [choice[0] for choice in User.Role.choices]
+        campus_choices = [choice[0] for choice in User.Campus.choices]
+        default_password = "test1234"
+        for role in roles:
+            email = f"{role.lower()}@example.com"
+            if not User.objects.filter(email=email).exists():
+                # Assign random campus and college for specific roles
+                if role in [User.Role.COORDINATOR, User.Role.DEAN, User.Role.PROGRAM_HEAD, User.Role.FACULTY]:
+                    campus = random.choice(campus_choices)
+                    college = random.choice(college_objs)
+                else:
+                    campus = User.Campus.TINUIGIBAN  # or any default
+                    college = None
+                user = User.objects.create_user(
+                    username=role.lower(),
+                    email=email,
+                    password=default_password,
+                    given_name=role.capitalize(),
+                    middle_initial="T",
+                    last_name="User",
+                    sex=User.Sex.MALE,
+                    contact_no="0999999999",
+                    campus=campus,
+                    college=college,
+                    role=role,
+                    is_confirmed=True,
+                )
+                self.stdout.write(self.style.SUCCESS(f"Created {role} user: {email} / {default_password}"))
+            else:
+                self.stdout.write(self.style.WARNING(f"{role} user already exists."))
+
         # Populate SDGs (only create if missing)
         created_sdgs = 0
         for sdg in SDG_DATA:
             obj, created = SustainableDevelopmentGoal.objects.get_or_create(goal_number=sdg['goal_number'], defaults={'name': sdg['name']})
-        self.stdout.write(self.style.SUCCESS(f'Successfully populated {created_sdgs} new SDGs populated.'))
+            if created:
+                created_sdgs += 1
+        self.stdout.write(self.style.SUCCESS(f'Successfully populated {created_sdgs} new SDGs.'))
+
+        # Create sample Agendas and associate with colleges
+        from internal.agenda.models import Agenda
+        agenda_samples = [
+            {
+                'name': 'Economics, Entrepreneurship, and Livelihood Enhancement',
+                'description': 'Programs and activities aimed at improving economic opportunities, fostering entrepreneurship, and enhancing livelihood skills among communities.'
+            },
+            {
+                'name': 'Environmental IEC and Culture Sensitivity',
+                'description': 'Initiatives focused on environmental education, information dissemination, and promoting cultural sensitivity and awareness.'
+            },
+            {
+                'name': 'Hospitality and Tourism Industry Enhancement',
+                'description': 'Projects designed to strengthen the hospitality and tourism sectors through training, innovation, and community engagement.'
+            },
+        ]
+        # Pick at least 3 colleges for each agenda
+        for agenda_data in agenda_samples:
+            agenda_obj, created = Agenda.objects.get_or_create(
+                name=agenda_data['name'],
+                defaults={'description': agenda_data['description']}
+            )
+            # Always update description in case it changed
+            if not created:
+                agenda_obj.description = agenda_data['description']
+                agenda_obj.save(update_fields=['description'])
+            # Associate with 3 random colleges
+            selected_colleges = random.sample(college_objs, 3)
+            agenda_obj.concerned_colleges.set(selected_colleges)
+            agenda_obj.save()
+        self.stdout.write(self.style.SUCCESS('Sample agendas created and associated with colleges.'))

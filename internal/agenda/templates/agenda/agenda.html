@@ -1,5 +1,6 @@
 {% extends "base_internal.html" %}
 {% block content %}
+{% load custom_tags %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -280,6 +281,20 @@
     .agenda-table th.settings-col, .agenda-table td.settings-col {
         text-align: center !important;
     }
+
+    .view-more {
+        font-family: 'Inter', sans-serif;
+        font-weight: 400;
+        font-size: 15px;
+        color: #2EA8FF;
+		text-decoration: none;
+        margin-top: 10px;
+        cursor: pointer;
+    }
+
+    .view-more:hover {
+        text-decoration: underline;
+    }
 </style>
 
 <!-- Agenda Carousel Styles -->
@@ -412,166 +427,44 @@
 
         <!-- Table View -->
         <div class="table-view-container">
+        {% for agenda in agendas %}
             <div class="title-expand-container">
-                <span class="table-title-text">First Agenda</span>
-                <span class="expand-icon"> <svg class="expand-icon"> <use href="#expand-icon"/> </svg></span>
+                <span class="table-title-text">{{ agenda.name }}</span>
+                <a href="{% url 'project_dispatcher' %}?agenda={{ agenda.id }}" class="view-more">View More &rarr;</a>
             </div>
-
             <table class="agenda-table">
                 <thead>
                     <tr>
                         <th>Title</th>
-                        <th>Team Leader</th>
+                        <th>Leader</th>
+                        <th>College/Unit</th>
+                        <th>Last Updated</th>
                         <th>Start Date</th>
+                        <th>Progress</th>
                         <th>Status</th>
-                        <th class="settings-col">Settings</th>
                     </tr>
                 </thead>
                 <tbody>
+                    {% for project in agenda_projects|get_item:agenda.id %}
                     <tr>
-                        <td>Agenda Title</td>
-                        <td>John Doe</td>
-                        <td>2025-09-01</td>
-                        <td>Active</td>
-                        <td class="settings-col"><span class="settings-icon"><svg class="settings-icon"><use href="#settings-icon"/></svg></span></td>
+                        <td>
+                            <a href="{% url 'project_profile' project.id %}" class="name-link" title="{{ project.title }}">
+                                {{ project.title|truncatechars:20 }}
+                            </a>
+                        </td>
+                        <td>{{ project.project_leader.get_full_name }}</td>
+                        <td>{% if project.project_leader.college %}{{ project.project_leader.college.name }}{% else %}<em>-</em>{% endif %}</td>
+                        <td>{{ project.updated_at|date:"Y-m-d" }}</td>
+                        <td>{{ project.start_date|date:"Y-m-d" }}</td>
+                        <td>{{ project.progress_display }}</td>
+                        <td>{{ project.get_status_display }}</td>
                     </tr>
-                    <tr>
-                        <td>Another Agenda</td>
-                        <td>Jane Smith</td>
-                        <td>2025-09-10</td>
-                        <td>Pending</td>
-                        <td class="settings-col"><span class="settings-icon"><svg class="settings-icon"><use href="#settings-icon"/></svg></span></td>
-                    </tr>
-                    <tr>
-                        <td>Another Agenda</td>
-                        <td>Jane Smith</td>
-                        <td>2025-09-10</td>
-                        <td>Pending</td>
-                        <td class="settings-col"><span class="settings-icon"><svg class="settings-icon"><use href="#settings-icon"/></svg></span></td>
-                    </tr>
+                    {% empty %}
+                    <tr><td colspan="7" style="text-align:center;">No projects under this agenda.</td></tr>
+                    {% endfor %}
                 </tbody>
             </table>
-
-            <div class="title-expand-container">
-                <span class="table-title-text">Second Agenda</span>
-                <span class="expand-icon"> <svg class="expand-icon"> <use href="#expand-icon"/> </svg></span>
-            </div>
-
-            <table class="agenda-table">
-                <thead>
-                    <tr>
-                        <th>Title</th>
-                        <th>Team Leader</th>
-                        <th>Start Date</th>
-                        <th>Status</th>
-                        <th class="settings-col">Settings</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Agenda Title</td>
-                        <td>John Doe</td>
-                        <td>2025-09-01</td>
-                        <td>Active</td>
-                        <td class="settings-col"><span class="settings-icon"><svg class="settings-icon"><use href="#settings-icon"/></svg></span></td>
-                    </tr>
-                    <tr>
-                        <td>Another Agenda</td>
-                        <td>Jane Smith</td>
-                        <td>2025-09-10</td>
-                        <td>Pending</td>
-                        <td class="settings-col"><span class="settings-icon"><svg class="settings-icon"><use href="#settings-icon"/></svg></span></td>
-                    </tr>
-                    <tr>
-                        <td>Another Agenda</td>
-                        <td>Jane Smith</td>
-                        <td>2025-09-10</td>
-                        <td>Pending</td>
-                        <td class="settings-col"><span class="settings-icon"><svg class="settings-icon"><use href="#settings-icon"/></svg></span></td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <div class="title-expand-container">
-                <span class="table-title-text">Third Agenda</span>
-                <span class="expand-icon"> <svg class="expand-icon"> <use href="#expand-icon"/> </svg></span>
-            </div>
-
-            <table class="agenda-table">
-                <thead>
-                    <tr>
-                        <th>Title</th>
-                        <th>Team Leader</th>
-                        <th>Start Date</th>
-                        <th>Status</th>
-                        <th class="settings-col">Settings</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Agenda Title</td>
-                        <td>John Doe</td>
-                        <td>2025-09-01</td>
-                        <td>Active</td>
-                        <td class="settings-col"><span class="settings-icon"><svg class="settings-icon"><use href="#settings-icon"/></svg></span></td>
-                    </tr>
-                    <tr>
-                        <td>Another Agenda</td>
-                        <td>Jane Smith</td>
-                        <td>2025-09-10</td>
-                        <td>Pending</td>
-                        <td class="settings-col"><span class="settings-icon"><svg class="settings-icon"><use href="#settings-icon"/></svg></span></td>
-                    </tr>
-                    <tr>
-                        <td>Another Agenda</td>
-                        <td>Jane Smith</td>
-                        <td>2025-09-10</td>
-                        <td>Pending</td>
-                        <td class="settings-col"><span class="settings-icon"><svg class="settings-icon"><use href="#settings-icon"/></svg></span></td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <div class="title-expand-container">
-                <span class="table-title-text">Fourth Agenda</span>
-                <span class="expand-icon"> <svg class="expand-icon"> <use href="#expand-icon"/> </svg></span>
-            </div>
-
-            <table class="agenda-table">
-                <thead>
-                    <tr>
-                        <th>Title</th>
-                        <th>Team Leader</th>
-                        <th>Start Date</th>
-                        <th>Status</th>
-                        <th class="settings-col">Settings</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Agenda Title</td>
-                        <td>John Doe</td>
-                        <td>2025-09-01</td>
-                        <td>Active</td>
-                        <td class="settings-col"><span class="settings-icon"><svg class="settings-icon"><use href="#settings-icon"/></svg></span></td>
-                    </tr>
-                    <tr>
-                        <td>Another Agenda</td>
-                        <td>Jane Smith</td>
-                        <td>2025-09-10</td>
-                        <td>Pending</td>
-                        <td class="settings-col"><span class="settings-icon"><svg class="settings-icon"><use href="#settings-icon"/></svg></span></td>
-                    </tr>
-                    <tr>
-                        <td>Another Agenda</td>
-                        <td>Jane Smith</td>
-                        <td>2025-09-10</td>
-                        <td>Pending</td>
-                        <td class="settings-col"><span class="settings-icon"><svg class="settings-icon"><use href="#settings-icon"/></svg></span></td>
-                    </tr>
-                </tbody>
-            </table>
-
+        {% endfor %}
         </div>
 
 <!-- SVG Sprite Section -->

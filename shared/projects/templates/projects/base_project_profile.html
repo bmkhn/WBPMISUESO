@@ -376,7 +376,7 @@
             <div class="tags"> 
                 <content style="flex-grow: 2;"> 
                     <button class="campus">{{ project.project_leader.get_campus_display }}</button> 
-                    <button class="agenda">{{ project.agenda }}</button> 
+                    <button class="agenda">{{ project.agenda.name }}</button> 
                 </content> 
                 <content style="flex-grow: 0;"> 
                     <button class="status">{{ project.get_status_display }}</button> 
@@ -386,7 +386,17 @@
                 <div style="flex-direction: row; justify-content: space-between; display: flex; align-items: center; align-items: center;">
                     <a href="#" class="title">{{ project.title }}</a>
                     {% if request.user.role in ADMIN_ROLES %}
-                    <a class="admin-button">Mark as Cancelled</a>
+                        {% if project.status == 'CANCELLED' %}
+                        <form method="post" action="/projects/{{ project.id }}/undo_cancel/" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="admin-button" style="background:#f59e42;color:#fff;">Undo Cancel</button>
+                        </form>
+                        {% else %}
+                        <form method="post" action="/projects/{{ project.id }}/cancel/" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="admin-button" style="background:#dc2626;color:#fff;">Mark as Cancelled</button>
+                        </form>
+                        {% endif %}
                     {% endif %}
                 </div>
                 
@@ -412,9 +422,7 @@
                 {% if request.user.role in SUPERUSER_ROLES or request.user.role in ADMIN_ROLES %}
                 <button type="button" data-tab="providers" class="{% if '/providers/' in request.path %}active{% endif %}">Providers</button>
                 {% endif %}
-                {% if request.user.role in SUPERUSER_ROLES or request.user.role in ADMIN_ROLES %}
                 <button type="button" data-tab="events" class="{% if '/events/' in request.path %}active{% endif %}">Events</button>
-                {% endif %}
                 <button type="button" data-tab="files" class="{% if '/files/' in request.path %}active{% endif %}">Files</button> 
                 {% if request.user.role in SUPERUSER_ROLES or request.user.role in ADMIN_ROLES or request.user.role == "FACULTY" %}
                 <button type="button" data-tab="submissions" class="{% if '/submissions/' in request.path %}active{% endif %}">Submissions</button>

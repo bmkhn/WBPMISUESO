@@ -4,7 +4,6 @@ from django.db import models
 
 class College(models.Model):
     def delete(self, *args, **kwargs):
-        # Delete associated logo from storage
         if self.logo and self.logo.storage and self.logo.storage.exists(self.logo.name):
             self.logo.storage.delete(self.logo.name)
         super().delete(*args, **kwargs)
@@ -18,7 +17,6 @@ class College(models.Model):
 
 class User(AbstractUser):
     def delete(self, *args, **kwargs):
-        # Delete associated profile picture and valid ID from storage
         if self.profile_picture and self.profile_picture.storage and self.profile_picture.storage.exists(self.profile_picture.name):
             self.profile_picture.storage.delete(self.profile_picture.name)
         if self.valid_id and self.valid_id.storage and self.valid_id.storage.exists(self.valid_id.name):
@@ -41,7 +39,7 @@ class User(AbstractUser):
         FEMALE = 'FEMALE', 'Female'
 
     class Campus(models.TextChoices):
-        MAIN = 'MAIN', 'Main'
+        TINUIGIBAN = 'TINUIGIBAN', 'Tinuigiban'
         RIZAL = 'RIZAL', 'Rizal'
         NARRA = 'NARRA', 'Narra'
         QUEZON = 'QUEZON', 'Quezon'
@@ -97,7 +95,6 @@ class User(AbstractUser):
             except Exception:
                 pass
         initial = (self.given_name or self.last_name or self.email or "?")[0].upper()
-        # SVG circle with initial, dark green background
         svg = f'<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><circle cx="20" cy="20" r="20" fill="#245F3E"/><text x="50%" y="55%" text-anchor="middle" fill="#fff" font-size="22" font-family="Arial" dy=".3em">{initial}</text></svg>'
         import base64
         svg_b64 = base64.b64encode(svg.encode('utf-8')).decode('utf-8')

@@ -581,7 +581,7 @@
         }
     });
 
-    // Role-Based Info Display (unchanged)
+    // Role-Based Info Display (robust for edit)
     document.addEventListener('DOMContentLoaded', function() {
         var roleSelect = document.querySelector('select[name="role"]');
         var roleBlocks = {
@@ -593,18 +593,27 @@
             'COORDINATOR': document.getElementById('role-info-COORDINATOR'),
         };
         function updateRoleBlocks() {
+            if (!roleSelect) return;
             var selected = roleSelect.value;
             Object.keys(roleBlocks).forEach(function(role) {
                 var block = roleBlocks[role];
-                if (role === selected) {
-                    block.style.display = 'block';
-                } else {
-                    block.style.display = 'none';
+                if (block) {
+                    block.style.display = (role === selected) ? 'block' : 'none';
                 }
             });
         }
-        roleSelect.addEventListener('change', updateRoleBlocks);
-        updateRoleBlocks();
+        if (roleSelect) {
+            roleSelect.addEventListener('change', updateRoleBlocks);
+            // Also update on page load in case the value is changed by JS or server
+            setTimeout(updateRoleBlocks, 0);
+        }
+        // Defensive: update on any form change (for edge cases)
+        var form = document.querySelector('form');
+        if (form && roleSelect) {
+            form.addEventListener('input', function(e) {
+                if (e.target === roleSelect) updateRoleBlocks();
+            });
+        }
 
         // AJAX email uniqueness check (unchanged)
         var emailInput = document.getElementById('email-input');
@@ -711,7 +720,6 @@
             }
         });
     });
-
 
     // Image Preview
     // Set valid_id_url from template, fallback to empty string
