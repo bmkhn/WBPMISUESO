@@ -643,6 +643,7 @@
                         <option value="{{ user.id }}">{{ user.get_full_name|default:user.username }}</option>
                     {% endfor %}
                 </select>
+                <script id="participants-data" type="application/json"></script>
             </div>
             <div class="form-group">
                 <label class="form-label">Notes (Optional)</label>
@@ -668,6 +669,18 @@
     </div>
 </div>
 
+<!-- Delete Confirmation Modal -->
+<div id="delete-confirm-modal" class="event-modal" style="display:none;align-items:center;justify-content:center;">
+    <div class="event-modal-content" style="max-width:400px;">
+        <h2 style="margin-bottom:20px;color:#E53E3E;font-size:1.3rem;">Confirm Delete</h2>
+        <div id="delete-confirm-message" style="font-size:1.1rem;margin-bottom:30px;color:#333;"></div>
+        <div style="display:flex;justify-content:flex-end;gap:15px;">
+            <button type="button" class="back-btn" id="cancel-delete-modal">Cancel</button>
+            <button type="button" class="submit-btn" id="confirm-delete-btn" style="background:#E53E3E;">Delete</button>
+        </div>
+    </div>
+</div>
+
 <svg>
     <!-- Add Icon -->
     <symbol id="icon-add" viewBox="0 0 16 16">
@@ -687,16 +700,92 @@
         document.getElementById('edit_event_date').value = eventObj.date || '';
         document.getElementById('edit_event_time').value = eventObj.time || '';
         document.getElementById('edit_event_location').value = eventObj.location || '';
-        document.getElementById('edit_event_notes').value = eventObj.notes || '';D
+        document.getElementById('edit_event_notes').value = eventObj.notes || '';
         // Participants tag UI
         const tagRow = document.getElementById('edit-participants-tag-row');
         while (tagRow.firstChild) tagRow.removeChild(tagRow.firstChild);
-        const tagUI = setupTagUI('edit-participants-tag-row', 'edit-participants-options-template', 'participants');
-        if (eventObj.participants && Array.isArray(eventObj.participants)) {
-            tagUI.setExclude([]);
-            tagUI.selected = eventObj.participants.map(String);
+        // Set JSON data for participants
+        document.getElementById('participants-data').textContent = JSON.stringify(eventObj.participants || []);
+        renderParticipantTags();
+    }
+
+    function renderParticipantTags() {
+        const tagRow = document.getElementById('edit-participants-tag-row');
+        const optionsTemplate = document.getElementById('edit-participants-options-template');
+        let selectedParticipants = [];
+        try {
+            selectedParticipants = JSON.parse(document.getElementById('participants-data').textContent);
+        } catch (e) {
+            selectedParticipants = [];
         }
-        tagUI.renderTags();
+        tagRow.innerHTML = '';
+        selectedParticipants.forEach(id => {
+            const opt = Array.from(optionsTemplate.options).find(o => String(o.value) === String(id));
+            if (opt) {
+                const tag = document.createElement('span');
+                tag.className = 'tag-box';
+                tag.textContent = opt.textContent;
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'tag-remove';
+                removeBtn.innerHTML = '&times;';
+                removeBtn.onclick = function() {
+                    selectedParticipants = selectedParticipants.filter(pid => pid !== id);
+                    document.getElementById('participants-data').textContent = JSON.stringify(selectedParticipants);
+                    renderParticipantTags();
+                };
+                tag.appendChild(removeBtn);
+                tagRow.appendChild(tag);
+            }
+        });
+        // Add button logic
+        const addBtn = document.createElement('button');
+        addBtn.type = 'button';
+        addBtn.innerHTML = '<svg width="16" height="16"><use href="#icon-add" /></svg>';
+        addBtn.className = 'tag-add-btn';
+        addBtn.onclick = function(e) {
+            const selectDropdown = document.createElement('select');
+            selectDropdown.multiple = false;
+            selectDropdown.style.position = 'absolute';
+            selectDropdown.style.zIndex = 9999;
+            selectDropdown.style.display = 'block';
+            selectDropdown.style.left = (addBtn.getBoundingClientRect().left + window.scrollX) + 'px';
+            selectDropdown.style.top = (addBtn.getBoundingClientRect().bottom + window.scrollY) + 'px';
+            Array.from(optionsTemplate.options).forEach(opt => {
+                if (!opt.value || selectedParticipants.includes(opt.value)) return;
+                const option = document.createElement('option');
+                option.value = opt.value;
+                option.textContent = opt.textContent;
+                selectDropdown.appendChild(option);
+            });
+            selectDropdown.onchange = function() {
+                const selectedId = selectDropdown.value;
+                if (selectedId && !selectedParticipants.includes(selectedId)) {
+                    selectedParticipants.push(selectedId);
+                    document.getElementById('participants-data').textContent = JSON.stringify(selectedParticipants);
+                    renderParticipantTags();
+                }
+                selectDropdown.value = '';
+                selectDropdown.style.display = 'none';
+            };
+            document.body.appendChild(selectDropdown);
+            selectDropdown.focus();
+            document.addEventListener('mousedown', function handler(e) {
+                if (!selectDropdown.contains(e.target) && e.target.className !== 'tag-add-btn') {
+                    selectDropdown.style.display = 'none';
+                    selectDropdown.remove();
+                    document.removeEventListener('mousedown', handler);
+                }
+            });
+        };
+        tagRow.appendChild(addBtn);
+        selectedParticipants.forEach(id => {
+            const hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.name = 'participants[]';
+            hidden.value = id;
+            tagRow.appendChild(hidden);
+        });
     }
     document.getElementById('close-edit-event-modal').onclick = function() {
         document.getElementById('edit-event-modal').style.display = 'none';
@@ -861,9 +950,14 @@
         });
         tagRow.appendChild(selectDropdown);
         renderTags();
+        function setSelected(ids) {
+            selected = Array.isArray(ids) ? ids.slice() : [];
+            renderTags();
+        }
         return {
             getSelected: () => selected.slice(),
             setExclude: (ids) => { excludeIds = ids; renderTags(); },
+            setSelected,
         };
     }
     document.addEventListener('DOMContentLoaded', function() {
@@ -924,18 +1018,20 @@
             body: JSON.stringify({
                 title, description, date, time, location, participants, notes
             })
-        }).then(r => r.json()).then(resp => {
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(resp) {
             if (resp.status === 'success') {
                 addEventModal.style.display = 'none';
-                // Fetch latest events from backend
+                // Fetch latest events from backend and update calendar grid
                 fetch('/calendar/events_json/')
-                  .then(r => r.json())
-                  .then(data => {
+                  .then(function(r) { return r.json(); })
+                  .then(function(data) {
                       events = data;
-                      renderCalendar(currentYear, currentMonth);
-                      fetchEvents();
+                      renderCalendar(currentYear, currentMonth); // update calendar grid
+                      fetchEvents(); // update sidebar event list
                   })
-                  .catch(err => {
+                  .catch(function(err) {
                       alert('Could not refresh events: ' + err.message);
                       renderCalendar(currentYear, currentMonth);
                       fetchEvents();
@@ -943,7 +1039,10 @@
             } else {
                 alert('Error: ' + JSON.stringify(resp.errors || resp));
             }
-        }).catch(err => alert('Network error: ' + err.message));
+        })
+        .catch(function(err) {
+            alert('Network error: ' + err.message);
+        });
     };
 
     // Hook up calendar day click to open modal
@@ -961,9 +1060,35 @@
             cell.textContent=d;
             cell.dataset.date=dateStr;
             if(events[dateStr]){
-                cell.style.backgroundColor="#7B7B7B";
-                cell.style.color="white";
-                cell.style.cursor="pointer";
+                let hasMeeting = events[dateStr].some(ev => ev.type === 'meeting');
+                let hasProject = events[dateStr].some(ev => ev.type === 'project');
+                // Determine if all events are done (past date)
+                const today = new Date();
+                const cellDate = new Date(year, month, d);
+                let isPast = cellDate < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                if (isPast) {
+                    // Faded blue/green for done
+                    if (hasMeeting && hasProject) {
+                        cell.style.background = 'linear-gradient(90deg, #A9C6DD 50%, #B6D3C2 50%)';
+                    } else if (hasMeeting) {
+                        cell.style.backgroundColor = '#A9C6DD';
+                    } else if (hasProject) {
+                        cell.style.backgroundColor = '#B6D3C2';
+                    }
+                    cell.style.color = '#eee';
+                } else {
+                    if (hasMeeting && hasProject) {
+                        cell.style.background = 'linear-gradient(90deg, #3A7CA5 50%, #245F3E 50%)';
+                        cell.style.color = 'white';
+                    } else if (hasMeeting) {
+                        cell.style.backgroundColor = '#3A7CA5';
+                        cell.style.color = 'white';
+                    } else if (hasProject) {
+                        cell.style.backgroundColor = '#245F3E';
+                        cell.style.color = 'white';
+                    }
+                }
+                cell.style.cursor = "pointer";
                 cell.onclick = function() {
                     showEventDetails(events[dateStr], dateStr);
                 };
@@ -971,6 +1096,12 @@
                 cell.onclick = function() {
                     openAddEventModal(dateStr);
                 };
+            }
+            // Highlight current day
+            const today = new Date();
+            if (year === today.getFullYear() && month === today.getMonth() && d === today.getDate()) {
+                cell.style.border = '2px solid #FFE066';
+                cell.style.boxShadow = '0 0 0 2px #FFE066';
             }
             calendar.appendChild(cell);
         }
@@ -983,31 +1114,107 @@
     eventDetailsModal.onclick = function(e) { if (e.target === eventDetailsModal) eventDetailsModal.style.display = 'none'; };
 
     function showEventDetails(eventArr, dateStr) {
-        // eventArr is an array of events for the date
         eventDetailsModal.style.display = 'flex';
         let html = '';
-        // Get current user info from Django context (injected as JS variables)
         const currentUserId = "{{ request.user.id|default:'' }}";
         const currentUserRole = "{{ request.user.role|default:''|escapejs }}";
-            eventArr.forEach(ev => {
+        eventArr.forEach(ev => {
+            if (ev.type === 'meeting') {
                 let canEdit = false;
                 if (currentUserId !== "" && (ev.created_by == currentUserId || ["DIRECTOR","UESO","VP"].includes(currentUserRole))) {
                     canEdit = true;
                 }
                 html += `<div class="event-details-row" style="display:flex;align-items:center;">
-                    <div style="font-size:1.5rem;font-weight:600;color:#245F3E;margin-bottom:0.3rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;flex:1;">${ev.title}</div>
-                    ${canEdit ? `<i class='fa-solid fa-pen-to-square' style='font-size:1.3rem;color:#245F3E;cursor:pointer;margin-left:10px;' title='Edit' onclick='window.openEditEventModal(${JSON.stringify(ev)})'></i>` : ''}
+                    <div style="font-size:1.5rem;font-weight:600;color:#3A7CA5;margin-bottom:0.3rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;flex:1;">${ev.title}</div>
+                    ${canEdit ? `<i class='fa-solid fa-pen-to-square' style='font-size:1.3rem;color:#3A7CA5;cursor:pointer;margin-left:10px;' title='Edit' onclick='window.openEditEventModal(${JSON.stringify(ev)})'></i>` : ''}
+                    ${canEdit ? `<i class='fa-solid fa-trash' style='font-size:1.3rem;color:#E53E3E;cursor:pointer;margin-left:10px;' title='Delete' onclick='window.confirmDeleteEvent(${ev.id}, ${JSON.stringify(ev.title)})'></i>` : ''}
                 </div>
                 <div style="font-size:1.1rem;font-weight:400;color:#222;margin-bottom:0.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">${ev.description}</div>
                 <div style="font-size:1rem;color:#666;margin-bottom:0.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">${ev.date} at ${ev.time}</div>
                 <div style="font-size:1.1rem;color:#333;margin-bottom:0.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">${ev.location}</div>
+                ${ev.participant_names && ev.participant_names.length ? `<div style='font-size:0.95em;color:#555;margin-bottom:0.2rem;'><b>Participants:</b> <span style='font-size:0.95em;'>${ev.participant_names.join(", ")}</span></div>` : ''}
                 ${ev.notes && ev.notes.trim() ? `<div style=\"font-size:1rem;color:#888;margin-top:0.3rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%\">${ev.notes}</div>` : ''}
                 <hr style="margin:10px 0;">`;
-    // Expose openEditEventModal globally for icon click
-    window.openEditEventModal = openEditEventModal;
-            });
-            document.getElementById('event-details-title').textContent = eventArr.length === 1 ? '' : `Events on ${dateStr}`;
-            document.getElementById('event-details-info').innerHTML = html;
+            } else if (ev.type === 'project') {
+                html += `<div class="event-details-row" style="display:flex;align-items:center;">
+                    <div style="font-size:1.5rem;font-weight:600;color:#245F3E;margin-bottom:0.3rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;flex:1;">${ev.title}</div>
+                    <i class='fa-regular fa-arrow-right' style='font-size:1.3rem;color:#245F3E;cursor:pointer;margin-left:10px;' title='Go to event' onclick='window.location.href="/projects/${ev.project_id}/"'></i>
+                </div>
+                ${ev.project_name ? `<div style='font-size:1.05em;color:#245F3E;margin-bottom:0.2rem;'><b>Project:</b> <span style='font-size:1.05em;'>${ev.project_name}</span></div>` : ''}
+                <div style="font-size:1.1rem;font-weight:400;color:#222;margin-bottom:0.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">${ev.description}</div>
+                <div style="font-size:1rem;color:#666;margin-bottom:0.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">${ev.date} at ${ev.time}</div>
+                <div style="font-size:1.1rem;color:#333;margin-bottom:0.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">${ev.location}</div>
+                ${ev.leader ? `<div style='font-size:0.95em;color:#555;margin-bottom:0.2rem;'><b>Leader:</b> <span style='font-size:0.95em;'>${ev.leader}</span></div>` : ''}
+                ${ev.provider_names && ev.provider_names.length ? `<div style='font-size:0.95em;color:#555;margin-bottom:0.2rem;'><b>Providers:</b> <span style='font-size:0.95em;'>${ev.provider_names.join(", ")}</span></div>` : ''}
+                ${ev.notes && ev.notes.trim() ? `<div style=\"font-size:1rem;color:#888;margin-top:0.3rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%\">${ev.notes}</div>` : ''}
+                <hr style="margin:10px 0;">`;
+            }
+        });
+        document.getElementById('event-details-title').textContent = eventArr.length === 1 ? '' : `Events on ${dateStr}`;
+        document.getElementById('event-details-info').innerHTML = html;
+    }
+
+    // Delete event logic
+    window.confirmDeleteEvent = function(eventId, eventTitle) {
+        // Hide all other modals
+        document.getElementById('event-details-modal').style.display = 'none';
+        document.getElementById('edit-event-modal').style.display = 'none';
+        // Show only the delete modal
+        document.getElementById('delete-confirm-modal').style.display = 'flex';
+        document.getElementById('delete-confirm-message').textContent = `Are you sure you want to delete "${eventTitle}"? This action cannot be undone.`;
+        pendingDeleteEventId = eventId;
+        pendingDeleteEventTitle = eventTitle;
+    };
+
+    document.getElementById('cancel-delete-modal').onclick = function() {
+        document.getElementById('delete-confirm-modal').style.display = 'none';
+    };
+    document.getElementById('delete-confirm-modal').onclick = function(e) {
+        if (e.target === this) {
+            this.style.display = 'none';
+        }
+    };
+    document.getElementById('confirm-delete-btn').onclick = function() {
+        if (pendingDeleteEventId) {
+            deleteEvent(pendingDeleteEventId);
+        }
+        document.getElementById('delete-confirm-modal').style.display = 'none';
+    };
+
+    function deleteEvent(eventId) {
+        const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+        fetch('/calendar/delete_event/' + eventId + '/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({})
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(resp) {
+            if (resp.status === 'success') {
+                document.getElementById('event-details-modal').style.display = 'none';
+                // Refresh events
+                fetch('/calendar/events_json/')
+                  .then(function(r) { return r.json(); })
+                  .then(function(data) {
+                      events = data;
+                      renderCalendar(currentYear, currentMonth);
+                      fetchEvents();
+                  })
+                  .catch(function(err) {
+                      alert('Could not refresh events: ' + err.message);
+                      renderCalendar(currentYear, currentMonth);
+                      fetchEvents();
+                  });
+            } else {
+                alert('Error: ' + JSON.stringify(resp.errors || resp));
+            }
+        })
+        .catch(function(err) {
+            alert('Network error: ' + err.message);
+        });
     }
 </script>
 
