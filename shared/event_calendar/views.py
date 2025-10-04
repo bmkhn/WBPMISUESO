@@ -13,6 +13,7 @@ from shared.projects.models import ProjectEvent, Project
 @role_required(allowed_roles=["DIRECTOR", "VP", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD", "FACULTY", "IMPLEMENTER"])
 def calendar_view(request):
     from system.users.models import User
+    current_user = request.user
     users = User.objects.exclude(role='CLIENT')
     from .models import MeetingEvent
     # Gather all events, group by date
@@ -62,10 +63,16 @@ def calendar_view(request):
         })
     import json
     events_json = json.dumps(events_by_date)
-    return render(request, 'event_calendar/calendar.html', {
-        'users': users,
-        'events_json': events_json,
-    })
+    if current_user.role == 'FACULTY' or current_user.role == 'IMPLEMENTER':
+        return render(request, 'event_calendar/calendar.html', {
+            'users': users,
+            'events_json': events_json,
+        })
+    elif current_user.role in ['VP', 'DIRECTOR', 'UESO', 'COORDINATOR', 'DEAN', 'PROGRAM_HEAD']:
+        return render(request, 'event_calendar/calendar_admin.html', {
+            'users': users,
+            'events_json': events_json,
+        })  
 
 
 @login_required
@@ -117,8 +124,31 @@ from django.views.decorators.http import require_GET
 def events_json(request):
     from .models import MeetingEvent
     from shared.projects.models import ProjectEvent, Project
-    events_qs = MeetingEvent.objects.all()
-    project_events_qs = ProjectEvent.objects.select_related('project').all()
+    from django.db import models
+    user = request.user
+    events_qs = MeetingEvent.objects.none()
+    project_events_qs = ProjectEvent.objects.select_related('project').none()
+    from system.users.models import User
+    from shared.projects.models import Project
+    if user.role in ['UESO', 'VP', 'DIRECTOR']:
+        print("User is UESO/VP/DIRECTOR, fetching all events")
+        events_qs = MeetingEvent.objects.all()
+        project_events_qs = ProjectEvent.objects.select_related('project').all()
+    elif user.role in ['PROGRAM_HEAD', 'DEAN', 'COORDINATOR']:
+        print("User is PROGRAM_HEAD/DEAN/COORDINATOR, fetching college events")
+        events_qs = MeetingEvent.objects.filter(participants=user)
+        project_events_qs = ProjectEvent.objects.select_related('project').filter(
+            project__project_leader__college=user.college
+        )
+    elif user.role in ['FACULTY', 'IMPLEMENTER']:
+        events_qs = MeetingEvent.objects.filter(participants=user)
+        project_events_qs = ProjectEvent.objects.select_related('project').filter(
+            models.Q(project__project_leader=user) |
+            models.Q(project__providers=user)
+        )
+    else:
+        events_qs = MeetingEvent.objects.none()
+        project_events_qs = ProjectEvent.objects.select_related('project').none()
     events_by_date = {}
     from django.utils import timezone
     for event in events_qs:
