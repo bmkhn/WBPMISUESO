@@ -23,6 +23,13 @@ class Downloadable(models.Model):
     uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='uploaded_downloadables')
     status = models.CharField(max_length=16, choices=STATUS_CHOICES, default='published')
     file_type = models.CharField(max_length=20, blank=True)
+    is_submission_template = models.BooleanField(default=False, help_text="Used as a template for user submissions")
+    SUBMISSION_TYPE_CHOICES = [
+        ('event', 'Event'),
+        ('final', 'Final'),
+        ('file', 'File'),
+    ]
+    submission_type = models.CharField(max_length=10, choices=SUBMISSION_TYPE_CHOICES, default='file')
 
     @property
     def name(self):

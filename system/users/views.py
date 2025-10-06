@@ -553,16 +553,17 @@ def unverify_user(request, id):
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
 
 
+from django.http import HttpResponseRedirect
+from django.urls import reverse
+
 # Delete user view with confirmation
 @login_required
 @role_required(allowed_roles=["VP", "DIRECTOR"])
 def delete_user(request, id):
     User = get_user_model()
     user = get_object_or_404(User, id=id)
-    if request.method == "POST":
-        user.delete()
-        return redirect('manage_user')
-    return render(request, 'users/confirm_delete_user.html', {'user': user})
+    user.delete()
+    return HttpResponseRedirect(reverse('manage_user'))
 
 ####################################################################################################
 

@@ -394,7 +394,7 @@
                                     </svg>
                                     Edit
                                 </a>
-                                <a class="options-item delete-option" href="{% url 'delete_agenda' agenda.id %}" title="Delete Agenda">
+                                <a href="#" class="options-item delete-option delete-modal-link" data-delete-url="{% url 'delete_agenda' agenda.id %}" data-agenda-name="{{ agenda.name }}" style="color:#DC2626;">
                                     <svg viewBox="0 0 24 24" fill="currentColor">
                                         <polyline points="3,6 5,6 21,6"></polyline>
                                         <path d="m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
@@ -484,7 +484,47 @@
 </svg>
 
 
+<!-- Delete Confirmation Modal -->
+<div id="deleteAgendaModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.18);z-index:9999;align-items:center;justify-content:center;">
+    <div style="background:white;padding:2rem 2.5rem;border-radius:16px;box-shadow:0 4px 32px rgba(0,0,0,0.18);max-width:350px;margin:auto;display:flex;flex-direction:column;align-items:center;">
+        <div style="font-size:1.25rem;font-weight:600;color:#E53E3E;margin-bottom:1rem;">Confirm Deletion</div>
+        <div id="deleteAgendaModalMsg" style="font-size:1rem;color:#444;margin-bottom:2rem;text-align:center;"></div>
+        <div style="display:flex;gap:1rem;">
+            <button id="cancelDeleteAgendaBtn" style="background:#e5e7eb;color:#374151;padding:0.75rem 1.5rem;border-radius:8px;font-size:1rem;font-weight:500;border:none; cursor:pointer">Cancel</button>
+            <button id="confirmDeleteAgendaBtn" style="background:#E53E3E;color:white;padding:0.75rem 1.5rem;border-radius:8px;font-size:1rem;font-weight:500;border:none; cursor:pointer">Delete</button>
+        </div>
+    </div>
+</div>
+
+
 <script>
+    // Agenda Delete confirmation modal logic
+    let agendaDeleteUrl = '';
+    document.querySelectorAll('.delete-modal-link').forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            agendaDeleteUrl = link.getAttribute('data-delete-url');
+            var agendaName = link.getAttribute('data-agenda-name');
+            document.getElementById('deleteAgendaModalMsg').innerHTML = 'Are you sure you want to delete the agenda <strong>' + agendaName + '</strong>? This action cannot be undone.';
+            document.getElementById('deleteAgendaModal').style.display = 'flex';
+        });
+    });
+    document.getElementById('cancelDeleteAgendaBtn').onclick = function() {
+        document.getElementById('deleteAgendaModal').style.display = 'none';
+        agendaDeleteUrl = '';
+    };
+    document.getElementById('confirmDeleteAgendaBtn').onclick = function() {
+        if (agendaDeleteUrl) {
+            window.location.href = agendaDeleteUrl;
+        }
+    };
+    // Hide modal when clicking outside
+    document.getElementById('deleteAgendaModal').addEventListener('mousedown', function(e) {
+        if (e.target === this) {
+            this.style.display = 'none';
+            agendaDeleteUrl = '';
+        }
+    });
     // Card click handler that ignores clicks on options
     function cardClick(event, id) {
         if (event.target.closest('.agenda-card-kebab')) {

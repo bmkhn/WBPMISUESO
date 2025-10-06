@@ -495,7 +495,7 @@
                             <div class="settings-dropdown-menu">
                                 <a href="{% url 'downloadable_download' downloadable.id %}" class="settings-dropdown-item" style="color:#0A6C44;">
                                     <svg width="18" height="19"><use href="#download-icon" /></svg>Download</a>
-                                <a href="{% url 'downloadable_delete' downloadable.id %}" class="settings-dropdown-item" style="color:#E53E3E;">
+                                <a href="#" class="settings-dropdown-item delete-link" data-delete-url="{% url 'downloadable_delete' downloadable.id %}" style="color:#E53E3E;">
                                     <svg width="18" height="22"><use href="#delete-icon" /></svg>Delete</a>
                                 {% if downloadable.status == 'archived' %}
                                     <a href="{% url 'downloadable_unarchive' downloadable.id %}" class="settings-dropdown-item" style="color:#F4A261;">
@@ -551,6 +551,19 @@
 		</div>
 	</div>
 
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.18);z-index:9999;align-items:center;justify-content:center;">
+    <div style="background:white;padding:2rem 2.5rem;border-radius:16px;box-shadow:0 4px 32px rgba(0,0,0,0.18);max-width:350px;margin:auto;display:flex;flex-direction:column;align-items:center;">
+        <div style="font-size:1.25rem;font-weight:600;color:#E53E3E;margin-bottom:1rem;">Confirm Deletion</div>
+        <div style="font-size:1rem;color:#444;margin-bottom:2rem;text-align:center;">Are you sure you want to delete this file? This action cannot be undone.</div>
+        <div style="display:flex;gap:1rem;">
+            <button id="cancelDeleteBtn" style="background:#e5e7eb;color:#374151;padding:0.75rem 1.5rem;border-radius:8px;font-size:1rem;font-weight:500;border:none;cursor:pointer;">Cancel</button>
+            <button id="confirmDeleteBtn" style="background:#E53E3E;color:white;padding:0.75rem 1.5rem;border-radius:8px;font-size:1rem;font-weight:500;border:none;cursor:pointer;">Delete</button>
+        </div>
+    </div>
+</div>
+
 <!-- SVG Sprite Section -->
 <svg style="display:none;">
     
@@ -603,6 +616,31 @@
 </svg>
 
 <script>
+    // Delete confirmation modal logic
+    let deleteUrl = '';
+    document.querySelectorAll('.delete-link').forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            deleteUrl = link.getAttribute('data-delete-url');
+            document.getElementById('deleteModal').style.display = 'flex';
+        });
+    });
+    document.getElementById('cancelDeleteBtn').onclick = function() {
+        document.getElementById('deleteModal').style.display = 'none';
+        deleteUrl = '';
+    };
+    document.getElementById('confirmDeleteBtn').onclick = function() {
+        if (deleteUrl) {
+            window.location.href = deleteUrl;
+        }
+    };
+    // Hide modal when clicking outside
+    document.getElementById('deleteModal').addEventListener('mousedown', function(e) {
+        if (e.target === this) {
+            this.style.display = 'none';
+            deleteUrl = '';
+        }
+    });
     document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.settings-dropdown-toggle').forEach(function(btn) {
             btn.addEventListener('click', function(e) {

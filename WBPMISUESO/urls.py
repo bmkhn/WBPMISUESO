@@ -30,7 +30,7 @@ urlpatterns = [
     path('dashboard/', include('internal.dashboard.urls')),         # Dashboard
     path('experts/', include('internal.experts.urls')),             # Experts
     path('goals/', include('internal.goals.urls')),                 # Goals
-    # Submission (None Yet)
+    path('submissions/', include('internal.submissions.urls')),     # Submissions
 
     # SHARED APPS
     path('about-us/', include('shared.about_us.urls')),             # About Us

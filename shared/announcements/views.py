@@ -2,6 +2,7 @@ from django.http import HttpResponseRedirect
 from django.core.paginator import Paginator
 from django.shortcuts import redirect, render
 from django.contrib.auth.decorators import login_required
+from django.urls import reverse
 from shared.announcements.forms import AnnouncementForm
 from system.users.decorators import role_required
 from django.shortcuts import get_object_or_404
@@ -443,11 +444,8 @@ def edit_announcement_view(request, id):
 def delete_announcement_view(request, id):
     from .models import Announcement
     announcement = get_object_or_404(Announcement, id=id)
-    if request.method == 'POST':
-        announcement.delete()
-        return redirect('announcement_dispatcher')
-    return render(request, 'announcements/delete_confirm.html', {"announcement": announcement})
-
+    announcement.delete()
+    return HttpResponseRedirect(reverse('announcement_dispatcher'))
 
 # Archive Announcement View
 @login_required

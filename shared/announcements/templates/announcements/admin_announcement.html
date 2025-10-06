@@ -542,9 +542,11 @@
 						</button>
 						<div class="options-dropdown" id="options-{{ announcement.id }}">
 							<a class="options-item edit-option" href="{% url 'announcement_edit' announcement.id %}" style="text-decoration: none;">
-								<svg width="16" height="16"><use href="#edit-icon"></use></svg>Edit</a>
-							<a class="options-item delete-option" href="{% url 'announcement_delete' announcement.id %}" style="text-decoration: none;">
-								<svg width="16" height="16"><use href="#delete-icon"></use></svg>Delete</a>
+								<svg width="16" height="16"><use href="#edit-icon"></use></svg>Edit
+							</a>
+							<a href="#" class="options-item delete-option delete-modal-link" data-delete-url="{% url 'announcement_delete' announcement.id %}" data-announcement-title="{{ announcement.title }}" style="color:#DC2626;text-decoration:none;">
+								<svg width="16" height="16"><use href="#delete-icon"></use></svg>Delete
+							</a>
 							{% if not announcement.archived %}
 							<a class="options-item" href="{% url 'announcement_archive' announcement.id %}" style="color:#F4A261;text-decoration:none;">
 								<svg width="16" height="16"><use href="#archive-icon"></use></svg>Archive
@@ -651,10 +653,49 @@
         <path d="M0 2C0 1.46957 0.210714 0.960859 0.585786 0.585786C0.960859 0.210714 1.46957 0 2 0H18C18.5304 0 19.0391 0.210714 19.4142 0.585786C19.7893 0.960859 20 1.46957 20 2C20 2.53043 19.7893 3.03914 19.4142 3.41421C19.0391 3.78929 18.5304 4 18 4H2C1.46957 4 0.960859 3.78929 0.585786 3.41421C0.210714 3.03914 0 2.53043 0 2ZM17 6C17.513 6 17.936 6.463 17.993 7.06L18 7.2V14.4C18 16.317 16.751 17.884 15.176 17.994L15 18H5C3.402 18 2.096 16.501 2.005 14.612L2 14.4V7.2C2 6.537 2.448 6 3 6H17ZM12 8H8L7.883 8.007C7.63995 8.03591 7.41594 8.15296 7.25341 8.33597C7.09088 8.51897 7.00111 8.75524 7.00111 9C7.00111 9.24476 7.09088 9.48103 7.25341 9.66403C7.41594 9.84704 7.63995 9.96409 7.883 9.993L8 10H12L12.117 9.993C12.36 9.96409 C12.5841,9 .84704,12.7466 9.66403C12.9091 9.48103 12.9989 9.24476 12.9989 9C12.9989 8.75524 12.9091 8.51897 12.7466 8.33597C12.5841 8.15296 12.36 8.03591 12.117 8.007L12 8Z" fill="#F4A261"/>
     </symbol>
 
-
 </svg>
 
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteAnnouncementModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.18);z-index:9999;align-items:center;justify-content:center;">
+	<div style="background:white;padding:2rem 2.5rem;border-radius:16px;box-shadow:0 4px 32px rgba(0,0,0,0.18);max-width:350px;margin:auto;display:flex;flex-direction:column;align-items:center;">
+		<div style="font-size:1.25rem;font-weight:600;color:#E53E3E;margin-bottom:1rem;">Confirm Deletion</div>
+		<div id="deleteAnnouncementModalMsg" style="font-size:1rem;color:#444;margin-bottom:2rem;text-align:center;"></div>
+		<div style="display:flex;gap:1rem;">
+			<button id="cancelDeleteAnnouncementBtn" style="background:#e5e7eb;color:#374151;padding:0.75rem 1.5rem;border-radius:8px;font-size:1rem;font-weight:500;border:none;cursor:pointer;">Cancel</button>
+			<button id="confirmDeleteAnnouncementBtn" style="background:#E53E3E;color:white;padding:0.75rem 1.5rem;border-radius:8px;font-size:1rem;font-weight:500;border:none;cursor:pointer;">Delete</button>
+		</div>
+	</div>
+</div>
+
 <script>
+	// Announcement Delete confirmation modal logic
+	let announcementDeleteUrl = '';
+	document.querySelectorAll('.delete-modal-link').forEach(function(link) {
+		link.addEventListener('click', function(e) {
+			e.preventDefault();
+			announcementDeleteUrl = link.getAttribute('data-delete-url');
+			var announcementTitle = link.getAttribute('data-announcement-title');
+			document.getElementById('deleteAnnouncementModalMsg').innerHTML = 'Are you sure you want to delete the announcement <strong>' + announcementTitle + '</strong>? This action cannot be undone.';
+			document.getElementById('deleteAnnouncementModal').style.display = 'flex';
+		});
+	});
+	document.getElementById('cancelDeleteAnnouncementBtn').onclick = function() {
+		document.getElementById('deleteAnnouncementModal').style.display = 'none';
+		announcementDeleteUrl = '';
+	};
+	document.getElementById('confirmDeleteAnnouncementBtn').onclick = function() {
+		if (announcementDeleteUrl) {
+			window.location.href = announcementDeleteUrl;
+		}
+	};
+	// Hide modal when clicking outside
+	document.getElementById('deleteAnnouncementModal').addEventListener('mousedown', function(e) {
+		if (e.target === this) {
+			this.style.display = 'none';
+			announcementDeleteUrl = '';
+		}
+	});
        // Card click handler that ignores clicks on options
        function cardClick(event, id) {
 	       if (event.target.closest('.announce-options')) {

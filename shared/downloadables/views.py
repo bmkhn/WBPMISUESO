@@ -296,19 +296,29 @@ def admin_downloadable(request):
 @role_required(allowed_roles=["UESO", "DIRECTOR", "VP"])
 def add_downloadable(request):
     error = None
+    from .models import Downloadable
+    submission_type_choices = Downloadable.SUBMISSION_TYPE_CHOICES
     if request.method == 'POST':
         form = DownloadableForm(request.POST, request.FILES)
         if form.is_valid():
             try:
-                form.save()
-                return render(request, 'downloadables/add_downloadable.html', {'form': DownloadableForm(), 'success': True})
+                downloadable = form.save(commit=False)
+                downloadable.uploaded_by = request.user
+                # Handle is_submission_template and submission_type from POST
+                is_submission_template = request.POST.get('is_submission_template')
+                downloadable.is_submission_template = bool(is_submission_template)
+                submission_type = request.POST.get('submission_type')
+                if submission_type in dict(downloadable.SUBMISSION_TYPE_CHOICES):
+                    downloadable.submission_type = submission_type
+                downloadable.save()
+                return render(request, 'downloadables/add_downloadable.html', {'form': DownloadableForm(), 'success': True, 'submission_type_choices': submission_type_choices})
             except Exception as e:
                 error = str(e)
         else:
             error = form.errors.get('file', [''])[0] or 'Please correct the errors below.'
     else:
         form = DownloadableForm()
-    return render(request, 'downloadables/add_downloadable.html', {'form': form, 'error': error})
+    return render(request, 'downloadables/add_downloadable.html', {'form': form, 'error': error, 'submission_type_choices': submission_type_choices})
 
 
 # Download file

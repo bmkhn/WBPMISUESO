@@ -49,7 +49,7 @@ INSTALLED_APPS = [
     'internal.dashboard',       # Dashboard
     'internal.experts',         # Experts
     'internal.goals',           # Goals
-    # 'internal.submissions',     # Submissions
+    'internal.submissions',     # Submissions
 
     # Shared Apps
     'shared.about_us',          # About Us

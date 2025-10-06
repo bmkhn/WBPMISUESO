@@ -76,14 +76,6 @@ def edit_agenda_view(request, agenda_id):
 @user_confirmed
 @role_required(allowed_roles=["VP", "DIRECTOR"])
 def delete_agenda_view(request, agenda_id):
-    try:
-        agenda = Agenda.objects.get(id=agenda_id)
-    except Agenda.DoesNotExist:
-        return render(request, 'agenda/agenda.html', {'agendas': Agenda.objects.all(), 'error': 'Agenda not found.'})
-
-    if request.method == 'POST':
-        agenda.delete()
-        return HttpResponseRedirect(reverse('agenda'))
-    else:
-        # Show confirmation dialog
-        return render(request, 'agenda/delete_agenda.html', {'agenda': agenda})
+    agenda = Agenda.objects.get(id=agenda_id)
+    agenda.delete()
+    return HttpResponseRedirect(reverse('agenda'))

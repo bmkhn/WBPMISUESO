@@ -10,6 +10,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
 
 <style>
+	.required {
+		color: #E53E3E;
+	}
+
     .success-message {
 		color: green; 
 		margin-bottom: 1rem;
@@ -216,17 +220,17 @@
             {% csrf_token %}
 
             <div class="form-group">
-                <label class="form-label" for="id_name">Name:</label>
+                <label class="form-label" for="id_name">Name: <span class="required">*</span></label>
                 <input class="form-input" type="text" name="name" id="id_name" value="{{ form.name.value|default:'' }}">
             </div>
 
             <div class="form-group">
-                <label class="form-label" for="id_description">Description:</label>
+                <label class="form-label" for="id_description">Description: <span class="required">*</span></label>
                 <textarea class="form-input form-textarea" name="description" id="id_description">{{ form.description.value|default:'' }}</textarea>
             </div>
 
             <div class="form-group">
-                <label class="form-label">Concerned Colleges:</label>
+                <label class="form-label">Concerned Colleges: <span class="required">*</span></label>
 				<div id="college-tag-row" class="college-row">
 					<!-- Tags, add button, and hidden inputs will be rendered here by JS -->
 				</div>
