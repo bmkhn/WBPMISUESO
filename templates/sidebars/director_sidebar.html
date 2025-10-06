@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
 
+
 <style>
 	body {
 		margin: 0;
@@ -172,11 +173,12 @@
 		transition: background 0.2s;
 	}
 
-	.topbar-profile-icon { 
-		background-color: black; 
+	.topbar-button:last-child {
+		width: 35px;
+		height: 35px;
 	}
-
 </style>
+
 </head>
 
 <body>
@@ -199,30 +201,37 @@
 				<svg class="sidebar-tab-icon" width="20" height="20"><use href="#icon-dashboard"/></svg>
 				<span class="table-text">Dashboard</span>
 			</a>
-			<a href="/projects/" class="sidebar-tab {% if '/projects/' in request.path %}active{% endif %}">
+
+			<a href="{% url 'project_dispatcher' %}" class="sidebar-tab {% if '/projects/' in request.path %}active{% endif %}">
 				<svg class="sidebar-tab-icon" width="22" height="21"><use href="#icon-projects"/></svg>
 				<span class="table-text">Projects</span>
 			</a>
-			<a href="/submission/" class="sidebar-tab {% if '/submission/' in request.path %}active{% endif %}">
+
+			<a href="{% url 'submissions_admin' %}" class="sidebar-tab {% if '/submissions/' in request.path %}active{% endif %}">
 				<svg class="sidebar-tab-icon" width="20" height="24"><use href="#icon-submission"/></svg>
-				<span class="table-text">Submission</span>
+				<span class="table-text">Submissions</span>
 			</a>
+
 			<a href="{% url 'experts' %}" class="sidebar-tab {% if '/experts/' in request.path %}active{% endif %}">
 				<svg class="sidebar-tab-icon" width="25" height="23"><use href="#icon-experts"/></svg>
 				<span class="table-text">Experts</span>
 			</a>
+
 			<a href="{% url 'calendar' %}" class="sidebar-tab {% if '/calendar/' in request.path %}active{% endif %}">
 				<svg class="sidebar-tab-icon" width="24" height="24"><use href="#icon-calendar"/></svg>
 				<span class="table-text">Calendar</span>
 			</a>
+
 			<a href="/analytics/" class="sidebar-tab {% if '/analytics/' in request.path %}active{% endif %}">
 				<svg class="sidebar-tab-icon" width="22" height="20"><use href="#icon-analytics"/></svg>
 				<span class="table-text">Analytics</span>
 			</a>
+
 			<a href="{% url 'agenda' %}" class="sidebar-tab {% if '/agenda/' in request.path %}active{% endif %}">
 				<svg class="sidebar-tab-icon" width="26" height="20"><use href="#icon-agenda"/></svg>
 				<span class="table-text">Agenda</span>
 			</a>
+
 			<a href="{% url 'goal' %}" class="sidebar-tab {% if '/goals/' in request.path %}active{% endif %}">
 				<svg class="sidebar-tab-icon" width="22" height="24"><use href="#icon-goals"/></svg>
 				<span class="table-text">Goals</span>
@@ -235,19 +244,23 @@
 				<svg class="sidebar-tab-icon" width="23" height="18"><use href="#icon-announcements"/></svg>
 				<span class="table-text">Announcements</span>
 			</a>
+
 			<a href="/archive/" class="sidebar-tab {% if '/archive/' in request.path %}active{% endif %}">
 				<svg class="sidebar-tab-icon" width="25" height="23"><use href="#icon-archive"/></svg>
 				<span class="table-text">Archive</span>
 			</a>
+
 			<a href="/budget/" class="sidebar-tab {% if '/budget/' in request.path %}active{% endif %}">
 				<svg class="sidebar-tab-icon" width="22" height="23"><use href="#icon-budget"/></svg>
 				<span class="table-text">Budget</span>
 			</a>
-			<a href="/about-us/" class="sidebar-tab {% if '/about-us/' in request.path %}active{% endif %}">
+
+			<a href="{% url 'about_us_dispatcher' %}" class="sidebar-tab {% if '/about-us/' in request.path %}active{% endif %}">
 				<svg class="sidebar-tab-icon" width="22" height="21"><use href="#icon-aboutus"/></svg>
 				<span class="table-text">About Us</span>
 			</a>
-			<a href="/downloadables/" class="sidebar-tab {% if '/downloadables/' in request.path %}active{% endif %}">
+
+			<a href="{% url 'downloadable_dispatcher' %}" class="sidebar-tab {% if '/downloadables/' in request.path %}active{% endif %}">
 				<svg class="sidebar-tab-icon" width="20" height="24"><use href="#icon-downloadables"/></svg>
 				<span class="table-text">Downloadables</span>
 			</a>
@@ -255,22 +268,26 @@
 			<!-- Other -->
 			<div class="sidebar-tab-group-label">OTHER</div>
 
-			<a href="/users/" class="sidebar-tab {% if '/users/' in request.path %}active{% endif %}">
+			<a href="{% url 'manage_user' %}" class="sidebar-tab {% if '/users/' in request.path %}active{% endif %}">
 				<svg class="sidebar-tab-icon" width="25" height="24"><use href="#icon-manageuser"/></svg>
 				<span class="table-text">Manage User</span>
 			</a>
-			<a href="/logs/" class="sidebar-tab {% if '/logs/' in request.path %}active{% endif %}">
+
+			<a href="{% url 'logs' %}" class="sidebar-tab {% if '/logs/' in request.path %}active{% endif %}">
 				<svg class="sidebar-tab-icon" width="26" height="18"><use href="#icon-logs"/></svg>
 				<span class="table-text">Logs</span>
-			</a>			
-			<a href="/inbox/" class="sidebar-tab {% if '/inbox/' in request.path %}active{% endif %}">
+			</a>
+
+			<a href="{% url 'inbox' %}" class="sidebar-tab {% if '/inbox/' in request.path %}active{% endif %}">
 				<svg class="sidebar-tab-icon" width="25" height="20"><use href="#icon-inbox"/></svg>
 				<span class="table-text">Inbox</span>
 			</a>
+
 			<a href="/notification/" class="sidebar-tab {% if '/notification/' in request.path %}active{% endif %}">
 				<svg class="sidebar-tab-icon" width="20" height="24"><use href="#icon-notification"/></svg>
 				<span class="table-text">Notification</span>
 			</a>
+
 			<a href="/settings/" class="sidebar-tab {% if '/settings/' in request.path %}active{% endif %}">
 				<svg class="sidebar-tab-icon" width="26" height="25"><use href="#icon-settings"/></svg>
 				<span class="table-text">Settings</span>
@@ -279,7 +296,7 @@
 
 		<!-- Logout -->
 		<div class="sidebar-logout">
-			<a href="/logout/" class="sidebar-tab">
+			<a href="{% url 'logout' %}" class="sidebar-tab">
 				<svg class="sidebar-tab-icon" width="20" height="20"><use href="#icon-logout"/></svg>
 				<span class="table-text">Log Out</span>
 			</a>
@@ -290,7 +307,9 @@
 	<div class="topbar">
 		<svg class="topbar-button" width="30" height="30"><use href="#icon-topbar-notification"/></svg>
 		<svg class="topbar-button" width="30" height="30"><use href="#icon-topbar-settings"/></svg>
-		<div class="topbar-button topbar-profile-icon"></div>
+		<div class="topbar-button">
+			<img src="{{ request.user.profile_picture_or_initial }}" alt="Profile Picture" style="object-fit:cover;width:35px;height:35px;">
+		</div>
 	</div>
 
 
@@ -410,6 +429,40 @@
 
 </svg>
 
+</body>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+<style>
+	#backToTopBtn {
+		position: fixed;
+		bottom: 40px;
+		right: 40px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 50px;
+		height: 50px;
+		background-color: #333;
+		color: white;
+		border: none;
+		border-radius: 50%;
+		cursor: pointer;
+		opacity: 0;
+		visibility: hidden;
+		transition: opacity 0.4s ease, visibility 0.4s ease;
+		z-index: 1000;
+		background-color: #063A1C;
+	}
+
+	#backToTopBtn.show {
+		opacity: 1;
+		visibility: visible;
+	}
+</style>
+
+<button id="backToTopBtn"><i class="fa-solid fa-up-long"></i></button>
+
 <script>
 	const sidebar = document.getElementById("sidebar");
 	const handle = sidebar.querySelector(".resize-handle");
@@ -459,6 +512,54 @@
 	});
 </script>
 
-</body>
+<script>
+// Window scroll persistence for director sidebar page
+document.addEventListener('DOMContentLoaded', function() {
+	var scrollKey = 'windowScrollY_director';
+	// Restore scroll after DOM is ready
+	setTimeout(function() {
+		var scrollY = sessionStorage.getItem(scrollKey);
+		if (scrollY !== null) {
+			window.scrollTo(0, parseInt(scrollY));
+		}
+	}, 0);
+
+	// Save scroll on scroll event
+	window.addEventListener('scroll', function() {
+		sessionStorage.setItem(scrollKey, window.scrollY);
+	});
+
+	// Save scroll before navigation (for tab links in sidebar)
+	var sidebarContainer = document.querySelector('.sidebar-container');
+	if (sidebarContainer) {
+		sidebarContainer.querySelectorAll('a').forEach(function(link) {
+			link.addEventListener('mousedown', function() {
+				sessionStorage.setItem(scrollKey, window.scrollY);
+			});
+			link.addEventListener('keydown', function(e) {
+				if (e.key === 'Enter' || e.key === ' ') {
+					sessionStorage.setItem(scrollKey, window.scrollY);
+				}
+			});
+		});
+	}
+	
+	var backToTopBtn = document.getElementById('backToTopBtn');
+
+	function toggleBackToTop() {
+		if (window.scrollY > 200) {
+			backToTopBtn.classList.add('show');
+		} else {
+			backToTopBtn.classList.remove('show');
+		}
+	}
+
+	window.addEventListener('scroll', toggleBackToTop);
+
+	backToTopBtn.addEventListener('click', function() {
+		window.scrollTo({ top: 0, behavior: 'smooth' });
+	});
+});
+</script>
 
 </html>

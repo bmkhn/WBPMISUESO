@@ -124,28 +124,50 @@
 		background-color: #303030;
 	}
 
+	.logo-circle img:hover {
+		cursor: pointer;
+		transform: scale(1.05);
+	}
+
+	#profileModal a {
+		transition: background 0.18s, color 0.18s;
+	}
+	#profileModal a:hover {
+		background: #F2F4F8;
+		color: #0A6C44;
+	}
 </style>
+
 </head>
 <body>
 
 	<div class="outside-container">
 		<!-- Top Container -->
 		<div class="top-container">
-		<!-- Logo Container -->
-		<div class="logo-container">
-			<div class="logo-circle"></div>
-			<div class="title">University Extensions<br>Services Office</div>
-		</div>
+			<!-- Logo Container -->
+			<div class="logo-container">
+				<div class="logo-circle"></div>
+				<div class="title">University Extensions<br>Services Office</div>
+			</div>
 
-		<!-- Button Container -->
-		<div class="button-container">
-			<a href="{% url 'home' %}" class="nav-button {% if '/home/' in request.path %}active{% endif %}">Home</a>
-			<a href="{% url 'downloadable_dispatcher' %}" class="nav-button {% if '/downloadables/' in request.path %}active{% endif %}">Downloadables</a>
-			<a href="{% url 'announcement_dispatcher' %}" class="nav-button {% if '/announcements/' in request.path %}active{% endif %}">Announcements</a>
-			<a href="/archives/" class="nav-button {% if '/archives/' in request.path %}active{% endif %}">Archives</a>
-			<a href="/about-us/" class="nav-button {% if '/about-us/' in request.path %}active{% endif %}">About Us</a>
-			<div class="logo-circle"></div>
-		</div>
+			<!-- Button Container -->
+			<div class="button-container">
+				<a href="{% url 'home' %}" class="nav-button {% if '/home/' in request.path %}active{% endif %}">Home</a>
+				<a href="{% url 'downloadable_dispatcher' %}" class="nav-button {% if '/downloadables/' in request.path %}active{% endif %}">Downloadables</a>
+				<a href="{% url 'announcement_dispatcher' %}" class="nav-button {% if '/announcements/' in request.path %}active{% endif %}">Announcements</a>
+				<a href="/archives/" class="nav-button {% if '/archives/' in request.path %}active{% endif %}">Archives</a>
+				<a href="{% url 'about_us_dispatcher' %}" class="nav-button {% if '/about-us/' in request.path %}active{% endif %}">About Us</a>
+				
+				<!-- Profile Picture Modal -->
+				<div class="logo-circle" id="profilePicContainer" style="position:relative;">
+					<img src="{{ request.user.profile_picture_or_initial }}" alt="Profile Picture" class="logo-circle" id="profilePic" style="object-fit: cover; cursor:pointer;">
+					<div id="profileModal" style="display:none; position:absolute; top:90px; right:0; background:#fff; border-radius:12px; box-shadow:0 8px 32px rgba(0,0,0,0.18); min-width:180px; z-index:1000; border:1px solid #e5e7eb; overflow:hidden;">
+						<a href="/profile/" style="display:block; padding:14px 24px; color:#222; text-decoration:none; font-family:'Inter',sans-serif; font-size:15px; border-bottom:1px solid #eee;">Profile</a>
+						<a href="/settings/" style="display:block; padding:14px 24px; color:#222; text-decoration:none; font-family:'Inter',sans-serif; font-size:15px; border-bottom:1px solid #eee;">Settings</a>
+						<a href="{% url 'logout' %}" style="display:block; padding:14px 24px; color:#E53E3E; text-decoration:none; font-family:'Inter',sans-serif; font-size:15px;">Log Out</a>
+					</div>
+				</div>
+			</div>
 		</div>
 
 		<!-- Bottom Container -->
@@ -157,5 +179,116 @@
 
 	</div>
 
+<script>
+	document.addEventListener('DOMContentLoaded', function() {
+		const profilePic = document.getElementById('profilePic');
+		const profileModal = document.getElementById('profileModal');
+		let modalOpen = false;
+		if (profilePic && profileModal) {
+			profilePic.addEventListener('click', function(e) {
+				e.stopPropagation();
+				profileModal.style.display = (profileModal.style.display === 'block') ? 'none' : 'block';
+				modalOpen = profileModal.style.display === 'block';
+			});
+			document.addEventListener('mousedown', function(e) {
+				if (modalOpen && !profileModal.contains(e.target) && e.target !== profilePic) {
+					profileModal.style.display = 'none';
+					modalOpen = false;
+				}
+			});
+			// Hide modal on option click
+			profileModal.querySelectorAll('a').forEach(function(link) {
+				link.addEventListener('click', function() {
+					profileModal.style.display = 'none';
+					modalOpen = false;
+				});
+			});
+		}
+	});
+</script>
+
 </body>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+<style>
+	#backToTopBtn {
+		position: fixed;
+		bottom: 40px;
+		right: 40px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 50px;
+		height: 50px;
+		background-color: #333;
+		color: white;
+		border: none;
+		border-radius: 50%;
+		cursor: pointer;
+		opacity: 0;
+		visibility: hidden;
+		transition: opacity 0.4s ease, visibility 0.4s ease;
+		z-index: 1000;
+		background-color: #063A1C;
+	}
+
+	#backToTopBtn.show {
+		opacity: 1;
+		visibility: visible;
+	}
+</style>
+
+<button id="backToTopBtn"><i class="fa-solid fa-up-long"></i></button>
+
+<script>
+	// Window scroll persistence for director sidebar page
+	document.addEventListener('DOMContentLoaded', function() {
+		var scrollKey = 'windowScrollY_director';
+		// Restore scroll after DOM is ready
+		setTimeout(function() {
+			var scrollY = sessionStorage.getItem(scrollKey);
+			if (scrollY !== null) {
+				window.scrollTo(0, parseInt(scrollY));
+			}
+		}, 0);
+
+		// Save scroll on scroll event
+		window.addEventListener('scroll', function() {
+			sessionStorage.setItem(scrollKey, window.scrollY);
+		});
+
+		// Save scroll before navigation (for tab links in sidebar)
+		var sidebarContainer = document.querySelector('.sidebar-container');
+		if (sidebarContainer) {
+			sidebarContainer.querySelectorAll('a').forEach(function(link) {
+				link.addEventListener('mousedown', function() {
+					sessionStorage.setItem(scrollKey, window.scrollY);
+				});
+				link.addEventListener('keydown', function(e) {
+					if (e.key === 'Enter' || e.key === ' ') {
+						sessionStorage.setItem(scrollKey, window.scrollY);
+					}
+				});
+			});
+		}
+		
+		var backToTopBtn = document.getElementById('backToTopBtn');
+
+		function toggleBackToTop() {
+			if (window.scrollY > 200) {
+				backToTopBtn.classList.add('show');
+			} else {
+				backToTopBtn.classList.remove('show');
+			}
+		}
+
+		window.addEventListener('scroll', toggleBackToTop);
+
+		backToTopBtn.addEventListener('click', function() {
+			window.scrollTo({ top: 0, behavior: 'smooth' });
+		});
+	});
+</script>
+
 </html>
