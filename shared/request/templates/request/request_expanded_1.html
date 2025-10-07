@@ -1,6 +1,3 @@
-{% extends "base_public.html" %}
-{% block content %}
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -30,9 +27,117 @@
       flex-direction: column;
     }
 
+    .top-container {
+      width: 100%;
+      height: 115px;
+      background-color: #F7F3F1;
+      padding: 0 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .logo-circle {
+      width: 75px;
+      height: 75px;
+      border-radius: 100%;
+      background-color: #ccc;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .logo-circle img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .title {
+      font-family: 'Instrument Sans', sans-serif;
+      font-size: 21px;
+      font-weight: bold;
+      color: #000;
+    }
+
+    .button-container {
+      display: flex;
+      gap: 30px;
+      align-items: center;
+    }
+
+    .nav-button {
+      font-family: 'Inter', sans-serif;
+      color: #404040;
+      font-size: 18px;
+      line-height: 38px;
+      font-weight: 600;
+      padding: 10px 20px;
+      border-radius: 4px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .nav-button:hover {
+      background-color: #000;
+      color: #fff;
+    }
+
+    .profile-circle {
+      width: 50px;
+      height: 50px;
+      border-radius: 100%;
+      background-color: #ddd;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .profile-circle img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .bottom-container {
+      background-color: black;
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      height: 40px;
+    }
+
+    .bottom-nav-button {
+      font-family: 'Inter', sans-serif;
+      color: #FFFFFF;
+      padding: 0 15px;
+      font-size: 12px;
+      line-height: 20px;
+      font-weight: 600;
+      background: none;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .bottom-nav-button:hover {
+      background-color: #191919;
+    }
+
     /* Main Content Layout */
     .content-wrapper {
       display: flex;
+      min-height: calc(100vh - 155px);
     }
 
     /* Left Sidebar */
@@ -220,6 +325,34 @@
 <body>
 
   <div class="main-container">
+    <!-- Top Container -->
+    <div class="top-container">
+      <!-- Logo Container -->
+      <div class="logo-container">
+        <div class="logo-circle">
+          {% load static %}
+          <img src="{% static 'ueso.png' %}" alt="UESO Logo">
+        </div>
+        <div class="title">University Extensions<br>Services Office</div>
+      </div>
+
+      <!-- Button Container -->
+      <div class="button-container">
+        <button class="nav-button">Home</button>
+        <button class="nav-button">Downloadables</button>
+        <button class="nav-button">Announcements</button>
+        <button class="nav-button">Archives</button>
+        <button class="nav-button">About Us</button>
+        <div class="profile-circle">
+          <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" alt="Profile">
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Container -->
+    <div class="bottom-container">
+        <button class="bottom-nav-button">Request</button>
+    </div>
 
     <!-- Main Content Wrapper -->
     <div class="content-wrapper">
@@ -293,5 +426,3 @@
 
 </body>
 </html>
-
-{% endblock %}

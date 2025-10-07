@@ -48,7 +48,7 @@ def submission_admin_view(request):
         submissions = submissions.order_by(sort_field)
 
     # Filter Options
-    all_statuses = [status[1] for status in SubmissionRequirement.STATUS_CHOICES]
+    all_statuses = [status[1] for status in SubmissionRequirement.SUBMISSION_STATUS_CHOICES]
     all_forms = Downloadable.objects.filter(is_submission_template=True)
 
     # Pagination

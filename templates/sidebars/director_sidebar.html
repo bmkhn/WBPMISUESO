@@ -212,6 +212,11 @@
 				<span class="table-text">Submissions</span>
 			</a>
 
+			<a href="{% url 'request_dispatcher' %}" class="sidebar-tab {% if '/requests/' in request.path %}active{% endif %}">
+				<svg class="sidebar-tab-icon" width="25" height="20"><use href="#icon-inbox"/></svg>
+				<span class="table-text">Requests</span>
+			</a>
+
 			<a href="{% url 'experts' %}" class="sidebar-tab {% if '/experts/' in request.path %}active{% endif %}">
 				<svg class="sidebar-tab-icon" width="25" height="23"><use href="#icon-experts"/></svg>
 				<span class="table-text">Experts</span>
@@ -273,14 +278,14 @@
 				<span class="table-text">Manage User</span>
 			</a>
 
+			<a href="" class="sidebar-tab {% if '/exports/' in request.path %}active{% endif %}">
+				<svg class="sidebar-tab-icon" width="25" height="20"><use href="#icon-inbox"/></svg>
+				<span class="table-text">Exports</span>
+			</a>
+
 			<a href="{% url 'logs' %}" class="sidebar-tab {% if '/logs/' in request.path %}active{% endif %}">
 				<svg class="sidebar-tab-icon" width="26" height="18"><use href="#icon-logs"/></svg>
 				<span class="table-text">Logs</span>
-			</a>
-
-			<a href="{% url 'inbox' %}" class="sidebar-tab {% if '/inbox/' in request.path %}active{% endif %}">
-				<svg class="sidebar-tab-icon" width="25" height="20"><use href="#icon-inbox"/></svg>
-				<span class="table-text">Inbox</span>
 			</a>
 
 			<a href="/notification/" class="sidebar-tab {% if '/notification/' in request.path %}active{% endif %}">

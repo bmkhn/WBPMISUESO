@@ -11,13 +11,13 @@ class SubmissionRequirement(models.Model):
 	notes = models.TextField(blank=True, null=True)
 	created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='created_submission_requirements')
 	created_at = models.DateTimeField(auto_now_add=True)
-	STATUS_CHOICES = [
+	SUBMISSION_STATUS_CHOICES = [
         ('PENDING', 'Pending'),
 		('REVIEWED', 'Reviewed'),
         ('COMPLETED', 'Completed'),
         ('OVERDUE', 'Overdue'),
     ]
-	status = models.CharField(max_length=32, choices=STATUS_CHOICES, default='PENDING')
+	status = models.CharField(max_length=32, choices=SUBMISSION_STATUS_CHOICES, default='PENDING')
 	reviewed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='reviewed_submission_requirements')
 	reviewed_at = models.DateTimeField(null=True, blank=True)
 

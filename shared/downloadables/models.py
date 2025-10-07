@@ -12,7 +12,7 @@ class Downloadable(models.Model):
             self.thumbnail.storage.delete(self.thumbnail.name)
         super().delete(*args, **kwargs)
 
-    STATUS_CHOICES = [
+    DOWNLOADABLES_STATUS_CHOICES = [
         ('published', 'Published'),
         ('archived', 'Archived'),
     ]
@@ -21,7 +21,7 @@ class Downloadable(models.Model):
     available_for_non_users = models.BooleanField(default=False, help_text="Available for non-logged-in users")
     uploaded_at = models.DateTimeField(auto_now_add=True)
     uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='uploaded_downloadables')
-    status = models.CharField(max_length=16, choices=STATUS_CHOICES, default='published')
+    status = models.CharField(max_length=16, choices=DOWNLOADABLES_STATUS_CHOICES, default='published')
     file_type = models.CharField(max_length=20, blank=True)
     is_submission_template = models.BooleanField(default=False, help_text="Used as a template for user submissions")
     SUBMISSION_TYPE_CHOICES = [

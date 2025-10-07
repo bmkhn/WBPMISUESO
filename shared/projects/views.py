@@ -245,13 +245,13 @@ def undo_cancel_project(request, pk):
     today = dtdate.today()
     if project.start_date and project.estimated_end_date:
         if project.start_date <= today <= project.estimated_end_date:
-            project.status = 'ONGOING'
+            project.status = 'IN_PROGRESS'
         elif today < project.start_date:
             project.status = 'NOT_STARTED'
         else:
             project.status = 'COMPLETED'
     else:
-        project.status = 'ONGOING'
+        project.status = 'IN_PROGRESS'
     project.save()
     return redirect(f'/projects/{pk}/overview/')
 

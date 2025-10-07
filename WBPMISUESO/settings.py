@@ -41,7 +41,6 @@ INSTALLED_APPS = [
 
     # External Apps
     'external.home',            # Home
-    'external.request',         # Request
 
     # Internal Apps
     'internal.agenda',          # Agenda
@@ -59,9 +58,10 @@ INSTALLED_APPS = [
     'shared.event_calendar',    # Calendar
     'shared.downloadables',     # Downloadables
     'shared.projects',          # Projects
+    'shared.request',           # Request
 
     # System Apps
-    'system.inbox',             # Inbox
+    'system.exports',         # Exports
     'system.logs',              # Logs
     'system.users',             # Custom User
 ]

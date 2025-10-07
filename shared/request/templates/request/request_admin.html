@@ -5,7 +5,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Projects</title>
+<title>Requests</title>
 
 <link href="https://fonts.googleapis.com/css?family=Inter:400,500,700&display=swap" rel="stylesheet">
 
@@ -37,7 +37,7 @@
         align-items: center;
     }
 
-    .project-text {
+    .request-text {
         font-family: 'Inter', sans-serif;
         font-weight: 400;
         font-size: 32px;
@@ -406,13 +406,7 @@
         <!-- Top Section -->
 		<div class="container-a">
             <div class="text-sort-container">
-                <div class="project-text">Projects</div>
-            </div>
-            <div class="button-container">
-                {% if request.user.role in ADMIN_ROLES %}
-                <a class="add-user-btn" href="{% url 'add_project' %}">Add Project</a>
-                {% endif %}
-                <button class="export-btn" id="exportProjectBtn" type="button">Export</button>
+                <div class="request-text">Requests</div>
             </div>
 		</div>
 
@@ -420,75 +414,32 @@
         <div class="search-container">
             <form class="search-bar" method="get" action="">
                 <svg width="20" height="20"> <use href="#icon-search"></use> </svg>
-                <input type="text" name="search" placeholder="Search by project title..." value="{{ search|default:'' }}"/>
+                <input type="text" name="search" placeholder="Search by title..." value="{{ search|default:'' }}"/>
                 <button type="button" id="filterBtn" style="background:none;border:none;padding:0;margin-right:5px;cursor:pointer;">
                     <svg width="20" height="20"> <use href="#icon-filter"></use> </svg>
                 </button>
                 <div id="filterDropdown" class="filter-dropdown">
-                    <div class="filter-grid" style="grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(2, 1fr);">
-                        <!-- Row 1 -->
+                    <div class="filter-grid" style="grid-template-columns: repeat(2, 1fr); grid-template-rows: 1fr;">
                         <label>Sort By
                             <select name="sort_by">
                                 <option value="title" {% if sort_by == 'title' %}selected{% endif %}>Title</option>
-                                <option value="last_updated" {% if sort_by == 'last_updated' %}selected{% endif %}>Last Updated</option>
-                                <option value="start_date" {% if sort_by == 'start_date' %}selected{% endif %}>Start Date</option>
-                                <option value="progress" {% if sort_by == 'progress' %}selected{% endif %}>Progress</option>
+                                <option value="submitted_at" {% if sort_by == 'submitted_at' %}selected{% endif %}>Date Submitted</option>
+                                <option value="submitted_by" {% if sort_by == 'submitted_by' %}selected{% endif %}>Submitted By</option>
+                                <option value="status" {% if sort_by == 'status' %}selected{% endif %}>Status</option>
                             </select>
                         </label>
-                        <label>Order By
+                        <label>Order
                             <select name="order">
                                 <option value="asc" {% if order == 'asc' %}selected{% endif %}>Ascending</option>
                                 <option value="desc" {% if order == 'desc' %}selected{% endif %}>Descending</option>
                             </select>
                         </label>
-                        <label>College (Leader)
-                            <select name="college">
-                                <option value="">All Colleges</option>
-                                {% for c in colleges %}
-                                <option value="{{ c.id }}" {% if college == c.id|stringformat:'s' %}selected{% endif %}>{{ c.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </label>
-                        <label>Campus (Leader)
-                            <select name="campus">
-                                <option value="">All Campuses</option>
-                                {% for c in campuses %}
-                                <option value="{{ c.0 }}" {% if campus == c.0 %}selected{% endif %}>{{ c.1 }}</option>
-                                {% endfor %}
-                            </select>
-                        </label>
-                        <label>Agenda
-                            <select name="agenda">
-                                <option value="">All Agendas</option>
-                                {% for a in agendas %}
-                                <option value="{{ a.id }}" {% if agenda == a.id|stringformat:'s' %}selected{% endif %}>{{ a.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </label>
-                        <!-- Row 2 -->
                         <label>Status
                             <select name="status">
                                 <option value="">All Statuses</option>
-                                {% for s in status_choices %}
+                                {% for s in all_statuses %}
                                 <option value="{{ s.0 }}" {% if status == s.0 %}selected{% endif %}>{{ s.1 }}</option>
                                 {% endfor %}
-                            </select>
-                        </label>
-                        <label>Year
-                            <select name="year">
-                                <option value="">All Years</option>
-                                {% for y in years %}
-                                <option value="{{ y }}" {% if year == y|stringformat:'s' %}selected{% endif %}>{{ y }}</option>
-                                {% endfor %}
-                            </select>
-                        </label>
-                        <label>Quarter
-                            <select name="quarter">
-                                <option value="">All Quarters</option>
-                                <option value="1" {% if quarter == '1' %}selected{% endif %}>Q1</option>
-                                <option value="2" {% if quarter == '2' %}selected{% endif %}>Q2</option>
-                                <option value="3" {% if quarter == '3' %}selected{% endif %}>Q3</option>
-                                <option value="4" {% if quarter == '4' %}selected{% endif %}>Q4</option>
                             </select>
                         </label>
                         <label>Date
@@ -508,31 +459,27 @@
             <thead>
                 <tr>
                     <th>Title</th>
-                    <th>Leader</th>
-                    <th>College/Unit</th>
-                    <th>Last Updated</th>
-                    <th>Start Date</th>
-                    <th>Progress</th>
+                    <th>Organization</th>
+                    <th>Date Submitted</th>
+                    <th>Submitted By</th>
                     <th>Status</th>
                 </tr>
             </thead>
             <tbody>
-                {% for project in projects %}
+                {% for request in requests %}
                 <tr>
                     <td>
-                        <a href="{% url 'project_profile' project.id %}" class="name-link" title="{{ project.title }}">
-                            {{ project.title|truncatechars:20 }}
+                        <a href="{% url 'request_details' request.id %}" class="name-link" title="{{ request.title }}">
+                            {{ request.title|truncatechars:20 }}
                         </a>
                     </td>
-                    <td>{{ project.project_leader.get_full_name }}</td>
-                    <td>{% if project.project_leader.college %}{{ project.project_leader.college.name }}{% else %}<em>-</em>{% endif %}</td>
-                    <td>{{ project.updated_at|date:"Y-m-d" }}</td>
-                    <td>{{ project.start_date|date:"Y-m-d" }}</td>
-                    <td>{{ project.progress_display }}</td>
-                    <td>{{ project.get_status_display }}</td>
+                    <td>{{ request.organization.name }}</td>
+                    <td>{{ request.submitted_at|date:"Y-m-d" }}</td>
+                    <td>{{ request.submitted_by.get_full_name }}</td>
+                    <td>{{ request.get_status_display }}</td>
                 </tr>
                 {% empty %}
-                <tr><td colspan="7" style="text-align:center;">No projects found.</td></tr>
+                <tr><td colspan="5" style="text-align:center;">No requests found.</td></tr>
                 {% endfor %}
             </tbody>
         </table>
@@ -571,22 +518,6 @@
 <!-- SVG Sprite Section -->
 <svg style="display:none;">
 
-    <!-- Delete -->
-    <symbol id="delete-icon" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-        <polyline points="3,6 5,6 21,6"></polyline>
-        <path d="m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
-    </symbol>
-
-    <!-- Settings -->
-    <symbol id="settings-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M2 4C1.45 4 0.979167 3.80417 0.5875 3.4125C0.195833 3.02083 0 2.55 0 2C0 1.45 0.195833 0.979167 0.5875 0.5875C0.979167 0.195833 1.45 0 2 0C2.55 0 3.02083 0.195833 3.4125 0.5875C3.80417 0.979167 4 1.45 4 2C4 2.55 3.80417 3.02083 3.4125 3.4125C3.02083 3.80417 2.55 4 2 4ZM8 4C7.45 4 6.97917 3.80417 6.5875 3.4125C6.19583 3.02083 6 2.55 6 2C6 1.45 6.19583 0.979167 6.5875 0.5875C6.97917 0.195833 7.45 0 8 0C8.55 0 9.02083 0.195833 9.4125 0.5875C9.80417 0.979167 10 1.45 10 2C10 2.55 9.80417 3.02083 9.4125 3.4125C9.02083 3.80417 8.55 4 8 4ZM14 4C13.45 4 12.9792 3.80417 12.5875 3.4125C12.1958 3.02083 12 2.55 12 2C12 1.45 12.1958 0.979167 12.5875 0.5875C12.9792 0.195833 13.45 0 14 0C14.55 0 15.0208 0.195833 15.4125 0.5875C15.8042 0.979167 16 1.45 16 2C16 2.55 15.8042 3.02083 15.4125 3.4125C15.0208 3.80417 14.55 4 14 4Z" fill="#1D1B20"/>
-    </symbol>
-
-    <!-- Sort -->
-    <symbol id="sort-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M9.97066 18.8067V1.13672M9.97066 1.13672L18.8057 9.97172M9.97066 1.13672L1.13566 9.97172" stroke="black" stroke-width="1.97904" stroke-linecap="round" stroke-linejoin="round"/>
-    </symbol>
-
     <!-- Dropdown -->
     <symbol id="dropdown-icon" viewBox="0 0 15 10" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M7.11427 6.46831L12.3293 1.25327C12.4265 1.15265 12.5427 1.07239 12.6713 1.01717C12.7998 0.961959 12.9381 0.932896 13.0779 0.93168C13.2178 0.930465 13.3566 0.957121 13.486 1.01009C13.6155 1.06307 13.7331 1.1413 13.8321 1.24022C13.931 1.33914 14.0092 1.45677 14.0622 1.58624C14.1152 1.71572 14.1418 1.85445 14.1406 1.99434C14.1394 2.13423 14.1103 2.27247 14.0551 2.40101C13.9999 2.52954 13.9196 2.6458 13.819 2.74298L7.85912 8.70287C7.66155 8.90038 7.39363 9.01133 7.11427 9.01133C6.8349 9.01133 6.56698 8.90038 6.36941 8.70287L0.409525 2.74298C0.308901 2.6458 0.228639 2.52954 0.173424 2.40101C0.118209 2.27247 0.089146 2.13423 0.0879304 1.99434C0.0867148 1.85445 0.113371 1.71572 0.166344 1.58624C0.219317 1.45677 0.297546 1.33914 0.396466 1.24022C0.495386 1.1413 0.613016 1.06307 0.742492 1.01009C0.871969 0.957121 1.0107 0.930465 1.15059 0.93168C1.29048 0.932896 1.42872 0.961959 1.55726 1.01717C1.68579 1.07239 1.80205 1.15265 1.89923 1.25327L7.11427 6.46831Z" fill="black"/>
@@ -602,49 +533,7 @@
 		<path opacity="0.9" d="M21.5399 1.92871H1.37988L9.44388 11.4644V18.0567L13.4759 20.0727V11.4644L21.5399 1.92871Z" stroke="#1E1E1E" stroke-width="2.016" stroke-linecap="round" stroke-linejoin="round"/>
 	</symbol>
 
-    <!-- Info Icon -->
-    <symbol id="info-icon" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M11 9V17M11 5V7M11 21C16.523 21 21 16.523 21 11C21 5.477 16.523 1 11 1C5.477 1 1 5.477 1 11C1 16.523 5.477 21 11 21Z" stroke="#00538E" stroke-width="2"/>
-    </symbol>
-
-	<!-- Edit -->
-	<symbol id="edit-icon" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-		<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-		<path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-	</symbol>
-
 </svg>
-
-<!-- Export Request Submitted Modal -->
-<div id="exportRequestModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.18);z-index:9999;align-items:center;justify-content:center;">
-    <div style="background:white;padding:2rem 2.5rem;border-radius:16px;box-shadow:0 4px 32px rgba(0,0,0,0.18);max-width:350px;margin:auto;display:flex;flex-direction:column;align-items:center;">
-        <div style="font-size:1.25rem;font-weight:600;color:#00538E;margin-bottom:1rem;">Export Request Submitted</div>
-        <div style="font-size:1rem;color:#444;margin-bottom:2rem;text-align:center;">Your export request has been submitted for approval.</div>
-        <div style="display:flex;gap:1rem;">
-            <button id="closeExportRequestModalBtn" style="background:#e5e7eb;color:#374151;padding:0.75rem 1.5rem;border-radius:8px;font-size:1rem;font-weight:500;border:none;cursor:pointer;">Close</button>
-        </div>
-    </div>
-</div>
-<script>
-function showExportRequestModal() {
-    var modal = document.getElementById('exportRequestModal');
-    if (modal) {
-        modal.style.display = 'flex';
-    }
-    var closeBtn = document.getElementById('closeExportRequestModalBtn');
-    if (closeBtn) {
-        closeBtn.onclick = function() {
-            modal.style.display = 'none';
-        };
-    }
-    // Optional: close modal on background click
-    modal.onclick = function(e) {
-        if (e.target === modal) {
-            modal.style.display = 'none';
-        }
-    };
-}
-</script>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -692,59 +581,6 @@ function showExportRequestModal() {
             filterDropdown.style.display = 'none';
         }
     });
-</script>
-
-<script>
-// Export button AJAX logic
-function getExportUrl() {
-    // Build the export URL with current querystring
-    var baseUrl = "{% url 'export_project' %}";
-    var query = "{{ querystring|escapejs }}";
-    return query ? baseUrl + "?" + query : baseUrl;
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    var exportBtn = document.getElementById('exportProjectBtn');
-    if (exportBtn) {
-        exportBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            var url = getExportUrl();
-            fetch(url, {
-                method: 'GET',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                },
-                credentials: 'same-origin',
-            })
-            .then(async response => {
-                if (response.status === 202) {
-                    showExportRequestModal();
-                } else if (response.ok) {
-                    // XLSX file download
-                    const blob = await response.blob();
-                    const disposition = response.headers.get('Content-Disposition');
-                    let filename = 'projects_export.xlsx';
-                    if (disposition && disposition.indexOf('filename=') !== -1) {
-                        filename = disposition.split('filename=')[1].replace(/\"/g, '').replace(/;/g, '').trim();
-                    }
-                    const link = document.createElement('a');
-                    link.href = window.URL.createObjectURL(blob);
-                    link.download = filename;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                } else {
-                    response.json().then(data => {
-                        alert(data.error || 'Export failed.');
-                    });
-                }
-            })
-            .catch(() => {
-                alert('Export failed.');
-            });
-        });
-    }
-});
 </script>
 
 </body>

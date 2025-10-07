@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class RequestConfig(AppConfig):
+class ExportsConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'external.request'
+    name = 'system.exports'

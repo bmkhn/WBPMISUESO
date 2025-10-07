@@ -50,7 +50,6 @@
         font-weight: 600; 
         padding: 0.35rem 0.6rem;
         margin-right: 0.5rem;
-        cursor: pointer;
     } 
 
     .agenda {
@@ -60,7 +59,6 @@
         font-weight: 500; 
         padding: 0.35rem 0.6rem;
         margin-right: 0.5rem;
-        cursor: pointer;
     } 
 
     .status {
@@ -70,7 +68,6 @@
         font-weight: 500; 
         padding: 0.35rem 0.6rem;
         margin-right: 0.5rem;
-        cursor: pointer;
     }  
 
     .tags {
@@ -376,7 +373,9 @@
             <div class="tags"> 
                 <content style="flex-grow: 2;"> 
                     <button class="campus">{{ project.project_leader.get_campus_display }}</button> 
+                    {% if project.agenda %}
                     <button class="agenda">{{ project.agenda.name }}</button> 
+                    {% endif %}
                 </content> 
                 <content style="flex-grow: 0;"> 
                     <button class="status">{{ project.get_status_display }}</button> 

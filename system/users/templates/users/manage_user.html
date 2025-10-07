@@ -410,7 +410,7 @@
             </div>
             <div class="button-container">
                 <a class="add-user-btn" href="{% url 'add_user' %}">Add User</a>
-                <button class="export-btn">Export</button>
+                <a class="export-btn" href="{% url 'export_manage_user' %}?{{ querystring|safe }}">Export</a>
             </div>
 		</div>
 
