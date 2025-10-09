@@ -4,6 +4,7 @@ from django.conf import settings
 # Create your models here.
 
 class ExportRequest(models.Model):
+    querystring = models.TextField(blank=True, default='')
     EXPORT_TYPE_CHOICES = [
         ('MANAGE_USER', 'Manage User'),
         ('PROJECT', 'Project'),

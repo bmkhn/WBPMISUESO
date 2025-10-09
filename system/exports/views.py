@@ -1,14 +1,17 @@
-from django.shortcuts import render
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from system.users.decorators import role_required
-from django.utils import timezone
 from django.core.paginator import Paginator
-from django.http import HttpResponse, JsonResponse
+from django.core.mail import EmailMultiAlternatives
+from django.http import FileResponse, HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404, render
+from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
+
 from .models import ExportRequest, can_export_direct, must_request_export
+from system.users.decorators import role_required
 from system.users.models import User
 from shared.projects.models import Project
-import csv
+
 import openpyxl
 from openpyxl.utils import get_column_letter
 from openpyxl.styles import Alignment
@@ -27,10 +30,19 @@ def exports_view(request):
     date = request.GET.get('date', '')
     search = request.GET.get('search', '').strip()
 
+
     # Apply filters
-    if status: requests = requests.filter(status__iexact=status)
-    if date: requests = requests.filter(deadline__date=date)
-    if search: requests = requests.filter(submitted_by__icontains=search)
+    if status:
+        requests = requests.filter(status__iexact=status)
+    if date:
+        requests = requests.filter(deadline__date=date)
+    if search:
+        from django.db.models import Q
+        requests = requests.filter(
+            Q(submitted_by__given_name__icontains=search) |
+            Q(submitted_by__last_name__icontains=search) |
+            Q(submitted_by__email__icontains=search)
+        )
 
     requests = requests.distinct()
 
@@ -67,6 +79,286 @@ def exports_view(request):
         'querystring': request.GET.urlencode().replace('&page='+str(page_obj.number), '') if page_obj else '',
     })
 
+
+########################################################################################################################
+
+
+@login_required
+@role_required(allowed_roles=["UESO", "VP", "DIRECTOR"])
+def approve_export_request(request, request_id):
+    try:
+        export_request = ExportRequest.objects.get(id=request_id, status='PENDING')
+    except ExportRequest.DoesNotExist:
+        return JsonResponse({'error': 'Export request not found or already processed.'}, status=404)
+    export_request.status = 'APPROVED'
+    export_request.save()
+
+    user = export_request.submitted_by
+    file_buffer = BytesIO()
+    filename = None
+    subject = None
+
+    # Build download link for the export_download view
+    from django.urls import reverse
+    scheme = 'https' if request.is_secure() else 'http'
+    domain = request.get_host()
+    download_path = reverse('export_download', args=[export_request.id])
+    download_url = f"{scheme}://{domain}{download_path}"
+
+    from urllib.parse import parse_qs
+    qs = parse_qs(export_request.querystring)
+
+    if export_request.type == 'PROJECT':
+        projects = Project.objects.all()
+        search = qs.get('search', [''])[0].strip()
+        sort_by = qs.get('sort_by', ['last_updated'])[0]
+        order = qs.get('order', ['desc'])[0]
+        college = qs.get('college', [''])[0]
+        campus = qs.get('campus', [''])[0]
+        agenda = qs.get('agenda', [''])[0]
+        status = qs.get('status', [''])[0]
+        year = qs.get('year', [''])[0]
+        quarter = qs.get('quarter', [''])[0]
+        date = qs.get('date', [''])[0]
+        if college:
+            projects = projects.filter(project_leader__college__id=college)
+        if campus:
+            projects = projects.filter(project_leader__campus=campus)
+        if agenda:
+            projects = projects.filter(agenda__id=agenda)
+        if status:
+            projects = projects.filter(status=status)
+        if year:
+            projects = projects.filter(start_date__year=year)
+        if quarter:
+            qmap = {'1': (1,3), '2': (4,6), '3': (7,9), '4': (10,12)}
+            if quarter in qmap:
+                start, end = qmap[quarter]
+                projects = projects.filter(start_date__month__gte=start, start_date__month__lte=end)
+        if date:
+            projects = projects.filter(start_date=date)
+        if search:
+            projects = projects.filter(title__icontains=search)
+        sort_map = {
+            'title': 'title',
+            'last_updated': 'updated_at',
+            'start_date': 'start_date',
+            'progress': '',
+        }
+        sort_field = sort_map.get(sort_by, 'title')
+        if sort_field:
+            if order == 'desc':
+                sort_field = '-' + sort_field
+            projects = projects.order_by(sort_field)
+        elif sort_by == 'progress':
+            projects = sorted(projects, key=lambda p: (p.progress[0] / p.progress[1]) if p.progress[1] else 0, reverse=(order=='desc'))
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Projects"
+        headers = [
+            'Title', 'Leader', 'College/Unit', 'Last Updated', 'Start Date', 'Progress', 'Status'
+        ]
+        ws.append(headers)
+        for p in projects:
+            ws.append([
+                p.title,
+                p.project_leader.get_full_name() if p.project_leader else '',
+                p.project_leader.college.name if p.project_leader and p.project_leader.college else '',
+                p.updated_at.strftime('%Y-%m-%d') if p.updated_at else '',
+                p.start_date.strftime('%Y-%m-%d') if p.start_date else '',
+                getattr(p, 'progress_display', ''),
+                p.get_status_display() if hasattr(p, 'get_status_display') else p.status,
+            ])
+        wb.save(file_buffer)
+        filename = 'projects_export.xlsx'
+        subject = 'Your Project Export File'
+
+    # BUDGET
+    # GOAL
+
+    if filename and user.email:
+        file_buffer.seek(0)
+        
+        email = EmailMultiAlternatives(
+            subject,
+            f'Your export request has been approved. Download: {download_url}',
+            getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@yourdomain.com'),
+            [user.email],
+        )
+        html_body = f'Your export request has been approved. <a href="{download_url}">Click here</a> to download your file.'
+        email.attach_alternative(html_body, "text/html")
+        email.send(fail_silently=True)
+
+    return JsonResponse({'message': 'Export request approved and file sent to submitter.'})
+
+
+@login_required
+@require_POST
+def reject_export_request(request, request_id):
+    try:
+        export_request = ExportRequest.objects.get(id=request_id, status='PENDING')
+    except ExportRequest.DoesNotExist:
+        return JsonResponse({'error': 'Export request not found or already processed.'}, status=404)
+    export_request.status = 'REJECTED'
+    export_request.save()
+    return JsonResponse({'message': 'Export request rejected.'})
+
+
+# Robust download endpoint for filtered export files
+@login_required
+def export_download(request, request_id):
+    export_request = get_object_or_404(ExportRequest, id=request_id, status='APPROVED')
+    # Only allow the submitter or reviewers to download
+    user = request.user
+    allowed_roles = ["UESO", "VP", "DIRECTOR"]
+    if not (user == export_request.submitted_by or (hasattr(user, 'role') and user.role in allowed_roles)):
+        return JsonResponse({'error': 'You do not have permission to download this export.'}, status=403)
+
+    from urllib.parse import parse_qs
+    file_buffer = BytesIO()
+    filename = None
+    qs = parse_qs(export_request.querystring)
+
+    if export_request.type == 'MANAGE_USER':
+        users = User.objects.all()
+        from django.db.models import Q
+        search = qs.get('search', [''])[0].strip()
+        if search:
+            users = users.filter(
+                Q(given_name__icontains=search) |
+                Q(last_name__icontains=search) |
+                Q(middle_initial__icontains=search) |
+                Q(suffix__icontains=search) |
+                Q(email__icontains=search)
+            )
+        sort_by = qs.get('sort_by', ['date'])[0]
+        order = qs.get('order', ['desc'])[0]
+        role = qs.get('role', [''])[0]
+        verified = qs.get('verified', [''])[0]
+        date = qs.get('date', [''])[0]
+        college = qs.get('college', [''])[0]
+        campus = qs.get('campus', [''])[0]
+        if role:
+            users = users.filter(role=role)
+        if verified == 'true':
+            users = users.filter(is_confirmed=True)
+        elif verified == 'false':
+            users = users.filter(is_confirmed=False)
+        if date:
+            users = users.filter(date_joined__date=date)
+        if college:
+            users = users.filter(college_id=college)
+        if campus:
+            users = users.filter(campus=campus)
+        if sort_by == 'name':
+            sort_field = ['last_name', 'given_name', 'middle_initial', 'suffix']
+        else:
+            sort_map = {
+                'email': 'email',
+                'date': 'date_joined',
+                'role': 'role',
+            }
+            sort_field = [sort_map.get(sort_by, 'last_name')]
+        if order == 'desc':
+            sort_field = ['-' + f for f in sort_field]
+        users = users.order_by(*sort_field)
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Manage Users"
+        headers = [
+            'Last Name', 'Given Name', 'Middle Initial', 'Suffix', 'Email', 'Role', 'Verified', 'Date Joined', 'College', 'Campus'
+        ]
+        ws.append(headers)
+        for u in users:
+            ws.append([
+                u.last_name,
+                u.given_name,
+                u.middle_initial,
+                u.suffix,
+                u.email,
+                u.get_role_display() if hasattr(u, 'get_role_display') else getattr(u, 'role', ''),
+                u.is_confirmed,
+                u.date_joined.strftime('%Y-%m-%d %H:%M'),
+                str(getattr(u, 'college', '')),
+                u.get_campus_display() if hasattr(u, 'get_campus_display') else getattr(u, 'campus', ''),
+            ])
+        wb.save(file_buffer)
+        filename = 'manage_users_export.xlsx'
+    elif export_request.type == 'PROJECT':
+        projects = Project.objects.all()
+        from django.db.models import Q
+        search = qs.get('search', [''])[0].strip()
+        sort_by = qs.get('sort_by', ['last_updated'])[0]
+        order = qs.get('order', ['desc'])[0]
+        college = qs.get('college', [''])[0]
+        campus = qs.get('campus', [''])[0]
+        agenda = qs.get('agenda', [''])[0]
+        status = qs.get('status', [''])[0]
+        year = qs.get('year', [''])[0]
+        quarter = qs.get('quarter', [''])[0]
+        date = qs.get('date', [''])[0]
+        if college:
+            projects = projects.filter(project_leader__college__id=college)
+        if campus:
+            projects = projects.filter(project_leader__campus=campus)
+        if agenda:
+            projects = projects.filter(agenda__id=agenda)
+        if status:
+            projects = projects.filter(status=status)
+        if year:
+            projects = projects.filter(start_date__year=year)
+        if quarter:
+            qmap = {'1': (1,3), '2': (4,6), '3': (7,9), '4': (10,12)}
+            if quarter in qmap:
+                start, end = qmap[quarter]
+                projects = projects.filter(start_date__month__gte=start, start_date__month__lte=end)
+        if date:
+            projects = projects.filter(start_date=date)
+        if search:
+            projects = projects.filter(title__icontains=search)
+        sort_map = {
+            'title': 'title',
+            'last_updated': 'updated_at',
+            'start_date': 'start_date',
+            'progress': '',
+        }
+        sort_field = sort_map.get(sort_by, 'title')
+        if sort_field:
+            if order == 'desc':
+                sort_field = '-' + sort_field
+            projects = projects.order_by(sort_field)
+        elif sort_by == 'progress':
+            projects = sorted(projects, key=lambda p: (p.progress[0] / p.progress[1]) if p.progress[1] else 0, reverse=(order=='desc'))
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Projects"
+        headers = [
+            'Title', 'Leader', 'College/Unit', 'Last Updated', 'Start Date', 'Progress', 'Status'
+        ]
+        ws.append(headers)
+        for p in projects:
+            ws.append([
+                p.title,
+                p.project_leader.get_full_name() if p.project_leader else '',
+                p.project_leader.college.name if p.project_leader and p.project_leader.college else '',
+                p.updated_at.strftime('%Y-%m-%d') if p.updated_at else '',
+                p.start_date.strftime('%Y-%m-%d') if p.start_date else '',
+                getattr(p, 'progress_display', ''),
+                p.get_status_display() if hasattr(p, 'get_status_display') else p.status,
+            ])
+        wb.save(file_buffer)
+        filename = 'projects_export.xlsx'
+
+    # BUDGET
+    # GOAL
+
+    if filename:
+        file_buffer.seek(0)
+        return FileResponse(file_buffer, as_attachment=True, filename=filename, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    return JsonResponse({'error': 'Export type not supported.'}, status=400)
+
+
+########################################################################################################################
 
 
 @require_GET
@@ -136,7 +428,7 @@ def export_manage_user(request):
         sort_field = ['-' + f for f in sort_field]
     users = users.order_by(*sort_field)
 
-    # Generate XLSX
+    # Generate XLSX (direct export)
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = "Manage Users"
@@ -267,6 +559,7 @@ def export_project(request):
             date_submitted=timezone.now(),
             submitted_by=user,
             status='PENDING',
+            querystring=request.META.get('QUERY_STRING', '')
         )
         return JsonResponse({'message': 'Your export request has been submitted for approval.'}, status=202)
     else:

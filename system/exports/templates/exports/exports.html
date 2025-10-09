@@ -141,7 +141,7 @@
     }
 
     .user-table td {
-        font-size: 12px;
+        font-size: 13px;
         font-weight: 400;
         border: none;
         border-bottom: 1px solid rgba(0,0,0,0.18);
@@ -162,10 +162,50 @@
         display: inline-block;
         vertical-align: middle;
         cursor: pointer;
+        margin-top: 10px;
     }
 
     .user-table th.settings-col, .user-table td.settings-col {
         text-align: center !important;
+    }
+
+    .action-col {
+        text-align: center !important;
+    }
+
+    .action-btn {
+        background: none;
+        border: none;
+        padding: 6px 10px;
+        margin: 0 2px;
+        font-size: 1.1em;
+        cursor: pointer;
+        transition: background 0.15s;
+        border-radius: 6px;
+        font-family: 'Inter', Arial, sans-serif;
+    }
+
+    .action-btn:disabled {
+        cursor: not-allowed;
+        opacity: 0.9;
+    }
+
+    .approve-btn {
+        background: #D1F5E3;
+        color: #1f7c57;
+    }
+
+    .approve-btn:hover {
+        background: #e6f7ed;
+    }
+
+    .reject-btn {
+        background: #FEE2E2;
+        color: #E53E3E;
+    }
+
+    .reject-btn:hover {
+        background: #fdeaea;
     }
 </style>
 
@@ -414,7 +454,7 @@
         <div class="search-container">
             <form class="search-bar" method="get" action="">
                 <svg width="20" height="20"> <use href="#icon-search"></use> </svg>
-                <input type="text" name="search" placeholder="Search by project title..." value="{{ search|default:'' }}"/>
+                <input type="text" name="search" placeholder="Search by submitter name..." value="{{ search|default:'' }}"/>
                 <button type="button" id="filterBtn" style="background:none;border:none;padding:0;margin-right:5px;cursor:pointer;">
                     <svg width="20" height="20"> <use href="#icon-filter"></use> </svg>
                 </button>
@@ -461,9 +501,8 @@
                     <th>Type</th>
                     <th>Date Submitted</th>
                     <th>Submitted By</th>
-                    <th>Status</th>
                     <th></th>
-                    <th class="settings-col">Settings</th>
+                    <th class="action-col">Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -472,7 +511,6 @@
                     <td>{{ export.get_type_display }}</td>
                     <td>{{ export.date_submitted|date:"Y-m-d" }}</td>
                     <td>{{ export.submitted_by.get_full_name }}</td>
-                    <td>{{ export.get_status_display }}</td>
                     <td style="text-align:center;">
                         {% if export.type == 'PROJECT' %}
                             <a href="{% url 'export_project' %}?{{ export.querystring|safe }}" style="color:#2EA8FF;">Download</a>
@@ -482,24 +520,19 @@
                             <span style="color:#888;">N/A</span>
                         {% endif %}
                     </td>
-                    <td class="settings-col" style="padding-top:19px;">
-                        <div class="settings-dropdown-container" style="position:relative;">
-                            <button class="settings-dropdown-toggle" style="background:none;border:none;padding:0;cursor:pointer;">
-                                <svg width="20" height="20" class="settings-icon"><use href="#settings-icon"/></svg>
-                            </button>
-                            <div class="settings-dropdown-menu">
-                                <a href="#" class="settings-dropdown-item" style="color:#E53E3E;">
-                                    <span class="crossmark-icon" style="vertical-align:middle;">&#10007;</span> Reject
-                                </a>
-                                <a href="#" class="settings-dropdown-item" style="color:#245F3E;">
-                                    <span class="checkmark-icon" style="vertical-align:middle;">&#10003;</span> Accept
-                                </a>
-                            </div>
-                        </div>
+                    <td class="action-col" style="text-align:center;">
+                        {% if export.status == 'PENDING' %}
+                            <button class="action-btn approve-btn" title="Approve" data-id="{{ export.id }}">Approve</button>
+                            <button class="action-btn reject-btn" title="Reject" data-id="{{ export.id }}">Reject</button>
+                        {% elif export.status == 'APPROVED' %}
+                            <button class="action-btn" title="Already approved" disabled>Approved</button>
+                        {% elif export.status == 'REJECTED' %}
+                            <button class="action-btn" title="Already rejected" disabled>Rejected</button>
+                        {% endif %}
                     </td>
                 </tr>
                 {% empty %}
-                <tr><td colspan="6" style="text-align:center;">No exports found.</td></tr>
+                <tr><td colspan="5" style="text-align:center;">No exports found.</td></tr>
                 {% endfor %}
             </tbody>
         </table>
@@ -606,6 +639,68 @@
             filterDropdown.style.display = 'none';
         }
     });
+
+    // Approve button AJAX
+    document.querySelectorAll('.approve-btn').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            var id = btn.getAttribute('data-id');
+            fetch('/exports/approve/' + id + '/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Approve': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    // Update row to show approved state (text version)
+                    btn.parentElement.innerHTML = '<button class="action-btn" title="Already approved" disabled style="cursor:not-allowed;opacity:0.6;">Approved</button>';
+                } else {
+                    alert(data.error || 'Failed to approve.');
+                }
+            });
+        });
+    });
+    // Reject button AJAX
+    document.querySelectorAll('.reject-btn').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            var id = btn.getAttribute('data-id');
+            fetch('/exports/reject/' + id + '/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Approve': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    // Update row to show rejected state (text version)
+                    btn.parentElement.innerHTML = '<button class="action-btn" title="Already rejected" disabled style="cursor:not-allowed;opacity:0.6;">Rejected</button>';
+                } else {
+                    alert(data.error || 'Failed to reject.');
+                }
+            });
+        });
+    });
+    // CSRF helper
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
 </script>
 
 </body>
