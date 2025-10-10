@@ -10,13 +10,22 @@ from django.core.paginator import Paginator
 @role_required(allowed_roles=["UESO", "VP", "DIRECTOR", "CLIENT"])
 def request_dispatcher(request):
     if request.user.role == 'CLIENT':
-        return render(request, 'request/request_client.html')
+        return request_client_view(request)
     elif request.user.role in ['UESO', 'VP', 'DIRECTOR']:
-        return render(request, 'request/request_admin.html')
+        return request_admin_view(request)
+
+
+########################################################################################################################
 
 
 def request_client_view(request):
     return render(request, 'request/request_client.html')
+
+
+# Add
+
+
+########################################################################################################################
 
 
 def request_admin_view(request):
@@ -69,3 +78,11 @@ def request_admin_view(request):
         'querystring': request.GET.urlencode().replace('&page='+str(page_obj.number), '') if page_obj else '',
     })
 
+
+# Approve
+
+# Reject
+
+# Endorse
+
+# Deny

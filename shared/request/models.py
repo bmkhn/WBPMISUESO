@@ -13,7 +13,7 @@ class ClientRequest(models.Model):
     primary_location = models.CharField(max_length=200)
     primary_beneficiary = models.CharField(max_length=200)
     summary = models.TextField()
-    related_docs = models.ManyToManyField('RelatedDocument', blank=True, related_name='client_requests')
+    letter_of_intent = models.FileField(upload_to='client_requests/letters_of_intent/', blank=True, null=True)
     submitted_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -42,30 +42,3 @@ class ClientRequest(models.Model):
 
     def __str__(self):
         return self.title
-
-
-class RelatedDocument(models.Model):
-    title = models.CharField(max_length=200)
-    file = models.FileField(upload_to='client_requests/related_docs/')
-    uploaded_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.title
-
-    def delete(self, *args, **kwargs):
-        # Delete associated file from storage
-        if self.file and self.file.storage and self.file.name and self.file.storage.exists(self.file.name):
-            self.file.storage.delete(self.file.name)
-        super().delete(*args, **kwargs)
-
-########################################################################################################################
-
-
-@receiver(post_delete, sender=ClientRequest)
-def delete_orphan_related_docs(sender, instance, **kwargs):
-    # Get all related docs before the m2m is cleared
-    related_docs = list(instance.related_docs.all())
-    for doc in related_docs:
-        # If this was the only ClientRequest linked, delete the doc (and its file)
-        if doc.client_requests.count() <= 1:
-            doc.delete()
