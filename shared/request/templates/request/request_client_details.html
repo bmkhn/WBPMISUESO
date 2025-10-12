@@ -9,6 +9,7 @@
 <title>Budget</title>
 
 <link href="https://fonts.googleapis.com/css?family=Inter:400,500,600,700,800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
 <!-- General -->
 <style>
@@ -41,8 +42,8 @@
 		background-color: white;
 		border-radius: 1rem;
 		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
-		padding: 50px;
-		height: auto;
+		padding: 20px;
+		height: 650px;
 		display: flex;
 		flex-direction: column;
 		gap: 30px; 
@@ -50,6 +51,7 @@
 	}
 
 	.widgets-header {
+		padding: 20px 20px 0 20px;
 		display: flex;
 		align-items: center;
 		height: 4rem; 
@@ -81,6 +83,53 @@
 
 <!-- Right -->
 <style>
+	.right-container {
+		display: flex;
+		flex-direction: column;
+		width: 100%;
+		gap: 30px;
+	}
+
+	.progress-container {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		gap: 20px;
+		justify-content: center;
+		margin: 0 30px;
+	}
+
+	.progress-group {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		align-items: center;
+	}
+
+	.progress-svg {
+		text-align: center;
+		width: 70px;
+		height: 70px;
+	}
+
+	.progress-text {
+		text-align: center;
+		font-family: 'Inter', sans-serif;
+		font-weight: 500;
+		font-size: 18px;
+	}
+
+	.progress-line {
+		width: 100%;
+		height: 4px;
+		background-color: #ADADAD;
+		border-radius: 2px;
+	}
+
+	.done {
+		background-color: #245F3E !important;
+	}
+
 	.list {
 		background-color: white;
 		border-radius: 1rem;
@@ -92,257 +141,50 @@
 		gap: 30px; 
 	}
 
-	.add-request-btn {
-		background: #063A1C;
-		color: white;
-		padding: 15px 45px;
-		border-radius: 8px;
-		font-size: 20px;
+	.step-text {
 		font-family: 'Inter', sans-serif;
-        font-weight: 500;
-		cursor: pointer;
-		transition: all 0.2s ease;
-		box-shadow: 0 2px 8px rgba(10, 108, 68, 0.2);
-		text-decoration: none;
-        border-radius: 18px;
-        cursor: pointer;
-        transition: background 0.2s;
-	}   
-
-	.add-request-btn:hover {
-		background: #04521c;
-		transform: translateY(-2px);
-		box-shadow: 0 4px 12px rgba(10, 108, 68, 0.3);
-		text-decoration: none;
-		color: white;
+		font-weight: 600;
+		font-size: 28px;
+		color: #000000;
 	}
 
-	.files-header {
+	.location-text {
+		font-family: 'Inter', sans-serif;
+		font-weight: 400;
+		font-size: 18px;
+		color: #000000;
+		margin-top: -10px;
+	}
+
+	.content-text {
+		font-family: 'Inter', sans-serif;
+		font-weight: 400;
+		font-size: 18px;
+		color: #000000;
+	}
+
+	.from-text {
+		font-family: 'Inter', sans-serif;
+		font-weight: 400;
+		font-size: 18px;
+		color: #000000;
+		text-align: end;
+	}
+
+	.text-button-container {
 		display: flex;
 		justify-content: space-between;
-		align-items: center;
-		height: 4rem;
+		flex-direction: row;
 	}
 
-	.files-header > div {
-		display: flex;
-		align-items: center; 
-	}
-
-	.files-header h2 {
-		margin: 0;       
-		line-height: 1;   
-	}
-
-	.list-holder {
-		display: flex;
-		flex-direction: column;
-		gap: 1rem;
-		height: auto;  /* Make sure height is auto */
-	}
-
-	.list-item {
-		background: #E6F2FB;
-		border-radius: 1rem;
-		padding: 1rem 1.5rem;
-		box-shadow: 0 2px 5px rgba(0,0,0,0.15);
-	}
-
-	.project-table {
-		width: 100%;
-		border-collapse: collapse;
-		font-size: 0.95rem;
-		border-radius: 1rem;
-		overflow: hidden;
-		box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
-		table-layout: fixed;
-	}
-
-	.project-table thead {
-		background-color: #f4f4f4;
-		font-weight: 600;
-	}
-
-	.project-table th, .project-table td {
-		padding: 1rem;
-		text-align: left;
-		border-bottom: 1px solid #ddd;
-		vertical-align: middle;
-	}
-
-	.project-table .provider-cell {
-		display: flex;
-		align-items: center;
-		gap: 0.25rem;
-		height: 2rem; 
-	}
-
-	.project-table .provider-cell span {
-		display: inline-flex;
-		align-items: center;
-		height: 100%;
-		padding: 0 0.5rem;
-		color: #666;
-		font-size: 0.9rem;
-	}
-
-	.project-table td img {
-		width: 2.5rem;
-		height: 2.5rem;
-		border-radius: 50%; 
-		border: 0.08rem solid #ccc;
-		object-fit: cover;
-		margin-right: 0.25rem;
-		vertical-align: middle;
-	} 
-
-	.project-table td.provider-cell {
-		border-bottom: none;
-	}
-
-	.status-counts {
-		display: flex;
-		gap: 2rem;
-		margin-bottom: 1rem;
-		padding: 0 1rem;
-	}
-	
-	.status-count {
-		font-size: 1.25rem;
-		display: flex;
-		align-items: baseline;
-		gap: 0.5rem;
-	}
-
-	.status-count .number {
-		font-size: 1.6rem;
-		font-weight: 700;
-	}
-
-	.status-count .label {
-		font-weight: 400;
-	}
-</style>
-
-<!-- Search Bar Styles -->
-<style>
-	.search-container {
-		width: 100%;
-		display: flex;
-		gap: 10px;
-	}
-
-	.search-bar {
-		width: 100%;
-		height: 52px;
-		background: #F2F4F8;
-		display: flex;
-		align-items: center;
-		padding: 0 16px;
-		border-bottom: 1.09px solid #535353;
-		border-radius: 8px;
-		box-sizing: border-box;
-	}
-
-	.search-bar input {
-		flex: 1;
-		border: none;
-		outline: none;
-		background: transparent;
-		font-size: 18px;
+	.view-change-text {
 		font-family: 'Inter', sans-serif;
 		font-weight: 400;
-		color: #5A5252;
-		padding: 0 10px;
-	}
-</style>
-
-<!-- Sort/Filter Styles -->
-<style>
-	.filter-dropdown {
-		display: none;
-		position: absolute;
-		top: 420px;
-		right: 120px;
-		z-index: 1000;
-		background: white;
-		border: 1px solid #e5e7eb;
-		border-radius: 12px;
-		box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-		padding: 24px 32px;
-		min-width: 340px;
-	}
-
-	.filter-grid {
-		display: grid;
-		grid-template-columns: repeat(2, 1fr);
-		grid-gap: 24px;
-	}
-
-	.filter-dropdown label {
-		font-weight: 500;
-		color: #374151;
-		display: flex;
-		flex-direction: column;
-	}
-
-	.filter-dropdown select,
-	.filter-dropdown input[type="date"] {
-		width: 100%;
-		margin-top: 6px;
-		border: 1px solid #e5e7eb;
-		border-radius: 6px;
-		padding: 6px 10px;
-		font-size: 15px;
-		font-family: 'Inter', sans-serif;
-		background: #f9f9f9;
-		color: #374151;
-	}
-
-	.filter-dropdown select {
-		appearance: none;
-		-webkit-appearance: none;
-		-moz-appearance: none;
-		padding-right: 2rem;
-		background: url("data:image/svg+xml;utf8,<svg width='16' height='11' viewBox='0 0 16 11' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M7.99976 7.19417L13.9025 1.29147C14.0125 1.17758 14.144 1.08674 14.2895 1.02424C14.435 0.961746 14.5915 0.92885 14.7498 0.927474C14.9082 0.926098 15.0652 0.95627 15.2117 1.01623C15.3583 1.07619 15.4914 1.16473 15.6034 1.27669C15.7153 1.38866 15.8039 1.5218 15.8638 1.66835C15.9238 1.8149 15.954 1.97192 15.9526 2.13026C15.9512 2.28859 15.9183 2.44506 15.8558 2.59055C15.7933 2.73604 15.7025 2.86762 15.5886 2.97762L8.84283 9.72339C8.61921 9.94694 8.31596 10.0725 7.99976 10.0725C7.68356 10.0725 7.38031 9.94694 7.15669 9.72339L0.41092 2.97762C0.297028 2.86762 0.206183 2.73604 0.143687 2.59055C0.0811915 2.44506 0.0482959 2.28859 0.04692 2.13026C0.0455441 1.97192 0.0757155 1.8149 0.135674 1.66835C0.195632 1.5218 0.284176 1.38866 0.39614 1.27669C0.508103 1.16473 0.641244 1.07619 0.787794 1.01623C0.934343 0.95627 1.09137 0.926098 1.2497 0.927474C1.40804 0.92885 1.56451 0.961746 1.71 1.02424C1.85548 1.08674 1.98706 1.17758 2.09706 1.29147L7.99976 7.19417Z' fill='%23374151'/></svg>")
-        		no-repeat right 0.75rem center;
-  		background-size: 13px 8px;
-	}
-
-	.filter-actions {
-		display: flex;
-		justify-content: flex-end;
-		gap: 10px;
-		margin-top: 24px;
-	}
-
-	.filter-apply {
-		background: #063A1C;
-		color: white;
-		padding: 10px 28px;
-		border-radius: 8px;
-		font-size: 16px;
-		font-family: 'Inter', sans-serif;
-		font-weight: 500;
+		font-size: 20px;
+		color: #6B6B6B;
+		text-align: end;
 		cursor: pointer;
-		transition: background 0.2s;
-		border: none;
-	}
-
-	.filter-close {
-		background: #e5e7eb;
-		color: #374151;
-		padding: 10px 18px;
-		border-radius: 8px;
-		font-size: 16px;
-		font-family: 'Inter', sans-serif;
-		font-weight: 500;
-		cursor: pointer;
-		border: none;
-	}
-
-	.search-bar > input[type="text"] {
-		border: none;
+		margin-top: 30px;
 	}
 </style>
 
@@ -350,38 +192,204 @@
 
 <body>
 
+
 <main>
 	<div class="widgets">
 		<div class="widgets-header">
 			<h2>My Updates</h2>
 		</div>
+		<div class="my-updates-list">
+			{% if my_updates %}
+				<ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:25px;max-height:500px;overflow-y:auto;">
+				{% for update in my_updates %}
+					<li>
+						<a href="{% url 'request_details_dispatcher' update.request_id %}"
+						   class="my-update-link{% if not update.viewed %} my-update-unviewed{% endif %} my-update-block">
+							<div>
+								{{ update.message }}
+								<div style="font-size:0.95em;color:#888;margin-top:8px;">
+									{{ update.updated_at|date:'M d, Y H:i' }}
+									{% if not update.viewed %}
+										<span style="background:#E37910;color:white;border-radius:8px;padding:2px 8px;font-size:0.8em;margin-left:8px;">New</span>
+									{% endif %}
+								</div>
+							</div>
+						</a>
+					</li>
+				{% endfor %}
+				</ul>
+				<style>
+				.my-update-link {
+					color: #000000;
+					text-decoration: none;
+					font-weight: 400;
+				}
+				.my-update-link.my-update-unviewed {
+					font-weight: 700;
+				}
+				.my-update-block {
+					display: block;
+					padding: 8px 10px;
+					border-radius: 8px;
+					transition: background 0.15s;
+				}
+				.my-update-block:hover {
+					background: #f3f4f6;
+					text-decoration: none;
+				}
+				.my-updates-list ul::-webkit-scrollbar {
+					width: 8px;
+				}
+				.my-updates-list ul::-webkit-scrollbar-thumb {
+					background: #e5e7eb;
+					border-radius: 6px;
+				}
+				.my-updates-list ul {
+					scrollbar-width: thin;
+					scrollbar-color: #e5e7eb #fff;
+				}
+				</style>
+			{% else %}
+				<div style="color:#888;font-size:1em; text-align:center;">No recent updates.</div>
+			{% endif %}
+		</div>
 	</div>
 
-	<div class="list">
-		<div class="files-header">
-			<h2>Requests Overview</h2>
-			<div style="display: flex; gap: 0.7rem;">
-				<a class="add-request-btn">Submit Request</a>
+	<div class="right-container">
+		<div class="progress-container">
+			<div class="progress-group">
+				<div class="progress-svg"><svg><use href="#icon-received"></use></svg></div>
+				<div class="progress-text">Received<br>Request</div>
+			</div>
+			<div class="progress-line{% if req.status == 'UNDER_REVIEW' or req.status == 'APPROVED' or req.status == 'REJECTED' or req.status == 'ENDORSED' or req.status == 'DENIED' %} done{% endif %}"></div>
+			<div class="progress-group">
+				{% if req.status == 'UNDER_REVIEW' or req.status == 'APPROVED' or req.status == 'REJECTED' or req.status == 'ENDORSED' or req.status == 'DENIED' %}
+				<div class="progress-svg"><svg><use href="#icon-reviewing-done"></use></svg></div>
+				<div class="progress-text">Reviewing<br>Request</div>    
+				{% else %}
+				<div class="progress-svg"><svg><use href="#icon-reviewing"></use></svg></div>
+				<div class="progress-text">Reviewing<br>Request</div>
+				{% endif %}
+			</div>
+			<div class="progress-line{% if req.status == 'APPROVED' or req.status == 'REJECTED' or req.status == 'ENDORSED' or req.status == 'DENIED' %} done{% endif %}"></div>
+			<div class="progress-group">
+				{% if req.status == 'APPROVED' or req.status == 'ENDORSED' or req.status == 'DENIED' %}
+				<div class="progress-svg"><svg><use href="#icon-waiting-approval-approved"></use></svg></div>
+				<div class="progress-text">Request<br>Approved</div>
+				{% elif req.status == 'REJECTED' %}
+				<div class="progress-svg"><svg><use href="#icon-waiting-approval-rejected"></use></svg></div>
+				<div class="progress-text">Request<br>Rejected</div>
+				{% else %}
+				<div class="progress-svg"><svg><use href="#icon-waiting-approval"></use></svg></div>
+				<div class="progress-text">Waiting<br>Approval</div>
+				{% endif %}
+			</div>
+			<div class="progress-line{% if req.status == 'ENDORSED' or req.status == 'DENIED' %} done{% endif %}"></div>
+			<div class="progress-group">
+				{% if req.status == 'ENDORSED' %}
+				<div class="progress-svg"><svg><use href="#icon-request-endorsed-done"></use></svg></div>
+				<div class="progress-text">Request<br>Endorsed</div>
+				{% else %}
+				<div class="progress-svg"><svg><use href="#icon-request-endorsed"></use></svg></div>
+				<div class="progress-text">Request<br>Endorsed</div>
+				{% endif %}
 			</div>
 		</div>
 
+		<!-- Progress Mode -->
+		<div id="progress-mode" style="display: none;">
+			<div class="list">
+				{% if req.status == 'RECEIVED' %}
+				<div class="step-text">{{ req.title }}</div>
+				<div class="location-text">{{ req.primary_location }}</div>
+				<div class="content-text">{{ req.summary }}</div>
+				<div class="from-text">{{ req.organization }}</div>
 
-		<div class="status-counts">
-			<span class="status-count confirmed-count">0 Confirmed</span>
-			<span class="status-count rejected-count">0 Rejected</span>
+				{% elif req.status == 'UNDER_REVIEW' %}
+				<div class="step-text">STEP 2: Your submitted request is under review</div>
+				<div class="content-text">Please be patient as we review the validity and essence of your request. This might take 3-5 business days.</div>
+				<div class="from-text">University Extension Services Office</div>
+
+				{% elif req.status == 'APPROVED' %}
+				<div class="step-text">STEP 3: Your request has been approved</div>
+				<div class="content-text">We have reviewed your request and have approved of its contents. Due to protocol, you and your organization must submit your letter of intent to the President’s Office at the admin building of Palawan State Univeristy’s Tiniguiban Campus. The Endorsement process will take a few days, once endorsed your request can be approved by the office.</div>
+				<div class="from-text">University Extension Services Office</div>
+
+				{% elif req.status == 'REJECTED' %}
+				<div class="step-text">STEP 3: Your request has been rejected</div>
+				<div class="content-text">We have reviewed your request and found that it is lacking in a few details:</div>
+				<div class="content-text">{{ req.reason }}</div>
+				<div class="content-text">You can submit another request complete with the details asked for above.</div>
+				<div class="from-text">University Extension Services Office</div>
+                
+				{% elif req.status == 'ENDORSED' %}
+				<div class="step-text">STEP 4: Your request has been endorsed</div>
+				<div class="content-text">Our office has endorsed your request and your request shall be sent to the President’s Office to be officially approved.</div>
+				<div class="from-text">University Extension Services Office</div>
+				{% else %}
+				<div style="text-align:center;">None</div>
+
+				{% endif %}
+			</div>
+
+			{% if req.status != 'RECEIVED' %}
+			<div class="text-button-container">
+				<a href="{% url 'request_dispatcher' %}" class="view-change-text" style="text-decoration:none;"><i class="fa-solid fa-arrow-left"></i>  Back to Requests</a>
+				<div class="view-change-text" id="view-details-btn" style="text-align:right;">View Request Details</div>
+			</div>
+			
+			{% else %}
+			<div class="text-button-container">
+				<a href="{% url 'request_dispatcher' %}" class="view-change-text" style="text-decoration:none; text-align:left;"><i class="fa-solid fa-arrow-left"></i>  Back to Requests</a>
+			</div>
+			{% endif %}
 		</div>
-		<table class="project-table">
-			<thead>
-				<tr>
-					<th style="width: 50%;">Title</th>
-					<th style="width: 25%;">Date Given</th>
-					<th style="width: 25%;">Status</th>
-				</tr>
-			</thead>
-			<tbody></tbody>
-		</table>
+
+		<!-- Details Mode -->
+		<div id="details-mode" style="display: none;">
+			<div class="list">
+				<div class="step-text">{{ req.title }}</div>
+				<div class="location-text">{{ req.primary_location }}</div>
+				<div class="content-text">{{ req.summary }}</div>
+				<div class="content-text"><a href="{{ req.letter_of_intent.url }}" target="_blank">Download Letter of Intent</a></div>
+				<div class="from-text">{{ req.organization }}</div>
+			</div>
+			<div class="view-change-text" id="view-progress-btn" style="text-align:right;">View Request Progress</div>
+		</div>
 	</div>
 </main>
+
+<script>
+	// Default: Progress Mode unless status is RECEIVED, then only show details
+	const reqStatus = "{{ req.status }}";
+	let inProgressMode = true;
+	if (reqStatus === 'RECEIVED') {
+		// Only show details for RECEIVED
+		document.addEventListener('DOMContentLoaded', function() {
+			document.getElementById('progress-mode').style.display = 'block';
+			document.getElementById('details-mode').style.display = 'none';
+			// Hide view details button if present
+			var btn = document.getElementById('view-details-btn');
+			if (btn) btn.style.display = 'none';
+		});
+	} else {
+		document.addEventListener('DOMContentLoaded', function() {
+			document.getElementById('progress-mode').style.display = 'block';
+			document.getElementById('details-mode').style.display = 'none';
+			inProgressMode = true;
+			document.getElementById('view-details-btn').onclick = function() {
+				document.getElementById('progress-mode').style.display = 'none';
+				document.getElementById('details-mode').style.display = 'block';
+				inProgressMode = false;
+			};
+			document.getElementById('view-progress-btn').onclick = function() {
+				document.getElementById('progress-mode').style.display = 'block';
+				document.getElementById('details-mode').style.display = 'none';
+				inProgressMode = true;
+			};
+		});
+	}
+</script>
 
 
 
@@ -420,7 +428,7 @@
     </symbol>
 
     <!-- Request Endorsed -->
-    <symbol width="73" height="73" viewBox="0 0 73 73" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="icon-request-endorsed" width="73" height="73" viewBox="0 0 73 73" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M52.1898 62.8988L64.6998 50.4788L60.9198 46.6988L52.1898 55.2488L48.6798 51.7388L44.8998 55.6088L52.1898 62.8988ZM11.5998 22.3988H54.7998V15.1988H11.5998V22.3988ZM54.7998 72.7988C49.8198 72.7988 45.5754 71.0432 42.0666 67.532C38.5578 64.0208 36.8022 59.7764 36.7998 54.7988C36.7974 49.8212 38.553 45.5768 42.0666 42.0656C45.5802 38.5544 49.8246 36.7988 54.7998 36.7988C59.775 36.7988 64.0206 38.5544 67.5366 42.0656C71.0526 45.5768 72.807 49.8212 72.7998 54.7988C72.7926 59.7764 71.037 64.022 67.533 67.5356C64.029 71.0492 59.7846 72.8036 54.7998 72.7988ZM0.799805 69.1988V7.99883C0.799805 6.01883 1.5054 4.32443 2.9166 2.91563C4.32781 1.50683 6.0222 0.801228 7.9998 0.798828H58.3998C60.3798 0.798828 62.0754 1.50443 63.4866 2.91563C64.8978 4.32683 65.6022 6.02123 65.5998 7.99883V32.0288C63.9198 31.1888 62.1642 30.5732 60.333 30.182C58.5018 29.7908 56.6574 29.5964 54.7998 29.5988H11.5998V36.7988H37.1598C36.1398 37.8188 35.1954 38.9288 34.3266 40.1288C33.4578 41.3288 32.6922 42.6188 32.0298 43.9988H11.5998V51.1988H29.8698C29.7498 51.7988 29.6754 52.3844 29.6466 52.9556C29.6178 53.5268 29.6022 54.1412 29.5998 54.7988C29.5998 57.3188 29.9454 59.7344 30.6366 62.0456C31.3278 64.3568 32.3622 66.5612 33.7398 68.6588L33.1998 69.1988L27.7998 63.7988L22.3998 69.1988L16.9998 63.7988L11.5998 69.1988L6.1998 63.7988L0.799805 69.1988Z" fill="#ADADAD"/>
     </symbol>
 
@@ -440,3 +448,6 @@
     </symbol>
 
 </svg>
+
+
+{% endblock %}

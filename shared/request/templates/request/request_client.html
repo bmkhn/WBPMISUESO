@@ -41,8 +41,8 @@
 		background-color: white;
 		border-radius: 1rem;
 		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
-		padding: 50px;
-		height: auto;
+		padding: 20px;
+		height: 650px;
 		display: flex;
 		flex-direction: column;
 		gap: 30px; 
@@ -50,6 +50,7 @@
 	}
 
 	.widgets-header {
+		padding: 20px 20px 0 20px;
 		display: flex;
 		align-items: center;
 		height: 4rem; 
@@ -90,6 +91,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: 30px; 
+		width: 100%;
 	}
 
 	.add-request-btn {
@@ -146,58 +148,6 @@
 		border-radius: 1rem;
 		padding: 1rem 1.5rem;
 		box-shadow: 0 2px 5px rgba(0,0,0,0.15);
-	}
-
-	.project-table {
-		width: 100%;
-		border-collapse: collapse;
-		font-size: 0.95rem;
-		border-radius: 1rem;
-		overflow: hidden;
-		box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
-		table-layout: fixed;
-	}
-
-	.project-table thead {
-		background-color: #f4f4f4;
-		font-weight: 600;
-	}
-
-	.project-table th, .project-table td {
-		padding: 1rem;
-		text-align: left;
-		border-bottom: 1px solid #ddd;
-		vertical-align: middle;
-	}
-
-	.project-table .provider-cell {
-		display: flex;
-		align-items: center;
-		gap: 0.25rem;
-		height: 2rem; 
-	}
-
-	.project-table .provider-cell span {
-		display: inline-flex;
-		align-items: center;
-		height: 100%;
-		padding: 0 0.5rem;
-		color: #666;
-		font-size: 0.9rem;
-	}
-
-	.project-table td img {
-		width: 2.5rem;
-		height: 2.5rem;
-		border-radius: 50%; 
-		border: 0.08rem solid #ccc;
-		object-fit: cover;
-		margin-right: 0.25rem;
-		vertical-align: middle;
-	} 
-
-	.project-table td.provider-cell {
-		border-bottom: none;
 	}
 
 	.status-counts {
@@ -346,6 +296,102 @@
 	}
 </style>
 
+<!-- Table Section -->
+<style>
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #FEFCFC;
+        border: 1px solid rgba(0,0,0,0.18);
+        overflow: visible;
+    }
+
+    .table th {
+        font-size: 16px;
+        font-weight: 500;
+        background: rgba(217, 217, 217, 0.2);
+        border-bottom: 1px solid rgba(0,0,0,0.18);
+        padding: 14px 12px;
+        text-align: left;
+        font-family: 'Inter', Arial, sans-serif;
+    }
+
+    .table td {
+        font-size: 15px;
+        font-weight: 400;
+        border: none;
+        border-bottom: 1px solid rgba(0,0,0,0.18);
+        padding: 14px 12px;
+        text-align: left;
+        font-family: 'Inter', Arial, sans-serif;
+        position: relative;
+        overflow: visible;
+    }
+
+    .table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .settings-icon {
+        width: 16px;
+        height: 16px;
+        align-items: center;
+        justify-content: center;
+        display: inline-block;
+        vertical-align: middle;
+        cursor: pointer;
+    }
+
+    .table th.settings-col, .table td.settings-col {
+        text-align: center !important;
+    }
+</style>
+
+<!-- Pagination Styles -->
+<style>
+	.pagination-container {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.pagination-button {
+		padding: 0.75rem 1rem;
+		border: 1px solid #E5E7EB;
+		background: white;
+		color: #4B5563;
+		border-radius: 8px;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		font-weight: 500;
+		text-decoration: none;
+	}
+
+	.pagination-button:hover {
+		background: #F3F4F6;
+		border-color: #0A6C44;
+		color: #0A6C44;
+	}
+
+	.pagination-button.active {
+		background: #0A6C44;
+		color: white;
+		border-color: #0A6C44;
+	}
+
+	.pagination-button:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	.page-info {
+		margin: 0 1rem;
+		color: #4B5563;
+		font-weight: 500;
+	}
+</style>
+
 </head>
 
 <body>
@@ -354,6 +400,61 @@
 	<div class="widgets">
 		<div class="widgets-header">
 			<h2>My Updates</h2>
+		</div>
+		<div class="my-updates-list">
+			{% if my_updates %}
+				<ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:25px;max-height:500px;overflow-y:auto;">
+				{% for update in my_updates %}
+					<li>
+						<a href="{% url 'request_details_dispatcher' update.request_id %}"
+						   class="my-update-link{% if not update.viewed %} my-update-unviewed{% endif %} my-update-block">
+							<div>
+								{{ update.message }}
+								<div style="font-size:0.95em;color:#888;margin-top:8px;">
+									{{ update.updated_at|date:'M d, Y H:i' }}
+									{% if not update.viewed %}
+										<span style="background:#E37910;color:white;border-radius:8px;padding:2px 8px;font-size:0.8em;margin-left:8px;">New</span>
+									{% endif %}
+								</div>
+							</div>
+						</a>
+					</li>
+				{% endfor %}
+				</ul>
+				<style>
+				.my-update-link {
+					color: #000000;
+					text-decoration: none;
+					font-weight: 400;
+				}
+				.my-update-link.my-update-unviewed {
+					font-weight: 700;
+				}
+				.my-update-block {
+					display: block;
+					padding: 8px 10px;
+					border-radius: 8px;
+					transition: background 0.15s;
+				}
+				.my-update-block:hover {
+					background: #f3f4f6;
+					text-decoration: none;
+				}
+				.my-updates-list ul::-webkit-scrollbar {
+					width: 8px;
+				}
+				.my-updates-list ul::-webkit-scrollbar-thumb {
+					background: #e5e7eb;
+					border-radius: 6px;
+				}
+				.my-updates-list ul {
+					scrollbar-width: thin;
+					scrollbar-color: #e5e7eb #fff;
+				}
+				</style>
+			{% else %}
+				<div style="color:#888;font-size:1em; text-align:center;">No recent updates.</div>
+			{% endif %}
 		</div>
 	</div>
 
@@ -367,80 +468,118 @@
 
 		<!-- Search Bar -->
 		<div class="search-container">
-		       <form class="search-bar" method="get" action="">
-					<svg width="20" height="20"> <use href="#icon-search"></use> </svg>
-					<input type="text" name="search" placeholder="Search Title" value="{{ search_query|default:'' }}"/>
-					<button type="button" id="filterBtn" style="background:none;border:none;padding:0;margin-right:5px;cursor:pointer;">
-						<svg width="20" height="20"> <use href="#icon-filter"></use> </svg>
-					</button>
-				   
-					<div id="filterDropdown" class="filter-dropdown">
-						<div class="filter-grid">
-							
-							<!-- Sort By -->
-							<label style="font-weight:500;color:#374151;display:flex;flex-direction:column;">
-								Sort By
-								<select name="sort" style="width:100%;margin-top:6px;">
-									<option value="title" {% if sort_by == 'title' %}selected{% endif %}>Title</option>
-									<option value="date" {% if sort_by == 'date' %}selected{% endif %}>Date Submitted</option>
-									<option value="status" {% if sort_by == 'status' %}selected{% endif %}>Status</option>
-								</select>
-							</label>
+			<form class="search-bar" method="get" action="">
+				<svg width="20" height="20"> <use href="#icon-search"></use> </svg>
+				<input type="text" name="search" placeholder="Search" value="{{ search|default:'' }}"/>
+				<button type="button" id="filterBtn" style="background:none;border:none;padding:0;margin-right:5px;cursor:pointer;">
+					<svg width="20" height="20"> <use href="#icon-filter"></use> </svg>
+				</button>
+				
+				<div id="filterDropdown" class="filter-dropdown">
+					<div class="filter-grid">
 
-							<!-- Order -->
-							<label style="font-weight:500;color:#374151;display:flex;flex-direction:column;">
-								Order
-								<select name="order" style="width:100%;margin-top:6px;">
-									<option value="desc" {% if sort_order == 'desc' %}selected{% endif %}>Descending</option>
-									<option value="asc" {% if sort_order == 'asc' %}selected{% endif %}>Ascending</option>
-								</select>
-							</label>
+						
+						<!-- Sort By -->
+						<label style="font-weight:500;color:#374151;display:flex;flex-direction:column;">
+							Sort By
+							<select name="sort_by" style="width:100%;margin-top:6px;">
+								<option value="last_updated" {% if sort_by == 'last_updated' %}selected{% endif %}>Last Updated</option>
+								<option value="submitted_at" {% if sort_by == 'submitted_at' %}selected{% endif %}>Date Submitted</option>
+								<option value="title" {% if sort_by == 'title' %}selected{% endif %}>Title</option>
+								<option value="status" {% if sort_by == 'status' %}selected{% endif %}>Status</option>
+							</select>
+						</label>
 
-							<!-- Status Filter -->
-							<label style="font-weight:500;color:#374151;display:flex;flex-direction:column;">
-								Status
-								<select name="status" style="width:100%;margin-top:6px;">
-									<option value="">All Status</option>
-									<option value="RECEIVED" {% if filter_status == 'RECEIVED' %}selected{% endif %}>Received</option>
-									<option value="UNDER_REVIEW" {% if filter_status == 'UNDER_REVIEW' %}selected{% endif %}>Under Review</option>
-									<option value="APPROVED" {% if filter_status == 'APPROVED' %}selected{% endif %}>Approved</option>
-									<option value="REJECTED" {% if filter_status == 'REJECTED' %}selected{% endif %}>Rejected</option>
-									<option value="ENDORSED" {% if filter_status == 'ENDORSED' %}selected{% endif %}>Endorsed</option>
-									<option value="DENIED" {% if filter_status == 'DENIED' %}selected{% endif %}>Denied</option>
-								</select>
-							</label>
+						<!-- Order -->
+						<label style="font-weight:500;color:#374151;display:flex;flex-direction:column;">
+							Order
+							<select name="order" style="width:100%;margin-top:6px;">
+								<option value="desc" {% if order == 'desc' %}selected{% endif %}>Descending</option>
+								<option value="asc" {% if order == 'asc' %}selected{% endif %}>Ascending</option>
+							</select>
+						</label>
 
-							<!-- Bottom Right - Date -->
-							<label style="font-weight:500;color:#374151;display:flex;flex-direction:column;">
-								Date
-								<input type="date" name="date" value="{{ filter_date|default:'' }}" style="width:100%;margin-top:6px;" />
-							</label>
-						</div>
+						<!-- Status Filter -->
+						<label style="font-weight:500;color:#374151;display:flex;flex-direction:column;">
+							Status
+							<select name="status" style="width:100%;margin-top:6px;">
+								<option value="">All Status</option>
+								<option value="RECEIVED" {% if status == 'RECEIVED' %}selected{% endif %}>Received</option>
+								<option value="UNDER_REVIEW" {% if status == 'UNDER_REVIEW' %}selected{% endif %}>Under Review</option>
+								<option value="APPROVED" {% if status == 'APPROVED' %}selected{% endif %}>Approved</option>
+								<option value="REJECTED" {% if status == 'REJECTED' %}selected{% endif %}>Rejected</option>
+								<option value="ENDORSED" {% if status == 'ENDORSED' %}selected{% endif %}>Endorsed</option>
+								<option value="DENIED" {% if status == 'DENIED' %}selected{% endif %}>Denied</option>
+							</select>
+						</label>
 
-						<!-- Buttons Row -->
-						<div style="display:flex;justify-content:flex-end;gap:10px;margin-top:24px;">
-						<button type="submit" class="filter-apply">Apply</button>
-						<button type="button" id="closeFilter" class="filter-close">Close</button>
-						</div>
+						<!-- Bottom Right - Date -->
+						<label style="font-weight:500;color:#374151;display:flex;flex-direction:column;">
+							Date
+							<input type="date" name="date" value="{{ date|default:'' }}" style="width:100%;margin-top:6px;" />
+						</label>
 					</div>
 
-		       </form>
+					<!-- Buttons Row -->
+					<div style="display:flex;justify-content:flex-end;gap:10px;margin-top:24px;">
+					<button type="submit" class="filter-apply">Apply</button>
+					<button type="button" id="closeFilter" class="filter-close">Close</button>
+					</div>
+				</div>
+			</form>
 		</div>
-
-		<div class="status-counts">
-			<span class="status-count confirmed-count">0 Confirmed</span>
-			<span class="status-count rejected-count">0 Rejected</span>
-		</div>
-		<table class="project-table">
+		
+		<table class="table">
 			<thead>
 				<tr>
-					<th style="width: 50%;">Title</th>
-					<th style="width: 25%;">Date Given</th>
-					<th style="width: 25%;">Status</th>
+					<th>Title</th>
+					<th>Date Submitted</th>
+					<th>Last Updated</th>
+					<th>Status</th>
 				</tr>
 			</thead>
-			<tbody></tbody>
+			<tbody>
+				{% for req in requests %}
+				<tr>
+					<td><a href="{% url 'request_details_dispatcher' req.pk %}" style="color:#063A1C;font-weight:600;text-decoration:underline;">{{ req.title }}</a></td>
+					<td>{{ req.submitted_at|date:'Y-m-d H:i' }}</td>
+					<td>{{ req.last_updated|date:'Y-m-d H:i' }}</td>
+					<td>{{ req.get_status_display }}</td>
+				</tr>
+				{% empty %}
+				<tr><td colspan="4" style="text-align:center;color:gray;padding:2rem;">No requests found.</td></tr>
+				{% endfor %}
+			</tbody>
 		</table>
+
+		<!-- Pagination -->
+		<div class="pagination-container">
+			{% if page_obj.has_previous %}
+				<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page=1">First</a>
+				<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a>
+			{% else %}
+				<button class="pagination-button" disabled>First</button>
+				<button class="pagination-button" disabled>Previous</button>
+			{% endif %}
+
+			{% for num in page_range %}
+				{% if num == page_obj.number %}
+					<button class="pagination-button active" disabled>{{ num }}</button>
+				{% else %}
+					<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ num }}">{{ num }}</a>
+				{% endif %}
+			{% endfor %}
+
+			{% if page_obj.has_next %}
+				<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.next_page_number }}">Next</a>
+				<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ paginator.num_pages }}">Last</a>
+			{% else %}
+				<button class="pagination-button" disabled>Next</button>
+				<button class="pagination-button" disabled>Last</button>
+			{% endif %}
+
+			<span class="page-info">Page {{ page_obj.number }} of {{ paginator.num_pages }}</span>
+		</div>
 	</div>
 </main>
 
@@ -476,7 +615,7 @@
         padding: 2rem 2rem 2rem 2rem;
         min-width: 400px;
         max-width: 95vw;
-        max-height: 420px;
+        max-height: 40px;
         box-shadow: 0 8px 32px rgba(0,0,0,0.18);
         position: relative;
         overflow-y: auto;
@@ -492,7 +631,7 @@
         display: flex;
         align-items: flex-start;
         gap: 1rem;
-        margin-bottom: 0.5rem;
+        margin-bottom: 15px;
     }
     .form-label {
         font-weight: 600;
@@ -523,7 +662,7 @@
     }
 
 	.required { color: #DC2626; }
-    .form-actions { display: flex; gap: 1rem; margin-top: 1.5rem; }
+    .form-actions { display: flex; gap: 1rem; margin-top: 40px; }
 	.submit-btn:hover { background-color: #07532F; }
     .back-btn:hover { background-color: #D1D5DB; }
     textarea { resize: none; }
@@ -540,7 +679,7 @@
 
 <!-- Submit Request Modal -->
 <div id="submit-request-modal" class="event-modal" style="display:none;align-items:center;justify-content:center;">
-    <div class="event-modal-content" style="min-width:400px;max-width:95vw;max-height:500px;height:500px;overflow-y:auto;">
+    <div class="event-modal-content" style="min-width:400px;max-width:95vw;max-height:535px;height:535px;overflow-y:auto;">
         <span class="close" id="close-submit-request-modal">&times;</span>
         <h2 id="submit-request-modal-title" style="margin-bottom:1rem;">Submit Request</h2>
         <form id="submit-request-form" method="post" enctype="multipart/form-data" action="/requests/submit/">
@@ -579,57 +718,6 @@
 
 
 <script>
-	const projects = [
-		{ title: "Project A", dateGiven: "2025-10-07", status: "Confirmed" },
-		{ title: "Project B", dateGiven: "2025-10-06", status: "Rejected" },
-		{ title: "Project C", dateGiven: "2025-10-05", status: "Confirmed" }
-	];
-
-	function updateStatusCounts() {
-		const confirmed = projects.filter(p => p.status === 'Confirmed').length;
-		const rejected = projects.filter(p => p.status === 'Rejected').length;
-		
-		document.querySelector('.confirmed-count').innerHTML = 
-			`<span class="number">${confirmed}</span><span class="label">Confirmed</span>`;
-		document.querySelector('.rejected-count').innerHTML = 
-			`<span class="number">${rejected}</span><span class="label">Rejected</span>`;
-	}
-
-	function renderListView() {
-		const tbody = document.querySelector(".project-table tbody");
-		tbody.innerHTML = "";
-
-		if (projects.length === 0) {
-		const row = document.createElement("tr");
-		const cell = document.createElement("td");
-		cell.colSpan = 3;
-		cell.textContent = "No items.";
-		cell.style.textAlign = "center";
-		cell.style.padding = "2rem";
-		cell.style.color = "gray";
-		cell.style.fontSize = "1rem";
-		row.appendChild(cell);
-		tbody.appendChild(row);
-		return;
-		}
-
-		projects.forEach(proj => {
-		const row = document.createElement("tr");
-		row.innerHTML = `
-			<td>${proj.title}</td>
-			<td>${proj.dateGiven}</td>
-			<td style="font-weight:600; color:${proj.status === 'Confirmed' ? '#1a7f37' : '#c20000'};">
-			${proj.status}
-			</td>
-		`;
-		tbody.appendChild(row);
-		});
-
-		updateStatusCounts();
-	}
-
-	document.addEventListener('DOMContentLoaded', renderListView);
-
 	// Modal open/close logic for Submit Request
 	const submitRequestModal = document.getElementById('submit-request-modal');
 	const openSubmitRequestBtn = document.querySelector('.add-request-btn');

@@ -414,7 +414,7 @@
         <div class="search-container">
             <form class="search-bar" method="get" action="">
                 <svg width="20" height="20"> <use href="#icon-search"></use> </svg>
-                <input type="text" name="search" placeholder="Search by title..." value="{{ search|default:'' }}"/>
+                <input type="text" name="search" placeholder="Search by Title" value="{{ search|default:'' }}"/>
                 <button type="button" id="filterBtn" style="background:none;border:none;padding:0;margin-right:5px;cursor:pointer;">
                     <svg width="20" height="20"> <use href="#icon-filter"></use> </svg>
                 </button>
@@ -462,6 +462,8 @@
                     <th>Organization</th>
                     <th>Date Submitted</th>
                     <th>Submitted By</th>
+                    <th>Last Updated</th>
+                    <th>Updated By</th>
                     <th>Status</th>
                 </tr>
             </thead>
@@ -469,17 +471,19 @@
                 {% for request in requests %}
                 <tr>
                     <td>
-                        <a href="{% url 'request_details' request.id %}" class="name-link" title="{{ request.title }}">
+                        <a href="{% url 'admin_request_details_entry' request.id %}" class="name-link" title="{{ request.title }}">
                             {{ request.title|truncatechars:20 }}
                         </a>
                     </td>
-                    <td>{{ request.organization.name }}</td>
-                    <td>{{ request.submitted_at|date:"Y-m-d" }}</td>
+                    <td>{{ request.organization }}</td>
+                    <td>{{ request.submitted_at|date:"Y-m-d H:i" }}</td>
                     <td>{{ request.submitted_by.get_full_name }}</td>
+                    <td>{{ request.last_updated|date:"Y-m-d H:i" }}</td>
+                    <td>{{ request.updated_by.get_full_name|default:"N/A" }}</td>
                     <td>{{ request.get_status_display }}</td>
                 </tr>
                 {% empty %}
-                <tr><td colspan="5" style="text-align:center;">No requests found.</td></tr>
+                <tr><td colspan="6" style="text-align:center;">No requests found.</td></tr>
                 {% endfor %}
             </tbody>
         </table>

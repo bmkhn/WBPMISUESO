@@ -1,0 +1,325 @@
+{% extends "base_internal.html" %}
+{% block content %}
+<title>Request Details</title>
+
+<style>
+    body {
+        background: #F9F9F9;
+        margin: 0;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .main-container {
+        margin: 60px;
+        display: flex;
+        flex-direction: column;
+        gap: 30px;
+    }
+
+    .detail-text {
+        font-family: 'Inter', sans-serif;
+        font-weight: 400;
+        font-size: 32px;
+        color: #000000;
+    }
+
+    .detail-container {
+        border-radius: 20px;
+        background: #FEFCFC;
+        box-shadow: 0 0 8px 1px rgba(0, 0, 0, 0.25);
+        padding: 50px 60px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .detail-trio {
+        display: flex;
+        align-items: flex-start;
+    }
+
+    .detail-trio > :nth-child(1) {
+        margin-right: 15px;
+    }
+
+    .detail-trio > :nth-child(2) {
+        margin-right: 75px;
+    }
+
+    .detail-icon {
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .detail-item {
+        font-family: 'Inter', sans-serif;
+        font-weight: 600;
+        font-size: 20px;
+        width: 170px;
+    }
+
+    .detail-value {
+        font-family: 'Inter', sans-serif;
+        font-weight: 400;
+        font-size: 20px;
+    }
+
+
+    .back-btn, .action-btn, .reject-btn {
+        display: inline-block;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 1rem;
+        font-weight: 500;
+        border: none;
+        text-align: center;
+        font-family: 'Inter', sans-serif;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    .back-btn { background: #6B7280; }
+    .back-btn:hover { background: #4b5563; }
+    .action-btn { background: #063A1C; }
+    .action-btn:hover { background: #095c2d; }
+    .reject-btn { background: #D5110A; }
+    .reject-btn:hover { background: #a10c07; }
+
+    /* Modal Styles */
+    .modal-bg {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.25);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .modal {
+        background: #fff;
+        border-radius: 1rem;
+        box-shadow: 0 2px 16px rgba(0,0,0,0.18);
+        padding: 2.5rem 2.5rem 2rem 2.5rem;
+        min-width: 350px;
+        max-width: 95vw;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        align-items: center;
+    }
+    .modal-title {
+        font-size: 1.3rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: #222;
+    }
+    .modal-content {
+        font-size: 1rem;
+        color: #444;
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+    .modal-actions {
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+        width: 100%;
+    }
+    .modal input, .modal textarea {
+        width: 100%;
+        padding: 0.5rem;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        font-size: 1rem;
+        font-family: 'Inter', sans-serif;
+        margin-bottom: 1rem;
+    }
+
+    textarea {
+        resize: none;
+    }
+
+</style>
+
+<div class="main-container">
+    <div class="detail-text">Request Details</div>
+    <div class="detail-container">
+        <div class="detail-trio">
+            <span class="detail-icon">
+                <svg width="24" height="24"><use href="#detail-icon"/></svg>
+            </span>
+            <span class="detail-item">Title</span>
+            <span class="detail-value">{{ req.title }}</span>
+        </div>
+        <div class="detail-trio">
+            <span class="detail-icon">
+                <svg width="24" height="24"><use href="#detail-icon"/></svg>
+            </span>
+            <span class="detail-item">Organization</span>
+            <span class="detail-value">{{ req.organization }}</span>
+        </div>
+        <div class="detail-trio">
+            <span class="detail-icon">
+                <svg width="24" height="24"><use href="#detail-icon"/></svg>
+            </span>
+            <span class="detail-item">Primary Location</span>
+            <span class="detail-value">{{ req.primary_location }}</span>
+        </div>
+        <div class="detail-trio">
+            <span class="detail-icon">
+                <svg width="24" height="24"><use href="#detail-icon"/></svg>
+            </span>
+            <span class="detail-item">Primary Beneficiaries</span>
+            <span class="detail-value">{{ req.primary_beneficiary }}</span>
+        </div>
+        <div class="detail-trio">
+            <span class="detail-icon">
+                <svg width="24" height="24"><use href="#detail-icon"/></svg>
+            </span>
+            <span class="detail-item">Summary</span>
+            <span class="detail-value">{{ req.summary }}</span>
+        </div>
+        <div class="detail-trio">
+            <span class="detail-icon">
+                <svg width="24" height="24"><use href="#detail-icon"/></svg>
+            </span>
+            <span class="detail-item">Status</span>
+            <span class="detail-value">{{ req.get_status_display }}</span>
+        </div>
+        <div class="detail-trio">
+            <span class="detail-icon">
+                <svg width="24" height="24"><use href="#detail-icon"/></svg>
+            </span>
+            <span class="detail-item">Date Submitted</span>
+            <span class="detail-value">{{ req.submitted_at|date:'Y-m-d H:i' }}</span>
+        </div>
+        <div class="detail-trio">
+            <span class="detail-icon">
+                <svg width="24" height="24"><use href="#detail-icon"/></svg>
+            </span>
+            <span class="detail-item">Letter of Intent</span>
+            <span class="detail-value">
+                {% if req.letter_of_intent %}
+                    <a href="{{ req.letter_of_intent.url }}" target="_blank">Download</a>
+                {% else %}
+                    <span style="color:#888;">None</span>
+                {% endif %}
+            </span>
+        </div>
+        {% if req.reason %}
+        <div class="detail-trio">
+            <span class="detail-icon">
+                <svg width="24" height="24"><use href="#detail-icon"/></svg>
+            </span>
+            <span class="detail-item">Reason of Rejection</span>
+            <span class="detail-value">{{ req.reason|default:'-' }}</span>
+        </div>
+        {% endif %}
+    </div>
+
+
+    <div style="display:flex;flex-direction:row;justify-content:space-between;align-items:center;">
+        <a href="{% url 'request_dispatcher' %}" class="back-btn" style="width:auto;align-self:left;">Back to Requests</a>
+
+        {% if req.status == 'UNDER_REVIEW' %}
+        <div style="display: flex; gap: 15px;">
+            <button type="button" class="action-btn" id="approve-btn">Approve</button>
+            <button type="button" class="reject-btn" id="reject-btn">Reject</button>
+        </div>
+        {% elif req.status == 'APPROVED' %}
+        <div style="display: flex; gap: 40px;">
+            <button type="button" class="action-btn" id="endorse-btn">Endorse</button>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Modals -->
+    <div id="modal-bg" class="modal-bg" style="display:none;">
+        <div class="modal" id="modal-reject" style="display:none;">
+            <div class="modal-title">Reject Request</div>
+            <div class="modal-content">Please provide a reason for rejection:</div>
+            <form method="post" action="{% url 'admin_request_action' req.id %}" style="width:100%;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="reject" />
+                <textarea name="reason" rows="3" required placeholder="Enter reason..." style="resize:vertical;"></textarea>
+                <div class="modal-actions">
+                    <button type="button" class="back-btn" id="cancel-reject">Cancel</button>
+                    <button type="submit" class="reject-btn">Reject</button>
+                </div>
+            </form>
+        </div>
+        <div class="modal" id="modal-approve" style="display:none;">
+            <div class="modal-title">Confirm Approval</div>
+            <div class="modal-content">Are you sure you want to approve this request?</div>
+            <form method="post" action="{% url 'admin_request_action' req.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="approve" />
+                <div class="modal-actions">
+                    <button type="button" class="back-btn" id="cancel-approve">Cancel</button>
+                    <button type="submit" class="action-btn">Approve</button>
+                </div>
+            </form>
+        </div>
+        <div class="modal" id="modal-endorse" style="display:none;">
+            <div class="modal-title">Confirm Endorsement</div>
+            <div class="modal-content">Confirm that this request letter has been endorsed<br>and forwarded to the president's office?</div>
+            <form method="post" action="{% url 'admin_request_action' req.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="endorse" />
+                <div class="modal-actions">
+                    <button type="button" class="back-btn" id="cancel-endorse">Cancel</button>
+                    <button type="submit" class="action-btn">Endorse</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+    // Modal logic
+    function showModal(which) {
+        document.getElementById('modal-bg').style.display = 'flex';
+        document.getElementById('modal-reject').style.display = (which === 'reject') ? 'flex' : 'none';
+        document.getElementById('modal-approve').style.display = (which === 'approve') ? 'flex' : 'none';
+        document.getElementById('modal-endorse').style.display = (which === 'endorse') ? 'flex' : 'none';
+    }
+    function hideModal() {
+        document.getElementById('modal-bg').style.display = 'none';
+        document.getElementById('modal-reject').style.display = 'none';
+        document.getElementById('modal-approve').style.display = 'none';
+        document.getElementById('modal-endorse').style.display = 'none';
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+        var rejectBtn = document.getElementById('reject-btn');
+        var approveBtn = document.getElementById('approve-btn');
+        var endorseBtn = document.getElementById('endorse-btn');
+        if (rejectBtn) rejectBtn.onclick = function() { showModal('reject'); };
+        if (approveBtn) approveBtn.onclick = function() { showModal('approve'); };
+        if (endorseBtn) endorseBtn.onclick = function() { showModal('endorse'); };
+        // Cancel buttons
+        var cancelReject = document.getElementById('cancel-reject');
+        var cancelApprove = document.getElementById('cancel-approve');
+        var cancelEndorse = document.getElementById('cancel-endorse');
+        if (cancelReject) cancelReject.onclick = hideModal;
+        if (cancelApprove) cancelApprove.onclick = hideModal;
+        if (cancelEndorse) cancelEndorse.onclick = hideModal;
+        // Hide modal when clicking outside
+        document.getElementById('modal-bg').addEventListener('click', function(e) {
+            if (e.target === this) hideModal();
+        });
+    });
+    </script>
+
+
+    
+</div>
+
+<svg style="display:none;">
+    <symbol id="detail-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M11.8008 17.5508C12.1266 17.5508 12.3999 17.4404 12.6207 17.2196C12.8415 16.9988 12.9515 16.7258 12.9508 16.4008V11.8008C12.9508 11.4749 12.8404 11.202 12.6196 10.982C12.3988 10.7619 12.1258 10.6515 11.8008 10.6508C11.4757 10.65 11.2028 10.7604 10.982 10.982C10.7612 11.2035 10.6508 11.4765 10.6508 11.8008V16.4008C10.6508 16.7266 10.7612 16.9999 10.982 17.2207C11.2028 17.4415 11.4757 17.5515 11.8008 17.5508ZM11.8008 8.35078C12.1266 8.35078 12.3999 8.24038 12.6207 8.01958C12.8415 7.79878 12.9515 7.52585 12.9508 7.20078C12.95 6.87571 12.8396 6.60278 12.6196 6.38198C12.3995 6.16118 12.1266 6.05078 11.8008 6.05078C11.4749 6.05078 11.202 6.16118 10.982 6.38198C10.7619 6.60278 10.6515 6.87571 10.6508 7.20078C10.65 7.52585 10.7604 7.79916 10.982 8.02073C11.2035 8.2423 11.4765 8.35231 11.8008 8.35078ZM11.8008 23.3008C10.2099 23.3008 8.71495 22.9987 7.31578 22.3946C5.91662 21.7904 4.69953 20.9713 3.66453 19.937C2.62953 18.9028 1.81035 17.6857 1.20698 16.2858C0.603616 14.8858 0.301549 13.3908 0.300783 11.8008C0.300016 10.2107 0.602083 8.71571 1.20698 7.31578C1.81188 5.91585 2.63107 4.69876 3.66453 3.66453C4.698 2.6303 5.91508 1.81111 7.31578 1.20698C8.71648 0.602848 10.2115 0.300781 11.8008 0.300781C13.3901 0.300781 14.8851 0.602848 16.2858 1.20698C17.6865 1.81111 18.9036 2.6303 19.937 3.66453C20.9705 4.69876 21.7901 5.91585 22.3957 7.31578C23.0014 8.71571 23.3031 10.2107 23.3008 11.8008C23.2985 13.3908 22.9964 14.8858 22.3946 16.2858C21.7927 17.6857 20.9736 18.9028 19.937 19.937C18.9005 20.9713 17.6834 21.7908 16.2858 22.3957C14.8881 23.0006 13.3931 23.3023 11.8008 23.3008ZM11.8008 21.0008C14.3691 21.0008 16.5445 20.1095 18.327 18.327C20.1095 16.5445 21.0008 14.3691 21.0008 11.8008C21.0008 9.23245 20.1095 7.05703 18.327 5.27453C16.5445 3.49203 14.3691 2.60078 11.8008 2.60078C9.23245 2.60078 7.05703 3.49203 5.27453 5.27453C3.49203 7.05703 2.60078 9.23245 2.60078 11.8008C2.60078 14.3691 3.49203 16.5445 5.27453 18.327C7.05703 20.1095 9.23245 21.0008 11.8008 21.0008Z" fill="black"/>
+    </symbol>
+</svg>
+{% endblock %}
