@@ -5,7 +5,7 @@ from shared.downloadables.models import Downloadable
 
 # Submission Requirement (by UESO, VP, Director)
 class SubmissionRequirement(models.Model):
-	projects = models.ManyToManyField(Project, related_name='submission_requirements')
+	project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='submission_requirements')
 	downloadables = models.ManyToManyField(Downloadable, related_name='submission_requirements')
 	deadline = models.DateTimeField()
 	notes = models.TextField(blank=True, null=True)

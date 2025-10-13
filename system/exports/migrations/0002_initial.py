@@ -10,14 +10,14 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('downloadables', '0001_initial'),
+        ('exports', '0001_initial'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='downloadable',
-            name='uploaded_by',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='uploaded_downloadables', to=settings.AUTH_USER_MODEL),
+            model_name='exportrequest',
+            name='submitted_by',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='export_requests', to=settings.AUTH_USER_MODEL),
         ),
     ]

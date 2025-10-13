@@ -99,16 +99,26 @@ WSGI_APPLICATION = 'WBPMISUESO.wsgi.application'
 
 
 # Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+#
+# For production (PostgreSQL):
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'ueso',                 # Database Name
+#         'USER': 'postgres',             # Username
+#         'PASSWORD': 'postgres',         # Password
+#         'HOST': 'localhost',            # Server Host
+#         'PORT': '5432',                 # Server Port
+#     }
+# }
+
+# For development/testing (SQLite):
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'ueso',                 # Database Name
-        'USER': 'postgres',             # Username
-        'PASSWORD': 'postgres',         # Password
-        'HOST': 'localhost',            # Server Host
-        'PORT': '5432',                 # Server Port
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 

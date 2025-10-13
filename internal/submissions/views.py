@@ -80,18 +80,17 @@ def add_submission_requirement(request):
     downloadables = Downloadable.objects.filter(is_submission_template=True)
 
     if request.method == "POST":
-        project_ids = request.POST.getlist('projects')
+        project_id = request.POST.get('project')
         downloadable_ids = request.POST.getlist('downloadables')
         deadline = request.POST.get('deadline')
         error = None
-        if not project_ids:
-            error = "At least one project is required."
+        if not project_id:
+            error = "A project is required."
         if not downloadable_ids:
             error = "At least one downloadable is required."
         if not deadline:
             error = "Deadline is required."
         if error:
-            print("Post")
             return render(request, 'submissions/add_submissions.html', {
                 'projects': projects,
                 'downloadables': downloadables,
@@ -99,12 +98,12 @@ def add_submission_requirement(request):
             })
         # Create SubmissionRequirement
         sr = SubmissionRequirement.objects.create(
+            project=Project.objects.get(id=project_id),
             deadline=deadline,
             created_by=request.user,
             status='pending',
             created_at=timezone.now()
         )
-        sr.projects.set(Project.objects.filter(id__in=project_ids))
         sr.downloadables.set(Downloadable.objects.filter(id__in=downloadable_ids))
         sr.save()
         return render(request, 'submissions/add_submissions.html', {
