@@ -1,7 +1,6 @@
 from django.http import HttpResponseRedirect
 from django.core.paginator import Paginator
 from django.shortcuts import redirect, render
-from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 from shared.announcements.forms import AnnouncementForm
 from system.users.decorators import role_required
@@ -140,7 +139,6 @@ def user_announcement_view(request):
 
 
 # SuperUser Announcement View
-@login_required
 @role_required(allowed_roles=["PROGRAM_HEAD", "DEAN", "COORDINATOR"])
 def announcement_superuser_view(request):
     search_query = request.GET.get('search', '').strip()
@@ -234,7 +232,6 @@ def announcement_superuser_view(request):
 
 
 # Admin Announcement View
-@login_required
 @role_required(allowed_roles=["VP", "DIRECTOR", "UESO"])
 def announcement_admin_view(request):
     search_query = request.GET.get('search', '').strip()
@@ -381,7 +378,6 @@ def announcement_admin_view(request):
 
 
 # Add Announcement View
-@login_required
 @role_required(allowed_roles=["VP", "DIRECTOR", "UESO"])
 def add_announcement_view(request):
     if request.method == 'POST':
@@ -408,7 +404,6 @@ def add_announcement_view(request):
 
 
 # Edit Announcement View
-@login_required
 @role_required(allowed_roles=["VP", "DIRECTOR", "UESO"])
 def edit_announcement_view(request, id):
 
@@ -439,7 +434,6 @@ def edit_announcement_view(request, id):
 
 
 # Delete Announcement View
-@login_required
 @role_required(allowed_roles=["VP", "DIRECTOR", "UESO"])
 def delete_announcement_view(request, id):
     from .models import Announcement
@@ -448,7 +442,6 @@ def delete_announcement_view(request, id):
     return HttpResponseRedirect(reverse('announcement_dispatcher'))
 
 # Archive Announcement View
-@login_required
 @role_required(allowed_roles=["VP", "DIRECTOR", "UESO"])
 def archive_announcement_view(request, id):
     announcement = get_object_or_404(Announcement, id=id)
@@ -460,7 +453,6 @@ def archive_announcement_view(request, id):
 
 
 # Unarchive Announcement View
-@login_required
 @role_required(allowed_roles=["VP", "DIRECTOR", "UESO"])
 def unarchive_announcement_view(request, id):
     announcement = get_object_or_404(Announcement, id=id)

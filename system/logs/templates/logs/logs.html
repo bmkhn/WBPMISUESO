@@ -187,60 +187,39 @@
         <thead>
             <tr>
                 <th>User</th>
-                <th>Activity</th>
-                <th>Date</th>
-                <th>Time</th>
+                <th>Action</th>
+                <th>Model</th>
+                <th>Object ID</th>
+                <th>Object Repr</th>
+                <th>Timestamp</th>
+                <th>Details</th>
+                <th>URL</th>
             </tr>
         </thead>
         <tbody>
+            {% for log in logs %}
             <tr>
                 <td>
-                    Alice Johnson
-                    <span class="user-email">alice.johnson@email.com</span>
+                    {{ log.user.get_full_name|default:'-' }}
+                    {% if log.user and log.user.email %}
+                        <span class="user-email">{{ log.user.email }}</span>
+                    {% endif %}
                 </td>
+                <td>{{ log.get_action_display }}</td>
+                <td>{{ log.model }}</td>
+                <td>{{ log.object_id }}</td>
+                <td title="{{ log.object_repr }}">{{ log.object_repr|truncatechars:7 }}</td>
+                <td>{{ log.timestamp|date:"Y-m-d H:i:s" }}</td>
+                <td title="{{ log.details }}">{{ log.details|truncatechars:30 }}</td>
                 <td>
-                    Logged in
-                    <span class="project-name">Teaching Media Literacy</span>
+                    {% if log.url %}
+                        <a href="{{ log.url  }}">Link</a>
+                    {% endif %}
                 </td>
-                <td>2025-08-26</td>
-                <td>09:15</td>
             </tr>
-            <tr>
-                <td>
-                    Bob Smith
-                    <span class="user-email">bob.smith@email.com</span>
-                </td>
-                <td>
-                    Exported report
-                    <span class="project-name">Teaching Media Literacy</span>
-                </td>
-                <td>2025-08-26</td>
-                <td>09:20</td>
-            </tr>
-            <tr>
-                <td>
-                    Carol Lee
-                    <span class="user-email">carol.lee@email.com</span>
-                </td>
-                <td>
-                    Changed password
-                    <span class="project-name">Teaching Media Literacy</span>
-                </td>
-                <td>2025-08-25</td>
-                <td>17:45</td>
-            </tr>
-            <tr>
-                <td>
-                    David Kim
-                    <span class="user-email">david.kim@email.com</span>
-                </td>
-                <td>
-                    Added new user
-                    <span class="project-name">Teaching Media Literacy</span>
-                </td>
-                <td>2025-08-25</td>
-                <td>16:30</td>
-            </tr>
+            {% empty %}
+            <tr><td colspan="9" style="text-align:center;">No logs found.</td></tr>
+            {% endfor %}
         </tbody>
     </table>
 </div>

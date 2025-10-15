@@ -1,5 +1,4 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
 from shared.request.models import ClientRequest
 from system.users.decorators import role_required
 from django.utils import timezone
@@ -7,7 +6,7 @@ from django.core.paginator import Paginator
 from django.urls import reverse
 from .models import RequestUpdate
 
-@login_required
+
 @role_required(allowed_roles=["UESO", "VP", "DIRECTOR", "CLIENT"])
 def request_dispatcher(request):
     if request.user.role == 'CLIENT':
@@ -16,7 +15,7 @@ def request_dispatcher(request):
         return request_admin_view(request)
 
 
-@login_required
+
 @role_required(allowed_roles=["UESO", "VP", "DIRECTOR", "CLIENT"])
 def request_details_dispatcher(request, pk):
     # Only allow the submitter or privileged roles to view
@@ -61,7 +60,7 @@ def request_details_dispatcher(request, pk):
 ########################################################################################################################
 
 
-@login_required
+
 @role_required(allowed_roles=["CLIENT"])
 def request_client_view(request):
     # Get recent status updates for this user's requests
@@ -90,7 +89,7 @@ def request_client_view(request):
     query_params = {}
 
     # Filters
-    sort_by = request.GET.get('sort_by', 'last_updated')
+    sort_by = request.GET.get('sort_by', 'updated_at')
     query_params['sort_by'] = sort_by
     order = request.GET.get('order', 'desc')
     query_params['order'] = order
@@ -100,7 +99,7 @@ def request_client_view(request):
         query_params['status'] = status
     date = request.GET.get('date', '')
     if date:
-        requests = requests.filter(submitted_at__date=date) | requests.filter(last_updated__date=date)
+        requests = requests.filter(submitted_at__date=date) | requests.filter(updated_at__date=date)
         requests = requests.distinct()
         query_params['date'] = date
     search = request.GET.get('search', '').strip()
@@ -110,18 +109,18 @@ def request_client_view(request):
 
     # Sorting
     sort_map = {
-        'last_updated': 'last_updated',
+        'updated_at': 'updated_at',
         'submitted_at': 'submitted_at',
         'status': 'status',
         'title': 'title',
     }
     if sort_by:
-        sort_field = sort_map.get(sort_by, 'last_updated')
+        sort_field = sort_map.get(sort_by, 'updated_at')
         if order == 'desc':
             sort_field = '-' + sort_field
-        requests = requests.order_by(sort_field, '-last_updated', '-submitted_at')
+        requests = requests.order_by(sort_field, '-updated_at', '-submitted_at')
     else:
-        requests = requests.order_by('-last_updated', '-submitted_at')
+        requests = requests.order_by('-updated_at', '-submitted_at')
 
     querystring = urlencode(query_params)
 
@@ -157,7 +156,7 @@ def request_client_view(request):
     })
 
 
-@login_required
+
 @role_required(allowed_roles=["CLIENT"])
 def submit_request(request):
     if request.method == 'POST':
@@ -189,7 +188,7 @@ def submit_request(request):
 ########################################################################################################################
 
 
-@login_required
+
 @role_required(allowed_roles=["UESO", "VP", "DIRECTOR"])
 def request_admin_view(request):
     from urllib.parse import urlencode
@@ -197,7 +196,7 @@ def request_admin_view(request):
     query_params = {}
 
     # Filters
-    sort_by = request.GET.get('sort_by', 'last_updated')
+    sort_by = request.GET.get('sort_by', 'updated_at')
     query_params['sort_by'] = sort_by
     order = request.GET.get('order', 'desc')
     query_params['order'] = order
@@ -218,18 +217,18 @@ def request_admin_view(request):
 
     # Sorting
     sort_map = {
-        'last_updated': 'last_updated',
+        'updated_at': 'updated_at',
         'submitted_at': 'submitted_at',
         'status': 'status',
         'title': 'title',
     }
     if sort_by:
-        sort_field = sort_map.get(sort_by, 'last_updated')
+        sort_field = sort_map.get(sort_by, 'updated_at')
         if order == 'desc':
             sort_field = '-' + sort_field
-        requests = requests.order_by(sort_field, '-last_updated', '-submitted_at')
+        requests = requests.order_by(sort_field, '-updated_at', '-submitted_at')
     else:
-        requests = requests.order_by('-last_updated', '-submitted_at')
+        requests = requests.order_by('-updated_at', '-submitted_at')
 
     querystring = urlencode(query_params)
 
@@ -265,25 +264,26 @@ def request_admin_view(request):
 
 
 # APPROVE/REJECT/ENDORSE
-@login_required
+
 @role_required(allowed_roles=["UESO", "VP", "DIRECTOR"])
 def admin_request_action(request, pk):
     req = get_object_or_404(ClientRequest, pk=pk)
     from django.utils import timezone
     if request.method == 'POST':
         action = request.POST.get('action')
-        old_status = req.status
         if req.status == 'UNDER_REVIEW':
             if action == 'approve':
                 req.status = 'APPROVED'
                 req.reviewed_by = request.user
                 req.review_at = timezone.now()
+                req.updated_at = timezone.now()
                 req.updated_by = request.user
                 req.save()
             elif action == 'reject':
                 req.status = 'REJECTED'
                 req.reviewed_by = request.user
                 req.review_at = timezone.now()
+                req.updated_at = timezone.now()
                 req.updated_by = request.user
                 req.reason = request.POST.get('reason', '')
                 req.save()
@@ -291,6 +291,7 @@ def admin_request_action(request, pk):
             req.status = 'ENDORSED'
             req.endorsed_by = request.user
             req.endorsed_at = timezone.now()
+            req.updated_at = timezone.now()
             req.updated_by = request.user
             req.save()
             
@@ -302,13 +303,13 @@ def admin_request_action(request, pk):
                 status=req.status,
                 defaults={
                     'viewed': False,
-                    'updated_at': req.last_updated,
+                    'updated_at': req.updated_at,
                 }
             )
     return redirect('request_details_dispatcher', pk=pk)
 
 
-@login_required
+
 @role_required(allowed_roles=["UESO", "VP", "DIRECTOR"])
 def admin_request_details_entry(request, pk):
     req = get_object_or_404(ClientRequest, pk=pk)

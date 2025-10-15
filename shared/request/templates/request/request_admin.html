@@ -478,7 +478,7 @@
                     <td>{{ request.organization }}</td>
                     <td>{{ request.submitted_at|date:"Y-m-d H:i" }}</td>
                     <td>{{ request.submitted_by.get_full_name }}</td>
-                    <td>{{ request.last_updated|date:"Y-m-d H:i" }}</td>
+                    <td>{{ request.updated_at|date:"Y-m-d H:i" }}</td>
                     <td>{{ request.updated_by.get_full_name|default:"N/A" }}</td>
                     <td>{{ request.get_status_display }}</td>
                 </tr>

@@ -1,7 +1,6 @@
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout, authenticate, get_user_model
-from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
 
 from system.users.models import College
@@ -47,11 +46,9 @@ def role_redirect(request):
     else:
         return redirect("home")
 
-@login_required
 def home(request):
     return render(request, 'base_public.html')  # extends base_public.html
 
-@login_required
 def dashboard(request):
     return render(request, 'base_internal.html')  # extends base_internal.html
 
@@ -294,7 +291,6 @@ def not_confirmed_view(request):
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404
 
-@login_required
 @role_required(allowed_roles=["VP", "DIRECTOR"])
 def manage_user(request):
     query_params = {}
@@ -404,7 +400,6 @@ def manage_user(request):
     })
 
 
-@login_required
 def user_details_view(request, id):
     User = get_user_model()
     user = get_object_or_404(User, id=id)
@@ -412,7 +407,6 @@ def user_details_view(request, id):
 
 
 
-@login_required
 @role_required(allowed_roles=["VP", "DIRECTOR"])
 def add_user(request):
     User = get_user_model()
@@ -482,7 +476,6 @@ def add_user(request):
     })
 
 # Edit user view
-@login_required
 @role_required(allowed_roles=["VP", "DIRECTOR"])
 def edit_user(request, id):
     User = get_user_model()
@@ -534,7 +527,6 @@ def edit_user(request, id):
 # Verify/Unverify user views
 from django.http import HttpResponseRedirect
 
-@login_required
 @role_required(allowed_roles=["VP", "DIRECTOR"])
 def verify_user(request, id):
     User = get_user_model()
@@ -543,7 +535,6 @@ def verify_user(request, id):
     user.save()
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
 
-@login_required
 @role_required(allowed_roles=["VP", "DIRECTOR"])
 def unverify_user(request, id):
     User = get_user_model()
@@ -557,7 +548,6 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse
 
 # Delete user view with confirmation
-@login_required
 @role_required(allowed_roles=["VP", "DIRECTOR"])
 def delete_user(request, id):
     User = get_user_model()

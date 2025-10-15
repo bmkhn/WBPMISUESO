@@ -1,5 +1,4 @@
 from django.conf import settings
-from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.core.mail import EmailMultiAlternatives
 from django.http import FileResponse, HttpResponse, JsonResponse
@@ -18,7 +17,6 @@ from openpyxl.styles import Alignment
 from io import BytesIO
 
 
-@login_required
 @role_required(allowed_roles=["UESO", "VP", "DIRECTOR"])
 def exports_view(request):
     requests = ExportRequest.objects.all()
@@ -83,7 +81,6 @@ def exports_view(request):
 ########################################################################################################################
 
 
-@login_required
 @role_required(allowed_roles=["UESO", "VP", "DIRECTOR"])
 def approve_export_request(request, request_id):
     try:
@@ -192,7 +189,6 @@ def approve_export_request(request, request_id):
     return JsonResponse({'message': 'Export request approved and file sent to submitter.'})
 
 
-@login_required
 @require_POST
 def reject_export_request(request, request_id):
     try:
@@ -205,7 +201,6 @@ def reject_export_request(request, request_id):
 
 
 # Robust download endpoint for filtered export files
-@login_required
 def export_download(request, request_id):
     export_request = get_object_or_404(ExportRequest, id=request_id, status='APPROVED')
     # Only allow the submitter or reviewers to download
@@ -362,7 +357,6 @@ def export_download(request, request_id):
 
 
 @require_GET
-@login_required
 @role_required(allowed_roles=["UESO", "VP", "DIRECTOR"])
 def export_manage_user(request):
     user = request.user
@@ -464,7 +458,6 @@ def export_manage_user(request):
 
 
 @require_GET
-@login_required
 def export_project(request):
     user = request.user
     from django.db.models import Q
@@ -567,21 +560,18 @@ def export_project(request):
 
 
 @require_GET
-@login_required
 def export_log(request):
     # Later
     return 0
 
 
 @require_GET
-@login_required
 def export_goals(request):
     # Later
     return 0
 
 
 @require_GET
-@login_required
 def export_budget(request):
     # Later
     return 0

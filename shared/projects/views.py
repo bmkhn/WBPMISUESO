@@ -1,6 +1,5 @@
 from django.shortcuts import get_object_or_404, render, redirect
 from system.users.decorators import role_required
-from django.contrib.auth.decorators import login_required
 from .models import SustainableDevelopmentGoal, Project, ProjectEvaluation, ProjectEvent
 from system.users.models import College, User
 from internal.agenda.models import Agenda
@@ -226,7 +225,6 @@ def project_evaluations(request, pk):
 
 from django.views.decorators.http import require_POST
 # Mark project as cancelled
-@login_required
 @role_required(allowed_roles=["VP", "DIRECTOR", "UESO"])
 @require_POST
 def cancel_project(request, pk):
@@ -236,7 +234,6 @@ def cancel_project(request, pk):
     return redirect(f'/projects/{pk}/overview/')
 
 # Undo cancel
-@login_required
 @role_required(allowed_roles=["VP", "DIRECTOR", "UESO"])
 @require_POST
 def undo_cancel_project(request, pk):
@@ -270,13 +267,11 @@ def projects_dispatcher(request):
     return user_projects(request)
 
 
-@login_required
 @role_required(allowed_roles=["FACULTY"])
 def user_projects(request):
     return render(request, 'projects/user_project.html')
 
 
-@login_required
 @role_required(allowed_roles=["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"])
 def admin_project(request):
     ADMIN_ROLES = ["VP", "DIRECTOR", "UESO"]
@@ -376,7 +371,6 @@ def admin_project(request):
 ########################################################################################################################
 
 
-@login_required
 @role_required(allowed_roles=["VP", "DIRECTOR"])
 def add_project_view(request):
     error = None

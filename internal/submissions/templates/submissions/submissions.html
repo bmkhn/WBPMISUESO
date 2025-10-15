@@ -280,7 +280,7 @@
         <div class="search-container">
             <form class="search-bar" method="get" action="">
                 <svg width="20" height="20"> <use href="#icon-search"></use> </svg>
-                <input type="text" name="search" placeholder="Search by project title..." value="{{ search|default:'' }}"/>
+                <input type="text" name="search" placeholder="Search by Project Title" value="{{ search|default:'' }}"/>
                 <button type="button" id="filterBtn" style="background:none;border:none;padding:0;margin-right:5px;cursor:pointer;">
                     <svg width="20" height="20"> <use href="#icon-filter"></use> </svg>
                 </button>
@@ -347,17 +347,15 @@
             </thead>
             <tbody>
                 {% for submission in page_obj %}
-                    {% for project in submission.projects.all %}
-                        {% for form in submission.downloadables.all %}
+                    {% for form in submission.downloadables.all %}
                         <tr>
-                            <td>{{ project.title }}</td>
+                            <td>{{ submission.project.title }}</td>
                             <td>{{ submission.deadline|date:"Y-m-d H:i" }}</td>
                             <td>{{ form.name }}</td>
                             <td>-</td> <!-- Submitted Forms ... For Later -->
                             <td>-</td> <!-- Date Submitted ... For Later -->
                             <td>{{ submission.status|capfirst }}</td>
                         </tr>
-                        {% endfor %}
                     {% endfor %}
                 {% empty %}
                 <tr><td colspan="6" style="text-align:center;">No submissions found.</td></tr>

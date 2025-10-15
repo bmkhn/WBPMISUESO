@@ -1,8 +1,9 @@
 from django.shortcuts import render
 from system.users.decorators import role_required
 from django.contrib.auth.decorators import login_required
+from .models import LogEntry
 
-@login_required
 @role_required(allowed_roles=["VP", "DIRECTOR"])
 def logs_view(request):
-    return render(request, 'logs/logs.html')
+    logs = LogEntry.objects.select_related('user').order_by('-timestamp')
+    return render(request, 'logs/logs.html', {'logs': logs})

@@ -1,9 +1,10 @@
 from django.conf import settings
 from django.db import models
-from django.db import models
-from django.db.models.signals import post_delete
+from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.conf import settings
+
+from system.logs.models import LogEntry
+from django.urls import reverse
 
 
 ########################################################################################################################
@@ -29,7 +30,7 @@ class ClientRequest(models.Model):
     reason = models.TextField(blank=True)
     endorsed_by = models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.SET_NULL,null=True,blank=True,related_name='endorsed_requests')
     endorsed_at = models.DateTimeField(null=True, blank=True)
-    last_updated = models.DateTimeField(auto_now=True)
+    updated_at = models.DateTimeField(null=True, blank=True)
     updated_by = models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.SET_NULL,null=True,blank=True,related_name='updated_requests')
     status = models.CharField(max_length=50, choices=[
         ('RECEIVED', 'Received'),
@@ -39,13 +40,45 @@ class ClientRequest(models.Model):
         ('ENDORSED', 'Endorsed'),
         ('DENIED', 'Denied'),
     ])
+
     
     def __str__(self):
         return self.title
-    
+
     def get_status_display(self):
         status_map = dict(self._meta.get_field('status').choices)
         return status_map.get(self.status, self.status.replace('_', ' ').title())
+
+
+# Log creation and update actions for ClientRequest
+@receiver(post_save, sender=ClientRequest)
+def log_client_request_action(sender, instance, created, **kwargs):
+    user = instance.updated_by or instance.submitted_by or None
+    url = reverse('request_details_dispatcher', args=[instance.id])
+    # Only log creation if created
+    if created:
+        LogEntry.objects.create(
+            user=user,
+            action='CREATE',
+            model='ClientRequest',
+            object_id=instance.id,
+            object_repr=str(instance),
+            details=f"Status: {instance.status}",
+            url=url,
+            is_notification=True
+        )
+    # Only log update if not created and updated_at is set and not equal to submitted_at
+    elif instance.updated_at and instance.updated_at != instance.submitted_at:
+        LogEntry.objects.create(
+            user=user,
+            action='UPDATE',
+            model='ClientRequest',
+            object_id=instance.id,
+            object_repr=str(instance),
+            details=f"Status: {instance.status}",
+            url=url,
+            is_notification=True
+        )
 
 
 class RequestUpdate(models.Model):

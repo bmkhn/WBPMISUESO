@@ -2,7 +2,6 @@ from django.http import HttpResponseRedirect, HttpResponse, Http404
 from django.urls import reverse
 from .forms import DownloadableForm
 from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
 from system.users.decorators import role_required
 from django.core.paginator import Paginator
 from .models import Downloadable
@@ -119,7 +118,6 @@ def user_downloadable(request):
     })
 
 
-@login_required
 @role_required(allowed_roles=["PROGRAM_HEAD", "DEAN", "COORDINATOR"])
 def superuser_downloadable(request):
     query_params = {}
@@ -201,7 +199,6 @@ def superuser_downloadable(request):
     })
 
 
-@login_required
 @role_required(allowed_roles=["UESO", "DIRECTOR", "VP"])
 def admin_downloadable(request):
     query_params = {}
@@ -292,7 +289,6 @@ def admin_downloadable(request):
     })
 
 
-@login_required
 @role_required(allowed_roles=["UESO", "DIRECTOR", "VP"])
 def add_downloadable(request):
     error = None
@@ -337,7 +333,6 @@ def downloadable_download(request, pk):
 
 
 # Delete file
-@login_required
 @role_required(allowed_roles=["UESO", "DIRECTOR", "VP"])
 def downloadable_delete(request, pk):
     try:
@@ -350,7 +345,6 @@ def downloadable_delete(request, pk):
 
 
 # Archive file
-@login_required
 @role_required(allowed_roles=["UESO", "DIRECTOR", "VP"])
 def downloadable_archive(request, pk):
     try:
@@ -363,7 +357,6 @@ def downloadable_archive(request, pk):
 
 
 # Unarchive file
-@login_required
 @role_required(allowed_roles=["UESO", "DIRECTOR", "VP"])
 def downloadable_unarchive(request, pk):
     try:
@@ -376,7 +369,6 @@ def downloadable_unarchive(request, pk):
 
 
 # Make file public
-@login_required
 @role_required(allowed_roles=["UESO", "DIRECTOR", "VP"])
 def downloadable_make_public(request, pk):
     try:
@@ -389,7 +381,6 @@ def downloadable_make_public(request, pk):
 
 
 # Make file private
-@login_required
 @role_required(allowed_roles=["UESO", "DIRECTOR", "VP"])
 def downloadable_make_private(request, pk):
     try:

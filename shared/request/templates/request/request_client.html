@@ -483,7 +483,7 @@
 						<label style="font-weight:500;color:#374151;display:flex;flex-direction:column;">
 							Sort By
 							<select name="sort_by" style="width:100%;margin-top:6px;">
-								<option value="last_updated" {% if sort_by == 'last_updated' %}selected{% endif %}>Last Updated</option>
+								<option value="updated_at" {% if sort_by == 'updated_at' %}selected{% endif %}>Last Updated</option>
 								<option value="submitted_at" {% if sort_by == 'submitted_at' %}selected{% endif %}>Date Submitted</option>
 								<option value="title" {% if sort_by == 'title' %}selected{% endif %}>Title</option>
 								<option value="status" {% if sort_by == 'status' %}selected{% endif %}>Status</option>
@@ -541,9 +541,9 @@
 			<tbody>
 				{% for req in requests %}
 				<tr>
-					<td><a href="{% url 'request_details_dispatcher' req.pk %}" style="color:#063A1C;font-weight:600;text-decoration:underline;">{{ req.title }}</a></td>
+					<td><a href="{% url 'request_details_dispatcher' req.pk %}" style="color:#063A1C;font-weight:600;text-decoration:underline;" title="{{ req.title }}">{{ req.title|truncatechars:15 }}</a></td>
 					<td>{{ req.submitted_at|date:'Y-m-d H:i' }}</td>
-					<td>{{ req.last_updated|date:'Y-m-d H:i' }}</td>
+					<td>{{ req.updated_at|date:'Y-m-d H:i' }}</td>
 					<td>{{ req.get_status_display }}</td>
 				</tr>
 				{% empty %}

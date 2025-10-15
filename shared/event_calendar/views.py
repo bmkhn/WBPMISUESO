@@ -4,12 +4,10 @@ from django.http import JsonResponse
 from system.users.models import User
 from django.shortcuts import render
 from .models import MeetingEvent
-from django.contrib.auth.decorators import login_required
 from system.users.decorators import role_required
 from shared.projects.models import ProjectEvent, Project
 
 
-@login_required
 @role_required(allowed_roles=["DIRECTOR", "VP", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD", "FACULTY", "IMPLEMENTER"])
 def calendar_view(request):
     from system.users.models import User
@@ -75,7 +73,6 @@ def calendar_view(request):
         })  
 
 
-@login_required
 @role_required(allowed_roles=["DIRECTOR", "VP", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD", "FACULTY", "IMPLEMENTER"])
 def add_event(request):
     if request.method == "POST":
@@ -118,7 +115,6 @@ def add_event(request):
 
 from django.views.decorators.http import require_GET
 
-@login_required
 @role_required(allowed_roles=["DIRECTOR", "VP", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD", "FACULTY", "IMPLEMENTER"])
 @require_GET
 def events_json(request):
@@ -192,7 +188,6 @@ def events_json(request):
 
 
 from django.views.decorators.csrf import csrf_exempt
-@login_required
 @role_required(allowed_roles=["DIRECTOR", "VP", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD", "FACULTY", "IMPLEMENTER"])
 @csrf_exempt
 def edit_event(request):
@@ -260,7 +255,6 @@ def edit_event(request):
 
 
 # Delete Event View
-@login_required
 @role_required(allowed_roles=["DIRECTOR", "VP", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD", "FACULTY", "IMPLEMENTER"])
 @csrf_exempt
 def delete_event(request, event_id):

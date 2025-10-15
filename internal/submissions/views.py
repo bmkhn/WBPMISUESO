@@ -1,5 +1,4 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
 from system.users.decorators import role_required
 from shared.projects.models import Project
 from shared.downloadables.models import Downloadable
@@ -8,7 +7,6 @@ from django.utils import timezone
 from django.core.paginator import Paginator
 
 
-@login_required
 @role_required(allowed_roles=["UESO", "VP", "DIRECTOR"])
 def submission_admin_view(request):
     submissions = SubmissionRequirement.objects.all()
@@ -73,7 +71,6 @@ def submission_admin_view(request):
     })
 
 
-@login_required
 @role_required(allowed_roles=["UESO", "VP", "DIRECTOR"])
 def add_submission_requirement(request):
     projects = Project.objects.exclude(status__in=['CANCELLED', 'COMPLETED'])
