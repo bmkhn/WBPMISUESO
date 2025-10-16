@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
 
+
 <style>
 	body {
 		margin: 0;
@@ -16,26 +17,23 @@
 		display: flex;
 	}
 
-    .sidebar-container {
-		width: 250px;
-		height: 100%;
+	.sidebar-container {
+		width: 270px;
+		position: fixed;
+		height: 100vh;
+		top: 0;
+		left: 0;
 		padding: 20px;
 		background-color: #063A1C;
 		color: white;
 		display: flex;
 		flex-direction: column;
-		justify-content: space-between;
 		border-top-right-radius: 20px;
 		border-bottom-right-radius: 20px;
 		transition: width 0.2s ease;
-		overflow: hidden;
-		position: relative;
 		z-index: 20;
-    }
-
-    .sidebar-container.collapsed {
-		width: 55px;
-    }
+		position: sticky;
+	}
 
 	.resize-handle {
 		position: absolute;
@@ -74,12 +72,7 @@
 		display: inline-block;
     }
 
-	.sidebar-container.collapsed .sidebar-tab-group-label {
-    	visibility: hidden;
-    }
-
-    .sidebar-container.collapsed .sidebar-logo-text,
-	.sidebar-container.collapsed .table-text {
+    .sidebar-container.collapsed .sidebar-logo-text {
     	display: none;
     }
 
@@ -88,14 +81,34 @@
 		font-size: 16px;
 		font-weight: 400;
 		padding: 10px 0;
+		transition: text-align 0.2s;
     }
 
-    .sidebar-tabs {
+	.sidebar-tabs {
 		flex: 1;
 		display: flex;
 		flex-direction: column;
 		gap: 15px;
-    }
+		overflow-y: auto;
+		max-height: calc(100vh - 120px); /* Adjust for logo and logout */
+		scrollbar-width: thin;
+		scrollbar-color: #1a5c2a #063A1C;
+		overflow-x: hidden;
+	}
+
+	.sidebar-tabs:hover {
+		overflow-y: auto;
+	}
+
+	.sidebar-tabs::-webkit-scrollbar {
+		width: 8px;
+		background: #063A1C;
+	}
+
+	.sidebar-tabs::-webkit-scrollbar-thumb {
+		background: #1a5c2a;
+		border-radius: 4px;
+	}
 
     .sidebar-tab {
 		display: flex;
@@ -105,6 +118,7 @@
 		padding: 10px;
 		border-radius: 10px;
 		transition: background-color 0.2s ease;
+		transition: flex-direction 0.2s, padding 0.2s;
     }
 
     .sidebar-tab:hover {
@@ -119,6 +133,7 @@
 		background-position: center;
 		margin-right: 15px;
 		flex-shrink: 0;
+		transition: margin-right 0.2s;
     }
 
 	.ueso-icon { 
@@ -130,7 +145,7 @@
     }
 
 	.sidebar-container.collapsed ~ .topbar {
-		left: 55px; 
+		left: 65px; 
 	}
 
 	.sidebar-tab.active {
@@ -141,13 +156,15 @@
 		font-family: 'Inter', sans-serif;
 		font-size: 22px;
 		font-weight: bold;
+		transition: margin-top 0.2s, font-size 0.2s;
     }
+
 
 	/* Top Bar */
 	.topbar {
 		position: fixed;
 		top: 0;
-		left: 250px; 
+		left: 270px; 
 		right: 0;
 		height: 80px;
 		background-color: #F9F9F9;
@@ -177,6 +194,7 @@
 		height: 35px;
 	}
 </style>
+
 </head>
 
 <body>
@@ -260,10 +278,7 @@
 				<svg class="sidebar-tab-icon" width="26" height="25"><use href="#icon-settings"/></svg>
 				<span class="table-text">Settings</span>
 			</a>
-		</div>
 
-		<!-- Logout -->
-		<div class="sidebar-logout">
 			<a href="{% url 'logout' %}" class="sidebar-tab">
 				<svg class="sidebar-tab-icon" width="20" height="20"><use href="#icon-logout"/></svg>
 				<span class="table-text">Log Out</span>
@@ -297,6 +312,16 @@
         <path d="M19 20C19.5304 20 20.0391 19.7645 20.4142 19.3453C20.7893 18.9261 21 18.3575 21 17.7647V6.58824C21 5.9954 20.7893 5.42684 20.4142 5.00764C20.0391 4.58844 19.5304 4.35294 19 4.35294H11.1C10.7655 4.35661 10.4355 4.26645 10.1403 4.09072C9.84505 3.91499 9.59396 3.6593 9.41 3.34706L8.6 2.00588C8.41789 1.69682 8.16997 1.44312 7.8785 1.26756C7.58702 1.092 7.26111 1.00006 6.93 1H3C2.46957 1 1.96086 1.2355 1.58579 1.6547C1.21071 2.0739 1 2.64246 1 3.23529V17.7647C1 18.3575 1.21071 18.9261 1.58579 19.3453C1.96086 19.7645 2.46957 20 3 20H19Z" stroke="#E0E6E3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
     </symbol>
 
+    <!-- Submission -->
+    <symbol id="icon-submission" viewBox="0 0 20 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M7.75 18.6L11.125 15.3M11.125 15.3L7.75 12M11.125 15.3H3.25C2.65326 15.3 2.08097 15.5318 1.65901 15.9444C1.23705 16.3569 1 16.9165 1 17.5V20.8C1 21.3835 1.23705 21.9431 1.65901 22.3556C2.08097 22.7682 2.65326 23 3.25 23H16.75C17.3467 23 17.919 22.7682 18.341 22.3556C18.7629 21.9431 19 21.3835 19 20.8V6.5L13.375 1H3.25C2.65326 1 2.08097 1.23178 1.65901 1.64436C1.23705 2.05695 1 2.61652 1 3.2V10.9M12.25 1V5.4C12.25 5.98348 12.4871 6.54306 12.909 6.95564C13.331 7.36822 13.9033 7.6 14.5 7.6H19" stroke="#E0E6E3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+
+	<!-- Requests -->
+	<symbol id="icon-requests" viewBox="0 0 24 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+		<path d="M2.4 18C1.74 18 1.1752 17.7799 0.7056 17.3396C0.236 16.8994 0.0008 16.3695 0 15.75V2.25C0 1.63125 0.2352 1.10175 0.7056 0.6615C1.176 0.22125 1.7408 0.00075 2.4 0H21.6C22.26 0 22.8252 0.2205 23.2956 0.6615C23.766 1.1025 24.0008 1.632 24 2.25V15.75C24 16.3687 23.7652 16.8986 23.2956 17.3396C22.826 17.7806 22.2608 18.0007 21.6 18H2.4ZM21.6 4.5L12.63 9.75937C12.53 9.81562 12.4252 9.858 12.3156 9.8865C12.206 9.915 12.1008 9.92887 12 9.92812C11.8992 9.92737 11.7944 9.9135 11.6856 9.8865C11.5768 9.8595 11.4716 9.81712 11.37 9.75937L2.4 4.5V15.75H21.6V4.5ZM12 7.875L21.6 2.25H2.4L12 7.875ZM2.4 4.78125V3.12187V3.15V3.1365V4.78125Z" fill="#E0E6E3"/>
+	</symbol>
+
     <!-- Experts -->
     <symbol id="icon-experts" viewBox="0 0 25 23" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M17.1 10.3333L19.4 12.6667L24 8M17.1 22V19.6667C17.1 18.429 16.6154 17.242 15.7527 16.3668C14.89 15.4917 13.72 15 12.5 15H5.6C4.38 15 3.20998 15.4917 2.34731 16.3668C1.48464 17.242 1 18.429 1 19.6667V22M13.65 5.66667C13.65 8.244 11.5905 10.3333 9.05 10.3333C6.50949 10.3333 4.45 8.244 4.45 5.66667C4.45 3.08934 6.50949 1 9.05 1C11.5905 1 13.65 3.08934 13.65 5.66667Z" stroke="#E0E6E3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -310,6 +335,17 @@
     <!-- Analytics -->
     <symbol id="icon-analytics" viewBox="0 0 22 20" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M11 14V19M15 12V19M19 8V19M21 1L12.354 9.646C12.3076 9.69256 12.2524 9.72951 12.1916 9.75471C12.1309 9.77992 12.0658 9.79289 12 9.79289C11.9342 9.79289 11.8691 9.77992 11.8084 9.75471C11.7476 9.72951 11.6924 9.69256 11.646 9.646L8.354 6.354C8.26024 6.26026 8.13308 6.20761 8.0005 6.20761C7.86792 6.20761 7.74076 6.26026 7.647 6.354L1 13M3 16V19M7 12V19" stroke="#E0E6E3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+
+    <!-- Agenda -->
+    <symbol id="icon-agenda" viewBox="0 0 26 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M6.39841 7.42857C6.72968 7.42857 6.99823 7.14075 6.99823 6.78571C6.99823 6.43067 6.72968 6.14286 6.39841 6.14286C6.06714 6.14286 5.79859 6.43067 5.79859 6.78571C5.79859 7.14075 6.06714 7.42857 6.39841 7.42857Z" fill="black"/>
+        <path d="M16.5954 1L24.1532 9.1C24.4216 9.38667 24.6346 9.72731 24.7799 10.1024C24.9252 10.4775 25 10.8796 25 11.2857C25 11.6918 24.9252 12.094 24.7799 12.469C24.6346 12.8441 24.4216 13.1848 24.1532 13.4714L18.9947 19M10.1005 1.75343C9.65067 1.27116 9.0405 1.00015 8.40422 1H2.19965C1.88148 1 1.57635 1.13546 1.35137 1.37658C1.12639 1.6177 1 1.94472 1 2.28571V8.93543C1.00014 9.61736 1.25301 10.2713 1.70299 10.7534L8.54578 18.0871C9.09103 18.6678 9.8285 18.9937 10.5972 18.9937C11.3659 18.9937 12.1033 18.6678 12.6486 18.0871L16.9433 13.4843C17.4851 12.8999 17.7892 12.1095 17.7892 11.2857C17.7892 10.4619 17.4851 9.67152 16.9433 9.08714L10.1005 1.75343ZM6.99823 6.78571C6.99823 7.14075 6.72968 7.42857 6.39841 7.42857C6.06714 7.42857 5.79859 7.14075 5.79859 6.78571C5.79859 6.43067 6.06714 6.14286 6.39841 6.14286C6.72968 6.14286 6.99823 6.43067 6.99823 6.78571Z" stroke="#E0E6E3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+
+    <!-- Goals -->
+    <symbol id="icon-goals" viewBox="0 0 22 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10.8997 13.1V1L19.6997 5.40001L10.8997 9.80002M20.3168 10.0442C20.9022 11.8484 20.9569 13.7827 20.4746 15.6171C19.9922 17.4515 18.9931 19.1087 17.596 20.3916C16.1989 21.6745 14.4627 22.529 12.5939 22.8536C10.7252 23.1781 8.80249 22.959 7.05468 22.2222C5.30686 21.4855 3.80747 20.2622 2.73489 18.6978C1.66231 17.1335 1.0617 15.2939 1.0045 13.398C0.94731 11.5022 1.43595 9.62976 2.41228 8.00359C3.38861 6.37742 4.81153 5.06595 6.51176 4.22521M6.50186 9.79672C5.95065 10.5304 5.5918 11.3904 5.45801 12.2983C5.32421 13.2062 5.41971 14.1332 5.73582 14.9947C6.05193 15.8563 6.57859 16.625 7.26782 17.2309C7.95705 17.8369 8.78695 18.2607 9.68189 18.4638C10.5768 18.6669 11.5084 18.6429 12.3917 18.3939C13.2749 18.1449 14.0819 17.6788 14.7389 17.0381C15.396 16.3975 15.8823 15.6026 16.1535 14.7259C16.4248 13.8492 16.4723 12.9185 16.2919 12.0187" stroke="#E0E6E3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
     </symbol>
 
 	<!-- Announcements -->
@@ -335,6 +371,21 @@
 	<!-- Downloadables -->
 	<symbol id="icon-downloadables" viewBox="0 0 20 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 		<path d="M12.25 1.24609V5.44609C12.25 6.00305 12.4871 6.53719 12.909 6.93102C13.331 7.32484 13.9033 7.54609 14.5 7.54609H19M10 18.0461V11.7461M10 18.0461L6.625 14.8961M10 18.0461L13.375 14.8961M13.375 1.24609H3.25C2.65326 1.24609 2.08097 1.46734 1.65901 1.86117C1.23705 2.255 1 2.78914 1 3.34609V20.1461C1 20.703 1.23705 21.2372 1.65901 21.631C2.08097 22.0248 2.65326 22.2461 3.25 22.2461H16.75C17.3467 22.2461 17.919 22.0248 18.341 21.631C18.7629 21.2372 19 20.703 19 20.1461V6.49609L13.375 1.24609Z" stroke="#E0E6E3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+	</symbol>
+
+	<!-- Manage User -->
+	<symbol id="icon-manageuser" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+		<path d="M15.3692 20.4512L16.447 20.0017M16.447 17.3L15.3692 16.8493M18.3434 15.389L17.8962 14.3028M18.3434 21.9127L17.8962 23M21.0246 15.389L21.4718 14.3028M21.4707 23L21.0246 21.9127M1 22.181C1.00014 20.6995 1.34728 19.2389 2.01321 17.918C2.67913 16.5972 3.64503 15.4534 4.83235 14.5796C6.01967 13.7058 7.39488 13.1268 8.84615 12.8896C10.2974 12.6523 11.7838 12.7636 13.1843 13.2144M22.921 17.3L24 16.8493M22.921 20.0017L24 20.4524M16.1807 6.88361C16.1807 10.133 13.5667 12.7672 10.342 12.7672C7.11735 12.7672 4.50325 10.133 4.50325 6.88361C4.50325 3.63418 7.11735 1 10.342 1C13.5667 1 16.1807 3.63418 16.1807 6.88361ZM23.1872 18.6508C23.1872 20.6005 21.6188 22.181 19.684 22.181C17.7492 22.181 16.1807 20.6005 16.1807 18.6508C16.1807 16.7012 17.7492 15.1207 19.684 15.1207C21.6188 15.1207 23.1872 16.7012 23.1872 18.6508Z" stroke="#E0E6E3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+	</symbol>
+
+	<!-- Exports -->
+	<symbol id="icon-exports" viewBox="0 0 18 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+		<path d="M1.54128 22L0 20.4614L3.24771 17.2761H0.770642V15.1166H6.99083V21.2172H4.78899V18.8147L1.54128 22ZM9.19266 21.5951V19.4356H15.7982V7.55828H10.2936V2.15951H2.58716V12.9571H0.385321V2.15951C0.385321 1.56564 0.601101 1.05744 1.03266 0.634896C1.46422 0.212352 1.98239 0.000719836 2.58716 0H11.3945L18 6.47853V19.4356C18 20.0294 17.7846 20.538 17.3538 20.9613C16.9229 21.3845 16.4044 21.5958 15.7982 21.5951H9.19266Z" fill="#E0E6E3"/>
+	</symbol>
+
+	<!-- Logs -->
+	<symbol id="icon-logs" viewBox="0 0 26 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+		<path d="M14.3333 9H25M14.3333 17H25M14.3333 1H25M1 9H2.33333M1 17H2.33333M1 1H2.33333M7.66667 9H9M7.66667 17H9M7.66667 1H9" stroke="#E0E6E3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 	</symbol>
 
 	<!-- Notification -->
@@ -401,16 +452,55 @@
 <button id="backToTopBtn"><i class="fa-solid fa-up-long"></i></button>
 
 <script>
-	const sidebar = document.getElementById("sidebar");
+	const sidebar = document.querySelector(".sidebar-container");
 	const handle = sidebar.querySelector(".resize-handle");
+	const collapseKey = 'sidebarCollapsed_director';
+
+	const sidebarLogo = document.querySelector('.sidebar-logo');
+
+	const groupLabel = document.querySelectorAll('.sidebar-tab-group-label');
 
 	let isDragging = false;
 	let startX = 0;
 	let startWidth = 0;
 
-	const expandedWidth = 250;
-	const collapsedWidth = 55;
+	const expandedWidth = 270;
+	const collapsedWidth = 95;
 	const dragTolerance = 10; // how sensitive a "tap" vs drag is
+
+	function setSidebarCollapsed(collapsed) {
+		if (collapsed) {
+			sidebar.classList.add("collapsed");
+			sidebar.style.width = collapsedWidth + "px";
+			sidebarLogo.style.justifyContent = 'center';
+			groupLabel.forEach(label => {
+				label.style.textAlign = 'center';
+			});
+			sidebar.querySelectorAll('.sidebar-tab').forEach(tab => {
+				tab.style.flexDirection = 'column';
+				tab.querySelector('.sidebar-tab-icon').style.marginRight = '0px';
+				const text = tab.querySelector('.table-text');
+				if (text) text.style.marginTop = '5px';
+				if (text) text.style.fontSize = '10px';
+			});
+			sessionStorage.setItem(collapseKey, '1');
+		} else {
+			sidebar.classList.remove("collapsed");
+			sidebar.style.width = expandedWidth + "px";
+			sidebarLogo.style.justifyContent = 'flex-start';
+			groupLabel.forEach(label => {
+				label.style.textAlign = 'left';
+			});
+			sidebar.querySelectorAll('.sidebar-tab').forEach(tab => {
+				tab.style.flexDirection = 'row';
+				tab.querySelector('.sidebar-tab-icon').style.marginRight = '15px';
+				const text = tab.querySelector('.table-text');
+				if (text) text.style.marginTop = '0px';
+				if (text) text.style.fontSize = '22px';
+			});
+			sessionStorage.setItem(collapseKey, '0');
+		}
+	}
 
 	handle.addEventListener("mousedown", (e) => {
 		isDragging = true;
@@ -429,60 +519,58 @@
 		// If tap or small drag → auto toggle
 		if (Math.abs(diff) < dragTolerance) {
 			if (sidebar.classList.contains("collapsed")) {
-				sidebar.classList.remove("collapsed");
-				sidebar.style.width = expandedWidth + "px";
+				setSidebarCollapsed(false);
 			} else {
-				sidebar.classList.add("collapsed");
-				sidebar.style.width = collapsedWidth + "px";
+				setSidebarCollapsed(true);
 			}
 			return;
 		}
 
 		// If actual drag → snap based on final X
 		if (e.clientX < 150) {
-			sidebar.classList.add("collapsed");
-			sidebar.style.width = collapsedWidth + "px";
+			setSidebarCollapsed(true);
 		} else {
-			sidebar.classList.remove("collapsed");
-			sidebar.style.width = expandedWidth + "px";
+			setSidebarCollapsed(false);
 		}
+	});
+
+	// On page load, restore collapse state
+	document.addEventListener("DOMContentLoaded", function() {
+		const collapsed = sessionStorage.getItem(collapseKey) === '1';
+		setSidebarCollapsed(collapsed);
 	});
 </script>
 
 <script>
-// Window scroll persistence for director sidebar page
+// Sidebar-tabs scroll persistence for director sidebar only
 document.addEventListener('DOMContentLoaded', function() {
-	var scrollKey = 'windowScrollY_director';
-	// Restore scroll after DOM is ready
-	setTimeout(function() {
+	var tabs = document.querySelector('.sidebar-tabs');
+	var scrollKey = 'sidebarTabsScroll_dean';
+	// Restore sidebar-tabs scroll position
+	if (tabs) {
 		var scrollY = sessionStorage.getItem(scrollKey);
 		if (scrollY !== null) {
-			window.scrollTo(0, parseInt(scrollY));
+			tabs.scrollTop = parseInt(scrollY);
 		}
-	}, 0);
-
-	// Save scroll on scroll event
-	window.addEventListener('scroll', function() {
-		sessionStorage.setItem(scrollKey, window.scrollY);
-	});
-
-	// Save scroll before navigation (for tab links in sidebar)
-	var sidebarContainer = document.querySelector('.sidebar-container');
-	if (sidebarContainer) {
-		sidebarContainer.querySelectorAll('a').forEach(function(link) {
+		// Save scroll position on scroll
+		tabs.addEventListener('scroll', function() {
+			sessionStorage.setItem(scrollKey, tabs.scrollTop);
+		});
+		// Save scroll before navigation (for tab links)
+		tabs.querySelectorAll('a').forEach(function(link) {
 			link.addEventListener('mousedown', function() {
-				sessionStorage.setItem(scrollKey, window.scrollY);
+				sessionStorage.setItem(scrollKey, tabs.scrollTop);
 			});
 			link.addEventListener('keydown', function(e) {
 				if (e.key === 'Enter' || e.key === ' ') {
-					sessionStorage.setItem(scrollKey, window.scrollY);
+					sessionStorage.setItem(scrollKey, tabs.scrollTop);
 				}
 			});
 		});
 	}
-	
-	var backToTopBtn = document.getElementById('backToTopBtn');
 
+	// Back to top button logic (for main window scroll)
+	var backToTopBtn = document.getElementById('backToTopBtn');
 	function toggleBackToTop() {
 		if (window.scrollY > 200) {
 			backToTopBtn.classList.add('show');
@@ -490,13 +578,16 @@ document.addEventListener('DOMContentLoaded', function() {
 			backToTopBtn.classList.remove('show');
 		}
 	}
-
 	window.addEventListener('scroll', toggleBackToTop);
-
 	backToTopBtn.addEventListener('click', function() {
 		window.scrollTo({ top: 0, behavior: 'smooth' });
 	});
 });
+</script>
+
+
+<script>
+
 </script>
 
 </html>
