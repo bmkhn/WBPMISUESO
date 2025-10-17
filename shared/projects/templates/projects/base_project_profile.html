@@ -1,4 +1,4 @@
-{% extends "base_internal.html" %}
+{% extends base_template %}
 {% block content %}
 
 <!DOCTYPE html>
@@ -424,7 +424,7 @@
                 <button type="button" data-tab="events" class="{% if '/events/' in request.path %}active{% endif %}">Events</button>
                 <button type="button" data-tab="files" class="{% if '/files/' in request.path %}active{% endif %}">Files</button> 
                 {% if request.user.role in SUPERUSER_ROLES or request.user.role in ADMIN_ROLES or request.user.role == "FACULTY" %}
-                <button type="button" data-tab="submissions" class="{% if '/submissions/' in request.path %}active{% endif %}">Submissions</button>
+                <button type="button" data-tab="submission" class="{% if '/submission/' in request.path %}active{% endif %}">Submissions</button>
                 {% endif %}
                 <button type="button" data-tab="evaluations" class="{% if '/evaluations/' in request.path %}active{% endif %}">Evaluations</button>
                 {% if request.user.role in ADMIN_ROLES %}
@@ -469,7 +469,7 @@
             providers: `/projects/${pk}/providers/`,
             events: `/projects/${pk}/events/`,
             files: `/projects/${pk}/files/`,
-            submissions: `/projects/${pk}/submissions/`,
+            submission: `/projects/${pk}/submission/`,
             evaluations: `/projects/${pk}/evaluations/`,
             expenses: `/projects/${pk}/expenses/`
         };

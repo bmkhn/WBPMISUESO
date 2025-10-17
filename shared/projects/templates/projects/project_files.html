@@ -42,6 +42,53 @@
     }
 </style>
 
+
+<!-- Pagination Styles -->
+<style>
+	.pagination-container {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.pagination-button {
+		padding: 0.75rem 1rem;
+		border: 1px solid #E5E7EB;
+		background: white;
+		color: #4B5563;
+		border-radius: 8px;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		font-weight: 500;
+		text-decoration: none;
+	}
+
+	.pagination-button:hover {
+		background: #F3F4F6;
+		border-color: #0A6C44;
+		color: #0A6C44;
+	}
+
+	.pagination-button.active {
+		background: #0A6C44;
+		color: white;
+		border-color: #0A6C44;
+	}
+
+	.pagination-button:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	.page-info {
+		margin: 0 1rem;
+		color: #4B5563;
+		font-weight: 500;
+	}
+</style>
+
+
 <div class="card-header">
     <h3>Files</h3>
 </div>
@@ -117,4 +164,34 @@
         {% endfor %}
     </div>
 </div>
+
+<!-- Pagination -->
+<div class="pagination-container">
+    {% if page_obj.has_previous %}
+        <a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page=1">First</a>
+        <a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a>
+    {% else %}
+        <button class="pagination-button" disabled>First</button>
+        <button class="pagination-button" disabled>Previous</button>
+    {% endif %}
+
+    {% for num in page_range %}
+        {% if num == page_obj.number %}
+            <button class="pagination-button active" disabled>{{ num }}</button>
+        {% else %}
+            <a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ num }}">{{ num }}</a>
+        {% endif %}
+    {% endfor %}
+
+    {% if page_obj.has_next %}
+        <a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.next_page_number }}">Next</a>
+        <a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ paginator.num_pages }}">Last</a>
+    {% else %}
+        <button class="pagination-button" disabled>Next</button>
+        <button class="pagination-button" disabled>Last</button>
+    {% endif %}
+
+    <span class="page-info">Page {{ page_obj.number }} of {{ paginator.num_pages }}</span>
+</div>
+
 {% endblock %}

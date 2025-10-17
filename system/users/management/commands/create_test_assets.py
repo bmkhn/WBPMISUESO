@@ -95,17 +95,18 @@ class Command(BaseCommand):
 
         # Create test users for each role
         roles = [choice[0] for choice in User.Role.choices]
-        campus_choices = [choice[0] for choice in User.Campus.choices]
         default_password = "test1234"
+        # Find College of Sciences and TINUIGIBAN campus
+        college_of_sciences = next((c for c in college_objs if c.name == "College of Sciences"), None)
+        tinuigiban_campus = User.Campus.TINUIGIBAN
         for role in roles:
             email = f"{role.lower()}@example.com"
             if not User.objects.filter(email=email).exists():
-                # Assign random campus and college for specific roles
                 if role in [User.Role.COORDINATOR, User.Role.DEAN, User.Role.PROGRAM_HEAD, User.Role.FACULTY]:
-                    campus = random.choice(campus_choices)
-                    college = random.choice(college_objs)
+                    campus = tinuigiban_campus
+                    college = college_of_sciences
                 else:
-                    campus = User.Campus.TINUIGIBAN  # or any default
+                    campus = tinuigiban_campus
                     college = None
                 user = User.objects.create_user(
                     username=role.lower(),

@@ -129,7 +129,7 @@
 		transform: none;
 	}
 
-    .college-tag {
+    .tag {
         background: #F8F8F8;
         border: 1px solid #000;
         border-radius: 5px;
@@ -142,7 +142,7 @@
         vertical-align: middle;
     }
     
-    .college-tag .remove-x {
+    .tag .remove-x {
         color: #E53E3E;
         font-weight: bold;
         font-size: 1.1rem;
@@ -154,7 +154,7 @@
         padding: 0;
     }
 
-    .add-college-btn {
+    .add-btn {
         width: 36px;
         height: 36px;
         border-radius: 50%;
@@ -168,11 +168,11 @@
         font-family: 'Inter', Arial, sans-serif;
     }
 
-    .add-college-btn:hover {
+    .add-btn:hover {
         box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     }
 
-    .college-select-modal {
+    .select-modal {
         display: none;
         position: absolute;
         z-index: 1000;
@@ -183,7 +183,7 @@
         padding: 1rem;
     }
 
-    .college-row {
+    .row {
         display: flex;
         align-items: center;
         flex-wrap: wrap;
@@ -193,7 +193,7 @@
         margin-top: 5px;
     }
 
-    #college-select-dropdown {
+    #select-dropdown {
         font-family: 'Inter', Arial, sans-serif;
         font-size: 13px;
         padding: 8px 16px;
@@ -232,10 +232,10 @@
 
             <div class="form-group">
                 <label class="form-label">Concerned Colleges: <span class="required">*</span></label>
-                <div id="college-tag-row" class="college-row">
+                <div id="tag-row" class="row">
                     <!-- Tags, add button, and hidden inputs will be rendered here by JS -->
                 </div>
-                <select id="college-options-template" style="display:none;">
+                <select id="options-template" style="display:none;">
                     <option value="">Select College</option>
                     {% for college in form.fields.concerned_colleges.queryset %}
                         <option value="{{ college.id }}">{{ college.name }}</option>
@@ -269,7 +269,7 @@
         descInput.classList.remove('error-input');
         let nameError = document.getElementById('name-error');
         let descError = document.getElementById('desc-error');
-        let collegeError = document.getElementById('college-error');
+        let collegeError = document.getElementById('error');
         if (nameError) nameError.remove();
         if (descError) descError.remove();
         if (collegeError) collegeError.remove();
@@ -301,9 +301,9 @@
         const selectedColleges = Array.from(document.querySelectorAll('input[name="concerned_colleges"]')).map(i => i.value);
         if (selectedColleges.length === 0) {
             valid = false;
-            const tagRow = document.getElementById('college-tag-row');
+            const tagRow = document.getElementById('tag-row');
             const err = document.createElement('div');
-            err.id = 'college-error';
+            err.id = 'error';
             err.textContent = 'At least one college must be selected.';
             err.style.color = '#E53E3E';
             err.style.fontSize = '0.95rem';
@@ -316,10 +316,10 @@
     });
 
     // Tag UI for Concerned Colleges
-    const collegeTagRow = document.getElementById('college-tag-row');
-    const collegeOptionsTemplate = document.getElementById('college-options-template');
+    const collegeTagRow = document.getElementById('tag-row');
+    const collegeOptionsTemplate = document.getElementById('options-template');
     const collegeSelectDropdown = document.createElement('select');
-    collegeSelectDropdown.id = 'college-select-dropdown';
+    collegeSelectDropdown.id = 'select-dropdown';
     collegeSelectDropdown.style.display = 'none';
     collegeSelectDropdown.style.position = 'absolute';
     collegeSelectDropdown.style.top = '44px';
@@ -354,7 +354,7 @@
             const college = colleges.find(c => c.id === id);
             if (college) {
                 const tag = document.createElement('span');
-                tag.className = 'college-tag';
+                tag.className = 'tag';
                 const removeBtn = document.createElement('button');
                 removeBtn.type = 'button';
                 removeBtn.className = 'remove-x';
@@ -371,8 +371,8 @@
 
         const addCollegeBtn = document.createElement('button');
         addCollegeBtn.type = 'button';
-        addCollegeBtn.id = 'add-college-btn';
-        addCollegeBtn.className = 'add-college-btn';
+        addCollegeBtn.id = 'add-btn';
+        addCollegeBtn.className = 'add-btn';
         addCollegeBtn.style.marginLeft = '8px';
         addCollegeBtn.innerHTML = `<svg width="16" height="16"><use href="#icon-add" /></svg>`;
         addCollegeBtn.onclick = function(e) {
@@ -382,7 +382,7 @@
             collegeSelectDropdown.style.left = (btnRect.left) + 'px';
             collegeSelectDropdown.style.top = (btnRect.bottom + 4) + 'px';
             collegeSelectDropdown.innerHTML = '';
-            const templateOptions = Array.from(document.getElementById('college-options-template').options);
+            const templateOptions = Array.from(document.getElementById('options-template').options);
             templateOptions.forEach(opt => {
                 if (!opt.value || !selectedColleges.includes(opt.value)) {
                     collegeSelectDropdown.appendChild(opt.cloneNode(true));
@@ -418,7 +418,7 @@
     };
 
     document.addEventListener('mousedown', function(e) {
-        if (!collegeSelectDropdown.contains(e.target) && e.target.id !== 'add-college-btn') {
+        if (!collegeSelectDropdown.contains(e.target) && e.target.id !== 'add-btn') {
             collegeSelectDropdown.style.display = 'none';
         }
     });

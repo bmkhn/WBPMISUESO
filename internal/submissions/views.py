@@ -2,14 +2,14 @@ from django.shortcuts import render, redirect
 from system.users.decorators import role_required
 from shared.projects.models import Project
 from shared.downloadables.models import Downloadable
-from .models import SubmissionRequirement
+from .models import Submission
 from django.utils import timezone
 from django.core.paginator import Paginator
 
 
-@role_required(allowed_roles=["UESO", "VP", "DIRECTOR"])
+@role_required(allowed_roles=["UESO", "VP", "DIRECTOR", "COORDINATOR"])
 def submission_admin_view(request):
-    submissions = SubmissionRequirement.objects.all()
+    submissions = Submission.objects.all()
 
     # Filters
     sort_by = request.GET.get('sort_by', 'deadline')
@@ -20,14 +20,15 @@ def submission_admin_view(request):
     search = request.GET.get('search', '').strip()
 
     # Apply filters
+
     if status:
         submissions = submissions.filter(status__iexact=status)
     if required_form:
-        submissions = submissions.filter(downloadables__id=required_form)
+        submissions = submissions.filter(downloadable__id=required_form)
     if date:
         submissions = submissions.filter(deadline__date=date)
     if search:
-        submissions = submissions.filter(projects__title__icontains=search)
+        submissions = submissions.filter(project__title__icontains=search)
 
     submissions = submissions.distinct()
 
@@ -35,9 +36,9 @@ def submission_admin_view(request):
     sort_map = {
         'deadline': 'deadline',
         # 'date_submitted': '', 
-        'title': 'projects__title',
+        'title': 'project__title',
         'status': 'status',
-        'required_form': 'downloadables__name',
+        'required_form': 'downloadable__name',
     }
     sort_field = sort_map.get(sort_by, 'deadline')
     if sort_field:
@@ -46,7 +47,7 @@ def submission_admin_view(request):
         submissions = submissions.order_by(sort_field)
 
     # Filter Options
-    all_statuses = [status[1] for status in SubmissionRequirement.SUBMISSION_STATUS_CHOICES]
+    all_statuses = [status[1] for status in Submission.SUBMISSION_STATUS_CHOICES]
     all_forms = Downloadable.objects.filter(is_submission_template=True)
 
     # Pagination
@@ -80,6 +81,8 @@ def add_submission_requirement(request):
         project_id = request.POST.get('project')
         downloadable_ids = request.POST.getlist('downloadables')
         deadline = request.POST.get('deadline')
+        notes = request.POST.get('notes')
+        
         error = None
         if not project_id:
             error = "A project is required."
@@ -93,16 +96,17 @@ def add_submission_requirement(request):
                 'downloadables': downloadables,
                 'error': error,
             })
-        # Create SubmissionRequirement
-        sr = SubmissionRequirement.objects.create(
-            project=Project.objects.get(id=project_id),
-            deadline=deadline,
-            created_by=request.user,
-            status='pending',
-            created_at=timezone.now()
-        )
-        sr.downloadables.set(Downloadable.objects.filter(id__in=downloadable_ids))
-        sr.save()
+        # Create a Submission for each downloadable
+        for downloadable_id in downloadable_ids:
+            Submission.objects.create(
+                project=Project.objects.get(id=project_id),
+                downloadable=Downloadable.objects.get(id=downloadable_id),
+                deadline=deadline,
+                created_by=request.user,
+                notes=notes,
+                status='PENDING',
+                created_at=timezone.now()
+            )
         return render(request, 'submissions/add_submissions.html', {
             'projects': projects,
             'downloadables': downloadables,

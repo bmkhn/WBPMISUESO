@@ -27,35 +27,269 @@
     }
 </style>
 
+<!-- Form Styles -->
+<style>
+    .form-group {
+		display: flex;
+		align-items: flex-start;
+		gap: 1rem;
+        margin-bottom: 0.5rem;
+	}
+
+	.form-label {
+		font-weight: 600;
+		color: #374151;
+		font-size: 0.95rem;
+        margin-top: 10px;
+	}
+
+    .required {
+        color: #DC2626;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    select {
+        font-weight: 500;
+        color: #374151;
+        font-size: 1.08rem;
+        word-break: break-word;
+        background: #f7f7f7;
+        border-radius: 0.5rem;
+        padding: 0.7rem 14px;
+        border: 1px solid #e5e7eb;
+        min-height: 21px;
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+		appearance: none;
+		-webkit-appearance: none;
+		-moz-appearance: none;
+		padding-right: 2rem;
+		background: url("data:image/svg+xml;utf8,<svg width='16' height='11' viewBox='0 0 16 11' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M7.99976 7.19417L13.9025 1.29147C14.0125 1.17758 14.144 1.08674 14.2895 1.02424C14.435 0.961746 14.5915 0.92885 14.7498 0.927474C14.9082 0.926098 15.0652 0.95627 15.2117 1.01623C15.3583 1.07619 15.4914 1.16473 15.6034 1.27669C15.7153 1.38866 15.8039 1.5218 15.8638 1.66835C15.9238 1.8149 15.954 1.97192 15.9526 2.13026C15.9512 2.28859 15.9183 2.44506 15.8558 2.59055C15.7933 2.73604 15.7025 2.86762 15.5886 2.97762L8.84283 9.72339C8.61921 9.94694 8.31596 10.0725 7.99976 10.0725C7.68356 10.0725 7.38031 9.94694 7.15669 9.72339L0.41092 2.97762C0.297028 2.86762 0.206183 2.73604 0.143687 2.59055C0.0811915 2.44506 0.0482959 2.28859 0.04692 2.13026C0.0455441 1.97192 0.0757155 1.8149 0.135674 1.66835C0.195632 1.5218 0.284176 1.38866 0.39614 1.27669C0.508103 1.16473 0.641244 1.07619 0.787794 1.01623C0.934343 0.95627 1.09137 0.926098 1.2497 0.927474C1.40804 0.92885 1.56451 0.961746 1.71 1.02424C1.85548 1.08674 1.98706 1.17758 2.09706 1.29147L7.99976 7.19417Z' fill='%23374151'/></svg>")
+        		no-repeat right 0.75rem center;
+  		background-size: 13px 8px;
+    }
+
+    .submit-btn {
+        background-color: #0A6C44;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+
+    .submit-btn:hover {
+        background-color: #07532F;
+    }
+
+    .back-btn {
+        background-color: #E5E7EB;
+        color: #374151;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+
+    .back-btn:hover {
+        background-color: #D1D5DB;
+    }
+
+    textarea {
+        resize: none;
+    }
+
+    input[type="text"], input[type="date"], textarea, input[type="file"], input[type="datetime-local"], input[type="number"] {
+        flex: 1;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+        padding: 0.75rem;
+        font-size: 1rem;
+        font-family: 'Inter', sans-serif;
+    }
+</style>
+
+<!-- Modal Styles -->
+<style>
+    .modal {
+        position: fixed;
+     
+        z-index: 9999;
+        left: 0; top: 0; width: 100vw; height: 100vh;
+        background: rgba(0,0,0,0.25);
+        display: none; align-items: center; justify-content: center;
+    }
+    
+    .modal-content {
+        background: #fff;
+        border-radius: 12px;
+        padding: 2rem 2rem 2rem 2rem;
+        min-width: 400px;
+        max-width: 95vw;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+        position: relative;
+    }
+
+    .modal-content h2 { margin-top:0; font-size:1.5rem; color:#000; font-weight: 400; }
+    .modal-content .close {
+        position: absolute; right: 1.5rem; top: 1.25rem;
+        font-size: 1.5rem; color: #888; cursor: pointer;
+    }
+</style>
+
 <div class="card-header">
     <h3>Overview</h3>
-    <a class="admin-button">Edit</a>
+    {% if request.user.role in ADMIN_ROLES %}
+        <button class="admin-button" onclick="openEditProjectModal()">Edit</button>
+    {% endif %}
 </div>
+
 <div class="card">
     <div class="card-body">
         <div class="infoseg">
-            <div><i class="fa-regular fa-circle-question"></i> <strong>Last Update</strong></div>
-            <div>{{ project.updated_at|date:'F d, Y' }}</div>
             <div><i class="fa-regular fa-circle-question"></i> <strong>Date Added</strong></div>
             <div>{{ project.created_at|date:'F d, Y' }}</div>
-            <div><i class="fa-regular fa-circle-question"></i> <strong>Project ID</strong></div>
-            <div>{{ project.id }}</div>
-            <div><i class="fa-regular fa-circle-question"></i> <strong>Estimated End</strong></div>
-            <div>{{ project.estimated_end_date|date:'F d, Y' }}</div>
-            <div><i class="fa-regular fa-circle-question"></i> <strong>Agenda</strong></div>
-            <div>{{ project.agenda }}</div>
+            <div><i class="fa-regular fa-circle-question"></i> <strong>Last Updated</strong></div>
+            <div>{{ project.updated_at|date:'F d, Y' }}</div>
+
             <div><i class="fa-regular fa-circle-question"></i> <strong>Project Status</strong></div>
             <div>{{ project.get_status_display }}</div>
-            <div><i class="fa-regular fa-circle-question"></i> <strong>Beneficiary</strong></div>
-            <div>{{ project.primary_beneficiary }}</div>
             <div><i class="fa-regular fa-circle-question"></i> <strong>Project Type</strong></div>
             <div>{{ project.get_project_type_display|default:project.project_type }}</div>
-            <div><i class="fa-regular fa-circle-question"></i> <strong>Expected Events</strong></div>
+
+            <div><i class="fa-regular fa-circle-question"></i> <strong>Agenda</strong></div>
+            <div>{{ project.agenda }}</div>
+            <div><i class="fa-regular fa-circle-question"></i> <strong>SDGs</strong></div>
+            <div style="flex-direction:column; align-items:flex-start; display:flex;">
+                {% for sdg in project.sdgs.all %}
+                    <span class="badge bg-success" style="align-self:flex-start;">{{ sdg.name }}{% if not forloop.last %}, {% endif %}</span>
+                {% empty %}
+                    <span class="text-muted" style="align-self:flex-start;">None</span>
+                {% endfor %}
+            </div>
+
+            <div><i class="fa-regular fa-circle-question"></i> <strong>Beneficiary</strong></div>
+            <div>{{ project.primary_beneficiary }}</div>
+            <div><i class="fa-regular fa-circle-question"></i> <strong>Estimated Events</strong></div>
             <div>{{ project.estimated_events }}</div>
+
             <div><i class="fa-regular fa-circle-question"></i> <strong>Location</strong></div>
             <div>{{ project.primary_location }}</div>
+            <div><i class="fa-regular fa-circle-question"></i> <strong>Estimated Trained Individuals</strong></div>
+            <div>{{ project.estimated_trainees }}</div>
+          
+            <div><i class="fa-regular fa-circle-question"></i> <strong>Start Date</strong></div>
+            <div>{{ project.start_date|date:'F d, Y' }}</div>
+            <div><i class="fa-regular fa-circle-question"></i> <strong>Estimated End</strong></div>
+            <div>{{ project.estimated_end_date|date:'F d, Y' }}</div>
+
         </div>
     </div>
 </div>
+
+
+<div id="edit-project-modal" class="modal">
+    <div class="modal-content">
+        <span class="close" id="close-edit-project-modal">&times;</span>
+        <h2>Edit Project</h2>
+        <form id="edit-project-form" method="post" enctype="multipart/form-data" action="">
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="form-label">Title <span class="required">*</span></label>
+                <input type="text" name="title" id="edit_project_title" value="{{ project.title }}" required style="flex:1;">
+            </div>
+
+            <div class="form-grid-2x2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0px 30px;">
+                <div class="form-group">
+                    <label class="form-label">Start Date</label>
+                    <input type="date" name="start_date" id="edit_project_start_date" value="{{ project.start_date|date:'Y-m-d' }}" style="flex:1;">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Estimated End</label>
+                    <input type="date" name="estimated_end_date" id="edit_project_end_date" value="{{ project.estimated_end_date|date:'Y-m-d' }}" style="flex:1;">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Agenda</label>
+                    <input type="text" name="agenda" id="edit_project_agenda" value="{{ project.agenda }}" style="flex:1;">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Project Type <span class="required">*</span></label>
+                    <select name="project_type" id="edit_project_type" required style="flex:1;">
+                        {% for val, label in project.PROJECT_TYPE_CHOICES %}
+                            <option value="{{ val }}" {% if project.project_type == val %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">SDGs</label>
+                <input type="text" name="sdgs" id="edit_project_sdgs" value="{% for sdg in project.sdgs.all %}{{ sdg.name }}{% if not forloop.last %}, {% endif %}{% endfor %}" style="flex:1;">
+            </div>
+
+            <div class="form-grid-2x2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0px 30px;">
+                <div class="form-group">
+                    <label class="form-label">Beneficiary</label>
+                    <input type="text" name="primary_beneficiary" id="edit_project_beneficiary" value="{{ project.primary_beneficiary }}" style="flex:1;">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Expected Events</label>
+                    <input type="number" name="estimated_events" id="edit_project_events" value="{{ project.estimated_events }}" style="flex:1;">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Location</label>
+                    <input type="text" name="primary_location" id="edit_project_location" value="{{ project.primary_location }}" style="flex:1;">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Expected Trained Individuals</label>
+                    <input type="number" name="estimated_trainees" id="edit_project_trainees" value="{{ project.estimated_trainees }}" style="flex:1;">
+                </div>
+
+            </div> <div class="form-actions" style="justify-content:flex-end;">
+                <button type="button" class="back-btn" id="cancel-edit-project-modal">Cancel</button>
+                <button type="submit" class="submit-btn">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+
+
+
+<script>
+    function openEditProjectModal() {
+        document.getElementById('edit-project-modal').style.display = 'flex';
+    }
+    document.getElementById('close-edit-project-modal').onclick = function() {
+        document.getElementById('edit-project-modal').style.display = 'none';
+    };
+    document.getElementById('cancel-edit-project-modal').onclick = function() {
+        document.getElementById('edit-project-modal').style.display = 'none';
+    };
+    document.getElementById('edit-project-modal').onclick = function(e) {
+        if (e.target === this) {
+            this.style.display = 'none';
+        }
+    };
+</script>
+
+
 
 {% endblock %}

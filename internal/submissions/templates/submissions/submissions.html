@@ -6,8 +6,14 @@
 <meta charset="UTF-8">
 <title>Submissions</title>
 <link href="https://fonts.googleapis.com/css?family=Inter:400,500,700&display=swap" rel="stylesheet">
+
 <!-- Top Section -->
 <style>
+    .name-link {
+        color:#0A6C44;
+        text-decoration:underline;
+    }
+
     body {
         background: #F9F9F9;
         margin: 0;
@@ -271,9 +277,11 @@
             <div class="text-sort-container">
                 <div class="project-text">Submissions</div>
             </div>
+            {% if request.user.role != "COORDINATOR" %}
             <div class="button-container">
                 <a class="add-user-btn" href="{% url 'add_submission' %}">Add Submission</a>
             </div>
+            {% endif %}
 		</div>
 
         <!-- Search Bar & Filter (4x2 Grid) -->
@@ -347,16 +355,24 @@
             </thead>
             <tbody>
                 {% for submission in page_obj %}
-                    {% for form in submission.downloadables.all %}
-                        <tr>
-                            <td>{{ submission.project.title }}</td>
-                            <td>{{ submission.deadline|date:"Y-m-d H:i" }}</td>
-                            <td>{{ form.name }}</td>
-                            <td>-</td> <!-- Submitted Forms ... For Later -->
-                            <td>-</td> <!-- Date Submitted ... For Later -->
-                            <td>{{ submission.status|capfirst }}</td>
-                        </tr>
-                    {% endfor %}
+                    <tr>
+                        <td><a class="name-link" href="{% url 'project_submissions_details' submission.project.id submission.id %}">{{ submission.project.title }}</a></td>
+                        <td>{{ submission.deadline|date:"Y-m-d H:i" }}</td>
+                        {% if submission.downloadable.file.url %}
+                        <td><a href="{{ submission.downloadable.file.url }}" target="_blank" class="name-link">{{ submission.downloadable.name }}</a></td>
+                        {% endif %}
+                        <td>{{ submission.submitted_at|date:"Y-m-d H:i"|default:"N/A" }}</td>
+                        {% if submission.file.url or submission.image_event.url %}
+                            {% if submission.downloadable.submission_type == "event" %}
+                                <td><a href="{{ submission.image_event.url }}" target="_blank" class="name-link">View</a></td>
+                            {% else %}
+                                <td><a href="{{ submission.file.url }}" target="_blank" class="name-link">View</a></td>
+                            {% endif %}
+                        {% else %}
+                            <td><span style="color:#888;">N/A</span></td>
+                        {% endif %}
+                        <td>{{ submission.get_status_display }}</td>
+                    </tr>
                 {% empty %}
                 <tr><td colspan="6" style="text-align:center;">No submissions found.</td></tr>
                 {% endfor %}

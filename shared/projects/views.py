@@ -1,30 +1,40 @@
 from django.shortcuts import get_object_or_404, render, redirect
 from system.users.decorators import role_required
 from .models import SustainableDevelopmentGoal, Project, ProjectEvaluation, ProjectEvent
+from internal.submissions.models import Submission
 from system.users.models import College, User
 from internal.agenda.models import Agenda
 from .forms import ProjectForm, ProjectEventForm
 from django.core.paginator import Paginator
 import os
+from django.db import models
 
 
 def get_role_constants():
     ADMIN_ROLES = ["VP", "DIRECTOR", "UESO"]
     SUPERUSER_ROLES = ["PROGRAM_HEAD", "DEAN", "COORDINATOR"]
     FACULTY_ROLE = "FACULTY"
-    return ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE
+    COORDINATOR_ROLE = "COORDINATOR"
+    return ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE, COORDINATOR_ROLE
 
 
 def project_profile(request, pk):
-    return redirect('project_overview', pk=pk)
+    return redirect(project_overview, pk=pk)
 
 
 def project_overview(request, pk):
-    ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE = get_role_constants()
+    ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE, COORDINATOR_ROLE = get_role_constants()
+
+    user_role = getattr(request.user, 'role', None)
+    if user_role in ["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
+        base_template = "base_internal.html"
+    else:
+        base_template = "base_public.html"
 
     project = get_object_or_404(Project, pk=pk)
     return render(request, 'projects/project_overview.html', {
         'project': project,
+        'base_template': base_template,
         "ADMIN_ROLES": ADMIN_ROLES,
         "SUPERUSER_ROLES": SUPERUSER_ROLES,
         "FACULTY_ROLE": FACULTY_ROLE
@@ -32,19 +42,55 @@ def project_overview(request, pk):
 
 
 def project_providers(request, pk):
-    ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE = get_role_constants()
-
+    ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE, COORDINATOR_ROLE = get_role_constants()
     project = get_object_or_404(Project, pk=pk)
+    providers_qs = project.providers.all()
+
+    user_role = getattr(request.user, 'role', None)
+    if user_role in ["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
+        base_template = "base_internal.html"
+    else:
+        base_template = "base_public.html"
+
+    # Pagination
+    paginator = Paginator(providers_qs, 3)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+
+    current = page_obj.number
+    total = paginator.num_pages
+    if total <= 5:
+        page_range = range(1, total + 1)
+    elif current <= 3:
+        page_range = range(1, 6)
+    elif current >= total - 2:
+        page_range = range(total - 4, total + 1)
+    else:
+        page_range = range(current - 2, current + 3)
+
     return render(request, 'projects/project_providers.html', {
         'project': project,
+        'base_template': base_template,
         "ADMIN_ROLES": ADMIN_ROLES,
         "SUPERUSER_ROLES": SUPERUSER_ROLES,
-        "FACULTY_ROLE": FACULTY_ROLE
+        "FACULTY_ROLE": FACULTY_ROLE,
+        'providers': page_obj,
+        'paginator': paginator,
+        'page_number': page_number,
+        'page_obj': page_obj,
+        'page_range': page_range,
     })
 
 
 def project_events(request, pk):
-    ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE = get_role_constants()
+    ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE, COORDINATOR_ROLE = get_role_constants()
+
+    user_role = getattr(request.user, 'role', None)
+    if user_role in ["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
+        base_template = "base_internal.html"
+    else:
+        base_template = "base_public.html"
+
     project = get_object_or_404(Project, pk=pk)
     events_qs = project.events.all().order_by('datetime')
     total = project.estimated_events
@@ -82,6 +128,7 @@ def project_events(request, pk):
 
     return render(request, 'projects/project_events.html', {
         'project': project,
+        'base_template': base_template,
         'events': events,
         'total': total,
         'completed': completed,
@@ -95,9 +142,17 @@ def project_events(request, pk):
 
 
 def project_files(request, pk):
-    ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE = get_role_constants()
+    ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE, COORDINATOR_ROLE = get_role_constants()
+
+    user_role = getattr(request.user, 'role', None)
+    if user_role in ["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
+        base_template = "base_internal.html"
+    else:
+        base_template = "base_public.html"
+
     project = get_object_or_404(Project, pk=pk)
     documents = project.documents.all()
+    
 
     search = request.GET.get('search', '')
     sort_by = request.GET.get('sort_by', 'name')
@@ -129,8 +184,25 @@ def project_files(request, pk):
     files_page_obj = files_paginator.get_page(files_page_number)
     file_types = sorted(list(extensions))
 
+    # Pagination
+    paginator = Paginator(documents, 4)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+
+    current = page_obj.number
+    total = paginator.num_pages
+    if total <= 5:
+        page_range = range(1, total + 1)
+    elif current <= 3:
+        page_range = range(1, 6)
+    elif current >= total - 2:
+        page_range = range(total - 4, total + 1)
+    else:
+        page_range = range(current - 2, current + 3)
+
     return render(request, 'projects/project_files.html', {
         'project': project,
+        'base_template': base_template,
         'files': files_page_obj,
         'file_types': file_types,
         'sort_by': sort_by,
@@ -138,29 +210,144 @@ def project_files(request, pk):
         "ADMIN_ROLES": ADMIN_ROLES,
         "SUPERUSER_ROLES": SUPERUSER_ROLES,
         "FACULTY_ROLE": FACULTY_ROLE,
+
+        'documents': page_obj,
+        'paginator': paginator,
+        'page_number': page_number,
+        'page_obj': page_obj,
+        'page_range': page_range,
     })
 
 
 def project_submissions(request, pk):
-    ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE = get_role_constants()
-    project = get_object_or_404(Project, pk=pk)
-    submissions = getattr(project, 'submissions', None)
+    ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE, COORDINATOR_ROLE = get_role_constants()
+    from internal.submissions.models import Submission
+    submissions = Submission.objects.filter(project__pk=pk).order_by('deadline')
+    events = ProjectEvent.objects.filter(project__pk=pk).order_by('datetime')
 
-    if submissions is None and hasattr(project, 'submission_set'):
-        submissions = project.submission_set.all()
-    elif submissions is None:
-        submissions = []
-    return render(request, 'projects/project_submissions.html', {
-        'project': project, 
-        'submissions': submissions,
+    user_role = getattr(request.user, 'role', None)
+    if user_role in ["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
+        base_template = "base_internal.html"
+    else:
+        base_template = "base_public.html"
+
+    project = get_object_or_404(Project, pk=pk)
+
+    # Submission Logic
+    from django.utils import timezone
+    from django.http import HttpResponseBadRequest
+    from django.shortcuts import redirect
+    from django.contrib import messages
+
+    if request.method == "POST":
+        submission = get_object_or_404(Submission, pk=request.POST.get('submission_id'))
+        action = request.POST.get('action')
+        print("DEBUG:", action, submission.status)
+
+        # Handle Submission Upload
+        if action == "submit" and submission.status == "PENDING":
+            sub_type = submission.downloadable.submission_type
+
+            if sub_type == "final":
+                submission.file = request.FILES.get("final_file")
+                submission.for_product_production = bool(request.POST.get("for_product_production"))
+                submission.for_research = bool(request.POST.get("for_research"))
+                submission.for_extension = bool(request.POST.get("for_extension"))
+            
+            elif sub_type == "event":
+                submission.event_image = request.FILES.get("event_image")
+                submission.image_description = request.POST.get("image_description", "")
+                submission.num_trained_individuals = request.POST.get("num_trained_individuals", 0)
+                submission.event = ProjectEvent.objects.filter(pk=request.POST.get("event")).first()
+
+            else:  # "file"
+                submission.file = request.FILES.get("file_file")
+
+            submission.status = "SUBMITTED"
+            submission.submitted_at = timezone.now()
+            submission.submitted_by = request.user
+            submission.save()
+
+            return redirect(request.path_info)
+
+    provider_ids = list(project.providers.values_list('id', flat=True))
+    context = {
+        "project": project,
+        "base_template": base_template,
+        "submissions": submissions,
+        "events": events,
         "ADMIN_ROLES": ADMIN_ROLES,
-        "SUPERUSER_ROLES": SUPERUSER_ROLES,
-        "FACULTY_ROLE": FACULTY_ROLE,
-    })
+        "COORDINATOR_ROLE": COORDINATOR_ROLE,
+        "provider_ids": provider_ids,
+    }
+    return render(request, "projects/project_submissions.html", context)
+
+
+def project_submissions_details(request, pk, submission_id):
+    ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE, COORDINATOR_ROLE = get_role_constants()
+    
+    submission = get_object_or_404(Submission, pk=submission_id, project__pk=pk)
+
+    user_role = getattr(request.user, 'role', None)
+    if user_role in ["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
+        base_template = "base_internal.html"
+    else:
+        base_template = "base_public.html"
+
+    project = get_object_or_404(Project, pk=pk)
+
+    context = {
+        "project": project,
+        "base_template": base_template,
+        "submission": submission,
+        "ADMIN_ROLES": ADMIN_ROLES,
+        "COORDINATOR_ROLE": COORDINATOR_ROLE,
+    }
+    return render(request, "projects/project_submissions_details.html", context)
+
+@role_required(allowed_roles=["UESO", "VP", "DIRECTOR", "COORDINATOR"])
+def admin_submission_action(request, pk, submission_id):
+    submission = get_object_or_404(Submission, pk=submission_id, project__pk=pk)
+    from django.utils import timezone
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if submission.status == 'SUBMITTED' and request.user.role == "COORDINATOR":
+            if action == 'forward':
+                submission.status = 'FORWARDED'
+                submission.reviewed_by = request.user
+                submission.reviewed_at = timezone.now()
+                submission.save()
+            elif action == 'request_revision':
+                submission.status = 'REQUESTED_REVISION'
+                submission.reviewed_by = request.user
+                submission.reviewed_at = timezone.now()
+                submission.reason_for_revision = request.POST.get('reason', '')
+                submission.save()
+        elif submission.status == 'FORWARDED' and request.user.role in ["VP", "DIRECTOR", "UESO"]:
+            if action == 'accept':
+                submission.status = 'ACCEPTED'
+                submission.final_reviewed_by = request.user
+                submission.final_reviewed_at = timezone.now()
+                submission.save()
+            elif action == 'reject':
+                submission.status = 'REJECTED'
+                submission.final_reviewed_by = request.user
+                submission.final_reviewed_at = timezone.now()
+                submission.reason_for_rejection = request.POST.get('reason', '')
+                submission.save()
+            
+    return redirect('project_submissions_details', pk=pk, submission_id=submission_id)
 
 
 def project_expenses(request, pk):
-    ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE = get_role_constants()
+    ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE, COORDINATOR_ROLE = get_role_constants()
+
+    user_role = getattr(request.user, 'role', None)
+    if user_role in ["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
+        base_template = "base_internal.html"
+    else:
+        base_template = "base_public.html"
+
     project = get_object_or_404(Project, pk=pk)
 
     expenses = [
@@ -188,6 +375,7 @@ def project_expenses(request, pk):
     ]
     return render(request, 'projects/project_expenses.html', {
         'project': project, 
+        'base_template': base_template,
         'expenses': expenses,
         "ADMIN_ROLES": ADMIN_ROLES,
         "SUPERUSER_ROLES": SUPERUSER_ROLES,
@@ -195,7 +383,14 @@ def project_expenses(request, pk):
     })
 
 def project_evaluations(request, pk):
-    ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE = get_role_constants()
+    ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE, COORDINATOR_ROLE = get_role_constants()
+
+    user_role = getattr(request.user, 'role', None)
+    if user_role in ["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
+        base_template = "base_internal.html"
+    else:
+        base_template = "base_public.html"
+
     project = get_object_or_404(Project, pk=pk)
 
     if request.method == 'POST':
@@ -213,6 +408,7 @@ def project_evaluations(request, pk):
     evaluations = project.evaluations.select_related('evaluated_by').order_by('-created_at')
     return render(request, 'projects/project_evaluations.html', {
         'project': project, 
+        'base_template': base_template,
         'evaluations': evaluations,
         "ADMIN_ROLES": ADMIN_ROLES,
         "SUPERUSER_ROLES": SUPERUSER_ROLES,
@@ -263,13 +459,39 @@ def projects_dispatcher(request):
         if role in ["UESO", "DIRECTOR", "VP", "PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
             return admin_project(request)
         else:
-            return user_projects(request)
-    return user_projects(request)
+            return faculty_project(request)
+    return faculty_project(request)
 
 
 @role_required(allowed_roles=["FACULTY"])
-def user_projects(request):
-    return render(request, 'projects/user_project.html')
+def faculty_project(request):
+    user = request.user
+    projects = Project.objects.filter(
+        models.Q(project_leader=user) | models.Q(providers=user)
+    ).distinct().order_by('-updated_at')
+
+    # Pagination
+    paginator = Paginator(projects, 5)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+
+    current = page_obj.number
+    total = paginator.num_pages
+    if total <= 5:
+        page_range = range(1, total + 1)
+    elif current <= 3:
+        page_range = range(1, 6)
+    elif current >= total - 2:
+        page_range = range(total - 4, total + 1)
+    else:
+        page_range = range(current - 2, current + 3)
+
+    return render(request, 'projects/faculty_project.html', {
+        'projects': page_obj,
+        'page_obj': page_obj,
+        'paginator': paginator,
+        'page_range': page_range,
+    })
 
 
 @role_required(allowed_roles=["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"])

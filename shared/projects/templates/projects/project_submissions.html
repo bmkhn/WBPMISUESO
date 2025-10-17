@@ -3,9 +3,9 @@
 
 <style>
     .submission-list {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 2rem;
+        display: flex;
+        flex-direction: column; 
+        gap: 1.5rem;
     }
 
     .submission-card {
@@ -28,6 +28,7 @@
         margin: 0.2rem 0;
         font-size: 0.95rem;
         color: #555;
+        text-align: left;
     }
 
     .submission-card .admin-button {
@@ -37,19 +38,63 @@
     }
 </style>
 
+
+<style>
+    .submission-modal {
+        position: fixed;
+        z-index: 1000;
+        left: 0; top: 0; width: 100vw; height: 100vh;
+        background: rgba(0,0,0,0.3);
+        display: flex; align-items: center; justify-content: center;
+    }
+    .modal-content {
+        background: #fff;
+        border-radius: 1rem;
+        padding: 2.5rem 2.5rem 2rem 2.5rem;
+        min-width: 340px;
+        max-width: 95vw;
+        box-shadow: 0 4px 32px 0 rgba(0,0,0,0.18);
+        position: relative;
+        display: flex;
+        flex-direction: column;
+    }
+    .close-modal {
+        position: absolute;
+        top: 1.2rem;
+        right: 1.7rem;
+        font-size: 1.7rem;
+        color: #888;
+        cursor: pointer;
+        transition: color 0.2s;
+    }
+    .close-modal:hover {
+        color: #222;
+    }
+
+    .submission-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+    }
+</style>
+
 <div class="card-header">
     <h3>Submissions</h3>
 </div>
 <div class="card-body">
     {% if submissions %}
         <div class="submission-list">
-            {% for submission in submissions %}
-            <div class="submission-card">
-                <h4>{{ submission.title }}</h4>
-                <p>Submitted by: <strong>{{ submission.submitter.get_full_name|default:submission.submitter.username }}</strong></p>
-                <p>Date: {{ submission.submitted_at|date:'M d, Y' }}</p>
-                <p>Status: <span>{{ submission.get_status_display }}</span></p>
-                <a href="{{ submission.file.url }}" target="_blank" class="admin-button">View File</a>
+            {% for sub in submissions %}
+            <div class="submission-card submission-card-clickable" style="position:relative; cursor:pointer;" data-submission-id="{{ sub.id }}" data-submission-type="{{ sub.downloadable.submission_type }}" data-submission-status="{{ sub.status }}">
+                <h4>{{ sub.downloadable.name }}</h4>
+                <p>Assigned on: <strong>{{ sub.created_at|date:'M d, Y' }}</strong></p>
+                {% if sub.notes %}<p title="{{ sub.notes }}"><strong>Notes:</strong> {{ sub.notes|truncatechars:50 }}</p>{% endif %}
+                <div style="position:absolute; top:1.5rem; right:1.5rem; text-align:right;">
+                    <span title="{{ sub.deadline|date:'Y-m-d H:i' }}">
+                        {{ sub.deadline|timeuntil }} left
+                    </span>
+                    <br>
+                    <span>{{ sub.get_status_display }}</span>
+                </div>
             </div>
             {% endfor %}
         </div>
@@ -57,5 +102,330 @@
         <p style="color:#888;font-size:1.1rem;">No submissions found.</p>
     {% endif %}
 </div>
+
+<!-- Form -->
+<style>
+    .form-group {
+		display: flex;
+		align-items: flex-start;
+		gap: 1rem;
+        margin-bottom: 0.5rem;
+	}
+
+	.form-label {
+		font-weight: 600;
+		color: #374151;
+		font-size: 0.95rem;
+	}
+
+    .required {
+        color: #DC2626;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    .submit-btn {
+        background-color: #0A6C44;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+
+    .submit-btn:hover {
+        background-color: #07532F;
+    }
+
+    .back-btn {
+        background-color: #E5E7EB;
+        color: #374151;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+
+    .back-btn:hover {
+        background-color: #D1D5DB;
+    }
+
+    textarea {
+        resize: none;
+    }
+
+    .submission-modal h2 {
+        margin-top: 0;
+        font-size: 1.5rem;
+        color: #000;
+        font-weight: 400;
+    }
+
+    input[type="text"], input[type="date"], textarea, input[type="file"], input[type="datetime-local"], input[type="number"] {
+        flex: 1;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+        padding: 0.75rem;
+        font-size: 1rem;
+        font-family: 'Inter', sans-serif;
+    }
+
+    select {
+        flex: 1;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+        padding: 0.75rem;
+        font-size: 1rem;
+        font-family: 'Inter', sans-serif;
+		appearance: none;
+		-webkit-appearance: none;
+		-moz-appearance: none;
+		padding-right: 2rem;
+		background: url("data:image/svg+xml;utf8,<svg width='16' height='11' viewBox='0 0 16 11' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M7.99976 7.19417L13.9025 1.29147C14.0125 1.17758 14.144 1.08674 14.2895 1.02424C14.435 0.961746 14.5915 0.92885 14.7498 0.927474C14.9082 0.926098 15.0652 0.95627 15.2117 1.01623C15.3583 1.07619 15.4914 1.16473 15.6034 1.27669C15.7153 1.38866 15.8039 1.5218 15.8638 1.66835C15.9238 1.8149 15.954 1.97192 15.9526 2.13026C15.9512 2.28859 15.9183 2.44506 15.8558 2.59055C15.7933 2.73604 15.7025 2.86762 15.5886 2.97762L8.84283 9.72339C8.61921 9.94694 8.31596 10.0725 7.99976 10.0725C7.68356 10.0725 7.38031 9.94694 7.15669 9.72339L0.41092 2.97762C0.297028 2.86762 0.206183 2.73604 0.143687 2.59055C0.0811915 2.44506 0.0482959 2.28859 0.04692 2.13026C0.0455441 1.97192 0.0757155 1.8149 0.135674 1.66835C0.195632 1.5218 0.284176 1.38866 0.39614 1.27669C0.508103 1.16473 0.641244 1.07619 0.787794 1.01623C0.934343 0.95627 1.09137 0.926098 1.2497 0.927474C1.40804 0.92885 1.56451 0.961746 1.71 1.02424C1.85548 1.08674 1.98706 1.17758 2.09706 1.29147L7.99976 7.19417Z' fill='%23374151'/></svg>")
+        		no-repeat right 0.75rem center;
+  		background-size: 13px 8px;
+    }
+</style>
+
+<!-- Submission [Final] -->
+<div id="modal-final" class="submission-modal" style="display:none;">
+    <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h2>Final Submission</h2>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" name="submission_id" value="{{ submission.id }}" />
+            <input type="hidden" name="action" value="submit" />
+            <div class="form-group">
+                <label class="form-label">File:</label>
+                <input type="file" name="final_file" required>
+            </div>
+
+            <div class="form-group">
+                <label><input type="checkbox" name="for_product_production"> For Product Production</label><br>
+                <label><input type="checkbox" name="for_research"> For Research</label><br>
+                <label><input type="checkbox" name="for_extension"> For Extension</label>
+            </div>
+
+            <div class="form-actions" style="justify-content:flex-end;">
+                <button type="button" class="back-btn">Cancel</button>
+                <button type="submit" class="submit-btn">Submit</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Submission [Event] -->
+<div id="modal-event" class="submission-modal" style="display:none;">
+    <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h2>Event Submission</h2>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" name="submission_id" value="{{ submission.id }}" />
+            <input type="hidden" name="action" value="submit" />
+            <div class="form-group">
+                <label class="form-label">Event <span class="required">*</span></label><br>
+                <select name="event" required>
+                    <option value="" disabled selected>Select event</option>
+                    {% for event in events %}
+                        <option value="{{ event.id }}">{{ event.title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">No. of Trained Individuals <span class="required">*</span></label><br>
+                <input type="number" name="num_trained_individuals" min="0" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Image File <span class="required">*</span></label><br>
+                <input type="file" name="event_image" accept="image/*" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Description of Picture <span class="required">*</span></label><br>
+                <textarea name="image_description" rows="3" required></textarea>
+            </div>
+
+            <div class="form-actions" style="justify-content:flex-end;">
+                <button type="button" class="back-btn">Cancel</button>
+                <button type="submit" class="submit-btn">Submit</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Submission [File] -->
+<div id="modal-file" class="submission-modal" style="display:none;">
+    <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h2>File Submission</h2>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" name="submission_id" value="{{ submission.id }}" />
+            <input type="hidden" name="action" value="submit" />
+            <div class="form-group">
+                <label class="form-label">File <span class="required">*</span></label>
+                <input type="file" name="file_file" required>
+            </div>
+
+            <div class="form-actions" style="justify-content:flex-end;">
+                <button type="button" class="back-btn">Cancel</button>
+                <button type="submit" class="submit-btn">Submit</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<!-- Confirmation Modals -->
+<div id="modal-bg-action" class="modal-bg" style="display:none;">
+    <div class="modal" id="modal-confirm-revision" style="display:none;">
+        <div class="modal-title">Confirm Request Revision</div>
+        <div class="modal-content">Are you sure you want to request a revision for this submission?</div>
+        <form method="post" style="width:100%;">
+            {% csrf_token %}
+            <input type="hidden" name="submission_id" value="" />
+            <input type="hidden" name="action" value="request_revision" />
+            <div class="modal-actions">
+                <button type="button" class="back-btn" id="cancel-revision">Cancel</button>
+                <button type="submit" class="submit-btn" style="background:#f59e42;">Request Revision</button>
+            </div>
+        </form>
+    </div>
+    <div class="modal" id="modal-confirm-forward" style="display:none;">
+        <div class="modal-title">Confirm Forward to UESO</div>
+        <div class="modal-content">Are you sure you want to forward this submission to UESO?</div>
+        <form method="post" style="width:100%;">
+            {% csrf_token %}
+            <input type="hidden" name="submission_id" value="" />
+            <input type="hidden" name="action" value="forward_to_ueso" />
+            <div class="modal-actions">
+                <button type="button" class="back-btn" id="cancel-forward">Cancel</button>
+                <button type="submit" class="submit-btn" style="background:#0A6C44;">Forward to UESO</button>
+            </div>
+        </form>
+    </div>
+    <div class="modal" id="modal-confirm-reject" style="display:none;">
+        <div class="modal-title">Confirm Reject</div>
+        <div class="modal-content">Are you sure you want to reject this submission?</div>
+        <form method="post" style="width:100%;">
+            {% csrf_token %}
+            <input type="hidden" name="submission_id" value="" />
+            <input type="hidden" name="action" value="reject" />
+            <div class="modal-actions">
+                <button type="button" class="back-btn" id="cancel-reject">Cancel</button>
+                <button type="submit" class="submit-btn" style="background:#dc2626;">Reject</button>
+            </div>
+        </form>
+    </div>
+    <div class="modal" id="modal-confirm-accept" style="display:none;">
+        <div class="modal-title">Confirm Accept</div>
+        <div class="modal-content">Are you sure you want to accept this submission?</div>
+        <form method="post" style="width:100%;">
+            {% csrf_token %}
+            <input type="hidden" name="submission_id" value="" />
+            <input type="hidden" name="action" value="accept" />
+            <div class="modal-actions">
+                <button type="button" class="back-btn" id="cancel-accept">Cancel</button>
+                <button type="submit" class="submit-btn" style="background:#0A6C44;">Accept</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Action confirmation modal logic
+        function showActionModal(which, subId) {
+            document.getElementById('modal-bg-action').style.display = 'flex';
+            ['modal-confirm-revision','modal-confirm-forward','modal-confirm-reject','modal-confirm-accept'].forEach(function(mid){
+                document.getElementById(mid).style.display = (mid === which) ? 'flex' : 'none';
+            });
+            // Set submission_id in the modal form
+            var modal = document.getElementById(which);
+            if (modal) {
+                modal.querySelectorAll('input[name="submission_id"]').forEach(function(inp){ inp.value = subId; });
+            }
+        }
+        function hideActionModal() {
+            document.getElementById('modal-bg-action').style.display = 'none';
+            ['modal-confirm-revision','modal-confirm-forward','modal-confirm-reject','modal-confirm-accept'].forEach(function(mid){
+                document.getElementById(mid).style.display = 'none';
+            });
+        }
+        // Only allow modal opening for involved users
+    var userIsInvolved = ("{% if request.user.id == project.project_leader.id or request.user.id in provider_ids %}true{% else %}false{% endif %}" === "true");
+        document.querySelectorAll('.submission-card-clickable').forEach(function(card) {
+            card.addEventListener('click', function() {
+                if (!userIsInvolved) return;
+                var type = card.getAttribute('data-submission-type');
+                var status = card.getAttribute('data-submission-status');
+                var subId = card.getAttribute('data-submission-id');
+                var modalId = '';
+                if (status && status === 'PENDING') {
+                    if (type === 'final') {
+                        modalId = 'modal-final';
+                    } else if (type === 'event') {
+                        modalId = 'modal-event';
+                    } else {
+                        modalId = 'modal-file';
+                    }
+                    // Set submission.id for the modal form
+                    var modal = document.getElementById(modalId);
+                    if (modal) {
+                        modal.style.display = 'flex';
+                        var input = modal.querySelector('input[name="submission_id"]');
+                        if (input) input.value = subId;
+                    }
+                } else {
+                    // Redirect to details page for non-pending submissions
+                    window.location.href = '/projects/{{ project.id }}/submissions/' + subId + '/';
+                }
+            });
+        });
+
+        // Hide modal when clicking outside
+        document.getElementById('modal-bg-action').addEventListener('click', function(e) {
+            if (e.target === this) hideActionModal();
+        });
+        // Close modal on X
+        document.querySelectorAll('.close-modal').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                btn.closest('.submission-modal').style.display = 'none';
+            });
+        });
+        // Close modal on Cancel button
+        document.querySelectorAll('.back-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                btn.closest('.submission-modal').style.display = 'none';
+            });
+        });
+        // Close modal on clicking outside modal-content
+        document.querySelectorAll('.submission-modal').forEach(function(modal) {
+            modal.addEventListener('mousedown', function(e) {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        });
+        // Close modal on Escape key
+        window.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.submission-modal').forEach(function(modal) {
+                    modal.style.display = 'none';
+                });
+            }
+        });
+    });
+</script>
 
 {% endblock %}
