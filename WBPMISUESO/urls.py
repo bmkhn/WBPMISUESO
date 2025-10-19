@@ -25,7 +25,7 @@ urlpatterns = [
 
     # INTERNAL APPS
     path('agenda/', include('internal.agenda.urls')),               # Agenda
-    # Analytics (None Yet)
+    path('analytics/', include('internal.analytics.urls')),         # Analytics
     path('dashboard/', include('internal.dashboard.urls')),         # Dashboard
     path('experts/', include('internal.experts.urls')),             # Experts
     path('goals/', include('internal.goals.urls')),                 # Goals
@@ -34,8 +34,8 @@ urlpatterns = [
     # SHARED APPS
     path('about-us/', include('shared.about_us.urls')),             # About Us
     path('announcements/', include('shared.announcements.urls')),   # Announcements
-    # Archive (None Yet)
-    # Budget (None Yet)
+    path('archives/', include('shared.archive.urls')),              # Archives
+    path('budget/', include('shared.budget.urls')),                 # Budget
     path('calendar/', include('shared.event_calendar.urls')),       # Calendar
     path('downloadables/', include('shared.downloadables.urls')),   # Downloadables
     path('projects/', include('shared.projects.urls')),             # Projects

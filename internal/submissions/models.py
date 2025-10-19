@@ -1,8 +1,11 @@
-
 from django.db import models
 from django.conf import settings
+from django.urls import reverse
 from shared.projects.models import Project, ProjectEvent
 from shared.downloadables.models import Downloadable
+from system.logs.models import LogEntry
+from django.dispatch import receiver
+from django.db.models.signals import post_save
 
 class Submission(models.Model):
 	project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='submissions')
@@ -12,7 +15,7 @@ class Submission(models.Model):
 	created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='created_submissions')
 	created_at = models.DateTimeField(auto_now_add=True)
 
-	# Submission/response fields
+	# Submission/Response fields
 	submitted_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='submitted_submissions')
 	submitted_at = models.DateTimeField(null=True, blank=True)
 	file = models.FileField(upload_to='submissions/files/', null=True, blank=True)
@@ -38,6 +41,7 @@ class Submission(models.Model):
 		('REJECTED', 'Rejected'),               		# UESO/Director/VP rejected
 		('OVERDUE', 'Overdue'),                 		# Missed deadline
 	]
+
 	status = models.CharField(max_length=32, choices=SUBMISSION_STATUS_CHOICES, default='PENDING')
 	reviewed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='reviewed_submissions')
 	reviewed_at = models.DateTimeField(null=True, blank=True)
@@ -45,6 +49,66 @@ class Submission(models.Model):
 	authorized_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='final_approved_submissions')
 	authorized_at = models.DateTimeField(null=True, blank=True)
 	reason_for_rejection = models.TextField(blank=True, null=True)
+	updated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='updated_submissions')
+	updated_at = models.DateTimeField(auto_now=True)
 
 	def get_status_display(self):
 		return dict(self.SUBMISSION_STATUS_CHOICES).get(self.status, self.status)
+
+
+# Log creation and update actions for Submission
+@receiver(post_save, sender=Submission)
+def log_submission_action(sender, instance, created, **kwargs):
+	user = instance.updated_by or instance.submitted_by or None
+	# project_submissions_details view expects (request, pk, submission_id) -> provide pk and submission_id for reverse
+	url = reverse('project_submissions_details', args=[instance.project.pk, instance.id])
+	# Only log creation if created
+	if created:
+		LogEntry.objects.create(
+			user=user,
+			action='CREATE',
+			model='Submission',
+			object_id=instance.id,
+			object_repr=str(instance),
+			details=f"Status: {instance.status}",
+			url=url,
+			is_notification=True
+		)
+	# Only log update if not created and updated_at is set and not equal to submitted_at
+	elif instance.updated_at and instance.updated_at != instance.submitted_at:
+		LogEntry.objects.create(
+			user=user,
+			action='UPDATE',
+			model='ClientRequest',
+			object_id=instance.id,
+			object_repr=str(instance),
+			details=f"Status: {instance.status}",
+			url=url,
+			is_notification=True
+		)
+
+
+@receiver(post_save, sender=Submission)
+def update_project_event_progress(sender, instance, **kwargs):
+    # Only trigger on APPROVED event submissions
+    if instance.downloadable.submission_type == 'event' and instance.status == 'APPROVED':
+        project = instance.project
+        # Count all APPROVED event submissions for this project
+        approved_count = Submission.objects.filter(
+            project=project,
+            downloadable__submission_type='event',
+            status='APPROVED'
+        ).count()
+        project.event_progress = approved_count
+        project.save(update_fields=['event_progress'])
+
+
+class SubmissionUpdate(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    submission = models.ForeignKey(Submission, on_delete=models.CASCADE)
+    status = models.CharField(max_length=32)
+    viewed = models.BooleanField(default=False)
+    updated_at = models.DateTimeField()
+
+    class Meta:
+        unique_together = ('user', 'submission', 'status')

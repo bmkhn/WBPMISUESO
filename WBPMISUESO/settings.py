@@ -44,7 +44,7 @@ INSTALLED_APPS = [
 
     # Internal Apps
     'internal.agenda',          # Agenda
-    # 'internal.analytics',       # Analytics
+    'internal.analytics',       # Analytics
     'internal.dashboard',       # Dashboard
     'internal.experts',         # Experts
     'internal.goals',           # Goals
@@ -53,7 +53,7 @@ INSTALLED_APPS = [
     # Shared Apps
     'shared.about_us',          # About Us
     'shared.announcements',     # Announcements
-    # 'shared.archive',           # Archive
+    'shared.archive',           # Archive
     'shared.budget',            # Budget
     'shared.event_calendar',    # Calendar
     'shared.downloadables',     # Downloadables
@@ -61,9 +61,10 @@ INSTALLED_APPS = [
     'shared.request',           # Request
 
     # System Apps
-    'system.exports',         # Exports
+    'system.exports',           # Exports
     'system.logs',              # Logs
     'system.users',             # Custom User
+    # 'rest_framework',           # Django REST Framework
 ]
 
 MIDDLEWARE = [

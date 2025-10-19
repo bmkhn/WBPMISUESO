@@ -90,6 +90,7 @@
         align-items: center;
         gap: 1.5rem;
         margin: 1rem 0 2rem 0;
+        flex-wrap: wrap;
     } 
 
     .project-authors content {
@@ -401,21 +402,52 @@
                 
                 <h5>{{ project.start_date|date:'F d, Y' }} - {{ project.estimated_end_date|date:'F d, Y' }}</h5>
             </div> 
-            <div class="project-authors"> 
+            <div class="project-authors" id="project-authors" style="position:relative;">
                 <content>
                     {% if project.project_leader %}
                         <img src="{{ project.project_leader.profile_picture_or_initial }}" alt="">
                         <a href="#">{{ project.project_leader.get_full_name|default:project.project_leader.username }}</a>
                     {% endif %}
-                </content> 
-                {% for provider in project.providers.all %}
-                <content>
-                    <img src="{{ provider.profile_picture_or_initial }}" alt="">
-                    <a href="#">{{ provider.get_full_name|default:provider.username }}</a> 
-                </content> 
-                {% empty %}
-                {% endfor %}
-            </div> 
+                </content>
+                {% with all_authors=project.providers.all %}
+                    {% for provider in all_authors|slice:":2" %}
+                        <content>
+                            <img src="{{ provider.profile_picture_or_initial }}" alt="">
+                            <a href="#">{{ provider.get_full_name|default:provider.username }}</a>
+                        </content>
+                    {% endfor %}
+                    {% if all_authors|length > 3 %}
+                        <div class="dropdown" style="display:inline-block; position:relative;">
+                            <button class="dropdown-btn" id="authors-dropdown-btn" style="font-size:0.95rem; color:#007bff; background:none; border:none; cursor:pointer; margin-left:8px;">+{{ all_authors|length|add:"-3" }} more ▾</button>
+                                <div class="dropdown-menu" id="authors-dropdown-menu" style="display:none; position:absolute; right:0; top:30px; min-width:220px; background:#fff; border:1px solid #ccc; border-radius:4px; box-shadow:0 2px 8px rgba(0,0,0,0.1); z-index:10;">
+                                {% for provider in all_authors|slice:"3:" %}
+                                    <div style="display:flex; align-items:center; gap:0.75rem; padding:8px 12px; border-bottom:1px solid #eee;">
+                                        <img src="{{ provider.profile_picture_or_initial }}" alt="" style="width:2rem; height:2rem; border-radius:50%; object-fit:cover; border:0.08rem solid #ccc;">
+                                        <a href="#" style="font-size:0.9rem; color:#000; text-decoration:none;">{{ provider.get_full_name|default:provider.username }}</a>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endwith %}
+            </div>
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    var btn = document.getElementById('authors-dropdown-btn');
+                    var menu = document.getElementById('authors-dropdown-menu');
+                    if (btn && menu) {
+                        btn.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            menu.style.display = menu.style.display === 'none' || menu.style.display === '' ? 'block' : 'none';
+                        });
+                        document.addEventListener('click', function(e) {
+                            if (!menu.contains(e.target) && e.target !== btn) {
+                                menu.style.display = 'none';
+                            }
+                        });
+                    }
+                });
+            </script>
             <div class="tabs">  
                 <button type="button" data-tab="overview" class="{% if '/overview/' in request.path %}active{% endif %}"> Overview</button>
                 {% if request.user.role in SUPERUSER_ROLES or request.user.role in ADMIN_ROLES %}

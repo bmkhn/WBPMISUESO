@@ -892,21 +892,46 @@
                 
                 <h5>{{ project.start_date|date:'F d, Y' }} - {{ project.estimated_end_date|date:'F d, Y' }}</h5>
             </div> 
-            <div class="project-authors"> 
+            <div class="project-authors" id="project-authors">
                 <content>
                     {% if project.project_leader %}
                         <img src="{{ project.project_leader.profile_picture_or_initial }}" alt="">
                         <a href="#">{{ project.project_leader.get_full_name|default:project.project_leader.username }}</a>
                     {% endif %}
-                </content> 
-                {% for provider in project.providers.all %}
-                <content>
-                    <img src="{{ provider.profile_picture_or_initial }}" alt="">
-                    <a href="#">{{ provider.get_full_name|default:provider.username }}</a> 
-                </content> 
-                {% empty %}
-                {% endfor %}
-            </div> 
+                </content>
+                {% with all_authors=project.providers.all %}
+                    {% for provider in all_authors|slice:":3" %}
+                        <content>
+                            <img src="{{ provider.profile_picture_or_initial }}" alt="">
+                            <a href="#">{{ provider.get_full_name|default:provider.username }}</a>
+                        </content>
+                    {% endfor %}
+                    {% if all_authors|length > 3 %}
+                        <a href="#" id="show-more-authors" style="font-size:0.95rem; color:#007bff; text-decoration:underline; cursor:pointer;">+{{ all_authors|length|add:"-3" }} more</a>
+                        <span id="extra-authors" style="display:none;">
+                            {% for provider in all_authors|slice:"3:" %}
+                                <content>
+                                    <img src="{{ provider.profile_picture_or_initial }}" alt="">
+                                    <a href="#">{{ provider.get_full_name|default:provider.username }}</a>
+                                </content>
+                            {% endfor %}
+                        </span>
+                    {% endif %}
+                {% endwith %}
+            </div>
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    var showMore = document.getElementById('show-more-authors');
+                    var extraAuthors = document.getElementById('extra-authors');
+                    if (showMore && extraAuthors) {
+                        showMore.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            extraAuthors.style.display = 'inline-flex';
+                            showMore.style.display = 'none';
+                        });
+                    }
+                });
+            </script>
             <div class="tabs">  
                 <button type="button" data-tab="overview"> Information</button>
                 <button type="button" data-tab="providers">Providers</button>

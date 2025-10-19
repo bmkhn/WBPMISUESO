@@ -9,6 +9,8 @@ from django.core.paginator import Paginator
 
 @role_required(allowed_roles=["UESO", "VP", "DIRECTOR", "COORDINATOR"])
 def submission_admin_view(request):
+    from django.db.models import Case, When, Value, IntegerField
+    user_role = getattr(request.user, 'role', None)
     submissions = Submission.objects.all()
 
     # Filters
@@ -20,7 +22,6 @@ def submission_admin_view(request):
     search = request.GET.get('search', '').strip()
 
     # Apply filters
-
     if status:
         submissions = submissions.filter(status__iexact=status)
     if required_form:
@@ -32,19 +33,28 @@ def submission_admin_view(request):
 
     submissions = submissions.distinct()
 
-    # Sorting
-    sort_map = {
-        'deadline': 'deadline',
-        # 'date_submitted': '', 
-        'title': 'project__title',
-        'status': 'status',
-        'required_form': 'downloadable__name',
-    }
-    sort_field = sort_map.get(sort_by, 'deadline')
-    if sort_field:
-        if order == 'desc':
-            sort_field = '-' + sort_field
-        submissions = submissions.order_by(sort_field)
+    # Custom ordering for roles
+    if user_role in ["COORDINATOR", "PROGRAM_HEAD", "DEAN"]:
+        submissions = submissions.filter(status__in=["SUBMITTED", "REVISION_REQUESTED", "FORWARDED"])
+        submissions = submissions.annotate(
+            status_priority=Case(
+                When(status="SUBMITTED", then=Value(0)),
+                When(status="REVISION_REQUESTED", then=Value(1)),
+                When(status="FORWARDED", then=Value(2)),
+                default=Value(3),
+                output_field=IntegerField(),
+            )
+        ).order_by('status_priority', '-created_at')
+    elif user_role in ["UESO", "VP", "DIRECTOR"]:
+        submissions = submissions.annotate(
+            status_priority=Case(
+                When(status="FORWARDED", then=Value(0)),
+                default=Value(1),
+                output_field=IntegerField(),
+            )
+        ).order_by('status_priority', '-created_at')
+    else:
+        submissions = submissions.order_by('-created_at')
 
     # Filter Options
     all_statuses = [status[1] for status in Submission.SUBMISSION_STATUS_CHOICES]

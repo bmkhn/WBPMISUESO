@@ -251,9 +251,9 @@
 				<svg class="sidebar-tab-icon" width="23" height="18"><use href="#icon-announcements"/></svg>
 				<span class="table-text">Announcements</span>
 			</a>
-			<a href="/archive/" class="sidebar-tab {% if '/archive/' in request.path %}active{% endif %}">
+			<a href="{% url 'archive' %}" class="sidebar-tab {% if '/archives/' in request.path %}active{% endif %}">
 				<svg class="sidebar-tab-icon" width="25" height="23"><use href="#icon-archive"/></svg>
-				<span class="table-text">Archive</span>
+				<span class="table-text">Archives</span>
 			</a>
 			<a href="/budget/" class="sidebar-tab {% if '/budget/' in request.path %}active{% endif %}">
 				<svg class="sidebar-tab-icon" width="22" height="23"><use href="#icon-budget"/></svg>

@@ -135,6 +135,7 @@ class Project(models.Model):
 	project_type = models.CharField(max_length=20, choices=PROJECT_TYPE_CHOICES)
 	sdgs = models.ManyToManyField(SustainableDevelopmentGoal, related_name='projects')
 	estimated_events = models.PositiveIntegerField()
+	event_progress = models.PositiveIntegerField(default=0)
 	estimated_trainees = models.PositiveIntegerField()
 	primary_beneficiary = models.CharField(max_length=255)
 	primary_location = models.CharField(max_length=255)
@@ -168,11 +169,8 @@ class Project(models.Model):
 
 	@property
 	def progress(self):
-		# Placeholder: replace with real event logic
-		# Example: done_events = self.events.filter(status='DONE').count()
-		# total_events = self.events.count()
-		# return (done_events, total_events)
-		return (0, self.estimated_events or 0)
+		if self.estimated_events:
+			return (self.event_progress, self.estimated_events)
 
 	@property
 	def progress_display(self):

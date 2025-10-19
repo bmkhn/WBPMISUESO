@@ -32,12 +32,41 @@ def project_overview(request, pk):
         base_template = "base_public.html"
 
     project = get_object_or_404(Project, pk=pk)
+    all_sdgs = SustainableDevelopmentGoal.objects.all()
+    agendas = Agenda.objects.all()
+
+    if request.method == 'POST' and request.user.role in ADMIN_ROLES:
+        # Update project fields from form
+        project.title = request.POST.get('title', project.title)
+        project.start_date = request.POST.get('start_date', project.start_date)
+        project.estimated_end_date = request.POST.get('estimated_end_date', project.estimated_end_date)
+        agenda_id = request.POST.get('agenda')
+        if agenda_id:
+            try:
+                project.agenda = Agenda.objects.get(pk=agenda_id)
+            except Agenda.DoesNotExist:
+                pass
+        project.project_type = request.POST.get('project_type', project.project_type)
+        project.primary_beneficiary = request.POST.get('primary_beneficiary', project.primary_beneficiary)
+        project.estimated_events = request.POST.get('estimated_events', project.estimated_events)
+        project.primary_location = request.POST.get('primary_location', project.primary_location)
+        project.estimated_trainees = request.POST.get('estimated_trainees', project.estimated_trainees)
+        # SDGs (many-to-many)
+        sdg_ids = request.POST.getlist('sdgs[]')
+        if sdg_ids is not None:
+            project.sdgs.set(sdg_ids)
+        project.save()
+        # Optionally redirect to avoid resubmission
+        return redirect(request.path)
+
     return render(request, 'projects/project_overview.html', {
         'project': project,
         'base_template': base_template,
         "ADMIN_ROLES": ADMIN_ROLES,
         "SUPERUSER_ROLES": SUPERUSER_ROLES,
-        "FACULTY_ROLE": FACULTY_ROLE
+        "FACULTY_ROLE": FACULTY_ROLE,
+        'all_sdgs': all_sdgs,
+        'agendas': agendas,
     })
 
 
@@ -46,11 +75,35 @@ def project_providers(request, pk):
     project = get_object_or_404(Project, pk=pk)
     providers_qs = project.providers.all()
 
+    # Handle add provider POST
+    if request.method == 'POST' and request.user.role in ADMIN_ROLES:
+        provider_id = request.POST.get('provider_id')
+        if provider_id:
+            from system.users.models import User
+            try:
+                provider = User.objects.get(pk=provider_id)
+                if provider not in providers_qs:
+                    project.providers.add(provider)
+                    project.save()
+            except User.DoesNotExist:
+                pass
+        return redirect(request.path)
+
     user_role = getattr(request.user, 'role', None)
     if user_role in ["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
         base_template = "base_internal.html"
     else:
         base_template = "base_public.html"
+
+    # Candidates: all confirmed faculty/implementers not already providers and not the project leader
+    from system.users.models import User
+    exclude_ids = list(providers_qs.values_list('id', flat=True))
+    if hasattr(project, 'leader') and project.leader:
+        exclude_ids.append(project.leader.id)
+    provider_candidates = User.objects.filter(
+        is_confirmed=True,
+        role__in=[User.Role.FACULTY, User.Role.IMPLEMENTER]
+    ).exclude(id__in=exclude_ids)
 
     # Pagination
     paginator = Paginator(providers_qs, 3)
@@ -79,6 +132,7 @@ def project_providers(request, pk):
         'page_number': page_number,
         'page_obj': page_obj,
         'page_range': page_range,
+        'provider_candidates': provider_candidates,
     })
 
 
@@ -92,10 +146,9 @@ def project_events(request, pk):
         base_template = "base_public.html"
 
     project = get_object_or_404(Project, pk=pk)
-    events_qs = project.events.all().order_by('datetime')
+    events = project.events.all().order_by('datetime')
     total = project.estimated_events
-    events = events_qs[:total] if total else events_qs
-    completed = events_qs.filter(status='COMPLETED').count()
+    completed = project.event_progress
     percent = int((completed / total) * 100) if total else 0
 
     event_form = None
@@ -222,8 +275,17 @@ def project_files(request, pk):
 def project_submissions(request, pk):
     ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE, COORDINATOR_ROLE = get_role_constants()
     from internal.submissions.models import Submission
-    submissions = Submission.objects.filter(project__pk=pk).order_by('deadline')
+    from django.utils import timezone
+    # Get all submissions for this project
+    all_submissions = Submission.objects.filter(project__pk=pk)
     events = ProjectEvent.objects.filter(project__pk=pk).order_by('datetime')
+
+    # Mark overdue submissions
+    now = timezone.now()
+    for sub in all_submissions:
+        if sub.status == "PENDING" and sub.deadline and sub.deadline < now:
+            sub.status = "OVERDUE"
+            sub.save(update_fields=["status"])
 
     user_role = getattr(request.user, 'role', None)
     if user_role in ["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
@@ -233,8 +295,31 @@ def project_submissions(request, pk):
 
     project = get_object_or_404(Project, pk=pk)
 
+    # Filter and order submissions for display
+    from django.db.models import Case, When, Value, IntegerField
+    if user_role in ["COORDINATOR"]:
+        submissions = all_submissions.filter(status__in=["SUBMITTED", "REVISION_REQUESTED", "FORWARDED"])
+        submissions = submissions.annotate(
+            status_priority=Case(
+                When(status="SUBMITTED", then=Value(0)),
+                When(status="REVISION_REQUESTED", then=Value(1)),
+                When(status="FORWARDED", then=Value(2)),
+                default=Value(3),
+                output_field=IntegerField(),
+            )
+        ).order_by('status_priority', '-created_at')
+    elif user_role in ["VP", "DIRECTOR", "UESO"]:
+        submissions = all_submissions.annotate(
+            status_priority=Case(
+                When(status="FORWARDED", then=Value(0)),
+                default=Value(1),
+                output_field=IntegerField(),
+            )
+        ).order_by('status_priority', '-created_at')
+    else:
+        submissions = all_submissions.order_by('-created_at')
+
     # Submission Logic
-    from django.utils import timezone
     from django.http import HttpResponseBadRequest
     from django.shortcuts import redirect
     from django.contrib import messages
@@ -255,7 +340,7 @@ def project_submissions(request, pk):
                 submission.for_extension = bool(request.POST.get("for_extension"))
             
             elif sub_type == "event":
-                submission.event_image = request.FILES.get("event_image")
+                submission.image_event = request.FILES.get("image_event")
                 submission.image_description = request.POST.get("image_description", "")
                 submission.num_trained_individuals = request.POST.get("num_trained_individuals", 0)
                 submission.event = ProjectEvent.objects.filter(pk=request.POST.get("event")).first()
@@ -311,29 +396,37 @@ def admin_submission_action(request, pk, submission_id):
     from django.utils import timezone
     if request.method == 'POST':
         action = request.POST.get('action')
-        if submission.status == 'SUBMITTED' and request.user.role == "COORDINATOR":
+        if submission.status == 'SUBMITTED' and request.user.role == "COORDINATOR": 
             if action == 'forward':
                 submission.status = 'FORWARDED'
                 submission.reviewed_by = request.user
                 submission.reviewed_at = timezone.now()
+                submission.updated_by = request.user
+                submission.updated_at = timezone.now()
                 submission.save()
             elif action == 'request_revision':
-                submission.status = 'REQUESTED_REVISION'
+                submission.status = 'REVISION_REQUESTED'
                 submission.reviewed_by = request.user
                 submission.reviewed_at = timezone.now()
                 submission.reason_for_revision = request.POST.get('reason', '')
+                submission.updated_by = request.user
+                submission.updated_at = timezone.now()
                 submission.save()
         elif submission.status == 'FORWARDED' and request.user.role in ["VP", "DIRECTOR", "UESO"]:
             if action == 'accept':
-                submission.status = 'ACCEPTED'
-                submission.final_reviewed_by = request.user
-                submission.final_reviewed_at = timezone.now()
+                submission.status = 'APPROVED'
+                submission.authorized_by = request.user
+                submission.authorized_at = timezone.now()
+                submission.updated_by = request.user
+                submission.updated_at = timezone.now()
                 submission.save()
             elif action == 'reject':
                 submission.status = 'REJECTED'
-                submission.final_reviewed_by = request.user
-                submission.final_reviewed_at = timezone.now()
+                submission.authorized_by = request.user
+                submission.authorized_at = timezone.now()
                 submission.reason_for_rejection = request.POST.get('reason', '')
+                submission.updated_by = request.user
+                submission.updated_at = timezone.now()
                 submission.save()
             
     return redirect('project_submissions_details', pk=pk, submission_id=submission_id)

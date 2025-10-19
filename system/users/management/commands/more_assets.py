@@ -245,3 +245,55 @@ class Command(BaseCommand):
 					user.is_expert = True
 					user.save(update_fields=['is_expert'])
 		self.stdout.write(self.style.SUCCESS("10 projects created."))
+
+
+		# ADD TEST PROJECT
+		leader = User.objects.filter(given_name='Faculty', last_name='User').first()
+		if leader:
+			agenda = Agenda.objects.first()
+			sdgs = list(SustainableDevelopmentGoal.objects.all())
+			project = Project.objects.create(
+				title='Test',
+				project_leader=leader,
+				agenda=agenda,
+				project_type='NEEDS_BASED',
+				estimated_events=3,
+				estimated_trainees=30,
+				primary_beneficiary='Test Beneficiary',
+				primary_location='Test City',
+				logistics_type='BOTH',
+				internal_budget=10000,
+				external_budget=5000,
+				sponsor_name='Test Sponsor',
+				start_date=timezone.now().date(),
+				estimated_end_date=timezone.now().date() + datetime.timedelta(days=90),
+				created_by=leader,
+				status='NOT_STARTED',
+			)
+			if sdgs:
+				project.sdgs.set(sdgs[:2])
+			# Add proposal_document and additional_documents
+			file_path = 'downloadables/files/File.docx'
+			proposal_doc = ProjectDocument.objects.create(
+				project=project,
+				file=file_path,
+				document_type='PROPOSAL',
+				description='Test proposal document',
+			)
+			additional_docs = []
+			for i in range(2):
+				additional_doc = ProjectDocument.objects.create(
+					project=project,
+					file=file_path,
+					document_type='ADDITIONAL',
+					description=f'Test additional document {i+1}',
+				)
+				additional_docs.append(additional_doc)
+			project.proposal_document = proposal_doc
+			project.save(update_fields=['proposal_document'])
+			project.additional_documents.set(additional_docs)
+			self.stdout.write(self.style.SUCCESS(f"Created project: {project.title} (Leader: {leader.get_full_name()}) with proposal and additional docs"))
+		else:
+			self.stdout.write(self.style.WARNING("Faculty T. User not found. Test project not created."))
+
+

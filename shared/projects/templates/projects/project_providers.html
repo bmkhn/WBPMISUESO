@@ -104,11 +104,58 @@
 <div class="card-header">
     <h3>Providers</h3>
     {% if request.user.role in ADMIN_ROLES %}
-    <a class="admin-button">Add Provider</a>
+    <button class="admin-button" id="show-provider-dropdown">Add Provider</button>
+    <div id="provider-dropdown" style="display:none; position:absolute; z-index:2; margin-top:5px; margin-left:-30px; min-width:220px; background:#fff; border:1px solid #ccc; border-radius:4px; box-shadow:0 2px 8px rgba(0,0,0,0.1); max-height:220px; overflow-y:auto;">
+        <ul style="list-style:none; margin:0; padding:0;">
+            {% for provider in provider_candidates %}
+                <li class="provider-option" data-id="{{ provider.id }}" style="padding:8px 12px; cursor:pointer; border-bottom:1px solid #eee;">
+                    {{ provider.get_full_name }}
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+    <script>
+            const btn = document.getElementById('show-provider-dropdown');
+            const dropdown = document.getElementById('provider-dropdown');
+            btn.addEventListener('click', function(e) {
+                const rect = btn.getBoundingClientRect();
+                dropdown.style.left = rect.left + 'px';
+                dropdown.style.top = (rect.bottom + 10 + window.scrollY) + 'px';
+                dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+            });
+
+            document.addEventListener('click', function(e) {
+                if (!dropdown.contains(e.target) && e.target !== btn) {
+                    dropdown.style.display = 'none';
+                }
+            });
+
+            dropdown.querySelectorAll('.provider-option').forEach(function(item) {
+                item.addEventListener('click', function() {
+                    const providerId = item.getAttribute('data-id');
+                    // Create and submit a form dynamically
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = '';
+                    const csrf = document.createElement('input');
+                    csrf.type = 'hidden';
+                    csrf.name = 'csrfmiddlewaretoken';
+                    csrf.value = '{{ csrf_token }}';
+                    form.appendChild(csrf);
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'provider_id';
+                    input.value = providerId;
+                    form.appendChild(input);
+                    document.body.appendChild(form);
+                    form.submit();
+                });
+            });
+    </script>
     {% endif %}
 </div>
 <div class="providers">
-    {% for provider in project.providers.all %}
+    {% for provider in page_obj %}
     <div class="tiles">
         <section class="prov-seg-sec">
             {% if provider.role == 'IMPLEMENTER' %}

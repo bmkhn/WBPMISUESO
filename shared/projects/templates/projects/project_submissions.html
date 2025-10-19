@@ -247,7 +247,7 @@
             </div>
             <div class="form-group">
                 <label class="form-label">Image File <span class="required">*</span></label><br>
-                <input type="file" name="event_image" accept="image/*" required>
+                <input type="file" name="image_event" accept="image/*" required>
             </div>
             <div class="form-group">
                 <label class="form-label">Description of Picture <span class="required">*</span></label><br>
@@ -362,16 +362,17 @@
                 document.getElementById(mid).style.display = 'none';
             });
         }
-        // Only allow modal opening for involved users
-    var userIsInvolved = ("{% if request.user.id == project.project_leader.id or request.user.id in provider_ids %}true{% else %}false{% endif %}" === "true");
+        // Fix: open details for all users except when a faculty leader/provider clicks a PENDING submission
+        var userIsInvolved = ("{% if request.user.id == project.project_leader.id or request.user.id in provider_ids %}true{% else %}false{% endif %}" === "true");
+        var isFaculty = ("{% if request.user.role == 'FACULTY' %}true{% else %}false{% endif %}" === "true");
         document.querySelectorAll('.submission-card-clickable').forEach(function(card) {
             card.addEventListener('click', function() {
-                if (!userIsInvolved) return;
                 var type = card.getAttribute('data-submission-type');
                 var status = card.getAttribute('data-submission-status');
                 var subId = card.getAttribute('data-submission-id');
                 var modalId = '';
-                if (status && status === 'PENDING') {
+                // Only faculty leader/provider with PENDING opens modal, all others go to details
+                if (userIsInvolved && isFaculty && status === 'PENDING') {
                     if (type === 'final') {
                         modalId = 'modal-final';
                     } else if (type === 'event') {
@@ -379,7 +380,6 @@
                     } else {
                         modalId = 'modal-file';
                     }
-                    // Set submission.id for the modal form
                     var modal = document.getElementById(modalId);
                     if (modal) {
                         modal.style.display = 'flex';
@@ -387,8 +387,7 @@
                         if (input) input.value = subId;
                     }
                 } else {
-                    // Redirect to details page for non-pending submissions
-                    window.location.href = '/projects/{{ project.id }}/submissions/' + subId + '/';
+                    window.location.href = '/projects/{{ project.id }}/submission/' + subId + '/';
                 }
             });
         });

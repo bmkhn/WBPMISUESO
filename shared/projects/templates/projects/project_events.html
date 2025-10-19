@@ -218,11 +218,7 @@
 <div class="card-body">
     <div class="tracker-box">
         <div class="progress">
-            {% if total > 0 %}
-                <!-- <div class="progress-bar" style="width:{{ percent }}%;"></div> -->
-            {% else %}
-                <div class="progress-bar" style="width:0%;"></div>
-            {% endif %}
+            <div class="progress-bar" style="width: {{ percent|default_if_none:'0' }}%;"></div>
         </div>
         <p class="status-text">{{ completed }}/{{ total }} events completed ({{ percent }}%)</p>
     </div>
