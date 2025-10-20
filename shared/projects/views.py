@@ -1,4 +1,5 @@
 from django.shortcuts import get_object_or_404, render, redirect
+from shared import request
 from system.users.decorators import role_required
 from .models import SustainableDevelopmentGoal, Project, ProjectEvaluation, ProjectEvent
 from internal.submissions.models import Submission
@@ -13,10 +14,17 @@ from django.db import models
 def get_role_constants():
     ADMIN_ROLES = ["VP", "DIRECTOR", "UESO"]
     SUPERUSER_ROLES = ["PROGRAM_HEAD", "DEAN", "COORDINATOR"]
-    FACULTY_ROLE = "FACULTY"
-    COORDINATOR_ROLE = "COORDINATOR"
+    FACULTY_ROLE = ["FACULTY", "IMPLEMENTER"]
+    COORDINATOR_ROLE = ["COORDINATOR"]
     return ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE, COORDINATOR_ROLE
 
+def get_templates(request):
+    user_role = getattr(request.user, 'role', None)
+    if user_role in ["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
+        base_template = "base_internal.html"
+    else:
+        base_template = "base_public.html"
+    return base_template
 
 def project_profile(request, pk):
     return redirect(project_overview, pk=pk)
@@ -295,10 +303,15 @@ def project_submissions(request, pk):
 
     project = get_object_or_404(Project, pk=pk)
 
+    # Status filter
+    status_filter = request.GET.get('status', '')
+
     # Filter and order submissions for display
     from django.db.models import Case, When, Value, IntegerField
     if user_role in ["COORDINATOR"]:
         submissions = all_submissions.filter(status__in=["SUBMITTED", "REVISION_REQUESTED", "FORWARDED"])
+        if status_filter:
+            submissions = submissions.filter(status=status_filter)
         submissions = submissions.annotate(
             status_priority=Case(
                 When(status="SUBMITTED", then=Value(0)),
@@ -309,7 +322,10 @@ def project_submissions(request, pk):
             )
         ).order_by('status_priority', '-created_at')
     elif user_role in ["VP", "DIRECTOR", "UESO"]:
-        submissions = all_submissions.annotate(
+        submissions = all_submissions
+        if status_filter:
+            submissions = submissions.filter(status=status_filter)
+        submissions = submissions.annotate(
             status_priority=Case(
                 When(status="FORWARDED", then=Value(0)),
                 default=Value(1),
@@ -317,7 +333,13 @@ def project_submissions(request, pk):
             )
         ).order_by('status_priority', '-created_at')
     else:
-        submissions = all_submissions.order_by('-created_at')
+        submissions = all_submissions
+        if status_filter:
+            submissions = submissions.filter(status=status_filter)
+        submissions = submissions.order_by('-created_at')
+
+    # Pass all status choices for filter dropdown
+    status_choices = Submission.SUBMISSION_STATUS_CHOICES
 
     # Submission Logic
     from django.http import HttpResponseBadRequest
@@ -355,15 +377,38 @@ def project_submissions(request, pk):
 
             return redirect(request.path_info)
 
+    # Pagination
+    paginator = Paginator(submissions, 3)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+
+    current = page_obj.number
+    total = paginator.num_pages
+    if total <= 5:
+        page_range = range(1, total + 1)
+    elif current <= 3:
+        page_range = range(1, 6)
+    elif current >= total - 2:
+        page_range = range(total - 4, total + 1)
+    else:
+        page_range = range(current - 2, current + 3)
+
     provider_ids = list(project.providers.values_list('id', flat=True))
     context = {
         "project": project,
         "base_template": base_template,
-        "submissions": submissions,
+        "submissions": page_obj,
         "events": events,
         "ADMIN_ROLES": ADMIN_ROLES,
         "COORDINATOR_ROLE": COORDINATOR_ROLE,
         "provider_ids": provider_ids,
+        "status_choices": status_choices,
+        "status_filter": status_filter,
+
+        'paginator': paginator,
+        'page_number': page_number,
+        'page_obj': page_obj,
+        'page_range': page_range,
     }
     return render(request, "projects/project_submissions.html", context)
 
@@ -387,16 +432,25 @@ def project_submissions_details(request, pk, submission_id):
         "submission": submission,
         "ADMIN_ROLES": ADMIN_ROLES,
         "COORDINATOR_ROLE": COORDINATOR_ROLE,
+        "FACULTY_ROLE": FACULTY_ROLE,
     }
     return render(request, "projects/project_submissions_details.html", context)
 
-@role_required(allowed_roles=["UESO", "VP", "DIRECTOR", "COORDINATOR"])
+@role_required(allowed_roles=["UESO", "VP", "DIRECTOR", "COORDINATOR", "FACULTY", "IMPLEMENTER"])
 def admin_submission_action(request, pk, submission_id):
     submission = get_object_or_404(Submission, pk=submission_id, project__pk=pk)
     from django.utils import timezone
     if request.method == 'POST':
         action = request.POST.get('action')
-        if submission.status == 'SUBMITTED' and request.user.role == "COORDINATOR": 
+        if submission.status == 'SUBMITTED' and request.user.role in ["FACULTY", "IMPLEMENTER"]:
+            if action == 'unsubmit':
+                submission.status = 'PENDING'
+                submission.submitted_by = None
+                submission.submitted_at = None
+                submission.updated_by = request.user
+                submission.updated_at = timezone.now()
+                submission.save()
+        elif submission.status == 'SUBMITTED' and request.user.role == "COORDINATOR": 
             if action == 'forward':
                 submission.status = 'FORWARDED'
                 submission.reviewed_by = request.user

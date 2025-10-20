@@ -367,12 +367,19 @@
     </div>
 
     <div class="action-container">
-        {% if submission.status == 'SUBMITTED' and request.user.role == 'COORDINATOR' %}
+        {% if submission.status == 'SUBMITTED' and request.user.role in FACULTY_ROLE %}
+       <form method="post" action="{% url 'admin_submission_action' project.id submission.id %}" class="action-form">
+            {% csrf_token %}
+            <button type="submit" name="action" value="unsubmit" class="reject-btn">Unsubmit</button>
+        </form>
+
+        {% elif submission.status == 'SUBMITTED' and request.user.role == 'COORDINATOR' %}
         <form method="post" action="{% url 'admin_submission_action' project.id submission.id %}" class="action-form">
             {% csrf_token %}
             <button type="submit" name="action" value="forward" class="action-btn">Forward to UESO</button>
             <button type="button" class="reject-btn" id="request-revision-btn">Request Revision</button>
         </form>
+
         {% elif submission.status == 'FORWARDED' and request.user.role in ADMIN_ROLES %}
         <form method="post" action="{% url 'admin_submission_action' project.id submission.id %}" class="action-form">
             {% csrf_token %}
