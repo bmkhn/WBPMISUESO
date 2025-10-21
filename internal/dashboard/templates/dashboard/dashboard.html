@@ -14,7 +14,7 @@
         position: relative;
         display: inline-block;
     }
-    
+
     .dropdown-icon {
         position: absolute;
         right: 12px;
@@ -117,7 +117,7 @@
         flex-direction: column;
         gap: 15px;
     }
-    
+
     .overview-text {
         font-family: 'Inter', sans-serif;
         font-weight: 500;
@@ -131,7 +131,7 @@
         align-items: center;
         gap: 30px;
     }
-    
+
     .container-2A {
         position: relative;
         width: 234px;
@@ -147,6 +147,12 @@
         z-index: 0;
         border: none; /* Remove border-image and border */
         overflow: hidden; /* Ensure the pseudo-element doesn't overflow */
+        text-decoration: none;
+    }
+
+    .container-2A:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
     }
 
     .container-2A::before {
@@ -333,6 +339,71 @@
     }
 </style>
 
+<!-- Table Section -->
+<style>
+    .name-link {
+        color:#0A6C44;
+        text-decoration:underline;
+    }
+
+    .checkmark-icon {
+        color:#1f7c57;
+        font-size:1.2em;
+        text-align: center;
+    }
+
+    .crossmark-icon {
+        color:#E53E3E;
+        font-size:1.2em;
+        text-align: center;
+    }
+
+    .user-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #FEFCFC;
+        border: 1px solid rgba(0,0,0,0.18);
+    }
+
+    .user-table th {
+        font-size: 14px;
+        font-weight: 500;
+        background: rgba(217, 217, 217, 0.2);
+        border-bottom: 1px solid rgba(0,0,0,0.18);
+        padding: 14px 12px;
+        text-align: left;
+        font-family: 'Inter', Arial, sans-serif;
+    }
+
+    .user-table td {
+        font-size: 12px;
+        font-weight: 400;
+        border: none;
+        border-bottom: 1px solid rgba(0,0,0,0.18);
+        padding: 14px 12px;
+        text-align: left;
+        font-family: 'Inter', Arial, sans-serif;
+    }
+
+    .user-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .settings-icon {
+        width: 16px;
+        height: 16px;
+        align-items: center;
+        justify-content: center;
+        display: inline-block;
+        vertical-align: middle;
+        cursor: pointer;
+    }
+
+    .user-table th.settings-col, .user-table td.settings-col {
+        text-align: center !important;
+    }
+</style>
+
 <!-- Goal Tile Card -->
 <style>
     .goal-section {
@@ -401,6 +472,7 @@
 </style>
 
 </head>
+
 <body>
     <div class="main-container">
         <div class="container-1">
@@ -438,22 +510,22 @@
         <div class="overview-section">
             <div class="overview-text">Overview</div>
             <div class="container-2">
-                <div class="container-2A">
-                    <div class="container-2A-number">10</div>
+                <a class="container-2A" href="{% url 'request_dispatcher' %}?status=PENDING">
+                    <div class="container-2A-number">{{ pending_requests.count }}</div>
                     <div class="container-2A-name">Request Pending</div>
-                </div>
-                <div class="container-2A">
-                    <div class="container-2A-number">121</div>
+                </a>
+                <a class="container-2A" href="{% url 'project_dispatcher' %}?status=IN_PROGRESS">
+                    <div class="container-2A-number">{{ inprogress_projects.count }}</div>
                     <div class="container-2A-name">Ongoing Projects</div>
-                </div>
-                <div class="container-2A">
-                    <div class="container-2A-number">58</div>
+                </a>
+                <a class="container-2A" href="{% url 'experts' %}">
+                    <div class="container-2A-number">{{ expert_users.count }}</div>
                     <div class="container-2A-name">Experts Active</div>
-                </div>
-                <div class="container-2A">
-                    <div class="container-2A-number">8</div>
+                </a>
+                <a class="container-2A" href="{% url 'calendar' %}">
+                    <div class="container-2A-number">{{ events_in_calendar }}</div>
                     <div class="container-2A-name">Events in Calendar</div>
-                </div>
+                </a>
             </div>
         </div>
 
@@ -469,13 +541,13 @@
                         </svg>
                     </div>
                     <div class="charts-inner">
-                        <div class="chart chart-1"></div>
-                        <div class="chart chart-2"></div>
+                        <!-- Agenda Distribution Here (Distribution of Project Depending on their Agenda) -->
                     </div>
                 </div>
 
                 <!-- Calendar Container (blank, with expand icon) -->
                 <div class="calendar-container">
+                    <canvas id="agendaPieChart" width="340" height="340"></canvas>
                     <div class="expand-icon-container">
                         <svg class="expand-icon" width="16" height="16">
                           <use href="#icon-expand"></use>
@@ -483,76 +555,43 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Project Summary Table now below charts and calendar -->
-            <div class="project-summary-table-container">
-                <table class="project-summary-table">
-                    <tr class="header-row">
-                        <th>Projects Summary</th>
-                        <th>
-                            Campus
-                            <span class="dropdown-wrapper">
-                                <select class="dropdown">
-                                    <option>Main</option>
-                                    <option>Satellite</option>
-                                </select>
-                                <span class="dropdown-icon">
-                                    <svg width="16" height="16"><use href="#icon-dropdown"/></svg>
-                                </span>
-                            </span>
-                        </th>
-                        <th>
-                            College
-                            <span class="dropdown-wrapper">
-                                <select class="dropdown">
-                                    <option>Engineering</option>
-                                    <option>Business</option>
-                                </select>
-                                <span class="dropdown-icon">
-                                    <svg width="16" height="16"><use href="#icon-dropdown"/></svg>
-                                </span>
-                            </span>
-                        </th>
-                        <th>
-                            Status
-                            <span class="dropdown-wrapper">
-                                <select class="dropdown">
-                                    <option>Active</option>
-                                    <option>Pending</option>
-                                    <option>Completed</option>
-                                </select>
-                                <span class="dropdown-icon">
-                                    <svg width="16" height="16"><use href="#icon-dropdown"/></svg>
-                                </span>
-                            </span>
-                        </th>
-                    </tr>
-                    <tr>
-                        <th>Title</th>
-                        <th>Team Leader</th>
-                        <th>Status</th>
-                        <th>Progress</th>
-                    </tr>
-                    <tr>
-                        <td>Eco-Tourism Initiative</td>
-                        <td>Jane Smith</td>
-                        <td>Active</td>
-                        <td class="progress high">80%</td>
-                    </tr>
-                    <tr>
-                        <td>SDG Project</td>
-                        <td>John Doe</td>
-                        <td>Pending</td>
-                        <td class="progress low">40%</td>
-                    </tr>
-                </table>
-                <div class="expand-icon-bottom">
-                    <svg class="expand-svg" width="16" height="16"><use href="#icon-expand"/></svg>
-                </div>
-            </div>
         </div>
 
-        <!-- Goal Section -->
+            <!-- Project Summary Table now below charts and calendar -->
+            <table class="user-table">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Leader</th>
+                    <th>College/Unit</th>
+                    <th>Last Updated</th>
+                    <th>Start Date</th>
+                    <th>Progress</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for project in projects %}
+                <tr>
+                    <td>
+                        <a href="{% url 'project_profile' project.id %}" class="name-link" title="{{ project.title }}">
+                            {{ project.title|truncatechars:20 }}
+                        </a>
+                    </td>
+                    <td>{{ project.project_leader.get_full_name }}</td>
+                    <td>{% if project.project_leader.college %}{{ project.project_leader.college.name }}{% else %}<em>-</em>{% endif %}</td>
+                    <td>{{ project.updated_at|date:"Y-m-d" }}</td>
+                    <td>{{ project.start_date|date:"Y-m-d" }}</td>
+                    <td>{{ project.progress_display }}</td>
+                    <td>{{ project.get_status_display }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" style="text-align:center;">No projects found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Goal Section (keep existing goals for VP/Director) -->
         {% if vpde_content %}
         <div class="goal-section">
             <div class="goal-text">Goals</div>
@@ -580,8 +619,9 @@
             </div>
         </div>
         {% endif %}
-    </div>
+</body>
 
+</div>
 <!-- SVG Sprite Section -->
 <svg style="display:none;">
 
@@ -599,7 +639,6 @@
     <symbol id="kebab-icon" viewBox="0 0 4 16" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M2 16C1.45 16 0.979167 15.8042 0.5875 15.4125C0.195833 15.0208 0 14.55 0 14C0 13.45 0.195833 12.9792 0.5875 12.5875C0.979167 12.1958 1.45 12 2 12C2.55 12 3.02083 12.1958 3.4125 12.5875C3.80417 12.9792 4 13.45 4 14C4 14.55 3.80417 15.0208 3.4125 15.4125C3.02083 15.8042 2.55 16 2 16ZM2 10C1.45 10 0.979167 9.80417 0.5875 9.4125C0.195833 9.02083 0 8.55 0 8C0 7.45 0.195833 6.97917 0.5875 6.5875C0.979167 6.19583 1.45 6 2 6C2.55 6 3.02083 6.19583 3.4125 6.5875C3.80417 6.97917 4 7.45 4 8C4 8.55 3.80417 9.02083 3.4125 9.4125C3.02083 9.80417 2.55 10 2 10ZM2 4C1.45 4 0.979167 3.80417 0.5875 3.4125C0.195833 3.02083 0 2.55 0 2C0 1.45 0.195833 0.979167 0.5875 0.5875C0.979167 0.195833 1.45 0 2 0C2.55 0 3.02083 0.195833 3.4125 0.5875C3.80417 0.979167 4 1.45 4 2C4 2.55 3.80417 3.02083 3.4125 3.4125C3.02083 3.80417 2.55 4 2 4Z" fill="#1D1B20"/>
     </symbol>
-    
 </svg>
 
 </body>
