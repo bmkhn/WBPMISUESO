@@ -18,7 +18,7 @@
 	}
 
 	.sidebar-container {
-		width: 270px;
+		width: 225px;
 		position: fixed;
 		height: 100vh;
 		top: 0;
@@ -34,6 +34,24 @@
 		z-index: 20;
 		position: sticky;
 	}
+
+    .table-text {
+		font-family: 'Inter', sans-serif;
+		font-size: 18px;
+		font-weight: bold;
+		transition: margin-top 0.2s, font-size 0.2s;
+    }
+
+    .sidebar-tab-icon {
+		width: 30px;
+		height: 30px;
+		background-size: contain;
+		background-repeat: no-repeat;
+		background-position: center;
+		margin-right: 15px;
+		flex-shrink: 0;
+		transition: margin-right 0.2s;
+    }
 
 	.resize-handle {
 		position: absolute;
@@ -53,8 +71,8 @@
     }
 
     .sidebar-logo-circle {
-		width: 48px;
-		height: 48px;
+		width: 40px;
+		height: 40px;
 		background-size: contain;
 		background-repeat: no-repeat;
 		background-position: center;
@@ -67,7 +85,7 @@
 
     .sidebar-logo-text {
 		font-family: 'Instrument Sans', sans-serif;
-		font-size: 16px;
+		font-size: 14px;
 		font-weight: 800;
 		display: inline-block;
     }
@@ -125,17 +143,6 @@
 		background-color: #052C15;
     }
 
-    .sidebar-tab-icon {
-		width: 35px;
-		height: 35px;
-		background-size: contain;
-		background-repeat: no-repeat;
-		background-position: center;
-		margin-right: 15px;
-		flex-shrink: 0;
-		transition: margin-right 0.2s;
-    }
-
 	.ueso-icon { 
 		background-image: url("{% static 'ueso.png' %}");
 	}
@@ -152,12 +159,6 @@
     	background-color: #052C15;
 	}
 
-    .table-text {
-		font-family: 'Inter', sans-serif;
-		font-size: 22px;
-		font-weight: bold;
-		transition: margin-top 0.2s, font-size 0.2s;
-    }
 
 
 	/* Top Bar */
@@ -479,7 +480,7 @@
 	let startX = 0;
 	let startWidth = 0;
 
-	const expandedWidth = 270;
+	const expandedWidth = 225;
 	const collapsedWidth = 95;
 	const dragTolerance = 10; // how sensitive a "tap" vs drag is
 
@@ -511,7 +512,7 @@
 				tab.querySelector('.sidebar-tab-icon').style.marginRight = '15px';
 				const text = tab.querySelector('.table-text');
 				if (text) text.style.marginTop = '0px';
-				if (text) text.style.fontSize = '22px';
+				if (text) text.style.fontSize = '18px';
 			});
 			sessionStorage.setItem(collapseKey, '0');
 		}
@@ -560,7 +561,7 @@
 // Sidebar-tabs scroll persistence for director sidebar only
 document.addEventListener('DOMContentLoaded', function() {
 	var tabs = document.querySelector('.sidebar-tabs');
-	var scrollKey = 'sidebarTabsScroll_vp';
+	var scrollKey = 'sidebarTabsScroll_director';
 	// Restore sidebar-tabs scroll position
 	if (tabs) {
 		var scrollY = sessionStorage.getItem(scrollKey);
