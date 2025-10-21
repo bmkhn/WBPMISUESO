@@ -1,0 +1,802 @@
+{% extends base_template %}
+{% block content %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Budget</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.css' rel='stylesheet'/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
+  <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.js'></script>
+  <style>
+    body {
+      font-family: Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      background-color: #eaeaea;
+    }
+    header {
+      background-color: #245F3E;
+      height: 4rem;
+      display: flex;
+      align-items: center;
+      padding: 0 1rem;
+      color: white;
+    }
+    main {
+      display: flex;
+      flex-direction: column;
+      margin: 2rem 5rem;
+      gap: 1.5rem;
+    }
+    footer {
+      background-color: #245F3E;
+      height: 6rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+    }
+    section {
+      display: flex;
+      flex-direction: row;
+      gap: 1.5rem;
+    }
+    section > div {
+      background-color: white;
+      border-radius: 1rem;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+      padding: 1.5rem 2.5rem;
+    }
+    .list {
+      flex: 2;
+      min-height: 20rem;
+    }
+    .logs {
+      flex: 1;
+      min-height: 20rem;
+      overflow-y: auto;
+      position: relative;
+      padding: 0;
+    }
+    .summary {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      width: 100%;
+    }
+    .college-budget, .history {
+      flex: 1;
+      display: flex;
+      flex-direction: row;
+    }
+    h2 {
+      font-size: 1.75rem;
+      font-weight: 500;
+    }
+    .files-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        height: 4rem;
+        padding: 1rem 2rem;
+    }
+    .dropdown2 {
+        position: relative;
+        width: 9.5rem;
+    }
+    .dropdown-btn2 { 
+        margin: 0.75rem; 
+        border: none;
+        width: 100%;
+        padding: 0.5rem;
+        border-radius: 0.75rem;
+        background: none;
+        text-align: center;
+        cursor: pointer;
+        font-family: Helvetica, Arial, sans-serif;
+        font-weight: 400;
+        font-size: 1rem; 
+    } 
+    .dropdown-btn2:hover {
+        border: 0.08rem solid #000000;
+    }
+    .dropdown-menu2 {
+        position: absolute;
+        top: calc(100% - 0.7rem);
+        left: 0.8rem;
+        margin: 0;
+        right: 0; 
+        width: 100%;
+        background: white;
+        border: 0.08rem solid #ccc;
+        border-radius: 0.75rem; 
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        z-index: 10;
+        overflow: hidden;
+    }
+    .dropdown-item2 {
+        padding: 0.75rem;
+        cursor: pointer;
+        transition: background 0.2s;
+        font-family: Helvetica, Arial, sans-serif;
+        font-weight: 400;
+        text-align: center;
+        border-bottom: 1px solid rgb(196, 196, 196);
+    }
+    .dropdown-item2:hover {
+        background-color: #000000;
+        color: white;
+    } 
+    .sort-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+        color: #333;
+        margin-left: 0.5rem;
+    }
+    .hidden {
+      display: none;
+    }
+    .view-btn {
+      width: 3rem;
+      height: 3rem;
+      border: 0.08rem solid white;
+      border-radius: 0.75rem;
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1.2rem;
+      color: #333;
+      transition: all 0.2s ease-in-out;
+    }
+    .view-btn:hover {
+      background: black;
+      color: white;
+      border-color: black;
+    }
+    .view-btn.active {
+      background: black;
+      color: white;
+      border-color: black;
+    }
+    .files-header > div {
+      display: flex;
+      align-items: center; 
+    }
+    .files-header h2 {
+      margin: 0;       
+      line-height: 1;   
+    }
+    .card-holder {
+      display: grid;
+      grid-template-columns: repeat(2, auto);
+      gap: 2rem;            
+      justify-content: center;      
+      padding: 1.5rem;                  
+      box-sizing: border-box;
+    }
+    .card {
+      width: 100%;
+      max-width: 17.5rem;
+      height: 16rem;
+      background-color: #E6F2FB;
+      border-radius: 2rem;
+      padding: 0.5rem 1.5rem;
+    }
+    .card p {
+      font-size: 0.75rem;
+    }
+    .project-authors {
+      display: flex; 
+      flex-direction: row; 
+      align-items: center;
+      gap: 0.5rem;
+      margin: 1rem 0 2rem 0; 
+      position: relative;
+    } 
+    .project-authors content {
+      display: flex; 
+      flex-direction: row; 
+      align-items: center; 
+      gap: 0.75rem;
+    }
+    .project-authors img {
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: 50%;
+      object-fit: cover; 
+      border: 0.08rem solid #ccc;
+    } 
+    .project-title {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        height: 4.2rem; 
+    }
+    .progress { 
+        width: 100%;
+        height: 0.25rem;
+        background-color: #385682;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-top: 1rem;
+    }
+    .progress-bar {
+        height: 100%;
+        width: 0%; 
+        background: #30CE76;
+        transition: width 0.5s ease;
+    }
+    .card .status-text {
+      margin: 0.25rem 0 0 0;
+      font-size: 0.85rem;
+      text-align: center;
+      color: #385682;
+      font-weight: 600;
+    }
+    .logs-list {
+      display: flex;
+      flex-direction: column; 
+      background-color: #F2F1F1;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      background-color: #F2F1F1;
+      width: 100%;
+    }
+    .log-item {
+      background: transparent;        
+      border-top: 1px solid rgb(196, 196, 196);
+      border-bottom: 1px solid rgb(196, 196, 196);
+      font-size: 0.95rem;
+      line-height: 1.4;
+      padding: 1rem 2rem;
+    }
+    .log-item strong {
+      font-weight: 600;
+      color: #000;
+    }
+    .log-item a {
+      color: #007bff;
+      text-decoration: none;
+    }
+    .log-item a:hover {
+      text-decoration: underline;
+    }
+    .log-time {
+      font-size: 0.75rem;
+      color: gray;
+      margin-top: 0.5rem;
+      display: block;
+    }
+    .expand-btn {
+      position: static;
+      margin-left: auto;
+      top: 1rem;
+      right: 1rem;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1.3rem; 
+      color: #090909;
+      transition: color 0.2s;
+      z-index: 100;
+    }
+    .expand-btn:hover {
+      color: #37d4ff;
+    }
+    .expand-rev {
+      position: absolute;
+      bottom: 1rem;
+      right: 1rem;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1.3rem; 
+      color: #090909;
+      transition: color 0.2s;
+      z-index: 100;
+    }
+    .expand-rev:hover {
+      color: #37d4ff;
+    }
+    .budget-box {
+      border-radius: 1rem;
+      padding: 1.5rem;
+      text-align: left;  
+      font-family: Helvetica, Arial, sans-serif;
+    }
+    .budget-text {
+      font-size: 1rem;
+      margin: 0 0 1rem 0;
+      color: #111;
+    }
+    .budget-percentage {
+      font-size: 3rem;
+      font-weight: 700;
+      margin: 0.5rem 0;
+      background: linear-gradient(90deg, #a68f2d, #3ea047);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .budget-note {
+      font-size: 1rem;
+      margin: 0;
+      color: #111;
+    }
+    .list-holder {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      padding: 1.5rem;
+    }
+    .project-table td.provider-cell {
+          border-bottom: none;
+        }
+    .project-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.95rem;
+        border-radius: 1rem;
+        overflow: hidden;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        display: none;
+    }
+    .project-table thead {
+        background-color: #f4f4f4;
+        font-weight: 600;
+    }
+    .project-table th, .project-table td {
+        padding: 1.25rem 1rem;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+        vertical-align: middle;
+    }
+    .project-table .provider-cell {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        height: 2.5rem;       
+    }
+    .plus-indicator {
+        display: inline-flex;
+        align-items: center;
+        height: 2.5rem;
+        padding: 0 0.75rem;
+        background: #f0f0f0;
+        border-radius: 1.25rem;
+        color: #666;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+    .list-holder.hidden .project-table {
+        display: none;
+    }
+    .list-holder:not(.hidden) .project-table {
+        display: table;
+    }
+    .project-table td img {
+        width: 2.5rem;          
+        height: 2.5rem;     
+        border-radius: 50%;
+        object-fit: cover;
+        border: 0.08rem solid #ccc;
+        display: inline-block;
+        vertical-align: middle;
+    }
+  </style>
+</head>
+<body> 
+  <svg style="display: none;">
+      <!-- ascdesc -->
+      <symbol id="ascdesc" viewBox="0 0 640 640" fill="black">
+        <path d="M342.6 81.4C330.1 68.9 309.8 68.9 297.3 81.4L137.3 241.4C124.8 253.9 124.8 274.2 137.3 286.7C149.8 299.2 170.1 299.2 182.6 286.7L288 181.3L288 552C288 569.7 302.3 584 320 584C337.7 584 352 569.7 352 552L352 181.3L457.4 286.7C469.9 299.2 490.2 299.2 502.7 286.7C515.2 274.2 515.2 253.9 502.7 241.4L342.7 81.4z"/> 
+      </symbol> 
+      <!-- expand -->
+      <symbol id="expand" viewBox="0 0 640 640" fill="currentColor">
+        <path d="M408 64L552 64C565.3 64 576 74.7 576 88L576 232C576 241.7 570.2 250.5 561.2 254.2C552.2 257.9 541.9 255.9 535 249L496 210L409 297C399.6 306.4 384.4 306.4 375.1 297L343.1 265C333.7 255.6 333.7 240.4 343.1 231.1L430.1 144.1L391.1 105.1C384.2 98.2 382.2 87.9 385.9 78.9C389.6 69.9 398.3 64 408 64zM232 576L88 576C74.7 576 64 565.3 64 552L64 408C64 398.3 69.8 389.5 78.8 385.8C87.8 382.1 98.1 384.2 105 391L144 430L231 343C240.4 333.6 255.6 333.6 264.9 343L296.9 375C306.3 384.4 306.3 399.6 296.9 408.9L209.9 495.9L248.9 534.9C255.8 541.8 257.8 552.1 254.1 561.1C250.4 570.1 241.7 576 232 576z"/>
+      </symbol> 
+      <!-- list -->
+      <symbol id="list" viewBox="0 0 640 640" fill="currentColor">
+        <path d="M112 208C138.5 208 160 186.5 160 160C160 133.5 138.5 112 112 112C85.5 112 64 133.5 64 160C64 186.5 85.5 208 112 208zM256 128C238.3 128 224 142.3 224 160C224 177.7 238.3 192 256 192L544 192C561.7 192 576 177.7 576 160C576 142.3 561.7 128 544 128L256 128zM256 288C238.3 288 224 302.3 224 320C224 337.7 238.3 352 256 352L544 352C561.7 352 576 337.7 576 320C576 302.3 561.7 288 544 288L256 288zM256 448C238.3 448 224 462.3 224 480C224 497.7 238.3 512 256 512L544 512C561.7 512 576 497.7 576 480C576 462.3 561.7 448 544 448L256 448zM112 528C138.5 528 160 506.5 160 480C160 453.5 138.5 432 112 432C85.5 432 64 453.5 64 480C64 506.5 85.5 528 112 528zM160 320C160 293.5 138.5 272 112 272C85.5 272 64 293.5 64 320C64 346.5 85.5 368 112 368C138.5 368 160 346.5 160 320z"/>
+      </symbol> 
+      <!-- card -->
+      <symbol id="card" viewBox="0 0 640 640" fill="currentColor">
+        <path d="M480 160L352 160L352 288L480 288L480 160zM544 288L544 480C544 515.3 515.3 544 480 544L160 544C124.7 544 96 515.3 96 480L96 160C96 124.7 124.7 96 160 96L480 96C515.3 96 544 124.7 544 160L544 288zM160 352L160 480L288 480L288 352L160 352zM288 288L288 160L160 160L160 288L288 288zM352 352L352 480L480 480L480 352L352 352z"/>
+      </symbol>
+  </svg>  
+  <header>
+    <h1>Budget Dashboard</h1>
+  </header>
+  <main>
+    <section>
+      <div class="list">
+        <div class="files-header">
+          <h2>Projects</h2>
+          <div style="display: flex; gap: 0.7rem;">
+            <svg width="20" height="20" style="fill: currentColor;">
+                <use href="#ascdesc"/>
+            </svg>
+            <div class="dropdown2">
+              <button class="dropdown-btn2">Sort by ▾</button>
+                <div class="dropdown-menu2 hidden">
+                    <div class="dropdown-item2">Name</div>
+                    <div class="dropdown-item2">Date Completed</div>
+                    <div class="dropdown-item2">Last Updated</div>
+                    <div class="dropdown-item2">Q4</div>
+                </div>
+            </div>
+            <button class="view-btn" id="listBtn" style="margin-left: 1rem;"> 
+              <svg width="30" height="30" style="fill: currentColor;">
+                  <use href="#list"/>
+              </svg>
+            </button>
+            <button class="view-btn active" id="cardBtn">
+              <svg width="30" height="30" style="fill: currentColor;">
+                  <use href="#card"/>
+              </svg>
+            </button>
+            </div>
+          </div>
+          <div class="card-holder">
+            <div class="card">
+              <p><i>Last updated January 01, 2024</i></p>
+              <h3 class="project-title">The Idler Wheel Is Wiser Than the Driver of the Screw and Whipping Cords Will Serve You More Than Ropes Will</h3>
+              <div class="project-authors"> 
+                  <content>
+                      <img src="https://img.apmcdn.org/3ddbb3761de2e44418a47d0e2ecce75a3bc686c3/square/35d350-20130729-fiona-apple.jpg" alt="">
+                  </content> 
+                  <content>
+                      <img src="https://img.apmcdn.org/3ddbb3761de2e44418a47d0e2ecce75a3bc686c3/square/35d350-20130729-fiona-apple.jpg" alt="">
+                  </content>
+              </div>
+              <div class="progress">
+                <div class="progress-bar" id="progressBar"></div>
+              </div>
+              <p id="statusText" class="status-text">20% of budget remianing</p>
+            </div>
+            <div class="card">
+              <p><i>Last updated January 01, 2024</i></p>
+              <h3 class="project-title">The Idler Wheel Is Wiser Than the Driver of the Screw and Whipping Cords Will Serve You More Than Ropes Will</h3>
+              <div class="project-authors"> 
+                  <content>
+                      <img src="https://img.apmcdn.org/3ddbb3761de2e44418a47d0e2ecce75a3bc686c3/square/35d350-20130729-fiona-apple.jpg" alt="">
+                  </content> 
+                  <content>
+                      <img src="https://img.apmcdn.org/3ddbb3761de2e44418a47d0e2ecce75a3bc686c3/square/35d350-20130729-fiona-apple.jpg" alt="">
+                  </content>
+              </div>
+              <div class="progress">
+                <div class="progress-bar" id="progressBar"></div>
+              </div>
+              <p id="statusText" class="status-text">20% of budget remianing</p>
+            </div>
+            <div class="card">
+              <p><i>Last updated January 01, 2024</i></p>
+              <h3 class="project-title">The Idler Wheel Is Wiser Than the Driver of the Screw and Whipping Cords Will Serve You More Than Ropes Will</h3>
+              <div class="project-authors"> 
+                  <content>
+                      <img src="https://img.apmcdn.org/3ddbb3761de2e44418a47d0e2ecce75a3bc686c3/square/35d350-20130729-fiona-apple.jpg" alt="">
+                  </content> 
+                  <content>
+                      <img src="https://img.apmcdn.org/3ddbb3761de2e44418a47d0e2ecce75a3bc686c3/square/35d350-20130729-fiona-apple.jpg" alt="">
+                  </content>
+              </div>
+              <div class="progress">
+                <div class="progress-bar" id="progressBar"></div>
+              </div>
+              <p id="statusText" class="status-text">20% of budget remianing</p>
+            </div>
+            <div class="card">
+              <p><i>Last updated January 01, 2024</i></p>
+              <h3 class="project-title">The Idler Wheel Is Wiser Than the Driver of the Screw and Whipping Cords Will Serve You More Than Ropes Will</h3>
+              <div class="project-authors"> 
+                  <content>
+                      <img src="https://img.apmcdn.org/3ddbb3761de2e44418a47d0e2ecce75a3bc686c3/square/35d350-20130729-fiona-apple.jpg" alt="">
+                  </content> 
+                  <content>
+                      <img src="https://img.apmcdn.org/3ddbb3761de2e44418a47d0e2ecce75a3bc686c3/square/35d350-20130729-fiona-apple.jpg" alt="">
+                  </content>
+              </div>
+              <div class="progress">
+                <div class="progress-bar" id="progressBar"></div>
+              </div>
+              <p id="statusText" class="status-text">20% of budget remianing</p>
+            </div>
+          </div>
+          <div class="list-holder hidden">
+            <table class="project-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Progress</th>
+                        <th>Last updated</th>
+                        <th>Date started</th>
+                        <th>Provider/s</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Table rows will be dynamically inserted here -->
+                </tbody>
+            </table>
+        </div>
+      </div>
+      <div class="logs">
+        <div class="files-header">
+          <h2>Logs</h2>
+          <button class="expand-rev"> 
+              <svg width="20" height="20" style="fill: currentColor;">
+                  <use href="#expand"/>
+              </svg>
+          </button>
+        </div>
+        <div id="logsList" class="logs-list">
+        </div>
+      </div>
+    </section>
+    <section>
+      <div class="summary">
+        <div>
+          <h2>College Budget</h2>
+          <div class="college-budget">
+            chart
+          </div>
+        </div>
+        <div>
+          <h2>Historical Summary</h2>
+          <div class="history">
+            <div class="budget-box">
+              <p class="budget-text">
+                Your college’s current budget for this quarter is ₱70,000.00. It is
+              </p>
+              <p class="budget-percentage">8%</p>
+              <p class="budget-note">less than historical mean.</p>
+            </div>
+            <div>
+              chart
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer>
+    <p>© 2025 Budget Dashboard</p>
+  </footer>
+
+  <script>
+    // Dropdown logic
+    document.querySelectorAll('.dropdown-btn2').forEach(btn => {
+        btn.addEventListener('click', e => {
+            e.stopPropagation();
+            const menu = btn.nextElementSibling;
+            document.querySelectorAll('.dropdown-menu2').forEach(m => {
+                if (m !== menu) m.classList.add('hidden');
+            });
+            menu.classList.toggle('hidden');
+        });
+    });
+
+    document.querySelectorAll('.dropdown-item2').forEach(item => {
+        item.addEventListener('click', e => {
+            e.stopPropagation();
+            const menu = item.parentElement;
+            const btn = menu.previousElementSibling;
+            btn.textContent = e.target.textContent + " ▾";
+            menu.classList.add('hidden');
+        });
+    });
+
+    document.addEventListener('click', () => {
+        document.querySelectorAll('.dropdown-menu2').forEach(menu => {
+            menu.classList.add('hidden');
+        });
+    });
+
+    const projects = [
+    {
+        title: "College of Arts and Humanities Budget Request",
+        updated: "January 1, 2024",
+        started: "January 3, 2024",
+        completed: 70000,
+        total: 100000,
+        providers: [
+            { name: "Person 1", img: "https://img.apmcdn.org/3ddbb3761de2e44418a47d0e2ecce75a3bc686c3/square/35d350-20130729-fiona-apple.jpg" }
+        ]
+    },
+    {
+        title: "College of Sciences Budget Allocation",
+        updated: "January 2, 2023",
+        started: "January 3, 2022",
+        completed: 45000,
+        total: 50000,
+        providers: Array(3).fill().map((_, i) => ({ 
+            name: `Person ${i+1}`, 
+            img: "https://img.apmcdn.org/3ddbb3761de2e44418a47d0e2ecce75a3bc686c3/square/35d350-20130729-fiona-apple.jpg" 
+        }))
+    },
+    // Add more budget projects as needed
+];
+
+function renderCardView() {
+    const cardHolder = document.querySelector('.card-holder');
+    const listHolder = document.querySelector('.list-holder');
+    const projectTable = document.querySelector('.project-table');
+    
+    listHolder.style.display = 'none';
+    projectTable.style.display = 'none';
+    cardHolder.style.display = 'grid';
+    
+    cardHolder.innerHTML = '';
+
+    projects.forEach(proj => {
+        const percentage = Math.round((proj.completed / proj.total) * 100);
+        const card = document.createElement('div');
+        card.className = 'card';
+        
+        const maxVisibleProviders = 5;
+        const providerImages = proj.providers
+            .slice(0, maxVisibleProviders)
+            .map(p => `<img src="${p.img}" alt="${p.name}">`).join('');
+        
+        const remainingProviders = proj.providers.length - maxVisibleProviders;
+        const plusIndicator = remainingProviders > 0 ? 
+            `<span class="plus-indicator">+${remainingProviders}</span>` : '';
+        
+        card.innerHTML = `
+            <p><i>Last updated ${proj.updated}</i></p>
+            <h3 class="project-title">${proj.title}</h3>
+            <div class="project-authors">
+                ${providerImages}
+                ${plusIndicator}
+            </div>
+            <div class="progress">
+                <div class="progress-bar" style="width: ${percentage}%"></div>
+            </div>
+            <p class="status-text">${percentage}% of budget remaining</p>
+        `;
+        
+        cardHolder.appendChild(card);
+    });
+}
+
+function renderListView() {
+    const cardHolder = document.querySelector('.card-holder');
+    const listHolder = document.querySelector('.list-holder');
+    const projectTable = document.querySelector('.project-table');
+    
+    cardHolder.style.display = 'none';
+    listHolder.style.display = 'block';
+    projectTable.style.display = 'table';
+    
+    const tbody = document.querySelector(".project-table tbody");
+    tbody.innerHTML = "";
+
+    projects.forEach(proj => {
+        const percentage = Math.round((proj.completed / proj.total) * 100);
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+            <td>${proj.title}</td>
+            <td><strong>₱${proj.completed.toLocaleString()}</strong></td>
+            <td>${proj.updated}</td>
+            <td>${proj.started}</td>
+            <td class="provider-cell"></td>
+        `;
+
+        const providerCell = row.querySelector(".provider-cell");
+        
+        if (proj.providers[0]) {
+            const img = document.createElement("img");
+            img.src = proj.providers[0].img;
+            img.alt = proj.providers[0].name;
+            providerCell.appendChild(img);
+        }
+
+        if (proj.providers.length > 1) {
+            const span = document.createElement("span");
+            span.textContent = `+${proj.providers.length - 1}`;
+            providerCell.appendChild(span);
+        }
+
+        tbody.appendChild(row);
+    });
+}
+
+// Update event listeners
+const cardBtn = document.getElementById('cardBtn');
+const listBtn = document.getElementById('listBtn');
+
+function setActive(button) {
+    document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
+    button.classList.add('active');
+}
+
+cardBtn.addEventListener('click', () => {
+    setActive(cardBtn);
+    renderCardView();
+});
+
+listBtn.addEventListener('click', () => {
+    setActive(listBtn);
+    renderListView();
+});
+
+    function updateEventProgress() {
+    const completed = 3; // example value
+    const total = 5;     // example value
+    const percentage = (completed / total) * 100;
+
+    // Update progress bar
+    document.getElementById('progressBar').style.width = percentage + "%";
+
+    // Update status text
+    document.getElementById('statusText').textContent =
+        `${completed} out of ${total} events completed`;
+    }
+
+    // Run once on page load
+    updateEventProgress();
+
+    function updateEventProgress() {
+    const completed = 3; // example value
+    const total = 5;     // example value
+    const percentage = (completed / total) * 100;
+
+    // Update progress bar
+    document.getElementById('progressBar').style.width = percentage + "%";
+
+    // Update status text (rounded to whole number)
+    document.getElementById('statusText').textContent =
+      `${Math.round(percentage)}% of budget remaining`;
+    }
+    const logs = [
+      {
+        amount: "2,000.00",
+        description: "Action Research Upskilling for TES, KES, IES, and ISES",
+        time: "09:08 P.M. December 30, 2023"
+      },
+      {
+        amount: "1,500.00",
+        description: "Training Materials for PDIs",
+        time: "08:42 P.M. December 28, 2023"
+      }
+      // add more logs here
+    ];
+
+    function renderLogs() {
+      const logsList = document.getElementById("logsList");
+      logsList.innerHTML = "";
+
+      logs.forEach(log => {
+        const item = document.createElement("div");
+        item.classList.add("log-item");
+        item.innerHTML = `
+          <strong>₱${log.amount}</strong> has been accounted for 
+          <a href="#">${log.description}</a>
+          <span class="log-time">${log.time}</span>
+        `;
+        logsList.appendChild(item);
+      });
+    }
+
+    renderLogs();
+
+  </script>
+</body>
+</html>
+
+{% endblock %}

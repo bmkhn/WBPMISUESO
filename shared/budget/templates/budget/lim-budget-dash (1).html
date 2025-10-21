@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Local DB Connector Template (Plain CSS)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f9fb;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #app {
+            width: 100%;
+            max-width: 500px;
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border: 1px solid #ddd;
+        }
+        h1 {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        #status-message {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: opacity 0.3s;
+            opacity: 0; /* Initially hidden */
+        }
+        #status-message.opacity-100 { opacity: 1; }
+        .bg-green-100 { background-color: #d1e7dd; color: #0f5132; }
+        .bg-red-100 { background-color: #f8d7da; color: #842029; }
+        .bg-blue-100 { background-color: #cfe2ff; color: #084298; }
+        
+        /* User Info Section */
+        .info-section p:first-child {
+            font-size: 10px;
+            font-weight: 600;
+            color: #777;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+        #user-id-display {
+            font-family: monospace;
+            color: #555;
+            background-color: #f0f0f0;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 14px;
+            word-break: break-all;
+        }
+
+        /* Input and Button */
+        #message-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            resize: vertical;
+            margin-bottom: 10px;
+        }
+        #save-button {
+            width: 100%;
+            background-color: #1d4ed8;
+            color: white;
+            font-weight: 600;
+            padding: 12px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #save-button:hover:not(:disabled) { background-color: #1e40af; }
+        #save-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Data Output */
+        .data-output-container {
+            margin-top: 25px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        h2 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        #database-output {
+            min-height: 80px;
+            padding: 15px;
+            background-color: #fffbe6;
+            border: 1px solid #ffeeba;
+            border-radius: 6px;
+            color: #777;
+            font-style: italic;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        /* Loading Spinner */
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid white; /* Spinner color contrasting button color */
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .hidden { display: none; }
+    </style>
+</head>
+<body class="p-4 md:p-8 min-h-screen flex items-center justify-center">
+
+    <div id="app">
+        <h1>Local IndexedDB Connection Demo</h1>
+
+        <div id="status-message"></div>
+
+        <!-- User Information -->
+        <div class="info-section" style="margin-bottom: 20px;">
+            <p>Current Persistence Layer</p>
+            <p id="user-id-display">Loading Local Database...</p>
+        </div>
+
+        <!-- Input and Save Controls -->
+        <div>
+            <textarea
+                id="message-input"
+                placeholder="Type your message here..."
+                rows="4"
+                disabled
+            ></textarea>
+
+            <button
+                id="save-button"
+                disabled
+            >
+                <div id="save-loader" class="hidden loading-spinner" style="margin-right: 8px;"></div>
+                Save Message to Local Database
+            </button>
+        </div>
+
+        <!-- Real-time Data Display -->
+        <div class="data-output-container">
+            <h2>Current Data from Local IndexedDB:</h2>
+            <div id="database-output">
+                Awaiting connection...
+            </div>
+        </div>
+    </div>
+
+    <!-- IndexedDB Setup and Application Logic -->
+    <script type="module">
+        // --- DOM Elements ---
+        const statusMessageEl = document.getElementById('status-message');
+        const userIdDisplayEl = document.getElementById('user-id-display');
+        const messageInputEl = document.getElementById('message-input');
+        const saveButtonEl = document.getElementById('save-button');
+        const saveLoaderEl = document.getElementById('save-loader');
+        const databaseOutputEl = document.getElementById('database-output');
+
+        // --- IndexedDB Constants ---
+        const DB_NAME = 'LocalUserDB';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'messages';
+        const MESSAGE_KEY = 'user_message'; // The key under which the message will be stored
+
+        let db; // Global variable for the IndexedDB instance
+
+        /**
+         * Utility function to show temporary status messages.
+         */
+        function showStatus(message, type = 'info') {
+            statusMessageEl.textContent = message;
+            
+            // Reset classes
+            statusMessageEl.className = 'opacity-100';
+            statusMessageEl.classList.remove('bg-green-100', 'bg-red-100', 'bg-blue-100');
+
+            if (type === 'success') {
+                statusMessageEl.classList.add('bg-green-100');
+            } else if (type === 'error') {
+                statusMessageEl.classList.add('bg-red-100');
+            } else {
+                statusMessageEl.classList.add('bg-blue-100');
+            }
+
+            // Hide after 5 seconds
+            setTimeout(() => {
+                statusMessageEl.classList.remove('opacity-100');
+                // The CSS transition handles the fading out
+            }, 5000);
+        }
+
+        /**
+         * Initializes the IndexedDB database.
+         * @returns {Promise<IDBDatabase>} A promise that resolves with the database instance.
+         */
+        function initDB() {
+            return new Promise((resolve, reject) => {
+                if (!window.indexedDB) {
+                    reject(new Error("IndexedDB is not supported by your browser."));
+                    return;
+                }
+
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+                request.onerror = (event) => {
+                    console.error("IndexedDB Error:", event.target.error);
+                    showStatus(`Local DB initialization failed: ${event.target.error.name}`, 'error');
+                    reject(event.target.error);
+                };
+
+                request.onsuccess = (event) => {
+                    db = event.target.result;
+                    resolve(db);
+                };
+
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    // Create an object store to hold our key/value data
+                    db.createObjectStore(STORE_NAME, { keyPath: 'key' });
+                };
+            });
+        }
+
+        /**
+         * Loads the stored message from IndexedDB and updates the UI.
+         */
+        async function loadMessage() {
+            if (!db) return;
+
+            try {
+                const transaction = db.transaction([STORE_NAME], 'readonly');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.get(MESSAGE_KEY);
+
+                request.onsuccess = (event) => {
+                    const result = event.target.result;
+                    let message = "No message saved yet. Type something and click 'Save'.";
+
+                    if (result && result.content) {
+                        message = result.content;
+                    }
+
+                    databaseOutputEl.textContent = message;
+                    // Only update the input if it was previously empty or holds the placeholder message
+                    if (messageInputEl.value === "" || messageInputEl.value.includes("Loading...")) {
+                        messageInputEl.value = message === "No message saved yet. Type something and click 'Save'." ? "" : message;
+                    }
+                };
+
+                request.onerror = (event) => {
+                    throw new Error(`Load Error: ${event.target.error.message}`);
+                };
+
+            } catch (error) {
+                console.error("Local DB Load Error:", error);
+                databaseOutputEl.textContent = `Error loading local data: ${error.message}`;
+            }
+        }
+
+        /**
+         * Handles saving the message input to IndexedDB.
+         */
+        async function handleSaveMessage() {
+            if (!db) {
+                showStatus("Local database is not ready. Please try again.", 'error');
+                return;
+            }
+
+            const content = messageInputEl.value.trim();
+            if (content === "") {
+                showStatus("Please enter a message before saving.", 'info');
+                return;
+            }
+
+            // Show loading state
+            saveButtonEl.disabled = true;
+            saveLoaderEl.classList.remove('hidden');
+            saveButtonEl.innerHTML = `<div class="loading-spinner" style="margin-right: 8px;"></div> Saving...`;
+
+            try {
+                const transaction = db.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+
+                const dataToSave = {
+                    key: MESSAGE_KEY,
+                    content: content,
+                    timestamp: new Date().toISOString()
+                };
+
+                const request = store.put(dataToSave);
+
+                // Wait for the transaction to complete
+                await new Promise((resolve, reject) => {
+                    request.onsuccess = () => resolve();
+                    request.onerror = () => reject(request.error);
+                });
+
+                // Update UI instantly since it's local
+                databaseOutputEl.textContent = content;
+                showStatus("Message saved successfully to local database!", 'success');
+
+            } catch (error) {
+                console.error("Local DB Save Error:", error);
+                showStatus(`Failed to save message: ${error.message}`, 'error');
+            } finally {
+                // Restore button state
+                saveLoaderEl.classList.add('hidden');
+                saveButtonEl.innerHTML = 'Save Message to Local Database';
+                saveButtonEl.disabled = false;
+            }
+        }
+
+        /**
+         * Main initialization function for the local app.
+         */
+        async function initializeLocalApp() {
+            userIdDisplayEl.textContent = 'Local (IndexedDB) Connected';
+            
+            try {
+                await initDB();
+                showStatus("Local database (IndexedDB) connected and ready.", 'success');
+                
+                // Enable UI elements
+                messageInputEl.disabled = false;
+                saveButtonEl.disabled = false;
+
+                // Load existing message
+                await loadMessage();
+
+            } catch (error) {
+                console.error("App Initialization Failed:", error);
+                userIdDisplayEl.textContent = 'DB Init Failed';
+                databaseOutputEl.textContent = 'Could not initialize local database. Check browser support.';
+            }
+        }
+
+        // --- Event Listener ---
+        saveButtonEl.addEventListener('click', handleSaveMessage);
+
+        // Start the application setup
+        window.onload = initializeLocalApp;
+    </script>
+</body>
+</html>
