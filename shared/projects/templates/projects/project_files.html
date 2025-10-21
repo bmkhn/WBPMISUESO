@@ -2,6 +2,16 @@
 {% block profile_content %}
 
 <style>
+    .name-link {
+        color: #0A6C44;
+        text-decoration: none;
+    }
+
+    .name-link:hover {
+        color: #095c2d;
+        text-decoration: underline;
+    }
+    
     .file-list {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
@@ -156,7 +166,7 @@
                     </div>
                 {% endif %}
             </a>
-            <h4>{{ file.name }}</h4>
+            <h4><a href="{{ file.file.url }}" class="name-link" target="_blank">{{ file.name }}</a></h4>
             <p>{{ file.extension|upper }} &bull; {{ file.size }} &bull; {{ file.uploaded_at|date:'M d, Y' }}</p>
         </div>
         {% empty %}

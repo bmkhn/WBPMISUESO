@@ -296,7 +296,7 @@
 <div id="modal-final" class="submission-modal" style="display:none;">
     <div class="modal-content">
         <span class="close-modal">&times;</span>
-        <h2>Final Submission</h2>
+        <h2 style="margin-bottom:1rem;">Final Submission</h2>
         <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
             <input type="hidden" name="submission_id" value="{{ submission.id }}" />
@@ -324,7 +324,7 @@
 <div id="modal-event" class="submission-modal" style="display:none;">
     <div class="modal-content">
         <span class="close-modal">&times;</span>
-        <h2>Event Submission</h2>
+        <h2 style="margin-bottom:1rem;">Event Submission</h2>
         <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
             <input type="hidden" name="submission_id" value="{{ submission.id }}" />
@@ -363,7 +363,7 @@
 <div id="modal-file" class="submission-modal" style="display:none;">
     <div class="modal-content">
         <span class="close-modal">&times;</span>
-        <h2>File Submission</h2>
+        <h2 style="margin-bottom:1rem;">File Submission</h2>
         <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
             <input type="hidden" name="submission_id" value="{{ submission.id }}" />
@@ -468,8 +468,8 @@
                 var status = card.getAttribute('data-submission-status');
                 var subId = card.getAttribute('data-submission-id');
                 var modalId = '';
-                // Only faculty leader/provider with PENDING opens modal, all others go to details
-                if (userIsInvolved && isFaculty && status === 'PENDING') {
+                // Only faculty leader/provider with PENDING or REVISION_REQUESTED opens modal, all others go to details
+                if (userIsInvolved && isFaculty && (status === 'PENDING' || status === 'REVISION_REQUESTED')) {
                     if (type === 'final') {
                         modalId = 'modal-final';
                     } else if (type === 'event') {

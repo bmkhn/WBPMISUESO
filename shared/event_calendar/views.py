@@ -16,7 +16,7 @@ def calendar_view(request):
     from .models import MeetingEvent
     # Gather all events, group by date
     events_qs = MeetingEvent.objects.all()
-    project_events_qs = ProjectEvent.objects.select_related('project').all()
+    project_events_qs = ProjectEvent.objects.select_related('project').filter(placeholder=False)
     events_by_date = {}
     from django.utils import timezone
     # MeetingEvents
@@ -129,18 +129,20 @@ def events_json(request):
     if user.role in ['UESO', 'VP', 'DIRECTOR']:
         print("User is UESO/VP/DIRECTOR, fetching all events")
         events_qs = MeetingEvent.objects.all()
-        project_events_qs = ProjectEvent.objects.select_related('project').all()
+        project_events_qs = ProjectEvent.objects.select_related('project').filter(placeholder=False)
     elif user.role in ['PROGRAM_HEAD', 'DEAN', 'COORDINATOR']:
         print("User is PROGRAM_HEAD/DEAN/COORDINATOR, fetching college events")
         events_qs = MeetingEvent.objects.filter(participants=user)
         project_events_qs = ProjectEvent.objects.select_related('project').filter(
-            project__project_leader__college=user.college
+            project__project_leader__college=user.college,
+            placeholder=False
         )
     elif user.role in ['FACULTY', 'IMPLEMENTER']:
         events_qs = MeetingEvent.objects.filter(participants=user)
         project_events_qs = ProjectEvent.objects.select_related('project').filter(
-            models.Q(project__project_leader=user) |
-            models.Q(project__providers=user)
+            (models.Q(project__project_leader=user) |
+            models.Q(project__providers=user)),
+            placeholder=False
         )
     else:
         events_qs = MeetingEvent.objects.none()

@@ -207,8 +207,8 @@ def project_event_image_upload_to(instance, filename):
 	return f"projects/unknown/events/{filename}"
 
 class ProjectEvent(models.Model):
-	def delete(self, using = ..., keep_parents = ...):
-		return super().delete(using, keep_parents)
+	def delete(self, using=None, keep_parents=False):
+		return super().delete(using=using, keep_parents=keep_parents)
 
 	project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='events')
 	title = models.CharField(max_length=255)
@@ -220,6 +220,7 @@ class ProjectEvent(models.Model):
 	updated_at = models.DateTimeField(auto_now=True)
 	updated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='updated_project_events')
 	image = models.ImageField(upload_to=project_event_image_upload_to, blank=True, null=True)
+	placeholder = models.BooleanField(default=False)
 
 	STATUS_CHOICES = [
 		("SCHEDULED", "Scheduled"),

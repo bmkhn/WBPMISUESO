@@ -162,27 +162,59 @@ def project_events(request, pk):
     event_form = None
     event_to_edit = None
     if request.method == 'POST':
-        event_id = request.POST.get('event_id')
-        if event_id:
-            event_to_edit = get_object_or_404(project.events, pk=event_id)
-            # Remove required validation for datetime and image
-            post_data = request.POST.copy()
-            files_data = request.FILES.copy()
-            if not post_data.get('datetime'):
-                post_data['datetime'] = event_to_edit.datetime
-            if not files_data.get('image'):
-                # If no new image uploaded, keep old image
-                files_data['image'] = event_to_edit.image
-            event_form = ProjectEventForm(post_data, files_data, instance=event_to_edit)
-        else:
-            event_form = ProjectEventForm(request.POST, request.FILES)
-        if event_form.is_valid():
-            event = event_form.save(commit=False)
-            event.project = project
-            event.created_by = request.user
-            event.status = 'SCHEDULED'
-            event.save()
+        if request.POST.get('add_event'):
+            # Add Event button: create new ProjectEvent and increment estimated_events
+            from .models import ProjectEvent
+            now = timezone.now()
+            new_event = ProjectEvent.objects.create(
+                project=project,
+                title=f"Event {project.events.count() + 1}",
+                description="Description Here",
+                datetime=now,
+                location="",
+                created_at=now,
+                created_by=request.user,
+                updated_at=now,
+                updated_by=request.user,
+                image=None,
+                placeholder=True
+            )
+            project.estimated_events += 1
+            project.save(update_fields=["estimated_events"])
             return redirect(request.path)
+        elif request.POST.get('delete_event_id'):
+            # Delete event: remove ProjectEvent and decrement estimated_events
+            event_id = request.POST.get('delete_event_id')
+            from .models import ProjectEvent
+            try:
+                event_to_delete = ProjectEvent.objects.get(pk=event_id, project=project)
+                event_to_delete.delete()
+                if project.estimated_events > 0:
+                    project.estimated_events -= 1
+                    project.save(update_fields=["estimated_events"])
+            except ProjectEvent.DoesNotExist:
+                pass
+            return redirect(request.path)
+        else:
+            event_id = request.POST.get('event_id')
+            if event_id:
+                event_to_edit = get_object_or_404(project.events, pk=event_id)
+                # Remove required validation for datetime and image
+                post_data = request.POST.copy()
+                files_data = request.FILES.copy()
+                if not post_data.get('datetime'):
+                    post_data['datetime'] = event_to_edit.datetime
+                if not files_data.get('image'):
+                    # If no new image uploaded, keep old image
+                    files_data['image'] = event_to_edit.image
+                event_form = ProjectEventForm(post_data, files_data, instance=event_to_edit)
+                if event_form.is_valid():
+                    event = event_form.save(commit=False)
+                    event.project = project
+                    event.created_by = request.user
+                    event.status = 'SCHEDULED'
+                    event.save()
+                    return redirect(request.path)
 
     if not event_form:
         event_form = ProjectEventForm()
@@ -308,6 +340,7 @@ def project_submissions(request, pk):
 
     # Filter and order submissions for display
     from django.db.models import Case, When, Value, IntegerField
+    # All roles: APPROVED and REJECTED at the bottom
     if user_role in ["COORDINATOR"]:
         submissions = all_submissions.filter(status__in=["SUBMITTED", "REVISION_REQUESTED", "FORWARDED"])
         if status_filter:
@@ -317,6 +350,8 @@ def project_submissions(request, pk):
                 When(status="SUBMITTED", then=Value(0)),
                 When(status="REVISION_REQUESTED", then=Value(1)),
                 When(status="FORWARDED", then=Value(2)),
+                When(status="APPROVED", then=Value(99)),
+                When(status="REJECTED", then=Value(100)),
                 default=Value(3),
                 output_field=IntegerField(),
             )
@@ -328,6 +363,8 @@ def project_submissions(request, pk):
         submissions = submissions.annotate(
             status_priority=Case(
                 When(status="FORWARDED", then=Value(0)),
+                When(status="APPROVED", then=Value(99)),
+                When(status="REJECTED", then=Value(100)),
                 default=Value(1),
                 output_field=IntegerField(),
             )
@@ -336,7 +373,14 @@ def project_submissions(request, pk):
         submissions = all_submissions
         if status_filter:
             submissions = submissions.filter(status=status_filter)
-        submissions = submissions.order_by('-created_at')
+        submissions = submissions.annotate(
+            status_priority=Case(
+                When(status="APPROVED", then=Value(99)),
+                When(status="REJECTED", then=Value(100)),
+                default=Value(0),
+                output_field=IntegerField(),
+            )
+        ).order_by('status_priority', '-created_at')
 
     # Pass all status choices for filter dropdown
     status_choices = Submission.SUBMISSION_STATUS_CHOICES
@@ -352,7 +396,7 @@ def project_submissions(request, pk):
         print("DEBUG:", action, submission.status)
 
         # Handle Submission Upload
-        if action == "submit" and submission.status == "PENDING":
+        if action == "submit" and (submission.status == "PENDING" or submission.status == "REVISION_REQUESTED"):
             sub_type = submission.downloadable.submission_type
 
             if sub_type == "final":
@@ -740,6 +784,8 @@ def admin_project(request):
 ########################################################################################################################
 
 
+from django.utils import timezone
+
 @role_required(allowed_roles=["VP", "DIRECTOR"])
 def add_project_view(request):
     error = None
@@ -817,6 +863,25 @@ def add_project_view(request):
                         document_type='ADDITIONAL'
                     )
                     project.additional_documents.add(add_doc)
+                project.save()
+
+                project.estimated_events = form.cleaned_data.get('estimated_events', 0)
+                now = timezone.now()
+                for i in range(1, project.estimated_events + 1):
+                    from .models import ProjectEvent
+                    ProjectEvent.objects.create(
+                        project=project,
+                        title=f"Event {i}",
+                        description="Description Here",
+                        datetime=now,
+                        status='SCHEDULED',
+                        created_at=now,
+                        created_by=request.user,
+                        updated_at=now,
+                        updated_by=request.user,
+                        image=None,
+                        placeholder=True
+                    )
                 project.save()
 
                 return render(request, 'projects/add_project.html', {
