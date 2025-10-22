@@ -3,8 +3,13 @@ from .views import login_view, logout_view, register_view, quick_login, role_red
 from .views import registration_client_view, registration_faculty_view, registration_implementer_view, client_verify_view, faculty_verify_view, implementer_verify_view, thank_you_view
 from .views import not_authenticated_view, no_permission_view, not_confirmed_view
 from .views import manage_user, add_user, user_details_view, edit_user, check_email_view, verify_user, unverify_user, delete_user
+from .views import newp_view, otp_view, end  # Temp views for testing
 
 urlpatterns = [
+    #test
+    path('newp/', newp_view, name='new_password'),        # New Password Page (Temp)
+    path('otp/', otp_view, name='otp'),                           # OTP Page (Temp)
+    path('end/', end, name='end'),                              # End Page (Temp)
 
     # User Authentication URLs
     path('login/', login_view, name='login'),                   # Login URL
