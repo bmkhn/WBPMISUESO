@@ -866,12 +866,13 @@
         eventList.innerHTML = '';
         const todayStr = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`;
         let todayEvents = [], meetings = [], projects = [], done = [];
+        const today = new Date();
         for (const dateStr in events) {
             if (events.hasOwnProperty(dateStr)) {
                 const dateObj = new Date(dateStr);
                 if (dateObj.getFullYear() === currentYear && dateObj.getMonth() === currentMonth) {
                     events[dateStr].forEach(ev => {
-                        const isPast = dateObj < new Date(currentYear, currentMonth, new Date().getDate());
+                        const isPast = dateObj < today;
                         if (isPast) {
                             done.push({...ev, dateStr});
                         } else if (dateStr === todayStr) {
@@ -1141,7 +1142,7 @@
                 // Determine if all events are done (past date)
                 const today = new Date();
                 const cellDate = new Date(year, month, d);
-                let isPast = cellDate < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                let isPast = cellDate < today;
                 if (isPast) {
                     // Faded blue/green for done
                     if (hasMeeting && hasProject) {

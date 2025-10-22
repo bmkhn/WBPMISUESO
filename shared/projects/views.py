@@ -9,6 +9,7 @@ from .forms import ProjectForm, ProjectEventForm
 from django.core.paginator import Paginator
 import os
 from django.db import models
+from django.db.models import Q, BooleanField, ExpressionWrapper
 
 
 def get_role_constants():
@@ -154,7 +155,11 @@ def project_events(request, pk):
         base_template = "base_public.html"
 
     project = get_object_or_404(Project, pk=pk)
-    events = project.events.all().order_by('datetime')
+    # Order events: those with datetime=None at the bottom
+    from django.db.models import F, Value, BooleanField, ExpressionWrapper
+    events = project.events.annotate(
+        has_datetime=ExpressionWrapper(Q(datetime__isnull=False), output_field=BooleanField())
+    ).order_by('-has_datetime', 'datetime')
     total = project.estimated_events
     completed = project.event_progress
     percent = int((completed / total) * 100) if total else 0
@@ -170,7 +175,7 @@ def project_events(request, pk):
                 project=project,
                 title=f"Event {project.events.count() + 1}",
                 description="Description Here",
-                datetime=now,
+                datetime=None,
                 location="",
                 created_at=now,
                 created_by=request.user,
@@ -198,24 +203,18 @@ def project_events(request, pk):
         else:
             event_id = request.POST.get('event_id')
             if event_id:
-                event_to_edit = get_object_or_404(project.events, pk=event_id)
-                # Remove required validation for datetime and image
-                post_data = request.POST.copy()
-                files_data = request.FILES.copy()
-                if not post_data.get('datetime'):
-                    post_data['datetime'] = event_to_edit.datetime
-                if not files_data.get('image'):
-                    # If no new image uploaded, keep old image
-                    files_data['image'] = event_to_edit.image
-                event_form = ProjectEventForm(post_data, files_data, instance=event_to_edit)
-                if event_form.is_valid():
-                    event = event_form.save(commit=False)
-                    event.project = project
-                    event.created_by = request.user
-                    event.status = 'SCHEDULED'
-                    event.save()
-                    return redirect(request.path)
+                # Edit existing event
+                event_to_edit = get_object_or_404(project.events, pk=event_id, project=project)
+                event_to_edit.title = request.POST.get('title', event_to_edit.title)
+                event_to_edit.description = request.POST.get('description', event_to_edit.description)
+                event_to_edit.datetime = request.POST.get('datetime', event_to_edit.datetime)
+                event_to_edit.location = request.POST.get('location', event_to_edit.location)
+                
+                if event_to_edit.datetime and event_to_edit.location:
+                    event_to_edit.placeholder = False
+                event_to_edit.updated_by = request.user
 
+                event_to_edit.save()
     if not event_form:
         event_form = ProjectEventForm()
 

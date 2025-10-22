@@ -15,4 +15,4 @@ class ProjectForm(forms.ModelForm):
 class ProjectEventForm(forms.ModelForm):
     class Meta:
         model = ProjectEvent
-        fields = ['title', 'description', 'datetime', 'location', 'image']
+        fields = ['title', 'description']
