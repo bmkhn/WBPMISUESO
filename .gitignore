@@ -5,13 +5,13 @@ __pycache__/
 *.pyd
 
 # Environment
-venv/
-.env
+# venv/
+# .env
 
 # Django-specific
 db.sqlite3
 *.log
-media/
+# media/
 staticfiles/
 
 # Editor/OS
