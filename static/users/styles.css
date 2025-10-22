@@ -1,3 +1,4 @@
+/* login sequence classes*/
 body {
     background: url("/static/background.png") no-repeat center center fixed;
     background-size: cover;
@@ -10,6 +11,11 @@ body {
 
 p, h1, h2, h3, h4, h5, h6 {
     cursor: default;
+} 
+ 
+a:hover {
+    text-decoration: none; 
+    color: #ff9900;
 }
 
 .sign-in-container {
@@ -27,7 +33,7 @@ p, h1, h2, h3, h4, h5, h6 {
     flex-direction: column;
     gap: 2.25rem; 
     min-height: 100%;
-    
+    position: relative;
 }
 
 .logo-container {
@@ -198,6 +204,11 @@ p, h1, h2, h3, h4, h5, h6 {
     display: block;
     margin-left: auto;
     margin-right: auto;
+    transition: background 0.3s ease;
+}
+
+.sign-in-button:hover {
+    background: #000000;
 }
 
 .bottom-container {
@@ -227,4 +238,32 @@ p, h1, h2, h3, h4, h5, h6 {
 
 .quick-login-container > a, .quick-login-container > h3 {
     color: #fff;
+}
+
+/* forgot pass unique classes */ 
+.back-container {
+    position: absolute;
+    bottom: 2rem;
+    left: 3rem;
+} 
+
+.back-btn {
+    display: flex;
+    align-items: center; 
+    width: auto; 
+    height: auto;
+    gap: 0.75rem;
+    text-decoration: none;
+}
+
+.back-btn-text {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 0.95rem;
+    color: #0099FF;
+    cursor: pointer;
+}
+
+.back-btn svg {
+    vertical-align: middle;
 }
