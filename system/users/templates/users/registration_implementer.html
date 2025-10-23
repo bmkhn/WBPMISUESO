@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html>
 <head>
@@ -5,277 +6,8 @@
 <meta charset="UTF-8">
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-
-<!-- General Styles -->
-<style>
-    body {
-        font-family: 'Inter', sans-serif;
-        background-color: #FBFBFB;
-        margin: 0;
-        padding: 0;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 100vh; 
-        overflow: hidden;
-        box-sizing: border-box;
-    }
-
-    .card {
-        background: #fff;
-        width: 800px;
-        min-height: 410px;
-        height: auto;
-        padding: 40px 40px;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-
-    h2 {
-        font-family: 'Inter', sans-serif;
-        font-weight: 600;
-        text-align: center;
-        font-size: 32px;
-        margin-bottom: 5px;
-        margin-top: 10px;
-    }
-
-    p.subtitle {
-        font-family: 'Inter', sans-serif;
-        text-align: center;
-        color: #666;
-        margin-bottom: 25px;
-    }
-
-    select {
-		appearance: none;
-		-webkit-appearance: none;
-		-moz-appearance: none;
-		padding-right: 2rem;
-		background: 
-            #F9F9F9 /* background color */
-            url("data:image/svg+xml;utf8,<svg width='16' height='11' viewBox='0 0 16 11' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M7.99976 7.19417L13.9025 1.29147C14.0125 1.17758 14.144 1.08674 14.2895 1.02424C14.435 0.961746 14.5915 0.92885 14.7498 0.927474C14.9082 0.926098 15.0652 0.95627 15.2117 1.01623C15.3583 1.07619 15.4914 1.16473 15.6034 1.27669C15.7153 1.38866 15.8039 1.5218 15.8638 1.66835C15.9238 1.8149 15.954 1.97192 15.9526 2.13026C15.9512 2.28859 15.9183 2.44506 15.8558 2.59055C15.7933 2.73604 15.7025 2.86762 15.5886 2.97762L8.84283 9.72339C8.61921 9.94694 8.31596 10.0725 7.99976 10.0725C7.68356 10.0725 7.38031 9.94694 7.15669 9.72339L0.41092 2.97762C0.297028 2.86762 0.206183 2.73604 0.143687 2.59055C0.0811915 2.44506 0.0482959 2.28859 0.04692 2.13026C0.0455441 1.97192 0.0757155 1.8149 0.135674 1.66835C0.195632 1.5218 0.284176 1.38866 0.39614 1.27669C0.508103 1.16473 0.641244 1.07619 0.787794 1.01623C0.934343 0.95627 1.09137 0.926098 1.2497 0.927474C1.40804 0.92885 1.56451 0.961746 1.71 1.02424C1.85548 1.08674 1.98706 1.17758 2.09706 1.29147L7.99976 7.19417Z' fill='%23374151'/></svg>")
-        	no-repeat right 1.25rem center !important;
-  		background-size: 13px 8px;
-    }
-
-    .actions {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        position: absolute;
-        left: 40px;
-        right: 40px;
-        bottom: 40px;
-    }
-
-    .back {
-        font-family: 'Inter', sans-serif;
-        height: 40px;
-        text-decoration: none;
-        font-size: 14px;
-        color: #007bff;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-    }
-
-    .back:hover {
-        text-decoration: underline;
-        color: black;
-    }
-
-    .button {
-        font-family: 'Inter', sans-serif;
-        padding: 12px 20px;
-        border: none;
-        background: #2c2c2c;
-        color: white;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 14px;
-    }
-    
-    .button:hover {
-        background-color: black;
-    }
-
-    .required {
-        color: red;
-    }
-
-    .checkbox {
-        font-family: 'Inter', sans-serif;
-        display: flex;
-        margin-top: 5px;
-        font-size: 10px;
-        color: #555;
-        white-space: pre;
-        align-items: center;
-    }
-
-    .checkbox input {
-        margin-right: 8px;
-        width: 15px;
-        height: 15px;
-        cursor: pointer;
-    }
-
-    .id-options {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-    }
-    
-    .id-options button {
-        font-family: 'Inter', sans-serif;
-        padding: 20px;
-        border: none;
-        border-bottom: 1px solid gray;
-        border-radius: 1px;
-        background: #fffafa;
-        font-size: 16px;
-        cursor: pointer;
-        text-align: left;
-    }
-
-    .id-options button:hover {
-        background: darkgray;
-    }
-
-    a {
-        font-family: 'Inter', sans-serif;
-        color: #007bff;
-    }
-
-    a:hover {
-        color: purple;
-    }
-</style>
-
-<!-- Form Styles -->
-<style>
-    .error-input {
-        border-color: #E53E3E !important;
-        background: #FFF5F5 !important;
-    }
-
-    .error-select {
-        border-color: #E53E3E !important;
-        background: 
-            #FFF5F5 /* background color */
-            url("data:image/svg+xml;utf8,<svg width='16' height='11' viewBox='0 0 16 11' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M7.99976 7.19417L13.9025 1.29147C14.0125 1.17758 14.144 1.08674 14.2895 1.02424C14.435 0.961746 14.5915 0.92885 14.7498 0.927474C14.9082 0.926098 15.0652 0.95627 15.2117 1.01623C15.3583 1.07619 15.4914 1.16473 15.6034 1.27669C15.7153 1.38866 15.8039 1.5218 15.8638 1.66835C15.9238 1.8149 15.954 1.97192 15.9526 2.13026C15.9512 2.28859 15.9183 2.44506 15.8558 2.59055C15.7933 2.73604 15.7025 2.86762 15.5886 2.97762L8.84283 9.72339C8.61921 9.94694 8.31596 10.0725 7.99976 10.0725C7.68356 10.0725 7.38031 9.94694 7.15669 9.72339L0.41092 2.97762C0.297028 2.86762 0.206183 2.73604 0.143687 2.59055C0.0811915 2.44506 0.0482959 2.28859 0.04692 2.13026C0.0455441 1.97192 0.0757155 1.8149 0.135674 1.66835C0.195632 1.5218 0.284176 1.38866 0.39614 1.27669C0.508103 1.16473 0.641244 1.07619 0.787794 1.01623C0.934343 0.95627 1.09137 0.926098 1.2497 0.927474C1.40804 0.92885 1.56451 0.961746 1.71 1.02424C1.85548 1.08674 1.98706 1.17758 2.09706 1.29147L7.99976 7.19417Z' fill='%23374151'/></svg>")
-        	no-repeat right 1.25rem center !important;
-    }
-
-    .form-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 20px;
-    }
-
-    .form-group {
-        display: flex;
-        flex-direction: column;
-    }
-
-	.form-label {
-		font-weight: 600;
-		color: #374151;
-		font-size: 0.95rem;
-	}
-
-	.form-input {
-		padding: 0.75rem 1rem;
-		border: 1px solid #E5E7EB;
-		border-radius: 8px;
-		font-size: 1rem;
-		font-family: 'Inter', sans-serif;
-		background: #F9F9F9;
-		transition: all 0.2s ease;
-        width: 100%;
-        min-width: 0;
-        box-sizing: border-box;
-	}
-
-    select.form-input {
-        appearance: none;
-    }
-
-	.form-input:focus {
-		outline: none;
-		border-color: #0A6C44;
-		background: white;
-		box-shadow: 0 0 0 3px rgba(10, 108, 68, 0.1);
-	}
-
-    .email-error {
-        color: red;
-        font-size: 13px;
-        margin-top: 4px;
-        display: none;
-    }
-</style>
-
-<!-- Valid ID Section -->
-<style>
-    .upload-area {
-        flex: 1;
-        border: 2px dashed #E5E7EB;
-        border-radius: 8px;
-        padding: 2rem;
-        text-align: center;
-        background: #F9F9F9;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .upload-area:hover {
-        border-color: #0A6C44;
-        background: #F0FDF4;
-    }
-
-    .upload-icon {
-        width: 24px;
-        height: 24px;
-        color: #4B5563;
-    }
-
-    .upload-text {
-        color: #4B5563;
-        font-size: 0.95rem;
-    }
-
-    .file-input {
-        display: none;
-    }
-
-    .file-preview {
-        margin-top: 1rem;
-        padding: 1rem;
-        background: #F0FDF4;
-        border: 1px solid #BBF7D0;
-        border-radius: 8px;
-        display: none;
-    }
-
-    .file-preview.show {
-        display: block;
-    }
-
-    .file-info {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        color: #1f7c57;
-        font-size: 0.9rem;
-    }
-</style>
-
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
+<link href="{% static 'users/regis_style.css' %}" rel="stylesheet">
 </head>
 
 <body>
@@ -283,8 +15,12 @@
     <form id="form-step1" autocomplete="off" style="display:block;" onsubmit="event.preventDefault(); nextStep(1);">
         {% csrf_token %}
         <div class="card" id="step1">
-            <h2>Create New Account</h2>
-            <p class="subtitle">Personal Details</p>
+            <h2>Create Implementer Account</h2> 
+            <hr>
+            <p class="subtitle"> 
+                <i class="fa-regular fa-id-card subtitle-icon" aria-hidden="true"></i>
+                Input your Contact and Personal Details.
+            </p> 
             <div class="form-grid">
                 <div class="form-group">
                     <div class="form-label">Given Name:<span class="required"> *</span></div> 
@@ -325,8 +61,18 @@
                 </div>
             </div>
             <div class="actions">
-                <a href="{% url 'register' %}" class="back">← Back to Sign In</a>
-                <button class="button" type="submit">Proceed →</button>
+                <a href="{% url 'register' %}" class="back-btn"> 
+                    <svg width="18" height="19" viewBox="0 0 18 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <use xlink:href="#icon-arrow-left" />
+                    </svg>
+                    <span class="back-btn-text">Back to Sign In</span>
+                </a>
+                <button class="proceed-btn" type="submit"> 
+                    <span class="back-btn-text">Proceed</span>
+                    <svg width="18" height="19" viewBox="0 0 18 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <use xlink:href="#icon-arrow-right" />
+                    </svg>
+                </button>
             </div>
         </div>
     </form>
@@ -335,8 +81,12 @@
     <form id="form-step2" autocomplete="off" style="display:none;" onsubmit="event.preventDefault(); nextStep(2);">
         {% csrf_token %}
         <div class="card" id="step2">
-            <h2>Create New Account</h2>
-            <p class="subtitle">Professional Details</p>
+            <h2>Create Implementer Account</h2> 
+            <hr>
+            <p class="subtitle">  
+                <i class="fa-solid fa-briefcase subtitle-icon"></i>
+                Input your Professional Details.
+            </p>
             <div class="form-grid">
                 <div class="form-group">
                     <div class="form-label">Degree:<span class="required"> *</span></div>
@@ -371,8 +121,18 @@
                 </div>
             </div>
             <div class="actions">
-                <a class="back" onclick="prevStep(2)">← Back</a>
-                <button class="button" type="submit">Proceed →</button>
+                <a class="back-btn" onclick="prevStep(2)"> 
+                    <svg width="18" height="19" viewBox="0 0 18 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <use xlink:href="#icon-arrow-left" />
+                    </svg>
+                    <span class="back-btn-text">Back</span>
+                </a>
+                <button class="proceed-btn" type="submit"> 
+                    <span class="back-btn-text">Proceed</span>
+                    <svg width="18" height="19" viewBox="0 0 18 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <use xlink:href="#icon-arrow-right" />
+                    </svg>
+                </button>
             </div>
         </div>
     </form>
@@ -381,8 +141,12 @@
     <form method="post" autocomplete="off" enctype="multipart/form-data" id="form-step3" style="display:none;">
         {% csrf_token %}
         <div class="card" id="step3">
-            <h2>Upload Your ID</h2>
-            <p class="subtitle">Select your ID type and upload your valid ID for verification.</p>
+            <h2>Upload Your ID</h2> 
+            <hr>
+            <p class="subtitle">  
+                <i class="fa-regular fa-address-card subtitle-icon"></i>
+                Select your ID type and upload your valid ID for verification. 
+            </p>
             <div style="margin-bottom: 1.5rem;">
                 <div class="form-label">Preferred ID <span class="required">*</span></div>
                 <select class="form-input" name="preferred_id" id="preferred_id">
@@ -411,8 +175,18 @@
                 </div>
             </div>
             <div class="actions">
-                <a class="back" onclick="prevStep(3)">← Back</a>
-                <button type="submit" class="button">Submit</button>
+                <a class="back-btn" onclick="prevStep(3)">
+                    <svg width="18" height="19" viewBox="0 0 18 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <use xlink:href="#icon-arrow-left" />
+                    </svg>
+                    <span class="back-btn-text">Back</span>
+                </a>
+                <button class="proceed-btn" type="submit"> 
+                    <span class="back-btn-text">Proceed</span>
+                    <svg width="18" height="19" viewBox="0 0 18 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <use xlink:href="#icon-arrow-right" />
+                    </svg>
+                </button>
             </div>
         </div>
     </form>
@@ -420,7 +194,14 @@
 <!-- SVG Sprite Section -->
 <svg style="display:none;">
 	
-	<!-- Upload Icon -->
+    <symbol id="icon-arrow-right" viewBox="0 0 18 19">  
+        <path d="M13.3925 10.4L7.2325 16.56L8.8 18.1L17.6 9.3L8.8 0.5L7.2325 2.04L13.3925 8.2H0V10.4H13.3925Z" fill="#0099FF"/>
+    </symbol> 
+    
+	<symbol id="icon-arrow-left" viewBox="0 0 18 19">
+        <path d="M4.60755 10.4L10.7675 16.56L9.20005 18.1L0.400047 9.3L9.20005 0.5L10.7675 2.04L4.60755 8.2H18V10.4H4.60755Z" fill="#0099FF"/>
+    </symbol>
+    
 	<symbol id="icon-upload" viewBox="0 0 24 24" fill="currentColor">
 		<path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
 		<path d="M12,11L8,15H16L12,11Z" />
@@ -692,7 +473,7 @@
                 }
                 if (!valid) {
                     e.preventDefault();
-                    showPopup("Please upload a valid ID and select a preferred ID to proceed.");
+                    showPopup("Please select a preferred ID and upload your image to proceed.");
                     return;
                 }
             });
@@ -701,11 +482,11 @@
 </script>
     
     <!-- Custom Modal Popup -->
-    <div id="custom-modal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(36,95,62,0.18);z-index:9999;align-items:center;justify-content:center;">
-        <div style="background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(36,95,62,0.18);padding:32px 40px;max-width:400px;text-align:center;position:relative;">
-            <div style="font-size:1.25rem;font-weight:600;color:#0A6C44;margin-bottom:18px;">Notice</div>
-            <div id="custom-modal-message" style="font-size:1.08rem;color:#333;margin-bottom:24px;"></div>
-            <button onclick="closePopup()" style="background:#0A6C44;color:#fff;border:none;border-radius:8px;padding:10px 32px;font-size:1rem;font-weight:500;cursor:pointer;">OK</button>
+    <div id="custom-modal">
+        <div class="modal-container">
+            <div class="modal-title">Notice</div>
+            <div id="custom-modal-message"></div>
+            <button onclick="closePopup()" class="modal-btn">OK</button>
         </div>
     </div>
 </body>

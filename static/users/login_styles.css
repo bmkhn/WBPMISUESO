@@ -28,7 +28,6 @@ a:hover {
             rgba(255, 255, 255, 0.95) 80%, 
             rgba(255, 255, 255, 0.9) 99%  
         );
-    
     display: flex;
     flex-direction: column;
     gap: 2.25rem; 

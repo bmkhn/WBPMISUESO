@@ -2,41 +2,76 @@
 
 body {
     font-family: 'Inter', sans-serif;
-    background-color: #FBFBFB;
+    background: url("/static/lightbg.jpg") no-repeat center center fixed;
+    background-size: cover;
     margin: 0;
     padding: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh; 
+    display: flex;  
+    align-items: flex-start;
     overflow: hidden;
-    box-sizing: border-box;
+    box-sizing: border-box; 
+    justify-content: center; 
+    height: 100vh; 
+    position: relative;
 }
 
+p, h1, h2, h3, h4, h5, h6 {
+    cursor: default;
+} 
+
 .card {
-    background: #fff;
-    width: 800px;
-    min-height: 410px;
-    height: auto;
-    padding: 40px 40px;
-    border-radius: 12px;
+    width: 55rem;  
+    min-width: 80%; 
+    min-height: 35rem;
+    margin: 4.5rem auto 0 auto; 
+    padding: 4rem 5rem;
+    border-radius: 1rem;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    background: 
+        radial-gradient(
+            circle at center, 
+            rgba(255, 255, 255, 0.99) 0%,  
+            rgba(255, 255, 255, 0.95) 80%, 
+            rgba(255, 255, 255, 0.9) 99%  
+        );  
+    flex-shrink: 0; 
 }
 
 h2 {
     font-family: 'Inter', sans-serif;
     font-weight: 600;
-    text-align: center;
-    font-size: 32px;
-    margin-bottom: 5px;
-    margin-top: 10px;
+    text-align: left;
+    font-size: 2.25rem;
+    margin-bottom: 0.75rem;
+    margin-top: 0.5rem;
 }
 
 p.subtitle {
     font-family: 'Inter', sans-serif;
-    text-align: center;
-    color: #666;
-    margin-bottom: 25px;
+    text-align: left; 
+    font-weight: 600;
+    color: #000000;
+    margin-bottom: 2rem; 
+    display: flex; 
+    align-items: center; 
+    gap: 0.6rem;
+} 
+ 
+.subtitle-icon {
+    font-size: 1.05rem;
+    color: #444;          
+    width: 1.2rem;
+    height: 1.2rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+} 
+ 
+hr {
+    border: none; 
+    height: 2.5px;
+    background: linear-gradient(90deg, #00681a 0%, #ff9900 100%);
+    margin: 1rem 0 2rem 0;
 }
 
 select {
@@ -56,10 +91,10 @@ select {
     justify-content: space-between;
     align-items: center;
     position: absolute;
-    left: 40px;
-    right: 40px;
-    bottom: 40px;
-}
+    left: 2rem;
+    right: 2rem;
+    bottom: 2rem;
+} 
 
 .back {
     font-family: 'Inter', sans-serif;
@@ -72,24 +107,13 @@ select {
     align-items: center;
 }
 
-.back:hover {
-    text-decoration: underline;
-    color: black;
-}
-
-.button {
+.proceed-btn {
     font-family: 'Inter', sans-serif;
-    padding: 12px 20px;
     border: none;
-    background: #2c2c2c;
+    background: none;
     color: white;
-    border-radius: 8px;
     cursor: pointer;
     font-size: 14px;
-}
-
-.button:hover {
-    background-color: black;
 }
 
 .required {
@@ -160,7 +184,7 @@ a:hover {
 .form-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 20px;
+    gap: 1.5rem;
 }
 
 .form-group {
@@ -169,21 +193,23 @@ a:hover {
 }
 
 .form-label {
-    font-weight: 600;
-    color: #374151;
-    font-size: 0.95rem;
+    font-weight: 400;
+    color: #444;
+    font-size: 0.95rem; 
+    margin-bottom: 0.5rem;
 }
 
-.form-input {
+.form-input, input {
     padding: 0.75rem 1rem;
-    border: 1px solid #E5E7EB;
+    border: 1px solid #8a8a8a;
     border-radius: 8px;
     font-size: 1rem;
     font-family: 'Inter', sans-serif;
     background: #F9F9F9;
     transition: all 0.2s ease;
     width: 100%;
-    min-width: 0;
+    min-width: 0; 
+    margin-bottom: 0rem;
     box-sizing: border-box;
 }
 
@@ -191,18 +217,26 @@ select.form-input {
     appearance: none;
 }
 
-.form-input:focus {
+.form-input:focus, input:focus {
     outline: none;
-    border-color: #0A6C44;
+    border-color: #00681a;
     background: white;
     box-shadow: 0 0 0 3px rgba(10, 108, 68, 0.1);
 }
 
 .email-error {
     color: red;
-    font-size: 13px;
+    font-size: 0.85rem;
     margin-top: 4px;
     display: none;
+} 
+ 
+.field-error {
+    color: #E53E3E;
+    font-size: 0.85rem;
+    line-height: 1;
+    display: block;    
+    margin-bottom: -1rem; 
 }
 
 .upload-area {
@@ -259,4 +293,123 @@ select.form-input {
     gap: 0.5rem;
     color: #1f7c57;
     font-size: 0.9rem;
+}  
+ 
+/* forgot pass unique classes */ 
+.back-container {
+    position: absolute;
+    bottom: 2rem;
+    left: 3rem;
+} 
+
+.back-btn, .proceed-btn {
+    display: flex;
+    align-items: center; 
+    width: auto; 
+    height: auto;
+    gap: 0.75rem;
+    text-decoration: none;
+} 
+
+.back-btn-text, .proceed-btn {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 0.95rem;
+    color: #0099FF;
+    cursor: pointer;
+}
+
+.back-btn svg, .proceed-btn svg {
+    vertical-align: middle;
+} 
+ 
+/* Custom Modal */
+#custom-modal {
+    display:none; 
+    position:fixed;top:0;left:0; 
+    width:100vw;height:100vh; 
+    background:rgba(0, 0, 0, 0.329); 
+    z-index:9999; 
+    align-items:center; 
+    justify-content:center;
+} 
+.modal-container {
+    background:#f8f8f8; 
+    border-radius:1rem; 
+    box-shadow:0 4px 24px rgba(0, 0, 0, 0.18); 
+    padding:2rem 4rem; 
+    max-width:40rem; 
+    text-align:center; 
+    position:relative;
+} 
+.modal-title { 
+    font-size:1.6rem; 
+    font-weight:600; 
+    color:black; 
+    margin-bottom:18px;
+} 
+.custom-modal-message {
+    font-size:1.08rem; 
+    color:#333; 
+    margin-bottom:24px;
+} 
+.modal-btn {
+    background: #00681a; 
+    color:#fff; 
+    border:none; 
+    border-radius:1rem; 
+    padding:1rem 2rem; 
+    font-size:1rem; 
+    font-weight:500;  
+    margin: 1.75rem 0 0 0;
+    cursor:pointer;
+} 
+.modal-btn:hover, .btn:hover {
+    background: #444;
+} 
+ 
+/* BVFerify unique classes */ 
+.error {
+    color: red;
+    margin-bottom: 10px;
+}
+
+.success {
+    color: green;
+    margin-bottom: 10px;
+}
+ 
+.card-verify {
+    width: 50rem;  
+    min-height: 35rem;
+    margin: 4.5rem auto 0 auto; 
+    padding: 4rem 5rem;
+    border-radius: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    background: 
+        radial-gradient(
+            circle at center, 
+            rgba(255, 255, 255, 0.99) 0%,  
+            rgba(255, 255, 255, 0.95) 80%, 
+            rgba(255, 255, 255, 0.9) 99%  
+        );  
+    flex-shrink: 0;   
+    position: relative;
+} 
+ 
+.btn {
+    background: #00681a; 
+    color:#fff; 
+    border:none; 
+    border-radius:1rem; 
+    padding:1rem 2rem; 
+    font-size:1rem; 
+    font-weight:500;  
+    margin: 1rem 0 0 0;
+    cursor:pointer; 
+}  
+ 
+.card-verify .form-group input{ 
+    margin-top: 0.5rem;
+    width: 20rem;
 }
