@@ -1,0 +1,238 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+p, h1, h2, h3, h4, h5, h6, div {
+    cursor: default;
+} 
+
+.outside-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column; 
+}
+
+.top-container {
+    width: 100%;
+    height: 5rem;
+    background-color: #F7F3F1;
+    padding: 0 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+}
+
+.nav-center {
+    flex: 1 1 auto; 
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    align-items: center;
+    pointer-events: auto;
+}
+
+.auth-container {
+    flex: 0 0 auto; 
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.logo-container {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex: 0 0 auto;
+}
+
+.logo-circle {
+    width: 2.85rem;
+    height: 2.85rem;
+    border-radius: 100%;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-image: url("/static/ueso.png");
+}
+
+.title {
+    font-family: 'Instrument Sans', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #000;
+}
+
+.button-container {
+    display: flex;
+    gap: 1rem;
+}
+
+.nav-button {
+    font-family: 'Inter', sans-serif; 
+    color: #444;
+    font-size: 0.95rem;
+    line-height: 1.5rem;
+    font-weight: 400;
+    padding: 1rem 0.85rem;
+    border-radius: 2rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    text-decoration: none;
+    text-align: center;
+    align-self: center;
+}
+
+.nav-button:hover, .nav-button.active:hover {
+    color: #ff9900;
+}
+
+.nav-button.active {
+    color: black; 
+    font-weight: 800;
+}
+
+.sign-in-button {
+    font-family: 'Inter', sans-serif;
+    background-color: #00681a;
+    color: #F5F5F5;
+    font-size: 1rem;
+    font-weight: 500;
+    padding: 0.8rem 1.8rem;
+    border-radius: 2rem;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    text-decoration: none;
+}
+
+.sign-in-button:hover {
+    background-color: #444;
+    color: #fff;
+}
+
+.pub-bottom-container {
+    width: auto;
+    height: 2px;
+    background-color: #000;
+} 
+ 
+#backToTopBtn {
+    position: fixed;
+    bottom: 40px;
+    right: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    background-color: #333;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.4s ease, visibility 0.4s ease;
+    z-index: 1000;
+    background-color: #00681a;
+}
+
+#backToTopBtn.show {
+    opacity: 1;
+    visibility: visible;
+} 
+  
+/* Lower buttons unique classes */
+.bottom-container {
+    position: sticky;
+    top: 115px;
+    left: 0;
+    right: 0;
+    background-color: black;
+    display: flex;
+    align-items: left;
+    gap: 20px;
+    padding: 0 20px;
+    box-sizing: border-box;
+}
+
+.bottom-nav-button {
+    font-family: 'Inter', sans-serif;
+    color: #FFFFFF;
+    padding: 0 15px;
+    font-size: 12px;
+    line-height: 20px;
+    font-weight: 500;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    text-decoration: none;
+    align-self: center;
+}
+
+.bottom-nav-button:hover {
+    background-color: #191919;
+}
+
+.bottom-nav-button.active {
+    background-color: #444;
+}
+
+.logo-circle img {
+    width: 100%;
+    height: 100%;
+    border-radius: 100%;
+    transition: transform 0.2s ease;
+}
+.logo-circle img:hover {
+    cursor: pointer;
+    transform: scale(1.05);
+}
+
+#profileModal {
+    display: none;
+    position: absolute; 
+    background: #fff; 
+    border-radius: 0.75rem; 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.05); 
+    min-width: 10rem; 
+    z-index: 1000; 
+    border: none; 
+    overflow: hidden; 
+    text-align: left;
+    top: calc(100% + 5px); 
+    right: 40px;
+    opacity: 0;
+    transform: translateY(-10px); 
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out; 
+}
+
+#profileModal.show {
+    display: block; 
+    opacity: 1; 
+    transform: translateX(1.75rem);
+}
+
+
+#profileModal a {
+    display:block; 
+    padding: 0.75rem 1.25rem;
+    color:#222; 
+    text-decoration:none;
+    font-family:'Inter',sans-serif;
+    font-size: 0.95rem;
+    font-weight: 500; 
+    border-bottom: 0;
+    transition: background 0.2s, color 0.2s;
+}
+
+#profileModal a:hover {
+    background: #f7f3f1; 
+    color: #00681a; 
+}

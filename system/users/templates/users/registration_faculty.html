@@ -493,11 +493,11 @@
 </script>
     
     <!-- Custom Modal Popup -->
-    <div id="custom-modal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(36,95,62,0.18);z-index:9999;align-items:center;justify-content:center;">
-        <div style="background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(36,95,62,0.18);padding:32px 40px;max-width:400px;text-align:center;position:relative;">
-            <div style="font-size:1.25rem;font-weight:600;color:#0A6C44;margin-bottom:18px;">Notice</div>
-            <div id="custom-modal-message" style="font-size:1.08rem;color:#333;margin-bottom:24px;"></div>
-            <button onclick="closePopup()" style="background:#0A6C44;color:#fff;border:none;border-radius:8px;padding:10px 32px;font-size:1rem;font-weight:500;cursor:pointer;">OK</button>
+    <div id="custom-modal">
+        <div class="modal-container">
+            <div class="modal-title">Notice</div>
+            <div id="custom-modal-message"></div>
+            <button onclick="closePopup()" class="modal-btn">OK</button>
         </div>
     </div>
 </body>
