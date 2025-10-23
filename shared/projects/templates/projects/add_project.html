@@ -1,5 +1,6 @@
 {% extends "base_internal.html" %}
-{% block content %}
+{% block content %} 
+{% load static %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -8,347 +9,19 @@
 <title>Add Project</title>
 
 <link href="https://fonts.googleapis.com/css?family=Inter:400,500,700&display=swap" rel="stylesheet">
-
-<style>
-    .success-message {
-		color: green; 
-		margin-bottom: 1rem;
-	}
-
-    .error-input {
-        border-color: #E53E3E !important;
-        background: #FFF5F5 !important;
-    }
-
-    .error-select {
-        border-color: #E53E3E !important;
-        background: 
-            #FFF5F5 /* background color */
-            url("data:image/svg+xml;utf8,<svg width='16' height='11' viewBox='0 0 16 11' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M7.99976 7.19417L13.9025 1.29147C14.0125 1.17758 14.144 1.08674 14.2895 1.02424C14.435 0.961746 14.5915 0.92885 14.7498 0.927474C14.9082 0.926098 15.0652 0.95627 15.2117 1.01623C15.3583 1.07619 15.4914 1.16473 15.6034 1.27669C15.7153 1.38866 15.8039 1.5218 15.8638 1.66835C15.9238 1.8149 15.954 1.97192 15.9526 2.13026C15.9512 2.28859 15.9183 2.44506 15.8558 2.59055C15.7933 2.73604 15.7025 2.86762 15.5886 2.97762L8.84283 9.72339C8.61921 9.94694 8.31596 10.0725 7.99976 10.0725C7.68356 10.0725 7.38031 9.94694 7.15669 9.72339L0.41092 2.97762C0.297028 2.86762 0.206183 2.73604 0.143687 2.59055C0.0811915 2.44506 0.0482959 2.28859 0.04692 2.13026C0.0455441 1.97192 0.0757155 1.8149 0.135674 1.66835C0.195632 1.5218 0.284176 1.38866 0.39614 1.27669C0.508103 1.16473 0.641244 1.07619 0.787794 1.01623C0.934343 0.95627 1.09137 0.926098 1.2497 0.927474C1.40804 0.92885 1.56451 0.961746 1.71 1.02424C1.85548 1.08674 1.98706 1.17758 2.09706 1.29147L7.99976 7.19417Z' fill='%23374151'/></svg>") 
-            no-repeat right 0.75rem center !important;
-    }
-
-
-    body {
-        background: #F9F9F9;
-        margin: 0;
-        font-family: 'Inter', Arial, sans-serif;
-    }
-
-    input, select, textarea {
-        font-family: 'Inter', Arial, sans-serif;
-        font-weight: 400;
-    }
-
-    .user-details-container {
-        margin: 60px;
-        display: flex;
-        flex-direction: column;
-        gap: 32px;
-    }
-
-    .user-details-title {
-        font-size: 32px;
-        font-weight: 400;
-        color: #000;
-        font-family: 'Inter', Arial, sans-serif;
-    }
-
-    .user-details-section {
-        padding-bottom: 16px;
-        border-bottom: 1px solid #E5E7EB;
-    }
-
-    .user-details-grid {
-        display: grid;
-        gap: 20px;
-    }
-
-    .user-details-row {
-        display: grid;
-        gap: 20px;
-    }
-
-    .user-details-row.cols-4 {
-        grid-template-columns: repeat(4, 1fr);
-    }
-    
-    .user-details-row.cols-3 {
-        grid-template-columns: repeat(3, 1fr);
-    }
-
-    .user-details-row.cols-2 {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .user-details-category {
-        font-size: 1.15rem;
-        font-weight: 700;
-        color: #000;
-    }
-
-    .user-details-label {
-        font-weight: 500;
-        color: #374151;
-        font-size: 1.08rem;
-        margin-bottom: 0.25rem;
-        margin-top: 1rem;
-    }
-
-    .user-details-value {
-        font-weight: 500;
-        color: #374151;
-        font-size: 1.08rem;
-        word-break: break-word;
-        background: #f7f7f7;
-        border-radius: 0.5rem;
-        padding: 8px 14px;
-        border: 1px solid #e5e7eb;
-        min-height: 21px;
-        display: block;
-        width: 100%;
-        box-sizing: border-box;
-    }
-
-    select.user-details-value {
-		appearance: none;
-		-webkit-appearance: none;
-		-moz-appearance: none;
-		padding-right: 2rem;
-		background: url("data:image/svg+xml;utf8,<svg width='16' height='11' viewBox='0 0 16 11' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M7.99976 7.19417L13.9025 1.29147C14.0125 1.17758 14.144 1.08674 14.2895 1.02424C14.435 0.961746 14.5915 0.92885 14.7498 0.927474C14.9082 0.926098 15.0652 0.95627 15.2117 1.01623C15.3583 1.07619 15.4914 1.16473 15.6034 1.27669C15.7153 1.38866 15.8039 1.5218 15.8638 1.66835C15.9238 1.8149 15.954 1.97192 15.9526 2.13026C15.9512 2.28859 15.9183 2.44506 15.8558 2.59055C15.7933 2.73604 15.7025 2.86762 15.5886 2.97762L8.84283 9.72339C8.61921 9.94694 8.31596 10.0725 7.99976 10.0725C7.68356 10.0725 7.38031 9.94694 7.15669 9.72339L0.41092 2.97762C0.297028 2.86762 0.206183 2.73604 0.143687 2.59055C0.0811915 2.44506 0.0482959 2.28859 0.04692 2.13026C0.0455441 1.97192 0.0757155 1.8149 0.135674 1.66835C0.195632 1.5218 0.284176 1.38866 0.39614 1.27669C0.508103 1.16473 0.641244 1.07619 0.787794 1.01623C0.934343 0.95627 1.09137 0.926098 1.2497 0.927474C1.40804 0.92885 1.56451 0.961746 1.71 1.02424C1.85548 1.08674 1.98706 1.17758 2.09706 1.29147L7.99976 7.19417Z' fill='%23374151'/></svg>")
-        		no-repeat right 0.75rem center;
-  		background-size: 13px 8px;
-    }
-
-    .user-details-picture {
-        width: 80px;
-        height: 80px;
-        border: 2px solid #000;
-        object-fit: cover;
-        margin-left: 12px;
-    }
-
-	.form-actions {
-		display: flex;
-		gap: 1rem;
-		justify-content: flex-end;
-	}
-
-    .btn {
-		padding: 0.75rem 1.5rem;
-		border: none;
-		border-radius: 8px;
-		font-size: 1rem;
-		font-weight: 600;
-		cursor: pointer;
-		transition: all 0.2s ease;
-		font-family: 'Inter', sans-serif;
-        text-decoration: none;
-    }
-
-    .back {
-		background: #6B7280;
-		color: white;
-    }
-
-    .back:hover {
-		background: #4B5563;
-		transform: translateY(-1px);
-    }
-
-    .save {
-		background: #0A6C44;
-		color: white;
-    }
-
-    .save:hover {
-		background: #1f7c57;
-		transform: translateY(-1px);
-    }
-
-    span.required {
-        color: #e53e3e;
-    }
-
-    .error-message {
-        color: #e53e3e;
-        font-size: 0.9rem;
-        margin-top: -0.5rem;
-        margin-bottom: 0.5rem;
-    }
-</style>
-
-<!-- File Upload -->
-<style>
-    .form-group {
-        margin-top: 1rem;
-        margin-bottom: 1rem;
-		display: flex;
-		align-items: flex-start;
-		gap: 1rem;
-	}
-
-	.form-label {
-		font-weight: 600;
-		color: #374151;
-		padding-top: 0.75rem;
-		font-size: 0.95rem;
-	}
-
-	.upload-area {
-        flex: 1;
-		border: 2px dashed #E5E7EB;
-		border-radius: 8px;
-		padding: 2rem;
-		text-align: center;
-		background: #F9F9F9;
-		cursor: pointer;
-		transition: all 0.2s ease;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 0.5rem;
-	}
-
-    .upload-area:hover {
-        border-color: #0A6C44;
-        background: #F0FDF4;
-    }
-
-    .upload-icon {
-        width: 24px;
-        height: 24px;
-        color: #4B5563;
-    }
-
-    .upload-text {
-        color: #4B5563;
-        font-size: 0.95rem;
-    }
-
-    .file-preview {
-        padding: 1rem;
-        background: #F0FDF4;
-        border: 1px solid #BBF7D0;
-        border-radius: 8px;
-        display: none;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 15px;
-    }
-
-    .file-info {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        color: #1f7c57;
-        font-size: 0.95rem;
-        flex: 1;
-    }
-
-    .remove-x {
-        color: #E53E3E;
-        font-weight: 400;
-        font-size: 1.1rem;
-        margin-left: auto;
-        cursor: pointer;
-        border: none;
-        background: none;
-        padding: 0 6px;
-        align-self: center;
-    }
-</style>
-
-<!-- Bordered Box -->
-<style>
-    .college-tag {
-        background: #F8F8F8;
-        border: 1px solid #000;
-        border-radius: 5px;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.35rem 0.85rem 0.35rem 0.5rem;
-        font-size: 0.95rem;
-        font-family: 'Inter', Arial, sans-serif;
-        vertical-align: middle;
-    }
-    
-    .college-tag .remove-x {
-        color: #E53E3E;
-        font-weight: bold;
-        font-size: 1.1rem;
-        margin-left: 3px;
-        margin-right: 1px;
-        cursor: pointer;
-        border: none;
-        background: none;
-        padding: 0;
-    }
-
-    .add-college-btn {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        background: #F0F0F0;
-        border: 1px solid rgba(0,0,0,0.16);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: box-shadow 0.2s;
-        font-family: 'Inter', Arial, sans-serif;
-    }
-
-    .add-college-btn:hover {
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    }
-
-    .college-select-modal {
-        display: none;
-        position: absolute;
-        z-index: 1000;
-        background: white;
-        border: 1px solid #E5E7EB;
-        border-radius: 8px;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-        padding: 1rem;
-    }
-
-    .college-row {
-        display: flex;
-        align-items: center;
-        flex-wrap: wrap;
-        position: relative;
-        gap: 10px;
-        margin-bottom: 15px;
-        margin-top: 5px;
-    }
-
-    #project-leader-tag-row-dropdown, #providers-tag-row-dropdown, #sdgs-tag-row-dropdown {
-        font-family: 'Inter', Arial, sans-serif;
-        font-size: 13px;
-        padding: 8px 30px 8px 16px;
-        border-radius: 6px;
-        appearance: none;
-        -webkit-appearance: none;
-        -moz-appearance: none;
-        background: white url('data:image/svg+xml;utf8,<svg fill="none" height="16" viewBox="0 0 16 16" width="16" xmlns="http://www.w3.org/2000/svg"><path d="M4 6L8 10L12 6" stroke="%23374151" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>') no-repeat right 18px center/16px 16px;
-        padding-right: 30px !important;
-    }
-</style>
-
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
+<link href="{% static 'shared/projects/styles.css' %}" rel="stylesheet">
 </head>
 
 <body>
 <form method="post" enctype="multipart/form-data" id="addProjectForm">
     {% csrf_token %}
     <div class="user-details-container">
-        <div class="user-details-title" style="display:flex;flex-direction:column;gap:8px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-                <span>Project Details</span>
-            </div>
+        <div class="user-details-title">
+            <h2>
+                Create New Extension Project
+            </h2> 
+            <p>Input all fields correctly and launch new project.</p>
         </div>
 
         {% if success %}
@@ -368,7 +41,10 @@
         {% endif %}
 
         <div class="user-details-section">
-            <div class="user-details-category">Project Profile</div>
+            <div class="user-details-category">  
+                <i class="fa-regular fa-address-card subtitle-icon"></i>
+                Project Profile 
+            </div>
             <div class="user-details-row cols-1">
                 <div>
                     <div class="user-details-label">Title <span class="required">*</span></div>
@@ -434,7 +110,10 @@
         </div>
 
         <div class="user-details-section">
-            <div class="user-details-category">Beneficiary</div>
+            <div class="user-details-category">
+                <i class="fa-solid fa-gears"></i>
+                Beneficiary
+            </div>
             <div class="user-details-row cols-2">
                 <div>
                     <div class="user-details-label">Primary Beneficiary <span class="required">*</span></div>
@@ -459,18 +138,27 @@
         </div>
 
         <div class="user-details-section">
-            <div class="user-details-category">Logistics</div>
+            <div class="user-details-category">
+                <i class="fa-solid fa-chart-simple"></i>
+                Logistics
+            </div>
 
             <!-- Logistics Type -->
-            <div class="user-details-row cols-1">
-                <div>
-                    <div class="user-details-label">Type <span class="required">*</span></div>
-                    <select name="logistics_type" class="user-details-value">
-                        <option value="BOTH">Both</option>
-                        <option value="INTERNAL">Internal</option>
-                        <option value="EXTERNAL">External</option>
-                    </select>
+            <div class="user-details-choice">
+                <div class="user-details-label">
+                    <span class="info-icon">    
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info-circle" viewBox="0 0 16 16">
+                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                            <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
+                        </svg>
+                    <span class="info-tooltip">Choose Internal if project is funded solely by PalSU, External if funded solely by a sponsor, and Both if funded by both.</span>
                 </div>
+                </span>
+                <select name="logistics_type" class="user-details-value">
+                    <option value="BOTH">Both</option>
+                    <option value="INTERNAL">Internal</option>
+                    <option value="EXTERNAL">External</option>
+                </select><span class="required">*</span>
             </div>
 
             <!-- BOTH -->
@@ -564,7 +252,7 @@
         </div>
 
         <div class="form-actions">
-            <a href="{% url 'project_dispatcher' %}" class="back btn">Back</a>
+            <a href="{% url 'project_dispatcher' %}" class="back btn">Cancel</a>
             <button type="submit" class="save btn">Add Project</button>
         </div>
     </div>
@@ -575,12 +263,12 @@
 <svg style="display:none;" xmlns="http://www.w3.org/2000/svg">
 
     <!-- Add Icon -->
-    <symbol id="icon-add" viewBox="0 0 16 16">
+    <symbol id="icon-add" viewBox="0 0 16 16" fill="currentColor">
         <path d="M6.80039 14.4004C6.80039 14.7187 6.92682 15.0239 7.15186 15.2489C7.37691 15.474 7.68213 15.6004 8.00039 15.6004C8.31865 15.6004 8.62388 15.474 8.84892 15.2489C9.07396 15.0239 9.20039 14.7187 9.20039 14.4004V9.20039H14.4004C14.7187 9.20039 15.0239 9.07396 15.2489 8.84892C15.474 8.62388 15.6004 8.31865 15.6004 8.00039C15.6004 7.68213 15.474 7.37691 15.2489 7.15186C15.0239 6.92682 14.7187 6.80039 14.4004 6.80039H9.20039V1.60039C9.20039 1.28213 9.07396 0.976906 8.84892 0.751863C8.62388 0.526819 8.31865 0.400391 8.00039 0.400391C7.68213 0.400391 7.37691 0.526819 7.15186 0.751863C6.92682 0.976906 6.80039 1.28213 6.80039 1.60039V6.80039H1.60039C1.28213 6.80039 0.976906 6.92682 0.751863 7.15186C0.526819 7.37691 0.400391 7.68213 0.400391 8.00039C0.400391 8.31865 0.526819 8.62388 0.751863 8.84892C0.976906 9.07396 1.28213 9.20039 1.60039 9.20039H6.80039V14.4004Z" fill="black"/>
     </symbol>
 
     <!-- Edit Icon -->
-    <symbol id="icon-edit" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="icon-edit" viewBox="0 0 18 18" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
     <path d="M2 16H3.425L13.2 6.225L11.775 4.8L2 14.575V16ZM1 18C0.716667 18 0.479333 17.904 0.288 17.712C0.0966668 17.52 0.000666667 17.2827 0 17V14.575C0 14.3083 0.0500001 14.054 0.15 13.812C0.25 13.57 0.391667 13.3577 0.575 13.175L13.2 0.575C13.4 0.391667 13.621 0.25 13.863 0.15C14.105 0.0500001 14.359 0 14.625 0C14.891 0 15.1493 0.0500001 15.4 0.15C15.6507 0.25 15.8673 0.4 16.05 0.6L17.425 2C17.625 2.18333 17.7707 2.4 17.862 2.65C17.9533 2.9 17.9993 3.15 18 3.4C18 3.66667 17.954 3.921 17.862 4.163C17.77 4.405 17.6243 4.62567 17.425 4.825L4.825 17.425C4.64167 17.6083 4.429 17.75 4.187 17.85C3.945 17.95 3.691 18 3.425 18H1ZM12.475 5.525L11.775 4.8L13.2 6.225L12.475 5.525Z" fill="black"/>
     </symbol>
 
@@ -633,7 +321,7 @@
                         err.className = 'field-error';
                         err.textContent = 'This field is required.';
                         err.style.color = '#E53E3E';
-                        err.style.fontSize = '0.95rem';
+                        err.style.fontSize = '0.75rem';
                         err.style.marginTop = '0.25rem';
                         field.parentNode.appendChild(err);
                     }
@@ -644,7 +332,7 @@
                         err.className = 'field-error';
                         err.textContent = 'This field is required.';
                         err.style.color = '#E53E3E';
-                        err.style.fontSize = '0.95rem';
+                        err.style.fontSize = '0.75rem';
                         err.style.marginTop = '0.25rem';
                         field.parentNode.appendChild(err);
                     }
