@@ -455,9 +455,66 @@ p, h1, h2, h3, h4, h5, h6, div {
     gap: 2rem;
 } 
  
-.submission-form { 
+.submission-form, .announcement-form, .agenda-form { 
     display: flex;  
     flex-direction: column;
     justify-content: flex-start;
     gap: 2rem;
+} 
+ 
+.upload-area {
+    flex: 1;
+    border: 1px dashed #8a8a8a;
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    background: #F9F9F9;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.upload-area:hover {
+    border-color: #0A6C44;
+    background: #F0FDF4;
+}
+
+.upload-icon {
+    width: 24px;
+    height: 24px;
+    color: #4B5563;
+}
+
+.upload-text {
+    color: #4B5563;
+    font-size: 0.95rem;
+}
+
+.schedule-button {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid #8a8a8a;
+    border-radius: 8px;
+    background: #F9F9F9;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    color: #374151; 
+}
+
+.schedule-button:hover {
+    border-color: #0A6C44;
+    background: white;
+}
+
+.clock-icon {
+    width: 20px;
+    height: 20px;
+    color: #4B5563;
 }
