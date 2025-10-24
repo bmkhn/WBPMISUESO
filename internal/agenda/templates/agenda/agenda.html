@@ -1,7 +1,7 @@
 {% extends "base_internal.html" %}
 {% block content %}
 {% load custom_tags %}
-
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,370 +9,19 @@
 <title>Agenda</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
-
-<!-- Page, Agenda Text, Add Agenda Button -->
-<style>
-    body {
-        background: #F9F9F9;
-        margin: 0;
-        font-family: 'Inter', Arial, sans-serif;
-    }
-
-    .main-container {
-        margin: 60px;
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
-    }
-
-    .container-a {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-    }
-
-    .container-a-text {
-        font-family: 'Inter', Arial, sans-serif;
-        font-weight: 400;
-        font-size: 32px;
-    }
-
-    .container-a-button {
-        padding: 15px 45px;
-        font-family: 'Inter', Arial, sans-serif;
-        font-weight: 500;
-        font-size: 18px;
-        color: #FFFFFF;
-        background: #063A1C;
-        border: none;
-        border-radius: 18px;
-        cursor: pointer;
-        transition: background 0.2s;
-    }
-
-    .container-a-button:hover {
-        background: #04521c;
-    }
-</style>
-
-<!-- Agenda Tile Card -->
-<style>
-    .container-b {
-        display: flex;
-        flex-direction: row;
-        gap: 15px;
-        width: 100%;
-    }
-
-    .agenda-card-kebab {
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        z-index: 2;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .agenda-card-kebab .kebab-svg {
-        width: 20px;
-        height: 20px;
-        color: #1D1B20;
-        transition: background 0.2s, transform 0.2s;
-    }
-
-    .agenda-card-kebab:hover .kebab-svg {
-        transform: scale(1.15);
-        background: none;
-    }
-
-    .options-dropdown {
-        position: absolute;
-        top: calc(100% + 8px);
-        right: 0;
-        background: white;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        opacity: 0;
-        visibility: hidden;
-        transform: translateY(-10px);
-        transition: all 0.2s ease;
-        z-index: 200;
-    }
-
-    .options-dropdown.show {
-        opacity: 1;
-        visibility: visible;
-        transform: translateY(0);
-    }
-
-    .options-item {
-        padding: 0.75rem 1rem;
-        cursor: pointer;
-        transition: background-color 0.2s ease;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-size: 0.875rem;
-        color: #374151;
-        text-decoration: none;
-    }
-
-    .options-item svg {
-        width: 16px;
-        height: 16px;
-    }
-
-    .options-item:hover {
-        background-color: #F3F4F6;
-    }
-
-    .edit-option {
-        color: #1f7c57;
-    }
-
-    .delete-option {
-        color: #DC2626;
-    }
-
-    .agenda-card {
-        position: relative;
-        width: 100%;
-        padding: 40px;
-        border-radius: 15px;
-        border: 1px solid rgba(0,0,0,0.42);
-        background: linear-gradient(to bottom, orange 0%, #FEFCFC 100%);
-        display: flex;
-        flex-direction: column;
-        gap: 55px;
-        align-items: center;
-        box-sizing: border-box;
-        vertical-align: top; 
-    }
-
-    .agenda-card-text {
-        font-family: 'Inter', Arial, sans-serif;
-        font-weight: 900;
-        font-size: 20px;
-        color: #000000;
-        text-align: center;
-        margin-top: 30px;
-    }
-
-    .agenda-card-desc {
-        font-family: 'Inter', Arial, sans-serif;
-        font-weight: 400;
-        font-size: 15px;
-        color: #000000;
-        text-align: center;
-        margin-top: 10px;
-        margin-bottom: 40px;
-        word-break: break-word;
-        overflow: hidden;
-        display: -webkit-box;
-        -webkit-line-clamp: 3;
-        -webkit-box-orient: vertical;
-    }
-
-    .agenda-card-viewlist {
-        position: absolute;
-        left: 20px;
-        bottom: 20px;
-        font-family: 'Inter', Arial, sans-serif;
-        font-weight: 400;
-        font-size: 12px;
-        color: #0077B6;
-        background: none;
-        border: none;
-        cursor: pointer;
-        text-align: left;
-        padding: 0;
-    }
-
-    .kebab-svg {
-        width: 16px;
-        height: 16px;
-    }
-</style>
-
-<!-- Table View -->
-<style>
-    .table-view-container {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        width: 100%;
-    }
-
-    .title-expand-container {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-        width: 100%;
-        margin-top: 30px;
-    }
-
-    .table-title-text {
-        font-family: 'Inter', Arial, sans-serif;
-        font-weight: 400;
-        font-size: 24px;
-        color: #000000;
-    }
-
-    .expand-icon {
-        width: 16px;
-        height: 16px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-    }
-
-    .expand-icon:hover {
-        transform: scale(1.1);
-    }
-
-    .agenda-table {
-        width: 100%;
-        border-collapse: collapse;
-        background: #FEFCFC;
-        border: 1px solid rgba(0,0,0,0.18);
-        overflow: hidden;
-    }
-
-    .agenda-table th {
-        font-size: 16px;
-        font-weight: 500;
-        background: rgba(217, 217, 217, 0.2);
-        border-bottom: 1px solid rgba(0,0,0,0.18);
-        padding: 14px 12px;
-        text-align: left;
-        font-family: 'Inter', Arial, sans-serif;
-    }
-
-    .agenda-table td {
-        font-size: 15px;
-        font-weight: 400;
-        border: none;
-        border-bottom: 1px solid rgba(0,0,0,0.18);
-        padding: 14px 12px;
-        text-align: left;
-        font-family: 'Inter', Arial, sans-serif;
-    }
-
-    .agenda-table tr:last-child td {
-        border-bottom: none;
-    }
-
-    .settings-icon {
-        width: 16px;
-        height: 16px;
-        align-items: center;
-        justify-content: center;
-        display: inline-block;
-        vertical-align: middle;
-        cursor: pointer;
-    }
-
-    .agenda-table th.settings-col, .agenda-table td.settings-col {
-        text-align: center !important;
-    }
-
-    .view-more {
-        font-family: 'Inter', sans-serif;
-        font-weight: 400;
-        font-size: 15px;
-        color: #2EA8FF;
-		text-decoration: none;
-        margin-top: 10px;
-        cursor: pointer;
-    }
-
-    .view-more:hover {
-        text-decoration: underline;
-    }
-</style>
-
-<!-- Agenda Carousel Styles -->
-<style>
-    .agenda-carousel-wrapper {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 100%;
-        position: relative;
-        margin-bottom: 30px;
-    }
-    .carousel-arrow {
-        background: none;
-        border: none;
-        width: 40px;
-        height: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: background 0.2s, transform 0.2s;
-        z-index: 10;
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-    }
-
-    .left-arrow {
-        left: -40px;
-    }
-
-    .right-arrow {
-        right: -40px;
-    }
-    
-    .carousel-arrow:active {
-        background: none;
-        transform: scale(0.95);
-    }
-
-    .carousel-arrow svg {
-        display: block;
-    }
-
-    .agenda-carousel {
-        overflow: hidden;
-        width: 960px;
-        position: relative;
-        margin: 0 auto;
-        display: flex;
-        align-items: flex-start;
-        justify-content: flex-start;
-    }
-
-    .agenda-carousel-track {
-        display: flex;
-        transition: transform 0.4s cubic-bezier(.77,.2,.05,1);
-        gap: 24px;
-        will-change: transform;
-        /* overflow: visible; */
-    }
-
-    .agenda-card {
-        flex: 0 0 calc(((960px - 2 * 24px) / 3) - 7px);
-        width: calc(((960px - 2 * 24px) / 3) - 7px);
-        margin: 0;
-        box-sizing: border-box;
-    }
-</style>
-
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
+<link href="{% static 'internal/agenda/styles.css' %}" rel="stylesheet">
 </head>
 <body>
     <div class="main-container">
         <!-- Container for Page Title and Add Agenda Button -->
         <div class="container-a">
-            <div class="container-a-text">Agenda</div>
-            <a href="{% url 'add_agenda' %}"><button class="container-a-button">Add Agenda</button></a>
+            <div class="project-text">Agenda</div>
+            <a href="{% url 'add_agenda' %}"><button class="add-user-btn">  
+                <i class="fa-solid fa-bars-progress"></i>
+                Add Agenda  
+            </button > 
+            </a>
         </div>
 
         <!-- Agenda Cards -->
@@ -412,7 +61,6 @@
                             {% endif %}
                         </div>
                         <div style="margin-bottom: 10px;"></div>
-                        <button class="agenda-card-viewlist">View List</button>
                     </div>
                     {% empty %}
                     <style>.agenda-carousel { justify-content: center; align-items: center; }</style>
@@ -430,9 +78,9 @@
         {% for agenda in agendas %}
             <div class="title-expand-container">
                 <span class="table-title-text">{{ agenda.name }}</span>
-                <a href="{% url 'project_dispatcher' %}?agenda={{ agenda.id }}" class="view-more">View More &rarr;</a>
+                <a href="{% url 'project_dispatcher' %}?agenda={{ agenda.id }}" class="view-more">View More</a>
             </div>
-            <table class="agenda-table">
+            <table class="user-table">
                 <thead>
                     <tr>
                         <th>Title</th>
@@ -555,35 +203,79 @@
 </script>
 
 <script>
-    // Carousel logic
+    // --- COLOR PALETTE (Define a set of gradients) ---
+    const CARD_BACKGROUNDS = [
+        'linear-gradient(to bottom, #FF9900 0%, #ffffff 100%)', // Bright Orange
+        'linear-gradient(to bottom, #FF3366 0%, #ffffff 100%)', // Neon Pink
+        'linear-gradient(to bottom, #3366FF 0%, #ffffff 100%)', // Electric Blue
+        'linear-gradient(to bottom, #99FF33 0%, #ffffff 100%)', // Lime Green
+        'linear-gradient(to bottom, #00CC99 0%, #ffffff 100%)', // Deep Turquoise
+        'linear-gradient(to bottom, #9933FF 0%, #ffffff 100%)', // Royal Purple
+        'linear-gradient(to bottom, #FFCC00 0%, #ffffff 100%)', // Sunny Yellow
+        'linear-gradient(to bottom, #FF4444 0%, #ffffff 100%)', // Hot Red
+        'linear-gradient(to bottom, #6600FF 0%, #ffffff 100%)', // Indigo/Violet
+    ];
+
+    // --- CAROUSEL LOGIC (Original, Non-Looping) ---
     let agendaIndex = 0;
-    const cardsToShow = 3;
+    const cardsToShow = 3; // Number of cards visible at once
+
     function getAgendaCards() {
         return document.querySelectorAll('.agenda-carousel-track .agenda-card');
     }
+
     function updateAgendaCarousel() {
         const track = document.querySelector('.agenda-carousel-track');
         const cards = getAgendaCards();
         const totalCards = cards.length;
         if (!track || totalCards === 0) return;
-        // Clamp index
-        if (agendaIndex < 0) agendaIndex = 0;
-        // Only allow scrolling to last full set of cards
-        if (agendaIndex > totalCards - cardsToShow) agendaIndex = Math.max(totalCards - cardsToShow, 0);
+
+        // 1. Clamp index (Stop at the beginning/end)
+        if (agendaIndex < 0) {
+            agendaIndex = 0;
+        }
+        // Only allow scrolling until the last full set of cards is visible
+        if (agendaIndex > totalCards - cardsToShow) {
+            agendaIndex = Math.max(totalCards - cardsToShow, 0);
+        }
+
+        // 2. Calculate offset and scroll
         const cardWidth = cards[0].offsetWidth;
         const gap = parseInt(window.getComputedStyle(track).gap) || 24;
         const offset = agendaIndex * (cardWidth + gap);
         track.style.transform = `translateX(-${offset}px)`;
-        // Arrow enable/disable
+
+        // 3. Arrow enable/disable (Disable when at start/end)
         document.querySelector('.left-arrow').disabled = agendaIndex === 0;
         document.querySelector('.right-arrow').disabled = agendaIndex >= totalCards - cardsToShow;
     }
+
     function scrollAgenda(dir) {
         agendaIndex += dir;
         updateAgendaCarousel();
     }
+
+    // --- NEW: Apply random colors to the cards ---
+    function applyRandomColors() {
+        const cards = getAgendaCards();
+        
+        cards.forEach((card, index) => {
+            // Assign a color based on the index modulo the color array length
+            const colorIndex = index % CARD_BACKGROUNDS.length;
+            
+            // Set the background-image style directly on the card
+            card.style.backgroundImage = CARD_BACKGROUNDS[colorIndex];
+        });
+    }
+
+    // --- Initialization ---
     window.addEventListener('resize', updateAgendaCarousel);
+    
     document.addEventListener('DOMContentLoaded', function() {
+        // 1. Apply colors first
+        applyRandomColors(); 
+        
+        // 2. Then set initial position for the carousel
         agendaIndex = 0;
         updateAgendaCarousel();
     });
