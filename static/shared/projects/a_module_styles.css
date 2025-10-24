@@ -138,7 +138,7 @@ body {
     justify-content: center;
     display: inline-block;
     vertical-align: middle;
-    cursor: pointer;
+    cursor:pointer;
 }
 
 .user-table th.settings-col,
@@ -151,12 +151,13 @@ body {
     display: flex;
     gap: 1rem;
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.08);
+    margin-bottom: 1rem;
 }
 
 .search-bar {
     width: 100%;
     height: 2.75rem;
-    background: #f8f8f8;
+    background: #fbfbfb;
     display: flex;
     align-items: center;
     padding: 0 16px;
@@ -170,7 +171,7 @@ body {
     border: none;
     outline: none;
     background: transparent;
-    font-size: 18px;
+    font-size: 1rem;
     font-family: 'Inter', sans-serif;
     font-weight: 400;
     color: #5A5252;
@@ -180,10 +181,10 @@ body {
 .filter-dropdown {
     display: none;
     position: absolute;
-    top: 280px;
+    top: 220px;
     right: 60px;
     z-index: 1000;
-    background: white;
+    background: #f8f8f8;
     border: 1px solid #e5e7eb;
     border-radius: 12px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
@@ -227,6 +228,13 @@ body {
     background-size: 13px 8px;
 }
 
+.filter-dropdown select:focus,
+.filter-dropdown input[type="date"]:focus {
+    outline: none;
+    border-color: #646464;
+    box-shadow: 0 0 0 2px rgba(139, 139, 139, 0.2);
+}
+
 .filter-actions {
     display: flex;
     justify-content: flex-end;
@@ -235,30 +243,44 @@ body {
 }
 
 .filter-apply {
-    background: #063A1C;
-    color: white;
-    padding: 10px 28px;
-    border-radius: 8px;
-    font-size: 16px;
-    font-family: 'Inter', Arial, sans-serif;
+    font-family: 'Inter', sans-serif;
+    background-color: #00681a;
+    color: #F5F5F5;
+    font-size: 1rem;
     font-weight: 500;
-    cursor: pointer;
-    transition: background 0.2s;
+    padding: 0.6rem 1.8rem;
+    border-radius: 1rem;
     border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    text-decoration: none;
+}
+
+.filter-apply:hover {
+    background-color: #444;
+    color: #fff;
+    transform: translateY(-1px);
 }
 
 .filter-close {
-    background: #e5e7eb;
-    color: #374151;
-    padding: 10px 18px;
-    border-radius: 8px;
-    font-size: 16px;
-    font-family: 'Inter', Arial, sans-serif;
+    background: #808080;
+    font-family: 'Inter', sans-serif;
+    color: #F5F5F5;
+    font-size: 1rem;
     font-weight: 500;
-    cursor: pointer;
+    padding: 0.6rem 1.8rem;
+    border-radius: 1rem;
     border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    text-decoration: none;
 }
 
+.filter-close:hover {
+    background-color: #444;
+    color: #fff;
+    transform: translateY(-1px);
+}
 .pagination-container {
     display: flex;
     justify-content: center;

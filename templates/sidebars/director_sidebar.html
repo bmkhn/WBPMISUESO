@@ -8,194 +8,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
-
-
-<style>
-	body {
-		margin: 0;
-		font-family: Arial, sans-serif;
-		display: flex;
-	}
-
-	.sidebar-container {
-		width: 225px;
-		position: fixed;
-		height: 100vh;
-		top: 0;
-		left: 0;
-		padding: 20px;
-		background-color: #063A1C;
-		color: white;
-		display: flex;
-		flex-direction: column;
-		border-top-right-radius: 20px;
-		border-bottom-right-radius: 20px;
-		transition: width 0.2s ease;
-		z-index: 20;
-		position: sticky;
-	}
-
-    .table-text {
-		font-family: 'Inter', sans-serif;
-		font-size: 18px;
-		font-weight: bold;
-		transition: margin-top 0.2s, font-size 0.2s;
-    }
-
-    .sidebar-tab-icon {
-		width: 30px;
-		height: 30px;
-		background-size: contain;
-		background-repeat: no-repeat;
-		background-position: center;
-		margin-right: 15px;
-		flex-shrink: 0;
-		transition: margin-right 0.2s;
-    }
-
-	.resize-handle {
-		position: absolute;
-		top: 0;
-		right: 0;
-		width: 8px;
-		cursor: ew-resize;
-		background: transparent;
-		height: 100%;
-	}
-
-    .sidebar-logo {
-		display: flex;
-		align-items: center;
-		margin-bottom: 15px;
-		white-space: nowrap;
-    }
-
-    .sidebar-logo-circle {
-		width: 40px;
-		height: 40px;
-		background-size: contain;
-		background-repeat: no-repeat;
-		background-position: center;
-		border-radius: 50%;
-		margin-left: 7px;
-		margin-right: 15px;
-		flex-shrink: 0;
-		align-items: center;
-    }
-
-    .sidebar-logo-text {
-		font-family: 'Instrument Sans', sans-serif;
-		font-size: 14px;
-		font-weight: 800;
-		display: inline-block;
-    }
-
-    .sidebar-container.collapsed .sidebar-logo-text {
-    	display: none;
-    }
-
-    .sidebar-tab-group-label {
-		font-family: 'Inter', sans-serif;
-		font-size: 16px;
-		font-weight: 400;
-		padding: 10px 0;
-		transition: text-align 0.2s;
-    }
-
-	.sidebar-tabs {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
-		gap: 15px;
-		overflow-y: auto;
-		max-height: calc(100vh - 120px); /* Adjust for logo and logout */
-		scrollbar-width: thin;
-		scrollbar-color: #1a5c2a #063A1C;
-		overflow-x: hidden;
-	}
-
-	.sidebar-tabs:hover {
-		overflow-y: auto;
-	}
-
-	.sidebar-tabs::-webkit-scrollbar {
-		width: 8px;
-		background: #063A1C;
-	}
-
-	.sidebar-tabs::-webkit-scrollbar-thumb {
-		background: #1a5c2a;
-		border-radius: 4px;
-	}
-
-    .sidebar-tab {
-		display: flex;
-		align-items: center;
-		text-decoration: none;
-		color: white;
-		padding: 10px;
-		border-radius: 10px;
-		transition: background-color 0.2s ease;
-		transition: flex-direction 0.2s, padding 0.2s;
-    }
-
-    .sidebar-tab:hover {
-		background-color: #052C15;
-    }
-
-	.ueso-icon { 
-		background-image: url("{% static 'ueso.png' %}");
-	}
-
-    .sidebar-logout {
-      	padding-top: 20px;
-    }
-
-	.sidebar-container.collapsed ~ .topbar {
-		left: 65px; 
-	}
-
-	.sidebar-tab.active {
-    	background-color: #052C15;
-	}
-
-
-
-	/* Top Bar */
-	.topbar {
-		position: fixed;
-		top: 0;
-		left: 270px; 
-		right: 0;
-		height: 80px;
-		background-color: #F9F9F9;
-		border-bottom: 1px solid rgba(0, 0, 0, 0.3);
-		display: flex;
-		align-items: center;
-		justify-content: flex-end;
-		padding: 0 30px;
-		box-sizing: border-box;
-		gap: 30px;
-		transition: left 0.2s ease;
-		z-index: 10;
-	}
-
-	.topbar-button {
-		width: 30px;
-		height: 30px;
-
-		background-size: contain;
-		background-repeat: no-repeat;
-		background-position: center;
-		transition: background 0.2s;
-	}
-
-	.topbar-button:last-child {
-		width: 35px;
-		height: 35px;
-	}
-</style>
-
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link href="{% static 'templates/side_style.css' %}" rel="stylesheet">
 </head>
 
 <body>
@@ -435,37 +249,7 @@
 
 </body>
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
-
-<style>
-	#backToTopBtn {
-		position: fixed;
-		bottom: 40px;
-		right: 40px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 50px;
-		height: 50px;
-		background-color: #333;
-		color: white;
-		border: none;
-		border-radius: 50%;
-		cursor: pointer;
-		opacity: 0;
-		visibility: hidden;
-		transition: opacity 0.4s ease, visibility 0.4s ease;
-		z-index: 1000;
-		background-color: #063A1C;
-	}
-
-	#backToTopBtn.show {
-		opacity: 1;
-		visibility: visible;
-	}
-</style>
-
-<button id="backToTopBtn"><i class="fa-solid fa-up-long"></i></button>
+<button id="backToTopBtn"><i class="fa-solid fa-arrow-up"></i></button>
 
 <script>
 	const sidebar = document.querySelector(".sidebar-container");
@@ -496,8 +280,8 @@
 				tab.style.flexDirection = 'column';
 				tab.querySelector('.sidebar-tab-icon').style.marginRight = '0px';
 				const text = tab.querySelector('.table-text');
-				if (text) text.style.marginTop = '5px';
-				if (text) text.style.fontSize = '10px';
+				if (text) text.style.marginTop = '1px';
+				if (text) text.style.fontSize = '0';
 			});
 			sessionStorage.setItem(collapseKey, '1');
 		} else {
@@ -509,10 +293,10 @@
 			});
 			sidebar.querySelectorAll('.sidebar-tab').forEach(tab => {
 				tab.style.flexDirection = 'row';
-				tab.querySelector('.sidebar-tab-icon').style.marginRight = '15px';
+				tab.querySelector('.sidebar-tab-icon').style.marginRight = '23px';
 				const text = tab.querySelector('.table-text');
 				if (text) text.style.marginTop = '0px';
-				if (text) text.style.fontSize = '18px';
+				if (text) text.style.fontSize = '13.8px';
 			});
 			sessionStorage.setItem(collapseKey, '0');
 		}
