@@ -20,9 +20,15 @@
             </div>
             <div class="button-container">
                 {% if request.user.role in ADMIN_ROLES %}
-                <a class="add-user-btn" href="{% url 'add_project' %}">Add Project</a>
+                <a class="add-user-btn" href="{% url 'add_project' %}">  
+                    <i class="fa-solid fa-diagram-project"></i>
+                    Add Project 
+                </a>
                 {% endif %}
-                <button class="export-btn" id="exportProjectBtn" type="button">Export</button>
+                <button class="export-btn" id="exportProjectBtn" type="button">  
+                    <i class="fa-solid fa-download"></i>
+                    Export 
+                </button>
             </div>
 		</div>
 
@@ -172,8 +178,6 @@
 				<button class="pagination-button" disabled>Next</button>
 				<button class="pagination-button" disabled>Last</button>
 			{% endif %}
-
-			<span class="page-info">Page {{ page_obj.number }} of {{ paginator.num_pages }}</span>
 		</div>
 
 	</div>

@@ -6,6 +6,11 @@ body {
     background: #f8f8f8;
     margin: 0;
     font-family: 'Inter', sans-serif;
+} 
+ 
+i {
+    cursor: pointer; 
+    margin-right: 0.3rem;
 }
 
 .main-container {
@@ -47,9 +52,9 @@ body {
     font-family: 'Inter', sans-serif;
     background-color: #00681a;
     color: #F5F5F5;
-    font-size: 1rem;
+    font-size: 0.85rem;
     font-weight: 500;
-    padding: 0.8rem 1.8rem;
+    padding: 0.6rem 1.6rem;
     border-radius: 2rem;
     border: none;
     cursor: pointer;
@@ -67,9 +72,9 @@ body {
     font-family: 'Inter', sans-serif;
     background-color: #ff9900;
     color: #F5F5F5;
-    font-size: 1rem;
+    font-size: 0.85rem;
     font-weight: 500;
-    padding: 0.8rem 1.8rem;
+    padding: 0.6rem 1.6rem;
     border-radius: 2rem;
     border: none;
     cursor: pointer;
@@ -81,11 +86,6 @@ body {
     background-color: #444;
     color: #fff;
     transform: translateY(-1px);
-}
-
-.name-link {
-    color: #0A6C44;
-    text-decoration: underline;
 }
 
 .checkmark-icon {
@@ -103,33 +103,42 @@ body {
 .user-table {
     width: 100%;
     border-collapse: collapse;
-    background: #FEFCFC;
-    border: 1px solid rgba(0, 0, 0, 0.18);
+    background: #FFFFFF; 
+    border-radius: 8px; 
+    overflow: hidden;  
+    box-shadow: 0 0 0 1px #dfdfdf, 0 0 15px rgba(0, 0, 0, 0.08); 
 }
 
 .user-table th {
-    font-size: 14px;
-    font-weight: 500;
-    background: rgba(217, 217, 217, 0.2);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.18);
-    padding: 14px 12px;
+    font-size: 0.95rem;
+    font-weight: 600; 
+    background: #eeeeee; 
+    border-bottom: 1px solid #E0E0E0; 
+    padding: 16px 18px; 
     text-align: left;
     font-family: 'Inter', Arial, sans-serif;
+    color: #333333; 
+    box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.05); 
 }
 
 .user-table td {
-    font-size: 12px;
+    font-size: 14px; 
     font-weight: 400;
     border: none;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.18);
-    padding: 14px 12px;
+    border-bottom: 1px solid #E0E0E0; 
+    padding: 14px 18px; 
     text-align: left;
     font-family: 'Inter', Arial, sans-serif;
-}
+    color: #555555; 
+} 
 
 .user-table tr:last-child td {
     border-bottom: none;
-}
+} 
+
+.user-table tr:nth-child(even) {
+    background-color: #f8f8f8;
+} 
 
 .settings-icon {
     width: 16px;
@@ -144,6 +153,32 @@ body {
 .user-table th.settings-col,
 .user-table td.settings-col {
     text-align: center !important;
+}
+ 
+.name-link {
+    color: #0099FF;
+    text-decoration: none;
+} 
+.name-link:hover {
+    text-decoration: underline;
+} 
+  
+.user-table td{
+    transition: padding 0.2s ease-in-out; 
+}
+
+.user-table tr:hover td {
+    padding-top: 18px;  
+    padding-bottom: 18px;  
+}
+
+.user-table tr:hover {
+    background-color: #f2f2f2; 
+    cursor: pointer;
+}
+
+.user-table tr:last-child:hover td {
+    border-bottom: none; 
 }
 
 .search-container {
@@ -316,12 +351,6 @@ body {
 .pagination-button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-}
-
-.page-info {
-    margin: 0 1rem;
-    color: #4B5563;
-    font-weight: 500;
 }
 
 @media (max-width: 900px) {
