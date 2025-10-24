@@ -8,7 +8,7 @@ body {
     font-family: 'Inter', sans-serif;
 } 
  
-i {
+.export-btn i, .add-user-btn i {
     cursor: pointer; 
     margin-right: 0.3rem;
 }
