@@ -13,7 +13,7 @@ class Announcement(models.Model):
 	is_scheduled = models.BooleanField(default=False)
 	scheduled_at = models.DateTimeField(null=True, blank=True)
 	scheduled_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='scheduled_announcements')
-	cover_photo = models.ImageField(upload_to='announcements/', null=True, blank=True)
+	cover_photo = models.ImageField(upload_to='announcements/', null=True, blank=True, default=('announcements/announcements.png'))
 	published_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='published_announcements')
 	published_at = models.DateTimeField(null=True, blank=True)
 	edited_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='edited_announcements')
