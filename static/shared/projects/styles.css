@@ -400,6 +400,7 @@ span.required {
 p, h1, h2, h3, h4, h5, h6, div {
     cursor: default;
 } 
+
 .info-icon {
     cursor: help;
     color: #666;
