@@ -455,7 +455,7 @@ p, h1, h2, h3, h4, h5, h6, div {
     gap: 2rem;
 } 
  
-.submission-form, .announcement-form, .agenda-form { 
+.submission-form, .announcement-form, .agenda-form, .downloadable-form { 
     display: flex;  
     flex-direction: column;
     justify-content: flex-start;
@@ -517,4 +517,4 @@ p, h1, h2, h3, h4, h5, h6, div {
     width: 20px;
     height: 20px;
     color: #4B5563;
-}
+} 
