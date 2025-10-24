@@ -105,7 +105,7 @@ body {
     border-collapse: collapse;
     background: #FFFFFF; 
     border-radius: 8px; 
-    overflow: hidden;  
+    overflow: auto;  
     box-shadow: 0 0 0 1px #dfdfdf, 0 0 15px rgba(0, 0, 0, 0.08); 
 }
 
