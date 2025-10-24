@@ -310,7 +310,7 @@ span.required {
     padding: 0 6px;
     align-self: center;
 }
-.college-tag {
+.college-tag, .item-tag {
     background: #F8F8F8;
     border: 1px solid #000;
     border-radius: 5px;
@@ -323,7 +323,7 @@ span.required {
     vertical-align: middle;
 }
 
-.college-tag .remove-x {
+.college-tag .remove-x, .item-tag .remove-x {
     color: #E53E3E;
     font-weight: bold;
     font-size: 1.1rem;
@@ -335,7 +335,7 @@ span.required {
     padding: 0;
 }
 
-.add-college-btn {
+.add-college-btn, .add-item-btn {
     width: 36px;
     height: 36px;
     border-radius: 50%;
@@ -349,11 +349,11 @@ span.required {
     font-family: 'Inter', Arial, sans-serif;
 }
 
-.add-college-btn:hover {
+.add-college-btn:hover, .add-item-btn:hover {
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
-.college-select-modal {
+.college-select-modal, .item-select-modal {
     display: none;
     position: absolute;
     z-index: 1000;
@@ -374,7 +374,7 @@ span.required {
     margin-top: 5px;
 }
 
-#project-leader-tag-row-dropdown, #providers-tag-row-dropdown, #sdgs-tag-row-dropdown {
+#project-leader-tag-row-dropdown, #providers-tag-row-dropdown, #sdgs-tag-row-dropdown, #item-select-dropdown {
     font-family: 'Inter', Arial, sans-serif;
     font-size: 13px;
     padding: 8px 30px 8px 16px;
@@ -385,7 +385,7 @@ span.required {
     background: white url('data:image/svg+xml;utf8,<svg fill="none" height="16" viewBox="0 0 16 16" width="16" xmlns="http://www.w3.org/2000/svg"><path d="M4 6L8 10L12 6" stroke="%23374151" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>') no-repeat right 18px center/16px 16px;
     padding-right: 30px !important;
 } 
-#project-leader-tag-row-dropdown:hover, #providers-tag-row-dropdown:hover, #sdgs-tag-row-dropdown:hover {
+#project-leader-tag-row-dropdown:hover, #providers-tag-row-dropdown:hover, #sdgs-tag-row-dropdown:hover, #item-select-dropdown:hover {
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 } 
 .field-error {
@@ -460,79 +460,4 @@ p, h1, h2, h3, h4, h5, h6, div {
     flex-direction: column;
     justify-content: flex-start;
     gap: 2rem;
-}
- 
-.item-tag {
-    background: #F8F8F8;
-    border: 1px solid #000;
-    border-radius: 5px;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.35rem 0.85rem 0.35rem 0.5rem;
-    font-size: 0.95rem;
-    font-family: 'Inter', Arial, sans-serif;
-    vertical-align: middle;
-}
-
-.item-tag .remove-x {
-    color: #E53E3E;
-    font-weight: bold;
-    font-size: 1.1rem;
-    margin-left: 3px;
-    margin-right: 1px;
-    cursor: pointer;
-    border: none;
-    background: none;
-    padding: 0;
-}
-
-.add-item-btn {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: #F0F0F0;
-    border: 1px solid rgba(0,0,0,0.16);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: box-shadow 0.2s;
-    font-family: 'Inter', Arial, sans-serif;
-}
-
-.add-item-btn:hover {
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-}
-
-.item-select-modal {
-    display: none;
-    position: absolute;
-    z-index: 1000;
-    background: white;
-    border: 1px solid #E5E7EB;
-    border-radius: 8px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-    padding: 1rem;
-}
-
-.item-row {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    position: relative;
-    gap: 10px;
-    margin-bottom: 5px;
-    margin-top: 5px;
-}
-
-#item-select-dropdown {
-    font-family: 'Inter', Arial, sans-serif;
-    font-size: 13px;
-    padding: 8px 30px 8px 15px;
-    border-radius: 6px;
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    background: white url('data:image/svg+xml;utf8,<svg fill="none" height="16" viewBox="0 0 16 16" width="16" xmlns="http://www.w3.org/2000/svg"><path d="M4 6L8 10L12 6" stroke="%23374151" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>') no-repeat right 10px center/16px 16px;
 }
