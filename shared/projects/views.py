@@ -1,7 +1,7 @@
 from django.shortcuts import get_object_or_404, render, redirect
 from shared import request
 from system.users.decorators import role_required
-from .models import SustainableDevelopmentGoal, Project, ProjectEvaluation, ProjectEvent
+from .models import SustainableDevelopmentGoal, Project, ProjectEvaluation, ProjectEvent, ProjectUpdate
 from internal.submissions.models import Submission
 from system.users.models import College, User
 from internal.agenda.models import Agenda
@@ -28,6 +28,18 @@ def get_templates(request):
     return base_template
 
 def project_profile(request, pk):
+    # Mark project alerts as viewed for faculty users
+    if request.user.role in ["FACULTY", "IMPLEMENTER"]:
+        from django.http import HttpResponseRedirect
+        from django.urls import reverse
+        project = get_object_or_404(Project, pk=pk)
+        updated = ProjectUpdate.objects.filter(user=request.user, project=project, viewed=False).update(viewed=True)
+        if updated and request.method == 'GET' and not request.GET.get('new'):
+            url = reverse('project_profile', args=[pk])
+            params = request.GET.copy()
+            params['new'] = '1'
+            url += '?' + params.urlencode()
+            return HttpResponseRedirect(url)
     return redirect(project_overview, pk=pk)
 
 
@@ -94,6 +106,17 @@ def project_providers(request, pk):
                 if provider not in providers_qs:
                     project.providers.add(provider)
                     project.save()
+                    
+                    # Create alert for the newly added provider
+                    from .models import ProjectUpdate
+                    ProjectUpdate.objects.create(
+                        user=provider,
+                        project=project,
+                        submission=None,  # No submission for provider addition alerts
+                        status='PROJECT_ASSIGNED',
+                        viewed=False,
+                        updated_at=timezone.now()
+                    )
             except User.DoesNotExist:
                 pass
         return redirect(request.path)
@@ -250,15 +273,12 @@ def project_files(request, pk):
     sort_by = request.GET.get('sort_by', 'name')
     order = request.GET.get('order', 'asc')
     file_type = request.GET.get('file_type', '')
-    date = request.GET.get('date', '')
 
     extensions = set(documents.values_list('file', flat=True))
     extensions = set([os.path.splitext(f)[1][1:].lower() for f in extensions if f])
 
     if file_type:
         documents = [doc for doc in documents if doc.extension == file_type]
-    if date:
-        documents = [doc for doc in documents if str(doc.uploaded_at.date()) == date]
     if search:
         documents = [doc for doc in documents if search.lower() in doc.name.lower()]
  
@@ -444,6 +464,7 @@ def project_submissions(request, pk):
         "events": events,
         "ADMIN_ROLES": ADMIN_ROLES,
         "COORDINATOR_ROLE": COORDINATOR_ROLE,
+        "FACULTY_ROLE": FACULTY_ROLE,
         "provider_ids": provider_ids,
         "status_choices": status_choices,
         "status_filter": status_filter,
@@ -460,6 +481,23 @@ def project_submissions_details(request, pk, submission_id):
     ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE, COORDINATOR_ROLE = get_role_constants()
     
     submission = get_object_or_404(Submission, pk=submission_id, project__pk=pk)
+
+    # Mark submission alerts as viewed for faculty users
+    if request.user.role in ["FACULTY", "IMPLEMENTER"]:
+        from django.http import HttpResponseRedirect
+        from django.urls import reverse
+        updated = ProjectUpdate.objects.filter(
+            user=request.user, 
+            project__pk=pk, 
+            submission=submission, 
+            viewed=False
+        ).update(viewed=True)
+        if updated and request.method == 'GET' and not request.GET.get('new'):
+            url = reverse('project_submissions_details', args=[pk, submission_id])
+            params = request.GET.copy()
+            params['new'] = '1'
+            url += '?' + params.urlencode()
+            return HttpResponseRedirect(url)
 
     user_role = getattr(request.user, 'role', None)
     if user_role in ["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
@@ -479,6 +517,7 @@ def project_submissions_details(request, pk, submission_id):
     }
     return render(request, "projects/project_submissions_details.html", context)
 
+# ACTIONS
 @role_required(allowed_roles=["UESO", "VP", "DIRECTOR", "COORDINATOR", "FACULTY", "IMPLEMENTER"])
 def admin_submission_action(request, pk, submission_id):
     submission = get_object_or_404(Submission, pk=submission_id, project__pk=pk)
@@ -490,6 +529,7 @@ def admin_submission_action(request, pk, submission_id):
                 submission.status = 'PENDING'
                 submission.submitted_by = None
                 submission.submitted_at = None
+                submission.file = None
                 submission.updated_by = request.user
                 submission.updated_at = timezone.now()
                 submission.save()
@@ -525,7 +565,26 @@ def admin_submission_action(request, pk, submission_id):
                 submission.updated_by = request.user
                 submission.updated_at = timezone.now()
                 submission.save()
+                
+        # Create or update ProjectUpdate for key status changes that affect the project team
+        if action in ['forward', 'accept', 'reject', 'request_revision'] and submission.project:
+            # Notify project leader and providers about submission status changes
+            users_to_notify = [submission.project.project_leader]
+            if submission.project.providers.exists():
+                users_to_notify.extend(submission.project.providers.all())
             
+            for user in users_to_notify:
+                if user:  # Ensure user exists
+                    ProjectUpdate.objects.update_or_create(
+                        user=user,
+                        project=submission.project,
+                        submission=submission,
+                        status=f'{submission.status}',
+                        defaults={
+                            'viewed': False,
+                            'updated_at': timezone.now(),
+                        }
+                    )
     return redirect('project_submissions_details', pk=pk, submission_id=submission_id)
 
 
@@ -614,9 +673,29 @@ from django.views.decorators.http import require_POST
 @role_required(allowed_roles=["VP", "DIRECTOR", "UESO"])
 @require_POST
 def cancel_project(request, pk):
+    from django.utils import timezone
     project = get_object_or_404(Project, pk=pk)
     project.status = 'CANCELLED'
     project.save()
+    
+    # Create project alerts for team members
+    users_to_notify = [project.project_leader]
+    if project.providers.exists():
+        users_to_notify.extend(project.providers.all())
+    
+    for user in users_to_notify:
+        if user:
+            ProjectUpdate.objects.update_or_create(
+                user=user,
+                project=project,
+                submission=None,  # No submission for project status changes
+                status='CANCELLED',
+                defaults={
+                    'viewed': False,
+                    'updated_at': timezone.now(),
+                }
+            )
+    
     return redirect(f'/projects/{pk}/overview/')
 
 # Undo cancel
@@ -624,8 +703,10 @@ def cancel_project(request, pk):
 @require_POST
 def undo_cancel_project(request, pk):
     from datetime import date as dtdate
+    from django.utils import timezone
     project = get_object_or_404(Project, pk=pk)
     today = dtdate.today()
+    old_status = project.status
     if project.start_date and project.estimated_end_date:
         if project.start_date <= today <= project.estimated_end_date:
             project.status = 'IN_PROGRESS'
@@ -636,6 +717,26 @@ def undo_cancel_project(request, pk):
     else:
         project.status = 'IN_PROGRESS'
     project.save()
+    
+    # Create project alerts for team members if status changed
+    if old_status != project.status:
+        users_to_notify = [project.project_leader]
+        if project.providers.exists():
+            users_to_notify.extend(project.providers.all())
+        
+        for user in users_to_notify:
+            if user:
+                ProjectUpdate.objects.update_or_create(
+                    user=user,
+                    project=project,
+                    submission=None,  # No submission for project status changes
+                    status=project.status,
+                    defaults={
+                        'viewed': False,
+                        'updated_at': timezone.now(),
+                    }
+                )
+    
     return redirect(f'/projects/{pk}/overview/')
 
 
@@ -653,9 +754,37 @@ def projects_dispatcher(request):
     return faculty_project(request)
 
 
-@role_required(allowed_roles=["FACULTY"])
+@role_required(allowed_roles=["FACULTY", "IMPLEMENTER"])
 def faculty_project(request):
     user = request.user
+    
+    # Get recent status updates for this user's projects
+    updates_qs = ProjectUpdate.objects.filter(user=user).order_by('-updated_at')[:10]
+    alerts = []
+    for update in updates_qs:
+        # Build message text
+        status_text = {
+            'CANCELLED': 'has been cancelled',
+            'COMPLETED': 'has been completed',
+            'ONGOING': 'is now ongoing',
+            'SCHEDULED': 'is now scheduled',
+            'PROJECT_ASSIGNED': 'you have been assigned to',
+            'PENDING': 'requires a new submission',
+            'FORWARDED': 'submission has been forwarded to UESO',
+            'APPROVED': 'submission has been approved',
+            'REJECTED': 'submission has been rejected',
+            'REVISION_REQUESTED': 'submission requires revision',
+        }.get(update.status, f'status updated to {update.status.replace("_", " ").lower()}')
+        alerts.append({
+            'project_id': update.project.id,
+            'submission_id': update.submission.id if update.submission else None,
+            'title': update.project.title,
+            'status': update.status,
+            'viewed': update.viewed,
+            'updated_at': update.updated_at,
+            'message': f"Your project '{update.project.title}' {status_text}",
+        })
+    
     projects = Project.objects.filter(
         models.Q(project_leader=user) | models.Q(providers=user)
     ).distinct().order_by('-updated_at')
@@ -681,6 +810,7 @@ def faculty_project(request):
         'page_obj': page_obj,
         'paginator': paginator,
         'page_range': page_range,
+        'my_alerts': alerts,
     })
 
 
@@ -886,6 +1016,22 @@ def add_project_view(request):
                         placeholder=True
                     )
                 project.save()
+
+                # Create alerts for project members about being added to the project
+                from .models import ProjectUpdate
+                project_members = list(project.providers.all())  # Get all project providers
+                if project.project_leader:  # Add project leader if exists
+                    project_members.append(project.project_leader)
+                
+                for member in project_members:
+                    ProjectUpdate.objects.create(
+                        user=member,
+                        project=project,
+                        submission=None,  # No submission for project creation alerts
+                        status='PROJECT_ASSIGNED',
+                        viewed=False,
+                        updated_at=timezone.now()
+                    )
 
                 return render(request, 'projects/add_project.html', {
                     'form': ProjectForm(),

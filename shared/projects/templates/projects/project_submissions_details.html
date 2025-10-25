@@ -321,7 +321,7 @@
             {% if submission.status != "PENDING" and submission.status != "SUBMITTED" %}
             <span class="grey-text">Reviewed:  {{ submission.reviewed_at|date:"F j, Y, H:i" }}{% if request.user.role in ADMIN_ROLES or request.user.role in COORDINATOR_ROLE %} • {{ submission.reviewed_by.get_full_name }}{% endif %}</span>
             {% endif %}
-            {% if submission.status != "PENDING" and submission.status != "SUBMITTED" and submission.status != "REQUESTED_REVISION" and submission.status != "FORWARDED" %}
+            {% if submission.status != "PENDING" and submission.status != "SUBMITTED" and submission.status != "REVISION_REQUESTED" and submission.status != "FORWARDED" %}
             <span class="grey-text">Authorized: {{ submission.authorized_at|date:"F j, Y, H:i" }}{% if request.user.role in ADMIN_ROLES%} • {{ submission.authorized_by.get_full_name }}{% endif %}</span>
             {% endif %}
         </div>
@@ -367,7 +367,13 @@
     </div>
 
     <div class="action-container">
-        {% if submission.status == 'SUBMITTED' and request.user.role in FACULTY_ROLE %}
+        {% if submission.status == 'PENDING' and request.user.role in FACULTY_ROLE %}
+        <form method="post" action="" class="action-form">
+            {% csrf_token %}
+            <button type="submit" name="action" value="submit" class="action-btn">Submit</button>
+        </form>
+
+        {% elif submission.status == 'SUBMITTED' and request.user.role in FACULTY_ROLE %}
        <form method="post" action="{% url 'admin_submission_action' project.id submission.id %}" class="action-form">
             {% csrf_token %}
             <button type="submit" name="action" value="unsubmit" class="reject-btn">Unsubmit</button>
@@ -385,6 +391,12 @@
             {% csrf_token %}
             <button type="submit" name="action" value="accept" class="action-btn">Accept</button>
             <button type="button" class="reject-btn" id="reject-btn">Reject</button>
+        </form>
+
+        {% elif submission.status == 'REVISION_REQUESTED' and request.user.role in FACULTY_ROLE %}
+        <form method="post" action="" class="action-form">
+            {% csrf_token %}
+            <button type="submit" name="action" value="submit" class="action-btn">Submit Revision</button>
         </form>
         {% endif %}
     </div>

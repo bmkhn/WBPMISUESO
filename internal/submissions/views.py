@@ -111,9 +111,10 @@ def add_submission_requirement(request):
                 'error': error,
             })
         # Create a Submission for each downloadable
+        project = Project.objects.get(id=project_id)
         for downloadable_id in downloadable_ids:
-            Submission.objects.create(
-                project=Project.objects.get(id=project_id),
+            submission = Submission.objects.create(
+                project=project,
                 downloadable=Downloadable.objects.get(id=downloadable_id),
                 deadline=deadline,
                 created_by=request.user,
@@ -121,6 +122,25 @@ def add_submission_requirement(request):
                 status='PENDING',
                 created_at=timezone.now()
             )
+            
+            # Create alert for project members about new submission requirement
+            from shared.projects.models import ProjectUpdate
+            project_members = list(project.providers.all())  # Get all project providers
+            if project.project_leader:  # Add project leader if exists
+                project_members.append(project.project_leader)
+            
+            for member in project_members:
+                ProjectUpdate.objects.create(
+                    user=member,
+                    project=project,
+                    submission=submission,
+                    status='PENDING',
+                    viewed=False,
+                    updated_at=timezone.now()
+                )
+            
+
+        
         return render(request, 'submissions/add_submissions.html', {
             'projects': projects,
             'downloadables': downloadables,
