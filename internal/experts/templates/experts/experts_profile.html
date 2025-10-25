@@ -1,10 +1,15 @@
+{% extends base_template %}
+{% load static %}
+
+{% block content %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Profile</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <title>{{ expert.get_full_name }} Profile</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
+    
     <style>
         body {
             font-family: Helvetica, Arial, sans-serif;
@@ -15,6 +20,7 @@
             min-height: 100vh;
             background-color: #e9e9e9;
         }
+        /* ... (all other user-provided styles remain here) ... */
 
         main {
             display: flex;
@@ -65,6 +71,8 @@
             object-fit: cover;
             border-radius: 50%;
             box-shadow: 0 2px 1rem rgba(0, 0, 0, 0.2);
+            /* Added Border for contrast */
+            border: 5px solid #245F3E; 
         }
 
         section > div > h1 {
@@ -108,6 +116,7 @@
         .personal-info img {
             border-radius: 50%;
             max-height: 5rem;
+            object-fit: contain;
         }
 
         .expertise {
@@ -155,64 +164,7 @@
             padding: 0.5rem 2.5rem;
             margin: 1rem 0.75rem;
         }
-
-        .dropdown {
-            position: relative;
-            width: 9.5rem;
-        }
-
-        .dropdown-btn {
-            margin: 0.75rem;
-            border: 0.08rem solid whitesmoke;
-            width: 100%;
-            padding: 0.5rem;
-            border-radius: 0.75rem;
-            background: none;
-            text-align: center;
-            cursor: pointer;
-            font-family: Helvetica, Arial, sans-serif;
-            font-weight: 400;
-            font-size: 1rem;
-        }
-
-        .dropdown-btn:hover {
-            border: 0.08rem solid #000000;
-        }
-
-        .dropdown-menu {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            margin: 0;
-            right: 0;
-            width: 100%;
-            background: white;
-            border: 0.08rem solid #ccc;
-            border-radius: 0.75rem;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            z-index: 10;
-            overflow: hidden;
-        }
-
-        .dropdown-item {
-            padding: 0.75rem;
-            cursor: pointer;
-            transition: background 0.2s;
-            font-family: Helvetica, Arial, sans-serif;
-            font-weight: 400;
-            text-align: center;
-            border-bottom: 1px solid rgb(196, 196, 196);
-        }
-
-        .dropdown-item:hover {
-            background-color: #000000;
-            color: white;
-        }
-
-        .hidden {
-            display: none;
-        }
-
+        
         .sort-btn {
             background: none;
             border: none;
@@ -221,7 +173,7 @@
             color: #333;
             margin-left: 0.5rem;
         }
-
+        
         .project-card {
             display: grid;
             grid-template-rows: 1fr 1fr;
@@ -348,131 +300,118 @@
 </head>
 <body>
     <header>
-        <h1>test</h1>
-    </header>
+        </header>
     <main> 
         <section>
             <div class="propic">
-                <img src="https://img.apmcdn.org/3ddbb3761de2e44418a47d0e2ecce75a3bc686c3/square/35d350-20130729-fiona-apple.jpg" class="propic" alt="profile picture">
+                <img src="{% if expert.profile_picture %}{{ expert.profile_picture.url }}{% else %}{{ expert.profile_picture_or_initial }}{% endif %}"
+                    class="propic"
+                    alt="{{ expert.get_full_name }} profile picture"
+                    onerror='this.onerror=null; this.src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTO3YkerCVdYtyi2McC6l-feLDSDl2KDOzFig&s";'>
             </div>
+
             <div class="personal-info">
-                <h2>Fiona Apple McAfee Maggart</h2>
-                <h4><i class="fas fa-map-marker-alt" style="color:red; margin-right:0.5rem;"></i> PSU - Tiniguiban</h4>
-                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQCG-8819DkziNFT4NY9X-eyHPBUa8bulKUnw&s" alt="college">
+                <h2>{{ expert.get_full_name }}</h2>
+                <h4>
+                    <i class="fas fa-map-marker-alt" style="color:red; margin-right:0.5rem;"></i> 
+                    PSU - {{ expert.get_campus_display|default:"N/A" }}
+                </h4>
+                <img src="{% if expert.college %}{% static 'media/colleges/logos' %}/{{ expert.college.name }}.png{% else %}{% static 'media/colleges/logos/Default.png' %}{% endif %}"
+                    alt="{{ expert.college.name|default:'College Logo' }}"
+                    onerror='this.onerror=null; this.src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTO3YkerCVdYtyi2McC6l-feLDSDl2KDOzFig&s";'>
             </div>
+            
             <div class="expertise">
                 <h5>Field of Expertise:</h5>
-                <p>Music, Singer-Songwriter in English, Instrument Savant</p>
-                <h5>Highschool Graduate</h5>
-                <p>Crossroads School for Arts & Sciences</p>
+                <p>{{ expert.expertise|default:"None Defined" }}</p>
+                <h5>Degree:</h5>
+                <p>{{ expert.degree|default:"N/A" }}</p>
             </div>
+            
             <div class="contact">
-                <h5>Sony Music</h5>
-                <p>fionaapplespager@gmail.com</p>
+                <h5>Email:</h5>
+                <p>{{ expert.email }}</p>
+                <h5>Contact No:</h5>
+                <p>{{ expert.contact_no }}</p>
             </div>
         </section>
+        
         <section class="lower">
             <div class="bio">
                 <div class="lower-header">
-                    <h1>Bio</h1>
+                    <h1>Status & Role</h1>
                 </div>
-                <p style="margin-top: 1rem;">Fiona Apple McAfee-Maggart (born September 13, 1977) is an American singer-songwriter and pianist celebrated for her
-                poetic lyrics, expressive contralto voice, and genre-blending style. She rose to prominence with her debut album Tidal
-                (1996), which earned her a Grammy Award for Criminal. Her later albums — When the Pawn… (1999), Extraordinary Machine
-                (2005), The Idler Wheel… (2012), and Fetch the Bolt Cutters (2020) — all received widespread acclaim, with the latter
-                winning two Grammys. Known for her uncompromising artistry and long gaps between releases, Apple remains one of the most
-                distinctive and influential figures in alternative music.</p>
+                <p style="margin-top: 1rem;">
+                    <strong>Role:</strong> {{ expert.get_role_display }}
+                    <br>
+                    <strong>Expert Status:</strong> 
+                    {% if expert.is_expert %}
+                        <span style="color: #1CB889;">Designated Expert (Verified)</span>
+                    {% else %}
+                        <span style="color: #ff9f10;">Not Designated Expert</span>
+                    {% endif %}
+                </p>
             </div>
+            
             <div class="project">
                 <div class="lower-header"> 
                     <div>
-                        <h1>Projects</h1>   
+                        <h1>Projects Led ({{ expert.led_projects.count }})</h1>   
                     </div>
                     <div style="display: flex; flex-shrink: 3;">
-                        <button class="sort-btn">
-                            <i class="fas fa-arrow-up"></i>
-                        </button>
-                        <div class="dropdown">
-                            <button class="dropdown-btn">Sort by ▾</button>
-                            <div class="dropdown-menu hidden">
-                                <div class="dropdown-item">Name</div>
-                                <div class="dropdown-item">Date Completed</div>
-                                <div class="dropdown-item">Last Updated</div>
-                                <div class="dropdown-item">Q4</div>
-                            </div>
+                         <div class="dropdown">
+                            <button class="dropdown-btn">Sort by Name</button>
                         </div> 
                     </div>
                 </div>
                 <div class="project-card"> 
+                    {% for project in expert.led_projects.all %}
                     <div>
-                        <h5>January 2024</h5>
-                        <a href="#" class="title">The Idler Wheel Is Wiser Than the Driver of the Screw and Whipping Cords Will Serve You More Than Ropes Will</a>
+                        <h5>{{ project.start_date|date:"F Y" }} - {{ project.estimated_end_date|date:"F Y" }}</h5>
+                        
+                        <a href="{% url 'project_profile_view' project.pk %}" class="title">{{ project.title }}</a>
+                        
                         <section class="project-tags">
-                            <button class="campus">PSU - Tiniguiban</button>
-                            <button class="agenda">Promotive and Preventive Health and Nutrition and Gender Sensitivity</button>
-                            <button class="status">Completed</button>
+                            <button class="campus">PSU - {{ project.project_leader.get_campus_display|default:'N/A' }}</button>
+                            <button class="agenda">{{ project.agenda.name|default:"No Agenda" }}</button>
+                            <button class="status">{{ project.get_status_display }}</button>
                         </section>
+                        
                         <section class="project-authors"> 
                             <content>
-                                <img src="https://img.apmcdn.org/3ddbb3761de2e44418a47d0e2ecce75a3bc686c3/square/35d350-20130729-fiona-apple.jpg" alt="">
-                                <a href="#">Fiona Apple McAfee Maggart</a> 
+                                {% with leader=project.project_leader %}
+                                    <img src="{% if leader.profile_picture %}{{ leader.profile_picture.url }}{% else %}{{ leader.profile_picture_or_initial }}{% endif %}" alt="Project Leader"
+                                        onerror="this.onerror=null; this.src='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTO3YkerCVdYtyi2McC6l-feLDSDl2KDOzFig&s';">
+                                    <a href="{% url 'expert_profile' leader.pk %}">{{ leader.get_full_name }}</a> 
+                                {% endwith %}
                             </content>
                         </section>
 
-                        <a href="#" class="view">View</a> 
+                        <a href="{% url 'project_profile_view' project.pk %}" class="view">View Details</a> 
                     </div> 
-                    <div>
-                        <h5>January 2024</h5>
-                        <a href="#" class="title">The Idler Wheel Is Wiser Than the Driver of the Screw and Whipping Cords Will Serve You More Than Ropes Will</a>
-                        <section class="project-tags">
-                            <button class="campus">PSU - Tiniguiban</button>
-                            <button class="agenda">Promotive and Preventive Health and Nutrition and Gender Sensitivity</button>
-                            <button class="status">Completed</button>
-                        </section>
-                        <section class="project-authors"> 
-                            <content>
-                                <img src="https://img.apmcdn.org/3ddbb3761de2e44418a47d0e2ecce75a3bc686c3/square/35d350-20130729-fiona-apple.jpg" alt="">
-                                <a href="#">Fiona Apple McAfee Maggart</a> 
-                            </content> 
-                            <content>
-                                <img src="https://img.apmcdn.org/3ddbb3761de2e44418a47d0e2ecce75a3bc686c3/square/35d350-20130729-fiona-apple.jpg" alt="">
-                                <a href="#">Fiona Apple McAfee Maggart</a> 
-                            </content>
-                        </section>
-
-                        <a href="#" class="view">View</a> 
-                    </div> 
+                    {% empty %}
+                        <div style="padding: 1rem 3rem;">
+                            <p style="color: #666;">This expert has not led any projects yet.</p>
+                        </div>
+                    {% endfor %}
                 </div>
             </div>
         </section>
     </main>
     <footer>
-        <p>test</p>
-    </footer> 
+        </footer> 
     <script> 
-        // Select all dropdown buttons
+        // JavaScript from user's provided template is kept for basic dropdown functionality
         document.querySelectorAll('.dropdown-btn').forEach(btn => {
             btn.addEventListener('click', e => {
-                e.stopPropagation(); // stop document click
+                e.stopPropagation(); 
                 const menu = btn.nextElementSibling;
-                // Close other open menus
                 document.querySelectorAll('.dropdown-menu').forEach(m => {
                     if (m !== menu) m.classList.add('hidden');
                 });
                 menu.classList.toggle('hidden');
             });
         });
-        // Dropdown item click
-        document.querySelectorAll('.dropdown-item').forEach(item => {
-            item.addEventListener('click', e => {
-                e.stopPropagation();
-                const menu = item.parentElement;
-                const btn = menu.previousElementSibling;
-                btn.textContent = e.target.textContent;
-                menu.classList.add('hidden');
-            });
-        });
-        // Click outside closes all menus
         document.addEventListener('click', () => {
             document.querySelectorAll('.dropdown-menu').forEach(menu => {
                 menu.classList.add('hidden');
@@ -481,3 +420,4 @@
     </script>
 </body>
 </html>
+{% endblock %}

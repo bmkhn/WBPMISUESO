@@ -1,5 +1,6 @@
 {% extends "base_internal.html" %}
 {% block content %}
+{% load static %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -7,10 +8,12 @@
 <meta charset="UTF-8">
 <title>Pool of Experts</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
+<link href="{% static 'shared/archive/styles.css' %}" rel="stylesheet"> 
 
-<!-- Top Section Styles -->
 <style>
+	/* --- STYLES ADAPTED FROM ORIGINAL EXPERTS/PROFILE TEMPLATES --- */
 	body {
 		background-color: #F9F9F9;
 		font-family: 'Inter', sans-serif;
@@ -19,10 +22,10 @@
 	}
 
 	.main-container {
-		margin: 75px;
+		margin: 2rem 4rem 4rem 4rem; 
 		display: flex;
 		flex-direction: column;
-		gap: 30px;
+		gap: 1.5rem;
 	}
 
 	.text-generate {
@@ -32,88 +35,152 @@
 	}
 
 	.title {
-		font-size: 32px;
-		font-weight: 400;
+		font-size: 1.65rem; 
+		font-weight: 500;
 	}
-
-	.generate-btn {
-		width: 200px;
+    
+    .generate-btn {
+        width: 200px;
 		height: 55px;
-		background: linear-gradient(90deg, #9409FF 0%, #FF3300 100%);
+        background: #ff9900; 
 		color: #fff;
-		font-size: 20px;
+		font-size: 1rem;
 		font-weight: 500;
 		border: none;
-		border-radius: 20px;
+		border-radius: 8px;
 		cursor: pointer;
-		box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.2);
+        transition: background-color 0.2s ease;
+		box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
 	}
-
-	.search-container {
-		width: 100%;
-		display: flex;
-		gap: 10px;
-	}
+    .generate-btn:hover {
+        background-color: #e68a00;
+    }
 
 	.search-bar {
-		width: 100%;
-		height: 52px;
-		background: #F2F4F8;
+        width: 100%;
+		height: 2.75rem; 
+		background: #fbfbfb;
 		display: flex;
 		align-items: center;
 		padding: 0 16px;
 		border-bottom: 1.09px solid #535353;
 		border-radius: 8px;
 		box-sizing: border-box;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.08); 
+        position: relative;
 	}
+    
+    .search-bar input {
+        flex: 1;
+        border: none;
+        outline: none;
+        background: transparent;
+        font-size: 1rem;
+        font-family: 'Inter', sans-serif;
+        font-weight: 400;
+        color: #5A5252;
+        padding: 0 10px;
+    }
+    
+    /* Dropdown specific styles */
+    .dropdown {
+        position: relative;
+        display: inline-block;
+        margin-right: 10px;
+    }
 
-	.search-bar input {
-		flex: 1;
-		border: none;
-		outline: none;
-		background: transparent;
-		font-size: 18px;
-		font-family: 'Inter', sans-serif;
-		font-weight: 400;
-		color: #5A5252;
-		padding: 0 10px;
-	}
+    .dropdown-btn {
+        padding: 10px 15px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        background: #fff;
+        cursor: pointer;
+        font-family: 'Inter', sans-serif;
+        font-size: 1rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        transition: all 0.2s ease;
+        height: 2.75rem; 
+    }
+    .dropdown-btn:hover {
+         border-color: #ff9900;
+    }
 
+    .dropdown-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        margin-top: 5px;
+        width: 250px;
+        background: white;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        z-index: 10;
+        overflow: hidden;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+    .dropdown-item {
+        padding: 10px 15px;
+        cursor: pointer;
+        transition: background 0.2s;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.9rem;
+        border-bottom: 1px solid #eee;
+    }
+
+    .dropdown-item:last-child {
+        border-bottom: none;
+    }
+
+    .dropdown-item:hover {
+        background-color: #f0f0f0;
+    }
+
+    /* View Buttons */
 	.view-buttons {
 		display: flex;
 		gap: 10px;
+        align-items: center;
 	}
 
 	.view-btn {
 		display: flex;
 		padding: 10px;
-		width: 32px;
-		height: 32px;
-		border-radius: 15px;
+		width: 40px;
+		height: 40px;
+		border-radius: 8px;
 		background: #F9F9F9;
 		cursor: pointer;
-		border: none;
+		border: 1px solid #E5E7EB;
+        transition: all 0.2s ease;
+        justify-content: center;
+        align-items: center;
 	}
 	
 	.view-btn.active {
         background: #000000;
         color: #FFFFFF;
+        border-color: #000000;
     }
-</style>
-
-<!-- Content Section Styles -->
-<style>
-	/* Expert Cards */
-	.expert-container {
+    
+    /* Content Layout */
+    .expert-container {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 30px;
+        margin-top: 20px;
 	}
 
+	/* Individual Expert Card - The requested style */
 	.expert-card {
 		width: 328px;
 		height: auto;
-		border: 0.8px solid rgba(0,0,0,0.4);
+		border: 0.8px solid rgba(0,0,0,0.1);
 		border-radius: 12px;
 		padding: 30px;
 		display: flex;
@@ -121,7 +188,16 @@
 		gap: 15px;
 		background: #fff;
 		position: relative;
+        text-decoration: none;
+        color: inherit;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+        transition: all 0.2s ease;
 	}
+    
+    .expert-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+    }
 
 	.campus-tag {
 		position: absolute;
@@ -132,25 +208,26 @@
 		padding: 4px 8px;
 		font-size: 14px;
 		font-weight: 500;
+        border-radius: 4px;
 	}
 
-	.college-logo {
+	.college-logo-card {
 		position: absolute;
 		top: 10px;
 		right: 10px;
 		width: 60px;
 		height: 60px;
-		background: #ddd;
 		border-radius: 50%;
 		object-fit: cover;
 	}
-
-	.profile-icon {
-		width: 200px;
-		height: 200px;
+    
+    .profile-icon {
+		width: 100px; 
+		height: 100px;
 		border-radius: 50%;
 		background: #ddd;
 		margin: 20px auto 10px auto;
+        object-fit: cover;
 	}
 
 	.expert-name {
@@ -160,242 +237,611 @@
 		color: #21272A;
 	}
 
-	.expert-degree {
+	.expert-expertise {
 		text-align: center;
 		font-size: 16px;
 		color: #21272A;
 		font-weight: 500;
 	}
 
-	.expert-projects {
+	.expert-college {
 		text-align: center;
 		font-size: 14px;
 		color: #333;
 	}
-
-	/* List view */
-	.expert-list {
+    
+    /* List View Table */
+    .expert-list {
 		width: 100%;
-		border-collapse: collapse;
+        border-collapse: collapse;
+        background: #FFFFFF; 
+        border-radius: 8px; 
+        box-shadow: 0 0 0 1px #dfdfdf, 0 0 15px rgba(0, 0, 0, 0.08); 
+        margin-top: 20px;
 	}
-
-	.expert-list th, .expert-list td {
-		border: 1px solid #ccc;
-		padding: 12px;
+    
+    .expert-list th, .expert-list td {
+		border: none;
+		border-bottom: 1px solid #E0E0E0; 
+		padding: 14px 18px; 
 		text-align: left;
+		font-family: 'Inter', Arial, sans-serif;
 	}
 
 	.expert-list th {
-		background: #eee;
+		font-size: 0.95rem;
+		font-weight: 600; 
+		background: #eeeeee; 
+		color: #333333; 
 	}
+    
+    .expert-list td {
+        font-size: 14px; 
+        color: #555555; 
+    }
+    
+    .expert-list tr:hover td {
+        background-color: #f2f2f2;
+    }
 
-	.expert-list td:last-child {
-		text-align: center;
-	}
-
-	/* Pagination */
-	.pagination {
-		display: flex;
-		justify-content: center;
-		gap: 10px;
-		margin-top: 20px;
-	}
-
-	.pagination button {
-		padding: 8px 14px;
-		border: 1px solid #ccc;
-		background: #fff;
-		border-radius: 6px;
-		cursor: pointer;
-	}
-	
 	.expert-list td a {
 		text-decoration: none;
+        color: #0099FF;
 	}
+    
+    .expert-list td a:hover {
+        text-decoration: underline;
+    }
 
+	/* Only use one class for hidden state management */
 	.hidden { display: none !important; }
-    .visible { display: flex !important; }
+    
+    /* AI MODAL STYLES */
+    .modal {
+        position: fixed; 
+        z-index: 2000; 
+        left: 0;
+        top: 0;
+        width: 100%; 
+        height: 100%; 
+        overflow: auto; 
+        background-color: rgba(0,0,0,0.4); 
+    }
+
+    .modal-content {
+        background-color: #fefefe;
+        margin: 5% auto; 
+        padding: 30px;
+        border: 1px solid #888;
+        width: 80%; 
+        max-width: 900px;
+        border-radius: 12px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+
+    .close-btn {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .team-card {
+        border: 1px solid #00681a;
+        padding: 15px;
+        margin-bottom: 15px;
+        border-radius: 8px;
+        background-color: #e6ffec; 
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .team-card h4 {
+        margin-top: 0;
+        color: #00681a;
+        font-size: 1.15rem;
+    }
+    
+    /* Custom AI Input Modal Style */
+    #aiInputModal .modal-content {
+        max-width: 450px;
+    }
+    #aiInputModal label {
+        display: block;
+        margin-top: 15px;
+        font-weight: 600;
+        color: #333;
+    }
+    #aiInputModal input {
+        width: 100%;
+        padding: 10px;
+        margin-top: 5px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+    }
 </style>
 
 </head>
 <body>
 	<div class="main-container">
 
-		<!-- Title + Generate -->
 		<div class="text-generate">
 			<div class="title">Pool of Experts</div>
-			<button class="generate-btn">Generate Team</button>
+			
+            {% if can_generate_teams %}
+			    <button id="generateTeamBtn" class="generate-btn">
+                    <i class="fas fa-robot"></i> Generate AI Team
+                </button>
+            {% endif %}
 		</div>
 
-		<!-- Search + Form Controls -->
-		<div class="search-container">
-			<div class="search-bar">
-				<svg width="20" height="20"> <use href="#icon-search"></use> </svg>
-				<input type="text" placeholder="Search"/>
-				<svg width="20" height="20"> <use href="#icon-filter"></use> </svg>
+		<div class="search-and-controls">
+			<div class="search-container" style="box-shadow: none;">
+                
+				<div class="dropdown">
+                    <button class="dropdown-btn" id="collegeDropdownBtn">
+                        <span id="currentFilterDisplay">All Experts</span> 
+                        <i class="fas fa-caret-down"></i>
+                    </button>
+                    <div class="dropdown-menu hidden" id="collegeDropdownMenu">
+                        {% for option in dropdown_options %}
+                            <div class="dropdown-item" data-filter-key="{{ option.filter_key }}" data-name="{{ option.name }}">
+                                {{ option.name }} 
+                                {% if not option.is_default %}({{ option.count|default:0 }}){% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+				<div class="search-bar">
+                    <svg width="20" height="20"> <use href="#icon-search"></use> </svg>
+					<input type="text" id="expertSearchInput" placeholder="Search name or expertise"/>
+					<svg width="20" height="20" id="filterToggleBtn"> <use href="#icon-filter"></use> </svg>
+				</div>
+
+				<div class="view-buttons">
+                    <button class="view-btn active" id="gridViewBtn" title="Grid View">
+                        <svg width="28" height="28"><use id="gridIconUse" href="#icon-grid-active"></use></svg>
+                    </button>
+                    <button class="view-btn" id="listViewBtn" title="List View">
+                        <svg width="28" height="28"><use id="listIconUse" href="#icon-list"></use></svg>
+                    </button>
+				</div>
 			</div>
-
-			<div class="view-buttons">
-				<svg class="view-btn active" id="gridViewBtn" width="28" height="28"><use id="gridIconUse" href="#icon-grid-active"></use></svg>
-				<svg class="view-btn" id="listViewBtn" width="28" height="28"><use id="listIconUse" href="#icon-list"></use></svg>
-			</div>
+            
+            <form id="expertFilterForm" class="hidden">
+                 <input type="hidden" name="search" id="hiddenSearchInput" value="">
+                 <select name="sort_by">
+                    <option value="last_name">Last Name</option>
+                    <option value="expertise">Expertise</option>
+                    <option value="college__name">College</option>
+                    <option value="campus">Campus</option>
+                 </select>
+                 <select name="order">
+                    <option value="asc">Ascending</option>
+                    <option value="desc">Descending</option>
+                 </select>
+            </form>
 		</div>
 
-		<!-- Expert Grid -->
-		<div class="expert-container visible" id="expertGrid">
-		<a href="profile/" class="expert-card" style="text-decoration:none; color:inherit;">
-			<div class="campus-tag">Campus A</div>
-			<div class="college-logo"></div>
-			<div class="profile-icon"></div>
-			<div class="expert-name">John Doe</div>
-			<div class="expert-degree">PhD in Computer Science</div>
-			<div class="expert-projects">Projects: 5</div>
-		</a>
-		</div>
+		<div id="contentArea">
+            
+            <div class="expert-container" id="expertGrid">
+                <p id="loadingIndicator" style="width: 100%; text-align: center;">Loading experts...</p>
+            </div>
 
-		<!-- Expert List (toggle alternative) -->
-		<table class="expert-list hidden" id="expertList">
-		<thead>
-			<tr>
-			<th>Name</th>
-			<th>Campus</th>
-			<th>College</th>
-			<th>No. of Projects</th>
-			<th>Settings</th>
-			</tr>
-		</thead>
-		<tbody>
-			<tr>
-			<td><a href="profile/">John Doe</a></td>
-			<td>Campus A</td>
-			<td>Engineering</td>
-			<td>5</td>
-			<td><svg width="16" height="4"><use href="#icon-settings"></use></svg></td>
-			</tr>
-		</tbody>
-		</table>
-
-		<!-- Pagination -->
-		<div class="pagination">
-			<button>1</button>
-			<button>2</button>
-			<button>3</button>
+            <table class="expert-list hidden" id="expertList">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Role</th>
+                    <th>College</th>
+                    <th>Expertise</th>
+                    <th>Campus</th>
+                    <th>Contact/Email</th>
+                </tr>
+            </thead>
+            <tbody id="expertListBody">
+            </tbody>
+            </table>
+            
+            <div class="pagination hidden" id="expertPagination">
+            </div>
+            
 		</div>
 
 	</div>
 
-<!-- SVG Sprite Section -->
-
-<svg style="display:none;">
-
-	<!-- Search -->
-	<symbol id="icon-search" viewBox="0 0 21 21" fill="none">
-		<path d="M8.89152 15.9057C9.75056 15.9057 10.6012 15.7365 11.3948 15.4077C12.1885 15.079 12.9096 14.5972 13.5171 13.9897C14.1245 13.3823 14.6064 12.6612 14.9351 11.8675C15.2638 11.0739 15.433 10.2232 15.433 9.36417C15.433 8.50513 15.2638 7.6545 14.9351 6.86084C14.6064 6.06719 14.1245 5.34606 13.5171 4.73862C12.9096 4.13119 12.1885 3.64934 11.3948 3.3206C10.6012 2.99186 9.75056 2.82266 8.89152 2.82266C7.1566 2.82266 5.49274 3.51185 4.26597 4.73862C3.03919 5.9654 2.35 7.62926 2.35 9.36417C2.35 11.0991 3.03919 12.763 4.26597 13.9897C5.49274 15.2165 7.1566 15.9057 8.89152 15.9057V15.9057ZM15.7819 14.713L19.685 18.6161C19.7891 18.7167 19.872 18.8371 19.9291 18.9701C19.9861 19.1032 20.0161 19.2463 20.0173 19.391C20.0184 19.5358 19.9907 19.6793 19.9358 19.8133C19.8809 19.9472 19.7999 20.0689 19.6974 20.1712C19.595 20.2735 19.4732 20.3544 19.3392 20.4091C19.2052 20.4638 19.0616 20.4913 18.9168 20.4899C18.772 20.4886 18.629 20.4584 18.496 20.4012C18.3631 20.3439 18.2428 20.2608 18.1423 20.1566L14.2392 16.2535C12.4866 17.614 10.2814 18.2554 8.07247 18.0472C5.86357 17.839 3.81705 16.7968 2.34951 15.1328C0.881971 13.4688 0.103735 11.308 0.173229 9.09044C0.242723 6.87284 1.15472 4.76508 2.72357 3.19623C4.29242 1.62738 6.40018 0.715379 8.61778 0.645885C10.8354 0.576391 12.9961 1.35463 14.6601 2.82217C16.3241 4.28971 17.3663 6.33623 17.5745 8.54513C17.7827 10.754 17.1413 12.9592 15.7808 14.7119L15.7819 14.713Z" fill="#5A5252"/>
-	</symbol>
-
-	<!-- Filter -->
-	<symbol id="icon-filter" viewBox="0 0 23 22" fill="none">
-		<path opacity="0.9" d="M21.5399 1.92871H1.37988L9.44388 11.4644V18.0567L13.4759 20.0727V11.4644L21.5399 1.92871Z" stroke="#1E1E1E" stroke-width="2.016" stroke-linecap="round" stroke-linejoin="round"/>
-	</symbol>
-
-	<!-- List -->
-	<symbol id="icon-list" viewBox="0 0 34 24" fill="none">
-		<path d="M10.3712 2.05664H31.9153M10.3712 12H31.9153M10.3712 21.9436H31.9153M2.08496 2.05664H2.10153M2.08496 12H2.10153M2.08496 21.9436H2.10153" stroke="black" stroke-width="3.31448" stroke-linecap="round" stroke-linejoin="round"/>
-	</symbol>
-
-	<!-- List (Active) -->
-	<symbol id="icon-list-active" viewBox="0 0 34 24" fill="none">
-		<path d="M10.3712 2.05664H31.9153M10.3712 12H31.9153M10.3712 21.9436H31.9153M2.08496 2.05664H2.10153M2.08496 12H2.10153M2.08496 21.9436H2.10153" stroke="white" stroke-width="3.31448" stroke-linecap="round" stroke-linejoin="round"/>
-	</symbol>
-
-	<!-- Grid -->
-	<symbol id="icon-grid" viewBox="0 0 32 32" fill="none">
-		<path d="M12.9331 2.19922H2.19971V12.9326H12.9331V2.19922Z" stroke="black" stroke-width="3.04932" stroke-linecap="round" stroke-linejoin="round"/>
-		<path d="M29.8 2.19932H19.0666V12.9327H29.8V2.19932Z" stroke="black" stroke-width="3.04932" stroke-linecap="round" stroke-linejoin="round"/>
-		<path d="M29.7998 19.0664H19.0664V29.7998H29.7998V19.0664Z" stroke="black" stroke-width="3.04932" stroke-linecap="round" stroke-linejoin="round"/>
-		<path d="M12.9331 19.0664H2.19971V29.7998H12.9331V19.0664Z" stroke="black" stroke-width="3.04932" stroke-linecap="round" stroke-linejoin="round"/>
-	</symbol>
-
-	<!-- Grid (Active) -->
-	<symbol id="icon-grid-active" viewBox="0 0 32 32" fill="none">
-		<path d="M12.9331 2.19922H2.19971V12.9326H12.9331V2.19922Z" stroke="white" stroke-width="3.04932" stroke-linecap="round" stroke-linejoin="round"/>
-		<path d="M29.8 2.19932H19.0666V12.9327H29.8V2.19932Z" stroke="white" stroke-width="3.04932" stroke-linecap="round" stroke-linejoin="round"/>
-		<path d="M29.7998 19.0664H19.0664V29.7998H29.7998V19.0664Z" stroke="white" stroke-width="3.04932" stroke-linecap="round" stroke-linejoin="round"/>
-		<path d="M12.9331 19.0664H2.19971V29.7998H12.9331V19.0664Z" stroke="white" stroke-width="3.04932" stroke-linecap="round" stroke-linejoin="round"/>
-	</symbol>
-
-	<!-- Settings (3 dots) -->
-	<symbol id="icon-settings" viewBox="0 0 16 4" fill="none" xmlns="http://www.w3.org/2000/svg">
-		<path d="M2 4C1.45 4 0.979167 3.80417 0.5875 3.4125C0.195833 3.02083 0 2.55 0 2C0 1.45 0.195833 0.979167 0.5875 0.5875C0.979167 0.195833 1.45 0 2 0C2.55 0 3.02083 0.195833 3.4125 0.5875C3.80417 0.979167 4 1.45 4 2C4 2.55 3.80417 3.02083 3.4125 3.4125C3.02083 3.80417 2.55 4 2 4ZM8 4C7.45 4 6.97917 3.80417 6.5875 3.4125C6.19583 3.02083 6 2.55 6 2C6 1.45 6.19583 0.979167 6.5875 0.5875C6.97917 0.195833 7.45 0 8 0C8.55 0 9.02083 0.195833 9.4125 0.5875C9.80417 0.979167 10 1.45 10 2C10 2.55 9.80417 3.02083 9.4125 3.4125C9.02083 3.80417 8.55 4 8 4ZM14 4C13.45 4 12.9792 3.80417 12.5875 3.4125C12.1958 3.02083 12 2.55 12 2C12 1.45 12.1958 0.979167 12.5875 0.5875C12.9792 0.195833 13.45 0 14 0C14.55 0 15.0208 0.195833 15.4125 0.5875C15.8042 0.979167 16 1.45 16 2C16 2.55 15.8042 3.02083 15.4125 3.4125C15.0208 3.80417 14.55 4 14 4Z" fill="#1D1B20"/>
-	</symbol>
-
-	<!-- Settings -->
-	 
-</svg>
-
+    <div id="aiInputModal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-btn" id="closeInputModal">&times;</span>
+            <h2 style="color: #00681a;"><i class="fas fa-search"></i> AI Team Requirements</h2>
+            <form id="aiPromptForm">
+                <label for="aiTopic">Expertise/Topic Required:</label>
+                <input type="text" id="aiTopic" name="topic" placeholder="e.g., Beekeeping, Data Analysis" required>
+                
+                <label for="aiMembers">Number of Team Members:</label>
+                <input type="number" id="aiMembers" name="num_members" value="4" min="1" required>
+                
+                <div style="text-align: right; margin-top: 20px;">
+                    <button type="submit" class="generate-btn" style="width: auto; padding: 10px 20px;">
+                        Analyze & Generate Team
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div id="teamResultsModal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-btn" id="closeResultsModal">&times;</span>
+            <h2 style="color: #00681a;"><i class="fas fa-robot"></i> AI Team Generation Results</h2>
+            <div id="modalBodyContent">
+                <p id="loadingMessage">Generating teams, please wait...</p>
+            </div>
+            <div id="modalFooter" style="text-align: right; margin-top: 20px;">
+                 <button id="confirmTeamsBtn" class="filter-apply hidden" style="background-color: #00681a;">
+                    Confirm & Save Teams
+                </button>
+            </div>
+        </div>
+    </div>
+    
 <script>
-    // View toggle functionality for experts
+    const appPrefix = '/experts'; 
+
+    // --- DOM Elements ---
     const gridViewBtn = document.getElementById('gridViewBtn');
     const listViewBtn = document.getElementById('listViewBtn');
     const expertGrid = document.getElementById('expertGrid');
     const expertList = document.getElementById('expertList');
+    const expertListBody = document.getElementById('expertListBody');
+    const expertPagination = document.getElementById('expertPagination');
+    const loadingIndicator = document.getElementById('loadingIndicator');
 
-    gridViewBtn.addEventListener('click', function() {
-        gridViewBtn.classList.add('active');
-        listViewBtn.classList.remove('active');
-        expertGrid.classList.remove('hidden');
-        expertGrid.classList.add('visible');
-        expertList.classList.add('hidden');
+    const collegeDropdownBtn = document.getElementById('collegeDropdownBtn');
+    const collegeDropdownMenu = document.getElementById('collegeDropdownMenu');
+    const currentFilterDisplay = document.getElementById('currentFilterDisplay');
+    
+    const expertSearchInput = document.getElementById('expertSearchInput');
+    const expertFilterForm = document.getElementById('expertFilterForm');
+    const hiddenSearchInput = document.getElementById('hiddenSearchInput');
+    
+    // AI Modals
+    const generateTeamBtn = document.getElementById('generateTeamBtn');
+    const aiInputModal = document.getElementById('aiInputModal');
+    const aiPromptForm = document.getElementById('aiPromptForm');
+    const teamResultsModal = document.getElementById('teamResultsModal');
+    const closeInputModal = document.getElementById('closeInputModal');
+    const closeResultsModal = document.getElementById('closeResultsModal');
+    const modalBodyContent = document.getElementById('modalBodyContent');
+    const confirmTeamsBtn = document.getElementById('confirmTeamsBtn');
+    
+    // --- State Variables ---
+    let currentFilterKey = 'all'; 
+    let currentFilterName = 'All Experts';
+    let currentView = 'grid';
+    let cachedExperts = []; 
+
+
+    // --- Utility Functions ---
+    function updateViewIcons(activeViewId) {
+        if (activeViewId === 'grid') {
+            document.getElementById('gridIconUse').setAttribute('href', '#icon-grid-active');
+            document.getElementById('listIconUse').setAttribute('href', '#icon-list');
+            gridViewBtn.classList.add('active');
+            listViewBtn.classList.remove('active');
+        } else {
+            document.getElementById('gridIconUse').setAttribute('href', '#icon-grid');
+            document.getElementById('listIconUse').setAttribute('href', '#icon-list-active');
+            gridViewBtn.classList.remove('active');
+            listViewBtn.classList.add('active');
+        }
+    }
+
+    function switchView(view) {
+        if (view === 'grid') {
+            // FIX: Hide list, show grid
+            expertList.classList.add('hidden');
+            expertGrid.classList.remove('hidden'); 
+            
+            updateViewIcons('grid');
+            currentView = 'grid';
+            renderExpertCards(cachedExperts); 
+        } else if (view === 'list') {
+            // FIX: Hide grid, show list
+            expertGrid.classList.add('hidden');
+            expertList.classList.remove('hidden');
+            
+            updateViewIcons('list');
+            currentView = 'list';
+            renderExpertList(cachedExperts); 
+        }
+    }
+    
+    // --- Rendering Functions ---
+
+    function renderExpertCards(experts) {
+        expertGrid.innerHTML = '';
+        if (experts.length === 0) {
+            expertGrid.innerHTML = '<p style="width: 100%; text-align: center;">No experts found matching this filter.</p>';
+            return;
+        }
+
+        experts.forEach(expert => {
+            const card = document.createElement('a');
+            card.className = 'expert-card';
+            card.href = `${appPrefix}/${expert.id}/profile/`; 
+            
+            const campusTag = expert.campus_display || 'N/A';
+            const collegeName = expert.college ? expert.college.name : 'N/A';
+            const profileIconUrl = expert.profile_picture ? expert.profile_picture : `{% static 'users/profile_pictures/Default.png' %}`; 
+            const collegeLogoPath = expert.college ? `{% static 'media/colleges/logos' %}/${expert.college.name}.png` : `{% static 'media/colleges/logos/Default.png' %}`;
+
+
+            card.innerHTML = `
+                <div class="campus-tag">${campusTag}</div>
+                <img src="${collegeLogoPath}" class="college-logo-card" alt="${collegeName} Logo" onerror="this.onerror=null;this.src='{% static 'media/colleges/logos/Default.png' %}'">
+                <img src="${profileIconUrl}" class="profile-icon" alt="${expert.full_name} Profile" onerror="this.onerror=null;this.src='{% static 'users/profile_pictures/Default.png' %}'">
+                <div class="expert-name">${expert.full_name}</div>
+                <div class="expert-expertise">${expert.expertise || 'General'}</div>
+                <div class="expert-college">${expert.role_display} | ${collegeName}</div>
+            `;
+            expertGrid.appendChild(card);
+        });
+    }
+
+    function renderExpertList(experts) {
+        expertListBody.innerHTML = '';
+        if (experts.length === 0) {
+            expertListBody.innerHTML = `<tr><td colspan="6" style="text-align: center;">No experts found matching this filter.</td></tr>`;
+            return;
+        }
+
+        experts.forEach(expert => {
+            const row = expertListBody.insertRow();
+            const profileUrl = `${appPrefix}/${expert.id}/profile/`;
+            
+            row.innerHTML = `
+                <td><a href="${profileUrl}">${expert.full_name}</a></td>
+                <td>${expert.role_display}</td>
+                <td>${expert.college ? expert.college.name : 'N/A'}</td>
+                <td>${expert.expertise || 'None Defined'}</td>
+                <td>${expert.campus_display || 'N/A'}</td>
+                <td>${expert.contact_no}<br><small>${expert.email}</small></td>
+            `;
+        });
+    }
+    
+    function renderPagination(jsonResponse) {
+        expertPagination.classList.remove('hidden');
+        expertPagination.innerHTML = '';
+        
+        const callback = 'loadExpertListPage'; 
+        
+        if (jsonResponse.previous) {
+            const prevUrl = new URL(jsonResponse.previous);
+            expertPagination.innerHTML += `<button class="pagination-button" onclick="event.preventDefault(); ${callback}('${prevUrl.search}');">Previous</button>`;
+        }
+        
+        const totalPages = Math.ceil(jsonResponse.count / (jsonResponse.page_size || 12));
+        expertPagination.innerHTML += `<span class="pagination-button active">Page ${jsonResponse.next ? parseInt(new URL(jsonResponse.next).searchParams.get('page')) - 1 : (jsonResponse.previous ? parseInt(new URL(jsonResponse.previous).searchParams.get('page')) + 1 : 1)} / ${totalPages}</span>`;
+
+        if (jsonResponse.next) {
+            const nextUrl = new URL(jsonResponse.next);
+            expertPagination.innerHTML += `<button class="pagination-button" onclick="event.preventDefault(); ${callback}('${nextUrl.search}');">Next</button>`;
+        }
+    }
+
+
+    // --- Data Fetching Logic ---
+    
+    async function fetchExpertData(url) {
+        loadingIndicator.style.display = 'block';
+        expertPagination.classList.add('hidden');
+        expertGrid.innerHTML = ''; 
+        expertListBody.innerHTML = ''; 
+        
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Server returned status ${response.status}. Error: ${errorText}`);
+            }
+            const jsonResponse = await response.json();
+            
+            loadingIndicator.style.display = 'none';
+
+            // Update cache with new data
+            cachedExperts = jsonResponse.results || [];
+
+            // Render the current active view using the new cached data
+            switchView(currentView); // Renders either grid or list from cache
+            
+            // Render pagination
+            if (jsonResponse.count > (jsonResponse.page_size || 12)) {
+                renderPagination(jsonResponse);
+            } else {
+                expertPagination.classList.add('hidden');
+            }
+            
+        } catch (error) {
+            console.error("Error fetching expert data:", error);
+            loadingIndicator.textContent = `Failed to load experts: ${error.message}`;
+        } 
+    }
+    
+    function loadExpertList(filterKey, filterName, queryString = '') {
+        currentFilterKey = filterKey;
+        currentFilterName = filterName;
+        currentFilterDisplay.textContent = filterName;
+        
+        let apiPath = '';
+        if (filterKey === 'all') {
+            apiPath = `${appPrefix}/api/aggregate_experts/?${queryString}`;
+        } else {
+            apiPath = `${appPrefix}/api/experts/filter/${filterKey}/?${queryString}`;
+        }
+        
+        fetchExpertData(apiPath);
+    }
+    
+    function loadExpertListPage(queryString) {
+        loadExpertList(currentFilterKey, currentFilterName, queryString.substring(1));
+    }
+
+
+    // --- AI Modal Logic ---
+
+    if (generateTeamBtn) {
+        generateTeamBtn.onclick = function() {
+            aiInputModal.classList.remove('hidden');
+        }
+    }
+    
+    aiPromptForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        aiInputModal.classList.add('hidden');
+        teamResultsModal.classList.remove('hidden');
+        
+        const topic = document.getElementById('aiTopic').value;
+        const numMembers = document.getElementById('aiMembers').value;
+        
+        generateTeams(topic, numMembers);
     });
 
-    listViewBtn.addEventListener('click', function() {
-        listViewBtn.classList.add('active');
-        gridViewBtn.classList.remove('active');
-        expertGrid.classList.remove('visible');
-        expertGrid.classList.add('hidden');
-        expertList.classList.remove('hidden');
+    closeInputModal.onclick = function() { aiInputModal.classList.add('hidden'); };
+    closeResultsModal.onclick = function() { teamResultsModal.classList.add('hidden'); };
+    window.onclick = function(event) {
+        if (event.target == aiInputModal || event.target == teamResultsModal) {
+            aiInputModal.classList.add('hidden');
+            teamResultsModal.classList.add('hidden');
+        }
+    }
+    
+    async function generateTeams(topic, numMembers) {
+        modalBodyContent.innerHTML = '<p id="loadingMessage">Generating teams, please wait...</p>';
+        confirmTeamsBtn.classList.add('hidden');
+
+        try {
+            const response = await fetch(`${appPrefix}/api/generate_teams/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}' 
+                },
+                body: JSON.stringify({ num_members: numMembers, topic: topic })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || `Server returned status ${response.status}`);
+            }
+
+            const teams = await response.json();
+            
+            renderTeams(teams);
+
+        } catch (error) {
+            console.error("Team generation failed:", error);
+            modalBodyContent.innerHTML = `<p style="color: red;">Error: ${error.message}. Please ensure the current user has DIRECTOR or VP privileges.</p>`;
+        }
+    }
+    
+    function renderTeams(teams) {
+        let html = '';
+        const team = teams[0]; 
+        
+        if (!team) {
+            html = '<p>The AI could not form any teams with the available experts. Ensure you have eligible Faculty/Implementer users marked as experts with defined expertise.</p>';
+        } else {
+            const membersList = team.members.map(member => `
+                <li>
+                    <i class="fas fa-user-circle"></i> <strong>${member.name}</strong> (${member.role})
+                    <br><small style="color: #555;">Expertise: ${member.expertise}</small>
+                </li>
+            `).join('');
+
+            html = `
+                <div class="team-card">
+                    <h4>${team.team_name} (AI Score: ${team.ai_score} / 100)</h4>
+                    <p style="margin-bottom: 10px;">**Rationale**: ${team.rationale}</p>
+                    <strong>Members:</strong>
+                    <ul style="list-style: none; padding-left: 10px;">
+                        ${membersList}
+                    </ul>
+                </div>
+            `;
+            confirmTeamsBtn.classList.remove('hidden');
+        }
+        modalBodyContent.innerHTML = html;
+    }
+
+
+	// --- Initial Load & Event Handlers ---
+
+	document.addEventListener('DOMContentLoaded', () => {
+        updateViewIcons(currentView);
+		loadExpertList('all', 'All Experts');
+	});
+
+	// FIX: Dropdown Logic
+    collegeDropdownBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        collegeDropdownMenu.classList.toggle('hidden');
     });
 
-    // Optionally, set default view on page load
-    document.addEventListener('DOMContentLoaded', function() {
-        gridViewBtn.classList.add('active');
-        expertGrid.classList.add('visible');
-        expertList.classList.add('hidden');
+    collegeDropdownMenu.querySelectorAll('.dropdown-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            const filterKey = e.currentTarget.getAttribute('data-filter-key');
+            const name = e.currentTarget.getAttribute('data-name');
+            
+            collegeDropdownMenu.classList.add('hidden');
+            
+            // Load the new filter set
+            loadExpertList(filterKey, name);
+        });
     });
 
-	const gridIconUse = document.getElementById('gridIconUse');
-	const listIconUse = document.getElementById('listIconUse');
+    document.addEventListener('click', () => {
+        collegeDropdownMenu.classList.add('hidden');
+    });
 
-	gridViewBtn.addEventListener('click', function() {
-		gridViewBtn.classList.add('active');
-		listViewBtn.classList.remove('active');
-		expertGrid.classList.remove('hidden');
-		expertGrid.classList.add('visible');
-		expertList.classList.add('hidden');
-		gridIconUse.setAttribute('href', '#icon-grid-active');
-		listIconUse.setAttribute('href', '#icon-list');
+
+    // FIX: View Toggle Handlers
+    gridViewBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        switchView('grid'); 
+    });
+    listViewBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        switchView('list');
+    });
+
+
+    // Search and Sort Form Submission
+    expertSearchInput.addEventListener('change', function() {
+        hiddenSearchInput.value = this.value;
+        expertFilterForm.dispatchEvent(new Event('submit'));
+    });
+    
+    expertFilterForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        const queryString = new URLSearchParams(formData).toString();
+        
+        loadExpertList(currentFilterKey, currentFilterName, queryString);
+    });
+    
+    // Back to Cards Button
+	document.getElementById('backToCardsBtn').addEventListener('click', (e) => {
+		e.preventDefault();
+		switchView('grid');
 	});
 
-	listViewBtn.addEventListener('click', function() {
-		listViewBtn.classList.add('active');
-		gridViewBtn.classList.remove('active');
-		expertGrid.classList.remove('visible');
-		expertGrid.classList.add('hidden');
-		expertList.classList.remove('hidden');
-		gridIconUse.setAttribute('href', '#icon-grid');
-		listIconUse.setAttribute('href', '#icon-list-active');
-	});
-
-	document.addEventListener('DOMContentLoaded', function() {
-		gridViewBtn.classList.add('active');
-		expertGrid.classList.add('visible');
-		expertList.classList.add('hidden');
-		gridIconUse.setAttribute('href', '#icon-grid-active');
-		listIconUse.setAttribute('href', '#icon-list');
-	});
 </script>
 
 </body>
 </html>
-
 {% endblock %}
