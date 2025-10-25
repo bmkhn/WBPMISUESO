@@ -1,3 +1,6 @@
+/* ========================================= */
+/* BASE STYLES & LAYOUT (from original file) */
+/* ========================================= */
 p, h1, h2, h3, h4, h5, h6, div {
     cursor: default;
 }
@@ -20,6 +23,7 @@ body {
     gap: 1rem;
 }
 
+/* Used for the header area */
 .container-a {
     display: flex;
     justify-content: space-between;
@@ -49,6 +53,7 @@ body {
     align-items: center;
 }
 
+/* Existing Button Styles (Apply, Export, etc.) */
 .add-user-btn {
     font-family: 'Inter', sans-serif;
     background-color: #00681a;
@@ -89,101 +94,14 @@ body {
     transform: translateY(-1px);
 }
 
-.checkmark-icon {
-    color: #1f7c57;
-    font-size: 1.2em;
-    text-align: center;
-}
-
-.crossmark-icon {
-    color: #E53E3E;
-    font-size: 1.2em;
-    text-align: center;
-}
-
-.user-table {
-    width: 100%;
-    border-collapse: collapse;
-    background: #FFFFFF; 
-    border-radius: 8px; 
-    overflow: auto;  
-    box-shadow: 0 0 0 1px #dfdfdf, 0 0 15px rgba(0, 0, 0, 0.08); 
-}
-
-.user-table th {
-    font-size: 0.95rem;
-    font-weight: 600; 
-    background: #eeeeee; 
-    border-bottom: 1px solid #E0E0E0; 
-    padding: 16px 18px; 
-    text-align: left;
-    font-family: 'Inter', Arial, sans-serif;
-    color: #333333; 
-    box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.05); 
-    transition: padding 0.2s ease-in-out; 
-}
-
-.user-table td {
-    font-size: 14px; 
-    font-weight: 400;
-    border: none;
-    border-bottom: 1px solid #E0E0E0; 
-    padding: 14px 18px; 
-    text-align: left;
-    font-family: 'Inter', Arial, sans-serif;
-    color: #555555; 
-    transition: padding 0.2s ease-in-out; 
-} 
-
-.user-table tr:last-child td {
-    border-bottom: none;
-} 
-
-.user-table tr:nth-child(even) {
-    background-color: #f8f8f8;
-} 
-
-.settings-icon {
-    width: 16px;
-    height: 16px;
-    align-items: center;
-    justify-content: center;
-    display: inline-block;
-    vertical-align: middle;
-    cursor:pointer;
-}
-
-.user-table th.settings-col,
-.user-table td.settings-col {
-    text-align: center !important;
-}
- 
-.name-link {
-    color: #0099FF;
-    text-decoration: none;
-} 
-.name-link:hover {
-    text-decoration: underline;
-} 
- 
-.user-table tr:hover td {
-    padding: 18px; 
-}
-
-.user-table tr:hover {
-    background-color: #f2f2f2; 
-    cursor: pointer;
-}
-
-.user-table tr:last-child:hover td {
-    border-bottom: none; 
-}
-
+/* ========================================= */
+/* SEARCH & FILTER (Maintained/Refined) */
+/* ========================================= */
 .search-container {
     width: 100%;
     display: flex;
     gap: 1rem;
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.08);
+    /* Removed box-shadow here to apply to the bar directly */
     margin-bottom: 1rem;
 }
 
@@ -194,9 +112,11 @@ body {
     display: flex;
     align-items: center;
     padding: 0 16px;
-    border-bottom: 1.09px solid #535353;
+    border-bottom: 1.09px solid #535353; /* Changed to border-style property */
     border-radius: 8px;
     box-sizing: border-box;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.08); /* Re-applied shadow here */
+    position: relative; /* Needed for filter-dropdown positioning */
 }
 
 .search-bar input {
@@ -214,10 +134,11 @@ body {
 .filter-dropdown {
     display: none;
     position: absolute;
-    top: 220px;
-    right: 60px;
+    /* Adjusted positioning to be relative to search-bar */
+    top: 45px; 
+    right: 0;
     z-index: 1000;
-    background: #f8f8f8;
+    background: #ffffff; /* Changed to white for better contrast */
     border: 1px solid #e5e7eb;
     border-radius: 12px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
@@ -227,8 +148,8 @@ body {
 
 .filter-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    grid-template-rows: repeat(2, 1fr);
+    /* Adjusted grid to 2 columns for better layout and less empty space */
+    grid-template-columns: repeat(2, 1fr); 
     grid-gap: 24px;
 }
 
@@ -241,7 +162,7 @@ body {
 
 .filter-dropdown select,
 .filter-dropdown input[type="date"] {
-    width: 150px;
+    width: 100%; /* Make inputs fill their grid column */
     margin-top: 6px;
     border: 1px solid #e5e7eb;
     border-radius: 6px;
@@ -257,7 +178,8 @@ body {
     -webkit-appearance: none;
     -moz-appearance: none;
     padding-right: 2rem;
-    background: url("data:image/svg+xml;utf8,<svg width='16' height='11' viewBox='0 0 16 11' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M7.99976 7.19417L13.9025 1.29147C14.0125 1.17758 14.144 1.08674 14.2895 1.02424C14.435 0.961746 14.5915 0.92885 14.7498 0.927474C14.9082 0.926098 15.0652 0.95627 15.2117 1.01623C15.3583 1.07619 15.4914 1.16473 15.6034 1.27669C15.7153 1.38866 15.8039 1.5218 15.8638 1.66835C15.9238 1.8149 15.954 1.97192 15.9526 2.13026C15.9512 2.28859 15.9183 2.44506 15.8558 2.59055C15.7933 2.73604 15.7025 2.86762 15.5886 2.97762L8.84283 9.72339C8.61921 9.94694 8.31596 10.0725 7.99976 10.0725C7.68356 10.0725 7.38031 9.94694 7.15669 9.72339L0.41092 2.97762C0.297028 2.86762 0.206183 2.73604 0.143687 2.59055C0.0811915 2.44506 0.0482959 2.28859 0.04692 2.13026C0.0455441 1.97192 0.0757155 1.8149 0.135674 1.66835C0.195632 1.5218 0.284176 1.38866 0.39614 1.27669C0.508103 1.16473 0.641244 1.07619 0.787794 1.01623C0.934343 0.95627 1.09137 0.926098 1.2497 1.02424C1.40804 0.92885 1.56451 0.961746 1.71 1.02424C1.85548 1.08674 1.98706 1.17758 2.09706 1.29147L7.99976 7.19417Z' fill='%23374151'/></svg>") no-repeat right 0.75rem center;
+    /* Re-using your existing custom arrow graphic */
+    background: url("data:image/svg+xml;utf8,<svg width='16' height='11' viewBox='0 0 16 11' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M7.99976 7.19417L13.9025 1.29147C14.0125 1.17758 14.144 1.08674 14.2895 1.02424C14.435 0.961746 14.5915 0.92885 14.7498 0.927474C14.9082 0.926098 15.0652 0.95627 15.2117 1.01623C15.3583 1.07619 15.4914 1.16473 15.6034 1.27669C15.7153 1.38866 15.8039 1.5218 15.8638 1.66835C15.9238 1.8149 15.9540 1.97192 15.9526 2.13026C15.9512 2.28859 15.9183 2.44506 15.8558 2.59055C15.7933 2.73604 15.7025 2.86762 15.5886 2.97762L8.84283 9.72339C8.61921 9.94694 8.31596 10.0725 7.99976 10.0725C7.68356 10.0725 7.38031 9.94694 7.15669 9.72339L0.41092 2.97762C0.297028 2.86762 0.206183 2.73604 0.143687 2.59055C0.0811915 2.44506 0.0482959 2.28859 0.04692 2.13026C0.0455441 1.97192 0.0757155 1.8149 0.135674 1.66835C0.195632 1.5218 0.284176 1.38866 0.39614 1.27669C0.508103 1.16473 0.641244 1.07619 0.787794 1.01623C0.934343 0.957121 1.09137 0.926098 1.24970 1.02424C1.40804 0.92885 1.56451 0.961746 1.71 1.02424C1.85548 1.08674 1.98706 1.17758 2.09706 1.29147L7.99976 7.19417Z' fill='%23374151'/></svg>") no-repeat right 0.75rem center;
     background-size: 13px 8px;
 }
 
@@ -314,6 +236,183 @@ body {
     color: #fff;
     transform: translateY(-1px);
 }
+
+/* ========================================= */
+/* ARCHIVE-SPECIFIC COMPONENTS (NEW) */
+/* ========================================= */
+
+.content-header {
+    /* Matches the layout required by archive.html */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-button {
+    background: #ffffff;
+    border: 1px solid #ccc;
+    padding: 8px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #333333;
+    transition: all 0.2s ease;
+}
+
+.dropdown-button:hover {
+    border-color: #ff9900;
+    color: #ff9900;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    min-width: 180px;
+    background-color: #ffffff;
+    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+    border-radius: 8px;
+    top: 100%; /* Position below the button */
+    left: 0;
+    margin-top: 5px;
+    overflow: hidden;
+}
+
+.dropdown-content a {
+    color: #555555;
+    padding: 10px 16px;
+    text-decoration: none;
+    display: block;
+    font-size: 0.9rem;
+}
+
+.dropdown-content a:hover {
+    background-color: #f2f2f2;
+    color: #000;
+}
+
+/* Card View */
+.archive-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.archive-card {
+    background-color: #ffffff;
+    border: 1px solid #E0E0E0;
+    border-radius: 8px;
+    padding: 25px 20px;
+    text-align: center;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.archive-card:hover {
+    background-color: #f2f2f2;
+    border-color: #ff9900;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+}
+
+.archive-card .title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #00681a; /* Use primary color for emphasis */
+    margin-bottom: 8px;
+}
+
+.archive-card .projects-info {
+    font-size: 0.9rem;
+    color: #808080;
+}
+
+.archive-card .projects-count {
+    font-weight: 600;
+    color: #333333;
+}
+
+/* Table View */
+.table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    margin-top: 1rem;
+}
+
+.table-box {
+    background: #FFFFFF; 
+    border-radius: 8px; 
+    box-shadow: 0 0 0 1px #dfdfdf, 0 0 15px rgba(0, 0, 0, 0.08);
+}
+
+#projectsTable {
+    width: 100%;
+    border-collapse: collapse;
+    background: #FFFFFF;
+    border-radius: 8px;
+}
+
+#projectsTable th {
+    font-size: 0.95rem;
+    font-weight: 600; 
+    background: #eeeeee; 
+    border-bottom: 1px solid #E0E0E0; 
+    padding: 16px 18px; 
+    text-align: left;
+    font-family: 'Inter', Arial, sans-serif;
+    color: #333333; 
+    box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.05); 
+}
+
+#projectsTable td {
+    font-size: 14px; 
+    font-weight: 400;
+    border: none;
+    border-bottom: 1px solid #E0E0E0; 
+    padding: 14px 18px; 
+    text-align: left;
+    font-family: 'Inter', Arial, sans-serif;
+    color: #555555; 
+} 
+
+#projectsTable tr:last-child td {
+    border-bottom: none;
+} 
+
+#projectsTable tr:nth-child(even) {
+    background-color: #f8f8f8;
+} 
+
+#projectsTable tr:hover {
+    background-color: #f2f2f2; 
+    cursor: default;
+}
+
+#projectsTable .link {
+    color: #0099FF;
+    text-decoration: none;
+}
+
+#projectsTable .link:hover {
+    text-decoration: underline;
+}
+
+/* ========================================= */
+/* PAGINATION (from original file) */
+/* ========================================= */
 .pagination-container {
     display: flex;
     justify-content: center;
@@ -354,6 +453,9 @@ body {
     cursor: not-allowed;
 }
 
+/* ========================================= */
+/* MEDIA QUERIES (from original file) */
+/* ========================================= */
 @media (max-width: 900px) {
     .announce-grid {
         grid-template-columns: 1fr;

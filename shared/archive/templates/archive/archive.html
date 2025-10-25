@@ -13,290 +13,398 @@
 </head>
 
 <body>
-<!-- Main Content -->
 <div class="main-content">
 
-	<!-- Search section -->
-	<div class="search-container">
-		<form class="search-bar" method="get" action="">
-			<svg width="16" height="16" style="margin-right:10px;"> <use href="#icon-search"></use> </svg>
-			<input type="text" name="search" placeholder="Search by project title" value="{{ search|default:'' }}"/>
-			<button type="button" id="filterBtn" style="background:none;border:none;padding:0;margin-right:5px;cursor:pointer;">
-				<svg width="16" height="16"> <use href="#icon-filter"></use> </svg>
-			</button>
-			<div id="filterDropdown" class="filter-dropdown">
-				<div class="filter-grid" style="grid-template-columns: repeat(2, 1fr); grid-template-rows: 1fr;">
-					<label>Sort By
-						<select name="sort_by">
-							<option value="title" {% if sort_by == 'title' %}selected{% endif %}>Title</option>
-							<option value="submitted_at" {% if sort_by == 'submitted_at' %}selected{% endif %}>Date Submitted</option>
-							<option value="submitted_by" {% if sort_by == 'submitted_by' %}selected{% endif %}>Submitted By</option>
-							<option value="status" {% if sort_by == 'status' %}selected{% endif %}>Status</option>
-						</select>
-					</label>
-					<label>Order
-						<select name="order">
-							<option value="asc" {% if order == 'asc' %}selected{% endif %}>Ascending</option>
-							<option value="desc" {% if order == 'desc' %}selected{% endif %}>Descending</option>
-						</select>
-					</label>
-					<label>Status
-						<select name="status">
-							<option value="">All Statuses</option>
-							{% for s in all_statuses %}
-							<option value="{{ s.0 }}" {% if status == s.0 %}selected{% endif %}>{{ s.1 }}</option>
-							{% endfor %}
-						</select>
-					</label>
-					<label>Date
-						<input type="date" name="date" value="{{ date|default:'' }}" style="width: 87%"/>
-					</label>
-				</div>
-				<div class="filter-actions">
-					<button type="submit" class="filter-apply">Apply</button>
-					<button type="button" id="closeFilter" class="filter-close">Close</button>
+	<div class="content-header">
+		<div style="display: flex; align-items: center;">
+			<div class="project-text" id="archiveTitle" style="margin-right: 20px;">Archives</div>
+			<div class="dropdown">
+				<button id="categoryDropdownBtn" class="dropdown-button">
+					<span id="currentCategoryDisplay">Group By: {{ categories.0.1 }}</span>
+					<svg width="15" height="10" style="margin-left: 10px;"> <use href="#dropdown-icon"></use> </svg>
+				</button>
+				<div id="categoryDropdownContent" class="dropdown-content">
+					{% for category_slug, category_name in categories %}
+						<a href="#" data-category-slug="{{ category_slug }}" data-category-name="{{ category_name }}">{{ category_name }}</a>
+					{% endfor %}
 				</div>
 			</div>
-		</form>
+		</div>
+
+		<div class="search-container">
+			<form class="search-bar" id="searchForm" method="get" action="#">
+				<svg width="16" height="16" style="margin-right:10px;"> <use href="#icon-search"></use> </svg>
+				<input type="text" name="search" placeholder="Search project title or leader name" />
+				<button type="button" id="filterBtn" style="background:none;border:none;padding:0;margin-right:5px;cursor:pointer; display: none;"> 
+					<svg width="16" height="16"> <use href="#icon-filter"></use> </svg>
+				</button>
+				<div id="filterDropdown" class="filter-dropdown" style="display: none;">
+					<div class="filter-grid" style="grid-template-columns: repeat(2, 1fr); grid-template-rows: 1fr;">
+						<label>Sort By
+							<select name="sort_by">
+								<option value="title">Title</option>
+								<option value="start_date">Date Started</option>
+								<option value="project_leader__last_name">Project Leader</option>
+								<option value="status">Status</option>
+							</select>
+						</label>
+						<label>Order
+							<select name="order">
+								<option value="asc">Ascending</option>
+								<option value="desc">Descending</option>
+							</select>
+						</label>
+						<label>Status
+							<select name="status">
+								<option value="">All Statuses</option>
+								<option value="NOT_STARTED">Not Started</option>
+								<option value="IN_PROGRESS">In Progress</option>
+								<option value="COMPLETED">Completed</option>
+								<option value="ON_HOLD">On Hold</option>
+								<option value="CANCELLED">Cancelled</option>
+							</select>
+						</label>
+						<label>Date
+							<input type="date" name="date" style="width: 87%"/>
+						</label>
+					</div>
+					<div class="filter-actions">
+						<button type="submit" class="filter-apply">Apply</button>
+						<button type="button" id="closeFilter" class="filter-close">Close</button>
+					</div>
+				</div>
+			</form>
+		</div>
 	</div> 
 	 
-	<div class="container-a">
-		<div class="text-sort-container">
-			<div class="project-text">Archives</div>
+	<div id="card-view" class="content-section">
+		<div class="archive-grid" id="cardGrid">
+			<div style="grid-column: 1 / -1; text-align: center; padding: 50px;" id="loadingIndicator">Loading archives...</div>
 		</div>
 	</div>
 
-	<!-- Year Grid View -->
-	<div id="year-view" class="content-section active">
-		<div class="archive-grid" id="yearGrid">
-			<a href="#" class="archive-card" data-year="2025">
-				<div class="year">2025</div>
-				<div class="projects-info">No. of Projects: <span class="projects-count">3</span></div>
-			</a>
-			<a href="#" class="archive-card" data-year="2024">
-				<div class="year">2024</div>
-				<div class="projects-info">No. of Projects: <span class="projects-count">10</span></div>
-			</a>
-			<a href="#" class="archive-card" data-year="2023">
-				<div class="year">2023</div>
-				<div class="projects-info">No. of Projects: <span class="projects-count">23</span></div>
-			</a>
-			<a href="#" class="archive-card" data-year="2022">
-				<div class="year">2022</div>
-				<div class="projects-info">No. of Projects: <span class="projects-count">15</span></div>
-			</a>
-			<a href="#" class="archive-card" data-year="2021">
-				<div class="year">2021</div>
-				<div class="projects-info">No. of Projects: <span class="projects-count">9</span></div>
-			</a>
-		</div>
-	</div>
-
-	<!-- Table View (2023 Projects) -->
 	<div id="table-view" class="content-section">
+		<div class="container-a">
+			<div class="text-sort-container">
+				<div class="project-text" id="tableTitle"></div>
+				<button id="backToCardsBtn" class="pagination-button">Back to Group View</button>
+			</div>
+		</div>
 		<div class="table-wrap">
 			<div class="table-box">
-				<table>
+				<table id="projectsTable">
 					<thead>
 						<tr>
 							<th>Name</th>
-							<th>Proponents</th>
-							<th>Date Started</th>
-							<th>Date Ended</th>
-							<th>Duration</th>
-							<th>No. of Trainees</th>
-							<th>Satisfaction Evaluation</th>
-							<th>Action</th>
+							<th>Project Leader (College)</th>
+							<th>Start Date</th>
+							<th>End Date</th>
+							<th>Progress</th>
+							<th>Trainees</th>
+							<th>Status</th>
 						</tr>
 					</thead>
 					<tbody>
-						<tr>
-							<td>
-								<a href="#" class="link">Pre-Release Psychological Intervention Program for PDL's</a>
-							</td>
-							<td>
-								<div><a href="#" class="link">Yvie G. Renaldo</a></div>
-								<div><a href="#" class="link">Estes U. Talledo</a></div>
-							</td>
-							<td>January 06, 2023</td>
-							<td>January 23, 2024</td>
-							<td>1 year, 17 days</td>
-							<td class="center">115</td>
-							<td>Excellent</td>
-							<td>Candidate for further research</td>
-						</tr>
-					</tbody>
+						</tbody>
 				</table>
 			</div>
 		</div>
-	</div>
-
-	<!-- College Cards View -->
-	<div id="college-view" class="content-section">
-		<div class="content">
-			<div class="cards">
-				<a href="#" style="text-decoration:none; color: inherit;">
-					<div class="college-card">
-						<div class="badge"><img src="{% static 'college_logos/collegeofartshumanities.jpg' %}" alt="College of Arts and Humanities"></div>
-						<div class="college-name">COLLEGE OF ARTS AND HUMANITIES</div>
-						<div class="muted">No. of Projects: 5</div>
-					</div>
-				</a>
-				<a href="#" style="text-decoration:none; color: inherit;">
-					<div class="college-card">
-						<div class="badge"><img src="{% static 'college_logos/collegeofcriminalandjustice.jpg' %}" alt="College of Criminal Justice Education"></div>
-						<div class="college-name">COLLEGE OF CRIMINAL JUSTICE EDUCATION</div>
-						<div class="muted">No. of Projects: 5</div>
-					</div>
-				</a>
-				<a href="#" style="text-decoration:none; color: inherit;">
-					<div class="college-card">
-						<div class="badge"><img src="{% static 'college_logos/collegeofbusinessaccountancy.jpg' %}" alt="College of Business and Accountancy"></div>
-						<div class="college-name">COLLEGE OF BUSINESS AND ACCOUNTANCY</div>
-						<div class="muted">No. of Projects: 3</div>
-					</div>
-				</a>
-				<a href="#" style="text-decoration:none; color: inherit;">
-					<div class="college-card">
-						<div class="badge"><img src="{% static 'college_logos/collegeofengineering.png' %}" alt="College of Engineering"></div>
-						<div class="college-name">COLLEGE OF ENGINEERING</div>
-						<div class="muted">No. of Projects: 5</div>
-					</div>
-				</a>
-				<a href="#" style="text-decoration:none; color: inherit;">
-					<div class="college-card">
-						<div class="badge"><img src="{% static 'college_logos/collegeofengineering.png' %}" alt="College of Architecture"></div>
-						<div class="college-name">COLLEGE OF ARCHITECTURE</div>
-						<div class="muted">No. of Projects: 5</div>
-					</div>
-				</a>
-				<a href="#" style="text-decoration:none; color: inherit;">
-					<div class="college-card">
-						<div class="badge"><img src="{% static 'college_logos/collegeofhospitalitymanagement.jpg' %}" alt="College of Hospitality and Tourism Management"></div>
-						<div class="college-name">COLLEGE OF HOSPITALITY AND TOURISM MANAGEMENT</div>
-						<div class="muted">No. of Projects: 5</div>
-					</div>
-				</a>
-				<a href="#" style="text-decoration:none; color: inherit;">
-					<div class="college-card">
-						<div class="badge"><img src="{% static 'college_logos/collegeofnursing.jpg' %}" alt="College of Nursing and Health Sciences"></div>
-						<div class="college-name">COLLEGE OF NURSING AND HEALTH SCIENCES</div>
-						<div class="muted">No. of Projects: 5</div>
-					</div>
-				</a>
-				<a href="#" style="text-decoration:none; color: inherit;">
-					<div class="college-card">
-						<div class="badge"><img src="{% static 'college_logos/collegeofsciences.jpg' %}" alt="College of Sciences"></div>
-						<div class="college-name">COLLEGE OF SCIENCES</div>
-						<div class="muted">No. of Projects: 5</div>
-					</div>
-				</a>
-				<a href="#" style="text-decoration:none; color: inherit;">
-					<div class="college-card">
-						<div class="badge"><img src="{% static 'college_logos/collegeofteachereducation.png' %}" alt="College of Teacher Education"></div>
-						<div class="college-name">COLLEGE OF TEACHER EDUCATION</div>
-						<div class="muted">No. of Projects: 3</div>
-					</div>
-				</a>
-			</div>
+		<div class="pagination-container" id="tablePagination">
 		</div>
-	</div> 
-		
-	<!-- Pagination -->
-	<div class="pagination-container">
-		{% if page_obj.has_previous %}
-			<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page=1">First</a>
-			<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a>
-		{% else %}
-			<button class="pagination-button" disabled>First</button>
-			<button class="pagination-button" disabled>Previous</button>
-		{% endif %}
-
-		{% for num in page_range %}
-			{% if num == page_obj.number %}
-				<button class="pagination-button active" disabled>{{ num }}</button>
-			{% else %}
-				<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ num }}">{{ num }}</a>
-			{% endif %}
-		{% endfor %}
-
-		{% if page_obj.has_next %}
-			<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.next_page_number }}">Next</a>
-			<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ paginator.num_pages }}">Last</a>
-		{% else %}
-			<button class="pagination-button" disabled>Next</button>
-			<button class="pagination-button" disabled>Last</button>
-		{% endif %}
 	</div>
+	
+	<svg style="display:none;">
+		<symbol id="dropdown-icon" viewBox="0 0 15 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+			<path d="M7.11427 6.46831L12.3293 1.25327C12.4265 1.15265 12.5427 1.07239 12.6713 1.01717C12.7998 0.961959 12.9381 0.932896 13.0779 0.93168C13.2178 0.930465 13.3566 0.957121 13.486 1.01009C13.6155 1.06307 13.7331 1.1413 13.8321 1.24022C13.931 1.33914 14.0092 1.45677 14.0622 1.58624C14.1152 1.71572 14.1418 1.85445 14.1406 1.99434C14.1394 2.13423 14.1103 2.27247 14.0551 2.40101C13.9999 2.52954 13.9196 2.6458 13.819 2.74298L7.85912 8.70287C7.66155 8.90038 7.39363 9.01133 7.11427 9.01133C6.83490 9.01133 6.56698 8.90038 6.36941 8.70287L0.409525 2.74298C0.308901 2.6458 0.228639 2.52954 0.173424 2.40101C0.118209 2.27247 0.089146 2.13423 0.0879304 1.99434C0.0867148 1.85445 0.113371 1.71572 0.166344 1.58624C0.219317 1.45677 0.297546 1.33914 0.396466 1.24022C0.495386 1.1413 0.613016 1.06307 0.742492 1.01009C0.871969 0.957121 1.0107 0.930465 1.15059 0.93168C1.29048 0.932896 1.42872 0.961959 1.55726 1.01717C1.68579 1.07239 1.80205 1.15265 1.89923 1.25327L7.11427 6.46831Z" fill="black"/>
+		</symbol>
+
+		<symbol id="icon-search" viewBox="0 0 21 21" fill="none">
+			<path d="M8.89152 15.9057C9.75056 15.9057 10.6012 15.7365 11.3948 15.4077C12.1885 15.079 12.9096 14.5972 13.5171 13.9897C14.1245 13.3823 14.6064 12.6612 14.9351 11.8675C15.2638 11.0739 15.4330 10.2232 15.4330 9.36417C15.4330 8.50513 15.2638 7.65450 14.9351 6.86084C14.6064 6.06719 14.1245 5.34606 13.5171 4.73862C12.9096 4.13119 12.1885 3.64934 11.3948 3.32060C10.6012 2.99186 9.75056 2.82266 8.89152 2.82266C7.15660 2.82266 5.49274 3.51185 4.26597 4.73862C3.03919 5.96540 2.35000 7.62926 2.35000 9.36417C2.35000 11.0991 3.03919 12.7630 4.26597 13.9897C5.49274 15.2165 7.15660 15.9057 8.89152 15.9057V15.9057ZM15.7819 14.713L19.6850 18.6161C19.7891 18.7167 19.8720 18.8371 19.9291 18.9701C19.9861 19.1032 20.0161 19.2463 20.0173 19.391C20.0184 19.5358 19.9907 19.6793 19.9358 19.8133C19.8809 19.9472 19.7999 20.0689 19.6974 20.1712C19.5950 20.2735 19.4732 20.3544 19.3392 20.4091C19.2052 20.4638 19.0616 20.4913 18.9168 20.4899C18.7720 20.4886 18.6290 20.4584 18.4960 20.4012C18.3631 20.3439 18.2428 20.2608 18.1423 20.1566L14.2392 16.2535C12.4866 17.614 10.2814 18.2554 8.07247 18.0472C5.86357 17.8390 3.81705 16.7968 2.34951 15.1328C0.881971 13.4688 0.103735 11.3080 0.173229 9.09044C0.242723 6.87284 1.15472 4.76508 2.72357 3.19623C4.29242 1.62738 6.40018 0.715379 8.61778 0.645885C10.8354 0.576391 12.9961 1.35463 14.6601 2.82217C16.3241 4.28971 17.3663 6.33623 17.5745 8.54513C17.7827 10.7540 17.1413 12.9592 15.7808 14.7119L15.7819 14.713Z" fill="#5A5252"/>
+		</symbol>
+
+		<symbol id="icon-filter" viewBox="0 0 23 22" fill="none">
+			<path opacity="0.9" d="M21.5399 1.92871H1.37988L9.44388 11.4644V18.0567L13.4759 20.0727V11.4644L21.5399 1.92871Z" stroke="#1E1E1E" stroke-width="2.016" stroke-linecap="round" stroke-linejoin="round"/>
+		</symbol>
+
+	</svg>
 </div> 
 	
-<svg style="display:none;">
-
-	<!-- Dropdown -->
-	<symbol id="dropdown-icon" viewBox="0 0 15 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-		<path d="M7.11427 6.46831L12.3293 1.25327C12.4265 1.15265 12.5427 1.07239 12.6713 1.01717C12.7998 0.961959 12.9381 0.932896 13.0779 0.93168C13.2178 0.930465 13.3566 0.957121 13.486 1.01009C13.6155 1.06307 13.7331 1.1413 13.8321 1.24022C13.931 1.33914 14.0092 1.45677 14.0622 1.58624C14.1152 1.71572 14.1418 1.85445 14.1406 1.99434C14.1394 2.13423 14.1103 2.27247 14.0551 2.40101C13.9999 2.52954 13.9196 2.6458 13.819 2.74298L7.85912 8.70287C7.66155 8.90038 7.39363 9.01133 7.11427 9.01133C6.8349 9.01133 6.56698 8.90038 6.36941 8.70287L0.409525 2.74298C0.308901 2.6458 0.228639 2.52954 0.173424 2.40101C0.118209 2.27247 0.089146 2.13423 0.0879304 1.99434C0.0867148 1.85445 0.113371 1.71572 0.166344 1.58624C0.219317 1.45677 0.297546 1.33914 0.396466 1.24022C0.495386 1.1413 0.613016 1.06307 0.742492 1.01009C0.871969 0.957121 1.0107 0.930465 1.15059 0.93168C1.29048 0.932896 1.42872 0.961959 1.55726 1.01717C1.68579 1.07239 1.80205 1.15265 1.89923 1.25327L7.11427 6.46831Z" fill="black"/>
-	</symbol>
-
-	<!-- Search -->
-	<symbol id="icon-search" viewBox="0 0 21 21" fill="none">
-		<path d="M8.89152 15.9057C9.75056 15.9057 10.6012 15.7365 11.3948 15.4077C12.1885 15.079 12.9096 14.5972 13.5171 13.9897C14.1245 13.3823 14.6064 12.6612 14.9351 11.8675C15.2638 11.0739 15.433 10.2232 15.433 9.36417C15.433 8.50513 15.2638 7.6545 14.9351 6.86084C14.6064 6.06719 14.1245 5.34606 13.5171 4.73862C12.9096 4.13119 12.1885 3.64934 11.3948 3.3206C10.6012 2.99186 9.75056 2.82266 8.89152 2.82266C7.1566 2.82266 5.49274 3.51185 4.26597 4.73862C3.03919 5.9654 2.35 7.62926 2.35 9.36417C2.35 11.0991 3.03919 12.763 4.26597 13.9897C5.49274 15.2165 7.1566 15.9057 8.89152 15.9057V15.9057ZM15.7819 14.713L19.685 18.6161C19.7891 18.7167 19.872 18.8371 19.9291 18.9701C19.9861 19.1032 20.0161 19.2463 20.0173 19.391C20.0184 19.5358 19.9907 19.6793 19.9358 19.8133C19.8809 19.9472 19.7999 20.0689 19.6974 20.1712C19.595 20.2735 19.4732 20.3544 19.3392 20.4091C19.2052 20.4638 19.0616 20.4913 18.9168 20.4899C18.772 20.4886 18.629 20.4584 18.496 20.4012C18.3631 20.3439 18.2428 20.2608 18.1423 20.1566L14.2392 16.2535C12.4866 17.614 10.2814 18.2554 8.07247 18.0472C5.86357 17.839 3.81705 16.7968 2.34951 15.1328C0.881971 13.4688 0.103735 11.308 0.173229 9.09044C0.242723 6.87284 1.15472 4.76508 2.72357 3.19623C4.29242 1.62738 6.40018 0.715379 8.61778 0.645885C10.8354 0.576391 12.9961 1.35463 14.6601 2.82217C16.3241 4.28971 17.3663 6.33623 17.5745 8.54513C17.7827 10.754 17.1413 12.9592 15.7808 14.7119L15.7819 14.713Z" fill="#5A5252"/>
-	</symbol>
-
-	<!-- Filter -->
-	<symbol id="icon-filter" viewBox="0 0 23 22" fill="none">
-		<path opacity="0.9" d="M21.5399 1.92871H1.37988L9.44388 11.4644V18.0567L13.4759 20.0727V11.4644L21.5399 1.92871Z" stroke="#1E1E1E" stroke-width="2.016" stroke-linecap="round" stroke-linejoin="round"/>
-	</symbol>
-
-</svg>
-
 <script>
-	document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('.settings-dropdown-toggle').forEach(function(btn) {
-            btn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                // Hide all other dropdowns
-                document.querySelectorAll('.settings-dropdown-menu').forEach(function(menu) {
-                    menu.style.display = 'none';
-                });
-                // Show this dropdown
-                var menu = btn.parentElement.querySelector('.settings-dropdown-menu');
-                if (menu) {
-                    menu.style.display = 'block';
-                }
-            });
-        });
-        // Hide dropdown when clicking outside
-        document.addEventListener('click', function() {
-            document.querySelectorAll('.settings-dropdown-menu').forEach(function(menu) {
-                menu.style.display = 'none';
-            });
-        });
+	const categoryDropdownBtn = document.getElementById('categoryDropdownBtn');
+	const categoryDropdownContent = document.getElementById('categoryDropdownContent');
+	const currentCategoryDisplay = document.getElementById('currentCategoryDisplay');
+	const cardView = document.getElementById('card-view');
+	const tableView = document.getElementById('table-view');
+	const cardGrid = document.getElementById('cardGrid');
+	const projectsTableBody = document.querySelector('#projectsTable tbody');
+	const tableTitle = document.getElementById('tableTitle');
+	const backToCardsBtn = document.getElementById('backToCardsBtn');
+	const loadingIndicator = document.getElementById('loadingIndicator');
+	const filterBtn = document.getElementById('filterBtn');
+	
+	// Default category set in ArchiveView context
+	let currentCategorySlug = '{{ default_category }}'; 
+	let currentFilterKey = null;
+	let currentFilterName = 'Year Started';
+
+	// --- Utility Functions ---
+
+	function showLoading() {
+		cardGrid.innerHTML = '';
+		loadingIndicator.style.display = 'block';
+	}
+
+	function hideLoading() {
+		loadingIndicator.style.display = 'none';
+	}
+
+	function switchView(view) {
+		if (view === 'cards') {
+			cardView.style.display = 'block';
+			tableView.style.display = 'none';
+			filterBtn.style.display = 'none';
+			document.getElementById('searchForm').style.display = 'flex'; 
+			document.getElementById('filterDropdown').style.display = 'none'; 
+		} else if (view === 'table') {
+			cardView.style.display = 'none';
+			tableView.style.display = 'block';
+			filterBtn.style.display = 'inline-block';
+		}
+	}
+
+	function renderCards(data, categorySlug) {
+		hideLoading();
+		cardGrid.innerHTML = '';
+		if (data.length === 0) {
+			cardGrid.innerHTML = '<p style="grid-column: 1 / -1; text-align: center;">No projects found for this grouping.</p>';
+			return;
+		}
+
+		data.forEach(item => {
+			const card = document.createElement('a');
+			card.className = 'archive-card';
+			card.href = '#'; 
+			card.setAttribute('data-filter-key', item.filter_key);
+			card.setAttribute('data-category', categorySlug);
+			card.innerHTML = `
+				<div class="title">${item.name}</div>
+				<div class="projects-info">No. of Projects: <span class="count">${item.count}</span></div>
+			`;
+			card.addEventListener('click', (e) => {
+				e.preventDefault();
+				const filterKey = e.currentTarget.getAttribute('data-filter-key');
+				const category = e.currentTarget.getAttribute('data-category');
+				const categoryName = e.currentTarget.querySelector('.title').textContent;
+				loadProjectTable(category, filterKey, categoryName);
+			});
+			cardGrid.appendChild(card);
+		});
+	}
+
+	function renderProjectTable(data) {
+		projectsTableBody.innerHTML = '';
+		if (data.length === 0) {
+			projectsTableBody.innerHTML = `<tr><td colspan="7" style="text-align: center;">No projects found for this filter.</td></tr>`;
+			return;
+		}
+		
+		data.forEach(project => {
+			const row = projectsTableBody.insertRow();
+			
+			const leaderName = project.project_leader ? project.project_leader.full_name : 'N/A';
+			const collegeName = (project.project_leader && project.project_leader.college) ? ` (${project.project_leader.college.name})` : '';
+			const progressDisplay = project.progress_display || '0/0 (0%)';
+            // Placeholder URL, adjust if project detail page URL structure is known
+			const projectDetailUrl = `/projects/${project.id}/`; 
+
+			row.innerHTML = `
+				<td><a href="${projectDetailUrl}" class="link">${project.title}</a></td>
+				<td>${leaderName} ${collegeName}</td>
+				<td>${project.start_date || 'N/A'}</td>
+				<td>${project.estimated_end_date || 'N/A'}</td>
+				<td>${progressDisplay}</td>
+				<td class="center">${project.estimated_trainees || 0}</td>
+				<td>${project.status}</td>
+			`;
+		});
+	}
+
+	// --- Data Fetching Functions ---
+
+	async function loadAggregationData(categorySlug) {
+		switchView('cards');
+		showLoading();
+		
+		try {
+			// Using the archives path prefix as defined in your main urls.py
+			const apiURL = `/archives/api/aggregate/${categorySlug}/`; 
+			const response = await fetch(apiURL);
+
+			if (!response.ok) {
+				const errorText = await response.text();
+				console.error(`API Error Status: ${response.status}`, errorText);
+				throw new Error(`API returned status ${response.status}`);
+			}
+			const data = await response.json();
+			renderCards(data, categorySlug);
+			currentCategorySlug = categorySlug;
+		} catch (error) {
+			console.error("Error fetching aggregation data:", error);
+			cardGrid.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: red;">Failed to load data. Please check the API endpoint and server console for details.</p>';
+		} 
+	}
+	
+	async function loadProjectTable(category, filterValue, titleName) {
+		currentFilterKey = filterValue;
+		currentFilterName = titleName;
+
+		switchView('table');
+		tableTitle.textContent = `Archive: Projects in ${currentFilterName}`;
+		projectsTableBody.innerHTML = `<tr><td colspan="7" style="text-align: center;">Loading projects...</td></tr>`;
+
+		// Get current search/filter parameters from the form
+		const formData = new FormData(document.getElementById('searchForm'));
+		const searchParams = new URLSearchParams(formData).toString();
+		
+		// The API URL includes the category, filter value, and search/sort params
+		const apiURL = `/archives/api/projects/${category}/${filterValue}/?${searchParams}`;
+
+		try {
+			const response = await fetch(apiURL);
+			if (!response.ok) {
+				const errorText = await response.text();
+				console.error(`API Error Status: ${response.status}`, errorText);
+				throw new Error(`API returned status ${response.status}`);
+			}
+			const jsonResponse = await response.json();
+			
+			// DRF ListAPIView with pagination will return {count: N, next: URL, previous: URL, results: [...]}
+			renderProjectTable(jsonResponse.results || jsonResponse);
+			
+			// Simple pagination button rendering (needs full implementation if pagination is deep)
+			const paginationContainer = document.getElementById('tablePagination');
+			paginationContainer.innerHTML = '';
+			
+			if (jsonResponse.previous) {
+				const prevUrl = new URL(jsonResponse.previous);
+				paginationContainer.innerHTML += `<a class="pagination-button" href="#" onclick="event.preventDefault(); loadProjectTablePage('${prevUrl.search}');">Previous</a>`;
+			}
+			if (jsonResponse.next) {
+				const nextUrl = new URL(jsonResponse.next);
+				paginationContainer.innerHTML += `<a class="pagination-button" href="#" onclick="event.preventDefault(); loadProjectTablePage('${nextUrl.search}');">Next</a>`;
+			}
+			
+		} catch (error) {
+			console.error("Error fetching project list:", error);
+			projectsTableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: red;">Failed to load project list.</td></tr>`;
+		}
+	}
+	
+	// Function to handle pagination clicks by taking the query string
+	async function loadProjectTablePage(queryString) {
+		const apiURL = `/archives/api/projects/${currentCategorySlug}/${currentFilterKey}/${queryString}`;
+		
+		projectsTableBody.innerHTML = `<tr><td colspan="7" style="text-align: center;">Loading page...</td></tr>`;
+
+		try {
+			const response = await fetch(apiURL);
+			if (!response.ok) {
+				throw new Error(`API returned status ${response.status}`);
+			}
+			const jsonResponse = await response.json();
+			renderProjectTable(jsonResponse.results || jsonResponse);
+
+			// Re-render pagination
+			const paginationContainer = document.getElementById('tablePagination');
+			paginationContainer.innerHTML = '';
+			
+			if (jsonResponse.previous) {
+				const prevUrl = new URL(jsonResponse.previous);
+				paginationContainer.innerHTML += `<a class="pagination-button" href="#" onclick="event.preventDefault(); loadProjectTablePage('${prevUrl.search}');">Previous</a>`;
+			}
+			if (jsonResponse.next) {
+				const nextUrl = new URL(jsonResponse.next);
+				paginationContainer.innerHTML += `<a class="pagination-button" href="#" onclick="event.preventDefault(); loadProjectTablePage('${nextUrl.search}');">Next</a>`;
+			}
+		} catch (error) {
+			console.error("Error fetching paginated list:", error);
+			projectsTableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: red;">Failed to load page.</td></tr>`;
+		}
+	}
+
+
+	// --- Event Listeners and Initial Load ---
+
+	// Category Dropdown Toggle
+	categoryDropdownBtn.addEventListener('click', (e) => {
+		e.stopPropagation();
+		categoryDropdownContent.style.display = categoryDropdownContent.style.display === 'block' ? 'none' : 'block';
+	});
+
+	// Category Selection
+	categoryDropdownContent.querySelectorAll('a').forEach(link => {
+		link.addEventListener('click', (e) => {
+			e.preventDefault();
+			const slug = e.currentTarget.getAttribute('data-category-slug');
+			const name = e.currentTarget.getAttribute('data-category-name');
+			
+			currentCategoryDisplay.textContent = `Group By: ${name}`;
+			categoryDropdownContent.style.display = 'none';
+			
+			loadAggregationData(slug);
+		});
+	});
+
+	// Back to Cards Button
+	backToCardsBtn.addEventListener('click', (e) => {
+		e.preventDefault();
+		loadAggregationData(currentCategorySlug); 
+	});
+
+	// Initial load
+	document.addEventListener('DOMContentLoaded', () => {
+		// Set initial text from context if available
+		currentCategoryDisplay.textContent = `Group By: {{ categories.0.1 }}`;
+		loadAggregationData(currentCategorySlug); 
+	});
+
+	// Hide category dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+		if (e.target !== categoryDropdownBtn && !categoryDropdownBtn.contains(e.target)) {
+			categoryDropdownContent.style.display = 'none';
+		}
     });
 
-    // Filter dropdown logic
-    const filterBtn = document.getElementById('filterBtn');
-    const filterDropdown = document.getElementById('filterDropdown');
-    const closeFilter = document.getElementById('closeFilter');
-    if (filterBtn && filterDropdown) {
+	// Filter dropdown logic
+    if (filterBtn && document.getElementById('filterDropdown')) {
         filterBtn.addEventListener('click', function(e) {
             e.preventDefault();
-            filterDropdown.style.display = 'block';
+            e.stopPropagation();
+            const filterDropdown = document.getElementById('filterDropdown');
+            filterDropdown.style.display = filterDropdown.style.display === 'block' ? 'none' : 'block';
         });
     }
-    if (closeFilter && filterDropdown) {
-        closeFilter.addEventListener('click', function(e) {
+
+    if (document.getElementById('closeFilter') && document.getElementById('filterDropdown')) {
+        document.getElementById('closeFilter').addEventListener('click', function(e) {
             e.preventDefault();
-            filterDropdown.style.display = 'none';
+            document.getElementById('filterDropdown').style.display = 'none';
         });
     }
-    // Hide dropdown when clicking outside
-    document.addEventListener('mousedown', function(e) {
-        if (filterDropdown && !filterDropdown.contains(e.target) && e.target !== filterBtn) {
-            filterDropdown.style.display = 'none';
-        }
-    });
+
+	// Handle search form submission to re-run the table query with new filters
+	document.getElementById('searchForm').addEventListener('submit', function(e) {
+		e.preventDefault();
+		if (tableView.style.display === 'block' && currentFilterKey !== null) {
+			// Reload table with new filters
+			loadProjectTable(currentCategorySlug, currentFilterKey, currentFilterName);
+		} else {
+			// If in card view, you could implement a search feature here if needed
+			loadAggregationData(currentCategorySlug); 
+		}
+		document.getElementById('filterDropdown').style.display = 'none';
+	});
 </script>
 </body>
 </html>
-
 {% endblock %}
