@@ -364,7 +364,7 @@ span.required {
     padding: 1rem;
 }
 
-.college-row {
+.college-row, .tag-row {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
@@ -374,7 +374,7 @@ span.required {
     margin-top: 5px;
 }
 
-#project-leader-tag-row-dropdown, #providers-tag-row-dropdown, #sdgs-tag-row-dropdown, #item-select-dropdown {
+#project-leader-tag-row-dropdown, #providers-tag-row-dropdown, #sdgs-tag-row-dropdown, #item-select-dropdown, #tag-row {
     font-family: 'Inter', Arial, sans-serif;
     font-size: 13px;
     padding: 8px 30px 8px 16px;
