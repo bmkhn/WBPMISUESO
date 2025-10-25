@@ -418,52 +418,34 @@ def add_user(request):
     success = False
     if request.method == 'POST':
         data = request.POST
-        files = request.FILES
-        required_fields = ['last_name', 'given_name', 'email', 'role', 'sex', 'password']
-        missing = [f for f in required_fields if not data.get(f)]
-        if missing:
-            error = f"Missing required fields: {', '.join(missing)}"
-        elif User.objects.filter(email=data.get('email')).exists():
+        if User.objects.filter(email=data.get('email')).exists():
             error = "Email already exists."
         else:
             try:
-                user = User()
-                user.last_name = data.get('last_name', '')
-                user.given_name = data.get('given_name', '')
-                user.middle_initial = data.get('middle_initial', '')
-                user.suffix = data.get('suffix', '')
-                user.sex = data.get('sex', '')
-                user.email = data.get('email', '')
-                user.contact_no = data.get('contact_no', '')
-                user.role = data.get('role', '')
-                user.username = data.get('email', '')
+                user = User.objects.create(
+                    last_name=data.get('last_name'),
+                    given_name=data.get('given_name'),
+                    middle_initial=data.get('middle_initial'),
+                    suffix=data.get('suffix'),
+                    sex=data.get('sex'),
+                    email=data.get('email'),
+                    contact_no=data.get('contact_no'),
 
-                password = data.get('password', '')
-                user.set_password(password)
+                    role=data.get('role'),
+                    username=data.get('email'),
 
-                if files.get('valid_id'):
-                    user.valid_id = files['valid_id']
-                user.is_confirmed = True
+                    college=College.objects.get(id=data.get('college')) if data.get('college') else None,
+                    campus=data.get('campus') if data.get('campus') else None,
+                    degree=data.get('degree'),
+                    expertise=data.get('expertise'),
+                    company=data.get('company'),
+                    industry=data.get('industry'),
 
-                # Role-specific fields
-                if user.role == 'IMPLEMENTER':
-                    user.degree = data.get('degree', '')
-                    user.expertise = data.get('expertise', '')
-                elif user.role == 'FACULTY':
-                    college_id = data.get('college')
-                    user.college = College.objects.get(id=college_id) if college_id else None
-                    user.campus = data.get('campus', '')
-                    user.degree = data.get('degree', '')
-                    user.expertise = data.get('expertise', '')
-                elif user.role == 'CLIENT':
-                    user.company = data.get('company', '')
-                    user.industry = data.get('industry', '')
-                elif user.role == 'DEAN' or user.role == 'PROGRAM_HEAD' or user.role == 'COORDINATOR':
-                    college_id = data.get('college')
-                    user.college = College.objects.get(id=college_id) if college_id else None
-                    user.campus = data.get('campus', '')
-
+                    is_confirmed=True,
+                )
+                user.set_password(data.get('password', ''))
                 user.save()
+
                 success = True
             except Exception as e:
                 error = str(e)
@@ -481,46 +463,51 @@ def edit_user(request, id):
     User = get_user_model()
     user = get_object_or_404(User, id=id)
     error = None
+    roles = list(User.Role.choices)
+    colleges = College.objects.all()
+    campus_choices = User.Campus.choices
+
     success = False
     if request.method == 'POST':
         data = request.POST
-        files = request.FILES
-        try:
-            user.last_name = data.get('last_name', user.last_name)
-            user.given_name = data.get('given_name', user.given_name)
-            user.middle_initial = data.get('middle_initial', user.middle_initial)
-            user.suffix = data.get('suffix', user.suffix)
-            user.sex = data.get('sex', user.sex)
-            user.email = data.get('email', user.email)
-            user.contact_no = data.get('contact_no', user.contact_no)
-            user.role = data.get('role', user.role)
-            user.username = data.get('email', user.username)
-            if files.get('valid_id'):
-                user.valid_id = files['valid_id']
-            # Role-specific fields
-            college_id = data.get('college')
-            user.college = College.objects.get(id=college_id) if college_id else None
-            user.campus = data.get('campus', user.campus) if data.get('campus') else user.campus
-            user.degree = data.get('degree', user.degree) if data.get('degree') else user.degree
-            user.expertise = data.get('expertise', user.expertise) if data.get('expertise') else user.expertise
-            user.company = data.get('company', user.company) if data.get('company') else user.company
-            user.industry = data.get('industry', user.industry) if data.get('industry') else user.industry
-            # Password update (optional)
-            password = data.get('password', '')
-            if password:
-                user.set_password(password)
-            user.save()
-            success = True
-        except Exception as e:
-            error = str(e)
-    colleges = College.objects.all()
-    campus_choices = User.Campus.choices
+        if User.objects.filter(email=data.get('email')).exclude(id=user.id).exists():
+            error = "Email already exists."
+        else:
+            try:
+                user.last_name = data.get('last_name')
+                user.given_name = data.get('given_name')
+                user.middle_initial = data.get('middle_initial') or None
+                user.suffix = data.get('suffix') or None
+                user.sex = data.get('sex')
+                user.email = data.get('email')
+                user.contact_no = data.get('contact_no')
+
+                user.role = data.get('role')
+                user.username = data.get('email')
+
+                user.college = College.objects.get(id=data.get('college')) if data.get('college') else None
+                user.campus = data.get('campus') if data.get('campus') else None
+                user.degree = data.get('degree') or None
+                user.expertise = data.get('expertise') or None
+                user.company = data.get('company') or None
+                user.industry = data.get('industry') or None
+
+                # Only update password if provided and not blank
+                password = data.get('password', '').strip()
+                if password:
+                    user.set_password(password)
+
+                user.save()
+                success = True
+            except Exception as e:
+                error = str(e)
     return render(request, 'users/edit_user.html', {
         'user': user,
         'error': error,
         'success': success,
         'colleges': colleges,
         'campus_choices': campus_choices,
+        'roles': roles,
     })
 
 

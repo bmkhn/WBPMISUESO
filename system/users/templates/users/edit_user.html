@@ -367,182 +367,77 @@
 
         <!-- Account Info Section -->
         <div class="user-details-section">
-            <div class="user-details-category">Account Info</div>
+            <div class="user-details-category">Account Information</div>
             <div class="user-details-row cols-2">
                 <div>
-                    <div class="user-details-label">Role</div>
+                    <div class="user-details-label">Role <span class="required">*</span></div>
                     <select name="role" class="user-details-value">
-                        <option value="UESO" {% if user.role == 'UESO' %}selected{% endif %}>UESO</option>
-                        <option value="COORDINATOR" {% if user.role == 'COORDINATOR' %}selected{% endif %}>College Coordinator</option>
-                        <option value="DEAN" {% if user.role == 'DEAN' %}selected{% endif %}>College Dean</option>
-                        <option value="PROGRAM_HEAD" {% if user.role == 'PROGRAM_HEAD' %}selected{% endif %}>Program Head</option>
-                        <option value="VP" {% if user.role == 'VP' %}selected{% endif %}>VP</option>
-                        <option value="IMPLEMENTER" {% if user.role == 'IMPLEMENTER' %}selected{% endif %}>Implementer</option>
-                        <option value="FACULTY" {% if user.role == 'FACULTY' %}selected{% endif %}>Faculty</option>
-                        <option value="CLIENT" {% if user.role == 'CLIENT' %}selected{% endif %}>Client</option>
+                        <option value="" disabled>Select Role</option>
+                        {% for r in roles %}
+                        <option value="{{ r.0 }}" {% if user.role == r.0 %}selected{% endif %}>{{ r.1 }}</option>
+                        {% endfor %}
                     </select>
                 </div>
                 <div>
-                    <div class="user-details-label">Joined</div>
-                    <input type="text" class="user-details-value" value="{{ user.date_joined|date:'F d, Y' }}" disabled>
+                    <div class="user-details-label">Password</div>
+                    <input type="password" name="password" class="user-details-value" value="" placeholder="Leave blank to keep current password" data-optional>
                 </div>
             </div>
         </div>
 
-        <!-- Implementer Info -->
-        <div id="role-info-IMPLEMENTER" class="role-info-block" {% if user.role == 'IMPLEMENTER' %}style="display:block;"{% else %}style="display:none;"{% endif %}>
-            <div class="user-details-section">
-                <div class="user-details-category">Implementer Info</div>
-                <div class="user-details-row cols-2">
-                    <div>
-                        <div class="user-details-label">Degree <span class="required">*</span></div>
-                        <input type="text" name="degree" class="user-details-value" value="{{ user.degree }}" data-role-required>
-                    </div>
-                    <div>
-                        <div class="user-details-label">Expertise <span class="required">*</span></div>
-                        <input type="text" name="expertise" class="user-details-value" value="{{ user.expertise }}" data-role-required>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <!-- New Logic -->
+        <div class="user-details-section" id="role-specific-section">
+            <div class="user-details-category">Role Specific Information</div>
 
-        <!-- Faculty Info -->
-        <div id="role-info-FACULTY" class="role-info-block" {% if user.role == 'FACULTY' %}style="display:block;"{% else %}style="display:none;"{% endif %}>
-            <div class="user-details-section">
-                <div class="user-details-category">Faculty Info</div>
-                <div class="user-details-row cols-2">
-                    <div>
-                        <div class="user-details-label">College <span class="required">*</span></div>
-                        <select name="college" class="user-details-value" data-role-required>
-                            <option value="">Select College</option>
-                            {% for college in colleges %}
-                                <option value="{{ college.id }}" {% if user.college and user.college.id == college.id %}selected{% endif %}>{{ college.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div>
-                        <div class="user-details-label">Campus <span class="required">*</span></div>
-                        <select name="campus" class="user-details-value" data-role-required>
-                            <option value="">Select Campus</option>
-                            {% for value, label in campus_choices %}
-                                <option value="{{ value }}" {% if user.campus == value %}selected{% endif %}>{{ label }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
+            <!-- If FACULTY, COORDINATOR, DEAN, PROGRAM_HEAD -->
+            <div class="user-details-row cols-2">
+                <div>
+                    <div class="user-details-label">College <span class="required">*</span></div>
+                    <select name="college" class="user-details-value" data-role-required>
+                        <option value="">Select College</option>
+                        {% for college in colleges %}
+                            <option value="{{ college.id }}" {% if user.college and user.college.id == college.id %}selected{% endif %}>{{ college.name }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
-                <div class="user-details-row cols-2">
-                    <div>
-                        <div class="user-details-label">Degree <span class="required">*</span></div>
-                        <input type="text" name="degree" class="user-details-value" value="{{ user.degree }}" data-role-required>
-                    </div>
-                    <div>
-                        <div class="user-details-label">Expertise <span class="required">*</span></div>
-                        <input type="text" name="expertise" class="user-details-value" value="{{ user.expertise }}" data-role-required>
-                    </div>
+                <div>
+                    <div class="user-details-label">Campus <span class="required">*</span></div>
+                    <select name="campus" class="user-details-value" data-role-required>
+                        <option value="">Select Campus</option>
+                        {% for value, label in campus_choices %}
+                            <option value="{{ value }}" {% if user.campus == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
             </div>
-        </div>
 
-        <!-- Client Info -->
-        <div id="role-info-CLIENT" class="role-info-block" {% if user.role == 'CLIENT' %}style="display:block;"{% else %}style="display:none;"{% endif %}>
-            <div class="user-details-section">
-                <div class="user-details-category">Client Info</div>
-                <div class="user-details-row cols-2">
-                    <div>
-                        <div class="user-details-label">Company <span class="required">*</span></div>
-                        <input type="text" name="company" class="user-details-value" value="{{ user.company }}" data-role-required>
-                    </div>
-                    <div>
-                        <div class="user-details-label">Industry <span class="required">*</span></div>
-                        <input type="text" name="industry" class="user-details-value" value="{{ user.industry }}" data-role-required>
-                    </div>
+            <!-- If IMPLEMENTER, FACULTY -->
+            <div class="user-details-row cols-2">
+                <div>
+                    <div class="user-details-label">Degree <span class="required">*</span></div>
+                    <input type="text" name="degree" class="user-details-value" value="{{ user.degree|default_if_none:'' }}" data-role-required>
+                </div>
+                <div>
+                    <div class="user-details-label">Expertise <span class="required">*</span></div>
+                    <input type="text" name="expertise" class="user-details-value" value="{{ user.expertise|default_if_none:'' }}" data-role-required>
                 </div>
             </div>
-        </div>
 
-        <!-- Dean Info -->
-        <div id="role-info-DEAN" class="role-info-block" {% if user.role == 'DEAN' %}style="display:block;"{% else %}style="display:none;"{% endif %}>
-            <div class="user-details-section">
-                <div class="user-details-category">Dean Info</div>
-                <div class="user-details-row cols-2">
-                    <div>
-                        <div class="user-details-label">College <span class="required">*</span></div>
-                        <select name="college" class="user-details-value" data-role-required>
-                            <option value="">Select College</option>
-                            {% for college in colleges %}
-                                <option value="{{ college.id }}" {% if user.college and user.college.id == college.id %}selected{% endif %}>{{ college.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div>
-                        <div class="user-details-label">Campus <span class="required">*</span></div>
-                        <select name="campus" class="user-details-value" data-role-required>
-                            <option value="">Select Campus</option>
-                            {% for value, label in campus_choices %}
-                                <option value="{{ value }}" {% if user.campus == value %}selected{% endif %}>{{ label }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
+            <!-- If CLIENT -->
+            <div class="user-details-row cols-2">
+                <div>
+                    <div class="user-details-label">Company <span class="required">*</span></div>
+                    <input type="text" name="company" class="user-details-value" value="{{ user.company|default_if_none:'' }}" data-role-required>
                 </div>
-            </div>
-        </div>
-
-        <!-- Program Head Info -->
-        <div id="role-info-PROGRAM_HEAD" class="role-info-block" {% if user.role == 'PROGRAM_HEAD' %}style="display:block;"{% else %}style="display:none;"{% endif %}>
-            <div class="user-details-section">
-                <div class="user-details-category">Program Head Info</div>
-                <div class="user-details-row cols-2">
-                    <div>
-                        <div class="user-details-label">College <span class="required">*</span></div>
-                        <select name="college" class="user-details-value" data-role-required>
-                            <option value="">Select College</option>
-                            {% for college in colleges %}
-                                <option value="{{ college.id }}" {% if user.college and user.college.id == college.id %}selected{% endif %}>{{ college.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div>
-                        <div class="user-details-label">Campus <span class="required">*</span></div>
-                        <select name="campus" class="user-details-value" data-role-required>
-                            <option value="">Select Campus</option>
-                            {% for value, label in campus_choices %}
-                                <option value="{{ value }}" {% if user.campus == value %}selected{% endif %}>{{ label }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
+                <div>
+                    <div class="user-details-label">Industry <span class="required">*</span></div>
+                    <input type="text" name="industry" class="user-details-value" value="{{ user.industry|default_if_none:'' }}" data-role-required>
                 </div>
-            </div>
-        </div>
-
-        <!-- Coordinator Info -->
-        <div id="role-info-COORDINATOR" class="role-info-block" {% if user.role == 'COORDINATOR' %}style="display:block;"{% else %}style="display:none;"{% endif %}>
-            <div class="user-details-section">
-                <div class="user-details-category">College Coordinator Info</div>
-                <div class="user-details-row cols-2">
-                    <div>
-                        <div class="user-details-label">College <span class="required">*</span></div>
-                        <select name="college" class="user-details-value" data-role-required>
-                            <option value="">Select College</option>
-                            {% for college in colleges %}
-                                <option value="{{ college.id }}" {% if user.college and user.college.id == college.id %}selected{% endif %}>{{ college.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div>
-                        <div class="user-details-label">Campus <span class="required">*</span></div>
-                        <select name="campus" class="user-details-value" data-role-required>
-                            <option value="">Select Campus</option>
-                            {% for value, label in campus_choices %}
-                                <option value="{{ value }}" {% if user.campus == value %}selected{% endif %}>{{ label }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-            </div>
+            </div> 
         </div>
 
         <div class="form-actions">
-            <a href="{% url 'manage_user' %}" class="back btn">Back</a>
+            <a href="{% url 'user_details' user.id %}" class="back btn">Back</a>
             <button type="submit" class="save btn">Save Changes</button>
         </div>
     </div>
@@ -560,61 +455,58 @@
 </svg>
 
 <script>
-    // File Input Change Handler (robust)
-    document.getElementById('id_valid_id').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        const fileInput = document.getElementById('id_valid_id');
-        let fileError = document.getElementById('file-error');
-        if (!fileError) {
-            fileError = document.createElement('div');
-            fileError.id = 'file-error';
-            fileError.className = 'error-message';
-            fileInput.parentNode.appendChild(fileError);
-        }
-        fileInput.classList.remove('error-input');
-        if (file) {
-            document.getElementById('file-name').textContent = file.name;
-            document.getElementById('file-preview').style.display = 'block';
-            fileError.style.display = 'none';
-        } else {
-            document.getElementById('file-preview').style.display = 'none';
-        }
-    });
-
-    // Role-Based Info Display (robust for edit)
+    // Role-specific field logic
     document.addEventListener('DOMContentLoaded', function() {
-        var roleSelect = document.querySelector('select[name="role"]');
-        var roleBlocks = {
-            'IMPLEMENTER': document.getElementById('role-info-IMPLEMENTER'),
-            'FACULTY': document.getElementById('role-info-FACULTY'),
-            'CLIENT': document.getElementById('role-info-CLIENT'),
-            'DEAN': document.getElementById('role-info-DEAN'),
-            'PROGRAM_HEAD': document.getElementById('role-info-PROGRAM_HEAD'),
-            'COORDINATOR': document.getElementById('role-info-COORDINATOR'),
+        const roleSelect = document.querySelector('select[name="role"]');
+        const allRoleFields = Array.from(document.querySelectorAll('[data-role-required]')).map(f => f.closest('.user-details-row'));
+        const roleSection = document.getElementById('role-specific-section');
+        // Map of role to required field selectors (adjust as needed)
+        const roleFieldMap = {
+            'FACULTY': ['college', 'campus', 'degree', 'expertise'],
+            'COORDINATOR': ['college', 'campus'],
+            'DEAN': ['college', 'campus'],
+            'PROGRAM_HEAD': ['college', 'campus'],
+            'IMPLEMENTER': ['degree', 'expertise'],
+            'CLIENT': ['company', 'industry'],
         };
-        function updateRoleBlocks() {
-            if (!roleSelect) return;
-            var selected = roleSelect.value;
-            Object.keys(roleBlocks).forEach(function(role) {
-                var block = roleBlocks[role];
-                if (block) {
-                    block.style.display = (role === selected) ? 'block' : 'none';
+        function showRoleFields(role) {
+            // Hide all role fields
+            allRoleFields.forEach(row => row.style.display = 'none');
+            // Hide section if no role
+            if (!role || !roleFieldMap[role]) {
+                roleSection.style.display = 'none';
+                return;
+            }
+            // Show section
+            roleSection.style.display = '';
+            // Show only relevant fields for the selected role
+            const fields = roleFieldMap[role];
+            if (!fields) return;
+            fields.forEach(fieldName => {
+                const field = document.querySelector(`[name="${fieldName}"]`);
+                if (field) {
+                    const row = field.closest('.user-details-row');
+                    if (row) row.style.display = '';
                 }
             });
         }
+        // Initial hide
+        allRoleFields.forEach(row => row.style.display = 'none');
+        if (roleSection) roleSection.style.display = 'none';
+        // On role change
         if (roleSelect) {
-            roleSelect.addEventListener('change', updateRoleBlocks);
-            // Also update on page load in case the value is changed by JS or server
-            setTimeout(updateRoleBlocks, 0);
-        }
-        // Defensive: update on any form change (for edge cases)
-        var form = document.querySelector('form');
-        if (form && roleSelect) {
-            form.addEventListener('input', function(e) {
-                if (e.target === roleSelect) updateRoleBlocks();
+            roleSelect.addEventListener('change', function() {
+                showRoleFields(this.value);
             });
+            // Show fields if value is pre-selected (trigger on page load)
+            setTimeout(() => {
+                if (roleSelect.value) showRoleFields(roleSelect.value);
+            }, 100);
         }
+    });
 
+    // DOMContentLoaded for event listeners
+    document.addEventListener('DOMContentLoaded', function() {
         // AJAX email uniqueness check (unchanged)
         var emailInput = document.getElementById('email-input');
         var emailError = document.getElementById('email-error');
