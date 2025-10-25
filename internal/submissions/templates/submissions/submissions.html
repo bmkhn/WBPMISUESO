@@ -288,7 +288,7 @@
         <div class="search-container">
             <form class="search-bar" method="get" action="">
                 <svg width="20" height="20"> <use href="#icon-search"></use> </svg>
-                <input type="text" name="search" placeholder="Search by Project Title" value="{{ search|default:'' }}"/>
+                <input type="text" name="search" placeholder="Search Project Title" value="{{ search|default:'' }}"/>
                 <button type="button" id="filterBtn" style="background:none;border:none;padding:0;margin-right:5px;cursor:pointer;">
                     <svg width="20" height="20"> <use href="#icon-filter"></use> </svg>
                 </button>
@@ -329,8 +329,12 @@
                             </select>
                         </label>
 
-                        <label>Date
-                            <input type="date" name="date" value="{{ date|default:'' }}" style="width: 87%"/>
+                        <label>Date From
+                            <input type="date" name="date_from" value="{{ date_from|default:'' }}" style="width: 87%"/>
+                        </label>
+
+                        <label>Date To
+                            <input type="date" name="date_to" value="{{ date_to|default:'' }}" style="width: 87%"/>
                         </label>
                     </div>
                     <div class="filter-actions">

@@ -698,7 +698,8 @@ def admin_project(request):
     status = request.GET.get('status', '')
     year = request.GET.get('year', '')
     quarter = request.GET.get('quarter', '')
-    date = request.GET.get('date', '')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
     search = request.GET.get('search', '')
 
     projects = Project.objects.all()
@@ -720,8 +721,10 @@ def admin_project(request):
         if quarter in qmap:
             start, end = qmap[quarter]
             projects = projects.filter(start_date__month__gte=start, start_date__month__lte=end)
-    if date:
-        projects = projects.filter(start_date=date)
+    if date_from:
+        projects = projects.filter(start_date__gte=date_from)
+    if date_to:
+        projects = projects.filter(start_date__lte=date_to)
     if search:
         projects = projects.filter(title__icontains=search)
 
@@ -769,7 +772,8 @@ def admin_project(request):
         'status': status,
         'year': year,
         'quarter': quarter,
-        'date': date,
+        'date_from': date_from,
+        'date_to': date_to,
         'search': search,
         'page_obj': page_obj,
         'paginator': paginator,

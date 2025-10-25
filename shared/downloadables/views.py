@@ -71,12 +71,6 @@ def user_downloadable(request):
         qs = qs.filter(available_for_non_users=False)
         query_params['public'] = 'false'
 
-    # Date Filter
-    date = request.GET.get('date', '')
-    if date:
-        qs = qs.filter(uploaded_at__date=date)
-        query_params['date'] = date
-
     querystring = urlencode(query_params)
     file_types = Downloadable.objects.values_list('file_type', flat=True).distinct()
 
@@ -108,7 +102,6 @@ def user_downloadable(request):
         'file_type': file_type,
         'file_types': file_types,
         'public': public,
-        'date': date,
         'downloadables': page_obj.object_list,
         'page_obj': page_obj,
         'paginator': paginator,
@@ -159,12 +152,6 @@ def superuser_downloadable(request):
         qs = qs.filter(available_for_non_users=False)
         query_params['public'] = 'false'
 
-    # Date Filter
-    date = request.GET.get('date', '')
-    if date:
-        qs = qs.filter(uploaded_at__date=date)
-        query_params['date'] = date
-
     querystring = urlencode(query_params)
     file_types = Downloadable.objects.values_list('file_type', flat=True).distinct()
 
@@ -190,7 +177,6 @@ def superuser_downloadable(request):
         'file_type': file_type,
         'file_types': file_types,
         'public': public,
-        'date': date,
         'downloadables': page_obj.object_list,
         'page_obj': page_obj,
         'paginator': paginator,
@@ -246,12 +232,6 @@ def admin_downloadable(request):
     elif public == 'false':
         qs = qs.filter(available_for_non_users=False)
         query_params['public'] = 'false'
-
-    # Date Filter
-    date = request.GET.get('date', '')
-    if date:
-        qs = qs.filter(uploaded_at__date=date)
-        query_params['date'] = date
         
     querystring = urlencode(query_params)
 
@@ -278,7 +258,6 @@ def admin_downloadable(request):
         'order': order,
         'status': status,
         'public': public,
-        'date': date,
         'file_type': file_type,
         'file_types': file_types,
         'downloadables': page_obj.object_list,

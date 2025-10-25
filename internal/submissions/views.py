@@ -18,7 +18,8 @@ def submission_admin_view(request):
     order = request.GET.get('order', 'desc')
     status = request.GET.get('status', '')
     required_form = request.GET.get('required_form', '')
-    date = request.GET.get('date', '')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
     search = request.GET.get('search', '').strip()
 
     # Apply filters
@@ -26,8 +27,10 @@ def submission_admin_view(request):
         submissions = submissions.filter(status__iexact=status)
     if required_form:
         submissions = submissions.filter(downloadable__id=required_form)
-    if date:
-        submissions = submissions.filter(deadline__date=date)
+    if date_from:
+        submissions = submissions.filter(deadline__date__gte=date_from)
+    if date_to:
+        submissions = submissions.filter(deadline__date__lte=date_to)
     if search:
         submissions = submissions.filter(project__title__icontains=search)
 
@@ -74,7 +77,8 @@ def submission_admin_view(request):
         'status': status,
         'all_forms': all_forms,
         'required_form': required_form,
-        'date': date,
+        'date_from': date_from,
+        'date_to': date_to,
         'page_obj': page_obj,
         'paginator': paginator,
         'page_range': page_range,

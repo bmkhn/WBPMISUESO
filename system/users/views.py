@@ -315,7 +315,8 @@ def manage_user(request):
     order = request.GET.get('order', 'desc')
     role = request.GET.get('role', '')
     verified = request.GET.get('verified', '')
-    date = request.GET.get('date', '')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
     college = request.GET.get('college', '')
     campus = request.GET.get('campus', '')
 
@@ -332,9 +333,12 @@ def manage_user(request):
     elif verified == 'false':
         users = users.filter(is_confirmed=False)
         query_params['verified'] = 'false'
-    if date:
-        users = users.filter(date_joined__date=date)
-        query_params['date'] = date
+    if date_from:
+        users = users.filter(date_joined__date__gte=date_from)
+        query_params['date_from'] = date_from
+    if date_to:
+        users = users.filter(date_joined__date__lte=date_to)
+        query_params['date_to'] = date_to
     if college:
         users = users.filter(college_id=college)
         query_params['college'] = college
@@ -389,7 +393,8 @@ def manage_user(request):
         'order': order,
         'role': role,
         'verified': verified,
-        'date': date,
+        'date_from': date_from,
+        'date_to': date_to,
         'college': college,
         'campus': campus,
         'roles': roles,

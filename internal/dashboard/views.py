@@ -18,7 +18,7 @@ def dashboard_view(request):
     expert_users = User.objects.filter(is_expert=True)
 
 
-    all_events = list(chain(ProjectEvent.objects.all(), MeetingEvent.objects.all()))
+    all_events = list(chain(ProjectEvent.objects.filter(placeholder=False), MeetingEvent.objects.all()))
     events_in_calendar = len(all_events)
     
 

@@ -203,7 +203,6 @@
 		display: grid;
 		grid-gap: 24px;
 		grid-template-columns: repeat(2, 1fr); 
-		grid-template-rows: repeat(2, 1fr);
 	}
 
 	.filter-dropdown label {
@@ -320,21 +319,12 @@
 	<div class="downloadable-container">
 		<div class="left">
 			<h1 class="left__title">Downloadables</h1>
-			
-			{% if user.role == 'FACULTY' or user.role == 'IMPLEMENTER' or user.role == 'CLIENT' %}
-			<style>
-				.filter-grid {
-					grid-template-columns: repeat(3, 1fr); 
-				}
-			</style>
-			{% endif %}
-
-
+	
 			<!-- Search Bar -->
 			<div class="search-container">
 				<form class="search-bar" method="get" action="">
 						<svg width="20" height="20"> <use href="#icon-search"></use> </svg>
-						<input type="text" name="search" placeholder="Search" value="{{ search_query|default:'' }}"/>
+						<input type="text" name="search" placeholder="Search File Name" value="{{ search_query|default:'' }}"/>
 						<button type="button" id="filterBtn" style="background:none;border:none;padding:0;margin-right:5px;cursor:pointer;">
 							<svg width="20" height="20"> <use href="#icon-filter"></use> </svg>
 						</button>
@@ -381,12 +371,6 @@
 									</select>
 								</label>
 								{% endif %}
-
-								<!-- Bottom Right - Date -->
-								<label>
-									Date
-									<input type="date" name="date" value="{{ filter_date|default:'' }}" style="width:100%;" />
-								</label>
 							</div>
 
 							<!-- Buttons Row -->
