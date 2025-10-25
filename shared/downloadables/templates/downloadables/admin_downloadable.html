@@ -13,28 +13,13 @@
 </head>
 <body>
     <div class="main-container"> 
-        <div class="container-a">
-            <div class="text-sort-container">
-                <div class="project-text"> 
-                    Downloadables
-                </div>
-            </div>
-            <div class="button-container">
-                <div class="admin-downloadable-button-container">
-                <a href="{% url 'add_downloadable' %}" class="add-user-btn">  
-                    <i class="fa-solid fa-download"></i>
-                    Add Downloadable 
-                </a>
-                </div> 
-            </div>
-		</div>
         <!-- Top Section -->
 
         <!-- Search Bar & Filter (3x2 Grid) -->
         <div class="search-container">
             <form class="search-bar" method="get" action="">
                 <svg width="16" height="16" style="margin-right:10px;"> <use href="#icon-search"></use> </svg>
-                <input type="text" name="search" placeholder="Search by project title" value="{{ search|default:'' }}"/>
+                <input type="text" name="search" placeholder="Search by file name" value="{{ search|default:'' }}"/>
                 <button type="button" id="filterBtn" style="background:none;border:none;padding:0;margin-right:5px;cursor:pointer;">
                     <svg width="16" height="16"> <use href="#icon-filter"></use> </svg>
                 </button>
@@ -93,7 +78,21 @@
                 </div>
             </form>
         </div>
-
+        <div class="container-a">
+            <div class="text-sort-container">
+                <div class="project-text"> 
+                    Downloadables
+                </div>
+            </div>
+            <div class="button-container">
+                <div class="admin-downloadable-button-container">
+                <a href="{% url 'add_downloadable' %}" class="add-user-btn">  
+                    <i class="fa-solid fa-download"></i>
+                    Add Downloadable 
+                </a>
+                </div> 
+            </div>
+		</div>
         <table class="user-table">
             <thead>
                 <tr>

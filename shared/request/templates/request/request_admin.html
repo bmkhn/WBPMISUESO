@@ -13,18 +13,12 @@
 </head>
 <body>
 	<div class="main-container">
-        <!-- Top Section -->
-		<div class="container-a">
-            <div class="text-sort-container">
-                <div class="project-text">Requests</div>
-            </div>
-		</div>
 
         <!-- Search Bar & Filter (4x2 Grid) -->
         <div class="search-container">
             <form class="search-bar" method="get" action="">
                 <svg width="16" height="16" style="margin-right:10px;"> <use href="#icon-search"></use> </svg>
-                <input type="text" name="search" placeholder="Search by project title" value="{{ search|default:'' }}"/>
+                <input type="text" name="search" placeholder="Search by title" value="{{ search|default:'' }}"/>
                 <button type="button" id="filterBtn" style="background:none;border:none;padding:0;margin-right:5px;cursor:pointer;">
                     <svg width="16" height="16"> <use href="#icon-filter"></use> </svg>
                 </button>
@@ -62,7 +56,14 @@
                     </div>
                 </div>
             </form>
-        </div>
+        </div> 
+         
+        <!-- Top Section -->
+		<div class="container-a">
+            <div class="text-sort-container">
+                <div class="project-text">Requests</div>
+            </div>
+		</div>
 
         <!-- Table Section -->
         <table class="user-table">

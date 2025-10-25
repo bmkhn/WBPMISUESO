@@ -12,20 +12,6 @@
 </head>
 <body>
 	<div class="main-container">
-        <!-- Top Section -->
-		<div class="container-a">
-            <div class="text-sort-container">
-                <div class="project-text">Submissions</div>
-            </div>
-            {% if request.user.role != "COORDINATOR" %}
-            <div class="button-container">
-                <a class="add-user-btn" href="{% url 'add_submission' %}">  
-                    <i class="fa-solid fa-file-import"></i>
-                    Add Submission  
-                </a>
-            </div>
-            {% endif %}
-		</div>
 
         <!-- Search Bar & Filter (4x2 Grid) -->
         <div class="search-container">
@@ -82,7 +68,22 @@
                     </div>
                 </div>
             </form>
-        </div>
+        </div> 
+         
+        <!-- Top Section -->
+		<div class="container-a">
+            <div class="text-sort-container">
+                <div class="project-text">Submissions</div>
+            </div>
+            {% if request.user.role != "COORDINATOR" %}
+            <div class="button-container">
+                <a class="add-user-btn" href="{% url 'add_submission' %}">  
+                    <i class="fa-solid fa-file-import"></i>
+                    Add Submission  
+                </a>
+            </div>
+            {% endif %}
+		</div>
 
         <!-- Table Section -->
         <table class="user-table">

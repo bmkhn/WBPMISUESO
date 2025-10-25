@@ -1,711 +1,301 @@
 {% extends base_template %}
 {% block content %}
-
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Director Archives</title>
-{% load static %}
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
-
-<style>
-	body {
-		margin: 0;
-		font-family: Arial, sans-serif;
-		display: flex;
-		background: #fff;
-		color: #111;
-	}
-
-    .sidebar-container {
-		width: 250px;
-		min-height: 100vh;
-		padding: 20px;
-		background-color: #063A1C;
-		color: white;
-		display: flex;
-		flex-direction: column;
-		justify-content: space-between;
-		border-top-right-radius: 20px;
-		border-bottom-right-radius: 20px;
-		transition: width 0.2s ease;
-		overflow: hidden;
-		position: relative;
-		flex-shrink: 0;
-    }
-
-    .sidebar-container.collapsed {
-		width: 55px;
-    }
-
-	/* Drag handle */
-	.resize-handle {
-		position: absolute;
-		top: 0;
-		right: 0;
-		width: 8px;
-		cursor: ew-resize;
-		background: transparent;
-		height: 100%;
-	}
-
-    .sidebar-logo {
-		display: flex;
-		align-items: center;
-		margin-bottom: 15px;
-		white-space: nowrap;
-    }
-
-    .sidebar-logo-circle {
-		width: 40px;
-		height: 40px;
-		background-color: white;
-		border-radius: 50%;
-		margin-left: 7px;
-		margin-right: 15px;
-		flex-shrink: 0;
-		align-items: center;
-    }
-
-    .sidebar-logo-text {
-		font-family: 'Instrument Sans', sans-serif;
-		font-size: 16px;
-		font-weight: 800;
-		display: inline-block;
-    }
-
-    /* Hide elements properly when collapsed */
-    .sidebar-container.collapsed .sidebar-tab-group-label {
-    	visibility: hidden;
-    }
-
-    .sidebar-container.collapsed .sidebar-logo-text,
-	.sidebar-container.collapsed .table-text {
-    	display: none;
-    }
-
-    .sidebar-tab-group-label {
-		font-family: 'Inter', sans-serif;
-		font-size: 16px;
-		padding: 10px 0;
-    }
-
-    .sidebar-tabs {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
-		gap: 15px;
-    }
-
-    .sidebar-tab {
-		display: flex;
-		align-items: center;
-		text-decoration: none;
-		color: white;
-		padding: 10px;
-		border-radius: 10px;
-		transition: background-color 0.2s ease;
-    }
-
-    .sidebar-tab:hover {
-		background-color: #052C15;
-    }
-
-    .sidebar-tab.active {
-		background-color: #052C15;
-    }
-
-    .sidebar-tab-icon {
-		width: 24px;
-		height: 24px;
-		margin-right: 15px;
-		flex-shrink: 0;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-    }
-
-    .sidebar-tab-icon svg {
-		width: 24px;
-		height: 24px;
-		color: white;
-    }
-
-    .sidebar-logout {
-      	padding-top: 20px;
-    }
-
-    .table-text {
-		font-family: 'Inter', sans-serif;
-		font-size: 22px;
-		font-weight: bold;
-    }
-
-    /* Main content area */
-    .main-content {
-    	flex: 1;
-    	padding: 40px;
-    	overflow-y: auto;
-    }
-
-    /* Top header area */
-    .content-header {
-    	display: flex;
-    	align-items: center;
-    	justify-content: space-between;
-    	margin-bottom: 20px;
-    }
-
-    .header-left {
-    	display: flex;
-    	align-items: center;
-    	gap: 20px;
-    }
-
-    .hamburger {
-    	width: 24px;
-    	height: 18px;
-    	cursor: pointer;
-    	display: flex;
-    	flex-direction: column;
-    	justify-content: space-between;
-    	background: none;
-    	border: none;
-    	padding: 0;
-    }
-
-    .hamburger span {
-    	width: 100%;
-    	height: 2px;
-    	background-color: #333;
-    	border-radius: 1px;
-    	transition: all 0.3s ease;
-    }
-
-    .header-right {
-    	display: flex;
-    	align-items: center;
-    	gap: 15px;
-    }
-
-    .notification-icon, .settings-icon {
-    	width: 24px;
-    	height: 24px;
-    	cursor: pointer;
-    	display: flex;
-    	align-items: center;
-    	justify-content: center;
-    	color: #333;
-    }
-
-    .notification-icon svg, .settings-icon svg {
-    	width: 20px;
-    	height: 20px;
-    }
-
-    .user-avatar {
-    	width: 50px;
-    	height: 50px;
-    	border-radius: 50%;
-    	background-color: #4A90E2;
-    	display: flex;
-    	align-items: center;
-    	justify-content: center;
-    	color: white;
-    	font-weight: bold;
-    	font-size: 18px;
-    	border: 2px solid #fff;
-    	box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-
-    /* Search row */
-    .search-section {
-    	margin: 20px 0;
-    	display: flex;
-    	align-items: center;
-    	gap: 12px;
-    }
-
-    .search {
-    	flex: 1;
-    	display: flex;
-    	align-items: center;
-    	gap: 10px;
-    	background: #f2f4f8;
-    	border: 1px solid #e6e9ef;
-    	border-radius: 12px;
-    	padding: 14px 16px;
-    }
-
-    .search svg { width: 18px; height: 18px; color: #666; }
-    .search input {
-    	flex: 1;
-    	border: none;
-    	outline: none;
-    	background: transparent;
-    	font-size: 14px;
-    	color: #111;
-    }
-
-    /* Sort Arrow */
-    .sort-arrow {
-    	display: flex;
-    	align-items: center;
-    	justify-content: center;
-    	width: 40px;
-    	height: 40px;
-    	border: 1px solid #e6e9ef;
-    	border-radius: 8px;
-    	background: #fff;
-    	cursor: pointer;
-    	font-size: 18px;
-    }
-
-    /* Dropdown */
-    .dropdown { position: relative; }
-    .dropdown-toggle {
-    	background: #f4f2f1;
-    	border: 1px solid #dad6d3;
-    	color: #111;
-    	padding: 10px 14px;
-    	border-radius: 10px;
-    	cursor: pointer;
-    	font-weight: 600;
-    	min-width: 150px;
-    	text-align: left;
-    }
-    .dropdown-toggle .caret { float: right; }
-    .dropdown-menu {
-    	position: absolute;
-    	right: 0;
-    	top: calc(100% + 6px);
-    	background: #fff;
-    	border: 1px solid #e6e6e6;
-    	border-radius: 10px;
-    	min-width: 180px;
-    	box-shadow: 0 8px 18px rgba(0,0,0,.06);
-    	display: none;
-    	padding: 8px 0;
-    	z-index: 1000;
-    }
-    .dropdown:hover .dropdown-menu { display: block; }
-    .dropdown .dropdown-menu:hover { display: block; }
-    .dropdown-header {
-    	padding: 8px 16px 4px 16px;
-    	font-size: 12px;
-    	font-weight: 600;
-    	color: #666;
-    	text-transform: uppercase;
-    	letter-spacing: 0.5px;
-    	border-bottom: 1px solid #f0f0f0;
-    	margin-bottom: 4px;
-    }
-    .dropdown-item {
-    	padding: 10px 16px;
-    	cursor: pointer;
-    	color: #333;
-    	font-size: 14px;
-    	border-radius: 0;
-    }
-    .dropdown-item:hover { background: #f4f6f8; }
-
-    /* Page title */
-    .page-title {
-    	margin: 20px 0;
-    }
-    .page-title h1 {
-    	font-size: 32px;
-    	font-weight: 700;
-    	letter-spacing: .2px;
-    	color: #000;
-    	margin: 0;
-    }
-
-    /* Content sections */
-    .content-section { display: none; }
-    .content-section.active { display: block; }
-
-    /* Year Grid View */
-    .archive-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; margin-top: 20px; }
-    .archive-card {
-    	border: 1px solid #ececec;
-    	border-radius: 14px;
-    	padding: 28px;
-    	background: #fff;
-    	min-height: 260px;
-    	display: flex;
-    	flex-direction: column;
-    	justify-content: center;
-    	align-items: center;
-    	text-decoration: none;
-    	color: inherit;
-    	transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .archive-card:hover {
-    	transform: translateY(-2px);
-    	box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-    .year {
-    	font-size: 72px;
-    	font-weight: 800;
-    	letter-spacing: 2px;
-    	background: linear-gradient(90deg, #db8b28, #45b16f);
-    	-webkit-background-clip: text;
-    	background-clip: text;
-    	color: transparent;
-    }
-    .projects-info {
-    	margin-top: 28px;
-    	font-size: 18px;
-    	color: #222;
-    	text-align: center;
-    }
-    .projects-count {
-    	font-weight: 800;
-    }
-
-    /* Table View */
-    .table-wrap { max-width: 1200px; margin: 0 auto 40px; padding: 0 20px; }
-    .table-box { border: 1px solid #000; border-radius: 0; overflow: hidden; background: #fff; }
-    table { width: 100%; border-collapse: collapse; }
-    thead th { text-align: left; background: #ffffff; padding: 16px; font-size: 18px; border-right: 1px solid #000; border-bottom: 1px solid #000; }
-    thead th:last-child { border-right: none; }
-    tbody td { background: #fff; padding: 18px 16px; vertical-align: top; border-right: 1px solid #000; border-bottom: 1px solid #000; }
-    tbody td:last-child { border-right: none; }
-    tbody tr:last-child td { border-bottom: none; }
-    a.link { color: #2a55ff; text-decoration: underline; }
-    .center { text-align: center; }
-
-    /* College Cards View */
-    .content { max-width: 1200px; margin: 18px auto; padding: 0 20px; }
-    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 24px; }
-    .college-card {
-    	background: #efefef;
-    	border: 1px solid #dcdcdc;
-    	border-radius: 12px;
-    	padding: 24px;
-    	display: grid;
-    	grid-template-rows: auto auto 1fr auto;
-    	align-items: center;
-    	justify-items: center;
-    	min-height: 360px;
-    	transition: transform 0.2s ease, box-shadow 0.2s ease;
-    	text-decoration: none;
-    	color: inherit;
-    }
-    .college-card:hover {
-    	transform: translateY(-2px);
-    	box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-    .badge {
-    	width: 160px;
-    	height: 160px;
-    	border-radius: 50%;
-    	background: #fff;
-    	border: 2px solid #ddd;
-    	margin-bottom: 10px;
-    	display: grid;
-    	place-items: center;
-    	font-weight: 800;
-    	color: #999;
-    }
-    .badge img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
-    .college-name { text-align: center; font-weight: 700; font-size: 14px; line-height: 1.2; }
-    .muted { color: #666; font-size: 14px; }
-</style>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Archives</title>
+	<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
+	<link href="{% static 'shared/archive/styles.css' %}" rel="stylesheet">
 </head>
 
 <body>
-	<!-- Main Content -->
-	<div class="main-content">
+<!-- Main Content -->
+<div class="main-content">
 
-	
-		<!-- Search section -->
-		<div class="search-section">
-			<div class="search">
-				<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-				<input type="text" placeholder="Search" />
-			</div>
-			<div class="sort-arrow" onclick="toggleSort()" title="Sort by Year Started">
-				<span id="sortIcon">▾</span>
-			</div>
-			<div class="dropdown">
-				<button class="dropdown-toggle">Year Started <span class="caret">▾</span></button>
-				<div class="dropdown-menu">
-					<div class="dropdown-item" onclick="showView('year')">Year Started</div>
-					<div class="dropdown-item" onclick="showView('year')">Year Ended</div>
-					<div class="dropdown-item">Agenda</div>
-					<div class="dropdown-item" onclick="showView('college')">College/CCRD</div>
+	<!-- Search section -->
+	<div class="search-container">
+		<form class="search-bar" method="get" action="">
+			<svg width="16" height="16" style="margin-right:10px;"> <use href="#icon-search"></use> </svg>
+			<input type="text" name="search" placeholder="Search by project title" value="{{ search|default:'' }}"/>
+			<button type="button" id="filterBtn" style="background:none;border:none;padding:0;margin-right:5px;cursor:pointer;">
+				<svg width="16" height="16"> <use href="#icon-filter"></use> </svg>
+			</button>
+			<div id="filterDropdown" class="filter-dropdown">
+				<div class="filter-grid" style="grid-template-columns: repeat(2, 1fr); grid-template-rows: 1fr;">
+					<label>Sort By
+						<select name="sort_by">
+							<option value="title" {% if sort_by == 'title' %}selected{% endif %}>Title</option>
+							<option value="submitted_at" {% if sort_by == 'submitted_at' %}selected{% endif %}>Date Submitted</option>
+							<option value="submitted_by" {% if sort_by == 'submitted_by' %}selected{% endif %}>Submitted By</option>
+							<option value="status" {% if sort_by == 'status' %}selected{% endif %}>Status</option>
+						</select>
+					</label>
+					<label>Order
+						<select name="order">
+							<option value="asc" {% if order == 'asc' %}selected{% endif %}>Ascending</option>
+							<option value="desc" {% if order == 'desc' %}selected{% endif %}>Descending</option>
+						</select>
+					</label>
+					<label>Status
+						<select name="status">
+							<option value="">All Statuses</option>
+							{% for s in all_statuses %}
+							<option value="{{ s.0 }}" {% if status == s.0 %}selected{% endif %}>{{ s.1 }}</option>
+							{% endfor %}
+						</select>
+					</label>
+					<label>Date
+						<input type="date" name="date" value="{{ date|default:'' }}" style="width: 87%"/>
+					</label>
+				</div>
+				<div class="filter-actions">
+					<button type="submit" class="filter-apply">Apply</button>
+					<button type="button" id="closeFilter" class="filter-close">Close</button>
 				</div>
 			</div>
+		</form>
+	</div> 
+	 
+	<div class="container-a">
+		<div class="text-sort-container">
+			<div class="project-text">Archives</div>
 		</div>
+	</div>
 
-		<!-- Page title -->
-		<div class="page-title">
-			<h1>Archive</h1>
+	<!-- Year Grid View -->
+	<div id="year-view" class="content-section active">
+		<div class="archive-grid" id="yearGrid">
+			<a href="#" class="archive-card" data-year="2025">
+				<div class="year">2025</div>
+				<div class="projects-info">No. of Projects: <span class="projects-count">3</span></div>
+			</a>
+			<a href="#" class="archive-card" data-year="2024">
+				<div class="year">2024</div>
+				<div class="projects-info">No. of Projects: <span class="projects-count">10</span></div>
+			</a>
+			<a href="#" class="archive-card" data-year="2023">
+				<div class="year">2023</div>
+				<div class="projects-info">No. of Projects: <span class="projects-count">23</span></div>
+			</a>
+			<a href="#" class="archive-card" data-year="2022">
+				<div class="year">2022</div>
+				<div class="projects-info">No. of Projects: <span class="projects-count">15</span></div>
+			</a>
+			<a href="#" class="archive-card" data-year="2021">
+				<div class="year">2021</div>
+				<div class="projects-info">No. of Projects: <span class="projects-count">9</span></div>
+			</a>
 		</div>
+	</div>
 
-		<!-- Year Grid View -->
-		<div id="year-view" class="content-section active">
-			<div class="archive-grid" id="yearGrid">
-				<a href="#" class="archive-card" data-year="2025">
-					<div class="year">2025</div>
-					<div class="projects-info">No. of Projects: <span class="projects-count">3</span></div>
-				</a>
-				<a href="#" class="archive-card" data-year="2024">
-					<div class="year">2024</div>
-					<div class="projects-info">No. of Projects: <span class="projects-count">10</span></div>
-				</a>
-				<a href="#" class="archive-card" data-year="2023">
-					<div class="year">2023</div>
-					<div class="projects-info">No. of Projects: <span class="projects-count">23</span></div>
-				</a>
-				<a href="#" class="archive-card" data-year="2022">
-					<div class="year">2022</div>
-					<div class="projects-info">No. of Projects: <span class="projects-count">15</span></div>
-				</a>
-				<a href="#" class="archive-card" data-year="2021">
-					<div class="year">2021</div>
-					<div class="projects-info">No. of Projects: <span class="projects-count">9</span></div>
-				</a>
-			</div>
-		</div>
-
-		<!-- Table View (2023 Projects) -->
-		<div id="table-view" class="content-section">
-			<div class="table-wrap">
-				<div class="table-box">
-					<table>
-						<thead>
-							<tr>
-								<th>Name</th>
-								<th>Proponents</th>
-								<th>Date Started</th>
-								<th>Date Ended</th>
-								<th>Duration</th>
-								<th>No. of Trainees</th>
-								<th>Satisfaction Evaluation</th>
-								<th>Action</th>
-							</tr>
-						</thead>
-						<tbody>
-							<tr>
-								<td>
-									<a href="#" class="link">Pre-Release Psychological Intervention Program for PDL's</a>
-								</td>
-								<td>
-									<div><a href="#" class="link">Yvie G. Renaldo</a></div>
-									<div><a href="#" class="link">Estes U. Talledo</a></div>
-								</td>
-								<td>January 06, 2023</td>
-								<td>January 23, 2024</td>
-								<td>1 year, 17 days</td>
-								<td class="center">115</td>
-								<td>Excellent</td>
-								<td>Candidate for further research</td>
-							</tr>
-						</tbody>
-					</table>
-				</div>
-			</div>
-		</div>
-
-		<!-- College Cards View -->
-		<div id="college-view" class="content-section">
-			<div class="content">
-				<div class="cards">
-					<a href="#" style="text-decoration:none; color: inherit;">
-						<div class="college-card">
-							<div class="badge"><img src="{% static 'college_logos/collegeofartshumanities.jpg' %}" alt="College of Arts and Humanities"></div>
-							<div class="college-name">COLLEGE OF ARTS AND HUMANITIES</div>
-							<div class="muted">No. of Projects: 5</div>
-						</div>
-					</a>
-					<a href="#" style="text-decoration:none; color: inherit;">
-						<div class="college-card">
-							<div class="badge"><img src="{% static 'college_logos/collegeofcriminalandjustice.jpg' %}" alt="College of Criminal Justice Education"></div>
-							<div class="college-name">COLLEGE OF CRIMINAL JUSTICE EDUCATION</div>
-							<div class="muted">No. of Projects: 5</div>
-						</div>
-					</a>
-					<a href="#" style="text-decoration:none; color: inherit;">
-						<div class="college-card">
-							<div class="badge"><img src="{% static 'college_logos/collegeofbusinessaccountancy.jpg' %}" alt="College of Business and Accountancy"></div>
-							<div class="college-name">COLLEGE OF BUSINESS AND ACCOUNTANCY</div>
-							<div class="muted">No. of Projects: 3</div>
-						</div>
-					</a>
-					<a href="#" style="text-decoration:none; color: inherit;">
-						<div class="college-card">
-							<div class="badge"><img src="{% static 'college_logos/collegeofengineering.png' %}" alt="College of Engineering"></div>
-							<div class="college-name">COLLEGE OF ENGINEERING</div>
-							<div class="muted">No. of Projects: 5</div>
-						</div>
-					</a>
-					<a href="#" style="text-decoration:none; color: inherit;">
-						<div class="college-card">
-							<div class="badge"><img src="{% static 'college_logos/collegeofengineering.png' %}" alt="College of Architecture"></div>
-							<div class="college-name">COLLEGE OF ARCHITECTURE</div>
-							<div class="muted">No. of Projects: 5</div>
-						</div>
-					</a>
-					<a href="#" style="text-decoration:none; color: inherit;">
-						<div class="college-card">
-							<div class="badge"><img src="{% static 'college_logos/collegeofhospitalitymanagement.jpg' %}" alt="College of Hospitality and Tourism Management"></div>
-							<div class="college-name">COLLEGE OF HOSPITALITY AND TOURISM MANAGEMENT</div>
-							<div class="muted">No. of Projects: 5</div>
-						</div>
-					</a>
-					<a href="#" style="text-decoration:none; color: inherit;">
-						<div class="college-card">
-							<div class="badge"><img src="{% static 'college_logos/collegeofnursing.jpg' %}" alt="College of Nursing and Health Sciences"></div>
-							<div class="college-name">COLLEGE OF NURSING AND HEALTH SCIENCES</div>
-							<div class="muted">No. of Projects: 5</div>
-						</div>
-					</a>
-					<a href="#" style="text-decoration:none; color: inherit;">
-						<div class="college-card">
-							<div class="badge"><img src="{% static 'college_logos/collegeofsciences.jpg' %}" alt="College of Sciences"></div>
-							<div class="college-name">COLLEGE OF SCIENCES</div>
-							<div class="muted">No. of Projects: 5</div>
-						</div>
-					</a>
-					<a href="#" style="text-decoration:none; color: inherit;">
-						<div class="college-card">
-							<div class="badge"><img src="{% static 'college_logos/collegeofteachereducation.png' %}" alt="College of Teacher Education"></div>
-							<div class="college-name">COLLEGE OF TEACHER EDUCATION</div>
-							<div class="muted">No. of Projects: 3</div>
-						</div>
-					</a>
-				</div>
+	<!-- Table View (2023 Projects) -->
+	<div id="table-view" class="content-section">
+		<div class="table-wrap">
+			<div class="table-box">
+				<table>
+					<thead>
+						<tr>
+							<th>Name</th>
+							<th>Proponents</th>
+							<th>Date Started</th>
+							<th>Date Ended</th>
+							<th>Duration</th>
+							<th>No. of Trainees</th>
+							<th>Satisfaction Evaluation</th>
+							<th>Action</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>
+								<a href="#" class="link">Pre-Release Psychological Intervention Program for PDL's</a>
+							</td>
+							<td>
+								<div><a href="#" class="link">Yvie G. Renaldo</a></div>
+								<div><a href="#" class="link">Estes U. Talledo</a></div>
+							</td>
+							<td>January 06, 2023</td>
+							<td>January 23, 2024</td>
+							<td>1 year, 17 days</td>
+							<td class="center">115</td>
+							<td>Excellent</td>
+							<td>Candidate for further research</td>
+						</tr>
+					</tbody>
+				</table>
 			</div>
 		</div>
 	</div>
 
-	<script>
-		// Sidebar functionality
-		const sidebar = document.getElementById("sidebar");
-		const handle = sidebar.querySelector(".resize-handle");
+	<!-- College Cards View -->
+	<div id="college-view" class="content-section">
+		<div class="content">
+			<div class="cards">
+				<a href="#" style="text-decoration:none; color: inherit;">
+					<div class="college-card">
+						<div class="badge"><img src="{% static 'college_logos/collegeofartshumanities.jpg' %}" alt="College of Arts and Humanities"></div>
+						<div class="college-name">COLLEGE OF ARTS AND HUMANITIES</div>
+						<div class="muted">No. of Projects: 5</div>
+					</div>
+				</a>
+				<a href="#" style="text-decoration:none; color: inherit;">
+					<div class="college-card">
+						<div class="badge"><img src="{% static 'college_logos/collegeofcriminalandjustice.jpg' %}" alt="College of Criminal Justice Education"></div>
+						<div class="college-name">COLLEGE OF CRIMINAL JUSTICE EDUCATION</div>
+						<div class="muted">No. of Projects: 5</div>
+					</div>
+				</a>
+				<a href="#" style="text-decoration:none; color: inherit;">
+					<div class="college-card">
+						<div class="badge"><img src="{% static 'college_logos/collegeofbusinessaccountancy.jpg' %}" alt="College of Business and Accountancy"></div>
+						<div class="college-name">COLLEGE OF BUSINESS AND ACCOUNTANCY</div>
+						<div class="muted">No. of Projects: 3</div>
+					</div>
+				</a>
+				<a href="#" style="text-decoration:none; color: inherit;">
+					<div class="college-card">
+						<div class="badge"><img src="{% static 'college_logos/collegeofengineering.png' %}" alt="College of Engineering"></div>
+						<div class="college-name">COLLEGE OF ENGINEERING</div>
+						<div class="muted">No. of Projects: 5</div>
+					</div>
+				</a>
+				<a href="#" style="text-decoration:none; color: inherit;">
+					<div class="college-card">
+						<div class="badge"><img src="{% static 'college_logos/collegeofengineering.png' %}" alt="College of Architecture"></div>
+						<div class="college-name">COLLEGE OF ARCHITECTURE</div>
+						<div class="muted">No. of Projects: 5</div>
+					</div>
+				</a>
+				<a href="#" style="text-decoration:none; color: inherit;">
+					<div class="college-card">
+						<div class="badge"><img src="{% static 'college_logos/collegeofhospitalitymanagement.jpg' %}" alt="College of Hospitality and Tourism Management"></div>
+						<div class="college-name">COLLEGE OF HOSPITALITY AND TOURISM MANAGEMENT</div>
+						<div class="muted">No. of Projects: 5</div>
+					</div>
+				</a>
+				<a href="#" style="text-decoration:none; color: inherit;">
+					<div class="college-card">
+						<div class="badge"><img src="{% static 'college_logos/collegeofnursing.jpg' %}" alt="College of Nursing and Health Sciences"></div>
+						<div class="college-name">COLLEGE OF NURSING AND HEALTH SCIENCES</div>
+						<div class="muted">No. of Projects: 5</div>
+					</div>
+				</a>
+				<a href="#" style="text-decoration:none; color: inherit;">
+					<div class="college-card">
+						<div class="badge"><img src="{% static 'college_logos/collegeofsciences.jpg' %}" alt="College of Sciences"></div>
+						<div class="college-name">COLLEGE OF SCIENCES</div>
+						<div class="muted">No. of Projects: 5</div>
+					</div>
+				</a>
+				<a href="#" style="text-decoration:none; color: inherit;">
+					<div class="college-card">
+						<div class="badge"><img src="{% static 'college_logos/collegeofteachereducation.png' %}" alt="College of Teacher Education"></div>
+						<div class="college-name">COLLEGE OF TEACHER EDUCATION</div>
+						<div class="muted">No. of Projects: 3</div>
+					</div>
+				</a>
+			</div>
+		</div>
+	</div> 
+		
+	<!-- Pagination -->
+	<div class="pagination-container">
+		{% if page_obj.has_previous %}
+			<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page=1">First</a>
+			<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a>
+		{% else %}
+			<button class="pagination-button" disabled>First</button>
+			<button class="pagination-button" disabled>Previous</button>
+		{% endif %}
 
-		let isDragging = false;
-		let startX = 0;
-		let startWidth = 0;
+		{% for num in page_range %}
+			{% if num == page_obj.number %}
+				<button class="pagination-button active" disabled>{{ num }}</button>
+			{% else %}
+				<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ num }}">{{ num }}</a>
+			{% endif %}
+		{% endfor %}
 
-		const expandedWidth = 250;
-		const collapsedWidth = 55;
-		const dragTolerance = 10;
+		{% if page_obj.has_next %}
+			<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.next_page_number }}">Next</a>
+			<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ paginator.num_pages }}">Last</a>
+		{% else %}
+			<button class="pagination-button" disabled>Next</button>
+			<button class="pagination-button" disabled>Last</button>
+		{% endif %}
+	</div>
+</div> 
+	
+<svg style="display:none;">
 
-		handle.addEventListener("mousedown", (e) => {
-			isDragging = true;
-			startX = e.clientX;
-			startWidth = sidebar.offsetWidth;
-			document.body.style.cursor = "ew-resize";
-		});
+	<!-- Dropdown -->
+	<symbol id="dropdown-icon" viewBox="0 0 15 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+		<path d="M7.11427 6.46831L12.3293 1.25327C12.4265 1.15265 12.5427 1.07239 12.6713 1.01717C12.7998 0.961959 12.9381 0.932896 13.0779 0.93168C13.2178 0.930465 13.3566 0.957121 13.486 1.01009C13.6155 1.06307 13.7331 1.1413 13.8321 1.24022C13.931 1.33914 14.0092 1.45677 14.0622 1.58624C14.1152 1.71572 14.1418 1.85445 14.1406 1.99434C14.1394 2.13423 14.1103 2.27247 14.0551 2.40101C13.9999 2.52954 13.9196 2.6458 13.819 2.74298L7.85912 8.70287C7.66155 8.90038 7.39363 9.01133 7.11427 9.01133C6.8349 9.01133 6.56698 8.90038 6.36941 8.70287L0.409525 2.74298C0.308901 2.6458 0.228639 2.52954 0.173424 2.40101C0.118209 2.27247 0.089146 2.13423 0.0879304 1.99434C0.0867148 1.85445 0.113371 1.71572 0.166344 1.58624C0.219317 1.45677 0.297546 1.33914 0.396466 1.24022C0.495386 1.1413 0.613016 1.06307 0.742492 1.01009C0.871969 0.957121 1.0107 0.930465 1.15059 0.93168C1.29048 0.932896 1.42872 0.961959 1.55726 1.01717C1.68579 1.07239 1.80205 1.15265 1.89923 1.25327L7.11427 6.46831Z" fill="black"/>
+	</symbol>
 
-		document.addEventListener("mouseup", (e) => {
-			if (!isDragging) return;
-			isDragging = false;
-			document.body.style.cursor = "default";
+	<!-- Search -->
+	<symbol id="icon-search" viewBox="0 0 21 21" fill="none">
+		<path d="M8.89152 15.9057C9.75056 15.9057 10.6012 15.7365 11.3948 15.4077C12.1885 15.079 12.9096 14.5972 13.5171 13.9897C14.1245 13.3823 14.6064 12.6612 14.9351 11.8675C15.2638 11.0739 15.433 10.2232 15.433 9.36417C15.433 8.50513 15.2638 7.6545 14.9351 6.86084C14.6064 6.06719 14.1245 5.34606 13.5171 4.73862C12.9096 4.13119 12.1885 3.64934 11.3948 3.3206C10.6012 2.99186 9.75056 2.82266 8.89152 2.82266C7.1566 2.82266 5.49274 3.51185 4.26597 4.73862C3.03919 5.9654 2.35 7.62926 2.35 9.36417C2.35 11.0991 3.03919 12.763 4.26597 13.9897C5.49274 15.2165 7.1566 15.9057 8.89152 15.9057V15.9057ZM15.7819 14.713L19.685 18.6161C19.7891 18.7167 19.872 18.8371 19.9291 18.9701C19.9861 19.1032 20.0161 19.2463 20.0173 19.391C20.0184 19.5358 19.9907 19.6793 19.9358 19.8133C19.8809 19.9472 19.7999 20.0689 19.6974 20.1712C19.595 20.2735 19.4732 20.3544 19.3392 20.4091C19.2052 20.4638 19.0616 20.4913 18.9168 20.4899C18.772 20.4886 18.629 20.4584 18.496 20.4012C18.3631 20.3439 18.2428 20.2608 18.1423 20.1566L14.2392 16.2535C12.4866 17.614 10.2814 18.2554 8.07247 18.0472C5.86357 17.839 3.81705 16.7968 2.34951 15.1328C0.881971 13.4688 0.103735 11.308 0.173229 9.09044C0.242723 6.87284 1.15472 4.76508 2.72357 3.19623C4.29242 1.62738 6.40018 0.715379 8.61778 0.645885C10.8354 0.576391 12.9961 1.35463 14.6601 2.82217C16.3241 4.28971 17.3663 6.33623 17.5745 8.54513C17.7827 10.754 17.1413 12.9592 15.7808 14.7119L15.7819 14.713Z" fill="#5A5252"/>
+	</symbol>
 
-			const diff = e.clientX - startX;
+	<!-- Filter -->
+	<symbol id="icon-filter" viewBox="0 0 23 22" fill="none">
+		<path opacity="0.9" d="M21.5399 1.92871H1.37988L9.44388 11.4644V18.0567L13.4759 20.0727V11.4644L21.5399 1.92871Z" stroke="#1E1E1E" stroke-width="2.016" stroke-linecap="round" stroke-linejoin="round"/>
+	</symbol>
 
-			if (Math.abs(diff) < dragTolerance) {
-				if (sidebar.classList.contains("collapsed")) {
-					sidebar.classList.remove("collapsed");
-					sidebar.style.width = expandedWidth + "px";
-				} else {
-					sidebar.classList.add("collapsed");
-					sidebar.style.width = collapsedWidth + "px";
-				}
-				return;
-			}
+</svg>
 
-			if (e.clientX < 150) {
-				sidebar.classList.add("collapsed");
-				sidebar.style.width = collapsedWidth + "px";
-			} else {
-				sidebar.classList.remove("collapsed");
-				sidebar.style.width = expandedWidth + "px";
-			}
-		});
+<script>
+	document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.settings-dropdown-toggle').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                // Hide all other dropdowns
+                document.querySelectorAll('.settings-dropdown-menu').forEach(function(menu) {
+                    menu.style.display = 'none';
+                });
+                // Show this dropdown
+                var menu = btn.parentElement.querySelector('.settings-dropdown-menu');
+                if (menu) {
+                    menu.style.display = 'block';
+                }
+            });
+        });
+        // Hide dropdown when clicking outside
+        document.addEventListener('click', function() {
+            document.querySelectorAll('.settings-dropdown-menu').forEach(function(menu) {
+                menu.style.display = 'none';
+            });
+        });
+    });
 
-		// Toggle sidebar function for hamburger menu
-		function toggleSidebar() {
-			if (sidebar.classList.contains("collapsed")) {
-				sidebar.classList.remove("collapsed");
-				sidebar.style.width = expandedWidth + "px";
-			} else {
-				sidebar.classList.add("collapsed");
-				sidebar.style.width = collapsedWidth + "px";
-			}
-		}
-
-		// Sort functionality
-		let isAscending = true;
-
-		function toggleSort() {
-			const grid = document.getElementById('yearGrid');
-			const cards = Array.from(grid.children);
-			const sortIcon = document.getElementById('sortIcon');
-
-			isAscending = !isAscending;
-			sortIcon.textContent = isAscending ? '▾' : '▴';
-
-			cards.sort((a, b) => {
-				const yearA = parseInt(a.getAttribute('data-year'));
-				const yearB = parseInt(b.getAttribute('data-year'));
-				return isAscending ? yearA - yearB : yearB - yearA;
-			});
-
-			cards.forEach(card => grid.appendChild(card));
-		}
-
-		function showView(viewName) {
-			// Hide all content sections
-			document.querySelectorAll('.content-section').forEach(section => {
-				section.classList.remove('active');
-			});
-			
-			// Show selected view
-			document.getElementById(viewName + '-view').classList.add('active');
-		}
-
-		// Improved dropdown hover behavior
-		document.addEventListener('DOMContentLoaded', function() {
-			// Handle main dropdown (Projects/Experts)
-			const dropdown = document.querySelector('.dropdown');
-			const dropdownMenu = document.querySelector('.dropdown-menu');
-			let dropdownTimeout;
-			
-			if (dropdown && dropdownMenu) {
-				dropdown.addEventListener('mouseenter', function() {
-					clearTimeout(dropdownTimeout);
-					dropdownMenu.style.display = 'block';
-				});
-				
-				dropdown.addEventListener('mouseleave', function() {
-					dropdownTimeout = setTimeout(function() {
-						dropdownMenu.style.display = 'none';
-					}, 150);
-				});
-				
-				dropdownMenu.addEventListener('mouseenter', function() {
-					clearTimeout(dropdownTimeout);
-					dropdownMenu.style.display = 'block';
-				});
-				
-				dropdownMenu.addEventListener('mouseleave', function() {
-					dropdownTimeout = setTimeout(function() {
-						dropdownMenu.style.display = 'none';
-					}, 150);
-				});
-			}
-		});
-	</script>
+    // Filter dropdown logic
+    const filterBtn = document.getElementById('filterBtn');
+    const filterDropdown = document.getElementById('filterDropdown');
+    const closeFilter = document.getElementById('closeFilter');
+    if (filterBtn && filterDropdown) {
+        filterBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            filterDropdown.style.display = 'block';
+        });
+    }
+    if (closeFilter && filterDropdown) {
+        closeFilter.addEventListener('click', function(e) {
+            e.preventDefault();
+            filterDropdown.style.display = 'none';
+        });
+    }
+    // Hide dropdown when clicking outside
+    document.addEventListener('mousedown', function(e) {
+        if (filterDropdown && !filterDropdown.contains(e.target) && e.target !== filterBtn) {
+            filterDropdown.style.display = 'none';
+        }
+    });
+</script>
 </body>
 </html>
 

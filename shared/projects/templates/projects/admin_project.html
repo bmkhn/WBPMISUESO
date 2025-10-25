@@ -13,24 +13,6 @@
 </head>
 <body>
 	<div class="main-container">
-        <!-- Top Section -->
-		<div class="container-a">
-            <div class="text-sort-container">
-                <div class="project-text">Extension Projects</div>
-            </div>
-            <div class="button-container">
-                {% if request.user.role in ADMIN_ROLES %}
-                <a class="add-user-btn" href="{% url 'add_project' %}">  
-                    <i class="fa-solid fa-diagram-project"></i>
-                    Add Project 
-                </a>
-                {% endif %}
-                <button class="export-btn" id="exportProjectBtn" type="button">  
-                    <i class="fa-solid fa-download"></i>
-                    Export 
-                </button>
-            </div>
-		</div>
 
         <!-- Search Bar & Filter (4x2 Grid) -->
         <div class="search-container">
@@ -117,7 +99,25 @@
                     </div>
                 </div>
             </form>
-        </div>
+        </div> 
+         
+        <div class="container-a">
+            <div class="text-sort-container">
+                <div class="project-text">Extension Projects</div>
+            </div>
+            <div class="button-container">
+                {% if request.user.role in ADMIN_ROLES %}
+                <a class="add-user-btn" href="{% url 'add_project' %}">  
+                    <i class="fa-solid fa-diagram-project"></i>
+                    Add Project 
+                </a>
+                {% endif %}
+                <button class="export-btn" id="exportProjectBtn" type="button">  
+                    <i class="fa-solid fa-download"></i>
+                    Export 
+                </button>
+            </div>
+		</div>
 
         <!-- Table Section -->
         <table class="user-table">
