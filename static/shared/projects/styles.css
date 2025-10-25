@@ -397,7 +397,29 @@ span.required {
 
 p, h1, h2, h3, h4, h5, h6, div {
     cursor: default;
-} 
+}  
+ 
+.verification-badge {
+    background: #E6FFFA;
+    border: 1px solid #1F7C57;
+    color: #1F7C57;
+    font-weight: 600;
+    font-size: 1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.verification-badge.unverified {
+    background: #FFF5F5;
+    border: 1px solid #E53E3E;
+    color: #E53E3E;
+}
+
+.verification-badge:hover {
+    opacity: 0.9;
+}
 
 .info-icon {
     cursor: help;
