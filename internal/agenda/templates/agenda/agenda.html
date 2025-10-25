@@ -11,8 +11,22 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
 <link href="{% static 'internal/agenda/styles.css' %}" rel="stylesheet">
-</head>
-<body>
+</head> 
+
+<body> 
+      
+    <!-- Delete Confirmation Modal - PLACE THIS RIGHT BEFORE </body> -->
+    <div id="deleteAgendaModal">
+        <div class="modal-content">
+            <div class="modal-title">Confirm Deletion</div>
+            <div id="deleteAgendaModalMsg" class="modal-message"></div>
+            <div class="modal-buttons">
+                <button id="cancelDeleteAgendaBtn" class="modal-btn modal-btn-cancel">Cancel</button>
+                <button id="confirmDeleteAgendaBtn" class="modal-btn modal-btn-delete">Delete</button>
+            </div>
+        </div>
+    </div>
+    
     <div class="main-container">
         <!-- Container for Page Title and Add Agenda Button -->
         <div class="container-a">
@@ -33,7 +47,7 @@
                 <div class="agenda-carousel-track">
                     {% for agenda in agendas %}
                     <div class="agenda-card">
-                        <div class="agenda-card-kebab" onclick="toggleOptions('{{ agenda.id }}')" title="More options">
+                        <div class="agenda-card-kebab" onclick="toggleOptions(event, '{{ agenda.id }}')" title="More options">
                             <svg class="kebab-svg"><use href="#kebab-icon"/></svg>
                             <div class="options-dropdown" id="options-{{ agenda.id }}">
                                 <a class="options-item edit-option" href="{% url 'edit_agenda' agenda.id %}">
@@ -54,11 +68,7 @@
                         </div>
                         <div class="agenda-card-text" onclick="cardClick(event, '{{ agenda.id }}')" style="cursor:pointer;">{{ agenda.name }}</div>
                         <div class="agenda-card-desc" onclick="cardClick(event, '{{ agenda.id }}')" style="cursor:pointer;">
-                            {% if agenda.description|length > 120 %}
-                                {{ agenda.description|slice:":120" }}&hellip;
-                            {% else %}
-                                {{ agenda.description }}
-                            {% endif %}
+                            {{ agenda.description }}
                         </div>
                         <div style="margin-bottom: 10px;"></div>
                     </div>
@@ -131,97 +141,82 @@
     </symbol>
 </svg>
 
-
-<!-- Delete Confirmation Modal -->
-<div id="deleteAgendaModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.18);z-index:9999;align-items:center;justify-content:center;">
-    <div style="background:white;padding:2rem 2.5rem;border-radius:16px;box-shadow:0 4px 32px rgba(0,0,0,0.18);max-width:350px;margin:auto;display:flex;flex-direction:column;align-items:center;">
-        <div style="font-size:1.25rem;font-weight:600;color:#E53E3E;margin-bottom:1rem;">Confirm Deletion</div>
-        <div id="deleteAgendaModalMsg" style="font-size:1rem;color:#444;margin-bottom:2rem;text-align:center;"></div>
-        <div style="display:flex;gap:1rem;">
-            <button id="cancelDeleteAgendaBtn" style="background:#e5e7eb;color:#374151;padding:0.75rem 1.5rem;border-radius:8px;font-size:1rem;font-weight:500;border:none; cursor:pointer">Cancel</button>
-            <button id="confirmDeleteAgendaBtn" style="background:#E53E3E;color:white;padding:0.75rem 1.5rem;border-radius:8px;font-size:1rem;font-weight:500;border:none; cursor:pointer">Delete</button>
-        </div>
-    </div>
-</div>
-
-
 <script>
-    // Agenda Delete confirmation modal logic
-    let agendaDeleteUrl = '';
-    document.querySelectorAll('.delete-modal-link').forEach(function(link) {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            agendaDeleteUrl = link.getAttribute('data-delete-url');
-            var agendaName = link.getAttribute('data-agenda-name');
-            document.getElementById('deleteAgendaModalMsg').innerHTML = 'Are you sure you want to delete the agenda <strong>' + agendaName + '</strong>? This action cannot be undone.';
-            document.getElementById('deleteAgendaModal').style.display = 'flex';
-        });
-    });
-    document.getElementById('cancelDeleteAgendaBtn').onclick = function() {
-        document.getElementById('deleteAgendaModal').style.display = 'none';
-        agendaDeleteUrl = '';
-    };
-    document.getElementById('confirmDeleteAgendaBtn').onclick = function() {
-        if (agendaDeleteUrl) {
-            window.location.href = agendaDeleteUrl;
+    // CSRF Token (Helper remains in global scope)
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.startsWith(name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
         }
-    };
-    // Hide modal when clicking outside
-    document.getElementById('deleteAgendaModal').addEventListener('mousedown', function(e) {
-        if (e.target === this) {
-            this.style.display = 'none';
-            agendaDeleteUrl = '';
-        }
-    });
-    // Card click handler that ignores clicks on options
-    function cardClick(event, id) {
-        if (event.target.closest('.agenda-card-kebab')) {
-            return;
-        }
-        window.location.href = '/agenda/details/' + id + '/';
+        return cookieValue;
     }
+    const csrftoken = getCookie('csrftoken');
 
-    // Options menu functionality
+    // Options Dropdown (Global Scope)
     let activeDropdown = null;
-    function toggleOptions(id) {
-        const dropdown = document.getElementById(`options-${id}`);
+    function toggleOptions(e, id) {
+        e.stopPropagation(); 
+        const dropdown = document.getElementById('options-' + id);
         if (!dropdown) return;
+        
         if (activeDropdown && activeDropdown !== dropdown) {
             activeDropdown.classList.remove('show');
         }
         dropdown.classList.toggle('show');
         activeDropdown = dropdown.classList.contains('show') ? dropdown : null;
     }
-    document.addEventListener('click', function(event) {
-        if (!event.target.closest('.agenda-card-kebab')) {
+
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.agenda-card-kebab') && !e.target.closest('#deleteAgendaModal')) {
             if (activeDropdown) {
                 activeDropdown.classList.remove('show');
                 activeDropdown = null;
             }
         }
     });
-</script>
 
-<script>
-    // --- COLOR PALETTE (Define a set of gradients) ---
+    // Card Click
+    function cardClick(event, id) {
+        if (event.target.closest('.agenda-card-kebab') || event.target.closest('.delete-modal-link')) {
+            return;
+        }
+        window.location.href = '/agenda/details/' + id + '/';
+    }
+
+    // --- COLOR PALETTE ---
     const CARD_BACKGROUNDS = [
-        'linear-gradient(to bottom, #FF9900 0%, #ffffff 100%)', // Bright Orange
-        'linear-gradient(to bottom, #FF3366 0%, #ffffff 100%)', // Neon Pink
-        'linear-gradient(to bottom, #3366FF 0%, #ffffff 100%)', // Electric Blue
-        'linear-gradient(to bottom, #99FF33 0%, #ffffff 100%)', // Lime Green
-        'linear-gradient(to bottom, #00CC99 0%, #ffffff 100%)', // Deep Turquoise
-        'linear-gradient(to bottom, #9933FF 0%, #ffffff 100%)', // Royal Purple
-        'linear-gradient(to bottom, #FFCC00 0%, #ffffff 100%)', // Sunny Yellow
-        'linear-gradient(to bottom, #FF4444 0%, #ffffff 100%)', // Hot Red
-        'linear-gradient(to bottom, #6600FF 0%, #ffffff 100%)', // Indigo/Violet
+        'linear-gradient(to bottom, #FF9900 0%, #ffffff 100%)', 
+        'linear-gradient(to bottom, #FF3366 0%, #ffffff 100%)', 
+        'linear-gradient(to bottom, #3366FF 0%, #ffffff 100%)', 
+        'linear-gradient(to bottom, #99FF33 0%, #ffffff 100%)', 
+        'linear-gradient(to bottom, #00CC99 0%, #ffffff 100%)', 
+        'linear-gradient(to bottom, #9933FF 0%, #ffffff 100%)', 
+        'linear-gradient(to bottom, #FFCC00 0%, #ffffff 100%)', 
+        'linear-gradient(to bottom, #FF4444 0%, #ffffff 100%)', 
+        'linear-gradient(to bottom, #6600FF 0%, #ffffff 100%)', 
     ];
 
-    // --- CAROUSEL LOGIC (Original, Non-Looping) ---
+    // --- CAROUSEL LOGIC ---
     let agendaIndex = 0;
-    const cardsToShow = 3; // Number of cards visible at once
+    const cardsToShow = 3; 
 
     function getAgendaCards() {
         return document.querySelectorAll('.agenda-carousel-track .agenda-card');
+    }
+
+    function applyRandomColors() {
+        const cards = getAgendaCards();
+        cards.forEach((card, index) => {
+            const colorIndex = index % CARD_BACKGROUNDS.length;
+            card.style.backgroundImage = CARD_BACKGROUNDS[colorIndex];
+        });
     }
 
     function updateAgendaCarousel() {
@@ -230,24 +225,38 @@
         const totalCards = cards.length;
         if (!track || totalCards === 0) return;
 
-        // 1. Clamp index (Stop at the beginning/end)
+        // 1. Clamp index
         if (agendaIndex < 0) {
             agendaIndex = 0;
         }
-        // Only allow scrolling until the last full set of cards is visible
         if (agendaIndex > totalCards - cardsToShow) {
             agendaIndex = Math.max(totalCards - cardsToShow, 0);
         }
 
         // 2. Calculate offset and scroll
-        const cardWidth = cards[0].offsetWidth;
+        const cardWidth = cards.length > 0 ? cards[0].offsetWidth : 0; 
         const gap = parseInt(window.getComputedStyle(track).gap) || 24;
         const offset = agendaIndex * (cardWidth + gap);
         track.style.transform = `translateX(-${offset}px)`;
 
-        // 3. Arrow enable/disable (Disable when at start/end)
-        document.querySelector('.left-arrow').disabled = agendaIndex === 0;
-        document.querySelector('.right-arrow').disabled = agendaIndex >= totalCards - cardsToShow;
+        // 3. Arrow enable/disable
+        const leftArrow = document.querySelector('.left-arrow');
+        const rightArrow = document.querySelector('.right-arrow');
+        if (leftArrow) leftArrow.disabled = agendaIndex === 0;
+        if (rightArrow) rightArrow.disabled = agendaIndex >= totalCards - cardsToShow;
+
+        // 4. DYNAMIC CLIPPING FIX: Apply 'expand-left' class 
+        const lastVisibleIndex = agendaIndex + cardsToShow - 1;
+        
+        cards.forEach((card, index) => {
+            card.classList.remove('expand-left');
+            if (index === lastVisibleIndex && index < totalCards) {
+                card.classList.add('expand-left');
+            }
+        });
+
+        // 5. DYNAMIC SHIFT FIX: Setup hover listeners for preceding card
+        setupHoverShift(); 
     }
 
     function scrollAgenda(dir) {
@@ -255,32 +264,137 @@
         updateAgendaCarousel();
     }
 
-    // --- NEW: Apply random colors to the cards ---
-    function applyRandomColors() {
+    // --- Dynamic Shifting (Hover) Logic ---
+    function setupHoverShift() {
         const cards = getAgendaCards();
-        
+
+        cards.forEach(card => {
+            card.classList.remove('shift-previous'); 
+        });
+
         cards.forEach((card, index) => {
-            // Assign a color based on the index modulo the color array length
-            const colorIndex = index % CARD_BACKGROUNDS.length;
+            if (card.classList.contains('expand-left')) {
+                const previousCard = cards[index - 1];
+
+                if (previousCard) {
+                    // Use named functions for listeners for better removal
+                    const mouseOverHandler = () => { previousCard.classList.add('shift-previous'); };
+                    const mouseOutHandler = () => { previousCard.classList.remove('shift-previous'); };
+
+                    // Remove existing listeners before setting new ones
+                    card.onmouseover = null;
+                    card.onmouseout = null;
+                    
+                    card.onmouseover = mouseOverHandler;
+                    card.onmouseout = mouseOutHandler;
+                }
+            } else {
+                card.onmouseover = null;
+                card.onmouseout = null;
+            }
+        });
+        
+        // Re-apply colors
+        applyRandomColors(); 
+
+        // CRITICAL: Re-attach modal listeners
+        setupModalLinks();
+    }
+
+
+    // ===============================================
+    // *** MODAL/LISTENER FIX START ***
+    // ===============================================
+    // Declare the critical variables in a high scope (module scope)
+    let agendaDeleteUrl = '';
+    let modal = null;
+    let modalMsg = null;
+
+    // This function handles attaching listeners to the DELETE links on the agenda cards
+    function setupModalLinks() {
+        // Remove old listeners to prevent duplication
+        document.querySelectorAll('.delete-modal-link').forEach(function(link) {
+            if (link._deleteListener) {
+                link.removeEventListener('click', link._deleteListener);
+                link._deleteListener = null;
+            }
+        });
+
+        // Attach fresh listeners
+        document.querySelectorAll('.delete-modal-link').forEach(function(link) {
+            const listener = function(e) {
+                e.stopPropagation(); 
+                e.preventDefault(); 
+                
+                if (activeDropdown) {
+                    activeDropdown.classList.remove('show');
+                    activeDropdown = null;
+                }
+
+                // Set the HIGH-SCOPED agendaDeleteUrl
+                agendaDeleteUrl = link.getAttribute('data-delete-url');
+                const agendaName = link.getAttribute('data-agenda-name');
+                
+                modalMsg.innerHTML = 'Are you sure you want to delete the agenda <strong>' + agendaName + '</strong>? This action cannot be undone.';
+                modal.classList.add('is-open'); 
+            };
             
-            // Set the background-image style directly on the card
-            card.style.backgroundImage = CARD_BACKGROUNDS[colorIndex];
+            link.addEventListener('click', listener);
+            link._deleteListener = listener; // Store reference for removal later
         });
     }
 
     // --- Initialization ---
     window.addEventListener('resize', updateAgendaCarousel);
-    
+
     document.addEventListener('DOMContentLoaded', function() {
-        // 1. Apply colors first
-        applyRandomColors(); 
         
-        // 2. Then set initial position for the carousel
-        agendaIndex = 0;
-        updateAgendaCarousel();
+        // Assign modal DOM elements once in DOMContentLoaded
+        modal = document.getElementById('deleteAgendaModal');
+        modalMsg = document.getElementById('deleteAgendaModalMsg');
+
+        // ===============================================
+        // *** MODAL BUTTON LISTENERS (ATTACHED ONCE) ***
+        // These use the high-scoped agendaDeleteUrl variable
+        // ===============================================
+
+        document.getElementById('cancelDeleteAgendaBtn').addEventListener('click', function() {
+            modal.classList.remove('is-open'); 
+            agendaDeleteUrl = '';
+        });
+
+        document.getElementById('confirmDeleteAgendaBtn').addEventListener('click', function() {
+            if (agendaDeleteUrl) {
+                fetch(agendaDeleteUrl, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': csrftoken },
+                })
+                .then(response => {
+                    if (response.ok || response.status === 204) {
+                        window.location.reload();
+                    } else {
+                        alert('Error deleting agenda.');
+                        modal.classList.remove('is-open'); 
+                    }
+                })
+                .catch(error => {
+                    alert('Network error occurred.');
+                    modal.classList.remove('is-open'); 
+                });
+            }
+        });
+
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                modal.classList.remove('is-open'); 
+                agendaDeleteUrl = '';
+            }
+        });
+
+        // Initial setup for carousel (this triggers setupHoverShift -> setupModalLinks)
+        updateAgendaCarousel(); 
     });
 </script>
-
 </body>
 </html>
 

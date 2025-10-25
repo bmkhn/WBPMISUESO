@@ -1,4 +1,5 @@
-body {
+
+ body {
     background: #F9F9F9;
     margin: 0;
     font-family: 'Inter', Arial, sans-serif;
@@ -16,34 +17,6 @@ body {
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-}
-.container-b {
-    display: flex;
-    flex-direction: row;
-    gap: 15px;
-    width: 100%;
-}
-
-.agenda-card-kebab {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    z-index: 2;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center; 
-}
-
-.agenda-card-kebab .kebab-svg {
-    width: 20px;
-    height: 20px;
-    transition: background 0.2s, transform 0.2s;
-}
-
-.agenda-card-kebab:hover .kebab-svg {
-    transform: scale(1.15);
-    background: none;
 }
 
 .options-dropdown {
@@ -97,76 +70,259 @@ body {
     height: 16px;
 }
 
-.options-item:hover {
-    background-color: #F3F4F6;
-}
-
 .edit-option {
     color: #1f7c57;
 }
 
 .delete-option {
     color: #DC2626;
+} 
+
+#deleteAgendaModal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.6); 
+    z-index: 999999;
+    align-items: center;
+    justify-content: center;
+}
+
+#deleteAgendaModal.is-open { 
+    display: flex !important; /* Ensures it overrides any 'display: none' from the carousel */
+}
+
+#deleteAgendaModal.show {
+    display: flex;
+}
+
+.modal-content {
+    background: white;
+    padding: 2rem 2.5rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 32px rgba(0, 0, 0, 0.18);
+    max-width: 350px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 1000000;
+}
+
+.modal-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #E53E3E;
+    margin-bottom: 1rem;
+}
+
+.modal-message {
+    font-size: 1rem;
+    color: #444;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 1rem;
+}
+
+.modal-btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.modal-btn-cancel {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.modal-btn-cancel:hover {
+    background: #d1d5db;
+}
+
+.modal-btn-delete {
+    background: #E53E3E;
+    color: white;
+}
+
+.modal-btn-delete:hover {
+    background: #c53030;
+}
+
+/* ========================================================= */
+/* CAROUSEL STRUCTURE & TRANSITION FIXES */
+/* ========================================================= */
+
+.agenda-carousel {
+    overflow: hidden;
+    width: 960px;
+    position: relative;
+    margin: 0 auto;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: 15px 0; 
+}
+
+.agenda-carousel-track {
+    display: flex;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    gap: 24px;
+    will-change: transform;
 }
 
 .agenda-card {
     position: relative;
-    width: 100%;
-    padding: 40px;
-    border-radius: 15px;
-    border: 1px solid rgba(0,0,0,0.42);
-    background: #ff9900;
+    width: 100%; 
+    height: 25rem;
+    padding: 35px 40px 60px 40px; 
+    border-radius: 12px;
+    border-top: 1px solid rgba(0, 0, 0, 0.1); 
+    border-left: 1px solid rgba(0, 0, 0, 0.1);
+    background-color: #ffffff;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08), 
+                0 2px 4px rgba(0, 0, 0, 0.04);
+    transform: rotate(-0.5deg); 
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); 
     display: flex;
     flex-direction: column;
-    gap: 55px;
-    align-items: center;
+    gap: 10px;
+    align-items: flex-start;
     box-sizing: border-box;
     vertical-align: top; 
+    flex: 0 0 calc(((960px - 2 * 24px) / 3) - 7px);
+    width: calc(((960px - 2 * 24px) / 3) - 7px);
+}
+
+.agenda-card:hover {
+    transform: translateY(-16px) rotate(0deg); 
+    flex: 0 0 calc((((960px - 2 * 24px) / 3) - 7px) * 2 + 24px);
+    width: calc((((960px - 2 * 24px) / 3) - 7px) * 2 + 24px);
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.25),
+                0 4px 8px rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(187, 187, 187, 0.8);
+}
+
+.agenda-card.expand-left:hover {
+    transform: translateY(-16px) translateX(calc((((960px - 2 * 24px) / 3) - 7px) * -1 - 24px)) rotate(0deg); 
+} 
+
+.agenda-card.shift-previous {
+    transform: translateX(calc((((960px - 2 * 24px) / 3) - 7px) * -1 - 24px)); 
+}
+
+.agenda-card-kebab {
+    position: absolute;
+    top: 15px; 
+    right: 15px; 
+    z-index: 2;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px; 
+    height: 30px; 
+    border-radius: 50%;
+    transition: background 0.2s, transform 0.3s; 
+}
+
+.agenda-card-kebab:hover {
+    background: rgba(0, 0, 0, 0.1);
+    transform: scale(1.1);
 }
 
 .agenda-card-text {
-    font-family: 'Inter', Arial, sans-serif;
-    font-weight: 900;
-    font-size: 20px;
-    color: #000000;
-    text-align: center;
-    margin-top: 30px;
+    font-family: 'Instrument Sans', Arial, sans-serif; 
+    font-weight: 900; 
+    font-size: 28px; 
+    color: #1A1A1A; 
+    text-align: left; 
+    width: 100%;
+    margin-top: 5px; 
+    position: relative; 
+    padding-bottom: 25px; 
+    margin-bottom: 5px; 
+}
+
+.agenda-card-text::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 5px; 
+    width: 5px; 
+    height: 4px;
+    background-color: #444;
+    border-radius: 2px;
+    transition: width 0.9s ease; 
+}
+
+.agenda-card:hover .agenda-card-text::after {
+    width: 100%;
+    background-color: #f8f8f8; 
 }
 
 .agenda-card-desc {
     font-family: 'Inter', Arial, sans-serif;
-    font-weight: 400;
-    font-size: 15px;
-    color: #000000;
-    text-align: center;
-    margin-top: 10px;
-    margin-bottom: 40px;
+    font-weight: 500;
+    font-size: 15px; 
+    color: #4B4B4B; 
+    text-align: left;
+    margin-top: 0; 
+    margin-bottom: 0; 
+    line-height: 1.5; 
     word-break: break-word;
     overflow: hidden;
     display: -webkit-box;
-    -webkit-line-clamp: 3;
+    -webkit-line-clamp: 4;
     -webkit-box-orient: vertical;
+}
+
+.agenda-card:hover .agenda-card-desc {
+    display: block !important; 
+    -webkit-line-clamp: none !important; 
+    -webkit-box-orient: initial !important; 
+    overflow: visible !important;
+    max-height: none !important; 
+    height: auto !important; 
 }
 
 .agenda-card-viewlist {
     position: absolute;
-    left: 20px;
-    bottom: 20px;
+    right: 20px; 
+    bottom: 25px; 
+    left: auto; 
     font-family: 'Inter', Arial, sans-serif;
-    font-weight: 400;
-    font-size: 12px;
+    font-weight: 700; 
+    font-size: 14px; 
     color: #0077B6;
+    text-decoration: none; 
     background: none;
     border: none;
     cursor: pointer;
-    text-align: left;
     padding: 0;
+    transition: color 0.5s ease;
+}
+
+.agenda-card-viewlist:hover {
+    color: #005691;
+    text-decoration: underline; 
 }
 
 .kebab-svg {
     width: 16px;
     height: 16px;
-}
+} 
+
 .table-view-container {
     display: flex;
     flex-direction: column;
@@ -203,14 +359,17 @@ body {
 .view-more:hover {
     text-decoration: underline;
 }
+
 .agenda-carousel-wrapper {
     display: flex;
     align-items: center;
     justify-content: center;
     width: 100%;
     position: relative;
-    margin: 0.7rem;
+    margin: 0.7rem;   
+    height: 30rem;
 }
+
 .carousel-arrow {
     background: none;
     border: none;
@@ -243,32 +402,6 @@ body {
 .carousel-arrow svg {
     display: block;
 }
-
-.agenda-carousel {
-    overflow: hidden;
-    width: 960px;
-    position: relative;
-    margin: 0 auto;
-    display: flex;
-    align-items: flex-start;
-    justify-content: flex-start;
-}
-
-.agenda-carousel-track {
-    display: flex;
-    transition: transform 0.4s cubic-bezier(.77,.2,.05,1);
-    gap: 24px;
-    will-change: transform;
-    /* overflow: visible; */
-}
-
-.agenda-card {
-    flex: 0 0 calc(((960px - 2 * 24px) / 3) - 7px);
-    width: calc(((960px - 2 * 24px) / 3) - 7px);
-    margin: 0;
-    box-sizing: border-box;
-} 
- 
 
 .user-table {
     width: 100%;
@@ -321,6 +454,7 @@ body {
     color: #0099FF;
     text-decoration: none;
 } 
+
 .name-link:hover {
     text-decoration: underline;
 } 
@@ -365,5 +499,4 @@ body {
 .add-user-btn i {
     cursor: pointer; 
     margin-right: 0.3rem;
-} 
- 
+}

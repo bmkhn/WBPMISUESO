@@ -37,7 +37,7 @@
 
                 <div class="form-group">
                     <label class="user-details-label" for="id_description">Description: <span class="required">*</span></label>
-                    <textarea class="form-input user-details-value" name="description" id="id_description">{{ form.description.value|default:'' }}</textarea>
+                    <textarea class="form-input user-details-value" maxlength="400" name="description" id="id_description">{{ form.description.value|default:'' }}</textarea>
                 </div>
 
                 <div class="form-group">
