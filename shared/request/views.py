@@ -97,11 +97,16 @@ def request_client_view(request):
     if status:
         requests = requests.filter(status__iexact=status)
         query_params['status'] = status
-    date = request.GET.get('date', '')
-    if date:
-        requests = requests.filter(submitted_at__date=date) | requests.filter(updated_at__date=date)
+    date_from = request.GET.get('date_from', '')
+    if date_from:
+        requests = requests.filter(submitted_at__date__gte=date_from) | requests.filter(updated_at__date__gte=date_from)
         requests = requests.distinct()
-        query_params['date'] = date
+        query_params['date_from'] = date_from
+    date_to = request.GET.get('date_to', '')
+    if date_to:
+        requests = requests.filter(submitted_at__date__lte=date_to) | requests.filter(updated_at__date__lte=date_to)
+        requests = requests.distinct()
+        query_params['date_to'] = date_to
     search = request.GET.get('search', '').strip()
     if search:
         requests = requests.filter(title__icontains=search)
@@ -146,7 +151,8 @@ def request_client_view(request):
         'sort_by': sort_by,
         'order': order,
         'status': status,
-        'date': date,
+        'date_from': date_from,
+        'date_to': date_to,
         'paginator': paginator,
         'page_number': page_number,
         'page_obj': page_obj,
@@ -204,10 +210,16 @@ def request_admin_view(request):
     if status:
         requests = requests.filter(status__iexact=status)
         query_params['status'] = status
-    date = request.GET.get('date', '')
-    if date:
-        requests = requests.filter(deadline__date=date)
-        query_params['date'] = date
+    date_from = request.GET.get('date_from', '')
+    if date_from:
+        requests = requests.filter(submitted_at__date__gte=date_from) | requests.filter(updated_at__date__gte=date_from)
+        requests = requests.distinct()
+        query_params['date_from'] = date_from
+    date_to = request.GET.get('date_to', '')
+    if date_to:
+        requests = requests.filter(submitted_at__date__lte=date_to) | requests.filter(updated_at__date__lte=date_to)
+        requests = requests.distinct()
+        query_params['date_to'] = date_to
     search = request.GET.get('search', '').strip()
     if search:
         requests = requests.filter(title__icontains=search)
@@ -254,7 +266,8 @@ def request_admin_view(request):
         'sort_by': sort_by,
         'order': order,
         'status': status,
-        'date': date,
+        'date_from': date_from,
+        'date_to': date_to,
         'paginator': paginator,
         'page_number': page_number,
         'page_obj': page_obj,

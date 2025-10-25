@@ -58,8 +58,12 @@
                             </select>
                         </label>
 
-                        <label>Date
-                            <input type="date" name="date" value="{{ date|default:'' }}" style="width: 87%"/>
+                        <label>Date From
+                            <input type="date" name="date_from" value="{{ date_from|default:'' }}" style="width: 87%"/>
+                        </label>
+
+                        <label>Date To
+                            <input type="date" name="date_to" value="{{ date_to|default:'' }}" style="width: 87%"/>
                         </label>
                     </div>
                     <div class="filter-actions">

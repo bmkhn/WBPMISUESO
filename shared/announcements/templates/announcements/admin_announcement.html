@@ -80,9 +80,16 @@
 							</label>
 
 							<!-- Bottom Right - Date -->
+							<!-- Date From -->
 							<label style="font-weight:500;color:#374151;display:flex;flex-direction:column;">
-								Date
-								<input type="date" name="date" value="{{ filter_date|default:'' }}" style="width:87%;margin-top:6px;" />
+								Date From
+								<input type="date" name="date_from" value="{{ date_from|default:'' }}" style="width:87%;margin-top:6px;" />
+							</label>
+
+							<!-- Date To -->
+							<label style="font-weight:500;color:#374151;display:flex;flex-direction:column;">
+								Date To
+								<input type="date" name="date_to" value="{{ date_to|default:'' }}" style="width:87%;margin-top:6px;" />
 							</label>
 						</div>
 

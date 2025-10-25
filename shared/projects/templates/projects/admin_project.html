@@ -72,6 +72,7 @@
                                 {% endfor %}
                             </select>
                         </label>
+
                         <label>Year
                             <select name="year">
                                 <option value="">All Years</option>
@@ -89,8 +90,11 @@
                                 <option value="4" {% if quarter == '4' %}selected{% endif %}>Q4</option>
                             </select>
                         </label>
-                        <label>Date
-                            <input type="date" name="date" value="{{ date|default:'' }}" style="width: 87%"/>
+                        <label>Date From
+                            <input type="date" name="date_from" value="{{ date_from|default:'' }}" style="width: 87%"/>
+                        </label>
+                        <label>Date To
+                            <input type="date" name="date_to" value="{{ date_to|default:'' }}" style="width: 87%"/>
                         </label>
                     </div>
                     <div class="filter-actions">

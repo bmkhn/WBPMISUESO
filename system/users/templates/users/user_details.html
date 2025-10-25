@@ -188,7 +188,6 @@
         font-size: 32px;
         padding: 6px 16px;
         border-radius: 8px;
-        cursor: pointer;
         text-decoration: none;
     }
 
@@ -264,7 +263,7 @@
 
         </div>
         <div class="user-details-section">
-            <div class="user-details-category">Account Info</div>
+            <div class="user-details-category">Account Information</div>
             <div class="user-details-row cols-2">
                 <div>
                     <div class="user-details-label">Role</div>
@@ -278,23 +277,11 @@
                 </div>
             </div>
         </div>
-        {% if user.role == 'IMPLEMENTER' %}
+
         <div class="user-details-section">
-            <div class="user-details-category">Implementer Info</div>
-            <div class="user-details-row cols-2">
-                <div>
-                    <div class="user-details-label">Degree</div>
-                    <div class="user-details-value">{{ user.degree }}</div>
-                </div>
-                <div>
-                    <div class="user-details-label">Expertise</div>
-                    <div class="user-details-value">{{ user.expertise }}</div>
-                </div>
-            </div>
-        </div>
-        {% elif user.role == 'FACULTY' %}
-        <div class="user-details-section">
-            <div class="user-details-category">Faculty Info</div>
+            <div class="user-details-category">Role Specific Information</div>
+
+            {% if user.role == 'FACULTY' or user.role == 'COORDINATOR' or user.role == 'PROGRAM_HEAD' or user.role == 'DEAN' %}
             <div class="user-details-row cols-2">
                 <div>
                     <div class="user-details-label">College</div>
@@ -305,6 +292,9 @@
                     <div class="user-details-value">{{ user.get_campus_display }}</div>
                 </div>
             </div>
+            {% endif %}
+
+            {% if user.role == 'IMPLEMENTER' or user.role == 'FACULTY' %}
             <div class="user-details-row cols-2">
                 <div>
                     <div class="user-details-label">Degree</div>
@@ -315,10 +305,9 @@
                     <div class="user-details-value">{{ user.expertise }}</div>
                 </div>
             </div>
-        </div>
-        {% elif user.role == 'CLIENT' %}
-        <div class="user-details-section">
-            <div class="user-details-category">Client Info</div>
+            {% endif %}
+   
+            {% if user.role == 'CLIENT' %}
             <div class="user-details-row cols-2">
                 <div>
                     <div class="user-details-label">Company</div>
@@ -329,49 +318,8 @@
                     <div class="user-details-value">{{ user.industry }}</div>
                 </div>
             </div>
+            {% endif %}
         </div>
-        {% elif user.role == 'DEAN' %}
-        <div class="user-details-section">
-            <div class="user-details-category">Dean Info</div>
-            <div class="user-details-row cols-2">
-                <div>
-                    <div class="user-details-label">College</div>
-                    <div class="user-details-value">{{ user.college }}</div>
-                </div>
-                <div>
-                    <div class="user-details-label">Campus</div>
-                    <div class="user-details-value">{{ user.get_campus_display }}</div>
-                </div>
-            </div>
-        </div>
-        {% elif user.role == 'PROGRAM_HEAD' %}
-        <div class="user-details-section">
-            <div class="user-details-category">Program Head Info</div>
-            <div class="user-details-row cols-2">
-                <div>
-                    <div class="user-details-label">College</div>
-                    <div class="user-details-value">{{ user.college }}</div>
-                </div>
-                <div>
-                    <div class="user-details-label">Campus</div>
-                    <div class="user-details-value">{{ user.get_campus_display }}</div>
-                </div>
-            </div>
-        </div>
-        {% elif user.role == 'COORDINATOR' %}
-        <div class="user-details-section">
-            <div class="user-details-category">College Coordinator Info</div>
-            <div class="user-details-row cols-2">
-                <div>
-                    <div class="user-details-label">College</div>
-                    <div class="user-details-value">{{ user.college }}</div>
-                </div>
-                <div>
-                    <div class="user-details-label">Campus</div>
-                    <div class="user-details-value">{{ user.get_campus_display }}</div>
-                </div>
-            </div>
-        {% endif %}
 
 
         <div class="form-actions">

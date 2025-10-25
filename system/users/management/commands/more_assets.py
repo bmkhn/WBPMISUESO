@@ -189,12 +189,13 @@ class Command(BaseCommand):
 			status = 'COMPLETED' if i < 5 else random.choice(['NOT_STARTED', 'IN_PROGRESS', 'ON_HOLD', 'CANCELLED'])
 
 			# Create Project first (without proposal/additional docs)
+			estimated_events = random.randint(1, 10)
 			project = Project.objects.create(
 				title=fake.sentence(nb_words=5),
 				project_leader=project_leader,
 				agenda=agenda,
 				project_type=random.choice(['NEEDS_BASED', 'RESEARCH_BASED']),
-				estimated_events=random.randint(1, 10),
+				estimated_events=estimated_events,
 				estimated_trainees=random.randint(10, 100),
 				primary_beneficiary=fake.company(),
 				primary_location=fake.city(),
@@ -207,6 +208,22 @@ class Command(BaseCommand):
 				created_by=director_user,
 				status=status,
 			)
+			# Create ProjectEvents for this project
+			from shared.projects.models import ProjectEvent
+			for eidx in range(estimated_events):
+				ProjectEvent.objects.create(
+					project=project,
+					title=f"Event {eidx+1}",
+					description="Description Here",
+					datetime=None,
+					location="",
+					created_at=timezone.now(),
+					created_by=director_user,
+					updated_at=timezone.now(),
+					updated_by=director_user,
+					image=None,
+					placeholder=True
+				)
 			# Now create proposal and additional docs with project FK
 			proposal_doc = None
 			additional_docs = []
@@ -257,7 +274,7 @@ class Command(BaseCommand):
 				project_leader=leader,
 				agenda=agenda,
 				project_type='NEEDS_BASED',
-				estimated_events=3,
+				estimated_events=5,
 				estimated_trainees=30,
 				primary_beneficiary='Test Beneficiary',
 				primary_location='Test City',
@@ -270,6 +287,22 @@ class Command(BaseCommand):
 				created_by=leader,
 				status='NOT_STARTED',
 			)
+			# Add ProjectEvents for test project
+			from shared.projects.models import ProjectEvent
+			for eidx in range(project.estimated_events):
+				ProjectEvent.objects.create(
+					project=project,
+					title=f"Event {eidx+1}",
+					description="Description Here",
+					datetime=None,
+					location="",
+					created_at=timezone.now(),
+					created_by=leader,
+					updated_at=timezone.now(),
+					updated_by=leader,
+					image=None,
+					placeholder=True
+				)
 			if sdgs:
 				project.sdgs.set(sdgs[:2])
 			# Add proposal_document and additional_documents
@@ -292,7 +325,7 @@ class Command(BaseCommand):
 			project.proposal_document = proposal_doc
 			project.save(update_fields=['proposal_document'])
 			project.additional_documents.set(additional_docs)
-			self.stdout.write(self.style.SUCCESS(f"Created project: {project.title} (Leader: {leader.get_full_name()}) with proposal and additional docs"))
+			self.stdout.write(self.style.SUCCESS(f"Created project: {project.title} (Leader: {leader.get_full_name()}) with proposal, additional docs, and events"))
 		else:
 			self.stdout.write(self.style.WARNING("Faculty T. User not found. Test project not created."))
 

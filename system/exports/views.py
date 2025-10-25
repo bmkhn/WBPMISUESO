@@ -25,15 +25,18 @@ def exports_view(request):
     sort_by = request.GET.get('sort_by', 'date_submitted')
     order = request.GET.get('order', 'desc')
     status = request.GET.get('status', '')
-    date = request.GET.get('date', '')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
     search = request.GET.get('search', '').strip()
 
 
     # Apply filters
     if status:
         requests = requests.filter(status__iexact=status)
-    if date:
-        requests = requests.filter(deadline__date=date)
+    if date_from:
+        requests = requests.filter(date_submitted__date__gte=date_from)
+    if date_to:
+        requests = requests.filter(date_submitted__date__lte=date_to)
     if search:
         from django.db.models import Q
         requests = requests.filter(
@@ -71,7 +74,8 @@ def exports_view(request):
         'order': order,
         'all_statuses': all_statuses,
         'status': status,
-        'date': date,
+        'date_from': date_from,
+        'date_to': date_to,
         'page_obj': page_obj,
         'page_range': page_range,
         'querystring': request.GET.urlencode().replace('&page='+str(page_obj.number), '') if page_obj else '',
@@ -381,7 +385,8 @@ def export_manage_user(request):
     order = request.GET.get('order', 'desc')
     role = request.GET.get('role', '')
     verified = request.GET.get('verified', '')
-    date = request.GET.get('date', '')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
     college = request.GET.get('college', '')
     campus = request.GET.get('campus', '')
 
@@ -398,9 +403,12 @@ def export_manage_user(request):
     elif verified == 'false':
         users = users.filter(is_confirmed=False)
         query_params['verified'] = 'false'
-    if date:
-        users = users.filter(date_joined__date=date)
-        query_params['date'] = date
+    if date_from:
+        users = users.filter(date_joined__date__gte=date_from)
+        query_params['date_from'] = date_from
+    if date_to:
+        users = users.filter(date_joined__date__lte=date_to)
+        query_params['date_to'] = date_to
     if college:
         users = users.filter(college_id=college)
         query_params['college'] = college
@@ -472,7 +480,8 @@ def export_project(request):
     status = request.GET.get('status', '')
     year = request.GET.get('year', '')
     quarter = request.GET.get('quarter', '')
-    date = request.GET.get('date', '')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
 
     # Filter by college/campus via team leader
     if college:
@@ -491,8 +500,10 @@ def export_project(request):
         if quarter in qmap:
             start, end = qmap[quarter]
             projects = projects.filter(start_date__month__gte=start, start_date__month__lte=end)
-    if date:
-        projects = projects.filter(start_date=date)
+    if date_from:
+        projects = projects.filter(start_date__gte=date_from)
+    if date_to:
+        projects = projects.filter(start_date__lte=date_to)
     if search:
         projects = projects.filter(title__icontains=search)
 

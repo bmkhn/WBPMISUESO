@@ -182,6 +182,10 @@
 </style>
 
 <style>
+    .required {
+        color: #DC2626;
+    }
+
     .event-modal {
         position: fixed;
         z-index: 9999;
@@ -226,20 +230,23 @@
     <section class="events-section">
         <div class="event-card">
             {% for event in events %}
-            <div class="event-details" {% if event.status == 'SCHEDULED' %}style="opacity:0.5;filter:grayscale(1);"{% endif %}>
+            <div class="event-details">
                 <div class="event-info">
                     <div style="display:flex;align-items:center;gap:0.5rem;">
                         <h4 style="margin:0;">{{ event.title }}</h4>
-                        <button class="edit-btn" title="Edit Event" style="background:none;border:none;cursor:pointer;padding:0;" onclick="openEventModal('{{ event.id }}', '{{ event.title|escapejs }}', '{{ event.description|escapejs }}', '{{ event.datetime }}', '{{ event.location|escapejs }}')">
-                            <i class="fa-solid fa-pen-to-square" style="color:#0A6C44;" onclick="event.stopPropagation();openEditEventModal('{{ event.id }}', '{{ event.title|escapejs }}', '{{ event.description|escapejs }}', '{{ event.datetime }}', '{{ event.location|escapejs }}', '{{ event.image.name|escapejs }}')"></i>
+                        {% if request.user.role in ADMIN_ROLES %}
+                        <button type="button" style="background:none;border:none;cursor:pointer;padding:0;" onclick="document.getElementById('edit-event-modal-{{ event.id }}').style.display='flex'">
+                            <i class="fa-solid fa-pen-to-square" style="color:#0A6C44;"></i>
                         </button>
                         <button type="button" title="Delete Event" style="background:none;border:none;cursor:pointer;padding:0;" onclick="openDeleteEventModal('{{ event.id }}')">
                             <i class="fa-solid fa-trash" style="color:#E53E3E;"></i>
                         </button>
+                        {% endif %}
                     </div>
                     <p>{{ event.description|default:'No description.' }}</p>
-                    {% if event.placeholder %}<p>Set Datetime</p>{% else %}<p>{{ event.datetime|date:'F d, Y' }} at {{ event.datetime|date:'g:i A' }}</p>{% endif %}
-                    {% if event.location %}<p><strong>Location:</strong> {{ event.location }}</p>{% else %}<p>Set Location</p>{% endif %}
+                    {% if event.placeholder %}{% else %}<p>{{ event.datetime|date:'F d, Y' }} at {{ event.datetime|date:'g:i A' }}</p>{% endif %}
+                    {% if event.location %}<p><strong>Location:</strong> {{ event.location }}</p>{% else %}{% endif %}
+                    {% if event.placeholder and request.user.role in ADMIN_ROLES %}<p style="color:red;">Set Date Time and Location to be able to Add Submission</p>{% endif %}
                 </div>
                 <div style="height:15rem;display:flex; text-align: center; align-items: center;">
                 {% if event.image %}
@@ -249,9 +256,46 @@
                 {% endif %}
                 </div>
             </div>
-            <div class="overlay" id="overlay" onclick="closeOverlay()">
-                <img id="overlayImg" src="" alt="Full Image">
+
+            <!-- Edit Event Modal for this specific event -->
+            <div id="edit-event-modal-{{ event.id }}" class="event-modal" style="display:none;">
+                <div class="event-modal-content">
+                    <span class="close" onclick="document.getElementById('edit-event-modal-{{ event.id }}').style.display='none'">&times;</span>
+                    <h2>Edit Event</h2>
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <input type="hidden" name="event_id" value="{{ event.id }}">
+                        <div class="form-group">
+                            <label class="form-label">Title <span class="required">*</span></label>
+                            <input type="text" name="title" value="{{ event.title }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Description <span class="required">*</span></label>
+                            <textarea name="description" required>{{ event.description }}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Date Time <span class="required">*</span></label>
+                            <input type="datetime-local" name="datetime" value="{{ event.datetime|date:'Y-m-d\\TH:i' }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Location <span class="required">*</span></label>
+                            <input type="text" name="location" value="{{ event.location }}" required>
+                        </div>
+                        <div class="form-actions" style="justify-content:flex-end;">
+                            <button type="button" class="back-btn" onclick="document.getElementById('edit-event-modal-{{ event.id }}').style.display='none'">Cancel</button>
+                            <button type="submit" class="submit-btn">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
             </div>
+
+            <script>
+                document.getElementById('edit-event-modal-{{ event.id }}').onclick = function(e) {
+                    if (e.target === this) {
+                        this.style.display = 'none';
+                    }
+                };
+            </script>
 
             {% empty %}
             <style>.event-details { display: flex; flex-direction: column; align-items: center; }</style>
@@ -293,7 +337,6 @@
     };
 </script>
 
-
 <!-- Delete Event Confirmation Modal -->
 <div id="delete-event-modal" class="event-modal" style="display:none;">
     <div class="event-modal-content" style="min-width:320px;max-width:95vw;">
@@ -329,120 +372,6 @@
 </script>
 
 
-<!-- Edit Event Modal -->
-<div id="edit-event-modal" class="event-modal">
-    <div class="event-modal-content">
-        <span class="close" id="close-edit-event-modal">&times;</span>
-        <h2 id="edit-event-modal-title">Edit Event</h2>
-        <form id="edit-event-form" method="post" enctype="multipart/form-data" action="/projects/{{ project.id }}/events/">
-            {% csrf_token %}
-            <input type="hidden" name="event_id" id="edit_event_id" value="">
-            <div class="form-group">
-                <label class="form-label">Title <span class="required">*</span></label>
-                <input type="text" name="title" id="edit_event_title" required style="flex:1;">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Description <span class="required">*</span></label>
-                <textarea name="description" id="edit_event_description" rows="2" required style="flex:1;border-radius:8px;border:1px solid #e5e7eb;padding:0.75rem;font-size:1rem;"></textarea>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Date <span class="required">*</span></label>
-                <input type="datetime-local" name="datetime" id="edit_datetime" style="flex:1;">
-                <span id="edit-datetime-display" style="margin-left:1rem;color:#888;font-size:0.95rem;margin-top: auto;margin-bottom: auto;"></span>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Location <span class="required">*</span></label>
-                <input type="text" name="location" id="edit_event_location" required style="flex:1;">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Image</label>
-                <input type="file" name="image" id="edit_event_image" style="flex:1;">
-                <span id="edit-file-name" style="margin-left:1rem;color:#888;font-size:0.95rem;margin-top: auto;margin-bottom: auto;"></span>
-                <div id="edit-image-preview" style="margin-top:0.5rem;"></div>
-            </div>
-            <div class="form-actions" style="justify-content:flex-end;">
-                <button type="button" class="back-btn" id="cancel-edit-event-modal">Cancel</button>
-                <button type="submit" class="submit-btn">Save Changes</button>
-            </div>
-        </form>
-    </div>
-</div>
 
-<script>
-    // Edit modal logic
-    function openEditEventModal(id, title, description, date, location, imageUrl) {
-        document.getElementById('edit-event-modal').style.display = 'flex';
-        var today = new Date().toISOString().split('T')[0];
-        document.getElementById('edit_datetime').setAttribute('min', today);
-        document.getElementById('edit_event_id').value = id;
-        document.getElementById('edit_event_title').value = title || '';
-        document.getElementById('edit_event_description').value = description || '';
-
-        // Format date for input
-        var formattedDate = '';
-        if (date) {
-            // If already in ISO format, use as is
-            if (date.length >= 16 && date.includes('T')) {
-                formattedDate = date;
-            } else if (date.length === 8) {
-                var d = date.substring(0,2);
-                var m = date.substring(2,4);
-                var y = date.substring(4,8);
-                formattedDate = y + '-' + m + '-' + d;
-            } else {
-                formattedDate = date;
-            }
-        }
-        document.getElementById('edit_datetime').value = formattedDate;
-        document.getElementById('edit-datetime-display').innerText = formattedDate ? 'Current: ' + formattedDate.replace('T', ' ') : '';
-        
-        document.getElementById('edit_event_location').value = location || '';
-
-        var formattedURL = '';
-        if (imageUrl) {
-            // imageUrl gets just the file name now
-            formattedURL = 'Current Image: ' + imageUrl.split('/').pop().split('?')[0];
-        } else {
-            formattedURL = 'No Image Uploaded';
-        }
-
-        document.getElementById('edit-file-name').innerHTML = formattedURL || '';
-
-        // Always show previous file name, do not update on file input change
-        var fileInput = document.getElementById('edit_event_image');
-
-        document.getElementById('edit_event_image').innerText = imageUrl ? imageUrl.split('/').pop().split('?')[0] : '';
-    }
-    document.getElementById('close-edit-event-modal').onclick = function() {
-        document.getElementById('edit-event-modal').style.display = 'none';
-    };
-    document.getElementById('cancel-edit-event-modal').onclick = function() {
-        document.getElementById('edit-event-modal').style.display = 'none';
-    };
-    document.getElementById('edit-event-modal').onclick = function(e) {
-        if (e.target === this) {
-            this.style.display = 'none';
-        }
-    };
-    // Modal open/close logic
-    function openEventModal() {
-        document.getElementById('event-modal').style.display = 'flex';
-        document.getElementById('event-form-errors').innerText = '';
-        // Prevent past dates
-        var today = new Date().toISOString().split('T')[0];
-        document.getElementById('datetime').setAttribute('min', today);
-    }
-    document.getElementById('close-event-modal').onclick = function() {
-        document.getElementById('event-modal').style.display = 'none';
-    };
-    document.getElementById('cancel-event-modal').onclick = function() {
-        document.getElementById('event-modal').style.display = 'none';
-    };
-    document.getElementById('event-modal').onclick = function(e) {
-        if (e.target === this) {
-            this.style.display = 'none';
-        }
-    };
-</script>
 
 {% endblock %}
