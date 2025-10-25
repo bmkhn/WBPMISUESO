@@ -41,7 +41,7 @@
 
 				<div class="form-group">
 					<label class="user-details-label">Concerned Colleges: <span class="required">*</span></label>
-					<div id="tag-row" class="row">
+					<div id="tag-row" class="tag-row">
 					</div>
 					<select id="options-template" style="display:none;">
 						<option value="">Select College</option>
@@ -168,7 +168,7 @@
 				if (college) {
 					tagsRendered = true;
 					const tag = document.createElement('span');
-					tag.className = 'tag';
+					tag.className = 'college-tag';
 					const removeBtn = document.createElement('button');
 					removeBtn.type = 'button';
 					removeBtn.className = 'remove-x';
