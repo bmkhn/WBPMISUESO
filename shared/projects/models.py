@@ -137,6 +137,7 @@ class Project(models.Model):
 	estimated_events = models.PositiveIntegerField()
 	event_progress = models.PositiveIntegerField(default=0)
 	estimated_trainees = models.PositiveIntegerField()
+	total_trained_individuals = models.PositiveIntegerField(default=0)
 	primary_beneficiary = models.CharField(max_length=255)
 	primary_location = models.CharField(max_length=255)
 	logistics_type = models.CharField(max_length=10, choices=LOGISTICS_TYPE_CHOICES)
@@ -229,7 +230,7 @@ def log_project_action(sender, instance, created, **kwargs):
 			model='Project',
 			object_id=instance.id,
 			object_repr=str(instance),
-			details=f"Status changed from {instance._old_status} to {instance.status}",
+			details=f"Status: {instance.status}",
 			url=url,
 			is_notification=True
 		)

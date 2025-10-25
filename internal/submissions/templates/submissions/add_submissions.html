@@ -217,6 +217,72 @@
         -moz-appearance: none;
         background: white url('data:image/svg+xml;utf8,<svg fill="none" height="16" viewBox="0 0 16 16" width="16" xmlns="http://www.w3.org/2000/svg"><path d="M4 6L8 10L12 6" stroke="%23374151" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>') no-repeat right 10px center/16px 16px;
     }
+
+    .downloadable-checkboxes {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        flex: 1;
+    }
+
+    .checkbox-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem;
+        border: 1px solid #E5E7EB;
+        border-radius: 6px;
+        background: #F9F9F9;
+        transition: all 0.2s ease;
+    }
+
+    .checkbox-item:hover {
+        background: #F3F4F6;
+    }
+
+    .checkbox-item.disabled {
+        opacity: 0.5;
+        background: #F5F5F5;
+    }
+
+    .checkbox-item input[type="checkbox"] {
+        margin: 0;
+        width: 16px;
+        height: 16px;
+    }
+
+    .checkbox-item label {
+        flex: 1;
+        margin: 0;
+        font-weight: 500;
+        cursor: pointer;
+    }
+
+    .checkbox-item.disabled label {
+        cursor: not-allowed;
+    }
+
+    .event-status {
+        font-size: 0.875rem;
+        font-weight: 500;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+    }
+
+    .event-status.no-events {
+        background: #FEE2E2;
+        color: #DC2626;
+    }
+
+    .event-status.has-events {
+        background: #D1FAE5;
+        color: #059669;
+    }
+
+    .event-status.pending {
+        background: #FEF3C7;
+        color: #D97706;
+    }
 </style>
 
 </head>
@@ -225,8 +291,10 @@
         <div class="form-header">
             <h1 class="form-title">Add Submission</h1>
         </div>
-        {% if success %}
-            <div class="success-message">Submission added successfully!</div>
+        {% if messages %}
+            {% for message in messages %}
+                <div class="success-message">{{ message }}</div>
+            {% endfor %}
         {% endif %}
         <form class="submission-form" method="post" enctype="multipart/form-data">
             {% csrf_token %}
@@ -244,12 +312,24 @@
 
             <div class="form-group">
                 <label class="form-label">Choose Form/s: <span class="required">*</span></label>
-                <div id="downloadable-tag-row" class="item-row"></div>
-                <select id="downloadable-options-template" style="display:none;">
-                    <option value="">Select Downloadable</option>
+                <div class="downloadable-checkboxes">
                     {% for downloadable in downloadables %}
-                        <option value="{{ downloadable.id }}">{{ downloadable.name }}</option>
+                        <div class="checkbox-item" data-project-dependent="{% if downloadable.submission_type == 'event' %}true{% else %}false{% endif %}">
+                            <input type="checkbox" name="downloadables" id="downloadable_{{ downloadable.id }}" value="{{ downloadable.id }}">
+                            <label for="downloadable_{{ downloadable.id }}">{{ downloadable.name }}</label>
+                            {% if downloadable.submission_type == 'event' %}
+                                <span class="event-status" id="event_status_{{ downloadable.id }}">Select a project first</span>
+                            {% endif %}
+                        </div>
                     {% endfor %}
+                </div>
+            </div>
+
+            <!-- Event Selection (shown only when event-type downloadable is selected) -->
+            <div class="form-group" id="event-selection-group" style="display:none;">
+                <label class="form-label">Select Event: <span class="required">*</span></label>
+                <select class="form-input" name="selected_event" id="id_selected_event">
+                    <option value="">Choose an event</option>
                 </select>
             </div>
 
@@ -282,36 +362,42 @@
     document.querySelector('.submission-form').addEventListener('submit', function(e) {
         let valid = true;
         // Remove Previous Error States
-        let projectError = document.getElementById('project-error');
         let downloadableError = document.getElementById('downloadable-error');
         let deadlineError = document.getElementById('deadline-error');
-        if (projectError) projectError.remove();
+        let eventError = document.getElementById('event-error');
         if (downloadableError) downloadableError.remove();
         if (deadlineError) deadlineError.remove();
+        if (eventError) eventError.remove();
 
-        // Validate Projects
-        const selectedProjects = Array.from(document.querySelectorAll('input[name="projects"]')).map(i => i.value);
-        if (selectedProjects.length === 0) {
-            valid = false;
-            const tagRow = document.getElementById('project-tag-row');
-            const err = document.createElement('div');
-            err.id = 'project-error';
-            err.textContent = 'At least one project must be selected.';
-            err.style.color = '#E53E3E';
-            err.style.fontSize = '0.95rem';
-            tagRow.appendChild(err);
-        }
-        // Validate Downloadables
-        const selectedDownloadables = Array.from(document.querySelectorAll('input[name="downloadables"]')).map(i => i.value);
+        // Validate Downloadables (checkboxes)
+        const selectedDownloadables = Array.from(document.querySelectorAll('input[name="downloadables"]:checked')).map(i => i.value);
         if (selectedDownloadables.length === 0) {
             valid = false;
-            const tagRow = document.getElementById('downloadable-tag-row');
+            const checkboxContainer = document.querySelector('.downloadable-checkboxes');
             const err = document.createElement('div');
             err.id = 'downloadable-error';
             err.textContent = 'At least one form must be selected.';
             err.style.color = '#E53E3E';
             err.style.fontSize = '0.95rem';
-            tagRow.appendChild(err);
+            err.style.marginTop = '0.5rem';
+            checkboxContainer.appendChild(err);
+        }
+        
+        // Validate Event Selection (if event downloadable is selected)
+        const eventCheckboxes = document.querySelectorAll('.checkbox-item[data-project-dependent="true"] input[type="checkbox"]:checked');
+        if (eventCheckboxes.length > 0) {
+            const selectedEvent = document.getElementById('id_selected_event').value;
+            if (!selectedEvent) {
+                valid = false;
+                const eventGroup = document.getElementById('event-selection-group');
+                const err = document.createElement('div');
+                err.id = 'event-error';
+                err.textContent = 'Please select an event for the event submission.';
+                err.style.color = '#E53E3E';
+                err.style.fontSize = '0.95rem';
+                err.style.marginTop = '0.5rem';
+                eventGroup.appendChild(err);
+            }
         }
         // Validate Deadline
         const deadlineInput = document.getElementById('id_deadline');
@@ -332,86 +418,83 @@
         }
     });
 
-    // Tag UI for Downloadables only
-    function setupTagUI(rowId, templateId, inputName) {
-        var tagRow = document.getElementById(rowId);
-        var templateOptions = Array.from(document.getElementById(templateId).options);
-        var selected = [];
-        var selectDropdown = document.createElement('select');
-        selectDropdown.id = 'item-select-dropdown';
-        selectDropdown.className = 'item-select-modal';
-        selectDropdown.style.display = 'none';
-        selectDropdown.style.position = 'absolute';
-        selectDropdown.style.zIndex = 9999;
-        function renderTags() {
-            tagRow.innerHTML = '';
-            selected.forEach(cid => {
-                var opt = templateOptions.find(o => o.value == cid);
-                if (opt) {
-                    var tag = document.createElement('span');
-                    tag.className = 'item-tag';
-                    var removeBtn = document.createElement('button');
-                    removeBtn.type = 'button';
-                    removeBtn.className = 'remove-x';
-                    removeBtn.innerHTML = '&times;';
-                    removeBtn.onclick = function() {
-                        selected = selected.filter(id => id != cid);
-                        renderTags();
-                    };
-                    tag.appendChild(removeBtn);
-                    tag.appendChild(document.createTextNode(opt.textContent));
-                    tagRow.appendChild(tag);
+    // Project Event Availability Data
+    const projectEventAvailability = {{ project_event_availability_json|safe }};
+
+    // Handle project selection change to update event availability
+    document.getElementById('id_project').addEventListener('change', function() {
+        const selectedProjectId = this.value;
+        const eventSelectionGroup = document.getElementById('event-selection-group');
+        const eventSelect = document.getElementById('id_selected_event');
+        
+        // Update event-dependent downloadables
+        document.querySelectorAll('.checkbox-item[data-project-dependent="true"]').forEach(function(checkboxItem) {
+            const checkbox = checkboxItem.querySelector('input[type="checkbox"]');
+            const eventStatus = checkboxItem.querySelector('.event-status');
+            
+            if (!selectedProjectId) {
+                // No project selected
+                checkboxItem.classList.add('disabled');
+                checkbox.disabled = true;
+                checkbox.checked = false;
+                eventStatus.textContent = 'Select a project first';
+                eventStatus.className = 'event-status pending';
+                eventSelectionGroup.style.display = 'none';
+            } else {
+                const availability = projectEventAvailability[selectedProjectId];
+                
+                if (availability && availability.has_available_events) {
+                    // Has available events
+                    checkboxItem.classList.remove('disabled');
+                    checkbox.disabled = false;
+                    eventStatus.textContent = `${availability.available_events.length} event(s) available`;
+                    eventStatus.className = 'event-status has-events';
+                    
+                    // Populate event selection dropdown
+                    eventSelect.innerHTML = '<option value="">Choose an event</option>';
+                    availability.available_events.forEach(function(event) {
+                        const option = document.createElement('option');
+                        option.value = event.id;
+                        option.textContent = `${event.title} - ${event.datetime}`;
+                        eventSelect.appendChild(option);
+                    });
+                } else {
+                    // No available events
+                    checkboxItem.classList.add('disabled');
+                    checkbox.disabled = true;
+                    checkbox.checked = false;
+                    eventStatus.textContent = 'No Available Events';
+                    eventStatus.className = 'event-status no-events';
+                    eventSelectionGroup.style.display = 'none';
                 }
-            });
-            var addBtn = document.createElement('button');
-            addBtn.type = 'button';
-            addBtn.className = 'add-item-btn';
-            addBtn.innerHTML = `<svg width="16" height="16"><use href="#icon-add" /></svg>`;
-            addBtn.onclick = function(e) {
-                e.preventDefault();
-                const btnRect = addBtn.getBoundingClientRect();
-                selectDropdown.style.display = 'block';
-                selectDropdown.style.position = 'fixed';
-                selectDropdown.style.left = (btnRect.left) + 'px';
-                selectDropdown.style.top = (btnRect.bottom + 4) + 'px';
-                selectDropdown.innerHTML = '';
-                templateOptions.forEach(opt => {
-                    if (!opt.value || !selected.includes(opt.value)) {
-                        selectDropdown.appendChild(opt.cloneNode(true));
-                    }
-                });
-                selectDropdown.focus();
-            };
-            tagRow.appendChild(addBtn);
-            if (!document.body.contains(selectDropdown)) {
-                document.body.appendChild(selectDropdown);
-            }
-            selected.forEach(cid => {
-                var hidden = document.createElement('input');
-                hidden.type = 'hidden';
-                hidden.name = inputName;
-                hidden.value = cid;
-                tagRow.appendChild(hidden);
-            });
-        }
-        selectDropdown.onchange = function() {
-            var selectedId = selectDropdown.value;
-            if (selectedId && !selected.includes(selectedId)) {
-                selected.push(selectedId);
-                renderTags();
-            }
-            selectDropdown.value = '';
-            selectDropdown.style.display = 'none';
-        };
-        document.addEventListener('mousedown', function(e) {
-            if (selectDropdown && !selectDropdown.contains(e.target) && e.target.className !== 'add-item-btn') {
-                selectDropdown.style.display = 'none';
             }
         });
-        renderTags();
+        
+        // Check if event selection should be shown
+        updateEventSelectionVisibility();
+    });
+
+    // Handle downloadable checkbox changes to show/hide event selection
+    function updateEventSelectionVisibility() {
+        const eventCheckboxes = document.querySelectorAll('.checkbox-item[data-project-dependent="true"] input[type="checkbox"]:checked');
+        const eventSelectionGroup = document.getElementById('event-selection-group');
+        
+        if (eventCheckboxes.length > 0) {
+            eventSelectionGroup.style.display = 'flex';
+        } else {
+            eventSelectionGroup.style.display = 'none';
+        }
     }
+
+    // Add event listeners to downloadable checkboxes
     document.addEventListener('DOMContentLoaded', function() {
-        setupTagUI('downloadable-tag-row', 'downloadable-options-template', 'downloadables');
+        // Initialize event status display
+        document.getElementById('id_project').dispatchEvent(new Event('change'));
+        
+        // Add change listeners to all downloadable checkboxes
+        document.querySelectorAll('input[name="downloadables"]').forEach(function(checkbox) {
+            checkbox.addEventListener('change', updateEventSelectionVisibility);
+        });
     });
 </script>
 

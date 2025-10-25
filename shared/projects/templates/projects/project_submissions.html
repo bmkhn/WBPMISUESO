@@ -459,33 +459,15 @@
                 document.getElementById(mid).style.display = 'none';
             });
         }
-        // Fix: open details for all users except when a faculty leader/provider clicks a PENDING submission
-        var userIsInvolved = ("{% if request.user.id == project.project_leader.id or request.user.id in provider_ids %}true{% else %}false{% endif %}" === "true");
-        var isFaculty = ("{% if request.user.role == 'FACULTY' %}true{% else %}false{% endif %}" === "true");
+        // Fix: Always redirect to details page when clicking submission cards
         document.querySelectorAll('.submission-card-clickable').forEach(function(card) {
             card.addEventListener('click', function() {
                 var type = card.getAttribute('data-submission-type');
                 var status = card.getAttribute('data-submission-status');
                 var subId = card.getAttribute('data-submission-id');
-                var modalId = '';
-                // Only faculty leader/provider with PENDING or REVISION_REQUESTED opens modal, all others go to details
-                if (userIsInvolved && isFaculty && (status === 'PENDING' || status === 'REVISION_REQUESTED')) {
-                    if (type === 'final') {
-                        modalId = 'modal-final';
-                    } else if (type === 'event') {
-                        modalId = 'modal-event';
-                    } else {
-                        modalId = 'modal-file';
-                    }
-                    var modal = document.getElementById(modalId);
-                    if (modal) {
-                        modal.style.display = 'flex';
-                        var input = modal.querySelector('input[name="submission_id"]');
-                        if (input) input.value = subId;
-                    }
-                } else {
-                    window.location.href = '/projects/{{ project.id }}/submission/' + subId + '/';
-                }
+                
+                // Always redirect to submission details
+                window.location.href = '/projects/{{ project.id }}/submission/' + subId + '/';
             });
         });
 

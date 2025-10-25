@@ -5,6 +5,7 @@ from shared.downloadables.models import Downloadable
 from .models import Submission
 from django.utils import timezone
 from django.core.paginator import Paginator
+from django.contrib import messages
 
 
 @role_required(allowed_roles=["UESO", "VP", "DIRECTOR", "COORDINATOR"])
@@ -88,14 +89,43 @@ def submission_admin_view(request):
 
 @role_required(allowed_roles=["UESO", "VP", "DIRECTOR"])
 def add_submission_requirement(request):
+    from shared.projects.models import ProjectEvent
+    import json
+    
     projects = Project.objects.exclude(status__in=['CANCELLED', 'COMPLETED'])
     downloadables = Downloadable.objects.filter(is_submission_template=True)
+    
+    # Get event availability for each project
+    project_event_availability = {}
+    for project in projects:
+        available_events = ProjectEvent.objects.filter(
+            project=project, 
+            placeholder=False, 
+            has_submission=False
+        ).order_by('-created_at')
+        
+        events_list = []
+        for event in available_events:
+            events_list.append({
+                'id': event.id,
+                'title': event.title,
+                'datetime': event.datetime.strftime('%Y-%m-%d %H:%M') if event.datetime else 'No date set'
+            })
+        
+        project_event_availability[project.id] = {
+            'has_available_events': available_events.exists(),
+            'available_events': events_list
+        }
+    
+    # Convert to JSON for template
+    project_event_availability_json = json.dumps(project_event_availability)
 
     if request.method == "POST":
         project_id = request.POST.get('project')
         downloadable_ids = request.POST.getlist('downloadables')
         deadline = request.POST.get('deadline')
         notes = request.POST.get('notes')
+        selected_event_id = request.POST.get('selected_event')  # Get selected event for event submissions
         
         error = None
         if not project_id:
@@ -108,14 +138,34 @@ def add_submission_requirement(request):
             return render(request, 'submissions/add_submissions.html', {
                 'projects': projects,
                 'downloadables': downloadables,
+                'project_event_availability_json': project_event_availability_json,
                 'error': error,
             })
         # Create a Submission for each downloadable
         project = Project.objects.get(id=project_id)
         for downloadable_id in downloadable_ids:
+            downloadable = Downloadable.objects.get(id=downloadable_id)
+            
+            # For event-type submissions, link to selected event
+            event = None
+            if downloadable.submission_type == 'event' and selected_event_id:
+                try:
+                    event = ProjectEvent.objects.get(
+                        id=selected_event_id,
+                        project=project, 
+                        placeholder=False, 
+                        has_submission=False
+                    )
+                    # Mark this event as having a submission
+                    event.has_submission = True
+                    event.save()
+                except ProjectEvent.DoesNotExist:
+                    pass
+            
             submission = Submission.objects.create(
                 project=project,
-                downloadable=Downloadable.objects.get(id=downloadable_id),
+                downloadable=downloadable,
+                event=event,  # Link to the selected event if it's an event submission
                 deadline=deadline,
                 created_by=request.user,
                 notes=notes,
@@ -141,15 +191,14 @@ def add_submission_requirement(request):
             
 
         
-        return render(request, 'submissions/add_submissions.html', {
-            'projects': projects,
-            'downloadables': downloadables,
-            'success': True,
-        })
+        # Add success message and redirect to refresh the event availability data
+        messages.success(request, 'Submission requirements added successfully!')
+        return redirect('add_submission')
     else:
         return render(request, 'submissions/add_submissions.html', {
             'projects': projects,
             'downloadables': downloadables,
+            'project_event_availability_json': project_event_availability_json,
         })
 
 

@@ -180,9 +180,16 @@ def project_events(request, pk):
     project = get_object_or_404(Project, pk=pk)
     # Order events: those with datetime=None at the bottom
     from django.db.models import F, Value, BooleanField, ExpressionWrapper
+    from internal.submissions.models import Submission
+    
     events = project.events.annotate(
         has_datetime=ExpressionWrapper(Q(datetime__isnull=False), output_field=BooleanField())
     ).order_by('-has_datetime', 'datetime')
+    
+    # Add submission status information to events
+    for event in events:
+        event.related_submissions = Submission.objects.filter(event=event).first()
+    
     total = project.estimated_events
     completed = project.event_progress
     percent = int((completed / total) * 100) if total else 0
@@ -214,12 +221,38 @@ def project_events(request, pk):
             # Delete event: remove ProjectEvent and decrement estimated_events
             event_id = request.POST.get('delete_event_id')
             from .models import ProjectEvent
+            from internal.submissions.models import Submission
             try:
                 event_to_delete = ProjectEvent.objects.get(pk=event_id, project=project)
+                
+                # Check for ALL submissions related to this event (not just approved ones)
+                related_submissions = Submission.objects.filter(event=event_to_delete)
+                
+                # Check if this event has approved submissions and adjust counters
+                approved_submission = related_submissions.filter(status='APPROVED').first()
+                
+                if approved_submission:
+                    # Decrement event progress if this was a completed event
+                    if project.event_progress > 0:
+                        project.event_progress -= 1
+                    
+                    # Subtract trained individuals if this event contributed to the total
+                    if approved_submission.num_trained_individuals:
+                        trained_count = approved_submission.num_trained_individuals
+                        if project.total_trained_individuals >= trained_count:
+                            project.total_trained_individuals -= trained_count
+                
+                # Delete all related submissions for this event
+                related_submissions.delete()
+                
+                # Delete the event itself
                 event_to_delete.delete()
                 if project.estimated_events > 0:
                     project.estimated_events -= 1
-                    project.save(update_fields=["estimated_events"])
+                    project.save(update_fields=["estimated_events", "event_progress", "total_trained_individuals"])
+                else:
+                    project.save(update_fields=["event_progress", "total_trained_individuals"])
+                    
             except ProjectEvent.DoesNotExist:
                 pass
             return redirect(request.path)
@@ -236,8 +269,10 @@ def project_events(request, pk):
                 if event_to_edit.datetime and event_to_edit.location:
                     event_to_edit.placeholder = False
                 event_to_edit.updated_by = request.user
+                event_to_edit.updated_at = timezone.now()
 
                 event_to_edit.save()
+                return redirect(request.path)  # Add redirect to refresh page
     if not event_form:
         event_form = ProjectEventForm()
 
@@ -463,6 +498,7 @@ def project_submissions(request, pk):
         "submissions": page_obj,
         "events": events,
         "ADMIN_ROLES": ADMIN_ROLES,
+        "SUPERUSER_ROLES": SUPERUSER_ROLES,
         "COORDINATOR_ROLE": COORDINATOR_ROLE,
         "FACULTY_ROLE": FACULTY_ROLE,
         "provider_ids": provider_ids,
@@ -506,11 +542,58 @@ def project_submissions_details(request, pk, submission_id):
         base_template = "base_public.html"
 
     project = get_object_or_404(Project, pk=pk)
+    events = ProjectEvent.objects.filter(project__pk=pk).order_by('datetime')
+
+    # Handle submission POST requests
+    if request.method == "POST":
+        from django.utils import timezone
+        action = request.POST.get('action')
+        
+        # Handle Submission Upload
+        if action == "submit" and (submission.status == "PENDING" or submission.status == "REVISION_REQUESTED"):
+            sub_type = submission.downloadable.submission_type
+
+            if sub_type == "final":
+                submission.file = request.FILES.get("final_file")
+                submission.for_product_production = bool(request.POST.get("for_product_production"))
+                submission.for_research = bool(request.POST.get("for_research"))
+                submission.for_extension = bool(request.POST.get("for_extension"))
+            
+            elif sub_type == "event":
+                # For event submissions, the event is already linked via submission.event
+                if submission.event:
+                    # Update the ProjectEvent with image and description
+                    submission.event.image = request.FILES.get("image_event")
+                    submission.event.description = request.POST.get("image_description", "")
+                    submission.event.save()
+                    
+                    # Update the project's total trained individuals
+                    num_trained = int(request.POST.get("num_trained_individuals", 0))
+                    project.total_trained_individuals += num_trained
+                    project.save()
+                
+                # Keep the submission fields for backward compatibility 
+                submission.image_event = request.FILES.get("image_event")
+                submission.image_description = request.POST.get("image_description", "")
+                submission.num_trained_individuals = request.POST.get("num_trained_individuals", 0)
+
+            else:  # "file"
+                submission.file = request.FILES.get("file_file")
+
+            submission.status = "SUBMITTED"
+            submission.submitted_at = timezone.now()
+            submission.submitted_by = request.user
+            submission.updated_by = request.user
+            submission.updated_at = timezone.now()
+            submission.save()
+
+            return redirect('project_submissions_details', pk=pk, submission_id=submission_id)
 
     context = {
         "project": project,
         "base_template": base_template,
         "submission": submission,
+        "events": events,
         "ADMIN_ROLES": ADMIN_ROLES,
         "COORDINATOR_ROLE": COORDINATOR_ROLE,
         "FACULTY_ROLE": FACULTY_ROLE,
@@ -533,6 +616,16 @@ def admin_submission_action(request, pk, submission_id):
                 submission.updated_by = request.user
                 submission.updated_at = timezone.now()
                 submission.save()
+        elif submission.status == 'PENDING' and request.user.role in ["UESO", "VP", "DIRECTOR"]:
+            if action == 'delete':
+                # Remove any ProjectUpdate alerts that were created for this submission
+                ProjectUpdate.objects.filter(submission=submission).delete()
+                
+                # Delete the submission itself
+                project_id = submission.project.id
+                submission.delete()
+                
+                return redirect('project_submissions', pk=project_id)
         elif submission.status == 'SUBMITTED' and request.user.role == "COORDINATOR": 
             if action == 'forward':
                 submission.status = 'FORWARDED'
@@ -1006,7 +1099,7 @@ def add_project_view(request):
                         project=project,
                         title=f"Event {i}",
                         description="Description Here",
-                        datetime=now,
+                        datetime=None,
                         status='SCHEDULED',
                         created_at=now,
                         created_by=request.user,
