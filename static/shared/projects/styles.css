@@ -369,7 +369,7 @@ span.required {
     font-family: 'Inter', Arial, sans-serif;
 }
 
-.add-college-btn:hover, .add-item-btn:hover {
+button:hover {
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 

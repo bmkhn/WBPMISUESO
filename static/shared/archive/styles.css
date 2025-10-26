@@ -326,6 +326,10 @@ body {
 .archive-card .projects-count {
     font-weight: 600;
     color: #333333;
+} 
+ 
+button:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 .user-table {
