@@ -1,6 +1,6 @@
 {% extends "base_internal.html" %}
 {% block content %}
-
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,266 +8,8 @@
 <title>Edit User</title>
 
 <link href="https://fonts.googleapis.com/css?family=Inter:400,500,700&display=swap" rel="stylesheet">
-
-<style>
-    .success-message {
-		color: green; 
-		margin-bottom: 1rem;
-	}
-
-    .error-input {
-        border-color: #E53E3E !important;
-        background: #FFF5F5 !important;
-    }
-
-    .error-select {
-        border-color: #E53E3E !important;
-        background: 
-            #FFF5F5 /* background color */
-            url("data:image/svg+xml;utf8,<svg width='16' height='11' viewBox='0 0 16 11' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M7.99976 7.19417L13.9025 1.29147C14.0125 1.17758 14.144 1.08674 14.2895 1.02424C14.435 0.961746 14.5915 0.92885 14.7498 0.927474C14.9082 0.926098 15.0652 0.95627 15.2117 1.01623C15.3583 1.07619 15.4914 1.16473 15.6034 1.27669C15.7153 1.38866 15.8039 1.5218 15.8638 1.66835C15.9238 1.8149 15.954 1.97192 15.9526 2.13026C15.9512 2.28859 15.9183 2.44506 15.8558 2.59055C15.7933 2.73604 15.7025 2.86762 15.5886 2.97762L8.84283 9.72339C8.61921 9.94694 8.31596 10.0725 7.99976 10.0725C7.68356 10.0725 7.38031 9.94694 7.15669 9.72339L0.41092 2.97762C0.297028 2.86762 0.206183 2.73604 0.143687 2.59055C0.0811915 2.44506 0.0482959 2.28859 0.04692 2.13026C0.0455441 1.97192 0.0757155 1.8149 0.135674 1.66835C0.195632 1.5218 0.284176 1.38866 0.39614 1.27669C0.508103 1.16473 0.641244 1.07619 0.787794 1.01623C0.934343 0.95627 1.09137 0.926098 1.2497 0.927474C1.40804 0.92885 1.56451 0.961746 1.71 1.02424C1.85548 1.08674 1.98706 1.17758 2.09706 1.29147L7.99976 7.19417Z' fill='%23374151'/></svg>") 
-            no-repeat right 0.75rem center !important;
-    }
-
-    body {
-        background: #F9F9F9;
-        margin: 0;
-        font-family: 'Inter', Arial, sans-serif;
-    }
-
-    input, select, textarea {
-        font-family: 'Inter', Arial, sans-serif;
-        font-weight: 400;
-    }
-
-    .user-details-container {
-        margin: 60px;
-        display: flex;
-        flex-direction: column;
-        gap: 32px;
-    }
-
-    .user-details-title {
-        font-size: 32px;
-        font-weight: 400;
-        color: #000;
-        font-family: 'Inter', Arial, sans-serif;
-    }
-
-    .user-details-section {
-        padding-bottom: 16px;
-        border-bottom: 1px solid #E5E7EB;
-    }
-
-    .user-details-grid {
-        display: grid;
-        gap: 20px;
-    }
-
-    .user-details-row {
-        display: grid;
-        gap: 20px;
-    }
-
-    .user-details-row.cols-4 {
-        grid-template-columns: repeat(4, 1fr);
-    }
-    
-    .user-details-row.cols-3 {
-        grid-template-columns: repeat(3, 1fr);
-    }
-
-    .user-details-row.cols-2 {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .user-details-category {
-        font-size: 1.15rem;
-        font-weight: 700;
-        color: #000;
-    }
-
-    .user-details-label {
-        font-weight: 500;
-        color: #374151;
-        font-size: 1.08rem;
-        margin-bottom: 0.25rem;
-        margin-top: 1rem;
-    }
-
-    .user-details-value {
-        font-weight: 500;
-        color: #374151;
-        font-size: 1.08rem;
-        word-break: break-word;
-        background: #f7f7f7;
-        border-radius: 0.5rem;
-        padding: 8px 14px;
-        border: 1px solid #e5e7eb;
-        min-height: 21px;
-        display: block;
-        width: 100%;
-        box-sizing: border-box;
-    }
-
-    select.user-details-value {
-		appearance: none;
-		-webkit-appearance: none;
-		-moz-appearance: none;
-		padding-right: 2rem;
-		background: url("data:image/svg+xml;utf8,<svg width='16' height='11' viewBox='0 0 16 11' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M7.99976 7.19417L13.9025 1.29147C14.0125 1.17758 14.144 1.08674 14.2895 1.02424C14.435 0.961746 14.5915 0.92885 14.7498 0.927474C14.9082 0.926098 15.0652 0.95627 15.2117 1.01623C15.3583 1.07619 15.4914 1.16473 15.6034 1.27669C15.7153 1.38866 15.8039 1.5218 15.8638 1.66835C15.9238 1.8149 15.954 1.97192 15.9526 2.13026C15.9512 2.28859 15.9183 2.44506 15.8558 2.59055C15.7933 2.73604 15.7025 2.86762 15.5886 2.97762L8.84283 9.72339C8.61921 9.94694 8.31596 10.0725 7.99976 10.0725C7.68356 10.0725 7.38031 9.94694 7.15669 9.72339L0.41092 2.97762C0.297028 2.86762 0.206183 2.73604 0.143687 2.59055C0.0811915 2.44506 0.0482959 2.28859 0.04692 2.13026C0.0455441 1.97192 0.0757155 1.8149 0.135674 1.66835C0.195632 1.5218 0.284176 1.38866 0.39614 1.27669C0.508103 1.16473 0.641244 1.07619 0.787794 1.01623C0.934343 0.95627 1.09137 0.926098 1.2497 0.927474C1.40804 0.92885 1.56451 0.961746 1.71 1.02424C1.85548 1.08674 1.98706 1.17758 2.09706 1.29147L7.99976 7.19417Z' fill='%23374151'/></svg>")
-        		no-repeat right 0.75rem center;
-  		background-size: 13px 8px;
-    }
-
-    .user-details-picture {
-        width: 80px;
-        height: 80px;
-        border: 2px solid #000;
-        object-fit: cover;
-        margin-left: 12px;
-    }
-
-	.form-actions {
-		display: flex;
-		gap: 1rem;
-		justify-content: flex-end;
-	}
-
-    .btn {
-		padding: 0.75rem 1.5rem;
-		border: none;
-		border-radius: 8px;
-		font-size: 1rem;
-		font-weight: 600;
-		cursor: pointer;
-		transition: all 0.2s ease;
-		font-family: 'Inter', sans-serif;
-        text-decoration: none;
-    }
-
-    .back {
-		background: #6B7280;
-		color: white;
-    }
-
-    .back:hover {
-		background: #4B5563;
-		transform: translateY(-1px);
-    }
-
-    .save {
-		background: #0A6C44;
-		color: white;
-    }
-
-    .save:hover {
-		background: #1f7c57;
-		transform: translateY(-1px);
-    }
-</style>
-
-<!-- File Upload -->
-<style>
-    .form-group {
-        margin-top: 1rem;
-        margin-bottom: 1rem;
-		display: flex;
-		align-items: flex-start;
-		gap: 1rem;
-	}
-
-	.form-label {
-		font-weight: 600;
-		color: #374151;
-		padding-top: 0.75rem;
-		font-size: 0.95rem;
-	}
-
-	.upload-area {
-		flex: 1;
-		border: 2px dashed #E5E7EB;
-		border-radius: 8px;
-		padding: 2rem;
-		text-align: center;
-		background: #F9F9F9;
-		cursor: pointer;
-		transition: all 0.2s ease;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 0.5rem;
-	}
-
-    .upload-area:hover {
-        border-color: #0A6C44;
-        background: #F0FDF4;
-    }
-
-    .upload-icon {
-        width: 24px;
-        height: 24px;
-        color: #4B5563;
-    }
-
-    .upload-text {
-        color: #4B5563;
-        font-size: 0.95rem;
-    }
-
-    .file-preview {
-        margin-top: 1rem;
-        padding: 1rem;
-        background: #F0FDF4;
-        border: 1px solid #BBF7D0;
-        border-radius: 8px;
-        display: none;
-    }
-
-    .file-info {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        color: #1f7c57;
-        font-size: 0.95rem;
-    }
-
-    span.required {
-        color: #e53e3e;
-    }
-
-    .error-message {
-        color: #e53e3e;
-        font-size: 0.9rem;
-        margin-top: -0.5rem;
-        margin-bottom: 0.5rem;
-    }
-</style>
-
-<!-- Verification -->
-<style>
-    .verification-badge {
-        background: #E6FFFA;
-        border: 1px solid #1F7C57;
-        color: #1F7C57;
-        font-weight: 600;
-        font-size: 32px;
-        padding: 6px 16px;
-        border-radius: 8px;
-        cursor: pointer;
-        text-decoration: none;
-    }
-
-    .verification-badge.unverified {
-        background: #FFF5F5;
-        border: 1px solid #E53E3E;
-        color: #E53E3E;
-    }
-
-    .verification-badge:hover {
-        opacity: 0.9;
-    }
-</style>
-
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
+<link href="{% static 'shared/projects/styles.css' %}" rel="stylesheet">
 </head>
 <body>
 <form method="post" enctype="multipart/form-data">
@@ -275,24 +17,47 @@
     <div class="user-details-container">
         <div class="user-details-title" style="display:flex;flex-direction:column;gap:8px;">
             <div style="display:flex;justify-content:space-between;align-items:center;">
-                <span>Edit User</span>
+                <h2>
+                Edit User Details
+                </h2> 
             </div>
         </div>
 
         {% if success %}
         <div id="add-success-msg" style="color:#16a34a;font-size:1.1rem;font-weight:500;">User edited successfully.</div>
-        {% endif %}
+        {% endif %} 
 
         <div style="position: absolute; top: 140px; right: 60px;">
-        {% if user.is_confirmed %}
-            <a href="{% url 'unverify_user' user.id %}" class="verification-badge">Verified</a>
-        {% else %}
-            <a href="{% url 'verify_user' user.id %}" class="verification-badge unverified">Unverified</a>
+        {% if user.is_confirmed %} 
+            <span class="info-icon">    
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info-circle" viewBox="0 0 16 16">
+                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                    <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
+                </svg>
+            <span class="info-tooltip">To remove verification for this user, click here.</span> 
+            </span>
+            <a href="{% url 'unverify_user' user.id %}" class="verification-badge"> 
+                Verified        
+            </a>
+        {% else %} 
+            <span class="info-icon">    
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info-circle" viewBox="0 0 16 16">
+                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                    <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
+                </svg>
+            <span class="info-tooltip">If user is not yet verified, click here to verify them.</span> 
+            </span>
+            <a href="{% url 'verify_user' user.id %}" class="verification-badge unverified">  
+                Unverified 
+            </a>
         {% endif %}
         </div>
 
         <div class="user-details-section">
-            <div class="user-details-category">User Profile</div>
+            <div class="user-details-category">  
+                <i class="fa-regular fa-user"></i>
+                User Profile 
+            </div>
             <div class="user-details-row cols-4">
                 <div>
                     <div class="user-details-label">Last Name <span class="required">*</span></div>
@@ -339,21 +104,7 @@
                         <img id="preview-img" src="{{ user.valid_id.url }}" alt="Valid ID" class="user-details-picture">
                         <a id="preview-link" href="{{ user.valid_id.url }}" style="font-size:18px;color:#00538E;margin-left:18px;vertical-align:middle;text-decoration:none;">View ID</a>
                         </div>
-                    </div>
-
-                    <div class="upload-area" onclick="document.getElementById('id_valid_id').click()">
-                        <svg class="upload-icon"><use href="#icon-upload"></use></svg>
-                        <span class="upload-text">Click to upload</span>
-                        <input class="file-input" type="file" name="valid_id" id="id_valid_id" style="display:none;" accept="image/*">
-                    </div>
-                    <div id="file-error" class="error-message" style="display:none;">File is required.</div>    
-                </div>
-
-                <div class="file-preview" id="file-preview">
-                <div class="file-info">
-                    <svg width="16" height="16"><use href="#icon-upload"></use></svg>
-                    <span id="file-name"></span>
-                </div>
+                    </div>  
                 </div>
 
             </div>
@@ -367,7 +118,10 @@
 
         <!-- Account Info Section -->
         <div class="user-details-section">
-            <div class="user-details-category">Account Information</div>
+            <div class="user-details-category">  
+                <i class="fa-regular fa-user"></i>
+                Account Information 
+            </div>
             <div class="user-details-row cols-2">
                 <div>
                     <div class="user-details-label">Role <span class="required">*</span></div>

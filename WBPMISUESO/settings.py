@@ -64,7 +64,7 @@ INSTALLED_APPS = [
     'system.exports',           # Exports
     'system.logs',              # Logs
     'system.users',             # Custom User
-    # 'rest_framework',           # Django REST Framework
+    'rest_framework',           # Django REST Framework
 ]
 
 MIDDLEWARE = [

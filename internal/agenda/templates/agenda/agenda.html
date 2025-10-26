@@ -1,7 +1,7 @@
 {% extends "base_internal.html" %}
 {% block content %}
 {% load custom_tags %}
-
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,370 +9,33 @@
 <title>Agenda</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
+<link href="{% static 'internal/agenda/styles.css' %}" rel="stylesheet">
+</head> 
 
-<!-- Page, Agenda Text, Add Agenda Button -->
-<style>
-    body {
-        background: #F9F9F9;
-        margin: 0;
-        font-family: 'Inter', Arial, sans-serif;
-    }
-
-    .main-container {
-        margin: 60px;
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
-    }
-
-    .container-a {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-    }
-
-    .container-a-text {
-        font-family: 'Inter', Arial, sans-serif;
-        font-weight: 400;
-        font-size: 32px;
-    }
-
-    .container-a-button {
-        padding: 15px 45px;
-        font-family: 'Inter', Arial, sans-serif;
-        font-weight: 500;
-        font-size: 18px;
-        color: #FFFFFF;
-        background: #063A1C;
-        border: none;
-        border-radius: 18px;
-        cursor: pointer;
-        transition: background 0.2s;
-    }
-
-    .container-a-button:hover {
-        background: #04521c;
-    }
-</style>
-
-<!-- Agenda Tile Card -->
-<style>
-    .container-b {
-        display: flex;
-        flex-direction: row;
-        gap: 15px;
-        width: 100%;
-    }
-
-    .agenda-card-kebab {
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        z-index: 2;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .agenda-card-kebab .kebab-svg {
-        width: 20px;
-        height: 20px;
-        color: #1D1B20;
-        transition: background 0.2s, transform 0.2s;
-    }
-
-    .agenda-card-kebab:hover .kebab-svg {
-        transform: scale(1.15);
-        background: none;
-    }
-
-    .options-dropdown {
-        position: absolute;
-        top: calc(100% + 8px);
-        right: 0;
-        background: white;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        opacity: 0;
-        visibility: hidden;
-        transform: translateY(-10px);
-        transition: all 0.2s ease;
-        z-index: 200;
-    }
-
-    .options-dropdown.show {
-        opacity: 1;
-        visibility: visible;
-        transform: translateY(0);
-    }
-
-    .options-item {
-        padding: 0.75rem 1rem;
-        cursor: pointer;
-        transition: background-color 0.2s ease;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-size: 0.875rem;
-        color: #374151;
-        text-decoration: none;
-    }
-
-    .options-item svg {
-        width: 16px;
-        height: 16px;
-    }
-
-    .options-item:hover {
-        background-color: #F3F4F6;
-    }
-
-    .edit-option {
-        color: #1f7c57;
-    }
-
-    .delete-option {
-        color: #DC2626;
-    }
-
-    .agenda-card {
-        position: relative;
-        width: 100%;
-        padding: 40px;
-        border-radius: 15px;
-        border: 1px solid rgba(0,0,0,0.42);
-        background: linear-gradient(to bottom, orange 0%, #FEFCFC 100%);
-        display: flex;
-        flex-direction: column;
-        gap: 55px;
-        align-items: center;
-        box-sizing: border-box;
-        vertical-align: top; 
-    }
-
-    .agenda-card-text {
-        font-family: 'Inter', Arial, sans-serif;
-        font-weight: 900;
-        font-size: 20px;
-        color: #000000;
-        text-align: center;
-        margin-top: 30px;
-    }
-
-    .agenda-card-desc {
-        font-family: 'Inter', Arial, sans-serif;
-        font-weight: 400;
-        font-size: 15px;
-        color: #000000;
-        text-align: center;
-        margin-top: 10px;
-        margin-bottom: 40px;
-        word-break: break-word;
-        overflow: hidden;
-        display: -webkit-box;
-        -webkit-line-clamp: 3;
-        -webkit-box-orient: vertical;
-    }
-
-    .agenda-card-viewlist {
-        position: absolute;
-        left: 20px;
-        bottom: 20px;
-        font-family: 'Inter', Arial, sans-serif;
-        font-weight: 400;
-        font-size: 12px;
-        color: #0077B6;
-        background: none;
-        border: none;
-        cursor: pointer;
-        text-align: left;
-        padding: 0;
-    }
-
-    .kebab-svg {
-        width: 16px;
-        height: 16px;
-    }
-</style>
-
-<!-- Table View -->
-<style>
-    .table-view-container {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        width: 100%;
-    }
-
-    .title-expand-container {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-        width: 100%;
-        margin-top: 30px;
-    }
-
-    .table-title-text {
-        font-family: 'Inter', Arial, sans-serif;
-        font-weight: 400;
-        font-size: 24px;
-        color: #000000;
-    }
-
-    .expand-icon {
-        width: 16px;
-        height: 16px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-    }
-
-    .expand-icon:hover {
-        transform: scale(1.1);
-    }
-
-    .agenda-table {
-        width: 100%;
-        border-collapse: collapse;
-        background: #FEFCFC;
-        border: 1px solid rgba(0,0,0,0.18);
-        overflow: hidden;
-    }
-
-    .agenda-table th {
-        font-size: 16px;
-        font-weight: 500;
-        background: rgba(217, 217, 217, 0.2);
-        border-bottom: 1px solid rgba(0,0,0,0.18);
-        padding: 14px 12px;
-        text-align: left;
-        font-family: 'Inter', Arial, sans-serif;
-    }
-
-    .agenda-table td {
-        font-size: 15px;
-        font-weight: 400;
-        border: none;
-        border-bottom: 1px solid rgba(0,0,0,0.18);
-        padding: 14px 12px;
-        text-align: left;
-        font-family: 'Inter', Arial, sans-serif;
-    }
-
-    .agenda-table tr:last-child td {
-        border-bottom: none;
-    }
-
-    .settings-icon {
-        width: 16px;
-        height: 16px;
-        align-items: center;
-        justify-content: center;
-        display: inline-block;
-        vertical-align: middle;
-        cursor: pointer;
-    }
-
-    .agenda-table th.settings-col, .agenda-table td.settings-col {
-        text-align: center !important;
-    }
-
-    .view-more {
-        font-family: 'Inter', sans-serif;
-        font-weight: 400;
-        font-size: 15px;
-        color: #2EA8FF;
-		text-decoration: none;
-        margin-top: 10px;
-        cursor: pointer;
-    }
-
-    .view-more:hover {
-        text-decoration: underline;
-    }
-</style>
-
-<!-- Agenda Carousel Styles -->
-<style>
-    .agenda-carousel-wrapper {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 100%;
-        position: relative;
-        margin-bottom: 30px;
-    }
-    .carousel-arrow {
-        background: none;
-        border: none;
-        width: 40px;
-        height: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: background 0.2s, transform 0.2s;
-        z-index: 10;
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-    }
-
-    .left-arrow {
-        left: -40px;
-    }
-
-    .right-arrow {
-        right: -40px;
-    }
+<body> 
+      
+    <!-- Delete Confirmation Modal - PLACE THIS RIGHT BEFORE </body> -->
+    <div id="deleteAgendaModal">
+        <div class="modal-content">
+            <div class="modal-title">Confirm Deletion</div>
+            <div id="deleteAgendaModalMsg" class="modal-message"></div>
+            <div class="modal-buttons">
+                <button id="cancelDeleteAgendaBtn" class="modal-btn modal-btn-cancel">Cancel</button>
+                <button id="confirmDeleteAgendaBtn" class="modal-btn modal-btn-delete">Delete</button>
+            </div>
+        </div>
+    </div>
     
-    .carousel-arrow:active {
-        background: none;
-        transform: scale(0.95);
-    }
-
-    .carousel-arrow svg {
-        display: block;
-    }
-
-    .agenda-carousel {
-        overflow: hidden;
-        width: 960px;
-        position: relative;
-        margin: 0 auto;
-        display: flex;
-        align-items: flex-start;
-        justify-content: flex-start;
-    }
-
-    .agenda-carousel-track {
-        display: flex;
-        transition: transform 0.4s cubic-bezier(.77,.2,.05,1);
-        gap: 24px;
-        will-change: transform;
-        /* overflow: visible; */
-    }
-
-    .agenda-card {
-        flex: 0 0 calc(((960px - 2 * 24px) / 3) - 7px);
-        width: calc(((960px - 2 * 24px) / 3) - 7px);
-        margin: 0;
-        box-sizing: border-box;
-    }
-</style>
-
-</head>
-<body>
     <div class="main-container">
         <!-- Container for Page Title and Add Agenda Button -->
         <div class="container-a">
-            <div class="container-a-text">Agenda</div>
-            <a href="{% url 'add_agenda' %}"><button class="container-a-button">Add Agenda</button></a>
+            <div class="project-text">Agenda</div>
+            <a href="{% url 'add_agenda' %}"><button class="add-user-btn">  
+                <i class="fa-solid fa-bars-progress"></i>
+                Add Agenda  
+            </button > 
+            </a>
         </div>
 
         <!-- Agenda Cards -->
@@ -384,7 +47,7 @@
                 <div class="agenda-carousel-track">
                     {% for agenda in agendas %}
                     <div class="agenda-card">
-                        <div class="agenda-card-kebab" onclick="toggleOptions('{{ agenda.id }}')" title="More options">
+                        <div class="agenda-card-kebab" onclick="toggleOptions(event, '{{ agenda.id }}')" title="More options">
                             <svg class="kebab-svg"><use href="#kebab-icon"/></svg>
                             <div class="options-dropdown" id="options-{{ agenda.id }}">
                                 <a class="options-item edit-option" href="{% url 'edit_agenda' agenda.id %}">
@@ -405,14 +68,9 @@
                         </div>
                         <div class="agenda-card-text" onclick="cardClick(event, '{{ agenda.id }}')" style="cursor:pointer;">{{ agenda.name }}</div>
                         <div class="agenda-card-desc" onclick="cardClick(event, '{{ agenda.id }}')" style="cursor:pointer;">
-                            {% if agenda.description|length > 120 %}
-                                {{ agenda.description|slice:":120" }}&hellip;
-                            {% else %}
-                                {{ agenda.description }}
-                            {% endif %}
+                            {{ agenda.description }}
                         </div>
                         <div style="margin-bottom: 10px;"></div>
-                        <button class="agenda-card-viewlist">View List</button>
                     </div>
                     {% empty %}
                     <style>.agenda-carousel { justify-content: center; align-items: center; }</style>
@@ -430,9 +88,9 @@
         {% for agenda in agendas %}
             <div class="title-expand-container">
                 <span class="table-title-text">{{ agenda.name }}</span>
-                <a href="{% url 'project_dispatcher' %}?agenda={{ agenda.id }}" class="view-more">View More &rarr;</a>
+                <a href="{% url 'project_dispatcher' %}?agenda={{ agenda.id }}" class="view-more">View More</a>
             </div>
-            <table class="agenda-table">
+            <table class="user-table">
                 <thead>
                     <tr>
                         <th>Title</th>
@@ -483,112 +141,260 @@
     </symbol>
 </svg>
 
-
-<!-- Delete Confirmation Modal -->
-<div id="deleteAgendaModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.18);z-index:9999;align-items:center;justify-content:center;">
-    <div style="background:white;padding:2rem 2.5rem;border-radius:16px;box-shadow:0 4px 32px rgba(0,0,0,0.18);max-width:350px;margin:auto;display:flex;flex-direction:column;align-items:center;">
-        <div style="font-size:1.25rem;font-weight:600;color:#E53E3E;margin-bottom:1rem;">Confirm Deletion</div>
-        <div id="deleteAgendaModalMsg" style="font-size:1rem;color:#444;margin-bottom:2rem;text-align:center;"></div>
-        <div style="display:flex;gap:1rem;">
-            <button id="cancelDeleteAgendaBtn" style="background:#e5e7eb;color:#374151;padding:0.75rem 1.5rem;border-radius:8px;font-size:1rem;font-weight:500;border:none; cursor:pointer">Cancel</button>
-            <button id="confirmDeleteAgendaBtn" style="background:#E53E3E;color:white;padding:0.75rem 1.5rem;border-radius:8px;font-size:1rem;font-weight:500;border:none; cursor:pointer">Delete</button>
-        </div>
-    </div>
-</div>
-
-
 <script>
-    // Agenda Delete confirmation modal logic
-    let agendaDeleteUrl = '';
-    document.querySelectorAll('.delete-modal-link').forEach(function(link) {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            agendaDeleteUrl = link.getAttribute('data-delete-url');
-            var agendaName = link.getAttribute('data-agenda-name');
-            document.getElementById('deleteAgendaModalMsg').innerHTML = 'Are you sure you want to delete the agenda <strong>' + agendaName + '</strong>? This action cannot be undone.';
-            document.getElementById('deleteAgendaModal').style.display = 'flex';
-        });
-    });
-    document.getElementById('cancelDeleteAgendaBtn').onclick = function() {
-        document.getElementById('deleteAgendaModal').style.display = 'none';
-        agendaDeleteUrl = '';
-    };
-    document.getElementById('confirmDeleteAgendaBtn').onclick = function() {
-        if (agendaDeleteUrl) {
-            window.location.href = agendaDeleteUrl;
+    // CSRF Token (Helper remains in global scope)
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.startsWith(name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
         }
-    };
-    // Hide modal when clicking outside
-    document.getElementById('deleteAgendaModal').addEventListener('mousedown', function(e) {
-        if (e.target === this) {
-            this.style.display = 'none';
-            agendaDeleteUrl = '';
-        }
-    });
-    // Card click handler that ignores clicks on options
-    function cardClick(event, id) {
-        if (event.target.closest('.agenda-card-kebab')) {
-            return;
-        }
-        window.location.href = '/agenda/details/' + id + '/';
+        return cookieValue;
     }
+    const csrftoken = getCookie('csrftoken');
 
-    // Options menu functionality
+    // Options Dropdown (Global Scope)
     let activeDropdown = null;
-    function toggleOptions(id) {
-        const dropdown = document.getElementById(`options-${id}`);
+    function toggleOptions(e, id) {
+        e.stopPropagation(); 
+        const dropdown = document.getElementById('options-' + id);
         if (!dropdown) return;
+        
         if (activeDropdown && activeDropdown !== dropdown) {
             activeDropdown.classList.remove('show');
         }
         dropdown.classList.toggle('show');
         activeDropdown = dropdown.classList.contains('show') ? dropdown : null;
     }
-    document.addEventListener('click', function(event) {
-        if (!event.target.closest('.agenda-card-kebab')) {
+
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.agenda-card-kebab') && !e.target.closest('#deleteAgendaModal')) {
             if (activeDropdown) {
                 activeDropdown.classList.remove('show');
                 activeDropdown = null;
             }
         }
     });
-</script>
 
-<script>
-    // Carousel logic
+    // Card Click
+    function cardClick(event, id) {
+        if (event.target.closest('.agenda-card-kebab') || event.target.closest('.delete-modal-link')) {
+            return;
+        }
+        window.location.href = '/agenda/details/' + id + '/';
+    }
+
+    // --- COLOR PALETTE ---
+    const CARD_BACKGROUNDS = [
+        'linear-gradient(to bottom, #FFC4A8 0%, #ffffff 100%)', // Soft Coral / Peach
+        'linear-gradient(to bottom, #B6F3D7 0%, #ffffff 100%)', // Soft Mint Green
+        'linear-gradient(to bottom, #B8D9FF 0%, #ffffff 100%)', // Soft Sky Blue
+        'linear-gradient(to bottom, #D0B8FF 0%, #ffffff 100%)', // Soft Lavender
+        'linear-gradient(to bottom, #FFF3B8 0%, #ffffff 100%)', // Soft Creamy Yellow
+        'linear-gradient(to bottom, #FFB8D9 0%, #ffffff 100%)', // Soft Rose Pink
+        'linear-gradient(to bottom, #A8FFF0 0%, #ffffff 100%)', // Soft Aqua
+        'linear-gradient(to bottom, #FFC0B8 0%, #ffffff 100%)', // Pale Salmon
+        'linear-gradient(to bottom, #D9D9F8 0%, #ffffff 100%)', // Soft Periwinkle
+    ];
+
+    // --- CAROUSEL LOGIC ---
     let agendaIndex = 0;
-    const cardsToShow = 3;
+    const cardsToShow = 3; 
+
     function getAgendaCards() {
         return document.querySelectorAll('.agenda-carousel-track .agenda-card');
     }
+
+    function applyRandomColors() {
+        const cards = getAgendaCards();
+        cards.forEach((card, index) => {
+            const colorIndex = index % CARD_BACKGROUNDS.length;
+            card.style.backgroundImage = CARD_BACKGROUNDS[colorIndex];
+        });
+    }
+
     function updateAgendaCarousel() {
         const track = document.querySelector('.agenda-carousel-track');
         const cards = getAgendaCards();
         const totalCards = cards.length;
         if (!track || totalCards === 0) return;
-        // Clamp index
-        if (agendaIndex < 0) agendaIndex = 0;
-        // Only allow scrolling to last full set of cards
-        if (agendaIndex > totalCards - cardsToShow) agendaIndex = Math.max(totalCards - cardsToShow, 0);
-        const cardWidth = cards[0].offsetWidth;
+
+        // 1. Clamp index
+        if (agendaIndex < 0) {
+            agendaIndex = 0;
+        }
+        if (agendaIndex > totalCards - cardsToShow) {
+            agendaIndex = Math.max(totalCards - cardsToShow, 0);
+        }
+
+        // 2. Calculate offset and scroll
+        const cardWidth = cards.length > 0 ? cards[0].offsetWidth : 0; 
         const gap = parseInt(window.getComputedStyle(track).gap) || 24;
         const offset = agendaIndex * (cardWidth + gap);
         track.style.transform = `translateX(-${offset}px)`;
-        // Arrow enable/disable
-        document.querySelector('.left-arrow').disabled = agendaIndex === 0;
-        document.querySelector('.right-arrow').disabled = agendaIndex >= totalCards - cardsToShow;
+
+        // 3. Arrow enable/disable
+        const leftArrow = document.querySelector('.left-arrow');
+        const rightArrow = document.querySelector('.right-arrow');
+        if (leftArrow) leftArrow.disabled = agendaIndex === 0;
+        if (rightArrow) rightArrow.disabled = agendaIndex >= totalCards - cardsToShow;
+
+        // 4. DYNAMIC CLIPPING FIX: Apply 'expand-left' class 
+        const lastVisibleIndex = agendaIndex + cardsToShow - 1;
+        
+        cards.forEach((card, index) => {
+            card.classList.remove('expand-left');
+            if (index === lastVisibleIndex && index < totalCards) {
+                card.classList.add('expand-left');
+            }
+        });
+
+        // 5. DYNAMIC SHIFT FIX: Setup hover listeners for preceding card
+        setupHoverShift(); 
     }
+
     function scrollAgenda(dir) {
         agendaIndex += dir;
         updateAgendaCarousel();
     }
+
+    // --- Dynamic Shifting (Hover) Logic ---
+    function setupHoverShift() {
+        const cards = getAgendaCards();
+
+        cards.forEach(card => {
+            card.classList.remove('shift-previous'); 
+        });
+
+        cards.forEach((card, index) => {
+            if (card.classList.contains('expand-left')) {
+                const previousCard = cards[index - 1];
+
+                if (previousCard) {
+                    // Use named functions for listeners for better removal
+                    const mouseOverHandler = () => { previousCard.classList.add('shift-previous'); };
+                    const mouseOutHandler = () => { previousCard.classList.remove('shift-previous'); };
+
+                    // Remove existing listeners before setting new ones
+                    card.onmouseover = null;
+                    card.onmouseout = null;
+                    
+                    card.onmouseover = mouseOverHandler;
+                    card.onmouseout = mouseOutHandler;
+                }
+            } else {
+                card.onmouseover = null;
+                card.onmouseout = null;
+            }
+        });
+        
+        // Re-apply colors
+        applyRandomColors(); 
+
+        // CRITICAL: Re-attach modal listeners
+        setupModalLinks();
+    }
+
+
+    // ===============================================
+    // *** MODAL/LISTENER FIX START ***
+    // ===============================================
+    // Declare the critical variables in a high scope (module scope)
+    let agendaDeleteUrl = '';
+    let modal = null;
+    let modalMsg = null;
+
+    // This function handles attaching listeners to the DELETE links on the agenda cards
+    function setupModalLinks() {
+        // Remove old listeners to prevent duplication
+        document.querySelectorAll('.delete-modal-link').forEach(function(link) {
+            if (link._deleteListener) {
+                link.removeEventListener('click', link._deleteListener);
+                link._deleteListener = null;
+            }
+        });
+
+        // Attach fresh listeners
+        document.querySelectorAll('.delete-modal-link').forEach(function(link) {
+            const listener = function(e) {
+                e.stopPropagation(); 
+                e.preventDefault(); 
+                
+                if (activeDropdown) {
+                    activeDropdown.classList.remove('show');
+                    activeDropdown = null;
+                }
+
+                // Set the HIGH-SCOPED agendaDeleteUrl
+                agendaDeleteUrl = link.getAttribute('data-delete-url');
+                const agendaName = link.getAttribute('data-agenda-name');
+                
+                modalMsg.innerHTML = 'Are you sure you want to delete the agenda <strong>' + agendaName + '</strong>? This action cannot be undone.';
+                modal.classList.add('is-open'); 
+            };
+            
+            link.addEventListener('click', listener);
+            link._deleteListener = listener; // Store reference for removal later
+        });
+    }
+
+    // --- Initialization ---
     window.addEventListener('resize', updateAgendaCarousel);
+
     document.addEventListener('DOMContentLoaded', function() {
-        agendaIndex = 0;
-        updateAgendaCarousel();
+        
+        // Assign modal DOM elements once in DOMContentLoaded
+        modal = document.getElementById('deleteAgendaModal');
+        modalMsg = document.getElementById('deleteAgendaModalMsg');
+
+        // ===============================================
+        // *** MODAL BUTTON LISTENERS (ATTACHED ONCE) ***
+        // These use the high-scoped agendaDeleteUrl variable
+        // ===============================================
+
+        document.getElementById('cancelDeleteAgendaBtn').addEventListener('click', function() {
+            modal.classList.remove('is-open'); 
+            agendaDeleteUrl = '';
+        });
+
+        document.getElementById('confirmDeleteAgendaBtn').addEventListener('click', function() {
+            if (agendaDeleteUrl) {
+                fetch(agendaDeleteUrl, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': csrftoken },
+                })
+                .then(response => {
+                    if (response.ok || response.status === 204) {
+                        window.location.reload();
+                    } else {
+                        alert('Error deleting agenda.');
+                        modal.classList.remove('is-open'); 
+                    }
+                })
+                .catch(error => {
+                    alert('Network error occurred.');
+                    modal.classList.remove('is-open'); 
+                });
+            }
+        });
+
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                modal.classList.remove('is-open'); 
+                agendaDeleteUrl = '';
+            }
+        });
+
+        // Initial setup for carousel (this triggers setupHoverShift -> setupModalLinks)
+        updateAgendaCarousel(); 
     });
 </script>
-
 </body>
 </html>
 

@@ -1,7 +1,7 @@
 {% extends "base_internal.html" %}
 {% block content %}
 {% load tz %}
-
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,214 +9,14 @@
 <title>Edit Announcement</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
-
-<style>
-	.error-input {
-		border-color: #E53E3E !important;
-		background: #FFF5F5 !important;
-	}
-
-    body {
-        background: #F9F9F9;
-        margin: 0;
-        font-family: 'Inter', Arial, sans-serif;
-    }
-
-    .main-container {
-        margin: 60px;
-        display: flex;
-        flex-direction: column;
-        gap: 30px;
-        min-height: 1440px;
-    }
-
-	.form-title {
-		font-family: 'Inter', Arial, sans-serif;
-        font-weight: 400;
-        font-size: 32px;
-		margin: 0;
-		color: #000000;
-	}
-
-	.form-group {
-		margin-bottom: 1.5rem;
-		display: flex;
-		align-items: flex-start;
-		gap: 1rem;
-	}
-
-	.form-label {
-		min-width: 150px;
-		font-weight: 600;
-		color: #374151;
-		padding-top: 0.75rem;
-		font-size: 0.95rem;
-	}
-
-	.form-input {
-		flex: 1;
-		padding: 0.75rem 1rem;
-		border: 1px solid #E5E7EB;
-		border-radius: 8px;
-		font-size: 1rem;
-		font-family: 'Inter', sans-serif;
-		background: #F9F9F9;
-		transition: all 0.2s ease;
-	}
-
-	.form-input:focus {
-		outline: none;
-		border-color: #0A6C44;
-		background: white;
-		box-shadow: 0 0 0 3px rgba(10, 108, 68, 0.1);
-	}
-
-	.form-textarea {
-		min-height: 120px;
-		resize: vertical;
-	}
-
-	.upload-area {
-		flex: 1;
-		border: 2px dashed #E5E7EB;
-		border-radius: 8px;
-		padding: 2rem;
-		text-align: center;
-		background: #F9F9F9;
-		cursor: pointer;
-		transition: all 0.2s ease;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 0.5rem;
-	}
-
-	.upload-area:hover {
-		border-color: #0A6C44;
-		background: #F0FDF4;
-	}
-
-	.upload-icon {
-		width: 24px;
-		height: 24px;
-		color: #4B5563;
-	}
-
-	.upload-text {
-		color: #4B5563;
-		font-size: 0.95rem;
-	}
-
-	.schedule-button {
-		flex: 1;
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		padding: 0.75rem 1rem;
-		border: 1px solid #E5E7EB;
-		border-radius: 8px;
-		background: #F9F9F9;
-		cursor: pointer;
-		transition: all 0.2s ease;
-		font-size: 1rem;
-		color: #374151;
-	}
-
-	.schedule-button:hover {
-		border-color: #0A6C44;
-		background: white;
-	}
-
-	.clock-icon {
-		width: 20px;
-		height: 20px;
-		color: #4B5563;
-	}
-
-	.form-actions {
-		display: flex;
-		gap: 1rem;
-		justify-content: flex-end;
-		margin-top: 2rem;
-		padding-top: 1.5rem;
-		border-top: 1px solid #E5E7EB;
-	}
-
-	.btn {
-		padding: 0.75rem 1.5rem;
-		border: none;
-		border-radius: 8px;
-		font-size: 1rem;
-		font-weight: 600;
-		cursor: pointer;
-		transition: all 0.2s ease;
-		font-family: 'Inter', sans-serif;
-	}
-
-	.btn-preview {
-		background: #6B7280;
-		color: white;
-	}
-
-	.btn-preview:hover {
-		background: #4B5563;
-		transform: translateY(-1px);
-	}
-
-	.btn-submit {
-		background: #0A6C44;
-		color: white;
-	}
-
-	.btn-submit:hover {
-		background: #1f7c57;
-		transform: translateY(-1px);
-	}
-
-	.btn-submit:disabled {
-		background: #E5E7EB;
-		color: #4B5563;
-		cursor: not-allowed;
-		transform: none;
-	}
-
-	.file-input {
-		display: none;
-	}
-
-	.file-preview {
-		margin-top: 1rem;
-		padding: 1rem;
-		background: #F0FDF4;
-		border: 1px solid #BBF7D0;
-		border-radius: 8px;
-		display: none;
-	}
-
-	.file-preview.show {
-		display: block;
-	}
-
-	.file-info {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		color: #1f7c57;
-		font-size: 0.9rem;
-	}
-
-	.success-message {
-		color: green; 
-		margin-bottom: 1rem;
-	}
-</style>
-
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
+<link href="{% static 'shared/projects/styles.css' %}" rel="stylesheet">
 </head>
 <body>
 	<div class="main-container">
-		<div class="form-header">
-			<h1 class="form-title">Edit Announcement</h1>
-		</div>
+		<div class="user-details-title">
+            <h2>Edit Announcement</h2> 
+        </div>
 
 		{% if success %}
             <div class="success-message">Announcement edited successfully!</div>
@@ -224,54 +24,60 @@
 
 		<form class="announcement-form" method="post" enctype="multipart/form-data">
 			{% csrf_token %}
+			<div class="user-details-section"> 
+				<div class="user-details-category">  
+					<i class="fa-regular fa-address-card subtitle-icon"></i>
+					Details
+				</div> 
+				
+				<div class="form-group">
+					<label class="user-details-label" for="id_title">Title:</label>
+					<input class="user-details-value" type="text" name="title" id="id_title" value="{{ form.title.value|default:'' }}">
+				</div>
 
-			<div class="form-group">
-				<label class="form-label" for="id_title">Title:</label>
-				<input class="form-input" type="text" name="title" id="id_title" value="{{ form.title.value|default:'' }}">
-			</div>
+				<div class="form-group">
+					<label class="user-details-label" for="id_body">Body:</label>
+					<textarea class="user-details-value form-textarea" name="body" id="id_body">{{ form.body.value|default:'' }}</textarea>
+				</div>
+				
 
-			<div class="form-group">
-				<label class="form-label" for="id_body">Body:</label>
-				<textarea class="form-input form-textarea" name="body" id="id_body">{{ form.body.value|default:'' }}</textarea>
+				<div class="form-group">
+					<label class="user-details-label" for="id_cover_photo">Attach Cover Photo:</label>
+					<div class="upload-area" onclick="document.getElementById('id_cover_photo').click()">
+						<svg class="upload-icon"><use href="#icon-upload"></use></svg>
+						<span class="upload-text">Click to upload</span>
+						<input class="file-input" style="display:none;" type="file" name="cover_photo" id="id_cover_photo" accept="image/*" value="{{ form.cover_photo.value|default:'' }}">
+					</div>
+				</div> 
+				 
+				{% if announcement.cover_photo %}
+				<div class="file-preview show" id="file-preview">
+					<div class="file-info">
+						<svg width="16" height="16"><use href="#icon-upload"></use></svg>
+						<span id="file-name">Current: <a href="{{ announcement.cover_photo.url }}" target="_blank">{{ announcement.title }}</a></span>
+					</div>
+				</div>
+				{% endif %}
+
+				<div class="form-group">
+					<label class="user-details-label" for="id_scheduled_at">Schedule Post:</label>
+					<div class="schedule-button" onclick="toggleSchedule()" {% if announcement.published_at or posted %}style="pointer-events:none;opacity:0.5;"{% endif %}>
+						<svg class="clock-icon"><use href="#icon-clock"></use></svg>
+						<span id="schedule-text">Now</span>
+					</div>
+					<input class="user-details-value" type="hidden" name="scheduled_at" id="id_scheduled_at" value="{{ form.scheduled_at.value|default:'' }}" {% if announcement.published_at or posted %}disabled {% endif %}>
+				</div>
+
+				{% if announcement.scheduled_at %}
+				<div style="margin-top:0.5rem;color:#E37910;font-size:0.95rem;">
+					Current scheduled date: {{ announcement.scheduled_at|date:"F d, Y H:i" }}
+				</div>
+				{% endif %}
 			</div>
 			
-
-			<div class="form-group">
-				<label class="form-label" for="id_cover_photo">Attach Cover Photo:</label>
-				<div class="upload-area" onclick="document.getElementById('id_cover_photo').click()">
-					<svg class="upload-icon"><use href="#icon-upload"></use></svg>
-					<span class="upload-text">Click to upload</span>
-					<input class="file-input" type="file" name="cover_photo" id="id_cover_photo" accept="image/*" value="{{ form.cover_photo.value|default:'' }}">
-				</div>
-			</div>
-
-			<div class="form-group">
-				<label class="form-label" for="id_scheduled_at">Schedule Post:</label>
-				<div class="schedule-button" onclick="toggleSchedule()" {% if announcement.published_at or posted %}style="pointer-events:none;opacity:0.5;"{% endif %}>
-					<svg class="clock-icon"><use href="#icon-clock"></use></svg>
-					<span id="schedule-text">Now</span>
-				</div>
-				<input class="form-input" type="hidden" name="scheduled_at" id="id_scheduled_at" value="{{ form.scheduled_at.value|default:'' }}" {% if announcement.published_at or posted %}disabled {% endif %}>
-			</div>
-
-			{% if announcement.scheduled_at %}
-			<div style="margin-top:0.5rem;color:#E37910;font-size:0.95rem;">
-				Current scheduled date: {{ announcement.scheduled_at|date:"F d, Y H:i" }}
-			</div>
-			{% endif %}
-
-			{% if announcement.cover_photo %}
-			<div class="file-preview show" id="file-preview">
-				<div class="file-info">
-					<svg width="16" height="16"><use href="#icon-upload"></use></svg>
-					<span id="file-name">Current: <a href="{{ announcement.cover_photo.url }}" target="_blank">{{ announcement.title }}</a></span>
-				</div>
-			</div>
-			{% endif %}
-
 			<div class="form-actions">
-				<a href="{% url 'announcement_dispatcher' %}" class="btn btn-preview" style="text-decoration: none;">Back</a>
-				<button type="submit" class="btn btn-submit" id="submit-btn">Save Changes</button>
+				<a href="{% url 'announcement_dispatcher' %}" class="back btn">Back</a>
+				<button type="submit" class="save btn" id="submit-btn">Save Changes</button>
 			</div>
 		</form>
 	</div>

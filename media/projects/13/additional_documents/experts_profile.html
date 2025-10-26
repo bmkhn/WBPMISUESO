@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Profile</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #e9e9e9;
+        }
+
+        main {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: stretch;
+            gap: 3rem;
+        }
+
+        header {
+            background-color: #245F3E;
+            position: relative;
+            top: 0;
+            width: 100%;
+            padding: 0;
+            height: 4rem;
+        }
+
+        footer {
+            background-color: #245F3E;
+            position: relative;
+            bottom: 0;
+            width: 100%;
+            height: 20rem;
+        }
+
+        main > section {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: flex-start;
+            width: 100%;
+            flex-wrap: wrap;
+            background-color: #fbfbfb;
+            box-shadow: 0 6px 0.5rem rgba(0, 0, 0, 0.2);
+        }
+
+        section > div {
+            margin: 3rem;
+            height: 100%;
+            display: block;
+            max-width: none;
+        }
+
+        .propic img {
+            width: 15rem;
+            height: 15rem;
+            object-fit: cover;
+            border-radius: 50%;
+            box-shadow: 0 2px 1rem rgba(0, 0, 0, 0.2);
+        }
+
+        section > div > h1 {
+            font-size: 4rem;
+            font-weight: 400;
+            margin-bottom: 1rem;
+        }
+
+        section > div > h5 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 0.35rem;
+        }
+
+        section > div > p {
+            font-size: 1rem;
+            font-weight: 400;
+            margin: 0 0 1rem 0;
+            line-height: 1.25;
+        }
+
+        .personal-info {
+            display: block;
+            flex-basis: 20rem;
+            flex-grow: 1;
+            margin: 3rem 1rem;
+        }
+
+        .personal-info h2 {
+            font-size: 2rem;
+            font-weight: 300;
+        }
+
+        .personal-info h4 {
+            font-size: 1rem;
+            font-weight: 400;
+            margin-top: -1rem;
+            margin-bottom: 1rem;
+        }
+
+        .personal-info img {
+            border-radius: 50%;
+            max-height: 5rem;
+        }
+
+        .expertise {
+            margin: 3rem 1rem;
+            flex-basis: 17rem;
+            flex-grow: 1;
+        }
+
+        .contact {
+            margin: 3rem 1rem;
+            flex-basis: 17rem;
+            flex-grow: 1;
+        }
+
+        .bio {
+            background-color: whitesmoke;
+            flex-basis: 20rem;
+            flex-grow: 1;
+            padding: 0.5rem 2.5rem;
+            margin: 1rem 0.75rem;
+        }
+
+        .lower {
+            background-color: #e9e9e9;
+        }
+
+        .lower-header {
+            border-bottom: 1px solid #ccc;
+            margin: 0 -2.5rem 0 -2.5rem;
+            padding: 0 2.5rem;
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+        }
+
+        .lower-header h1 {
+            font-size: 1.5rem;
+            font-weight: 500;
+        }
+
+        .project {
+            background-color: whitesmoke;
+            flex-basis: 35rem;
+            flex-grow: 2;
+            padding: 0.5rem 2.5rem;
+            margin: 1rem 0.75rem;
+        }
+
+        .dropdown {
+            position: relative;
+            width: 9.5rem;
+        }
+
+        .dropdown-btn {
+            margin: 0.75rem;
+            border: 0.08rem solid whitesmoke;
+            width: 100%;
+            padding: 0.5rem;
+            border-radius: 0.75rem;
+            background: none;
+            text-align: center;
+            cursor: pointer;
+            font-family: Helvetica, Arial, sans-serif;
+            font-weight: 400;
+            font-size: 1rem;
+        }
+
+        .dropdown-btn:hover {
+            border: 0.08rem solid #000000;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            margin: 0;
+            right: 0;
+            width: 100%;
+            background: white;
+            border: 0.08rem solid #ccc;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+            overflow: hidden;
+        }
+
+        .dropdown-item {
+            padding: 0.75rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-family: Helvetica, Arial, sans-serif;
+            font-weight: 400;
+            text-align: center;
+            border-bottom: 1px solid rgb(196, 196, 196);
+        }
+
+        .dropdown-item:hover {
+            background-color: #000000;
+            color: white;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .sort-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            color: #333;
+            margin-left: 0.5rem;
+        }
+
+        .project-card {
+            display: grid;
+            grid-template-rows: 1fr 1fr;
+            gap: 0;
+            margin: -0.5rem -2.5rem;
+        }
+
+        .project-card > div {
+            border-bottom: 1px rgb(122, 122, 122) solid;
+            padding: 1rem 3rem;
+            margin-bottom: 0;
+        }
+
+        .project-card h5 {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 0.5rem;
+            font-weight: 300;
+        }
+
+        .title {
+            font-size: 1.5rem;
+            font-weight: 500;
+            margin: 0.25rem 0 1rem 0;
+            color: #222;
+            text-decoration: none;
+        }
+
+        .title:hover {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .project-authors {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .project-authors content {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .project-authors img {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 0.08rem solid #ccc;
+        }
+
+        .project-authors a {
+            font-size: 0.9rem;
+            color: #000000;
+            text-decoration: none;
+        }
+
+        .project-authors a:hover {
+            color: #007bff;
+        }
+
+        .view {
+            display: inline-block;
+            margin-top: 0.75rem;
+            font-size: 0.9rem;
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .view:hover {
+            text-decoration: underline;
+        }
+
+        .project-tags {
+            margin: 1rem 0;
+        }
+
+        .campus {
+            background-color: #ff9f10;
+            color: rgb(55, 39, 0);
+            border: 0.08rem solid #ff9f10;
+            font-weight: 600;
+            padding: 0.35rem 0.6rem;
+            margin-right: 0.5rem;
+            cursor: pointer;
+        }
+
+        .agenda {
+            background: linear-gradient(90deg, white, #00ff6e3d);
+            color: #313131;
+            border: 0.08rem solid #313131;
+            font-weight: 500;
+            padding: 0.35rem 0.6rem;
+            margin-right: 0.5rem;
+            cursor: pointer;
+        }
+
+        .status {
+            background-color: whitesmoke;
+            color: #1CB889;
+            border: 0.08rem solid #1CB889;
+            font-weight: 500;
+            padding: 0.35rem 0.6rem;
+            margin-right: 0.5rem;
+            cursor: pointer;
+        }
+
+        @media (max-width: 600px) {
+            .personal-info, .expertise, .contact, .bio, .project {
+                flex-basis: 100%;
+                margin-left: 0.5rem;
+                margin-right: 0.5rem;
+            }
+            section:first-child {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>test</h1>
+    </header>
+    <main> 
+        <section>
+            <div class="propic">
+                <img src="https://img.apmcdn.org/3ddbb3761de2e44418a47d0e2ecce75a3bc686c3/square/35d350-20130729-fiona-apple.jpg" class="propic" alt="profile picture">
+            </div>
+            <div class="personal-info">
+                <h2>Fiona Apple McAfee Maggart</h2>
+                <h4><i class="fas fa-map-marker-alt" style="color:red; margin-right:0.5rem;"></i> PSU - Tiniguiban</h4>
+                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQCG-8819DkziNFT4NY9X-eyHPBUa8bulKUnw&s" alt="college">
+            </div>
+            <div class="expertise">
+                <h5>Field of Expertise:</h5>
+                <p>Music, Singer-Songwriter in English, Instrument Savant</p>
+                <h5>Highschool Graduate</h5>
+                <p>Crossroads School for Arts & Sciences</p>
+            </div>
+            <div class="contact">
+                <h5>Sony Music</h5>
+                <p>fionaapplespager@gmail.com</p>
+            </div>
+        </section>
+        <section class="lower">
+            <div class="bio">
+                <div class="lower-header">
+                    <h1>Bio</h1>
+                </div>
+                <p style="margin-top: 1rem;">Fiona Apple McAfee-Maggart (born September 13, 1977) is an American singer-songwriter and pianist celebrated for her
+                poetic lyrics, expressive contralto voice, and genre-blending style. She rose to prominence with her debut album Tidal
+                (1996), which earned her a Grammy Award for Criminal. Her later albums — When the Pawn… (1999), Extraordinary Machine
+                (2005), The Idler Wheel… (2012), and Fetch the Bolt Cutters (2020) — all received widespread acclaim, with the latter
+                winning two Grammys. Known for her uncompromising artistry and long gaps between releases, Apple remains one of the most
+                distinctive and influential figures in alternative music.</p>
+            </div>
+            <div class="project">
+                <div class="lower-header"> 
+                    <div>
+                        <h1>Projects</h1>   
+                    </div>
+                    <div style="display: flex; flex-shrink: 3;">
+                        <button class="sort-btn">
+                            <i class="fas fa-arrow-up"></i>
+                        </button>
+                        <div class="dropdown">
+                            <button class="dropdown-btn">Sort by ▾</button>
+                            <div class="dropdown-menu hidden">
+                                <div class="dropdown-item">Name</div>
+                                <div class="dropdown-item">Date Completed</div>
+                                <div class="dropdown-item">Last Updated</div>
+                                <div class="dropdown-item">Q4</div>
+                            </div>
+                        </div> 
+                    </div>
+                </div>
+                <div class="project-card"> 
+                    <div>
+                        <h5>January 2024</h5>
+                        <a href="#" class="title">The Idler Wheel Is Wiser Than the Driver of the Screw and Whipping Cords Will Serve You More Than Ropes Will</a>
+                        <section class="project-tags">
+                            <button class="campus">PSU - Tiniguiban</button>
+                            <button class="agenda">Promotive and Preventive Health and Nutrition and Gender Sensitivity</button>
+                            <button class="status">Completed</button>
+                        </section>
+                        <section class="project-authors"> 
+                            <content>
+                                <img src="https://img.apmcdn.org/3ddbb3761de2e44418a47d0e2ecce75a3bc686c3/square/35d350-20130729-fiona-apple.jpg" alt="">
+                                <a href="#">Fiona Apple McAfee Maggart</a> 
+                            </content>
+                        </section>
+
+                        <a href="#" class="view">View</a> 
+                    </div> 
+                    <div>
+                        <h5>January 2024</h5>
+                        <a href="#" class="title">The Idler Wheel Is Wiser Than the Driver of the Screw and Whipping Cords Will Serve You More Than Ropes Will</a>
+                        <section class="project-tags">
+                            <button class="campus">PSU - Tiniguiban</button>
+                            <button class="agenda">Promotive and Preventive Health and Nutrition and Gender Sensitivity</button>
+                            <button class="status">Completed</button>
+                        </section>
+                        <section class="project-authors"> 
+                            <content>
+                                <img src="https://img.apmcdn.org/3ddbb3761de2e44418a47d0e2ecce75a3bc686c3/square/35d350-20130729-fiona-apple.jpg" alt="">
+                                <a href="#">Fiona Apple McAfee Maggart</a> 
+                            </content> 
+                            <content>
+                                <img src="https://img.apmcdn.org/3ddbb3761de2e44418a47d0e2ecce75a3bc686c3/square/35d350-20130729-fiona-apple.jpg" alt="">
+                                <a href="#">Fiona Apple McAfee Maggart</a> 
+                            </content>
+                        </section>
+
+                        <a href="#" class="view">View</a> 
+                    </div> 
+                </div>
+            </div>
+        </section>
+    </main>
+    <footer>
+        <p>test</p>
+    </footer> 
+    <script> 
+        // Select all dropdown buttons
+        document.querySelectorAll('.dropdown-btn').forEach(btn => {
+            btn.addEventListener('click', e => {
+                e.stopPropagation(); // stop document click
+                const menu = btn.nextElementSibling;
+                // Close other open menus
+                document.querySelectorAll('.dropdown-menu').forEach(m => {
+                    if (m !== menu) m.classList.add('hidden');
+                });
+                menu.classList.toggle('hidden');
+            });
+        });
+        // Dropdown item click
+        document.querySelectorAll('.dropdown-item').forEach(item => {
+            item.addEventListener('click', e => {
+                e.stopPropagation();
+                const menu = item.parentElement;
+                const btn = menu.previousElementSibling;
+                btn.textContent = e.target.textContent;
+                menu.classList.add('hidden');
+            });
+        });
+        // Click outside closes all menus
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                menu.classList.add('hidden');
+            });
+        });     
+    </script>
+</body>
+</html>

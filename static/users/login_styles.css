@@ -1,0 +1,338 @@
+/* login sequence classes*/
+body {
+    background: url("/static/background.png") no-repeat center center fixed;
+    background-size: cover;
+    min-height: 100vh;
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    justify-content: flex-end;
+}
+
+p, h1, h2, h3, h4, h5, h6, div {
+    cursor: default;
+} 
+ 
+a:hover {
+    text-decoration: none; 
+    color: #ff9900;
+}
+
+.sign-in-container {
+    width: 30%; 
+    padding: 3rem 5rem;
+    background: 
+        radial-gradient(
+            circle at center, 
+            rgba(255, 255, 255, 0.98) 0%,  
+            rgba(255, 255, 255, 0.95) 80%, 
+            rgba(255, 255, 255, 0.9) 99%  
+        );
+    display: flex;
+    flex-direction: column;
+    gap: 2.25rem; 
+    min-height: 100%;
+    position: relative;
+}
+
+.logo-container {
+    display: flex;
+    align-items: center;
+    gap: 1.4rem;
+    text-decoration: none;
+    color: black;
+    margin-bottom: 1.75rem;
+    cursor: default;
+    margin-left: -2rem;
+    margin-top: -1rem;
+}
+
+.logo-icon {
+    width: 54px; 
+    height: 54px;
+    object-fit: contain;
+}
+
+.logo-text {
+    font-family: 'Instrument Sans', sans-serif;
+    font-weight: 500;
+    font-size: 20px; 
+    text-align: left;
+    display: flex;
+    align-items: center;
+    line-height: 1.2;
+}
+
+.center-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px; 
+    width: 340px; 
+    margin: 0 auto;
+}
+
+.text-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.welcome-text {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 32px;
+    text-align: center;
+}
+
+.psu-text {
+    font-family: 'Inter', sans-serif;
+    font-weight: 200;
+    font-size: 15px; 
+    text-align: center;
+}
+
+.fillbox-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+}
+
+.fillbox-label {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 15px; 
+    align-self: flex-start;
+}
+
+.fillbox-field {
+    position: relative;
+}
+
+.fillbox-field input {
+    width: 17.5rem; 
+    border: 1px solid #B9B9B9;
+    padding: 0.75rem 0.75rem 0.75rem 3.25rem;
+    color: #000000;
+    border-radius: 0.5rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    margin: 0;
+    display: block;
+}
+
+.input-icon-wrapper {
+    position: relative;
+    display: block;
+}
+
+.icon {
+    position: absolute;
+    left: 0.6rem; 
+    top: 50%;
+    transform: translateY(-50%); 
+    color: #6B6B6B;
+    font-size: 0.9rem; 
+    display: flex;
+    width: 2rem;
+    height: 2rem;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    pointer-events: none;
+}
+.center-container {
+    justify-content: center;
+    align-items: center;
+}
+.more-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 340px; 
+    align-items: center;
+    margin-top: 15px; 
+}
+
+.remember-container {
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    align-items: center;
+}
+
+.remember-checkbox {
+    width: 15px;
+    height: 15px;
+    accent-color: #B3B3B3;
+}
+
+.remember-text {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 0.85rem; 
+    color: #2A2A2A;
+    margin-left: -0.6rem;
+}
+
+.forgot-text {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 0.8rem; 
+    color: #0099FF;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.sign-in-button {
+    width: 10rem; 
+    border-radius: 1rem; 
+    background: #00681a;
+    color: #ffffff;
+    padding: 0.75rem 1rem; 
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 1rem; 
+    border: none;
+    cursor: pointer;
+    margin-top: 1.75rem; 
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    transition: background 0.3s ease;
+}
+
+.sign-in-button:hover {
+    background: #444;
+}
+
+.bottom-container {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+    align-items: center;
+    margin-top: 2.25rem; 
+    align-self: center;
+}
+
+.account-text {
+    font-family: 'Inter', sans-serif;
+    font-weight: 200;
+    font-size: 0.9rem;
+    color: #000;
+}
+
+.sign-up-text {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 1rem; 
+    color: #0099FF;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.quick-login-container > a, .quick-login-container > h3 {
+    color: #fff;
+}
+
+/* forgot pass unique classes */ 
+.back-container {
+    position: absolute;
+    bottom: 2rem;
+    left: 3rem;
+} 
+
+.back-btn {
+    display: flex;
+    align-items: center; 
+    width: auto; 
+    height: auto;
+    gap: 0.75rem;
+    text-decoration: none;
+}
+
+.back-btn-text {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 0.95rem;
+    color: #0099FF;
+    cursor: pointer;
+}
+
+.back-btn svg {
+    vertical-align: middle;
+}
+
+/* register sequence unique classes*/
+.select-text {
+    font-family: 'Inter', sans-serif;
+    font-weight: 550;
+    font-size: 2rem; 
+    text-align: center;
+    margin-bottom: 0rem;
+    margin-top: -1.7rem;
+}
+
+.option-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem; 
+    width: 100%;
+    align-items: center;
+}
+
+.option-item { 
+    display: flex;
+    flex-direction: column;
+    width: 20rem; 
+    padding: calc(2rem - 4px); 
+    background-image: linear-gradient(#f8f8f8, #ffffff), linear-gradient(90deg, #00681a, #ff9900);
+    background-origin: padding-box, border-box;
+    background-clip: padding-box, border-box;
+    border: 2px solid transparent;
+    border-radius: 0.5rem;
+    font-family: 'Inter', sans-serif;
+    align-items: flex-start; 
+    justify-content: flex-start;
+    cursor: pointer;
+    transition: background 0.2s, box-shadow 0.15s;
+    text-decoration: none; 
+}
+
+.option-item h3 {
+    font-weight: 600;
+    font-size: 1.2rem; 
+    flex-grow: 1; 
+    color: #ff9900; 
+    margin: 0 0 1rem 0;
+} 
+ 
+.option-item p {
+    font-weight: 300;
+    font-size: 0.9rem;
+    color: black;
+    margin: 0;
+    flex-grow: 1;
+}
+
+.option-item:hover {
+    background: #444;
+}
+.option-item:hover h3 {
+    color: #fff;
+}
+.option-item:hover p {
+    color: #ddd;
+}
+
+/* end redirect unique classes */
+.check-symbol {
+    width: 8rem; 
+    height: auto; 
+    padding: 0; 
+    margin-top: 2rem;
+}

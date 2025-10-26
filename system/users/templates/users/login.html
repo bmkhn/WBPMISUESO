@@ -7,194 +7,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Log In</title>
     <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@500&family=Inter:wght@200;600;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            background: url("{% static 'background.png' %}") no-repeat center center fixed;
-            background-size: contain;
-            background-size: cover;
-            min-height: 100vh;
-            margin: 0;
-            font-family: 'Inter', sans-serif;
-        }
-
-        .sign-in-container {
-            width: 525px; 
-            padding: 40px;
-            background: rgba(255,255,255,0.97);
-            display: flex;
-            flex-direction: column;
-            gap: 30px; 
-            height: 100%;
-            min-height: 100vh;
-        }
-
-        .logo-container {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            text-decoration: none;
-            color: black;
-        }
-
-        .logo-icon {
-            width: 54px; 
-            height: 54px;
-            object-fit: contain;
-        }
-
-        .logo-text {
-            font-family: 'Instrument Sans', sans-serif;
-            font-weight: 500;
-            font-size: 20px; 
-            text-align: left;
-            display: flex;
-            align-items: center;
-            line-height: 1.2;
-        }
-
-        .center-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 30px; 
-            width: 340px; 
-            margin: 0 auto;
-        }
-
-
-        .text-container {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .welcome-text {
-            font-family: 'Inter', sans-serif;
-            font-weight: 600;
-            font-size: 32px;
-            text-align: center;
-        }
-
-        .psu-text {
-            font-family: 'Inter', sans-serif;
-            font-weight: 200;
-            font-size: 15px; 
-            text-align: center;
-        }
-
-        .fillbox-container {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            align-items: center;
-        }
-
-        .fillbox-label {
-            font-family: 'Inter', sans-serif;
-            font-weight: 600;
-            font-size: 15px; 
-            align-self: flex-start;
-        }
-
-        .fillbox-field input {
-            width: 315px; 
-            border: 1px solid #B9B9B9;
-            padding: 12px; 
-            color: #B9B9B9;
-            border-radius: 12px;
-            font-size: 14px;
-            font-family: 'Inter', sans-serif;
-            margin: 0;
-            display: block;
-        }
-
-        .more-container {
-            display: flex;
-            flex-direction: row;
-            justify-content: space-between;
-            width: 340px; 
-            align-items: center;
-            margin-top: 15px; 
-        }
-
-        .remember-container {
-            display: flex;
-            flex-direction: row;
-            gap: 12px;
-            align-items: center;
-        }
-
-        .remember-checkbox {
-            width: 15px;
-            height: 15px;
-            accent-color: #B3B3B3;
-        }
-
-        .remember-text {
-            font-family: 'Inter', sans-serif;
-            font-weight: 600;
-            font-size: 12px; 
-            color: #2A2A2A;
-        }
-
-        .forgot-text {
-            font-family: 'Inter', sans-serif;
-            font-weight: 600;
-            font-size: 12px; 
-            color: #0099FF;
-            cursor: pointer;
-            text-decoration: none;
-        }
-
-        .sign-in-button {
-            width: 340px; 
-            border-radius: 8px; 
-            background: #2C2C2C;
-            color: #F5F5F5;
-            padding: 8px 0; 
-            font-family: 'Inter', sans-serif;
-            font-weight: 400;
-            font-size: 16px; 
-            border: none;
-            cursor: pointer;
-            margin-top: 16px; 
-        }
-
-        .bottom-container {
-            display: flex;
-            flex-direction: row;
-            gap: 8px;
-            align-items: center;
-            margin-top: 8px; 
-            align-self: center;
-        }
-
-        .account-text {
-            font-family: 'Inter', sans-serif;
-            font-weight: 200;
-            font-size: 14px;
-            color: #000;
-        }
-
-        .sign-up-text {
-            font-family: 'Inter', sans-serif;
-            font-weight: 500;
-            font-size: 14px; /* 18px * 0.75 */
-            color: #0099FF;
-            cursor: pointer;
-        }
-
-        /* Quick Login Section */
-        /* .quick-login-container {
-            display: none;
-        } */
-
-        .quick-login-container > a, .quick-login-container > h3 {
-            color: #fff;
-        }
-
-    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link href="{% static 'users/login_styles.css' %}" rel="stylesheet">
 </head>
 <body>
     <div class="sign-in-container">
@@ -210,10 +24,17 @@
             <form method="post" style="width:100%;">
                 {% csrf_token %}
                 <div class="fillbox-container">
-                    <div class="fillbox-label">Email Address</div>
-                    <div class="fillbox-field">{{ form.username }}</div>
-                    <div class="fillbox-label">Password</div>
-                    <div class="fillbox-field">{{ form.password }}</div>
+                    <label class="fillbox-label">Email Address</label>
+                    <div class="fillbox-field">
+                        <i class="far fa-envelope icon"></i> 
+                        {{ form.username }} 
+                    </div>
+
+                    <label class="fillbox-label">Password</label>
+                    <div class="fillbox-field">
+                        <i class="fas fa-lock icon"></i> 
+                        {{ form.password }}
+                    </div>
                 </div>
                 <div class="more-container">
                     <div class="remember-container">
@@ -222,7 +43,7 @@
                     </div>
                     <a href="/forgot-password/1/" class="forgot-text">Forgot password</a>
                 </div>
-                <button type="submit" class="sign-in-button">Sign In</button>
+                <button type="submit" class="sign-in-button">SIGN IN</button>
             </form>
         </div>
         <div class="bottom-container">
@@ -230,19 +51,5 @@
             <a href="/register/" class="sign-up-text">Sign up</a>
         </div>
     </div>
-
-        <div class="quick-login-container">
-            <h3>Quick Login (Test Users)</h3>
-            <a href="{% url 'quick_login' role='IMPLEMENTER' %}">Login as Implementer</a>
-            <a href="{% url 'quick_login' role='FACULTY' %}">Login as Faculty</a>
-            <a href="{% url 'quick_login' role='CLIENT' %}">Login as Client</a>
-            <br>
-            <a href="{% url 'quick_login' role='UESO' %}">Login as UESO</a>
-            <a href="{% url 'quick_login' role='COORDINATOR' %}">Login as College Coordinator</a>
-            <a href="{% url 'quick_login' role='DEAN' %}">Login as College Dean</a>
-            <a href="{% url 'quick_login' role='PROGRAM_HEAD' %}">Login as Program Head</a>
-            <a href="{% url 'quick_login' role='DIRECTOR' %}">Login as Director</a>
-            <a href="{% url 'quick_login' role='VP' %}">Login as VP</a>
-        </div>
 </body>
 </html>

@@ -565,3 +565,16 @@ def quick_login(request, role):
         return redirect("role_redirect")
     else:
         return redirect("login") 
+
+## temp stuff
+def newp_view(request):
+    logout(request)
+    return render(request, 'users/new_pass.html')
+    
+def otp_view(request):
+    logout(request)
+    return render(request, 'users/otp.html')
+
+def end(request):
+    logout(request)
+    return render(request, 'users/end_changepass.html')

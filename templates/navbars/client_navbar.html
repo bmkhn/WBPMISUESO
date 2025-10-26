@@ -8,134 +8,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
-
-<style>
-	* {
-		margin: 0;
-		padding: 0;
-		box-sizing: border-box;
-	}
-
-	.outside-container {
-		width: 100%;
-		display: flex;
-		flex-direction: column;
-	}
-
-	.top-container {
-		width: 100%;
-		height: 115px;
-		background-color: #F7F3F1;
-		padding: 0 40px;
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-	}
-
-	.logo-container {
-		display: flex;
-		align-items: center;
-		gap: 20px;
-	}
-
-	.logo-circle {
-		width: 75px;
-		height: 75px;
-		border-radius: 100%;
-		background-size: contain;
-		background-repeat: no-repeat;
-		background-position: center;
-		background-image: url("{% static 'ueso.png' %}");
-	}
-
-	.title {
-		font-family: 'Instrument Sans', sans-serif;
-		font-size: 21px;
-		font-weight: bold;
-		color: #000;
-	}
-
-	.button-container {
-		display: flex;
-		gap: 30px;
-	}
-
-	.nav-button {
-		font-family: 'Inter', sans-serif;
-		color: #404040;
-		font-size: 18px;
-		line-height: 38px;
-		font-weight: 600;
-		padding: 10px 20px;
-		border-radius: 4px;
-		background: none;
-		border: none;
-		cursor: pointer;
-		transition: background-color 0.2s ease, color 0.2s ease;
-		text-decoration: none;
-		align-self: center;
-	}
-
-	.nav-button:hover {
-		background-color: #303030;
-		color: #fff;
-	}
-
-	.nav-button.active {
-		background-color: #000;
-		color: #fff;
-	}
-
-	.bottom-container {
-		position: sticky;
-		top: 115px;
-		left: 0;
-		right: 0;
-		background-color: black;
-		display: flex;
-		align-items: left;
-		gap: 20px;
-		padding: 0 20px;
-		box-sizing: border-box;
-	}
-
-	.bottom-nav-button {
-		font-family: 'Inter', sans-serif;
-		color: #FFFFFF;
-		padding: 0 15px;
-		font-size: 12px;
-		line-height: 20px;
-		font-weight: 500;
-		background: none;
-		border: none;
-		cursor: pointer;
-		transition: background-color 0.2s ease, color 0.2s ease;
-		text-decoration: none;
-		align-self: center;
-	}
-
-	.bottom-nav-button:hover {
-		background-color: #191919;
-	}
-
-	.bottom-nav-button.active {
-		background-color: #303030;
-	}
-
-	.logo-circle img:hover {
-		cursor: pointer;
-		transform: scale(1.05);
-	}
-
-	#profileModal a {
-		transition: background 0.18s, color 0.18s;
-	}
-	#profileModal a:hover {
-		background: #F2F4F8;
-		color: #0A6C44;
-	}
-</style>
-
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link href="{% static 'templates/top_style.css' %}" rel="stylesheet">
 </head>
 <body>
 	<div class="outside-container">
@@ -149,21 +23,21 @@
 			</div>
 
 			<!-- Button Container -->
-			<div class="button-container">
+			<div class="nav-center">
 				<a href="{% url 'home' %}" class="nav-button {% if '/home/' in request.path %}active{% endif %}">Home</a>
 				<a href="{% url 'downloadable_dispatcher' %}" class="nav-button {% if '/downloadables/' in request.path %}active{% endif %}">Downloadables</a>
 				<a href="{% url 'announcement_dispatcher' %}" class="nav-button {% if '/announcements/' in request.path %}active{% endif %}">Announcements</a>
 				<a href="/archives/" class="nav-button {% if '/archives/' in request.path %}active{% endif %}">Archives</a>
 				<a href="{% url 'about_us_dispatcher' %}" class="nav-button {% if '/about-us/' in request.path %}active{% endif %}">About Us</a>
-				
-				<!-- Profile Picture Modal -->
-				<div class="logo-circle" id="profilePicContainer" style="position:relative;">
-					<img src="{{ request.user.profile_picture_or_initial }}" alt="Profile Picture" class="logo-circle" id="profilePic" style="object-fit: cover; cursor:pointer;">
-					<div id="profileModal" style="display:none; position:absolute; top:90px; right:0; background:#fff; border-radius:12px; box-shadow:0 8px 32px rgba(0,0,0,0.18); min-width:180px; z-index:1000; border:1px solid #e5e7eb; overflow:hidden;">
-						<a href="/profile/" style="display:block; padding:14px 24px; color:#222; text-decoration:none; font-family:'Inter',sans-serif; font-size:15px; border-bottom:1px solid #eee;">Profile</a>
-						<a href="/settings/" style="display:block; padding:14px 24px; color:#222; text-decoration:none; font-family:'Inter',sans-serif; font-size:15px; border-bottom:1px solid #eee;">Settings</a>
-						<a href="{% url 'logout' %}" style="display:block; padding:14px 24px; color:#E53E3E; text-decoration:none; font-family:'Inter',sans-serif; font-size:15px;">Log Out</a>
-					</div>
+			</div> 
+			
+			<!-- Profile Picture Modal -->
+			<div class="logo-circle" id="profilePicContainer" style="position:relative;">
+				<img src="{{ request.user.profile_picture_or_initial }}" alt="Profile Picture" class="logo-circle" id="profilePic" style="object-fit: cover; cursor:pointer;">
+				<div id="profileModal">
+					<a href="/profile/">Profile</a>
+					<a href="/settings/">Settings</a>
+					<a href="{% url 'logout' %}" style="color:#E53E3E;">Log Out</a>
 				</div>
 			</div>
 		</div>
@@ -184,19 +58,18 @@
 		if (profilePic && profileModal) {
 			profilePic.addEventListener('click', function(e) {
 				e.stopPropagation();
-				profileModal.style.display = (profileModal.style.display === 'block') ? 'none' : 'block';
-				modalOpen = profileModal.style.display === 'block';
+				profileModal.classList.toggle('show');
+				modalOpen = profileModal.classList.contains('show');
 			});
 			document.addEventListener('mousedown', function(e) {
-				if (modalOpen && !profileModal.contains(e.target) && e.target !== profilePic) {
-					profileModal.style.display = 'none';
+				if (profileModal.classList.contains('show') && !profileModal.contains(e.target) && e.target !== profilePic) {
+					profileModal.classList.remove('show');
 					modalOpen = false;
 				}
 			});
-			// Hide modal on option click
 			profileModal.querySelectorAll('a').forEach(function(link) {
 				link.addEventListener('click', function() {
-					profileModal.style.display = 'none';
+					profileModal.classList.remove('show');
 					modalOpen = false;
 				});
 			});
@@ -206,37 +79,7 @@
 
 </body>
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
-
-<style>
-	#backToTopBtn {
-		position: fixed;
-		bottom: 40px;
-		right: 40px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 50px;
-		height: 50px;
-		background-color: #333;
-		color: white;
-		border: none;
-		border-radius: 50%;
-		cursor: pointer;
-		opacity: 0;
-		visibility: hidden;
-		transition: opacity 0.4s ease, visibility 0.4s ease;
-		z-index: 1000;
-		background-color: #063A1C;
-	}
-
-	#backToTopBtn.show {
-		opacity: 1;
-		visibility: visible;
-	}
-</style>
-
-<button id="backToTopBtn"><i class="fa-solid fa-up-long"></i></button>
+<button id="backToTopBtn"><i class="fa-solid fa-arrow-up"></i></button>
 
 <script>
 	// Window scroll persistence for director sidebar page

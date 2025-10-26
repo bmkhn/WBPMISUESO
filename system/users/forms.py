@@ -3,7 +3,20 @@ from django.contrib.auth.forms import AuthenticationForm
 from .models import User
 
 class LoginForm(AuthenticationForm):
-    username = forms.EmailField(label="Email", widget=forms.EmailInput(attrs={'class': 'form-control'}))
+    username = forms.EmailField(
+        label="Email",
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'example@yourdomain.com'
+        })
+    )
+    password = forms.CharField(
+        label="Password",
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': '********'
+        })
+    )
 
 
 class ClientRegistrationForm(forms.ModelForm):
