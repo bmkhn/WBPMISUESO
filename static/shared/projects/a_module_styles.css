@@ -67,6 +67,33 @@ body {
     background-color: #444;
     color: #fff;
     transform: translateY(-1px);
+} 
+ 
+.action-btn {
+    font-family: 'Inter', sans-serif;
+    color: #F5F5F5;
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 2rem;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    text-decoration: none;
+}
+
+.action-btn:hover {
+    background-color: #444;
+    color: #fff;
+    transform: translateY(-1px);
+} 
+ 
+.approve-btn {
+    background-color: #10da56;
+}
+
+.reject-btn {
+    background-color: #ff0000;
 }
 
 .export-btn {

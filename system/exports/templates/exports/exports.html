@@ -80,7 +80,7 @@
                     <th>Type</th>
                     <th>Date Submitted</th>
                     <th>Submitted By</th>
-                    <th></th>
+                    <th>Preview</th>
                     <th class="action-col">Action</th>
                 </tr>
             </thead>
@@ -90,7 +90,7 @@
                     <td>{{ export.get_type_display }}</td>
                     <td>{{ export.date_submitted|date:"Y-m-d" }}</td>
                     <td>{{ export.submitted_by.get_full_name }}</td>
-                    <td style="text-align:center;">
+                    <td style="text-align:start;">
                         {% if export.type == 'PROJECT' %}
                             <a href="{% url 'export_project' %}?{{ export.querystring|safe }}" style="color:#2EA8FF;">Download</a>
                         {% elif export.type == 'USER' %}
@@ -99,7 +99,7 @@
                             <span style="color:#888;">N/A</span>
                         {% endif %}
                     </td>
-                    <td class="action-col" style="text-align:center;">
+                    <td class="action-col" style="display:block;">
                         {% if export.status == 'PENDING' %}
                             <button class="action-btn approve-btn" title="Approve" data-id="{{ export.id }}">Approve</button>
                             <button class="action-btn reject-btn" title="Reject" data-id="{{ export.id }}">Reject</button>
