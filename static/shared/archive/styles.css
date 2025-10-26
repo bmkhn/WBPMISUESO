@@ -515,12 +515,12 @@ body {
 .view-btn {
     display: flex;
     padding: 10px;
-    width: 2.5rem;
-    height: 2.5rem;
+    width: 2.65rem;
+    height: 2.65rem;
     border-radius: 8px;
-    background: #F9F9F9;
+    background: white;
     cursor: pointer;
-    border: 1px solid #E5E7EB;
+    border: 1px solid #d5d5d5;
     transition: all 0.2s ease;
     justify-content: center;
     align-items: center;
@@ -572,7 +572,6 @@ body {
     padding: 0.35rem 0.55rem;
     font-size: 0.90rem; 
     font-weight: 500; 
-    border: 0.8px solid #4B331B;
     border-radius: 0;
 }
 
