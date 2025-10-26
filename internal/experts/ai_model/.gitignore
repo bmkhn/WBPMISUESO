@@ -1,0 +1,6 @@
+# Ignore all model files (they are large and should be downloaded on deployment)
+# models--*
+# .locks/
+
+# # Keep this directory structure in git
+# !.gitignore
