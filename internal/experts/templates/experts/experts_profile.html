@@ -1,0 +1,423 @@
+{% extends "base_internal.html" %}
+{% block content %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Expert Profile</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+	body {
+		background-color: #F9F9F9;
+		font-family: 'Inter', sans-serif;
+		margin: 0;
+		padding: 0;
+	}
+
+	.main-container {
+		margin: 75px;
+		display: flex;
+		flex-direction: column;
+		gap: 30px;
+	}
+
+	/* Content Area */
+	.content-area {
+		padding: 30px;
+		overflow-y: auto;
+	}
+
+	/* Profile Header */
+	.profile-header {
+		background-color: white;
+		border-radius: 12px;
+		padding: 30px;
+		margin-bottom: 30px;
+		box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+	}
+
+	.profile-main {
+		display: flex;
+		align-items: flex-start;
+		gap: 40px;
+	}
+
+	.profile-left {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 20px;
+		flex-shrink: 0;
+	}
+
+	.profile-image {
+		width: 160px;
+		height: 160px;
+		border-radius: 50%;
+		background-color: #e9ecef;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		overflow: hidden;
+		border: 3px solid #f8f9fa;
+		box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+	}
+
+	.profile-image img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		border-radius: 50%;
+	}
+
+	.profile-middle {
+		display: flex;
+		flex-direction: column;
+		gap: 20px;
+		flex: 1;
+	}
+
+	.profile-name {
+		font-size: 32px;
+		font-weight: 700;
+		color: #333;
+		margin: 0;
+		text-align: left;
+		line-height: 1.2;
+	}
+
+	.profile-location {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		color: #333;
+		font-size: 16px;
+		text-align: left;
+	}
+
+	.location-icon {
+		color: #dc3545;
+		font-size: 18px;
+	}
+
+	.university-logo {
+		width: 70px;
+		height: 70px;
+		border-radius: 50%;
+		background-color: #f8f9fa;
+		border: 3px solid #dc3545;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		overflow: hidden;
+		box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+	}
+
+	.university-logo img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		border-radius: 50%;
+	}
+
+	.profile-info {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		gap: 30px;
+		padding-top: 0;
+	}
+
+	.expertise-section {
+		display: flex;
+		flex-direction: column;
+		gap: 20px;
+	}
+
+	.expertise-item {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+	}
+
+	.expertise-label {
+		font-weight: 700;
+		color: #333;
+		font-size: 16px;
+		margin-bottom: 5px;
+	}
+
+	.expertise-value {
+		color: #666;
+		font-size: 15px;
+		line-height: 1.4;
+	}
+
+	/* Content Cards */
+	.content-cards {
+		display: grid;
+		grid-template-columns: 30% 67.5%;
+		gap: 30px;
+	}
+
+	.content-card {
+		background-color: white;
+		border-radius: 12px;
+		padding: 25px;
+		box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+	}
+
+	.card-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 20px;
+	}
+
+	.card-title {
+		font-size: 20px;
+		font-weight: 600;
+		color: #333;
+	}
+
+	.sort-controls {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		color: #666;
+		font-size: 14px;
+	}
+
+	.sort-icon {
+		width: 16px;
+		height: 16px;
+		cursor: pointer;
+	}
+
+	.sort-dropdown {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		cursor: pointer;
+	}
+
+	/* Bio Content */
+	.bio-content {
+		color: #666;
+		line-height: 1.6;
+		font-size: 14px;
+	}
+
+	/* Projects List */
+	.projects-list {
+		display: flex;
+		flex-direction: column;
+		gap: 20px;
+	}
+
+	.project-item {
+		padding-bottom: 20px;
+		border-bottom: 1px solid #e9ecef;
+	}
+
+	.project-item:last-child {
+		border-bottom: none;
+		padding-bottom: 0;
+	}
+
+	.project-date {
+		font-size: 12px;
+		color: #999;
+		margin-bottom: 8px;
+	}
+
+	.project-title {
+		font-size: 16px;
+		font-weight: 600;
+		color: #333;
+		margin-bottom: 12px;
+	}
+
+	.project-tags {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+		margin-bottom: 15px;
+	}
+
+	.project-tag {
+		padding: 4px 12px;
+		border-radius: 20px;
+		font-size: 12px;
+		font-weight: 500;
+	}
+
+	.tag-orange {
+		background-color: #ffc107;
+		color: white;
+	}
+
+	.tag-green {
+		background-color: #d4edda;
+		color: #155724;
+	}
+
+	.tag-completed {
+		background-color: #28a745;
+		color: white;
+	}
+
+	.tag-ongoing {
+		background-color: #fd7e14;
+		color: white;
+	}
+
+	.project-contributors {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		margin-bottom: 10px;
+	}
+
+	.contributor-avatar {
+		width: 32px;
+		height: 32px;
+		border-radius: 50%;
+		background-color: #e9ecef;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 12px;
+		color: #6c757d;
+		font-weight: 600;
+	}
+
+	.contributor-name {
+		font-size: 12px;
+		color: #666;
+	}
+
+	.project-action {
+		color: #007bff;
+		text-decoration: none;
+		font-size: 14px;
+		font-weight: 500;
+	}
+
+	.project-action:hover {
+		text-decoration: underline;
+	}
+</style>
+
+</head>
+<body>
+	<!-- Main Content -->
+	<div class="main-content">
+		<!-- Content Area -->
+		<div class="content-area">
+			<!-- Profile Header -->
+			<div class="profile-header">
+				<div class="profile-main">
+					<div class="profile-left">
+						<div class="profile-image">
+							<img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face" alt="Yve G. Renaldo">
+						</div>
+					</div>
+					<div class="profile-middle">
+						<h1 class="profile-name">Yve G. Renaldo</h1>
+						<div class="profile-location">
+							<span class="location-icon">📍</span>
+							<span>PSU - Tiniguiban Campus</span>
+						</div>
+						<div class="university-logo">
+							{% load static %}
+							<img src="{% static 'college_logos/collegeofartshumanities.jpg' %}" alt="College Logo">
+						</div>
+					</div>
+					<div class="profile-info">
+						<div class="expertise-section">
+							<div class="expertise-item">
+								<span class="expertise-label">Field of Expertise:</span>
+								<span class="expertise-value">Educational Leadership and Management</span>
+							</div>
+							<div class="expertise-item">
+								<span class="expertise-label">Doctor of Philosophy in Education</span>
+								<span class="expertise-value">University of the Philippines, Diliman</span>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Content Cards -->
+			<div class="content-cards">
+				<!-- Bio Card -->
+				<div class="content-card">
+					<div class="card-header">
+						<h2 class="card-title">Bio</h2>
+					</div>
+					<div class="bio-content">
+						Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum consequat nisl a tellus at hendrerit. In dapibus magna id faucibus lobortis. Morbi non libero in libero egestas laoreet. Ut commodo lacus turpis, non consectetur urna sit amet. Morbi consequat nisl a aliquet interdum. Aliquam erat volutpat. Cras ultrices ligula lorem, sit amet euismod lectus placerat eu. Pellentesque venenatis nunc vitae imperdiet ultrices.
+					</div>
+				</div>
+
+				<!-- Projects Card -->
+				<div class="content-card">
+					<div class="card-header">
+						<h2 class="card-title">Projects</h2>
+						<div class="sort-controls">
+							<span class="sort-icon">☰</span>
+							<div class="sort-dropdown">
+								<span>Sort By</span>
+								<span>▼</span>
+							</div>
+						</div>
+					</div>
+					<div class="projects-list">
+
+						<!-- January 2024 Project -->
+						<div class="project-item">
+							<div class="project-date">January 2024</div>
+							<h3 class="project-title">Pre-Release Psychological Intervention Program for PDL's</h3>
+							<div class="project-tags">
+								<span class="project-tag tag-orange">PSU - Tiniguiban</span>
+								<span class="project-tag tag-green">Promotive and Preventive Health and Nutrition and Gender Sensitivity</span>
+								<span class="project-tag tag-completed">Completed</span>
+							</div>
+							<div class="project-contributors">
+								<div class="contributor-avatar">YR</div>
+								<span class="contributor-name">Yve G. Renaldo</span>
+								<div class="contributor-avatar">ET</div>
+								<span class="contributor-name">Estes U. Talledo</span>
+							</div>
+							<a href="#" class="project-action">View</a>
+						</div>
+
+						<!-- December 2023 Project -->
+						<div class="project-item">
+							<div class="project-date">December 2023</div>
+							<h3 class="project-title">Placeholder -Sample Extension Project</h3>
+							<div class="project-tags">
+								<span class="project-tag tag-orange">PSU - Tiniguiban</span>
+								<span class="project-tag tag-green">Promotive and Preventive Health and Nutrition and Gender Sensitivity</span>
+								<span class="project-tag tag-ongoing">Ongoing</span>
+							</div>
+							<div class="project-contributors">
+								<div class="contributor-avatar">YR</div>
+								<span class="contributor-name">Yve G. Renaldo</span>
+							</div>
+							<a href="#" class="project-action">View</a>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+</body>
+</html>
+
+{% endblock %}
