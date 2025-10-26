@@ -231,20 +231,43 @@ def get_meeting_event_notification_recipients(log_entry):
 def get_export_request_notification_recipients(log_entry):
     """
     Get recipients for export request notifications
-    Notify UESO, Director, VP who can approve/reject
+    - CREATE: Notify UESO, Director, VP who can approve/reject
+    - UPDATE (status change): Notify the requester + UESO, Director, VP
     """
+    from system.exports.models import ExportRequest
     from system.users.models import User
     
     recipients = []
     
-    # Notify those who can approve (UESO, Director, VP)
-    if log_entry.action in ['CREATE', 'UPDATE']:
-        approvers = User.objects.filter(
-            role__in=['UESO', 'DIRECTOR', 'VP'],
-            is_confirmed=True,
-            is_active=True
+    try:
+        export_request = ExportRequest.objects.select_related('submitted_by').get(
+            id=log_entry.object_id
         )
-        recipients.extend(approvers)
+        
+        if log_entry.action == 'CREATE':
+            # Notify those who can approve (UESO, Director, VP)
+            approvers = User.objects.filter(
+                role__in=['UESO', 'DIRECTOR', 'VP'],
+                is_confirmed=True,
+                is_active=True
+            )
+            recipients.extend(approvers)
+        
+        elif log_entry.action == 'UPDATE':
+            # Notify the requester about status changes (APPROVED/REJECTED)
+            if export_request.submitted_by:
+                recipients.append(export_request.submitted_by)
+            
+            # Also notify UESO, Director, VP about the status change
+            approvers = User.objects.filter(
+                role__in=['UESO', 'DIRECTOR', 'VP'],
+                is_confirmed=True,
+                is_active=True
+            )
+            recipients.extend(approvers)
+        
+    except ExportRequest.DoesNotExist:
+        pass
     
     return recipients
 

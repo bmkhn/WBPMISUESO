@@ -55,6 +55,20 @@ class ClientRequest(models.Model):
 def log_client_request_action(sender, instance, created, **kwargs):
     user = instance.updated_by or instance.submitted_by or None
     url = reverse('request_details_dispatcher', args=[instance.id])
+    
+    # Create better detail messages
+    if created:
+        details = f"New request from {instance.organization}"
+    else:
+        status_messages = {
+            'PENDING': 'Request is pending review',
+            'APPROVED': 'Your request has been approved',
+            'REJECTED': 'Your request has been rejected',
+            'ENDORSED': 'Your request has been endorsed',
+            'DENIED': 'Your request has been denied',
+        }
+        details = status_messages.get(instance.status, f"Request Status: {instance.get_status_display()}")
+    
     # Only log creation if created
     if created:
         LogEntry.objects.create(
@@ -62,8 +76,8 @@ def log_client_request_action(sender, instance, created, **kwargs):
             action='CREATE',
             model='ClientRequest',
             object_id=instance.id,
-            object_repr=str(instance),
-            details=f"Status: {instance.status}",
+            object_repr=instance.title,
+            details=details,
             url=url,
             is_notification=True
         )
@@ -74,8 +88,8 @@ def log_client_request_action(sender, instance, created, **kwargs):
             action='UPDATE',
             model='ClientRequest',
             object_id=instance.id,
-            object_repr=str(instance),
-            details=f"Status: {instance.status}",
+            object_repr=instance.title,
+            details=details,
             url=url,
             is_notification=True
         )

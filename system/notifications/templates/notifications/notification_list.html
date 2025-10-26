@@ -158,15 +158,16 @@
         }
 
         .notification-message {
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 8px;
-        }
-
-        .notification-details {
             font-size: 13px;
             color: #999;
             font-style: italic;
+        }
+
+        .notification-details {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+
         }
 
         .notification-badge {
@@ -272,9 +273,15 @@
         <!-- Notifications List -->
         <div class="notifications-list">
             {% for notification in notifications %}
-            <a href="{% if notification.url %}{{ notification.url }}{% else %}#{% endif %}" 
+            {% if notification.url %}
+            <a href="{{ notification.url }}" 
                class="notification-item {% if not notification.is_read %}unread{% endif %}"
                onclick="markAsRead({{ notification.id }}, event)">
+            {% else %}
+            <div class="notification-item {% if not notification.is_read %}unread{% endif %}"
+                 onclick="markAsReadNoRedirect({{ notification.id }})"
+                 style="cursor:default;">
+            {% endif %}
                 <div class="notification-icon">
                     {% if notification.actor %}
                         {{ notification.actor.first_name.0 }}{{ notification.actor.last_name.0 }}
@@ -294,16 +301,20 @@
                             {% endif %}
                         </div>
                     </div>
-                    <div class="notification-message">
-                        {{ notification.get_message }}
+                    <div class="notification-details">
+                        {{ notification.details }}     
                     </div>
                     {% if notification.details %}
-                    <div class="notification-details">
-                        {{ notification.details }}
+                    <div class="notification-message">  
+                        {{ notification.get_message }}
                     </div>
                     {% endif %}
                 </div>
+            {% if notification.url %}
             </a>
+            {% else %}
+            </div>
+            {% endif %}
             {% empty %}
             <div class="empty-state">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -379,6 +390,54 @@
                       if (badge) {
                           badge.remove();
                       }
+                      // Update badge count
+                      const navBadges = document.querySelectorAll('.notification-badge-count');
+                      navBadges.forEach(badge => {
+                          const currentCount = parseInt(badge.textContent);
+                          if (currentCount > 0) {
+                              const newCount = currentCount - 1;
+                              if (newCount === 0) {
+                                  badge.parentElement.remove();
+                              } else {
+                                  badge.textContent = newCount;
+                              }
+                          }
+                      });
+                  }
+              });
+        }
+
+        function markAsReadNoRedirect(notificationId, event) {
+            event.preventDefault();
+            fetch(`/notifications/mark-as-read/${notificationId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json',
+                },
+            }).then(response => response.json())
+              .then(data => {
+                  if (data.success) {
+                      // Mark the notification as read visually
+                      const item = event.currentTarget;
+                      item.classList.remove('unread');
+                      const badge = item.querySelector('.notification-badge');
+                      if (badge) {
+                          badge.remove();
+                      }
+                      // Update badge count
+                      const navBadges = document.querySelectorAll('.notification-badge-count');
+                      navBadges.forEach(badge => {
+                          const currentCount = parseInt(badge.textContent);
+                          if (currentCount > 0) {
+                              const newCount = currentCount - 1;
+                              if (newCount === 0) {
+                                  badge.parentElement.remove();
+                              } else {
+                                  badge.textContent = newCount;
+                              }
+                          }
+                      });
                   }
               });
         }

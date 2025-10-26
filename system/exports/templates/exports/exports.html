@@ -86,7 +86,7 @@
             </thead>
             <tbody>
                 {% for export in page_obj %}
-                <tr>
+                <tr id="export-{{ export.id }}">
                     <td>{{ export.get_type_display }}</td>
                     <td>{{ export.date_submitted|date:"Y-m-d" }}</td>
                     <td>{{ export.submitted_by.get_full_name }}</td>
@@ -278,6 +278,27 @@
         }
         return cookieValue;
     }
+    
+    // Highlight export from notification URL anchor
+    document.addEventListener('DOMContentLoaded', function() {
+        const hash = window.location.hash;
+        if (hash && hash.startsWith('#export-')) {
+            const exportRow = document.querySelector(hash);
+            if (exportRow) {
+                // Scroll to the row
+                exportRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                // Highlight the row temporarily
+                exportRow.style.backgroundColor = '#fff3cd';
+                exportRow.style.transition = 'background-color 0.3s ease';
+                
+                // Remove highlight after 3 seconds
+                setTimeout(() => {
+                    exportRow.style.backgroundColor = '';
+                }, 3000);
+            }
+        }
+    });
 </script>
 
 </body>

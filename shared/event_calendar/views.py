@@ -14,6 +14,10 @@ def calendar_view(request):
     current_user = request.user
     users = User.objects.exclude(role='CLIENT')
     from .models import MeetingEvent
+    
+    # Get date parameter from query string if present
+    initial_date = request.GET.get('date', None)
+    
     # Gather all events, group by date
     events_qs = MeetingEvent.objects.all()
     project_events_qs = ProjectEvent.objects.select_related('project').filter(placeholder=False)
@@ -61,16 +65,20 @@ def calendar_view(request):
         })
     import json
     events_json = json.dumps(events_by_date)
+    
+    context = {
+        'users': users,
+        'events_json': events_json,
+    }
+    
+    # Add initial date to context if present
+    if initial_date:
+        context['initial_date'] = initial_date
+    
     if current_user.role == 'FACULTY' or current_user.role == 'IMPLEMENTER':
-        return render(request, 'event_calendar/calendar.html', {
-            'users': users,
-            'events_json': events_json,
-        })
+        return render(request, 'event_calendar/calendar.html', context)
     elif current_user.role in ['VP', 'DIRECTOR', 'UESO', 'COORDINATOR', 'DEAN', 'PROGRAM_HEAD']:
-        return render(request, 'event_calendar/calendar_admin.html', {
-            'users': users,
-            'events_json': events_json,
-        })  
+        return render(request, 'event_calendar/calendar_admin.html', context)  
 
 
 @role_required(allowed_roles=["DIRECTOR", "VP", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD", "FACULTY", "IMPLEMENTER"], require_confirmed=True)

@@ -200,7 +200,7 @@ class Project(models.Model):
 
 
 # Log creation and update actions for Project
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, m2m_changed
 from django.dispatch import receiver
 from django.urls import reverse
 from system.logs.models import LogEntry
@@ -210,6 +210,20 @@ def log_project_action(sender, instance, created, **kwargs):
 	user = instance.updated_by or instance.created_by or None
 	# project_profile view expects (request, pk) -> provide pk for reverse
 	url = reverse('project_profile', args=[instance.pk])
+
+	# Create better detail messages
+	if created:
+		details = f"A new project has been created"
+	else:
+		status_messages = {
+			'NOT_STARTED': 'Project has not started yet',
+			'IN_PROGRESS': 'Project is currently in progress',
+			'COMPLETED': 'Project has been completed',
+			'ON_HOLD': 'Project is on hold',
+			'CANCELLED': 'Project has been cancelled',
+		}
+		details = status_messages.get(instance.status, f"Project Status: {instance.get_status_display()}")
+
 	# Only log creation if created
 	if created:
 		LogEntry.objects.create(
@@ -217,8 +231,8 @@ def log_project_action(sender, instance, created, **kwargs):
 			action='CREATE',
 			model='Project',
 			object_id=instance.id,
-			object_repr=str(instance),
-			details=f"Status: {instance.status}",
+			object_repr=instance.title,
+			details=details,
 			url=url,
 			is_notification=True
 		)
@@ -229,11 +243,44 @@ def log_project_action(sender, instance, created, **kwargs):
 			action='UPDATE',
 			model='Project',
 			object_id=instance.id,
-			object_repr=str(instance),
-			details=f"Status: {instance.status}",
+			object_repr=instance.title,
+			details=details,
 			url=url,
 			is_notification=True
 		)
+
+
+@receiver(m2m_changed, sender=Project.providers.through)
+def log_project_provider_added(sender, instance, action, pk_set, **kwargs):
+	"""
+	Notify users when they are added as providers to a project
+	"""
+	if action == 'post_add' and pk_set:
+		from system.users.models import User
+		from system.notifications.models import Notification
+		url = reverse('project_profile', args=[instance.pk])
+		actor = instance.updated_by or instance.created_by or None
+		
+		# Create a notification for each newly added provider
+		for user_id in pk_set:
+			try:
+				added_user = User.objects.get(id=user_id)
+				# Don't notify if the actor is the same as the added user
+				if actor and added_user == actor:
+					continue
+				
+				Notification.objects.create(
+					recipient=added_user,
+					actor=actor,
+					action='UPDATE',
+					model='Project',
+					object_id=instance.id,
+					object_repr=str(instance),
+					details=f"You have been added as a provider to this project",
+					url=url,
+				)
+			except User.DoesNotExist:
+				pass
 
 
 #############################################################################################################################################################################################################

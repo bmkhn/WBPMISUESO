@@ -91,7 +91,12 @@ def approve_export_request(request, request_id):
         export_request = ExportRequest.objects.get(id=request_id, status='PENDING')
     except ExportRequest.DoesNotExist:
         return JsonResponse({'error': 'Export request not found or already processed.'}, status=404)
+    
+    # Set who approved it and when
+    from django.utils import timezone
     export_request.status = 'APPROVED'
+    export_request.reviewed_by = request.user
+    export_request.reviewed_at = timezone.now()
     export_request.save()
 
     user = export_request.submitted_by
@@ -200,7 +205,12 @@ def reject_export_request(request, request_id):
         export_request = ExportRequest.objects.get(id=request_id, status='PENDING')
     except ExportRequest.DoesNotExist:
         return JsonResponse({'error': 'Export request not found or already processed.'}, status=404)
+    
+    # Set who rejected it and when
+    from django.utils import timezone
     export_request.status = 'REJECTED'
+    export_request.reviewed_by = request.user
+    export_request.reviewed_at = timezone.now()
     export_request.save()
     return JsonResponse({'message': 'Export request rejected.'})
 

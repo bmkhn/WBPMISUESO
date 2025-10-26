@@ -36,6 +36,8 @@ class Announcement(models.Model):
 @receiver(post_save, sender=Announcement)
 def log_announcement_action(sender, instance, created, **kwargs):
 	from system.logs.models import LogEntry
+	from django.urls import reverse
+	
 	# Skip logging if this is being called from within a signal to avoid duplicates
 	if hasattr(instance, '_skip_log'):
 		return
@@ -45,13 +47,25 @@ def log_announcement_action(sender, instance, created, **kwargs):
 	# Only create notification for published announcements
 	is_notification = bool(instance.published_at)
 	
+	# URL to announcement details
+	url = reverse('announcement_details', args=[instance.id])
+	
+	# Create better detail messages
+	if created and is_notification:
+		details = "A new announcement has been published"
+	elif not created:
+		details = "An announcement has been updated"
+	else:
+		details = "A new announcement draft has been created"
+	
 	LogEntry.objects.create(
 		user=user,
 		action=action,
 		model='Announcement',
 		object_id=instance.id,
-		object_repr=str(instance),
-		details=f"Title: {instance.title}",
+		object_repr=instance.title,
+		details=details,
+		url=url,
 		is_notification=is_notification
 	)
 
