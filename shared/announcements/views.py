@@ -125,7 +125,7 @@ def user_announcement_view(request):
 
 
 # SuperUser Announcement View
-@role_required(allowed_roles=["PROGRAM_HEAD", "DEAN", "COORDINATOR"])
+@role_required(allowed_roles=["PROGRAM_HEAD", "DEAN", "COORDINATOR"], require_confirmed=True)
 def announcement_superuser_view(request):
     search_query = request.GET.get('search', '').strip()
     sort_by = request.GET.get('sort')
@@ -207,7 +207,7 @@ def announcement_superuser_view(request):
 
 
 # Admin Announcement View
-@role_required(allowed_roles=["VP", "DIRECTOR", "UESO"])
+@role_required(allowed_roles=["VP", "DIRECTOR", "UESO"], require_confirmed=True)
 def announcement_admin_view(request):
     search_query = request.GET.get('search', '').strip()
     sort_by = request.GET.get('sort')
@@ -343,7 +343,7 @@ def announcement_admin_view(request):
 
 
 # Add Announcement View
-@role_required(allowed_roles=["VP", "DIRECTOR", "UESO"])
+@role_required(allowed_roles=["VP", "DIRECTOR", "UESO"], require_confirmed=True)
 def add_announcement_view(request):
     if request.method == 'POST':
         form = AnnouncementForm(request.POST, request.FILES)
@@ -369,7 +369,7 @@ def add_announcement_view(request):
 
 
 # Edit Announcement View
-@role_required(allowed_roles=["VP", "DIRECTOR", "UESO"])
+@role_required(allowed_roles=["VP", "DIRECTOR", "UESO"], require_confirmed=True)
 def edit_announcement_view(request, id):
 
     announcement = get_object_or_404(Announcement, id=id)

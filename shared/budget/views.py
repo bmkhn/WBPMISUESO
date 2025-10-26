@@ -20,7 +20,7 @@ def get_templates(request):
 ################################################################################################################################################################
 
 
-@role_required(["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR", "FACULTY", "IMPLEMENTER"])
+@role_required(["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR", "FACULTY", "IMPLEMENTER"], require_confirmed=True)
 def budget_dispatcher(request):
     INTERNAL_ROLES, INTERNAL_WITH_COLLEGE_ROLES, FACULTY_ROLES = get_role_constants()
 
@@ -36,18 +36,21 @@ def budget_dispatcher(request):
 ################################################################################################################################################################
 
 
+@role_required(["FACULTY", "IMPLEMENTER"], require_confirmed=True)
 def budget_faculty_view(request):
     context = {
         "base_template": get_templates(request),
     }
     return render(request, 'budget/faculty_budget.html', context)
 
+@role_required(["VP", "DIRECTOR", "UESO"], require_confirmed=True)
 def budget_internal_view(request):
     context = {
         "base_template": get_templates(request),
     }
     return render(request, 'budget/internal_budget.html', context)
 
+@role_required(["PROGRAM_HEAD", "DEAN", "COORDINATOR"], require_confirmed=True)
 def budget_internal_college_view(request):
     context = {
         "base_template": get_templates(request),

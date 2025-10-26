@@ -8,7 +8,7 @@ from system.users.decorators import role_required
 from shared.projects.models import ProjectEvent, Project
 
 
-@role_required(allowed_roles=["DIRECTOR", "VP", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD", "FACULTY", "IMPLEMENTER"])
+@role_required(allowed_roles=["DIRECTOR", "VP", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD", "FACULTY", "IMPLEMENTER"], require_confirmed=True)
 def calendar_view(request):
     from system.users.models import User
     current_user = request.user
@@ -73,7 +73,7 @@ def calendar_view(request):
         })  
 
 
-@role_required(allowed_roles=["DIRECTOR", "VP", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD", "FACULTY", "IMPLEMENTER"])
+@role_required(allowed_roles=["DIRECTOR", "VP", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD", "FACULTY", "IMPLEMENTER"], require_confirmed=True)
 def add_event(request):
     if request.method == "POST":
         try:
@@ -115,7 +115,7 @@ def add_event(request):
 
 from django.views.decorators.http import require_GET
 
-@role_required(allowed_roles=["DIRECTOR", "VP", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD", "FACULTY", "IMPLEMENTER"])
+@role_required(allowed_roles=["DIRECTOR", "VP", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD", "FACULTY", "IMPLEMENTER"], require_confirmed=True)
 @require_GET
 def events_json(request):
     from .models import MeetingEvent
@@ -190,7 +190,7 @@ def events_json(request):
 
 
 from django.views.decorators.csrf import csrf_exempt
-@role_required(allowed_roles=["DIRECTOR", "VP", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD", "FACULTY", "IMPLEMENTER"])
+@role_required(allowed_roles=["DIRECTOR", "VP", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD", "FACULTY", "IMPLEMENTER"], require_confirmed=True)
 @csrf_exempt
 def edit_event(request):
     if request.method == "POST":
@@ -257,7 +257,7 @@ def edit_event(request):
 
 
 # Delete Event View
-@role_required(allowed_roles=["DIRECTOR", "VP", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD", "FACULTY", "IMPLEMENTER"])
+@role_required(allowed_roles=["DIRECTOR", "VP", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD", "FACULTY", "IMPLEMENTER"], require_confirmed=True)
 @csrf_exempt
 def delete_event(request, event_id):
     if request.method == "POST":

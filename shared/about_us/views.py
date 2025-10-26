@@ -22,19 +22,19 @@ def user_about_us(request):
 	return render(request, 'about_us/user_about_us.html', {'about': about})
 
 
-@role_required(allowed_roles=["PROGRAM_HEAD", "DEAN", "COORDINATOR"])
+@role_required(allowed_roles=["PROGRAM_HEAD", "DEAN", "COORDINATOR"], require_confirmed=True)
 def superuser_about_us(request):
 	about = AboutUs.objects.first()
 	return render(request, 'about_us/superuser_about_us.html', {'about': about})
 
 
-@role_required(allowed_roles=["UESO", "DIRECTOR", "VP"])
+@role_required(allowed_roles=["UESO", "DIRECTOR", "VP"], require_confirmed=True)
 def admin_about_us(request):
 	about = AboutUs.objects.first()
 	return render(request, 'about_us/admin_about_us.html', {'about': about})
 
 
-@role_required(allowed_roles=["UESO", "DIRECTOR", "VP"])
+@role_required(allowed_roles=["UESO", "DIRECTOR", "VP"], require_confirmed=True)
 def edit_about_us(request):
 	about = AboutUs.objects.first()
 

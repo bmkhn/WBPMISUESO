@@ -7,7 +7,7 @@ from django.urls import reverse
 from .models import RequestUpdate
 
 
-@role_required(allowed_roles=["UESO", "VP", "DIRECTOR", "CLIENT"])
+@role_required(allowed_roles=["UESO", "VP", "DIRECTOR", "CLIENT"], require_confirmed=True)
 def request_dispatcher(request):
     if request.user.role == 'CLIENT':
         return request_client_view(request)
@@ -16,7 +16,7 @@ def request_dispatcher(request):
 
 
 
-@role_required(allowed_roles=["UESO", "VP", "DIRECTOR", "CLIENT"])
+@role_required(allowed_roles=["UESO", "VP", "DIRECTOR", "CLIENT"], require_confirmed=True)
 def request_details_dispatcher(request, pk):
     # Only allow the submitter or privileged roles to view
     req = get_object_or_404(ClientRequest, pk=pk)
@@ -61,7 +61,7 @@ def request_details_dispatcher(request, pk):
 
 
 
-@role_required(allowed_roles=["CLIENT"])
+@role_required(allowed_roles=["CLIENT"], require_confirmed=True)
 def request_client_view(request):
     # Get recent status updates for this user's requests
     updates_qs = RequestUpdate.objects.filter(user=request.user).order_by('-updated_at')[:10]
@@ -163,7 +163,7 @@ def request_client_view(request):
 
 
 
-@role_required(allowed_roles=["CLIENT"])
+@role_required(allowed_roles=["CLIENT"], require_confirmed=True)
 def submit_request(request):
     if request.method == 'POST':
         title = request.POST.get('title')
@@ -195,7 +195,7 @@ def submit_request(request):
 
 
 
-@role_required(allowed_roles=["UESO", "VP", "DIRECTOR"])
+@role_required(allowed_roles=["UESO", "VP", "DIRECTOR"], require_confirmed=True)
 def request_admin_view(request):
     from urllib.parse import urlencode
     requests = ClientRequest.objects.all()
@@ -278,7 +278,7 @@ def request_admin_view(request):
 
 # APPROVE/REJECT/ENDORSE
 
-@role_required(allowed_roles=["UESO", "VP", "DIRECTOR"])
+@role_required(allowed_roles=["UESO", "VP", "DIRECTOR"], require_confirmed=True)
 def admin_request_action(request, pk):
     req = get_object_or_404(ClientRequest, pk=pk)
     from django.utils import timezone
@@ -323,7 +323,7 @@ def admin_request_action(request, pk):
 
 
 
-@role_required(allowed_roles=["UESO", "VP", "DIRECTOR"])
+@role_required(allowed_roles=["UESO", "VP", "DIRECTOR"], require_confirmed=True)
 def admin_request_details_entry(request, pk):
     req = get_object_or_404(ClientRequest, pk=pk)
     if req.status == 'RECEIVED':

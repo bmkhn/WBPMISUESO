@@ -2,13 +2,11 @@ from django.shortcuts import render
 from shared.event_calendar.models import MeetingEvent
 from shared.projects.models import Project, ProjectEvent
 from system.users.decorators import role_required
-from system.users.decorators import user_confirmed
 from shared.request.models import ClientRequest
 from system.users.views import User
 from itertools import chain
 
-@user_confirmed
-@role_required(allowed_roles=["VP", "DIRECTOR", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD"])
+@role_required(allowed_roles=["VP", "DIRECTOR", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD"], require_confirmed=True)
 def dashboard_view(request):
     user_role = getattr(request.user, 'role', None)
     vpde_content = user_role in ["VP", "DIRECTOR"]

@@ -326,7 +326,7 @@
         }
         // Step 2 Validation
         if (current === 2) {
-            const requiredFields = ['id_degree', 'id_expertise', 'id_college', 'id_campus', 'id_password', 'id_confirm_password'];
+            const requiredFields = ['id_degree', 'id_expertise', 'id_password', 'id_confirm_password'];
             requiredFields.forEach(function(fieldId) {
                 const field = document.getElementById(fieldId);
                 if (field && !field.value.trim()) {
@@ -366,13 +366,12 @@
                 'id_given_name': 'given_name',
                 'id_middle_initial': 'middle_initial',
                 'id_last_name': 'last_name',
+                'id_suffix': 'suffix',
                 'id_sex': 'sex',
                 'id_email': 'email',
                 'id_contact_no': 'contact_no',
                 'id_degree': 'degree',
                 'id_expertise': 'expertise',
-                'id_college': 'college',
-                'id_campus': 'campus',
                 'id_password': 'password',
                 'id_confirm_password': 'confirm_password'
             };
@@ -412,13 +411,12 @@
                     'id_given_name': 'given_name',
                     'id_middle_initial': 'middle_initial',
                     'id_last_name': 'last_name',
+                    'id_suffix': 'suffix',
                     'id_sex': 'sex',
                     'id_email': 'email',
                     'id_contact_no': 'contact_no',
                     'id_degree': 'degree',
                     'id_expertise': 'expertise',
-                    'id_college': 'college',
-                    'id_campus': 'campus',
                     'id_password': 'password',
                     'id_confirm_password': 'confirm_password'
                 };

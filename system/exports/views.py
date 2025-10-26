@@ -17,7 +17,7 @@ from openpyxl.styles import Alignment
 from io import BytesIO
 
 
-@role_required(allowed_roles=["UESO", "VP", "DIRECTOR"])
+@role_required(allowed_roles=["UESO", "VP", "DIRECTOR"], require_confirmed=True)
 def exports_view(request):
     requests = ExportRequest.objects.all()
 
@@ -85,7 +85,7 @@ def exports_view(request):
 ########################################################################################################################
 
 
-@role_required(allowed_roles=["UESO", "VP", "DIRECTOR"])
+@role_required(allowed_roles=["UESO", "VP", "DIRECTOR"], require_confirmed=True)
 def approve_export_request(request, request_id):
     try:
         export_request = ExportRequest.objects.get(id=request_id, status='PENDING')
@@ -194,6 +194,7 @@ def approve_export_request(request, request_id):
 
 
 @require_POST
+@role_required(allowed_roles=["UESO", "VP", "DIRECTOR"], require_confirmed=True)
 def reject_export_request(request, request_id):
     try:
         export_request = ExportRequest.objects.get(id=request_id, status='PENDING')
@@ -361,7 +362,7 @@ def export_download(request, request_id):
 
 
 @require_GET
-@role_required(allowed_roles=["UESO", "VP", "DIRECTOR"])
+@role_required(allowed_roles=["UESO", "VP", "DIRECTOR"], require_confirmed=True)
 def export_manage_user(request):
     user = request.user
     UserModel = User
@@ -466,6 +467,7 @@ def export_manage_user(request):
 
 
 @require_GET
+@role_required(allowed_roles=["UESO", "VP", "DIRECTOR", "DEAN", "PROGRAM_HEAD", "COORDINATOR"], require_confirmed=True)
 def export_project(request):
     user = request.user
     from django.db.models import Q
@@ -575,7 +577,7 @@ from system.logs.models import LogEntry
 from system.users.models import User
 
 @require_GET
-@role_required(allowed_roles=["VP", "DIRECTOR"])
+@role_required(allowed_roles=["VP", "DIRECTOR"], require_confirmed=True)
 def export_log(request):
     # Get filter parameters (match logs_view)
     sort_by = request.GET.get('sort_by', 'timestamp')

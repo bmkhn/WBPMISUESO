@@ -86,6 +86,7 @@ class User(AbstractUser):
     industry = models.CharField(max_length=255, blank=True, null=True)
     is_expert = models.BooleanField(default=False)
     profile_picture = models.ImageField(upload_to='users/profile_pictures/', blank=True, null=True)
+    bio = models.TextField(blank=True, null=True)
     @property
     def profile_picture_or_initial(self):
         """

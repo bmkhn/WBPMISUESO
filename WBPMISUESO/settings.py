@@ -123,6 +123,11 @@ DATABASES = {
     }
 }
 
+# Custom authentication backend to allow email login
+AUTHENTICATION_BACKENDS = [
+    'system.users.backends.EmailBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
