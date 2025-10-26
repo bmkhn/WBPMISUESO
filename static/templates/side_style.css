@@ -156,7 +156,7 @@ body {
 .topbar {
     position: fixed;
     top: 0;
-    left: 270px; 
+    left: 260px; 
     right: 0;
     height: 4rem;
     background-color: #F7F3F1;
@@ -168,7 +168,7 @@ body {
     box-sizing: border-box;
     gap: 1.35rem;
     transition: left 0.2s ease;
-    z-index: 10;
+    z-index: 10;  
 }
 
 .topbar-button {
