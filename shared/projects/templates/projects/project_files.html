@@ -1,115 +1,17 @@
 {% extends "projects/base_project_profile.html" %}
 {% block profile_content %}
+{% load static %} 
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
+<link href="{% static 'shared/projects/view.css' %}" rel="stylesheet">
 
-<style>
-    .name-link {
-        color: #0A6C44;
-        text-decoration: none;
-    }
-
-    .name-link:hover {
-        color: #095c2d;
-        text-decoration: underline;
-    }
-    
-    .file-list {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 2rem;
-    }
-
-    .file-card {
-        background: #fff;
-        border-radius: 0.75rem;
-        padding: 1rem;
-        box-shadow: 0 0 0 1px #e5e7eb;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center
-    }
-
-    .file-card img {
-        max-width: 100%;
-        max-height: 8rem;
-        border-radius: 0.5rem;
-        border: 1px solid #ccc;
-        object-fit: cover;
-    }
-
-    .file-card h4 {
-        margin-top: 0.3rem;
-        font-weight: 500;
-        font-size: 1.1rem;
-        text-align: center;
-        word-break: break-all;
-    }
-
-    .file-card p {
-        margin-top: 0.5rem;
-        font-size: 0.95rem;
-        color: #666;
-        text-align: center;
-    }
-</style>
-
-
-<!-- Pagination Styles -->
-<style>
-	.pagination-container {
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		gap: 0.5rem;
-	}
-
-	.pagination-button {
-		padding: 0.75rem 1rem;
-		border: 1px solid #E5E7EB;
-		background: white;
-		color: #4B5563;
-		border-radius: 8px;
-		cursor: pointer;
-		transition: all 0.2s ease;
-		font-weight: 500;
-		text-decoration: none;
-	}
-
-	.pagination-button:hover {
-		background: #F3F4F6;
-		border-color: #0A6C44;
-		color: #0A6C44;
-	}
-
-	.pagination-button.active {
-		background: #0A6C44;
-		color: white;
-		border-color: #0A6C44;
-	}
-
-	.pagination-button:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
-	}
-
-	.page-info {
-		margin: 0 1rem;
-		color: #4B5563;
-		font-weight: 500;
-	}
-</style>
-
-
-<div class="card-header">
-    <h3>Files</h3>
-</div>
 <!-- Search Bar & Filter (2x2 Grid) -->
 <div class="search-container">
     <form class="search-bar" method="get" action="">
-        <svg width="20" height="20"> <use href="#icon-search"></use> </svg>
+        <svg width="16" height="16"> <use href="#icon-search"></use> </svg>
         <input type="text" name="search" placeholder="Search File Name" value="{{ request.GET.search|default:'' }}"/>
         <button type="button" id="filterBtn" style="background:none;border:none;padding:0;margin-right:5px;cursor:pointer;">
-            <svg width="20" height="20"> <use href="#icon-filter"></use> </svg>
+            <svg width="16" height="16"> <use href="#icon-filter"></use> </svg>
         </button>
         <div id="filterDropdown" class="filter-dropdown">
             <div class="filter-grid" style="grid-template-columns: repeat(3, 1fr); grid-template-rows: auto; grid-gap: 24px;">
@@ -146,6 +48,11 @@
         </div>
     </form>
 </div>
+
+<div class="card-header">
+    <h3>Files</h3>
+</div>
+
 <div style="margin-top:2rem;">
     <div class="file-list">
         {% for file in files %}
@@ -197,8 +104,6 @@
         <button class="pagination-button" disabled>Next</button>
         <button class="pagination-button" disabled>Last</button>
     {% endif %}
-
-    <span class="page-info">Page {{ page_obj.number }} of {{ paginator.num_pages }}</span>
 </div>
 
 {% endblock %}

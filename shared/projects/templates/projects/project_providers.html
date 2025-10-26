@@ -1,110 +1,14 @@
 {% extends "projects/base_project_profile.html" %}
 {% block profile_content %}
-<style>
-    .providers {
-        display: flex;
-        flex-wrap: wrap; 
-        justify-content: center; 
-        gap: 1rem; 
-    }
-
-    .providers > * {
-        box-sizing: border-box;
-    }
-
-    .tiles {
-        border: 0.08rem solid #a9a9a9;
-        border-radius: 15px;
-        width: 18rem;
-        height: 22.5rem;
-        padding: 1rem;
-    }
-
-    .providers > div h5 {
-        margin: 0;
-        font-weight: 600;
-    }
-    
-    .providers > div h3 {
-        font-weight: 500;
-        margin: 0.25rem 0;
-    }
-
-    .prov-seg-sec {
-        display: flex;
-        justify-content: space-between;
-    }
-
-    .prov-seg-sec img {
-        width: 5rem;
-        height: 100%;
-        border-radius: 50%;
-        object-fit: cover;
-        margin-bottom: -3rem;
-    }
-
-    .prof {
-        width: 10rem;
-        height: 100%;
-        border-radius: 50%;
-        object-fit: cover;
-        margin: 1rem 1rem 1rem 1rem;
-    }
-
-    .blank {
-        opacity: 0;
-    }
-</style>
-
-<!-- Pagination Styles -->
-<style>
-	.pagination-container {
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		gap: 0.5rem;
-	}
-
-	.pagination-button {
-		padding: 0.75rem 1rem;
-		border: 1px solid #E5E7EB;
-		background: white;
-		color: #4B5563;
-		border-radius: 8px;
-		cursor: pointer;
-		transition: all 0.2s ease;
-		font-weight: 500;
-		text-decoration: none;
-	}
-
-	.pagination-button:hover {
-		background: #F3F4F6;
-		border-color: #0A6C44;
-		color: #0A6C44;
-	}
-
-	.pagination-button.active {
-		background: #0A6C44;
-		color: white;
-		border-color: #0A6C44;
-	}
-
-	.pagination-button:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
-	}
-
-	.page-info {
-		margin: 0 1rem;
-		color: #4B5563;
-		font-weight: 500;
-	}
-</style>
+{% load static %} 
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
+<link href="{% static 'shared/projects/view.css' %}" rel="stylesheet">
 
 <div class="card-header">
     <h3>Providers</h3>
     {% if request.user.role in ADMIN_ROLES %}
-    <button class="admin-button" id="show-provider-dropdown">Add Provider</button>
+    <button class="admin-button save" id="show-provider-dropdown">Add Provider</button>
     <div id="provider-dropdown" style="display:none; position:absolute; z-index:2; margin-top:5px; margin-left:-30px; min-width:220px; background:#fff; border:1px solid #ccc; border-radius:4px; box-shadow:0 2px 8px rgba(0,0,0,0.1); max-height:220px; overflow-y:auto;">
         <ul style="list-style:none; margin:0; padding:0;">
             {% for provider in provider_candidates %}
@@ -164,9 +68,9 @@
             {% else %}
                 <button class="campus">{{ provider.get_campus_display }}</button>
                 {% if provider.college and provider.college.logo %}
-                    <img src="{{ provider.college.logo.url }}" alt="college logo" style="width: 3.5rem; height: 100%;">
+                    <img src="{{ provider.college.logo.url }}" alt="college logo">
                 {% else %}
-                    <img src="/media/colleges/logos/Default.png" alt="college logo" style="width: 3.5rem; height: 100%;">
+                    <img src="/media/colleges/logos/Default.png" alt="college logo">
                 {% endif %}
             {% endif %}
         </section>
@@ -208,8 +112,6 @@
         <button class="pagination-button" disabled>Next</button>
         <button class="pagination-button" disabled>Last</button>
     {% endif %}
-
-    <span class="page-info">Page {{ page_obj.number }} of {{ paginator.num_pages }}</span>
 </div>
 
 {% endblock %}
