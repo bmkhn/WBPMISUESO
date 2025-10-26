@@ -222,6 +222,26 @@ select.user-details-value {
     background-color: #444;
     color: #fff;
     transform: translateY(-1px);
+} 
+ 
+.edit {
+    font-family: 'Inter', sans-serif;
+    background-color: #ff9900;
+    color: #F5F5F5;
+    font-size: 1rem;
+    font-weight: 500;
+    padding: 0.8rem 1.8rem;
+    border-radius: 2rem;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    text-decoration: none;
+}
+
+.edit:hover {
+    background-color: #444;
+    color: #fff;
+    transform: translateY(-1px);
 }
 
 span.required {
