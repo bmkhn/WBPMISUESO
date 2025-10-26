@@ -1,423 +1,529 @@
 {% extends "base_internal.html" %}
+{% load static %}
+
 {% block content %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #e9e9e9;
+        }
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<title>Expert Profile</title>
+        main {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: stretch;
+            gap: 3rem;
+        }
 
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+        header {
+            background-color: #245F3E;
+            position: relative;
+            top: 0;
+            width: 100%;
+            padding: 0;
+            height: 4rem;
+        }
 
-<style>
-	body {
-		background-color: #F9F9F9;
-		font-family: 'Inter', sans-serif;
-		margin: 0;
-		padding: 0;
-	}
+        footer {
+            background-color: #245F3E;
+            position: relative;
+            bottom: 0;
+            width: 100%;
+            height: 20rem;
+        }
 
-	.main-container {
-		margin: 75px;
-		display: flex;
-		flex-direction: column;
-		gap: 30px;
-	}
+        main > section {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: flex-start;
+            width: 100%;
+            flex-wrap: wrap;
+            background-color: #fbfbfb;
+            box-shadow: 0 6px 0.5rem rgba(0, 0, 0, 0.2);
+        }
 
-	/* Content Area */
-	.content-area {
-		padding: 30px;
-		overflow-y: auto;
-	}
+        section > div {
+            margin: 3rem;
+            height: 100%;
+            display: block;
+            max-width: none;
+        }
 
-	/* Profile Header */
-	.profile-header {
-		background-color: white;
-		border-radius: 12px;
-		padding: 30px;
-		margin-bottom: 30px;
-		box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-	}
+        .propic img {
+            width: 15rem;
+            height: 15rem;
+            object-fit: cover;
+            border-radius: 50%;
+            box-shadow: 0 2px 1rem rgba(0, 0, 0, 0.2);
+        }
 
-	.profile-main {
-		display: flex;
-		align-items: flex-start;
-		gap: 40px;
-	}
+        section > div > h1 {
+            font-size: 4rem;
+            font-weight: 400;
+            margin-bottom: 1rem;
+        }
 
-	.profile-left {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 20px;
-		flex-shrink: 0;
-	}
+        section > div > h5 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 0.35rem;
+        }
 
-	.profile-image {
-		width: 160px;
-		height: 160px;
-		border-radius: 50%;
-		background-color: #e9ecef;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		overflow: hidden;
-		border: 3px solid #f8f9fa;
-		box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-	}
+        section > div > p {
+            font-size: 1rem;
+            font-weight: 400;
+            margin: 0 0 1rem 0;
+            line-height: 1.25;
+        }
 
-	.profile-image img {
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
-		border-radius: 50%;
-	}
+        .personal-info {
+            display: block;
+            flex-basis: 20rem;
+            flex-grow: 1;
+            margin: 3rem 1rem;
+        }
 
-	.profile-middle {
-		display: flex;
-		flex-direction: column;
-		gap: 20px;
-		flex: 1;
-	}
+        .personal-info h2 {
+            font-size: 2rem;
+            font-weight: 300;
+        }
 
-	.profile-name {
-		font-size: 32px;
-		font-weight: 700;
-		color: #333;
-		margin: 0;
-		text-align: left;
-		line-height: 1.2;
-	}
+        .personal-info h4 {
+            font-size: 1rem;
+            font-weight: 400;
+            margin-top: -1rem;
+            margin-bottom: 1rem;
+        }
 
-	.profile-location {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		color: #333;
-		font-size: 16px;
-		text-align: left;
-	}
+        .personal-info img {
+            border-radius: 50%;
+            max-height: 5rem;
+        }
 
-	.location-icon {
-		color: #dc3545;
-		font-size: 18px;
-	}
+        .expertise {
+            margin: 3rem 1rem;
+            flex-basis: 17rem;
+            flex-grow: 1;
+        }
 
-	.university-logo {
-		width: 70px;
-		height: 70px;
-		border-radius: 50%;
-		background-color: #f8f9fa;
-		border: 3px solid #dc3545;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		overflow: hidden;
-		box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-	}
+        .contact {
+            margin: 3rem 1rem;
+            flex-basis: 17rem;
+            flex-grow: 1;
+        }
 
-	.university-logo img {
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
-		border-radius: 50%;
-	}
+        .bio {
+            background-color: whitesmoke;
+            flex-basis: 20rem;
+            flex-grow: 1;
+            padding: 0.5rem 2.5rem;
+            margin: 1rem 0.75rem;
+        }
 
-	.profile-info {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
-		gap: 30px;
-		padding-top: 0;
-	}
+        .lower {
+            background-color: #e9e9e9;
+        }
 
-	.expertise-section {
-		display: flex;
-		flex-direction: column;
-		gap: 20px;
-	}
+        .lower-header {
+            border-bottom: 1px solid #ccc;
+            margin: 0 -2.5rem 0 -2.5rem;
+            padding: 0 2.5rem;
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+        }
 
-	.expertise-item {
-		display: flex;
-		flex-direction: column;
-		gap: 8px;
-	}
+        .lower-header h1 {
+            font-size: 1.5rem;
+            font-weight: 500;
+        }
 
-	.expertise-label {
-		font-weight: 700;
-		color: #333;
-		font-size: 16px;
-		margin-bottom: 5px;
-	}
+        .project {
+            background-color: whitesmoke;
+            flex-basis: 35rem;
+            flex-grow: 2;
+            padding: 0.5rem 2.5rem;
+            margin: 1rem 0.75rem;
+        }
 
-	.expertise-value {
-		color: #666;
-		font-size: 15px;
-		line-height: 1.4;
-	}
+        .dropdown {
+            position: relative;
+            width: 9.5rem;
+        }
 
-	/* Content Cards */
-	.content-cards {
-		display: grid;
-		grid-template-columns: 30% 67.5%;
-		gap: 30px;
-	}
+        .dropdown-btn {
+            margin: 0.75rem;
+            border: 0.08rem solid whitesmoke;
+            width: 100%;
+            padding: 0.5rem;
+            border-radius: 0.75rem;
+            background: none;
+            text-align: center;
+            cursor: pointer;
+            font-family: Helvetica, Arial, sans-serif;
+            font-weight: 400;
+            font-size: 1rem;
+        }
 
-	.content-card {
-		background-color: white;
-		border-radius: 12px;
-		padding: 25px;
-		box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-	}
+        .dropdown-btn:hover {
+            border: 0.08rem solid #000000;
+        }
 
-	.card-header {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		margin-bottom: 20px;
-	}
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            margin: 0;
+            right: 0;
+            width: 100%;
+            background: white;
+            border: 0.08rem solid #ccc;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+            overflow: hidden;
+        }
 
-	.card-title {
-		font-size: 20px;
-		font-weight: 600;
-		color: #333;
-	}
+        .dropdown-item {
+            padding: 0.75rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-family: Helvetica, Arial, sans-serif;
+            font-weight: 400;
+            text-align: center;
+            border-bottom: 1px solid rgb(196, 196, 196);
+        }
 
-	.sort-controls {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		color: #666;
-		font-size: 14px;
-	}
+        .dropdown-item:hover {
+            background-color: #000000;
+            color: white;
+        }
 
-	.sort-icon {
-		width: 16px;
-		height: 16px;
-		cursor: pointer;
-	}
+        .hidden {
+            display: none;
+        }
 
-	.sort-dropdown {
-		display: flex;
-		align-items: center;
-		gap: 4px;
-		cursor: pointer;
-	}
+        .sort-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            color: #333;
+            margin-left: 0.5rem;
+        }
 
-	/* Bio Content */
-	.bio-content {
-		color: #666;
-		line-height: 1.6;
-		font-size: 14px;
-	}
+        .project-card {
+            display: grid;
+            grid-template-rows: 1fr 1fr;
+            gap: 0;
+            margin: -0.5rem -2.5rem;
+        }
 
-	/* Projects List */
-	.projects-list {
-		display: flex;
-		flex-direction: column;
-		gap: 20px;
-	}
+        .project-card > div {
+            border-bottom: 1px rgb(122, 122, 122) solid;
+            padding: 1rem 3rem;
+            margin-bottom: 0;
+        }
 
-	.project-item {
-		padding-bottom: 20px;
-		border-bottom: 1px solid #e9ecef;
-	}
+        .project-card h5 {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 0.5rem;
+            font-weight: 300;
+        }
 
-	.project-item:last-child {
-		border-bottom: none;
-		padding-bottom: 0;
-	}
+        .title {
+            font-size: 1.5rem;
+            font-weight: 500;
+            margin: 0.25rem 0 1rem 0;
+            color: #222;
+            text-decoration: none;
+        }
 
-	.project-date {
-		font-size: 12px;
-		color: #999;
-		margin-bottom: 8px;
-	}
+        .title:hover {
+            color: #007bff;
+            text-decoration: none;
+        }
 
-	.project-title {
-		font-size: 16px;
-		font-weight: 600;
-		color: #333;
-		margin-bottom: 12px;
-	}
+        .project-authors {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
 
-	.project-tags {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 8px;
-		margin-bottom: 15px;
-	}
+        .project-authors content {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 0.75rem;
+        }
 
-	.project-tag {
-		padding: 4px 12px;
-		border-radius: 20px;
-		font-size: 12px;
-		font-weight: 500;
-	}
+        .project-authors img {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 0.08rem solid #ccc;
+        }
 
-	.tag-orange {
-		background-color: #ffc107;
-		color: white;
-	}
+        .project-authors a {
+            font-size: 0.9rem;
+            color: #000000;
+            text-decoration: none;
+        }
 
-	.tag-green {
-		background-color: #d4edda;
-		color: #155724;
-	}
+        .project-authors a:hover {
+            color: #007bff;
+        }
 
-	.tag-completed {
-		background-color: #28a745;
-		color: white;
-	}
+        .view {
+            display: inline-block;
+            margin-top: 0.75rem;
+            font-size: 0.9rem;
+            color: #007bff;
+            text-decoration: none;
+        }
 
-	.tag-ongoing {
-		background-color: #fd7e14;
-		color: white;
-	}
+        .view:hover {
+            text-decoration: underline;
+        }
 
-	.project-contributors {
-		display: flex;
-		align-items: center;
-		gap: 10px;
-		margin-bottom: 10px;
-	}
+        .project-tags {
+            margin: 1rem 0;
+        }
 
-	.contributor-avatar {
-		width: 32px;
-		height: 32px;
-		border-radius: 50%;
-		background-color: #e9ecef;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-size: 12px;
-		color: #6c757d;
-		font-weight: 600;
-	}
+        .campus {
+            background-color: #ff9f10;
+            color: rgb(55, 39, 0);
+            border: 0.08rem solid #ff9f10;
+            font-weight: 600;
+            padding: 0.35rem 0.6rem;
+            margin-right: 0.5rem;
+            cursor: pointer;
+        }
 
-	.contributor-name {
-		font-size: 12px;
-		color: #666;
-	}
+        .agenda {
+            background: linear-gradient(90deg, white, #00ff6e3d);
+            color: #313131;
+            border: 0.08rem solid #313131;
+            font-weight: 500;
+            padding: 0.35rem 0.6rem;
+            margin-right: 0.5rem;
+            cursor: pointer;
+        }
 
-	.project-action {
-		color: #007bff;
-		text-decoration: none;
-		font-size: 14px;
-		font-weight: 500;
-	}
+        .status {
+            background-color: whitesmoke;
+            color: #1CB889;
+            border: 0.08rem solid #1CB889;
+            font-weight: 500;
+            padding: 0.35rem 0.6rem;
+            margin-right: 0.5rem;
+            cursor: pointer;
+        }
 
-	.project-action:hover {
-		text-decoration: underline;
-	}
-</style>
+        @media (max-width: 600px) {
+            .personal-info, .expertise, .contact, .bio, .project {
+                flex-basis: 100%;
+                margin-left: 0.5rem;
+                margin-right: 0.5rem;
+            }
+            section:first-child {
+                justify-content: center;
+            }
+        }
+    </style>
+    <main> 
+        <section>
+            <div class="propic">
+                {% if expert.profile_picture %}
+                <img src="{{ expert.profile_picture.url }}" class="propic" alt="{{ expert.get_full_name|default:'Profile Picture' }}">
+                {% else %}
+                <img src="{% static 'users/default_profile.png' %}" class="propic" alt="profile picture placeholder">
+                {% endif %}
+            </div>
+            <div class="personal-info">
+                <h2>{{ expert.get_full_name|default:"Expert Name N/A" }}</h2>
+                <h4><i class="fas fa-map-marker-alt" style="color:red; margin-right:0.5rem;"></i> {{ expert.get_campus_display|default:"Campus N/A" }}</h4>
+                {% if expert.college and expert.college.logo %}
+                <img src="{{ expert.college.logo.url }}" alt="{{ expert.college.name }} logo">
+                {% else %}
+                <img src="{% static 'college/psu.png' %}" alt="college placeholder">
+                {% endif %}
+            </div>
+            <div class="expertise">
+                <h5>Field of Expertise:</h5>
+                <p>{{ expert.expertise|default:"Not specified" }}</p>
+                <h5>Highest Education:</h5>
+                <p>{{ expert.degree|default:"No Degree Listed" }}</p>
+            </div>
+            <div class="contact">
+                <h5>Email:</h5>
+                <p>{{ expert.email|default:"Not available" }}</p>
+                {% if expert.contact_no %}
+                <h5>Contact Number:</h5>
+                <p>{{ expert.contact_no }}</p>
+                {% endif %}
+            </div>
+        </section>
+        <section class="lower">
+            <div class="bio">
+                <div class="lower-header">
+                    <h1>Bio</h1>
+                </div>
+                <p style="margin-top: 1rem;">{{ expert.bio|default:"No biographical information available for this expert." }}</p>
+            </div>
+            <div class="project">
+                <div class="lower-header"> 
+                    <div>
+                        <h1>Projects ({{ expert.led_projects.count|add:expert.member_projects.count }})</h1>
+                    </div>
+                    <div style="display: flex; flex-shrink: 3;">
+                        <button class="sort-btn">
+                            <i class="fas fa-arrow-up"></i>
+                        </button>
+                        <div class="dropdown">
+                            <button class="dropdown-btn">Sort by ▾</button>
+                            <div class="dropdown-menu hidden">
+                                <div class="dropdown-item">Name</div>
+                                <div class="dropdown-item">Date Completed</div>
+                                <div class="dropdown-item">Last Updated</div>
+                                <div class="dropdown-item">Q4</div>
+                            </div>
+                        </div> 
+                    </div>
+                </div>
+                <div class="project-card"> 
+                    
+                    {# Loop 1: Projects where the expert is the Leader #}
+                    {% for project in expert.led_projects.all %}
+                    <div>
+                        <h5>{{ project.start_date|date:"F Y" }} (Leader)</h5>
+                        {# CORRECTED: Using pk=project.id for NoReverseMatch fix #}
+                        <a href="{% url 'project_profile' pk=project.id %}" class="title">{{ project.title|default:"Project Title N/A" }}</a>
+                        
+                        <section class="project-tags">
+                            <button class="campus">{{ project.primary_location|default:"Location N/A" }}</button>
+                            <button class="agenda">{{ project.agenda.name|default:"Agenda N/A" }}</button>
+                            <button class="status">{{ project.get_status_display|default:"Status N/A" }}</button>
+                        </section>
+                        
+                        <section class="project-authors"> 
+                            {# Project Leader #}
+                            {% with leader=project.project_leader %}
+                                <content>
+                                    <img src="{% if leader.profile_picture %}{{ leader.profile_picture.url }}{% else %}{% static 'users/default_profile.png' %}{% endif %}" alt="{{ leader.get_full_name }}">
+                                    <a href="{% url 'expert_profile' user_id=leader.id %}">{{ leader.get_full_name|default:'Leader N/A' }}</a> 
+                                </content>
+                            {% endwith %}
+                            {# Other Providers #}
+                            {% for provider in project.providers.all|slice:":2" %}
+                                <content>
+                                    <img src="{% if provider.profile_picture %}{{ provider.profile_picture.url }}{% else %}{% static 'users/default_profile.png' %}{% endif %}" alt="{{ provider.get_full_name }}">
+                                    <a href="{% url 'expert_profile' user_id=provider.id %}">{{ provider.get_full_name|default:'Provider N/A' }}</a> 
+                                </content>
+                            {% endfor %}
+                            {% if project.providers.count > 2 %}
+                                <p>...and {{ project.providers.count|add:-2 }} others</p>
+                            {% endif %}
+                        </section>
 
-</head>
-<body>
-	<!-- Main Content -->
-	<div class="main-content">
-		<!-- Content Area -->
-		<div class="content-area">
-			<!-- Profile Header -->
-			<div class="profile-header">
-				<div class="profile-main">
-					<div class="profile-left">
-						<div class="profile-image">
-							<img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face" alt="Yve G. Renaldo">
-						</div>
-					</div>
-					<div class="profile-middle">
-						<h1 class="profile-name">Yve G. Renaldo</h1>
-						<div class="profile-location">
-							<span class="location-icon">📍</span>
-							<span>PSU - Tiniguiban Campus</span>
-						</div>
-						<div class="university-logo">
-							{% load static %}
-							<img src="{% static 'college_logos/collegeofartshumanities.jpg' %}" alt="College Logo">
-						</div>
-					</div>
-					<div class="profile-info">
-						<div class="expertise-section">
-							<div class="expertise-item">
-								<span class="expertise-label">Field of Expertise:</span>
-								<span class="expertise-value">Educational Leadership and Management</span>
-							</div>
-							<div class="expertise-item">
-								<span class="expertise-label">Doctor of Philosophy in Education</span>
-								<span class="expertise-value">University of the Philippines, Diliman</span>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
+                        {# CORRECTED: Using pk=project.id for NoReverseMatch fix #}
+                        <a href="{% url 'project_profile' pk=project.id %}" class="view">View Project Details</a> 
+                    </div> 
+                    {% endfor %}
 
-			<!-- Content Cards -->
-			<div class="content-cards">
-				<!-- Bio Card -->
-				<div class="content-card">
-					<div class="card-header">
-						<h2 class="card-title">Bio</h2>
-					</div>
-					<div class="bio-content">
-						Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum consequat nisl a tellus at hendrerit. In dapibus magna id faucibus lobortis. Morbi non libero in libero egestas laoreet. Ut commodo lacus turpis, non consectetur urna sit amet. Morbi consequat nisl a aliquet interdum. Aliquam erat volutpat. Cras ultrices ligula lorem, sit amet euismod lectus placerat eu. Pellentesque venenatis nunc vitae imperdiet ultrices.
-					</div>
-				</div>
+                    {# Loop 2: Projects where the expert is a Provider, EXCLUDING projects where they are the leader #}
+                    {% for project in expert.member_projects.all %}
+                        {% if project.project_leader != expert %}
+                        <div>
+                            <h5>{{ project.start_date|date:"F Y" }} (Provider)</h5>
+                            {# CORRECTED: Using pk=project.id for NoReverseMatch fix #}
+                            <a href="{% url 'project_profile' pk=project.id %}" class="title">{{ project.title|default:"Project Title N/A" }}</a>
+                            
+                            <section class="project-tags">
+                                <button class="campus">{{ project.primary_location|default:"Location N/A" }}</button>
+                                <button class="agenda">{{ project.agenda.name|default:"Agenda N/A" }}</button>
+                                <button class="status">{{ project.get_status_display|default:"Status N/A" }}</button>
+                            </section>
+                            
+                            <section class="project-authors"> 
+                                {# Project Leader #}
+                                {% with leader=project.project_leader %}
+                                    <content>
+                                        <img src="{% if leader.profile_picture %}{{ leader.profile_picture.url }}{% else %}{% static 'users/default_profile.png' %}{% endif %}" alt="{{ leader.get_full_name }}">
+                                        <a href="{% url 'expert_profile' user_id=leader.id %}">{{ leader.get_full_name|default:'Leader N/A' }}</a> 
+                                    </content>
+                                {% endwith %}
 
-				<!-- Projects Card -->
-				<div class="content-card">
-					<div class="card-header">
-						<h2 class="card-title">Projects</h2>
-						<div class="sort-controls">
-							<span class="sort-icon">☰</span>
-							<div class="sort-dropdown">
-								<span>Sort By</span>
-								<span>▼</span>
-							</div>
-						</div>
-					</div>
-					<div class="projects-list">
+                                {# Other Providers (excluding the leader) #}
+                                {% for provider in project.providers.all %}
+                                    {% if provider != expert and provider != project.project_leader %}
+                                        <content>
+                                            <img src="{% if provider.profile_picture %}{{ provider.profile_picture.url }}{% else %}{% static 'users/default_profile.png' %}{% endif %}" alt="{{ provider.get_full_name }}">
+                                            <a href="{% url 'expert_profile' user_id=provider.id %}">{{ provider.get_full_name|default:'Provider N/A' }}</a> 
+                                        </content>
+                                    {% endif %}
+                                {% endfor %}
+                            </section>
 
-						<!-- January 2024 Project -->
-						<div class="project-item">
-							<div class="project-date">January 2024</div>
-							<h3 class="project-title">Pre-Release Psychological Intervention Program for PDL's</h3>
-							<div class="project-tags">
-								<span class="project-tag tag-orange">PSU - Tiniguiban</span>
-								<span class="project-tag tag-green">Promotive and Preventive Health and Nutrition and Gender Sensitivity</span>
-								<span class="project-tag tag-completed">Completed</span>
-							</div>
-							<div class="project-contributors">
-								<div class="contributor-avatar">YR</div>
-								<span class="contributor-name">Yve G. Renaldo</span>
-								<div class="contributor-avatar">ET</div>
-								<span class="contributor-name">Estes U. Talledo</span>
-							</div>
-							<a href="#" class="project-action">View</a>
-						</div>
-
-						<!-- December 2023 Project -->
-						<div class="project-item">
-							<div class="project-date">December 2023</div>
-							<h3 class="project-title">Placeholder -Sample Extension Project</h3>
-							<div class="project-tags">
-								<span class="project-tag tag-orange">PSU - Tiniguiban</span>
-								<span class="project-tag tag-green">Promotive and Preventive Health and Nutrition and Gender Sensitivity</span>
-								<span class="project-tag tag-ongoing">Ongoing</span>
-							</div>
-							<div class="project-contributors">
-								<div class="contributor-avatar">YR</div>
-								<span class="contributor-name">Yve G. Renaldo</span>
-							</div>
-							<a href="#" class="project-action">View</a>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-
-</body>
-</html>
-
-{% endblock %}
+                            {# CORRECTED: Using pk=project.id for NoReverseMatch fix #}
+                            <a href="{% url 'project_profile' pk=project.id %}" class="view">View Project Details</a> 
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {# Display no projects message if both loops combined yielded no results #}
+                    {% if not expert.led_projects.all and not expert.member_projects.all %}
+                        <div>
+                            <p style="padding: 1rem 0; text-align: center; color: #666;">This expert is not currently listed as a leader or provider on any projects.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+    </main>
+    <footer>
+        <p>test</p>
+    </footer> 
+    <script> 
+        // Select all dropdown buttons
+        document.querySelectorAll('.dropdown-btn').forEach(btn => {
+            btn.addEventListener('click', e => {
+                e.stopPropagation(); // stop document click
+                const menu = btn.nextElementSibling;
+                // Close other open menus
+                document.querySelectorAll('.dropdown-menu').forEach(m => {
+                    if (m !== menu) m.classList.add('hidden');
+                });
+                menu.classList.toggle('hidden');
+            });
+        });
+        // Dropdown item click
+        document.querySelectorAll('.dropdown-item').forEach(item => {
+            item.addEventListener('click', e => {
+                e.stopPropagation();
+                const menu = item.parentElement;
+                const btn = menu.previousElementSibling;
+                btn.textContent = e.target.textContent;
+                menu.classList.add('hidden');
+            });
+        });
+        // Click outside closes all menus
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                menu.classList.add('hidden');
+            });
+        });     
+    </script>
+{% endblock content %}

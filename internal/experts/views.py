@@ -1,11 +1,11 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404 # Added get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from system.users.decorators import role_required, user_confirmed
 from system.users.models import College, User
 from .ai_team_generator import get_team_generator
 import json
-
+from django.db.models import Count # NEW: Needed for project count calculation
 
 @user_confirmed
 @role_required(allowed_roles=["VP", "DIRECTOR", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD"])
@@ -17,11 +17,15 @@ def experts_view(request):
     colleges = College.objects.all()
     
     # Get all expert users
-    experts = User.objects.filter(is_expert=True, is_confirmed=True).select_related('college').order_by('last_name', 'first_name')
+    # FIX: Annotate the queryset to calculate total projects (led + member projects)
+    experts = User.objects.filter(is_expert=True, is_confirmed=True).select_related('college').annotate(
+        # Assuming Project model has 'led_projects' and 'member_projects' related names back to User
+        total_projects=Count('led_projects', distinct=True) + Count('member_projects', distinct=True)
+    ).order_by('last_name', 'first_name')
     
     # Pagination
     page_number = request.GET.get('page', 1)
-    paginator = Paginator(experts, 6)  # 6 items per page for grid view (3x2)
+    paginator = Paginator(experts, 12)  # FIX: Changed from 6 to 12 experts per page (4x3)
     page_obj = paginator.get_page(page_number)
     
     # Calculate page range for pagination UI
@@ -48,8 +52,17 @@ def experts_view(request):
 
 @user_confirmed
 @role_required(allowed_roles=["VP", "DIRECTOR", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD"])
-def expert_profile_view(request):
-    return render(request, 'experts/experts_profile.html')  # Add Expert Context Later
+# FIX: Added user_id parameter to make the profile dynamic
+def expert_profile_view(request, user_id): 
+    from django.shortcuts import get_object_or_404
+    # Fetch the expert by ID (returns 404 if not found or not confirmed/expert)
+    expert = get_object_or_404(
+        User.objects.select_related('college'), 
+        id=user_id, 
+        is_expert=True, 
+        is_confirmed=True
+    )
+    return render(request, 'experts/experts_profile.html', {'expert': expert})
 
 
 @user_confirmed
