@@ -570,11 +570,85 @@ def export_project(request):
         return JsonResponse({'error': 'You do not have permission to export.'}, status=403)
 
 
-@require_GET
-def export_log(request):
-    # Later
-    return 0
 
+from system.logs.models import LogEntry
+from system.users.models import User
+
+@require_GET
+@role_required(allowed_roles=["VP", "DIRECTOR"])
+def export_log(request):
+    # Get filter parameters (match logs_view)
+    sort_by = request.GET.get('sort_by', 'timestamp')
+    order = request.GET.get('order', 'desc')
+    user_role = request.GET.get('user_role', '')
+    action = request.GET.get('action', '')
+    model = request.GET.get('model', '')
+    search = request.GET.get('search', '').strip()
+
+    logs = LogEntry.objects.select_related('user')
+    if user_role:
+        logs = logs.filter(user__role=user_role)
+    if action:
+        logs = logs.filter(action=action)
+    if model:
+        logs = logs.filter(model=model)
+    if search:
+        from django.db.models import Q
+        logs = logs.filter(
+            Q(user__first_name__icontains=search) |
+            Q(user__last_name__icontains=search) |
+            Q(user__email__icontains=search) |
+            Q(object_repr__icontains=search)
+        )
+
+    sort_map = {
+        'timestamp': 'timestamp',
+        'user': 'user__first_name',
+        'action': 'action',
+        'model': 'model',
+        'object_id': 'object_id',
+        'object_repr': 'object_repr',
+    }
+    sort_field = sort_map.get(sort_by, 'timestamp')
+    if order == 'desc':
+        sort_field = '-' + sort_field
+    logs = logs.order_by(sort_field)
+
+    import openpyxl
+    from openpyxl.utils import get_column_letter
+    from openpyxl.styles import Alignment
+    from io import BytesIO
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Logs"
+    headers = [
+        'User', 'User Email', 'Action', 'Model', 'Object ID', 'Object Repr', 'Timestamp', 'Details', 'URL'
+    ]
+    ws.append(headers)
+    for log in logs:
+        ws.append([
+            log.user.get_full_name() if log.user else '-',
+            log.user.email if log.user and log.user.email else '-',
+            log.get_action_display(),
+            log.model,
+            log.object_id,
+            log.object_repr,
+            log.timestamp.strftime('%Y-%m-%d %H:%M:%S') if log.timestamp else '',
+            log.details,
+            log.url,
+        ])
+    # Auto-fit column widths
+    for col_idx, col in enumerate(ws.columns, 1):
+        max_length = max(len(str(cell.value)) if cell.value is not None else 0 for cell in col)
+        ws.column_dimensions[get_column_letter(col_idx)].width = max(max_length + 2, 12)
+        for cell in col:
+            cell.alignment = Alignment(wrap_text=True, vertical='top')
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+    response = HttpResponse(output.read(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename="logs_export.xlsx"'
+    return response
 
 @require_GET
 def export_goals(request):

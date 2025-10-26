@@ -137,6 +137,7 @@ class Project(models.Model):
 	estimated_events = models.PositiveIntegerField()
 	event_progress = models.PositiveIntegerField(default=0)
 	estimated_trainees = models.PositiveIntegerField()
+	total_trained_individuals = models.PositiveIntegerField(default=0)
 	primary_beneficiary = models.CharField(max_length=255)
 	primary_location = models.CharField(max_length=255)
 	logistics_type = models.CharField(max_length=10, choices=LOGISTICS_TYPE_CHOICES)
@@ -183,6 +184,57 @@ class Project(models.Model):
 	def __str__(self):
 		return self.title
 
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		self._old_status = self.status
+
+	def save(self, *args, **kwargs):
+		# Store old status for signal
+		if self.pk:
+			try:
+				old_instance = Project.objects.get(pk=self.pk)
+				self._old_status = old_instance.status
+			except Project.DoesNotExist:
+				self._old_status = None
+		super().save(*args, **kwargs)
+
+
+# Log creation and update actions for Project
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.urls import reverse
+from system.logs.models import LogEntry
+
+@receiver(post_save, sender=Project)
+def log_project_action(sender, instance, created, **kwargs):
+	user = instance.updated_by or instance.created_by or None
+	# project_profile view expects (request, pk) -> provide pk for reverse
+	url = reverse('project_profile', args=[instance.pk])
+	# Only log creation if created
+	if created:
+		LogEntry.objects.create(
+			user=user,
+			action='CREATE',
+			model='Project',
+			object_id=instance.id,
+			object_repr=str(instance),
+			details=f"Status: {instance.status}",
+			url=url,
+			is_notification=True
+		)
+	# Only log update if not created and status changed
+	elif hasattr(instance, '_old_status') and instance._old_status != instance.status:
+		LogEntry.objects.create(
+			user=user,
+			action='UPDATE',
+			model='Project',
+			object_id=instance.id,
+			object_repr=str(instance),
+			details=f"Status: {instance.status}",
+			url=url,
+			is_notification=True
+		)
+
 
 #############################################################################################################################################################################################################
 
@@ -221,6 +273,7 @@ class ProjectEvent(models.Model):
 	updated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='updated_project_events')
 	image = models.ImageField(upload_to=project_event_image_upload_to, blank=True, null=True)
 	placeholder = models.BooleanField(default=False)
+	has_submission = models.BooleanField(default=False)
 
 	STATUS_CHOICES = [
 		("SCHEDULED", "Scheduled"),
@@ -235,3 +288,43 @@ class ProjectEvent(models.Model):
 
 	def __str__(self):
 		return f"{self.title} ({self.project.title})"
+
+
+class ProjectUpdate(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    submission = models.ForeignKey('submissions.Submission', on_delete=models.CASCADE, null=True, blank=True)
+    status = models.CharField(max_length=32)
+    viewed = models.BooleanField(default=False)
+    updated_at = models.DateTimeField()
+
+    class Meta:
+        unique_together = ('user', 'project', 'submission', 'status')
+
+
+# Signal handlers
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+@receiver(post_save, sender=Project)
+def create_project_alerts(sender, instance, created, **kwargs):
+    """Create project alerts when project status changes"""
+    if not created and hasattr(instance, '_old_status') and instance._old_status != instance.status:
+        from django.utils import timezone
+        # Notify project leader and providers about status changes
+        users_to_notify = [instance.project_leader]
+        if instance.providers.exists():
+            users_to_notify.extend(instance.providers.all())
+        
+        for user in users_to_notify:
+            if user:
+                ProjectUpdate.objects.update_or_create(
+                    user=user,
+                    project=instance,
+                    submission=None,  # No submission for project status changes
+                    status=instance.status,
+                    defaults={
+                        'viewed': False,
+                        'updated_at': timezone.now(),
+                    }
+                )

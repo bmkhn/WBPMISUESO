@@ -675,6 +675,10 @@
         return {
             getSelected: () => selected.slice(),
             setExclude: (ids) => { excludeIds = ids; renderTags(); },
+            setSelected: (ids) => { 
+                selected = ids.slice(); 
+                renderTags(); 
+            },
         };
     }
 
@@ -682,6 +686,30 @@
     var leaderTagUI = setupTagUI('project-leader-tag-row', 'project-leader-options-template', 'project_leader', true);
     var providersTagUI = setupTagUI('providers-tag-row', 'providers-options-template', 'providers');
     setupTagUI('sdgs-tag-row', 'sdgs-options-template', 'sdgs');
+
+    // Load AI team selection from localStorage if available
+    try {
+        const aiTeamData = localStorage.getItem('aiTeamSelection');
+        if (aiTeamData) {
+            const teamData = JSON.parse(aiTeamData);
+            // Check if data is recent (within last 5 minutes)
+            const fiveMinutes = 5 * 60 * 1000;
+            if (Date.now() - teamData.timestamp < fiveMinutes) {
+                // Pre-select leader
+                if (teamData.leader) {
+                    leaderTagUI.setSelected([teamData.leader.toString()]);
+                }
+                // Pre-select providers
+                if (teamData.providers && teamData.providers.length > 0) {
+                    providersTagUI.setSelected(teamData.providers.map(p => p.toString()));
+                }
+            }
+            // Clear the data after using it
+            localStorage.removeItem('aiTeamSelection');
+        }
+    } catch (e) {
+        console.error('Error loading AI team selection:', e);
+    }
 
     // Update providers to exclude selected leader
     function updateProvidersExclude(leaderId) {

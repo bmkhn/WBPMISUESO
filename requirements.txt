@@ -10,8 +10,10 @@ colorama==0.4.6
 Django==5.2.6
 et_xmlfile==2.0.0
 kombu==5.5.4
+numpy==2.2.2
 openpyxl==3.1.5
 packaging==25.0
+pandas==2.2.3
 pdf2image==1.17.0
 pillow==11.3.0
 prompt_toolkit==3.0.52
@@ -19,8 +21,10 @@ psycopg2-binary==2.9.10
 python-dateutil==2.9.0.post0
 pytz==2025.2
 redis==6.4.0
+sentence-transformers==3.3.1
 six==1.17.0
 sqlparse==0.5.3
+torch==2.5.1
 tzdata==2025.2
 vine==5.1.0
 wcwidth==0.2.14

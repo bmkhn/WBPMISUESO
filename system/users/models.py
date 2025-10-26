@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
 
 class College(models.Model):
     def delete(self, *args, **kwargs):
@@ -103,6 +105,8 @@ class User(AbstractUser):
     valid_id = models.ImageField(upload_to='users/valid_ids/', blank=True, null=True)       # Required Logic will be backend
     created_by = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='created_users')
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_by = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='updated_users')
+    updated_at = models.DateTimeField(null=True, blank=True)
     is_confirmed = models.BooleanField(default=False, null=False)
 
     # Authentication
@@ -116,3 +120,40 @@ class User(AbstractUser):
         mi = f"{self.middle_initial}. " if self.middle_initial else ""
         suffix = f" {self.suffix}" if self.suffix else ""
         return f"{self.given_name} {mi}{self.last_name}{suffix}"
+
+    def save(self, *args, **kwargs):
+        # Only set updated_at if this is an update (object already exists)
+        if self.pk:
+            from django.utils import timezone
+            self.updated_at = timezone.now()
+        super().save(*args, **kwargs)
+
+
+@receiver(post_save, sender=User)
+def log_user_action(sender, instance, created, **kwargs):
+    from system.logs.models import LogEntry
+    # Skip logging if this is being called from within a signal to avoid duplicates
+    if hasattr(instance, '_skip_log'):
+        return
+    action = 'CREATE' if created else 'UPDATE'
+    LogEntry.objects.create(
+        user=instance.created_by if created else instance,
+        action=action,
+        model='User',
+        object_id=instance.id,
+        object_repr=str(instance),
+        details=f"Role: {instance.role}"
+    )
+
+
+@receiver(post_delete, sender=User)
+def log_user_delete(sender, instance, **kwargs):
+    from system.logs.models import LogEntry
+    LogEntry.objects.create(
+        user=None,  # User is being deleted, can't reference them
+        action='DELETE',
+        model='User',
+        object_id=instance.id,
+        object_repr=str(instance),
+        details=f"Role: {instance.role}"
+    )

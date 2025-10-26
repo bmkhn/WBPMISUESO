@@ -1,0 +1,1523 @@
+{% extends "base_internal.html" %}
+{% block content %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Pool of Experts</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Top Section Styles -->
+<style>
+	body {
+		background-color: #F9F9F9;
+		font-family: 'Inter', sans-serif;
+		margin: 0;
+		padding: 0;
+	}
+
+	.main-container {
+		margin: 75px;
+		display: flex;
+		flex-direction: column;
+		gap: 30px;
+	}
+
+	.text-generate {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
+
+	.title {
+		font-size: 32px;
+		font-weight: 400;
+	}
+
+	.generate-btn {
+		width: 200px;
+		height: 55px;
+		background: linear-gradient(90deg, #9409FF 0%, #FF3300 100%);
+		color: #fff;
+		font-size: 20px;
+		font-weight: 500;
+		border: none;
+		border-radius: 20px;
+		cursor: pointer;
+		box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.2);
+	}
+
+	.search-container {
+		width: 100%;
+		display: flex;
+		gap: 10px;
+	}
+
+	.search-bar {
+		width: 100%;
+		height: 52px;
+		background: #F2F4F8;
+		display: flex;
+		align-items: center;
+		padding: 0 16px;
+		border-bottom: 1.09px solid #535353;
+		border-radius: 8px;
+		box-sizing: border-box;
+	}
+
+	.search-bar input {
+		flex: 1;
+		border: none;
+		outline: none;
+		background: transparent;
+		font-size: 18px;
+		font-family: 'Inter', sans-serif;
+		font-weight: 400;
+		color: #5A5252;
+		padding: 0 10px;
+	}
+
+	.view-buttons {
+		display: flex;
+		gap: 10px;
+	}
+
+	.view-btn {
+		display: flex;
+		padding: 10px;
+		width: 32px;
+		height: 32px;
+		border-radius: 15px;
+		background: #F9F9F9;
+		cursor: pointer;
+		border: none;
+	}
+	
+	.view-btn.active {
+        background: #000000;
+        color: #FFFFFF;
+    }
+</style>
+
+<!-- Content Section Styles -->
+<style>
+	/* Expert Cards */
+	.expert-container {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 30px;
+		margin-bottom: 30px;
+	}
+
+	.expert-card {
+		width: 100%;
+		height: auto;
+		border: 0.8px solid rgba(0,0,0,0.4);
+		border-radius: 12px;
+		padding: 30px;
+		display: flex;
+		flex-direction: column;
+		gap: 15px;
+		background: #fff;
+		position: relative;
+	}
+
+	.campus-tag {
+		position: absolute;
+		top: 10px;
+		left: 10px;
+		background: #F8A959;
+		color: #4B331B;
+		padding: 4px 8px;
+		font-size: 14px;
+		font-weight: 500;
+	}
+
+	.college-logo {
+		position: absolute;
+		top: 10px;
+		right: 10px;
+		width: 60px;
+		height: 60px;
+		background: #ddd;
+		border-radius: 50%;
+		object-fit: cover;
+	}
+
+	.profile-icon {
+		width: 200px;
+		height: 200px;
+		border-radius: 50%;
+		background: #ddd;
+		margin: 20px auto 10px auto;
+	}
+
+	.expert-name {
+		text-align: center;
+		font-size: 20px;
+		font-weight: 500;
+		color: #21272A;
+	}
+
+	.expert-degree {
+		text-align: center;
+		font-size: 16px;
+		color: #21272A;
+		font-weight: 500;
+	}
+
+	.expert-projects {
+		text-align: center;
+		font-size: 14px;
+		color: #333;
+	}
+
+	/* List view */
+	.expert-list {
+		width: 100%;
+		border-collapse: collapse;
+	}
+
+	.expert-list th, .expert-list td {
+		border: 1px solid #ccc;
+		padding: 12px;
+		text-align: left;
+	}
+
+	.expert-list th {
+		background: #eee;
+	}
+
+	.expert-list td:last-child {
+		text-align: center;
+	}
+
+	/* Pagination */
+	.pagination {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		gap: 8px;
+		margin-top: 30px;
+	}
+
+	.pagination a,
+	.pagination span {
+		padding: 8px 12px;
+		border: 1px solid #ddd;
+		background: #fff;
+		border-radius: 6px;
+		text-decoration: none;
+		color: #333;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		font-size: 14px;
+		min-width: 36px;
+		text-align: center;
+	}
+
+	.pagination a:hover {
+		background: #f0f0f0;
+		border-color: #9409FF;
+	}
+
+	.pagination .current {
+		background: linear-gradient(90deg, #9409FF 0%, #FF3300 100%);
+		color: white;
+		border-color: #9409FF;
+		font-weight: 600;
+	}
+
+	.pagination .disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+		pointer-events: none;
+	}
+	
+	.expert-list td a {
+		text-decoration: none;
+	}
+
+	.hidden { display: none !important; }
+    .visible { display: flex !important; }
+</style>
+
+<!-- Modal Styles -->
+<style>
+	.modal-overlay {
+		display: none;
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background: rgba(0, 0, 0, 0.5);
+		z-index: 9998;
+	}
+
+	.modal-overlay.show {
+		display: block;
+	}
+
+	.modal-container {
+		display: none;
+		position: fixed;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		background: white;
+		border-radius: 20px;
+		padding: 40px;
+		max-width: 900px;
+		width: 90%;
+		max-height: 90vh;
+		overflow: hidden;
+		z-index: 9999;
+		box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+	}
+
+	.modal-container.show {
+		display: block;
+	}
+
+	.modal-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 30px;
+	}
+
+	.modal-title {
+		font-size: 28px;
+		font-weight: 500;
+		background: linear-gradient(90deg, #9409FF 0%, #FF3300 100%);
+		-webkit-background-clip: text;
+		-webkit-text-fill-color: transparent;
+		background-clip: text;
+	}
+
+	.modal-close {
+		background: none;
+		border: none;
+		font-size: 30px;
+		cursor: pointer;
+		color: #666;
+		padding: 0;
+		width: 30px;
+		height: 30px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.modal-close:hover {
+		color: #000;
+	}
+
+	/* Form View */
+	.form-view {
+		display: block;
+	}
+
+	.form-view.hidden {
+		display: none;
+	}
+
+	.form-group {
+		margin-bottom: 20px;
+	}
+
+	.form-group label {
+		display: block;
+		font-size: 16px;
+		font-weight: 500;
+		margin-bottom: 8px;
+		color: #333;
+	}
+
+	.form-group input,
+	.form-group select {
+		width: 100%;
+		padding: 12px;
+		font-size: 16px;
+		border: 1px solid #ddd;
+		border-radius: 8px;
+		font-family: 'Inter', sans-serif;
+		box-sizing: border-box;
+	}
+
+	.form-group input:focus,
+	.form-group select:focus {
+		outline: none;
+		border-color: #9409FF;
+	}
+
+	.generate-team-btn {
+		width: 100%;
+		height: 55px;
+		background: linear-gradient(90deg, #9409FF 0%, #FF3300 100%);
+		color: #fff;
+		font-size: 20px;
+		font-weight: 500;
+		border: none;
+		border-radius: 12px;
+		cursor: pointer;
+		box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.2);
+		margin-top: 10px;
+	}
+
+	.generate-team-btn:hover {
+		opacity: 0.9;
+	}
+
+	.generate-team-btn:disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
+	}
+
+	/* Results View */
+	.results-view {
+		display: none;
+		height: calc(90vh - 140px);
+		overflow: hidden;
+	}
+
+	.results-view.show {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.back-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		background: none;
+		border: none;
+		color: #9409FF;
+		font-size: 16px;
+		font-weight: 500;
+		cursor: pointer;
+		padding: 8px 0;
+		margin-bottom: 15px;
+		flex-shrink: 0;
+	}
+
+	.back-btn:hover {
+		opacity: 0.8;
+	}
+
+	.results-header {
+		font-size: 18px;
+		color: #666;
+		margin-bottom: 20px;
+		flex-shrink: 0;
+	}
+
+	.results-content {
+		display: flex;
+		gap: 20px;
+		flex: 1;
+		overflow: hidden;
+	}
+
+	.team-members-list {
+		flex: 1;
+		overflow-y: auto;
+		padding-right: 10px;
+	}
+
+	.member-item {
+		background: #fff;
+		border: 1px solid #e0e0e0;
+		border-radius: 12px;
+		padding: 15px;
+		margin-bottom: 12px;
+		cursor: pointer;
+		transition: all 0.3s ease;
+		display: flex;
+		align-items: center;
+		gap: 15px;
+		position: relative;
+	}
+
+	.member-item:hover {
+		border-color: #9409FF;
+		box-shadow: 0 2px 8px rgba(148, 9, 255, 0.15);
+	}
+
+	.member-item.active {
+		border-color: #9409FF;
+		background: #f9f5ff;
+	}
+
+	.member-item.selected {
+		border-color: #9409FF;
+		background: #f0e6ff;
+	}
+
+	.member-item.leader {
+		border-color: #FFD700;
+		background: #fffbea;
+		border-width: 2px;
+	}
+
+	.member-checkbox {
+		width: 20px;
+		height: 20px;
+		cursor: pointer;
+		flex-shrink: 0;
+	}
+
+	.leader-badge {
+		position: absolute;
+		top: 10px;
+		right: 10px;
+		background: #FFD700;
+		color: #000;
+		padding: 4px 10px;
+		border-radius: 12px;
+		font-size: 11px;
+		font-weight: 600;
+		display: none;
+	}
+
+	.member-item.leader .leader-badge {
+		display: block;
+	}
+
+	.create-project-btn {
+		width: 100%;
+		height: 50px;
+		background: linear-gradient(90deg, #9409FF 0%, #FF3300 100%);
+		color: #fff;
+		font-size: 18px;
+		font-weight: 600;
+		border: none;
+		border-radius: 12px;
+		cursor: pointer;
+		margin-bottom: 15px;
+		display: none;
+		transition: all 0.3s ease;
+	}
+
+	.create-project-btn:hover {
+		opacity: 0.9;
+		transform: translateY(-2px);
+		box-shadow: 0 4px 12px rgba(148, 9, 255, 0.3);
+	}
+
+	.create-project-btn.show {
+		display: block;
+	}
+
+	.create-project-btn:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	.member-avatar {
+		width: 60px;
+		height: 60px;
+		border-radius: 50%;
+		background: linear-gradient(135deg, #9409FF 0%, #FF3300 100%);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		color: white;
+		font-size: 24px;
+		font-weight: 500;
+		flex-shrink: 0;
+	}
+
+	.member-avatar img {
+		width: 100%;
+		height: 100%;
+		border-radius: 50%;
+		object-fit: cover;
+	}
+
+	.member-info {
+		flex: 1;
+	}
+
+	.member-name {
+		font-size: 16px;
+		font-weight: 500;
+		color: #000;
+		margin-bottom: 4px;
+	}
+
+	.member-score {
+		font-size: 14px;
+		color: #666;
+	}
+
+	/* Side Panel (like YT Shorts) */
+	.details-panel {
+		width: 350px;
+		background: #f9f9f9;
+		border-radius: 12px;
+		padding: 20px;
+		overflow-y: auto;
+		flex-shrink: 0;
+		display: none;
+	}
+
+	.details-panel.show {
+		display: block;
+	}
+
+	.details-panel-placeholder {
+		width: 350px;
+		background: #f9f9f9;
+		border-radius: 12px;
+		padding: 40px 20px;
+		text-align: center;
+		color: #999;
+		font-size: 14px;
+		flex-shrink: 0;
+	}
+
+	.panel-header {
+		margin-bottom: 20px;
+		padding-bottom: 15px;
+		border-bottom: 2px solid #e0e0e0;
+	}
+
+	.panel-name {
+		font-size: 18px;
+		font-weight: 500;
+		color: #000;
+		margin-bottom: 8px;
+	}
+
+	.panel-score {
+		font-size: 24px;
+		font-weight: 600;
+		background: linear-gradient(90deg, #9409FF 0%, #FF3300 100%);
+		-webkit-background-clip: text;
+		-webkit-text-fill-color: transparent;
+		background-clip: text;
+	}
+
+	.details-grid {
+		display: grid;
+		grid-template-columns: 1fr;
+		gap: 12px;
+		margin-bottom: 20px;
+	}
+
+	.detail-item {
+		font-size: 14px;
+	}
+
+	.detail-label {
+		font-weight: 500;
+		color: #333;
+		display: block;
+		margin-bottom: 4px;
+	}
+
+	.detail-value {
+		color: #666;
+	}
+
+	.scores-section {
+		background: white;
+		border-radius: 8px;
+		padding: 15px;
+		margin-top: 15px;
+	}
+
+	.scores-title {
+		font-size: 15px;
+		font-weight: 500;
+		color: #333;
+		margin-bottom: 15px;
+	}
+
+	.score-item {
+		margin-bottom: 15px;
+	}
+
+	.score-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: baseline;
+		margin-bottom: 8px;
+	}
+
+	.score-label {
+		font-size: 13px;
+		color: #666;
+	}
+
+	.score-values {
+		font-size: 12px;
+		color: #999;
+		text-align: right;
+	}
+
+	.score-raw {
+		font-weight: 500;
+		color: #333;
+	}
+
+	.score-weighted {
+		color: #9409FF;
+		font-weight: 600;
+	}
+
+	.score-bar-bg {
+		width: 100%;
+		height: 6px;
+		background: #e0e0e0;
+		border-radius: 3px;
+		overflow: hidden;
+		position: relative;
+	}
+
+	.score-bar-fill {
+		height: 100%;
+		border-radius: 3px;
+		transition: width 0.5s ease;
+		min-width: 2px;
+	}
+
+	.score-bar-semantic {
+		background: linear-gradient(90deg, #9409FF 0%, #FF3300 100%);
+	}
+
+	.score-bar-rating {
+		background: #4CAF50;
+	}
+
+	.score-bar-availability {
+		background: #2196F3;
+	}
+
+	.score-bar-final {
+		background: linear-gradient(90deg, #FF3300 0%, #FFD700 100%);
+	}
+
+	.final-score-item {
+		margin-top: 20px;
+		padding-top: 15px;
+		border-top: 2px solid #e0e0e0;
+	}
+
+	.loading-spinner {
+		display: none;
+		text-align: center;
+		padding: 40px 20px;
+		font-size: 16px;
+		color: #666;
+	}
+
+	.loading-spinner.show {
+		display: block;
+	}
+
+	.spinner-icon {
+		border: 3px solid #f3f3f3;
+		border-top: 3px solid #9409FF;
+		border-radius: 50%;
+		width: 40px;
+		height: 40px;
+		animation: spin 1s linear infinite;
+		margin: 0 auto 15px;
+	}
+
+	@keyframes spin {
+		0% { transform: rotate(0deg); }
+		100% { transform: rotate(360deg); }
+	}
+
+	.error-message {
+		display: none;
+		padding: 15px;
+		background: #fee;
+		border: 1px solid #fcc;
+		border-radius: 8px;
+		color: #c00;
+		margin-top: 15px;
+	}
+
+	.error-message.show {
+		display: block;
+	}
+
+	.required {
+		color: red;
+	}
+
+	.no-results {
+		text-align: center;
+		padding: 40px 20px;
+		color: #666;
+		font-size: 16px;
+	}
+</style>
+
+</head>
+<body>
+	<div class="main-container">
+
+		<!-- Title + Generate -->
+		<div class="text-generate">
+			<div class="title">Pool of Experts</div>
+			<button class="generate-btn" id="openModalBtn">Generate Team</button>
+		</div>
+
+		<!-- Search + Form Controls -->
+		<div class="search-container">
+			<div class="search-bar">
+				<svg width="20" height="20"> <use href="#icon-search"></use> </svg>
+				<input type="text" placeholder="Search"/>
+				<svg width="20" height="20"> <use href="#icon-filter"></use> </svg>
+			</div>
+
+			<div class="view-buttons">
+				<svg class="view-btn active" id="gridViewBtn" width="28" height="28"><use id="gridIconUse" href="#icon-grid-active"></use></svg>
+				<svg class="view-btn" id="listViewBtn" width="28" height="28"><use id="listIconUse" href="#icon-list"></use></svg>
+			</div>
+		</div>
+
+		<!-- Expert Grid -->
+		<div class="expert-container visible" id="expertGrid">
+		{% for expert in experts %}
+		<a href="profile/" class="expert-card" style="text-decoration:none; color:inherit;">
+			<div class="campus-tag">{{ expert.get_campus_display|default:"N/A" }}</div>
+			{% if expert.college and expert.college.logo %}
+			<img src="{{ expert.college.logo.url }}" class="college-logo" alt="{{ expert.college.name }}">
+			{% else %}
+			<div class="college-logo"></div>
+			{% endif %}
+			{% if expert.profile_picture %}
+			<img src="{{ expert.profile_picture.url }}" class="profile-icon" alt="{{ expert.get_full_name }}">
+			{% else %}
+			<div class="profile-icon"></div>
+			{% endif %}
+			<div class="expert-name">{{ expert.get_full_name }}</div>
+			<div class="expert-degree">{{ expert.degree|default:"No Degree Listed" }}</div>
+			<div class="expert-projects">Projects: {{ expert.total_projects|default:0 }}</div>
+		</a>
+		{% empty %}
+		<div style="grid-column: 1 / -1; text-align:center; padding:40px; color:#666;">No experts found.</div>
+		{% endfor %}
+		</div>
+
+		<!-- Pagination for Grid View -->
+		<div class="pagination visible" id="gridPagination">
+			{% if page_obj.has_previous %}
+			<a href="?page=1">&laquo; First</a>
+			<a href="?page={{ page_obj.previous_page_number }}">Previous</a>
+			{% else %}
+			<span class="disabled">&laquo; First</span>
+			<span class="disabled">Previous</span>
+			{% endif %}
+
+			{% for num in page_range %}
+			{% if num == page_obj.number %}
+			<span class="current">{{ num }}</span>
+			{% else %}
+			<a href="?page={{ num }}">{{ num }}</a>
+			{% endif %}
+			{% endfor %}
+
+			{% if page_obj.has_next %}
+			<a href="?page={{ page_obj.next_page_number }}">Next</a>
+			<a href="?page={{ paginator.num_pages }}">Last &raquo;</a>
+			{% else %}
+			<span class="disabled">Next</span>
+			<span class="disabled">Last &raquo;</span>
+			{% endif %}
+		</div>
+
+		<!-- Expert List (toggle alternative) -->
+		<table class="expert-list hidden" id="expertList">
+		<thead>
+			<tr>
+			<th>Name</th>
+			<th>Campus</th>
+			<th>College</th>
+			<th>No. of Projects</th>
+			<th>Settings</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for expert in experts %}
+			<tr>
+			<td><a href="profile/">{{ expert.get_full_name }}</a></td>
+			<td>{{ expert.get_campus_display|default:"N/A" }}</td>
+			<td>{{ expert.college.name|default:"N/A" }}</td>
+			<td>{{ expert.total_projects|default:0 }}</td>
+			<td><svg width="16" height="4"><use href="#icon-settings"></use></svg></td>
+			</tr>
+			{% empty %}
+			<tr>
+			<td colspan="5" style="text-align:center; color:#666;">No experts found.</td>
+			</tr>
+			{% endfor %}
+		</tbody>
+		</table>
+
+		<!-- Pagination for List View -->
+		<div class="pagination hidden" id="listPagination">
+			{% if page_obj.has_previous %}
+			<a href="?page=1">&laquo; First</a>
+			<a href="?page={{ page_obj.previous_page_number }}">Previous</a>
+			{% else %}
+			<span class="disabled">&laquo; First</span>
+			<span class="disabled">Previous</span>
+			{% endif %}
+
+			{% for num in page_range %}
+			{% if num == page_obj.number %}
+			<span class="current">{{ num }}</span>
+			{% else %}
+			<a href="?page={{ num }}">{{ num }}</a>
+			{% endif %}
+			{% endfor %}
+
+			{% if page_obj.has_next %}
+			<a href="?page={{ page_obj.next_page_number }}">Next</a>
+			<a href="?page={{ paginator.num_pages }}">Last &raquo;</a>
+			{% else %}
+			<span class="disabled">Next</span>
+			<span class="disabled">Last &raquo;</span>
+			{% endif %}
+		</div>
+
+		<!-- Pagination -->
+		<div class="pagination">
+			<button>1</button>
+			<button>2</button>
+			<button>3</button>
+		</div>
+
+	</div>
+
+	<!-- Modal Overlay -->
+	<div class="modal-overlay" id="modalOverlay"></div>
+
+	<!-- Modal -->
+	<div class="modal-container" id="generateModal">
+		<div class="modal-header">
+			<div class="modal-title">AI Team Generator</div>
+			<button class="modal-close" id="closeModalBtn">&times;</button>
+		</div>
+
+		<!-- Form View -->
+		<div class="form-view" id="formView">
+			<form id="generateTeamForm">
+				{% csrf_token %}
+				<div class="form-group">
+					<label for="keywords">Keywords <span class="required">*</span></label>
+					<input type="text" id="keywords" name="keywords" placeholder="e.g., marine life, agriculture, education" required>
+				</div>
+
+				<div class="form-group" style="display: flex; gap: 16px; align-items: flex-end;">
+					<div style="flex:1;">
+						<label for="campus">Campus (Optional)</label>
+						<select id="campus" name="campus">
+							<option value="">All Campuses</option>
+							{% for campus_code, campus_name in campuses %}
+								<option value="{{ campus_code }}">{{ campus_name }}</option>
+							{% endfor %}
+						</select>
+					</div>
+					<div style="flex:1;">
+						<label for="college">College (Optional)</label>
+						<select id="college" name="college">
+							<option value="">All Colleges</option>
+							{% for college in colleges %}
+								<option value="{{ college.id }}">{{ college.name }}</option>
+							{% endfor %}
+						</select>
+					</div>
+				</div>
+
+				<div class="form-group">
+					<label for="num_participants">Number of Participants <span class="required">*</span></label>
+					<input type="number" id="num_participants" name="num_participants" min="1" max="20" value="5" required>
+				</div>
+
+				<button type="submit" class="generate-team-btn" id="submitBtn">Generate Team</button>
+			</form>
+
+			<div class="loading-spinner" id="loadingSpinner">
+				<div class="spinner-icon"></div>
+				Generating team recommendations...
+			</div>
+
+			<div class="error-message" id="errorMessage"></div>
+		</div>
+
+		<!-- Results View -->
+		<div class="results-view" id="resultsView">
+			<button class="back-btn" id="backToFormBtn">
+				← Back to Search
+			</button>
+
+			<button class="create-project-btn" id="createProjectBtn">
+				Create Project with Selected Team
+			</button>
+
+			<div class="results-header" id="resultsHeader">
+				Found <strong id="resultsCount">0</strong> team members for "<strong id="searchKeyword"></strong>"
+			</div>
+
+			<div class="results-content">
+				<div class="team-members-list" id="teamMembersList"></div>
+				
+				<div class="details-panel-placeholder" id="detailsPlaceholder">
+					← Select a team member to view details
+				</div>
+				
+				<div class="details-panel" id="detailsPanel"></div>
+			</div>
+		</div>
+	</div>
+
+<!-- SVG Sprite Section -->
+
+<svg style="display:none;">
+
+	<!-- Search -->
+	<symbol id="icon-search" viewBox="0 0 21 21" fill="none">
+		<path d="M8.89152 15.9057C9.75056 15.9057 10.6012 15.7365 11.3948 15.4077C12.1885 15.079 12.9096 14.5972 13.5171 13.9897C14.1245 13.3823 14.6064 12.6612 14.9351 11.8675C15.2638 11.0739 15.433 10.2232 15.433 9.36417C15.433 8.50513 15.2638 7.6545 14.9351 6.86084C14.6064 6.06719 14.1245 5.34606 13.5171 4.73862C12.9096 4.13119 12.1885 3.64934 11.3948 3.3206C10.6012 2.99186 9.75056 2.82266 8.89152 2.82266C7.1566 2.82266 5.49274 3.51185 4.26597 4.73862C3.03919 5.9654 2.35 7.62926 2.35 9.36417C2.35 11.0991 3.03919 12.763 4.26597 13.9897C5.49274 15.2165 7.1566 15.9057 8.89152 15.9057V15.9057ZM15.7819 14.713L19.685 18.6161C19.7891 18.7167 19.872 18.8371 19.9291 18.9701C19.9861 19.1032 20.0161 19.2463 20.0173 19.391C20.0184 19.5358 19.9907 19.6793 19.9358 19.8133C19.8809 19.9472 19.7999 20.0689 19.6974 20.1712C19.595 20.2735 19.4732 20.3544 19.3392 20.4091C19.2052 20.4638 19.0616 20.4913 18.9168 20.4899C18.772 20.4886 18.629 20.4584 18.496 20.4012C18.3631 20.3439 18.2428 20.2608 18.1423 20.1566L14.2392 16.2535C12.4866 17.614 10.2814 18.2554 8.07247 18.0472C5.86357 17.839 3.81705 16.7968 2.34951 15.1328C0.881971 13.4688 0.103735 11.308 0.173229 9.09044C0.242723 6.87284 1.15472 4.76508 2.72357 3.19623C4.29242 1.62738 6.40018 0.715379 8.61778 0.645885C10.8354 0.576391 12.9961 1.35463 14.6601 2.82217C16.3241 4.28971 17.3663 6.33623 17.5745 8.54513C17.7827 10.754 17.1413 12.9592 15.7808 14.7119L15.7819 14.713Z" fill="#5A5252"/>
+	</symbol>
+
+	<!-- Filter -->
+	<symbol id="icon-filter" viewBox="0 0 23 22" fill="none">
+		<path opacity="0.9" d="M21.5399 1.92871H1.37988L9.44388 11.4644V18.0567L13.4759 20.0727V11.4644L21.5399 1.92871Z" stroke="#1E1E1E" stroke-width="2.016" stroke-linecap="round" stroke-linejoin="round"/>
+	</symbol>
+
+	<!-- List -->
+	<symbol id="icon-list" viewBox="0 0 34 24" fill="none">
+		<path d="M10.3712 2.05664H31.9153M10.3712 12H31.9153M10.3712 21.9436H31.9153M2.08496 2.05664H2.10153M2.08496 12H2.10153M2.08496 21.9436H2.10153" stroke="black" stroke-width="3.31448" stroke-linecap="round" stroke-linejoin="round"/>
+	</symbol>
+
+	<!-- List (Active) -->
+	<symbol id="icon-list-active" viewBox="0 0 34 24" fill="none">
+		<path d="M10.3712 2.05664H31.9153M10.3712 12H31.9153M10.3712 21.9436H31.9153M2.08496 2.05664H2.10153M2.08496 12H2.10153M2.08496 21.9436H2.10153" stroke="white" stroke-width="3.31448" stroke-linecap="round" stroke-linejoin="round"/>
+	</symbol>
+
+	<!-- Grid -->
+	<symbol id="icon-grid" viewBox="0 0 32 32" fill="none">
+		<path d="M12.9331 2.19922H2.19971V12.9326H12.9331V2.19922Z" stroke="black" stroke-width="3.04932" stroke-linecap="round" stroke-linejoin="round"/>
+		<path d="M29.8 2.19932H19.0666V12.9327H29.8V2.19932Z" stroke="black" stroke-width="3.04932" stroke-linecap="round" stroke-linejoin="round"/>
+		<path d="M29.7998 19.0664H19.0664V29.7998H29.7998V19.0664Z" stroke="black" stroke-width="3.04932" stroke-linecap="round" stroke-linejoin="round"/>
+		<path d="M12.9331 19.0664H2.19971V29.7998H12.9331V19.0664Z" stroke="black" stroke-width="3.04932" stroke-linecap="round" stroke-linejoin="round"/>
+	</symbol>
+
+	<!-- Grid (Active) -->
+	<symbol id="icon-grid-active" viewBox="0 0 32 32" fill="none">
+		<path d="M12.9331 2.19922H2.19971V12.9326H12.9331V2.19922Z" stroke="white" stroke-width="3.04932" stroke-linecap="round" stroke-linejoin="round"/>
+		<path d="M29.8 2.19932H19.0666V12.9327H29.8V2.19932Z" stroke="white" stroke-width="3.04932" stroke-linecap="round" stroke-linejoin="round"/>
+		<path d="M29.7998 19.0664H19.0664V29.7998H29.7998V19.0664Z" stroke="white" stroke-width="3.04932" stroke-linecap="round" stroke-linejoin="round"/>
+		<path d="M12.9331 19.0664H2.19971V29.7998H12.9331V19.0664Z" stroke="white" stroke-width="3.04932" stroke-linecap="round" stroke-linejoin="round"/>
+	</symbol>
+
+	<!-- Settings (3 dots) -->
+	<symbol id="icon-settings" viewBox="0 0 16 4" fill="none" xmlns="http://www.w3.org/2000/svg">
+		<path d="M2 4C1.45 4 0.979167 3.80417 0.5875 3.4125C0.195833 3.02083 0 2.55 0 2C0 1.45 0.195833 0.979167 0.5875 0.5875C0.979167 0.195833 1.45 0 2 0C2.55 0 3.02083 0.195833 3.4125 0.5875C3.80417 0.979167 4 1.45 4 2C4 2.55 3.80417 3.02083 3.4125 3.4125C3.02083 3.80417 2.55 4 2 4ZM8 4C7.45 4 6.97917 3.80417 6.5875 3.4125C6.19583 3.02083 6 2.55 6 2C6 1.45 6.19583 0.979167 6.5875 0.5875C6.97917 0.195833 7.45 0 8 0C8.55 0 9.02083 0.195833 9.4125 0.5875C9.80417 0.979167 10 1.45 10 2C10 2.55 9.80417 3.02083 9.4125 3.4125C9.02083 3.80417 8.55 4 8 4ZM14 4C13.45 4 12.9792 3.80417 12.5875 3.4125C12.1958 3.02083 12 2.55 12 2C12 1.45 12.1958 0.979167 12.5875 0.5875C12.9792 0.195833 13.45 0 14 0C14.55 0 15.0208 0.195833 15.4125 0.5875C15.8042 0.979167 16 1.45 16 2C16 2.55 15.8042 3.02083 15.4125 3.4125C15.0208 3.80417 14.55 4 14 4Z" fill="#1D1B20"/>
+	</symbol>
+
+	<!-- Settings -->
+	 
+</svg>
+
+<script>
+    // View toggle functionality for experts
+    const gridViewBtn = document.getElementById('gridViewBtn');
+    const listViewBtn = document.getElementById('listViewBtn');
+    const expertGrid = document.getElementById('expertGrid');
+    const expertList = document.getElementById('expertList');
+    const gridPagination = document.getElementById('gridPagination');
+    const listPagination = document.getElementById('listPagination');
+
+    gridViewBtn.addEventListener('click', function() {
+        gridViewBtn.classList.add('active');
+        listViewBtn.classList.remove('active');
+        expertGrid.classList.remove('hidden');
+        expertGrid.classList.add('visible');
+        expertList.classList.add('hidden');
+        if (gridPagination) {
+            gridPagination.classList.remove('hidden');
+            gridPagination.classList.add('visible');
+        }
+        if (listPagination) {
+            listPagination.classList.add('hidden');
+            listPagination.classList.remove('visible');
+        }
+    });
+
+    listViewBtn.addEventListener('click', function() {
+        listViewBtn.classList.add('active');
+        gridViewBtn.classList.remove('active');
+        expertGrid.classList.remove('visible');
+        expertGrid.classList.add('hidden');
+        expertList.classList.remove('hidden');
+        if (listPagination) {
+            listPagination.classList.remove('hidden');
+            listPagination.classList.add('visible');
+        }
+        if (gridPagination) {
+            gridPagination.classList.add('hidden');
+            gridPagination.classList.remove('visible');
+        }
+    });
+
+    // Optionally, set default view on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        gridViewBtn.classList.add('active');
+        expertGrid.classList.add('visible');
+        expertList.classList.add('hidden');
+        if (gridPagination) {
+            gridPagination.classList.add('visible');
+        }
+        if (listPagination) {
+            listPagination.classList.add('hidden');
+        }
+    });
+
+	const gridIconUse = document.getElementById('gridIconUse');
+	const listIconUse = document.getElementById('listIconUse');
+
+	gridViewBtn.addEventListener('click', function() {
+		gridViewBtn.classList.add('active');
+		listViewBtn.classList.remove('active');
+		expertGrid.classList.remove('hidden');
+		expertGrid.classList.add('visible');
+		expertList.classList.add('hidden');
+		if (gridPagination) {
+            gridPagination.classList.remove('hidden');
+            gridPagination.classList.add('visible');
+        }
+        if (listPagination) {
+            listPagination.classList.add('hidden');
+        }
+		gridIconUse.setAttribute('href', '#icon-grid-active');
+		listIconUse.setAttribute('href', '#icon-list');
+	});
+
+	listViewBtn.addEventListener('click', function() {
+		listViewBtn.classList.add('active');
+		gridViewBtn.classList.remove('active');
+		expertGrid.classList.remove('visible');
+		expertGrid.classList.add('hidden');
+		expertList.classList.remove('hidden');
+		if (listPagination) {
+            listPagination.classList.remove('hidden');
+            listPagination.classList.add('visible');
+        }
+        if (gridPagination) {
+            gridPagination.classList.add('hidden');
+        }
+		gridIconUse.setAttribute('href', '#icon-grid');
+		listIconUse.setAttribute('href', '#icon-list-active');
+	});
+
+	document.addEventListener('DOMContentLoaded', function() {
+		gridViewBtn.classList.add('active');
+		expertGrid.classList.add('visible');
+		expertList.classList.add('hidden');
+		if (gridPagination) {
+            gridPagination.classList.add('visible');
+        }
+        if (listPagination) {
+            listPagination.classList.add('hidden');
+        }
+		gridIconUse.setAttribute('href', '#icon-grid-active');
+		listIconUse.setAttribute('href', '#icon-list');
+	});
+
+	// Modal functionality
+	const openModalBtn = document.getElementById('openModalBtn');
+	const closeModalBtn = document.getElementById('closeModalBtn');
+	const modalOverlay = document.getElementById('modalOverlay');
+	const generateModal = document.getElementById('generateModal');
+	const generateTeamForm = document.getElementById('generateTeamForm');
+	const loadingSpinner = document.getElementById('loadingSpinner');
+	const errorMessage = document.getElementById('errorMessage');
+	const submitBtn = document.getElementById('submitBtn');
+	
+	// Views
+	const formView = document.getElementById('formView');
+	const resultsView = document.getElementById('resultsView');
+	const backToFormBtn = document.getElementById('backToFormBtn');
+	const teamMembersList = document.getElementById('teamMembersList');
+	const detailsPanel = document.getElementById('detailsPanel');
+	const detailsPlaceholder = document.getElementById('detailsPlaceholder');
+	const resultsCount = document.getElementById('resultsCount');
+	const searchKeyword = document.getElementById('searchKeyword');
+
+	let currentTeamMembers = [];
+
+	// Open modal
+	openModalBtn.addEventListener('click', function() {
+		modalOverlay.classList.add('show');
+		generateModal.classList.add('show');
+		// Reset to form view
+		showFormView();
+		generateTeamForm.reset();
+		errorMessage.classList.remove('show');
+	});
+
+	// Close modal
+	function closeModal() {
+		modalOverlay.classList.remove('show');
+		generateModal.classList.remove('show');
+	}
+
+	closeModalBtn.addEventListener('click', closeModal);
+	modalOverlay.addEventListener('click', closeModal);
+
+	// Back to form
+	backToFormBtn.addEventListener('click', function() {
+		showFormView();
+	});
+
+	// Show form view
+	function showFormView() {
+		formView.classList.remove('hidden');
+		resultsView.classList.remove('show');
+		loadingSpinner.classList.remove('show');
+		
+		// Reset selections
+		selectedMembers = [];
+		updateCreateButton();
+	}
+
+	// Show results view
+	function showResultsView() {
+		formView.classList.add('hidden');
+		resultsView.classList.add('show');
+	}
+
+	// Form submission
+	generateTeamForm.addEventListener('submit', async function(e) {
+		e.preventDefault();
+
+		// Get form data
+		const keywords = document.getElementById('keywords').value;
+		const formData = {
+			keywords: keywords,
+			campus: document.getElementById('campus').value,
+			college: document.getElementById('college').value,
+			num_participants: document.getElementById('num_participants').value
+		};
+
+		// Show loading
+		loadingSpinner.classList.add('show');
+		errorMessage.classList.remove('show');
+		submitBtn.disabled = true;
+
+		try {
+			// Get CSRF token
+			const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+							  getCookie('csrftoken');
+
+			const response = await fetch('{% url "generate_team" %}', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'X-CSRFToken': csrfToken
+				},
+				body: JSON.stringify(formData)
+			});
+
+			const data = await response.json();
+
+			if (data.success) {
+				// Update search keyword
+				searchKeyword.textContent = keywords;
+				resultsCount.textContent = data.team_members.length;
+				
+				// Display results
+				displayResults(data.team_members);
+				showResultsView();
+			} else {
+				// Show error
+				errorMessage.textContent = data.error || 'An error occurred';
+				errorMessage.classList.add('show');
+			}
+		} catch (error) {
+			console.error('Error:', error);
+			errorMessage.textContent = 'Failed to generate team. Please try again.';
+			errorMessage.classList.add('show');
+		} finally {
+			loadingSpinner.classList.remove('show');
+			submitBtn.disabled = false;
+		}
+	});
+
+	// Track selected team members
+	let selectedMembers = [];
+	const createProjectBtn = document.getElementById('createProjectBtn');
+
+	// Display results with side panel layout
+	function displayResults(teamMembers) {
+		currentTeamMembers = teamMembers;
+		selectedMembers = [];
+		teamMembersList.innerHTML = '';
+		detailsPanel.classList.remove('show');
+		detailsPlaceholder.style.display = 'flex';
+		updateCreateButton();
+		
+		if (teamMembers.length === 0) {
+			teamMembersList.innerHTML = '<div class="no-results">No experts found matching your criteria.</div>';
+			return;
+		}
+
+		teamMembers.forEach((member, index) => {
+			// Get initials for avatar
+			const initials = member.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+			
+			const memberItem = document.createElement('div');
+			memberItem.className = 'member-item';
+			memberItem.dataset.memberId = member.id;
+			memberItem.innerHTML = `
+				<input type="checkbox" class="member-checkbox" data-user-id="${member.id}">
+				<div class="member-avatar">
+					${member.profile_picture ? `<img src="${member.profile_picture}" alt="${member.name}">` : initials}
+				</div>
+				<div class="member-info">
+					<div class="member-name">${member.name}</div>
+					<div class="member-score">Match: ${(member.final_score * 100).toFixed(1)}%</div>
+				</div>
+				<span class="leader-badge">👑 Leader</span>
+			`;
+			
+			// Checkbox click handler
+			const checkbox = memberItem.querySelector('.member-checkbox');
+			checkbox.addEventListener('click', (e) => {
+				e.stopPropagation();
+				handleMemberSelection(member.id, checkbox.checked);
+			});
+			
+			// Member item click handler (for details)
+			memberItem.addEventListener('click', (e) => {
+				if (!e.target.classList.contains('member-checkbox')) {
+					showMemberDetails(member, memberItem);
+				}
+			});
+			
+			teamMembersList.appendChild(memberItem);
+		});
+	}
+
+	// Handle member selection
+	function handleMemberSelection(userId, isChecked) {
+		if (isChecked) {
+			// Add to selected members
+			selectedMembers.push(userId);
+		} else {
+			// Remove from selected members
+			const index = selectedMembers.indexOf(userId);
+			if (index > -1) {
+				selectedMembers.splice(index, 1);
+			}
+		}
+		
+		// Update UI
+		updateMemberStyles();
+		updateCreateButton();
+	}
+
+	// Update member item styles based on selection
+	function updateMemberStyles() {
+		document.querySelectorAll('.member-item').forEach(item => {
+			const userId = parseInt(item.dataset.memberId);
+			const checkbox = item.querySelector('.member-checkbox');
+			
+			item.classList.remove('selected', 'leader');
+			
+			if (selectedMembers.includes(userId)) {
+				item.classList.add('selected');
+				
+				// First selected member is the leader
+				if (selectedMembers[0] === userId) {
+					item.classList.add('leader');
+				}
+			}
+		});
+	}
+
+	// Update create project button visibility
+	function updateCreateButton() {
+		if (selectedMembers.length > 0) {
+			createProjectBtn.classList.add('show');
+		} else {
+			createProjectBtn.classList.remove('show');
+		}
+	}
+
+	// Create project button click handler
+	createProjectBtn.addEventListener('click', () => {
+		if (selectedMembers.length === 0) return;
+		
+		const leader = selectedMembers[0];
+		const providers = selectedMembers.slice(1);
+		
+		// Store team data in localStorage
+		const teamData = {
+			leader: leader,
+			providers: providers,
+			timestamp: Date.now()
+		};
+		localStorage.setItem('aiTeamSelection', JSON.stringify(teamData));
+		
+		// Redirect to add project page
+		window.location.href = '{% url "add_project" %}';
+	});
+
+	// Show member details in side panel
+	function showMemberDetails(member, memberItem) {
+		// Update active state
+		document.querySelectorAll('.member-item').forEach(item => {
+			item.classList.remove('active');
+		});
+		if (memberItem) {
+			memberItem.classList.add('active');
+		}
+		
+		// Hide placeholder, show panel
+		detailsPlaceholder.style.display = 'none';
+		detailsPanel.classList.add('show');
+		
+		// Get initials for avatar
+		const initials = member.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+		
+		// Calculate weighted scores (capped at 0 minimum for display)
+		const semanticWeighted = Math.max(0, member.semantic_score * 0.55);
+		const ratingWeighted = Math.max(0, member.normalized_rating * 0.30);
+		const availabilityWeighted = Math.max(0, member.availability_score * 0.15);
+		
+		// Calculate bar widths (0-100%, but never below 0)
+		const semanticBarWidth = Math.max(0, Math.min(100, member.semantic_score * 100));
+		const ratingBarWidth = Math.max(0, Math.min(100, member.normalized_rating * 100));
+		const availabilityBarWidth = Math.max(0, Math.min(100, member.availability_score * 100));
+		const finalBarWidth = Math.max(0, Math.min(100, member.final_score * 100));
+		
+		detailsPanel.innerHTML = `
+			<div class="panel-header">
+				<div class="panel-name">${member.name}</div>
+				<div class="panel-score">Final Score: ${member.final_score.toFixed(3)}</div>
+			</div>
+			
+			<div class="details-grid">
+				<div style="display: flex;">
+					<div class="detail-item" style="flex:1;">
+						<span class="detail-label">Campus</span>
+						<span class="detail-value">${member.campus || 'N/A'}</span>
+					</div>
+					<div class="detail-item" style="flex:1;">
+						<span class="detail-label">College</span>
+						<span class="detail-value">${member.college || 'N/A'}</span>
+					</div>
+				</div>
+
+				<div class="detail-item">
+					<span class="detail-label">Degree</span>
+					<span class="detail-value">${member.degree || 'N/A'}</span>
+				</div>
+				<div class="detail-item">
+					<span class="detail-label">Expertise</span>
+					<span class="detail-value">${member.expertise || 'N/A'}</span>
+				</div>
+				<div style="display: flex;">
+					<div class="detail-item" style="flex:1;">
+						<span class="detail-label">Total Projects</span>
+						<span class="detail-value">${member.total_projects}</span>
+					</div>
+					<div class="detail-item" style="flex:1;">
+						<span class="detail-label">Ongoing Projects</span>
+						<span class="detail-value">${member.ongoing_projects}</span>
+					</div>
+				</div>
+				<div class="detail-item">
+					<span class="detail-label">Avg Rating</span>
+					<span class="detail-value">${member.avg_rating.toFixed(2)}/5</span>
+				</div>
+			</div>
+			
+			<div class="scores-section">
+				<div class="scores-title">Scoring Breakdown</div>
+				
+				<div class="score-item">
+					<div class="score-header">
+						<span class="score-label">Semantic Match (55%)</span>
+						<div class="score-values">
+							<span class="score-raw">${member.semantic_score.toFixed(3)}</span> → 
+							<span class="score-weighted">${semanticWeighted.toFixed(3)}</span>
+						</div>
+					</div>
+					<div class="score-bar-bg">
+						<div class="score-bar-fill score-bar-semantic" style="width: ${semanticBarWidth}%"></div>
+					</div>
+				</div>
+				
+				<div class="score-item">
+					<div class="score-header">
+						<span class="score-label">Rating Score (30%)</span>
+						<div class="score-values">
+							<span class="score-raw">${member.normalized_rating.toFixed(3)}</span> → 
+							<span class="score-weighted">${ratingWeighted.toFixed(3)}</span>
+						</div>
+					</div>
+					<div class="score-bar-bg">
+						<div class="score-bar-fill score-bar-rating" style="width: ${ratingBarWidth}%"></div>
+					</div>
+				</div>
+				
+				<div class="score-item">
+					<div class="score-header">
+						<span class="score-label">Availability (15%)</span>
+						<div class="score-values">
+							<span class="score-raw">${member.availability_score.toFixed(3)}</span> → 
+							<span class="score-weighted">${availabilityWeighted.toFixed(3)}</span>
+						</div>
+					</div>
+					<div class="score-bar-bg">
+						<div class="score-bar-fill score-bar-availability" style="width: ${availabilityBarWidth}%"></div>
+					</div>
+				</div>
+				
+				<div class="score-item final-score-item">
+					<div class="score-header">
+						<span class="score-label"><strong>Final Score</strong></span>
+						<div class="score-values">
+							<span class="score-weighted" style="font-size: 16px;">${member.final_score.toFixed(3)}</span>
+						</div>
+					</div>
+					<div class="score-bar-bg">
+						<div class="score-bar-fill score-bar-final" style="width: ${finalBarWidth}%"></div>
+					</div>
+				</div>
+			</div>
+		`;
+	}
+
+	// Get CSRF token from cookie
+	function getCookie(name) {
+		let cookieValue = null;
+		if (document.cookie && document.cookie !== '') {
+			const cookies = document.cookie.split(';');
+			for (let i = 0; i < cookies.length; i++) {
+				const cookie = cookies[i].trim();
+				if (cookie.substring(0, name.length + 1) === (name + '=')) {
+					cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+					break;
+				}
+			}
+		}
+		return cookieValue;
+	}
+</script>
+
+{% endblock %}

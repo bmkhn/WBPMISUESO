@@ -252,7 +252,12 @@
             <div><i class="fa-regular fa-circle-question"></i> <strong>Location</strong></div>
             <div>{{ project.primary_location }}</div>
             <div><i class="fa-regular fa-circle-question"></i> <strong>Estimated Trained Individuals</strong></div>
-            <div>{{ project.estimated_trainees }}</div>
+            <div>
+                {{ project.estimated_trainees }}
+                {% if request.user.role in ADMIN_ROLES or request.user == project.project_leader or request.user in project.providers.all %}
+                    <span style="color:#6B7280;font-size:0.875rem;">({{ project.total_trained_individuals|default:0 }}/{{ project.estimated_trainees }})</span>
+                {% endif %}
+            </div>
           
             <div><i class="fa-regular fa-circle-question"></i> <strong>Start Date</strong></div>
             <div>{{ project.start_date|date:'F d, Y' }}</div>

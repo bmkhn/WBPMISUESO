@@ -52,6 +52,9 @@ class Submission(models.Model):
 	updated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='updated_submissions')
 	updated_at = models.DateTimeField(auto_now=True)
 
+	def __str__(self):
+		return self.project.title + " - " + self.downloadable.name
+
 	def get_status_display(self):
 		return dict(self.SUBMISSION_STATUS_CHOICES).get(self.status, self.status)
 
@@ -59,7 +62,7 @@ class Submission(models.Model):
 # Log creation and update actions for Submission
 @receiver(post_save, sender=Submission)
 def log_submission_action(sender, instance, created, **kwargs):
-	user = instance.updated_by or instance.submitted_by or None
+	user = instance.updated_by or instance.submitted_by or instance.created_by or None
 	# project_submissions_details view expects (request, pk, submission_id) -> provide pk and submission_id for reverse
 	url = reverse('project_submissions_details', args=[instance.project.pk, instance.id])
 	# Only log creation if created
@@ -79,7 +82,7 @@ def log_submission_action(sender, instance, created, **kwargs):
 		LogEntry.objects.create(
 			user=user,
 			action='UPDATE',
-			model='ClientRequest',
+			model='Submission',
 			object_id=instance.id,
 			object_repr=str(instance),
 			details=f"Status: {instance.status}",

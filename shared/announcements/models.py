@@ -1,4 +1,6 @@
 from django.db import models
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
 from system.users.models import User
 
 class Announcement(models.Model):
@@ -22,3 +24,43 @@ class Announcement(models.Model):
 
 	def __str__(self):
 		return self.title
+	
+	def save(self, *args, **kwargs):
+		# Only set updated_at if this is an update (object already exists)
+		if self.pk:
+			from django.utils import timezone
+			self.updated_at = timezone.now()
+		super().save(*args, **kwargs)
+
+
+@receiver(post_save, sender=Announcement)
+def log_announcement_action(sender, instance, created, **kwargs):
+	from system.logs.models import LogEntry
+	# Skip logging if this is being called from within a signal to avoid duplicates
+	if hasattr(instance, '_skip_log'):
+		return
+	action = 'CREATE' if created else 'UPDATE'
+	user = instance.published_by if created else instance.edited_by
+	LogEntry.objects.create(
+		user=user,
+		action=action,
+		model='Announcement',
+		object_id=instance.id,
+		object_repr=str(instance),
+		details=f"Title: {instance.title}"
+	)
+
+
+@receiver(post_delete, sender=Announcement)
+def log_announcement_delete(sender, instance, **kwargs):
+	from system.logs.models import LogEntry
+	LogEntry.objects.create(
+		user=instance.edited_by or instance.published_by,
+		action='DELETE',
+		model='Announcement',
+		object_id=instance.id,
+		object_repr=str(instance),
+		details=f"Title: {instance.title}"
+	)
+	
+

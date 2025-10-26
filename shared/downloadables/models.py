@@ -1,5 +1,7 @@
 from django.db import models
 from django.conf import settings
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
 import os
 
 class Downloadable(models.Model):
@@ -84,3 +86,32 @@ class Downloadable(models.Model):
                 import logging
                 logging.error(f"Thumbnail generation failed for {self.file.name}: {e}")
         super().save(*args, **kwargs)
+
+
+@receiver(post_save, sender=Downloadable)
+def log_downloadable_action(sender, instance, created, **kwargs):
+    from system.logs.models import LogEntry
+	# Skip logging if this is being called from within a signal to avoid duplicates
+    if hasattr(instance, '_skip_log'):
+        return
+    action = 'CREATE' if created else 'UPDATE'
+    LogEntry.objects.create(
+        user=instance.uploaded_by,
+        action=action,
+        model='Downloadable',
+        object_id=instance.id,
+        object_repr=str(instance),
+        details=f"File Type: {instance.file_type}, Status: {instance.status}"
+    )
+
+
+@receiver(post_delete, sender=Downloadable)
+def log_downloadable_delete(sender, instance, **kwargs):
+    from system.logs.models import LogEntry
+    LogEntry.objects.create(
+        user=instance.uploaded_by,
+        action='DELETE',
+        model='Downloadable',
+        object_id=instance.id,
+        object_repr=str(instance),
+    )

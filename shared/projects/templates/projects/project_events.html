@@ -222,7 +222,7 @@
 <div class="card-body">
     <div class="tracker-box">
         <div class="progress">
-            <div class="progress-bar" style="width:0%"></div> <!-- style="width: {{ percent|default_if_none:'0' }}%;" -->
+            <div class="progress-bar" style="width: {{ percent|default_if_none:'0' }}%;"></div>
         </div>
         <p class="status-text">{{ completed }}/{{ total }} events completed ({{ percent }}%)</p>
     </div>
@@ -234,6 +234,21 @@
                 <div class="event-info">
                     <div style="display:flex;align-items:center;gap:0.5rem;">
                         <h4 style="margin:0;">{{ event.title }}</h4>
+                        {% if event.related_submissions %}
+                            {% if event.related_submissions.status == 'PENDING' or event.related_submissions.status == 'REVISION_REQUESTED' %}
+                                <span style="background:#FEF3C7;color:#D97706;padding:0.25rem 0.5rem;border-radius:4px;font-size:0.75rem;font-weight:500;">Submission Required</span>
+                            {% elif event.related_submissions.status == 'SUBMITTED' %}
+                                <span style="background:#DBEAFE;color:#1D4ED8;padding:0.25rem 0.5rem;border-radius:4px;font-size:0.75rem;font-weight:500;">Under Review</span>
+                            {% elif event.related_submissions.status == 'FORWARDED' %}
+                                <span style="background:#E0E7FF;color:#6366F1;padding:0.25rem 0.5rem;border-radius:4px;font-size:0.75rem;font-weight:500;">Forwarded</span>
+                            {% elif event.related_submissions.status == 'APPROVED' %}
+                                <span style="background:#D1FAE5;color:#059669;padding:0.25rem 0.5rem;border-radius:4px;font-size:0.75rem;font-weight:500;">Completed</span>
+                            {% elif event.related_submissions.status == 'REJECTED' %}
+                                <span style="background:#FEE2E2;color:#DC2626;padding:0.25rem 0.5rem;border-radius:4px;font-size:0.75rem;font-weight:500;">Rejected</span>
+                            {% elif event.related_submissions.status == 'OVERDUE' %}
+                                <span style="background:#FEE2E2;color:#DC2626;padding:0.25rem 0.5rem;border-radius:4px;font-size:0.75rem;font-weight:500;">Overdue</span>
+                            {% endif %}
+                        {% endif %}
                         {% if request.user.role in ADMIN_ROLES %}
                         <button type="button" style="background:none;border:none;cursor:pointer;padding:0;" onclick="document.getElementById('edit-event-modal-{{ event.id }}').style.display='flex'">
                             <i class="fa-solid fa-pen-to-square" style="color:#0A6C44;"></i>
@@ -343,6 +358,7 @@
         <span class="close" id="close-delete-event-modal">&times;</span>
         <h2 style="margin-top:0;font-size:1.3rem;text-align:center;">Delete Event</h2>
         <p style="text-align:center;">Are you sure you want to delete this event?<br>This will remove the event and decrement the event count.</p>
+        <p style="text-align:center;color:#DC2626;font-weight:500;margin-top:1rem;">⚠️ Warning: All submissions related to this event will also be deleted permanently.</p>
         <form id="delete-event-confirm-form" method="post" style="margin-top:2rem;gap:15px;display:flex;align-items:center;justify-content:center">
             {% csrf_token %}
             <input type="hidden" name="delete_event_id" id="delete_event_id_input" value="">

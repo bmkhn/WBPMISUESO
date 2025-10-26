@@ -1,7 +1,7 @@
 from django.shortcuts import get_object_or_404, render, redirect
 from shared import request
 from system.users.decorators import role_required
-from .models import SustainableDevelopmentGoal, Project, ProjectEvaluation, ProjectEvent
+from .models import SustainableDevelopmentGoal, Project, ProjectEvaluation, ProjectEvent, ProjectUpdate
 from internal.submissions.models import Submission
 from system.users.models import College, User
 from internal.agenda.models import Agenda
@@ -28,6 +28,18 @@ def get_templates(request):
     return base_template
 
 def project_profile(request, pk):
+    # Mark project alerts as viewed for faculty users
+    if request.user.role in ["FACULTY", "IMPLEMENTER"]:
+        from django.http import HttpResponseRedirect
+        from django.urls import reverse
+        project = get_object_or_404(Project, pk=pk)
+        updated = ProjectUpdate.objects.filter(user=request.user, project=project, viewed=False).update(viewed=True)
+        if updated and request.method == 'GET' and not request.GET.get('new'):
+            url = reverse('project_profile', args=[pk])
+            params = request.GET.copy()
+            params['new'] = '1'
+            url += '?' + params.urlencode()
+            return HttpResponseRedirect(url)
     return redirect(project_overview, pk=pk)
 
 
@@ -94,6 +106,17 @@ def project_providers(request, pk):
                 if provider not in providers_qs:
                     project.providers.add(provider)
                     project.save()
+                    
+                    # Create alert for the newly added provider
+                    from .models import ProjectUpdate
+                    ProjectUpdate.objects.create(
+                        user=provider,
+                        project=project,
+                        submission=None,  # No submission for provider addition alerts
+                        status='PROJECT_ASSIGNED',
+                        viewed=False,
+                        updated_at=timezone.now()
+                    )
             except User.DoesNotExist:
                 pass
         return redirect(request.path)
@@ -157,9 +180,16 @@ def project_events(request, pk):
     project = get_object_or_404(Project, pk=pk)
     # Order events: those with datetime=None at the bottom
     from django.db.models import F, Value, BooleanField, ExpressionWrapper
+    from internal.submissions.models import Submission
+    
     events = project.events.annotate(
         has_datetime=ExpressionWrapper(Q(datetime__isnull=False), output_field=BooleanField())
     ).order_by('-has_datetime', 'datetime')
+    
+    # Add submission status information to events
+    for event in events:
+        event.related_submissions = Submission.objects.filter(event=event).first()
+    
     total = project.estimated_events
     completed = project.event_progress
     percent = int((completed / total) * 100) if total else 0
@@ -191,12 +221,38 @@ def project_events(request, pk):
             # Delete event: remove ProjectEvent and decrement estimated_events
             event_id = request.POST.get('delete_event_id')
             from .models import ProjectEvent
+            from internal.submissions.models import Submission
             try:
                 event_to_delete = ProjectEvent.objects.get(pk=event_id, project=project)
+                
+                # Check for ALL submissions related to this event (not just approved ones)
+                related_submissions = Submission.objects.filter(event=event_to_delete)
+                
+                # Check if this event has approved submissions and adjust counters
+                approved_submission = related_submissions.filter(status='APPROVED').first()
+                
+                if approved_submission:
+                    # Decrement event progress if this was a completed event
+                    if project.event_progress > 0:
+                        project.event_progress -= 1
+                    
+                    # Subtract trained individuals if this event contributed to the total
+                    if approved_submission.num_trained_individuals:
+                        trained_count = approved_submission.num_trained_individuals
+                        if project.total_trained_individuals >= trained_count:
+                            project.total_trained_individuals -= trained_count
+                
+                # Delete all related submissions for this event
+                related_submissions.delete()
+                
+                # Delete the event itself
                 event_to_delete.delete()
                 if project.estimated_events > 0:
                     project.estimated_events -= 1
-                    project.save(update_fields=["estimated_events"])
+                    project.save(update_fields=["estimated_events", "event_progress", "total_trained_individuals"])
+                else:
+                    project.save(update_fields=["event_progress", "total_trained_individuals"])
+                    
             except ProjectEvent.DoesNotExist:
                 pass
             return redirect(request.path)
@@ -213,8 +269,10 @@ def project_events(request, pk):
                 if event_to_edit.datetime and event_to_edit.location:
                     event_to_edit.placeholder = False
                 event_to_edit.updated_by = request.user
+                event_to_edit.updated_at = timezone.now()
 
                 event_to_edit.save()
+                return redirect(request.path)  # Add redirect to refresh page
     if not event_form:
         event_form = ProjectEventForm()
 
@@ -250,15 +308,12 @@ def project_files(request, pk):
     sort_by = request.GET.get('sort_by', 'name')
     order = request.GET.get('order', 'asc')
     file_type = request.GET.get('file_type', '')
-    date = request.GET.get('date', '')
 
     extensions = set(documents.values_list('file', flat=True))
     extensions = set([os.path.splitext(f)[1][1:].lower() for f in extensions if f])
 
     if file_type:
         documents = [doc for doc in documents if doc.extension == file_type]
-    if date:
-        documents = [doc for doc in documents if str(doc.uploaded_at.date()) == date]
     if search:
         documents = [doc for doc in documents if search.lower() in doc.name.lower()]
  
@@ -443,7 +498,9 @@ def project_submissions(request, pk):
         "submissions": page_obj,
         "events": events,
         "ADMIN_ROLES": ADMIN_ROLES,
+        "SUPERUSER_ROLES": SUPERUSER_ROLES,
         "COORDINATOR_ROLE": COORDINATOR_ROLE,
+        "FACULTY_ROLE": FACULTY_ROLE,
         "provider_ids": provider_ids,
         "status_choices": status_choices,
         "status_filter": status_filter,
@@ -461,6 +518,23 @@ def project_submissions_details(request, pk, submission_id):
     
     submission = get_object_or_404(Submission, pk=submission_id, project__pk=pk)
 
+    # Mark submission alerts as viewed for faculty users
+    if request.user.role in ["FACULTY", "IMPLEMENTER"]:
+        from django.http import HttpResponseRedirect
+        from django.urls import reverse
+        updated = ProjectUpdate.objects.filter(
+            user=request.user, 
+            project__pk=pk, 
+            submission=submission, 
+            viewed=False
+        ).update(viewed=True)
+        if updated and request.method == 'GET' and not request.GET.get('new'):
+            url = reverse('project_submissions_details', args=[pk, submission_id])
+            params = request.GET.copy()
+            params['new'] = '1'
+            url += '?' + params.urlencode()
+            return HttpResponseRedirect(url)
+
     user_role = getattr(request.user, 'role', None)
     if user_role in ["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
         base_template = "base_internal.html"
@@ -468,17 +542,65 @@ def project_submissions_details(request, pk, submission_id):
         base_template = "base_public.html"
 
     project = get_object_or_404(Project, pk=pk)
+    events = ProjectEvent.objects.filter(project__pk=pk).order_by('datetime')
+
+    # Handle submission POST requests
+    if request.method == "POST":
+        from django.utils import timezone
+        action = request.POST.get('action')
+        
+        # Handle Submission Upload
+        if action == "submit" and (submission.status == "PENDING" or submission.status == "REVISION_REQUESTED"):
+            sub_type = submission.downloadable.submission_type
+
+            if sub_type == "final":
+                submission.file = request.FILES.get("final_file")
+                submission.for_product_production = bool(request.POST.get("for_product_production"))
+                submission.for_research = bool(request.POST.get("for_research"))
+                submission.for_extension = bool(request.POST.get("for_extension"))
+            
+            elif sub_type == "event":
+                # For event submissions, the event is already linked via submission.event
+                if submission.event:
+                    # Update the ProjectEvent with image and description
+                    submission.event.image = request.FILES.get("image_event")
+                    submission.event.description = request.POST.get("image_description", "")
+                    submission.event.save()
+                    
+                    # Update the project's total trained individuals
+                    num_trained = int(request.POST.get("num_trained_individuals", 0))
+                    project.total_trained_individuals += num_trained
+                    project.save()
+                
+                # Keep the submission fields for backward compatibility 
+                submission.image_event = request.FILES.get("image_event")
+                submission.image_description = request.POST.get("image_description", "")
+                submission.num_trained_individuals = request.POST.get("num_trained_individuals", 0)
+
+            else:  # "file"
+                submission.file = request.FILES.get("file_file")
+
+            submission.status = "SUBMITTED"
+            submission.submitted_at = timezone.now()
+            submission.submitted_by = request.user
+            submission.updated_by = request.user
+            submission.updated_at = timezone.now()
+            submission.save()
+
+            return redirect('project_submissions_details', pk=pk, submission_id=submission_id)
 
     context = {
         "project": project,
         "base_template": base_template,
         "submission": submission,
+        "events": events,
         "ADMIN_ROLES": ADMIN_ROLES,
         "COORDINATOR_ROLE": COORDINATOR_ROLE,
         "FACULTY_ROLE": FACULTY_ROLE,
     }
     return render(request, "projects/project_submissions_details.html", context)
 
+# ACTIONS
 @role_required(allowed_roles=["UESO", "VP", "DIRECTOR", "COORDINATOR", "FACULTY", "IMPLEMENTER"])
 def admin_submission_action(request, pk, submission_id):
     submission = get_object_or_404(Submission, pk=submission_id, project__pk=pk)
@@ -490,9 +612,20 @@ def admin_submission_action(request, pk, submission_id):
                 submission.status = 'PENDING'
                 submission.submitted_by = None
                 submission.submitted_at = None
+                submission.file = None
                 submission.updated_by = request.user
                 submission.updated_at = timezone.now()
                 submission.save()
+        elif submission.status == 'PENDING' and request.user.role in ["UESO", "VP", "DIRECTOR"]:
+            if action == 'delete':
+                # Remove any ProjectUpdate alerts that were created for this submission
+                ProjectUpdate.objects.filter(submission=submission).delete()
+                
+                # Delete the submission itself
+                project_id = submission.project.id
+                submission.delete()
+                
+                return redirect('project_submissions', pk=project_id)
         elif submission.status == 'SUBMITTED' and request.user.role == "COORDINATOR": 
             if action == 'forward':
                 submission.status = 'FORWARDED'
@@ -525,7 +658,26 @@ def admin_submission_action(request, pk, submission_id):
                 submission.updated_by = request.user
                 submission.updated_at = timezone.now()
                 submission.save()
+                
+        # Create or update ProjectUpdate for key status changes that affect the project team
+        if action in ['forward', 'accept', 'reject', 'request_revision'] and submission.project:
+            # Notify project leader and providers about submission status changes
+            users_to_notify = [submission.project.project_leader]
+            if submission.project.providers.exists():
+                users_to_notify.extend(submission.project.providers.all())
             
+            for user in users_to_notify:
+                if user:  # Ensure user exists
+                    ProjectUpdate.objects.update_or_create(
+                        user=user,
+                        project=submission.project,
+                        submission=submission,
+                        status=f'{submission.status}',
+                        defaults={
+                            'viewed': False,
+                            'updated_at': timezone.now(),
+                        }
+                    )
     return redirect('project_submissions_details', pk=pk, submission_id=submission_id)
 
 
@@ -614,9 +766,29 @@ from django.views.decorators.http import require_POST
 @role_required(allowed_roles=["VP", "DIRECTOR", "UESO"])
 @require_POST
 def cancel_project(request, pk):
+    from django.utils import timezone
     project = get_object_or_404(Project, pk=pk)
     project.status = 'CANCELLED'
     project.save()
+    
+    # Create project alerts for team members
+    users_to_notify = [project.project_leader]
+    if project.providers.exists():
+        users_to_notify.extend(project.providers.all())
+    
+    for user in users_to_notify:
+        if user:
+            ProjectUpdate.objects.update_or_create(
+                user=user,
+                project=project,
+                submission=None,  # No submission for project status changes
+                status='CANCELLED',
+                defaults={
+                    'viewed': False,
+                    'updated_at': timezone.now(),
+                }
+            )
+    
     return redirect(f'/projects/{pk}/overview/')
 
 # Undo cancel
@@ -624,8 +796,10 @@ def cancel_project(request, pk):
 @require_POST
 def undo_cancel_project(request, pk):
     from datetime import date as dtdate
+    from django.utils import timezone
     project = get_object_or_404(Project, pk=pk)
     today = dtdate.today()
+    old_status = project.status
     if project.start_date and project.estimated_end_date:
         if project.start_date <= today <= project.estimated_end_date:
             project.status = 'IN_PROGRESS'
@@ -636,6 +810,26 @@ def undo_cancel_project(request, pk):
     else:
         project.status = 'IN_PROGRESS'
     project.save()
+    
+    # Create project alerts for team members if status changed
+    if old_status != project.status:
+        users_to_notify = [project.project_leader]
+        if project.providers.exists():
+            users_to_notify.extend(project.providers.all())
+        
+        for user in users_to_notify:
+            if user:
+                ProjectUpdate.objects.update_or_create(
+                    user=user,
+                    project=project,
+                    submission=None,  # No submission for project status changes
+                    status=project.status,
+                    defaults={
+                        'viewed': False,
+                        'updated_at': timezone.now(),
+                    }
+                )
+    
     return redirect(f'/projects/{pk}/overview/')
 
 
@@ -653,12 +847,49 @@ def projects_dispatcher(request):
     return faculty_project(request)
 
 
-@role_required(allowed_roles=["FACULTY"])
+@role_required(allowed_roles=["FACULTY", "IMPLEMENTER"])
 def faculty_project(request):
     user = request.user
+
+    # Filters
+    sort_by = request.GET.get('sort_by', 'last_updated')
+    order = request.GET.get('order', 'desc')
+    status = request.GET.get('status', '')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+    search = request.GET.get('search', '')
+
+    
     projects = Project.objects.filter(
         models.Q(project_leader=user) | models.Q(providers=user)
-    ).distinct().order_by('-updated_at')
+    ).distinct()
+
+    # Apply filters
+    if status:
+        projects = projects.filter(status=status)
+    if date_from:
+        projects = projects.filter(start_date__gte=date_from)
+    if date_to:
+        projects = projects.filter(start_date__lte=date_to)
+    if search:
+        projects = projects.filter(title__icontains=search)
+
+    # Sorting
+    if sort_by == 'progress':
+        # For progress sort, convert to list and sort in Python
+        projects_list = list(projects)
+        projects = sorted(projects_list, key=lambda p: (p.progress[0] / p.progress[1]) if p.progress and p.progress[1] else 0, reverse=(order=='desc'))
+    else:
+        # Database sorting for other fields
+        sort_map = {
+            'title': 'title',
+            'last_updated': 'updated_at',
+            'start_date': 'start_date',
+        }
+        sort_field = sort_map.get(sort_by, 'updated_at')
+        if order == 'desc':
+            sort_field = '-' + sort_field
+        projects = projects.order_by(sort_field)
 
     # Pagination
     paginator = Paginator(projects, 5)
@@ -676,11 +907,50 @@ def faculty_project(request):
     else:
         page_range = range(current - 2, current + 3)
 
+    # Get recent status updates for this user's projects
+    updates_qs = ProjectUpdate.objects.filter(user=user).order_by('-updated_at')[:10]
+    alerts = []
+    for update in updates_qs:
+        # Build message text
+        status_text = {
+            'CANCELLED': 'has been cancelled',
+            'COMPLETED': 'has been completed',
+            'ONGOING': 'is now ongoing',
+            'SCHEDULED': 'is now scheduled',
+            'PROJECT_ASSIGNED': 'you have been assigned to',
+            'PENDING': 'requires a new submission',
+            'FORWARDED': 'submission has been forwarded to UESO',
+            'APPROVED': 'submission has been approved',
+            'REJECTED': 'submission has been rejected',
+            'REVISION_REQUESTED': 'submission requires revision',
+        }.get(update.status, f'status updated to {update.status.replace("_", " ").lower()}')
+        alerts.append({
+            'project_id': update.project.id,
+            'submission_id': update.submission.id if update.submission else None,
+            'title': update.project.title,
+            'status': update.status,
+            'viewed': update.viewed,
+            'updated_at': update.updated_at,
+            'message': f"Your project '{update.project.title}' {status_text}",
+        })
+
+    # Status choices for filter dropdown
+    status_choices = Project.STATUS_CHOICES
+
     return render(request, 'projects/faculty_project.html', {
         'projects': page_obj,
         'page_obj': page_obj,
         'paginator': paginator,
         'page_range': page_range,
+        'my_alerts': alerts,
+        'status_choices': status_choices,
+        'sort_by': sort_by,
+        'order': order,
+        'status': status,
+        'date_from': date_from,
+        'date_to': date_to,
+        'search': search,
+        'querystring': request.GET.urlencode().replace('&page='+str(page_obj.number), '') if page_obj else '',
     })
 
 
@@ -704,7 +974,7 @@ def admin_project(request):
 
     projects = Project.objects.all()
 
-    # Filter by college/campus via team leader
+    # Apply filters
     if college:
         projects = projects.filter(project_leader__college__id=college)
     if campus:
@@ -729,29 +999,32 @@ def admin_project(request):
         projects = projects.filter(title__icontains=search)
 
     # Sorting
-    sort_map = {
-        'title': 'title',
-        'last_updated': 'updated_at',
-        'start_date': 'start_date',
-        'progress': '', # Placeholder, not supported in DB sort
-    }
-    sort_field = sort_map.get(sort_by, 'title')
-    if sort_field:
+    if sort_by == 'progress':
+        # For progress sort, convert to list and sort in Python
+        projects_list = list(projects)
+        projects = sorted(projects_list, key=lambda p: (p.progress[0] / p.progress[1]) if p.progress and p.progress[1] else 0, reverse=(order=='desc'))
+    else:
+        # Database sorting for other fields
+        sort_map = {
+            'title': 'title',
+            'last_updated': 'updated_at',
+            'start_date': 'start_date',
+        }
+        sort_field = sort_map.get(sort_by, 'updated_at')
         if order == 'desc':
             sort_field = '-' + sort_field
         projects = projects.order_by(sort_field)
-    # If progress sort, sort in Python
-    elif sort_by == 'progress':
-        projects = sorted(projects, key=lambda p: (p.progress[0] / p.progress[1]) if p.progress[1] else 0, reverse=(order=='desc'))
 
     # Filter options
     colleges = College.objects.all()
     campuses = User.Campus.choices
     status_choices = Project.STATUS_CHOICES
     agendas = Agenda.objects.all()
-    years = [d.year for d in projects.dates('start_date', 'year')]
+    # Get available years from projects that exist
+    years = list(set([d.year for d in Project.objects.dates('start_date', 'year')]))
+    years.sort(reverse=True)
 
-    # Pagination (optional, mimic old logic if needed)
+    # Pagination
     paginator = Paginator(projects, 20)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -876,7 +1149,7 @@ def add_project_view(request):
                         project=project,
                         title=f"Event {i}",
                         description="Description Here",
-                        datetime=now,
+                        datetime=None,
                         status='SCHEDULED',
                         created_at=now,
                         created_by=request.user,
@@ -886,6 +1159,22 @@ def add_project_view(request):
                         placeholder=True
                     )
                 project.save()
+
+                # Create alerts for project members about being added to the project
+                from .models import ProjectUpdate
+                project_members = list(project.providers.all())  # Get all project providers
+                if project.project_leader:  # Add project leader if exists
+                    project_members.append(project.project_leader)
+                
+                for member in project_members:
+                    ProjectUpdate.objects.create(
+                        user=member,
+                        project=project,
+                        submission=None,  # No submission for project creation alerts
+                        status='PROJECT_ASSIGNED',
+                        viewed=False,
+                        updated_at=timezone.now()
+                    )
 
                 return render(request, 'projects/add_project.html', {
                     'form': ProjectForm(),
