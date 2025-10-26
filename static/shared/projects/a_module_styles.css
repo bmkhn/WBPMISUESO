@@ -191,11 +191,11 @@ body {
     text-align: center !important;
 }
  
-.name-link {
+.name-link, a {
     color: #0099FF;
     text-decoration: none;
 } 
-.name-link:hover {
+.name-link:hover, a:hover {
     text-decoration: underline;
 } 
  
