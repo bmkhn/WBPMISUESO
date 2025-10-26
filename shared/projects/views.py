@@ -850,7 +850,63 @@ def projects_dispatcher(request):
 @role_required(allowed_roles=["FACULTY", "IMPLEMENTER"])
 def faculty_project(request):
     user = request.user
+
+    # Filters
+    sort_by = request.GET.get('sort_by', 'last_updated')
+    order = request.GET.get('order', 'desc')
+    status = request.GET.get('status', '')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+    search = request.GET.get('search', '')
+
     
+    projects = Project.objects.filter(
+        models.Q(project_leader=user) | models.Q(providers=user)
+    ).distinct()
+
+    # Apply filters
+    if status:
+        projects = projects.filter(status=status)
+    if date_from:
+        projects = projects.filter(start_date__gte=date_from)
+    if date_to:
+        projects = projects.filter(start_date__lte=date_to)
+    if search:
+        projects = projects.filter(title__icontains=search)
+
+    # Sorting
+    if sort_by == 'progress':
+        # For progress sort, convert to list and sort in Python
+        projects_list = list(projects)
+        projects = sorted(projects_list, key=lambda p: (p.progress[0] / p.progress[1]) if p.progress and p.progress[1] else 0, reverse=(order=='desc'))
+    else:
+        # Database sorting for other fields
+        sort_map = {
+            'title': 'title',
+            'last_updated': 'updated_at',
+            'start_date': 'start_date',
+        }
+        sort_field = sort_map.get(sort_by, 'updated_at')
+        if order == 'desc':
+            sort_field = '-' + sort_field
+        projects = projects.order_by(sort_field)
+
+    # Pagination
+    paginator = Paginator(projects, 5)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+
+    current = page_obj.number
+    total = paginator.num_pages
+    if total <= 5:
+        page_range = range(1, total + 1)
+    elif current <= 3:
+        page_range = range(1, 6)
+    elif current >= total - 2:
+        page_range = range(total - 4, total + 1)
+    else:
+        page_range = range(current - 2, current + 3)
+
     # Get recent status updates for this user's projects
     updates_qs = ProjectUpdate.objects.filter(user=user).order_by('-updated_at')[:10]
     alerts = []
@@ -877,26 +933,9 @@ def faculty_project(request):
             'updated_at': update.updated_at,
             'message': f"Your project '{update.project.title}' {status_text}",
         })
-    
-    projects = Project.objects.filter(
-        models.Q(project_leader=user) | models.Q(providers=user)
-    ).distinct().order_by('-updated_at')
 
-    # Pagination
-    paginator = Paginator(projects, 5)
-    page_number = request.GET.get('page', 1)
-    page_obj = paginator.get_page(page_number)
-
-    current = page_obj.number
-    total = paginator.num_pages
-    if total <= 5:
-        page_range = range(1, total + 1)
-    elif current <= 3:
-        page_range = range(1, 6)
-    elif current >= total - 2:
-        page_range = range(total - 4, total + 1)
-    else:
-        page_range = range(current - 2, current + 3)
+    # Status choices for filter dropdown
+    status_choices = Project.STATUS_CHOICES
 
     return render(request, 'projects/faculty_project.html', {
         'projects': page_obj,
@@ -904,6 +943,14 @@ def faculty_project(request):
         'paginator': paginator,
         'page_range': page_range,
         'my_alerts': alerts,
+        'status_choices': status_choices,
+        'sort_by': sort_by,
+        'order': order,
+        'status': status,
+        'date_from': date_from,
+        'date_to': date_to,
+        'search': search,
+        'querystring': request.GET.urlencode().replace('&page='+str(page_obj.number), '') if page_obj else '',
     })
 
 
@@ -927,7 +974,7 @@ def admin_project(request):
 
     projects = Project.objects.all()
 
-    # Filter by college/campus via team leader
+    # Apply filters
     if college:
         projects = projects.filter(project_leader__college__id=college)
     if campus:
@@ -952,29 +999,32 @@ def admin_project(request):
         projects = projects.filter(title__icontains=search)
 
     # Sorting
-    sort_map = {
-        'title': 'title',
-        'last_updated': 'updated_at',
-        'start_date': 'start_date',
-        'progress': '', # Placeholder, not supported in DB sort
-    }
-    sort_field = sort_map.get(sort_by, 'title')
-    if sort_field:
+    if sort_by == 'progress':
+        # For progress sort, convert to list and sort in Python
+        projects_list = list(projects)
+        projects = sorted(projects_list, key=lambda p: (p.progress[0] / p.progress[1]) if p.progress and p.progress[1] else 0, reverse=(order=='desc'))
+    else:
+        # Database sorting for other fields
+        sort_map = {
+            'title': 'title',
+            'last_updated': 'updated_at',
+            'start_date': 'start_date',
+        }
+        sort_field = sort_map.get(sort_by, 'updated_at')
         if order == 'desc':
             sort_field = '-' + sort_field
         projects = projects.order_by(sort_field)
-    # If progress sort, sort in Python
-    elif sort_by == 'progress':
-        projects = sorted(projects, key=lambda p: (p.progress[0] / p.progress[1]) if p.progress[1] else 0, reverse=(order=='desc'))
 
     # Filter options
     colleges = College.objects.all()
     campuses = User.Campus.choices
     status_choices = Project.STATUS_CHOICES
     agendas = Agenda.objects.all()
-    years = [d.year for d in projects.dates('start_date', 'year')]
+    # Get available years from projects that exist
+    years = list(set([d.year for d in Project.objects.dates('start_date', 'year')]))
+    years.sort(reverse=True)
 
-    # Pagination (optional, mimic old logic if needed)
+    # Pagination
     paginator = Paginator(projects, 20)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)

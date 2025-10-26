@@ -13,6 +13,7 @@ from shared.projects.models import Project, ProjectDocument, SustainableDevelopm
 from internal.agenda.models import Agenda
 
 
+
 class Command(BaseCommand):
 	help = "Add 10 faculty and 10 implementer users with fake data."
 
@@ -147,6 +148,8 @@ class Command(BaseCommand):
 					is_confirmed=True,
 					degree=degree,
 					expertise=expertise,
+					created_by=director_user,
+					created_at=timezone.now()
 				)
 		create_user(User.Role.FACULTY)
 		create_user(User.Role.IMPLEMENTER)
@@ -219,8 +222,6 @@ class Command(BaseCommand):
 					location="",
 					created_at=timezone.now(),
 					created_by=director_user,
-					updated_at=timezone.now(),
-					updated_by=director_user,
 					image=None,
 					placeholder=True
 				)
@@ -284,7 +285,7 @@ class Command(BaseCommand):
 				sponsor_name='Test Sponsor',
 				start_date=timezone.now().date(),
 				estimated_end_date=timezone.now().date() + datetime.timedelta(days=90),
-				created_by=leader,
+				created_by=director_user,
 				status='NOT_STARTED',
 			)
 			# Add ProjectEvents for test project

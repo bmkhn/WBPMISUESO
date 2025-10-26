@@ -52,6 +52,9 @@ class Submission(models.Model):
 	updated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='updated_submissions')
 	updated_at = models.DateTimeField(auto_now=True)
 
+	def __str__(self):
+		return self.project.title + " - " + self.downloadable.name
+
 	def get_status_display(self):
 		return dict(self.SUBMISSION_STATUS_CHOICES).get(self.status, self.status)
 

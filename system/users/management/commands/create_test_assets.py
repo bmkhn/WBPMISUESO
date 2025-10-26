@@ -121,6 +121,7 @@ class Command(BaseCommand):
                     college=college,
                     role=role,
                     is_confirmed=True,
+                    created_by=None,
                 )
                 self.stdout.write(self.style.SUCCESS(f"Created {role} user: {email} / {default_password}"))
             else:
@@ -163,5 +164,6 @@ class Command(BaseCommand):
             # Associate with 3 random colleges
             selected_colleges = random.sample(college_objs, 3)
             agenda_obj.concerned_colleges.set(selected_colleges)
+            agenda_obj.created_by = User.objects.filter(role=User.Role.DIRECTOR).first()
             agenda_obj.save()
         self.stdout.write(self.style.SUCCESS('Sample agendas created and associated with colleges.'))

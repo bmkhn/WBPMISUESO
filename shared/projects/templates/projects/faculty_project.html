@@ -230,7 +230,7 @@
 
 	.filter-grid {
 		display: grid;
-		grid-template-columns: repeat(2, 1fr);
+		grid-template-columns: repeat(3, 1fr);
 		grid-gap: 24px;
 	}
 
@@ -490,11 +490,11 @@
 						<label style="font-weight:500;color:#374151;display:flex;flex-direction:column;">
 							Sort By
 							<select name="sort_by" style="width:100%;margin-top:6px;">
-								<option value="alertd_at" {% if sort_by == 'alertd_at' %}selected{% endif %}>Last alertd</option>
-								<option value="submitted_at" {% if sort_by == 'submitted_at' %}selected{% endif %}>Date Submitted</option>
 								<option value="title" {% if sort_by == 'title' %}selected{% endif %}>Title</option>
-								<option value="status" {% if sort_by == 'status' %}selected{% endif %}>Status</option>
-							</select>
+                                <option value="last_updated" {% if sort_by == 'last_updated' %}selected{% endif %}>Last Updated</option>
+                                <option value="start_date" {% if sort_by == 'start_date' %}selected{% endif %}>Start Date</option>
+                                <option value="progress" {% if sort_by == 'progress' %}selected{% endif %}>Progress</option>
+                            </select>
 						</label>
 
 						<!-- Order -->
@@ -511,20 +511,19 @@
 							Status
 							<select name="status" style="width:100%;margin-top:6px;">
 								<option value="">All Status</option>
-								<option value="RECEIVED" {% if status == 'RECEIVED' %}selected{% endif %}>Received</option>
-								<option value="UNDER_REVIEW" {% if status == 'UNDER_REVIEW' %}selected{% endif %}>Under Review</option>
-								<option value="APPROVED" {% if status == 'APPROVED' %}selected{% endif %}>Approved</option>
-								<option value="REJECTED" {% if status == 'REJECTED' %}selected{% endif %}>Rejected</option>
-								<option value="ENDORSED" {% if status == 'ENDORSED' %}selected{% endif %}>Endorsed</option>
-								<option value="DENIED" {% if status == 'DENIED' %}selected{% endif %}>Denied</option>
+								{% for status_code, status_name in status_choices %}
+									<option value="{{ status_code }}" {% if status == status_code %}selected{% endif %}>{{ status_name }}</option>
+								{% endfor %}
 							</select>
 						</label>
 
 						<!-- Bottom Right - Date -->
-						<label style="font-weight:500;color:#374151;display:flex;flex-direction:column;">
-							Date
-							<input type="date" name="date" value="{{ date|default:'' }}" style="width:100%;margin-top:6px;" />
-						</label>
+                        <label>Date From
+                            <input type="date" name="date_from" value="{{ date_from|default:'' }}"/>
+                        </label>
+                        <label>Date To
+                            <input type="date" name="date_to" value="{{ date_to|default:'' }}"/>
+                        </label>
 					</div>
 
 					<!-- Buttons Row -->
