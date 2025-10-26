@@ -281,7 +281,7 @@ body {
 .expert-container {
     display: grid;
     grid-template-columns: repeat(4, 1fr); 
-    gap: 0.5rem; 
+    gap: 1.05rem; 
     padding: 20px 0;
 }
 
@@ -314,11 +314,12 @@ body {
     position: absolute;
     top: 10px;
     left: 10px;
-    background: #F8A959;
-    color: #4B331B;
-    padding: 4px 8px;
-    font-size: 14px;
-    font-weight: 500;
+    background-color: #ff9f10; 
+    color: rgb(55, 39, 0);
+    border: 0.08rem solid #ff9f10;
+    font-weight: 600; 
+    padding: 0.35rem 0.6rem;
+    margin-right: 0.5rem;
 }
 
 .college-logo {

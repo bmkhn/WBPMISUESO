@@ -141,7 +141,6 @@ button:hover {
     margin-bottom: 1rem; 
     width: 70%; 
     align-self: center; 
-    overflow: auto;
 }
 
 .detail-trio {
@@ -221,7 +220,7 @@ button:hover {
     left: 50%;
     transform: translateX(-50%);
     bottom: 100%;
-    width: 15rem;
+    width: 7rem;
     background-color: #333333c5;
     color: white;
     text-align: center;

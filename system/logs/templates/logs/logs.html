@@ -114,7 +114,7 @@
                 <td title="{{ log.details }}">{{ log.details|truncatechars:30 }}</td>
                 <td>
                     {% if log.url %}
-                        <a href="{{ log.url  }}">Link</a>
+                        <a href="{{ log.url  }}" class="name-link">Link</a>
                     {% else %}
                         -
                     {% endif %}

@@ -41,7 +41,7 @@
                 </div>
 
             <div class="form-group">
-                <label class="form-label">Choose Form/s: <span class="required">*</span></label>
+                <label class="user-details-label">Choose Form/s: <span class="required">*</span></label>
                 <div class="downloadable-checkboxes">
                     {% for downloadable in downloadables %}
                         <div class="checkbox-item" data-project-dependent="{% if downloadable.submission_type == 'event' %}true{% else %}false{% endif %}">
@@ -57,15 +57,15 @@
 
             <!-- Event Selection (shown only when event-type downloadable is selected) -->
             <div class="form-group" id="event-selection-group" style="display:none;">
-                <label class="form-label">Select Event: <span class="required">*</span></label>
-                <select class="form-input" name="selected_event" id="id_selected_event">
+                <label class="user-details-label">Select Event: <span class="required">*</span></label>
+                <select class="form-input user-details-value" name="selected_event" id="id_selected_event">
                     <option value="">Choose an event</option>
                 </select>
             </div>
 
             <div class="form-group">
-                <label class="form-label" for="id_deadline">Deadline: <span class="required">*</span></label>
-                <input class="form-input" type="datetime-local" name="deadline" id="id_deadline">
+                <label class="user-details-label" for="id_deadline">Deadline: <span class="required">*</span></label>
+                <input class="form-input user-details-value" type="datetime-local" name="deadline" id="id_deadline">
             </div>
 
                 <div class="form-group">

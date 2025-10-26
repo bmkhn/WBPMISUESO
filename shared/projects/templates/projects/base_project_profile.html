@@ -20,7 +20,7 @@
                 <content style="flex-grow: 2;"> 
                     <button class="campus">{{ project.project_leader.get_campus_display }}</button> 
                     {% if project.agenda %}
-                    <button class="agenda">puta{{ project.agenda.name }}</button> 
+                    <button class="agenda">{{ project.agenda.name }}</button> 
                     {% endif %}
                 </content> 
                 <content style="flex-grow: 0;"> 
@@ -34,12 +34,12 @@
                         {% if project.status == 'CANCELLED' %}
                         <form method="post" action="/projects/{{ project.id }}/undo_cancel/" style="display:inline;">
                             {% csrf_token %}
-                            <button type="submit" class="admin-button" style="background:#f59e42;color:#fff;">Undo Cancel</button>
+                            <button type="submit" class="admin-button cancel">Undo Cancel</button>
                         </form>
                         {% else %}
                         <form method="post" action="/projects/{{ project.id }}/cancel/" style="display:inline;">
                             {% csrf_token %}
-                            <button type="submit" class="admin-button" style="background:#dc2626;color:#fff;">Mark as Cancelled</button>
+                            <button type="submit" class="admin-button notcancel">Mark as Cancelled</button>
                         </form>
                         {% endif %}
                     {% endif %}

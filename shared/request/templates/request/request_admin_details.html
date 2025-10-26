@@ -34,8 +34,8 @@
             <h2>Overview</h2>
             <div class="detail-trio">
                 <span class="detail-icon">
-                    <svg width="24" height="24"><use href="#detail-icon"/></svg> 
-                    <span class="detail-tooltip">Choose</span>
+                    <svg width="24" height="24"><use href="#detail-icon"/></svg>
+                    <span class="detail-tooltip">The user who submitted this request.</span>
                 </span>
                 <span class="detail-item">Request Submmited by</span>
                 <span class="detail-value">{{ request.user.get_full_name }}</span>
@@ -43,6 +43,7 @@
             <div class="detail-trio">
                 <span class="detail-icon">
                     <svg width="24" height="24"><use href="#detail-icon"/></svg>
+                    <span class="detail-tooltip">The proposed title of the project.</span>
                 </span>
                 <span class="detail-item">Title</span>
                 <span class="detail-value">{{ req.title }}</span>
@@ -50,6 +51,7 @@
             <div class="detail-trio">
                 <span class="detail-icon">
                     <svg width="24" height="24"><use href="#detail-icon"/></svg>
+                    <span class="detail-tooltip">The external organization making the request.</span>
                 </span>
                 <span class="detail-item">Organization</span>
                 <span class="detail-value">{{ req.organization }}</span>
@@ -57,6 +59,7 @@
             <div class="detail-trio">
                 <span class="detail-icon">
                     <svg width="24" height="24"><use href="#detail-icon"/></svg>
+                    <span class="detail-tooltip">A brief overview of the request's objective and scope.</span>
                 </span>
                 <span class="detail-item">Summary</span>
                 <div class="detail-value sum">{{ req.summary }}</div>
@@ -68,6 +71,7 @@
             <div class="detail-trio">
                 <span class="detail-icon">
                     <svg width="24" height="24"><use href="#detail-icon"/></svg>
+                    <span class="detail-tooltip">The main geographic area where the project will be implemented.</span>
                 </span>
                 <span class="detail-item">Primary Location</span>
                 <span class="detail-value">{{ req.primary_location }}</span>
@@ -75,6 +79,7 @@
             <div class="detail-trio">
                 <span class="detail-icon">
                     <svg width="24" height="24"><use href="#detail-icon"/></svg>
+                    <span class="detail-tooltip">The community or group that the project is intended to serve.</span>
                 </span>
                 <span class="detail-item">Primary Beneficiaries</span>
                 <span class="detail-value">{{ req.primary_beneficiary }}</span>
@@ -82,17 +87,19 @@
             <div class="detail-trio">
                 <span class="detail-icon">
                     <svg width="24" height="24"><use href="#detail-icon"/></svg>
+                    <span class="detail-tooltip">The date and time the request was officially submitted.</span>
                 </span>
                 <span class="detail-item">Date Submitted</span>
                 <span class="detail-value">{{ req.submitted_at|date:'Y-m-d H:i' }}</span>
             </div> 
         </div> 
-         
+        
         <div class="label"> 
             <h2>Other</h2>
             <div class="detail-trio">
                 <span class="detail-icon">
                     <svg width="24" height="24"><use href="#detail-icon"/></svg>
+                    <span class="detail-tooltip">The current processing status of this request.</span>
                 </span>
                 <span class="detail-item">Status</span>
                 <span class="detail-value">{{ req.get_status_display }}</span>
@@ -101,6 +108,7 @@
             <div class="detail-trio">
                 <span class="detail-icon">
                     <svg width="24" height="24"><use href="#detail-icon"/></svg>
+                    <span class="detail-tooltip">The attached Letter of Intent document.</span>
                 </span>
                 <span class="detail-item">Letter of Intent</span>
                 <span class="detail-value">
@@ -115,6 +123,7 @@
             <div class="detail-trio">
                 <span class="detail-icon">
                     <svg width="24" height="24"><use href="#detail-icon"/></svg>
+                    <span class="detail-tooltip">The specific reason provided for rejecting the request.</span>
                 </span>
                 <span class="detail-item">Reason of Rejection</span>
                 <div class="detail-value sum">{{ req.reason|default:'-' }}</div>
