@@ -35,7 +35,8 @@
 			<div class="logo-circle" id="profilePicContainer" style="position:relative;">
 				<img src="{{ request.user.profile_picture_or_initial }}" alt="Profile Picture" class="logo-circle" id="profilePic" style="object-fit: cover; cursor:pointer;">
 				<div id="profileModal">
-					<a href="/profile/">Profile</a>
+					<a href="{% url 'profile' %}">Profile</a>
+					<a href="{% url 'notifications' %}">Notifications</a>
 					<a href="/settings/">Settings</a>
 					<a href="{% url 'logout' %}" style="color:#E53E3E;">Log Out</a>
 				</div>

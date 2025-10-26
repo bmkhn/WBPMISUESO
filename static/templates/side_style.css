@@ -156,7 +156,7 @@ body {
 .topbar {
     position: fixed;
     top: 0;
-    left: 270px; 
+    left: 0; 
     right: 0;
     height: 4rem;
     background-color: #F7F3F1;
@@ -186,7 +186,7 @@ body {
     height: 35px;
 }
   
- #backToTopBtn {
+#backToTopBtn {
     position: fixed;
     bottom: 40px;
     right: 40px;
@@ -210,3 +210,77 @@ body {
     opacity: 1;
     visibility: visible;
 } 
+
+.logo-circle {
+    width: 2.85rem;
+    height: 2.85rem;
+    border-radius: 100%;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-color: rgba(0, 0, 0, 0.15);
+}
+
+.logo-circle img {
+    width: 100%;
+    height: 100%;
+    border-radius: 100%;
+    transition: transform 0.2s ease;
+}
+.logo-circle img:hover {
+    cursor: pointer;
+    transform: scale(1.05);
+}
+
+.topbar-button img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    transition: transform 0.2s ease;
+}
+
+.topbar-button img:hover {
+    cursor: pointer;
+    transform: scale(1.05);
+}
+
+#profileModal {
+    display: none;
+    position: absolute; 
+    background: #fff; 
+    border-radius: 0.75rem; 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.05); 
+    min-width: 10rem; 
+    z-index: 1000; 
+    border: none; 
+    overflow: hidden; 
+    text-align: left;
+    top: calc(100% + 5px); 
+    right: 0;
+    opacity: 0;
+    transform: translateY(-10px); 
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out; 
+}
+
+#profileModal.show {
+    display: block; 
+    opacity: 1; 
+    transform: translateY(0);
+}
+
+#profileModal a {
+    display: block; 
+    padding: 0.75rem 1.25rem;
+    color: #222; 
+    text-decoration: none;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 500; 
+    border-bottom: 0;
+    transition: background 0.2s, color 0.2s;
+}
+
+#profileModal a:hover {
+    background: #f7f3f1; 
+    color: #00681a; 
+}

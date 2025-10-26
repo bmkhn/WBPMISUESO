@@ -137,13 +137,18 @@ def log_user_action(sender, instance, created, **kwargs):
     if hasattr(instance, '_skip_log'):
         return
     action = 'CREATE' if created else 'UPDATE'
+    
+    # Only notify on UPDATE (not CREATE), and only for certain changes
+    is_notification = not created
+    
     LogEntry.objects.create(
         user=instance.created_by if created else instance,
         action=action,
         model='User',
         object_id=instance.id,
         object_repr=str(instance),
-        details=f"Role: {instance.role}"
+        details=f"Role: {instance.role}",
+        is_notification=is_notification
     )
 
 

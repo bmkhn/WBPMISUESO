@@ -41,7 +41,8 @@ def log_export_request_action(sender, instance, created, **kwargs):
         model='ExportRequest',
         object_id=instance.id,
         object_repr=str(instance),
-        details=f"Export Type: {instance.type}, Status: {instance.status}"
+        details=f"Export Type: {instance.type}, Status: {instance.status}",
+        is_notification=True
     )
 
 
@@ -54,6 +55,7 @@ def log_export_request_delete(sender, instance, **kwargs):
         model='ExportRequest',
         object_id=instance.id,
         object_repr=str(instance),
+        is_notification=True
     )
 
 

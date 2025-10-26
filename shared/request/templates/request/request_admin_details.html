@@ -39,7 +39,7 @@
     }
 
     .detail-trio > :nth-child(1) {
-        margin-right: 15px;
+        margin-right: 10px;
     }
 
     .detail-trio > :nth-child(2) {
@@ -58,7 +58,7 @@
         font-family: 'Inter', sans-serif;
         font-weight: 600;
         font-size: 20px;
-        width: 170px;
+        width: 210px;
     }
 
     .detail-value {
@@ -143,97 +143,187 @@
     textarea {
         resize: none;
     }
+</style>
 
+<style>
+    .name-link {
+        color: #0A6C44 !important;
+        text-decoration: none;
+    }
+
+    .name-link:hover {
+        color: #095c2d;
+        text-decoration: underline;
+    }
+
+    .upper {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+    }
+
+    .upper-left {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 5px;
+    }
+
+    .upper-right {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        align-items: flex-end;
+    }
+
+    .file-text {
+        font-size: 2.3em;
+        font-weight: 600;
+    }
+
+    .green-text {
+        color: #0A6C44;
+    }
+
+    .grey-text {
+        font-size: 0.9em;
+        font-weight: 400;
+        color: #6c757d;
+    }
+    
+    .deadline-text {
+        font-size: 1.1em;
+        font-weight: 600;
+        color: #181818;
+    }
+
+    hr {
+        border: none;
+        border-top: 1px solid #7b7b7b;
+        margin: 0.5rem 1rem;
+    }
+
+    .notes-text {
+        font-size: 1.1em;
+        font-weight: 400;
+        color: #181818;
+        word-break: break-word;
+    }
+
+    .trained-individuals-text {
+        font-size: 1.5em;
+        font-weight: 600;
+        color: #181818;
+    }
+
+    input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        margin-top: 4px;
+        accent-color: black;
+    }
+
+    .content-leftright {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        gap: 150px;
+    }
+
+    .content-left {
+        display: flex;
+        flex-direction: column;
+        gap: 30px;
+    }
+
+    .content-right {
+        display: flex;
+        flex-direction: column;
+        gap: 30px;
+        min-width: 40%;
+        max-width: 40%;
+    }
+
+    .red {
+        color: #D5110A;
+    }
+
+    .redirect-text {
+        color: #007bff;
+        text-decoration: none;
+    }
+
+    .redirect-container {
+        display: flex;
+        gap: 20px;
+    }
+    
+    .redirect-text:hover {
+        text-decoration: underline;
+        cursor: pointer;
+    }
+
+    .action-container {
+        margin-top: 0.5rem;
+    }
+
+    .action-form {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+    }
 </style>
 
 <div class="main-container">
-    <div class="detail-text">Request Details</div>
-    <div class="detail-container">
-        <div class="detail-trio">
-            <span class="detail-icon">
-                <svg width="24" height="24"><use href="#detail-icon"/></svg>
-            </span>
-            <span class="detail-item">Title</span>
-            <span class="detail-value">{{ req.title }}</span>
+
+    <div class="redirect-container">
+        <a href="{% url 'request_dispatcher' %}" class="redirect-text">Go to Request 🡕</a>
+    </div>
+
+    <div class="upper">
+        <div class="upper-left">
+            <span class="file-text">{{ req.title }}</span>
+            <span>{{ req.organization }}</span>
+            <span>{{ req.submitted_by.email }} • {{ req.submitted_by.contact_no|default:'-' }} </span>
+            <span class="grey-text">Submitted: {{ req.submitted_at|date:"F j, Y, H:i" }} • {{ req.submitted_by.get_full_name }} </span>
+            {% if req.status != 'PENDING' and req.status != 'UNDER_REVIEW' %}
+            <span class="grey-text">Reviewed: {{ req.reviewed_at|date:"F j, Y, H:i" }} • {{ req.reviewed_by.get_full_name }} </span>
+            {% elif req.status != 'RECEIVED' and req.status != 'UNDER_REVIEW' and req.status != 'APPROVED' and req.status != 'REJECTED' and req.status != 'ENDORSED' and req.status != 'DENIED' %}
+            <span class="grey-text">Endorsed: {{ req.endorsed_at|date:"F j, Y, H:i" }} • {{ req.endorsed_by.get_full_name }} </span>
+            {% endif %}
         </div>
-        <div class="detail-trio">
-            <span class="detail-icon">
-                <svg width="24" height="24"><use href="#detail-icon"/></svg>
-            </span>
-            <span class="detail-item">Organization</span>
-            <span class="detail-value">{{ req.organization }}</span>
+
+        <div class="upper-right">
+            <span class="deadline-text">Status: {{ req.get_status_display }}</span>
         </div>
-        <div class="detail-trio">
-            <span class="detail-icon">
-                <svg width="24" height="24"><use href="#detail-icon"/></svg>
-            </span>
-            <span class="detail-item">Primary Location</span>
-            <span class="detail-value">{{ req.primary_location }}</span>
+    </div>
+
+    <div class="content-leftright">
+        <div class="content-left">
+            <span class="notes-text">{{ req.primary_location }}</span>
+            <span class="notes-text">{{ req.primary_beneficiary }}</span>
+            <span class="notes-text">{{ req.summary|default:'-' }}</span>
         </div>
-        <div class="detail-trio">
-            <span class="detail-icon">
-                <svg width="24" height="24"><use href="#detail-icon"/></svg>
-            </span>
-            <span class="detail-item">Primary Beneficiaries</span>
-            <span class="detail-value">{{ req.primary_beneficiary }}</span>
+
+        <div class="content-right">
+            <a class="name-link notes-text" href="{{ req.letter_of_intent.url }}" target="_blank">Letter of Intent</a>
+            {% if req.reason %}
+            <span class="notes-text"><strong class="red">Reason/s for Rejection</strong><br>{{ req.reason }}</span>
+            {% endif %}
         </div>
-        <div class="detail-trio">
-            <span class="detail-icon">
-                <svg width="24" height="24"><use href="#detail-icon"/></svg>
-            </span>
-            <span class="detail-item">Summary</span>
-            <span class="detail-value">{{ req.summary }}</span>
-        </div>
-        <div class="detail-trio">
-            <span class="detail-icon">
-                <svg width="24" height="24"><use href="#detail-icon"/></svg>
-            </span>
-            <span class="detail-item">Status</span>
-            <span class="detail-value">{{ req.get_status_display }}</span>
-        </div>
-        <div class="detail-trio">
-            <span class="detail-icon">
-                <svg width="24" height="24"><use href="#detail-icon"/></svg>
-            </span>
-            <span class="detail-item">Date Submitted</span>
-            <span class="detail-value">{{ req.submitted_at|date:'Y-m-d H:i' }}</span>
-        </div>
-        <div class="detail-trio">
-            <span class="detail-icon">
-                <svg width="24" height="24"><use href="#detail-icon"/></svg>
-            </span>
-            <span class="detail-item">Letter of Intent</span>
-            <span class="detail-value">
-                {% if req.letter_of_intent %}
-                    <a href="{{ req.letter_of_intent.url }}" target="_blank">Download</a>
-                {% else %}
-                    <span style="color:#888;">None</span>
-                {% endif %}
-            </span>
-        </div>
-        {% if req.reason %}
-        <div class="detail-trio">
-            <span class="detail-icon">
-                <svg width="24" height="24"><use href="#detail-icon"/></svg>
-            </span>
-            <span class="detail-item">Reason of Rejection</span>
-            <span class="detail-value">{{ req.reason|default:'-' }}</span>
-        </div>
-        {% endif %}
     </div>
 
 
-    <div style="display:flex;flex-direction:row;justify-content:space-between;align-items:center;">
-        <a href="{% url 'request_dispatcher' %}" class="back-btn" style="width:auto;align-self:left;">Back to Requests</a>
-
+    <div class="action-container">
         {% if req.status == 'UNDER_REVIEW' %}
-        <div style="display: flex; gap: 15px;">
+        <div class="action-form">
             <button type="button" class="action-btn" id="approve-btn">Approve</button>
             <button type="button" class="reject-btn" id="reject-btn">Reject</button>
         </div>
         {% elif req.status == 'APPROVED' %}
-        <div style="display: flex; gap: 40px;">
+        <div class="action-form">
             <button type="button" class="action-btn" id="endorse-btn">Endorse</button>
+            <button type="button" class="reject-btn" id="deny-btn">Deny</button>
         </div>
         {% endif %}
     </div>

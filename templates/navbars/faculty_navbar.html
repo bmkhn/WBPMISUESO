@@ -10,6 +10,8 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 <link href="{% static 'templates/top_style.css' %}" rel="stylesheet">
 </head>
+
+
 <body>
 
 	<div class="outside-container">
@@ -34,7 +36,8 @@
 			<div class="logo-circle" id="profilePicContainer" style="position:relative;">
 				<img src="{{ request.user.profile_picture_or_initial }}" alt="Profile Picture" class="logo-circle" id="profilePic" style="object-fit: cover; cursor:pointer;">
 				<div id="profileModal">
-					<a href="/profile/">Profile</a>
+					<a href="{% url 'profile' %}">Profile</a>
+					<a href="{% url 'notifications' %}">Notifications</a>
 					<a href="/settings/">Settings</a>
 					<a href="{% url 'logout' %}" style="color:#E53E3E;">Log Out</a>
 				</div>

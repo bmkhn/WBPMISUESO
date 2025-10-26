@@ -9,6 +9,24 @@ from .forms import LoginForm, ClientRegistrationForm, FacultyRegistrationForm, I
 
 import random
 
+
+
+def get_role_constants():
+    ADMIN_ROLES = ["VP", "DIRECTOR", "UESO"]
+    SUPERUSER_ROLES = ["PROGRAM_HEAD", "DEAN", "COORDINATOR"]
+    FACULTY_ROLE = ["FACULTY", "IMPLEMENTER"]
+    COORDINATOR_ROLE = ["COORDINATOR"]
+    return ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE, COORDINATOR_ROLE
+
+def get_templates(request):
+    user_role = getattr(request.user, 'role', None)
+    if user_role in ["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
+        base_template = "base_internal.html"
+    else:
+        base_template = "base_public.html"
+    return base_template
+
+
 ####################################################################################################
 
 # Login, Logout, Forgot Password, and Role-Based Redirection Views
@@ -561,6 +579,8 @@ from django.db.models import Q
 @login_required
 def profile_view(request):
     user = request.user
+
+    base_template = get_templates(request)
     
     # Get campus display name
     campus_display = dict(User.Campus.choices).get(user.campus, user.campus) if user.campus else "N/A"
@@ -609,6 +629,7 @@ def profile_view(request):
         'college_name': college_name,
         'college_logo': college_logo,
         'content_items': content_items,
+        'base_template': base_template,
     })
 
 

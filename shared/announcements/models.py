@@ -41,13 +41,18 @@ def log_announcement_action(sender, instance, created, **kwargs):
 		return
 	action = 'CREATE' if created else 'UPDATE'
 	user = instance.published_by if created else instance.edited_by
+	
+	# Only create notification for published announcements
+	is_notification = bool(instance.published_at)
+	
 	LogEntry.objects.create(
 		user=user,
 		action=action,
 		model='Announcement',
 		object_id=instance.id,
 		object_repr=str(instance),
-		details=f"Title: {instance.title}"
+		details=f"Title: {instance.title}",
+		is_notification=is_notification
 	)
 
 

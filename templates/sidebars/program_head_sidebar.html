@@ -103,10 +103,14 @@
 
 	<!-- Topbar -->
 	<div class="topbar">
-		<svg class="topbar-button" width="30" height="30"><use href="#icon-topbar-notification"/></svg>
-		<svg class="topbar-button" width="30" height="30"><use href="#icon-topbar-settings"/></svg>
-		<div class="topbar-button">
-			<img src="{{ request.user.profile_picture_or_initial }}" alt="Profile Picture" style="object-fit:cover;width:35px;height:35px;">
+		<div class="logo-circle" id="profilePicContainer" style="position:relative;">
+			<img src="{{ request.user.profile_picture_or_initial }}" alt="Profile Picture" id="profilePic" style="object-fit: cover; cursor:pointer;">
+			<div id="profileModal">
+				<a href="{% url 'profile' %}">Profile</a>
+				<a href="{% url 'notifications' %}">Notifications</a>
+				<a href="/settings/">Settings</a>
+				<a href="{% url 'logout' %}" style="color:#E53E3E;">Log Out</a>
+			</div>
 		</div>
 	</div>
 
@@ -372,7 +376,61 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 <script>
-
+	// Profile picture modal logic
+	document.addEventListener('DOMContentLoaded', function() {
+		const profilePic = document.getElementById('profilePic');
+		const profileModal = document.getElementById('profileModal');
+		let modalOpen = false;
+		
+		if (profilePic && profileModal) {
+			profilePic.addEventListener('click', function(e) {
+				e.stopPropagation();
+				if (modalOpen) {
+					profileModal.style.display = 'none';
+					profileModal.style.opacity = '0';
+					profileModal.style.transform = 'translateY(-10px)';
+					modalOpen = false;
+				} else {
+					profileModal.style.display = 'block';
+					setTimeout(function() {
+						profileModal.style.opacity = '1';
+						profileModal.style.transform = 'translateY(0)';
+					}, 10);
+					modalOpen = true;
+				}
+			});
+			
+			document.addEventListener('mousedown', function(e) {
+				if (modalOpen && !profileModal.contains(e.target) && e.target !== profilePic) {
+					profileModal.style.display = 'none';
+					profileModal.style.opacity = '0';
+					profileModal.style.transform = 'translateY(-10px)';
+					modalOpen = false;
+				}
+			});
+			
+			profileModal.querySelectorAll('a').forEach(function(link) {
+				link.addEventListener('mouseenter', function() {
+					this.style.background = '#f7f3f1';
+					this.style.color = '#00681a';
+				});
+				link.addEventListener('mouseleave', function() {
+					this.style.background = '';
+					if (this.getAttribute('href') !== "{% url 'logout' %}") {
+						this.style.color = '#222';
+					} else {
+						this.style.color = '#E53E3E';
+					}
+				});
+				link.addEventListener('click', function() {
+					profileModal.style.display = 'none';
+					profileModal.style.opacity = '0';
+					profileModal.style.transform = 'translateY(-10px)';
+					modalOpen = false;
+				});
+			});
+		}
+	});
 </script>
 
 </html>

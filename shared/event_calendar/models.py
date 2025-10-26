@@ -49,7 +49,8 @@ def log_meeting_event_action(sender, instance, created, **kwargs):
 		model='MeetingEvent',
 		object_id=instance.id,
 		object_repr=str(instance),
-		details=f"Status: {instance.get_status_display()}"
+		details=f"Status: {instance.get_status_display()}",
+		is_notification=True
 	)
 
 
@@ -62,5 +63,6 @@ def log_meeting_event_delete(sender, instance, **kwargs):
 		model='MeetingEvent',
 		object_id=instance.id,
 		object_repr=str(instance),
-		details=f"Status: {instance.get_status_display()}"
+		details=f"Status: {instance.get_status_display()}",
+		is_notification=True
 	)

@@ -1,0 +1,405 @@
+{% extends base_template %}
+{% block content %}
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Notifications</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            background-color: #F9F9F9;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .main-container {
+            margin: 75px;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .title-text {
+            font-size: 32px;
+            font-weight: 400;
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 15px;
+        }
+
+        .filter-tab {
+            padding: 10px 20px;
+            border-radius: 8px;
+            background: white;
+            border: 1px solid #ddd;
+            cursor: pointer;
+            text-decoration: none;
+            color: #333;
+            transition: all 0.3s ease;
+        }
+
+        .filter-tab:hover {
+            background: #f0f0f0;
+        }
+
+        .filter-tab.active {
+            background: linear-gradient(90deg, #9409FF 0%, #FF3300 100%);
+            color: white;
+            border-color: #9409FF;
+        }
+
+        .actions-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #ddd;
+        }
+
+        .unread-count {
+            font-size: 16px;
+            color: #666;
+        }
+
+        .mark-all-btn {
+            padding: 10px 20px;
+            background: linear-gradient(90deg, #9409FF 0%, #FF3300 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .mark-all-btn:hover {
+            opacity: 0.9;
+        }
+
+        .notifications-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .notification-item {
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #ddd;
+            padding: 20px;
+            display: flex;
+            align-items: start;
+            gap: 15px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .notification-item:hover {
+            border-color: #9409FF;
+            box-shadow: 0 2px 8px rgba(148, 9, 255, 0.15);
+        }
+
+        .notification-item.unread {
+            background: #f9f5ff;
+            border-color: #9409FF;
+            border-width: 2px;
+        }
+
+        .notification-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #9409FF 0%, #FF3300 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 8px;
+        }
+
+        .notification-actor {
+            font-weight: 600;
+            color: #000;
+            font-size: 16px;
+        }
+
+        .notification-time {
+            font-size: 13px;
+            color: #999;
+        }
+
+        .notification-message {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .notification-details {
+            font-size: 13px;
+            color: #999;
+            font-style: italic;
+        }
+
+        .notification-badge {
+            background: #9409FF;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-top: 30px;
+        }
+
+        .pagination a,
+        .pagination span {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            background: #fff;
+            border-radius: 6px;
+            text-decoration: none;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+            min-width: 36px;
+            text-align: center;
+        }
+
+        .pagination a:hover {
+            background: #f0f0f0;
+            border-color: #9409FF;
+        }
+
+        .pagination .current {
+            background: linear-gradient(90deg, #9409FF 0%, #FF3300 100%);
+            color: white;
+            border-color: #9409FF;
+            font-weight: 600;
+        }
+
+        .pagination .disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+            color: #666;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Header -->
+        <div class="header-section">
+            <div class="title-text">Notifications</div>
+            <div class="filter-tabs">
+                <a href="?filter=all" class="filter-tab {% if filter_type == 'all' %}active{% endif %}">All</a>
+                <a href="?filter=unread" class="filter-tab {% if filter_type == 'unread' %}active{% endif %}">Unread</a>
+                <a href="?filter=read" class="filter-tab {% if filter_type == 'read' %}active{% endif %}">Read</a>
+            </div>
+        </div>
+
+        <!-- Actions Bar -->
+        <div class="actions-bar">
+            <div class="unread-count">
+                {% if unread_count > 0 %}
+                    {{ unread_count }} unread notification{{ unread_count|pluralize }}
+                {% else %}
+                    No unread notifications
+                {% endif %}
+            </div>
+            {% if unread_count > 0 %}
+            <button class="mark-all-btn" onclick="markAllAsRead()">Mark All as Read</button>
+            {% endif %}
+        </div>
+
+        <!-- Notifications List -->
+        <div class="notifications-list">
+            {% for notification in notifications %}
+            <a href="{% if notification.url %}{{ notification.url }}{% else %}#{% endif %}" 
+               class="notification-item {% if not notification.is_read %}unread{% endif %}"
+               onclick="markAsRead({{ notification.id }}, event)">
+                <div class="notification-icon">
+                    {% if notification.actor %}
+                        {{ notification.actor.first_name.0 }}{{ notification.actor.last_name.0 }}
+                    {% else %}
+                        S
+                    {% endif %}
+                </div>
+                <div class="notification-content">
+                    <div class="notification-header">
+                        <div class="notification-actor">
+                            {{ notification.actor.get_full_name|default:"System" }}
+                        </div>
+                        <div class="notification-time">
+                            {{ notification.created_at|timesince }} ago
+                            {% if not notification.is_read %}
+                            <span class="notification-badge">NEW</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="notification-message">
+                        {{ notification.get_message }}
+                    </div>
+                    {% if notification.details %}
+                    <div class="notification-details">
+                        {{ notification.details }}
+                    </div>
+                    {% endif %}
+                </div>
+            </a>
+            {% empty %}
+            <div class="empty-state">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
+                <h3>No notifications</h3>
+                <p>You're all caught up! Check back later for updates.</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div class="pagination">
+            {% if page_obj.has_previous %}
+            <a href="?page=1&filter={{ filter_type }}">&laquo; First</a>
+            <a href="?page={{ page_obj.previous_page_number }}&filter={{ filter_type }}">Previous</a>
+            {% else %}
+            <span class="disabled">&laquo; First</span>
+            <span class="disabled">Previous</span>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <span class="current">{{ num }}</span>
+            {% else %}
+            <a href="?page={{ num }}&filter={{ filter_type }}">{{ num }}</a>
+            {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}&filter={{ filter_type }}">Next</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}&filter={{ filter_type }}">Last &raquo;</a>
+            {% else %}
+            <span class="disabled">Next</span>
+            <span class="disabled">Last &raquo;</span>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        function markAsRead(notificationId, event) {
+            fetch(`/notifications/mark-as-read/${notificationId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json',
+                },
+            }).then(response => response.json())
+              .then(data => {
+                  if (data.success) {
+                      // Mark the notification as read visually
+                      const item = event.currentTarget;
+                      item.classList.remove('unread');
+                      const badge = item.querySelector('.notification-badge');
+                      if (badge) {
+                          badge.remove();
+                      }
+                  }
+              });
+        }
+
+        function markAllAsRead() {
+            fetch('/notifications/mark-all-as-read/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json',
+                },
+            }).then(response => response.json())
+              .then(data => {
+                  if (data.success) {
+                      // Reload the page to reflect changes
+                      window.location.reload();
+                  }
+              });
+        }
+    </script>
+</body>
+</html>
+
+{% endblock %}
