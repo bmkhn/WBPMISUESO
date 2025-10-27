@@ -1,13 +1,11 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
-from system.users.decorators import role_required, user_confirmed
+from system.users.decorators import role_required
 from system.users.models import College, User
 from .ai_team_generator import get_team_generator
 import json
 
-
-@user_confirmed
 @role_required(allowed_roles=["VP", "DIRECTOR", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD"])
 def experts_view(request):
     from django.core.paginator import Paginator
@@ -21,7 +19,7 @@ def experts_view(request):
     
     # Pagination
     page_number = request.GET.get('page', 1)
-    paginator = Paginator(experts, 6)  # 6 items per page for grid view (3x2)
+    paginator = Paginator(experts, 12)  
     page_obj = paginator.get_page(page_number)
     
     # Calculate page range for pagination UI
@@ -46,13 +44,11 @@ def experts_view(request):
     })
 
 
-@user_confirmed
 @role_required(allowed_roles=["VP", "DIRECTOR", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD"])
 def expert_profile_view(request):
     return render(request, 'experts/experts_profile.html')  # Add Expert Context Later
 
 
-@user_confirmed
 @role_required(allowed_roles=["VP", "DIRECTOR", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD"])
 @require_POST
 def generate_team_view(request):

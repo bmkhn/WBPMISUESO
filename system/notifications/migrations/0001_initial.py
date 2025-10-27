@@ -12,18 +12,21 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='LogEntry',
+            name='Notification',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('action', models.CharField(choices=[('CREATE', 'Created'), ('UPDATE', 'Updated'), ('DELETE', 'Deleted')], max_length=16)),
+                ('action', models.CharField(choices=[('CREATE', 'Created'), ('UPDATE', 'Updated'), ('DELETE', 'Deleted'), ('PUBLISH', 'Published')], max_length=16)),
                 ('model', models.CharField(max_length=64)),
                 ('object_id', models.PositiveIntegerField()),
                 ('object_repr', models.CharField(max_length=200)),
-                ('timestamp', models.DateTimeField(auto_now_add=True)),
                 ('details', models.TextField(blank=True)),
                 ('url', models.CharField(blank=True, max_length=300)),
-                ('is_notification', models.BooleanField(default=False)),
-                ('notification_date', models.DateTimeField(blank=True, null=True)),
+                ('is_read', models.BooleanField(default=False)),
+                ('read_at', models.DateTimeField(blank=True, null=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True)),
             ],
+            options={
+                'ordering': ['-created_at'],
+            },
         ),
     ]
