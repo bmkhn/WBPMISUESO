@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     'system.exports',           # Exports
     'system.logs',              # Logs
     'system.users',             # Custom User
+    'system.notifications',     # Notifications
     'rest_framework',           # Django REST Framework
 ]
 
@@ -91,6 +92,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'system.notifications.context_processors.unread_notifications',
             ],
         },
     },
@@ -123,6 +125,11 @@ DATABASES = {
     }
 }
 
+# Custom authentication backend to allow email login
+AUTHENTICATION_BACKENDS = [
+    'system.users.backends.EmailBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators

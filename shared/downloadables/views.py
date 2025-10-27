@@ -111,7 +111,7 @@ def user_downloadable(request):
     })
 
 
-@role_required(allowed_roles=["PROGRAM_HEAD", "DEAN", "COORDINATOR"])
+@role_required(allowed_roles=["PROGRAM_HEAD", "DEAN", "COORDINATOR"], require_confirmed=True)
 def superuser_downloadable(request):
     query_params = {}
     qs = Downloadable.objects.filter(status='published')
@@ -185,7 +185,7 @@ def superuser_downloadable(request):
     })
 
 
-@role_required(allowed_roles=["UESO", "DIRECTOR", "VP"])
+@role_required(allowed_roles=["UESO", "DIRECTOR", "VP"], require_confirmed=True)
 def admin_downloadable(request):
     query_params = {}
     qs = Downloadable.objects.all().order_by('-id')
@@ -268,7 +268,7 @@ def admin_downloadable(request):
     })
 
 
-@role_required(allowed_roles=["UESO", "DIRECTOR", "VP"])
+@role_required(allowed_roles=["UESO", "DIRECTOR", "VP"], require_confirmed=True)
 def add_downloadable(request):
     error = None
     from .models import Downloadable
@@ -312,7 +312,7 @@ def downloadable_download(request, pk):
 
 
 # Delete file
-@role_required(allowed_roles=["UESO", "DIRECTOR", "VP"])
+@role_required(allowed_roles=["UESO", "DIRECTOR", "VP"], require_confirmed=True)
 def downloadable_delete(request, pk):
     try:
         downloadable = Downloadable.objects.get(pk=pk)
@@ -324,7 +324,7 @@ def downloadable_delete(request, pk):
 
 
 # Archive file
-@role_required(allowed_roles=["UESO", "DIRECTOR", "VP"])
+@role_required(allowed_roles=["UESO", "DIRECTOR", "VP"], require_confirmed=True)
 def downloadable_archive(request, pk):
     try:
         downloadable = Downloadable.objects.get(pk=pk)
@@ -336,7 +336,7 @@ def downloadable_archive(request, pk):
 
 
 # Unarchive file
-@role_required(allowed_roles=["UESO", "DIRECTOR", "VP"])
+@role_required(allowed_roles=["UESO", "DIRECTOR", "VP"], require_confirmed=True)
 def downloadable_unarchive(request, pk):
     try:
         downloadable = Downloadable.objects.get(pk=pk)
@@ -348,7 +348,7 @@ def downloadable_unarchive(request, pk):
 
 
 # Make file public
-@role_required(allowed_roles=["UESO", "DIRECTOR", "VP"])
+@role_required(allowed_roles=["UESO", "DIRECTOR", "VP"], require_confirmed=True)
 def downloadable_make_public(request, pk):
     try:
         downloadable = Downloadable.objects.get(pk=pk)
@@ -360,7 +360,7 @@ def downloadable_make_public(request, pk):
 
 
 # Make file private
-@role_required(allowed_roles=["UESO", "DIRECTOR", "VP"])
+@role_required(allowed_roles=["UESO", "DIRECTOR", "VP"], require_confirmed=True)
 def downloadable_make_private(request, pk):
     try:
         downloadable = Downloadable.objects.get(pk=pk)

@@ -8,7 +8,7 @@ from django.core.paginator import Paginator
 from django.contrib import messages
 
 
-@role_required(allowed_roles=["UESO", "VP", "DIRECTOR", "COORDINATOR"])
+@role_required(allowed_roles=["UESO", "VP", "DIRECTOR", "COORDINATOR"], require_confirmed=True)
 def submission_admin_view(request):
     from django.db.models import Case, When, Value, IntegerField
     user_role = getattr(request.user, 'role', None)
@@ -87,7 +87,7 @@ def submission_admin_view(request):
     })
 
 
-@role_required(allowed_roles=["UESO", "VP", "DIRECTOR"])
+@role_required(allowed_roles=["UESO", "VP", "DIRECTOR"], require_confirmed=True)
 def add_submission_requirement(request):
     from shared.projects.models import ProjectEvent
     import json

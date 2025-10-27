@@ -6,7 +6,7 @@ from django.db.models import Q
 from .models import LogEntry
 from system.users.models import User
 
-@role_required(allowed_roles=["VP", "DIRECTOR"])
+@role_required(allowed_roles=["VP", "DIRECTOR"], require_confirmed=True)
 def logs_view(request):
     # Get filter parameters
     sort_by = request.GET.get('sort_by', 'timestamp')

@@ -27,6 +27,7 @@ def get_templates(request):
         base_template = "base_public.html"
     return base_template
 
+
 def project_profile(request, pk):
     # Mark project alerts as viewed for faculty users
     if request.user.role in ["FACULTY", "IMPLEMENTER"]:
@@ -601,7 +602,7 @@ def project_submissions_details(request, pk, submission_id):
     return render(request, "projects/project_submissions_details.html", context)
 
 # ACTIONS
-@role_required(allowed_roles=["UESO", "VP", "DIRECTOR", "COORDINATOR", "FACULTY", "IMPLEMENTER"])
+@role_required(allowed_roles=["UESO", "VP", "DIRECTOR", "COORDINATOR", "FACULTY", "IMPLEMENTER"], require_confirmed=True)
 def admin_submission_action(request, pk, submission_id):
     submission = get_object_or_404(Submission, pk=submission_id, project__pk=pk)
     from django.utils import timezone
@@ -724,6 +725,8 @@ def project_expenses(request, pk):
         "FACULTY_ROLE": FACULTY_ROLE
     })
 
+
+@role_required(allowed_roles=["UESO", "VP", "DIRECTOR", "PROGRAM_HEAD", "DEAN", "COORDINATOR", "FACULTY", "IMPLEMENTER"], require_confirmed=True)
 def project_evaluations(request, pk):
     ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE, COORDINATOR_ROLE = get_role_constants()
 
@@ -763,7 +766,7 @@ def project_evaluations(request, pk):
 
 from django.views.decorators.http import require_POST
 # Mark project as cancelled
-@role_required(allowed_roles=["VP", "DIRECTOR", "UESO"])
+@role_required(allowed_roles=["VP", "DIRECTOR", "UESO"], require_confirmed=True)
 @require_POST
 def cancel_project(request, pk):
     from django.utils import timezone
@@ -792,7 +795,7 @@ def cancel_project(request, pk):
     return redirect(f'/projects/{pk}/overview/')
 
 # Undo cancel
-@role_required(allowed_roles=["VP", "DIRECTOR", "UESO"])
+@role_required(allowed_roles=["VP", "DIRECTOR", "UESO"], require_confirmed=True)
 @require_POST
 def undo_cancel_project(request, pk):
     from datetime import date as dtdate
@@ -847,7 +850,7 @@ def projects_dispatcher(request):
     return faculty_project(request)
 
 
-@role_required(allowed_roles=["FACULTY", "IMPLEMENTER"])
+@role_required(allowed_roles=["FACULTY", "IMPLEMENTER"], require_confirmed=True)
 def faculty_project(request):
     user = request.user
 
@@ -954,7 +957,7 @@ def faculty_project(request):
     })
 
 
-@role_required(allowed_roles=["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"])
+@role_required(allowed_roles=["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"], require_confirmed=True)
 def admin_project(request):
     ADMIN_ROLES = ["VP", "DIRECTOR", "UESO"]
     SUPERUSER_ROLES = ["PROGRAM_HEAD", "DEAN", "COORDINATOR"]
@@ -1062,7 +1065,8 @@ def admin_project(request):
 
 from django.utils import timezone
 
-@role_required(allowed_roles=["VP", "DIRECTOR"])
+
+@role_required(allowed_roles=["VP", "DIRECTOR", "UESO"], require_confirmed=True)
 def add_project_view(request):
     error = None
     faculty_users = User.objects.filter(role=User.Role.FACULTY, is_confirmed=True)

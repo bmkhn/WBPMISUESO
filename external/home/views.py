@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.db import models
 from shared.announcements.models import Announcement
 from shared.projects.models import Project
@@ -10,7 +10,9 @@ def get_role_constants():
 
 def home_view(request):
     PUBLIC_ROLES, FACULTY_ROLES = get_role_constants()
-
+    if request.user.is_authenticated and not getattr(request.user, 'is_confirmed', True):
+        return redirect('not_confirmed')
+    
     def get_project_card_data(project_qs):
         projects_data = []
         for project in project_qs:

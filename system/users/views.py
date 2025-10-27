@@ -9,11 +9,29 @@ from .forms import LoginForm, ClientRegistrationForm, FacultyRegistrationForm, I
 
 import random
 
+
+
+def get_role_constants():
+    ADMIN_ROLES = ["VP", "DIRECTOR", "UESO"]
+    SUPERUSER_ROLES = ["PROGRAM_HEAD", "DEAN", "COORDINATOR"]
+    FACULTY_ROLE = ["FACULTY", "IMPLEMENTER"]
+    COORDINATOR_ROLE = ["COORDINATOR"]
+    return ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE, COORDINATOR_ROLE
+
+def get_templates(request):
+    user_role = getattr(request.user, 'role', None)
+    if user_role in ["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
+        base_template = "base_internal.html"
+    else:
+        base_template = "base_public.html"
+    return base_template
+
+
 ####################################################################################################
 
 # Login, Logout, Forgot Password, and Role-Based Redirection Views
 def login_view(request):
-    logout(request)
+    logout(request) # Remove this line if you want to keep users logged in when they revisit the login page
     if request.method == 'POST':
         form = LoginForm(request, data=request.POST)
         if form.is_valid():
@@ -55,7 +73,6 @@ def dashboard(request):
 ####################################################################################################
 
 # Registration Views for Different User Types
-
 def check_email_view(request):
     email = request.GET.get('email', '').strip()
     exists = False
@@ -90,6 +107,8 @@ def registration_client_view(request):
             user = form.save(commit=False)
             user.is_confirmed = False
             user.username = user.email
+            user.role = User.Role.CLIENT  # Set role immediately
+            user.set_password(form.cleaned_data['password'])  # Hash the password
             user.save()
 
             # Store only user id and 2fa code in session
@@ -121,12 +140,13 @@ def client_verify_view(request):
             User = get_user_model()
             try:
                 user = User.objects.get(id=pending_user_id)
-                user.role = User.Role.CLIENT
+                # Role is already set during registration, no need to set it again
+                # Just ensure the user exists and verification was successful
                 user.save()
             except User.DoesNotExist:
                 error = "User not found. Please register again."
                 return render(request, 'users/verify_client.html', {'error': error})
-            # Optionally clear session data
+            # Clear session data
             request.session.pop('pending_user_id', None)
             request.session.pop('2fa_code', None)
             return redirect('thank_you')
@@ -157,6 +177,8 @@ def registration_faculty_view(request):
             user = form.save(commit=False)
             user.is_confirmed = False
             user.username = user.email
+            user.role = User.Role.FACULTY  # Set role immediately
+            user.set_password(form.cleaned_data['password'])  # Hash the password
             user.save()
 
             # Store only user id and 2fa code in session
@@ -189,12 +211,12 @@ def faculty_verify_view(request):
             User = get_user_model()
             try:
                 user = User.objects.get(id=pending_user_id)
-                user.role = User.Role.FACULTY
+                # Role is already set during registration, no need to set it again
                 user.save()
             except User.DoesNotExist:
                 error = "User not found. Please register again."
                 return render(request, 'users/verify_faculty.html', {'error': error})
-            # Optionally clear session data
+            # Clear session data
             request.session.pop('pending_user_id', None)
             request.session.pop('2fa_code', None)
             return redirect('thank_you')
@@ -225,7 +247,8 @@ def registration_implementer_view(request):
             user = form.save(commit=False)
             user.is_confirmed = False
             user.username = user.email
-            user.role = user.Role.IMPLEMENTER
+            user.role = User.Role.IMPLEMENTER  # Set role immediately
+            user.set_password(form.cleaned_data['password'])  # Hash the password
             user.save()
 
             # Store only user id and 2fa code in session
@@ -258,12 +281,12 @@ def implementer_verify_view(request):
             User = get_user_model()
             try:
                 user = User.objects.get(id=pending_user_id)
-                user.role = User.Role.IMPLEMENTER
+                # Role is already set during registration, no need to set it again
                 user.save()
             except User.DoesNotExist:
                 error = "User not found. Please register again."
                 return render(request, 'users/verify_implementer.html', {'error': error})
-            # Optionally clear session data
+            # Clear session data
             request.session.pop('pending_user_id', None)
             request.session.pop('2fa_code', None)
             return redirect('thank_you')
@@ -291,7 +314,7 @@ def not_confirmed_view(request):
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404
 
-@role_required(allowed_roles=["VP", "DIRECTOR"])
+@role_required(allowed_roles=["VP", "DIRECTOR"], require_confirmed=True)
 def manage_user(request):
     query_params = {}
     User = get_user_model()
@@ -412,7 +435,7 @@ def user_details_view(request, id):
 
 
 
-@role_required(allowed_roles=["VP", "DIRECTOR"])
+@role_required(allowed_roles=["VP", "DIRECTOR"], require_confirmed=True)
 def add_user(request):
     User = get_user_model()
     error = None
@@ -463,7 +486,7 @@ def add_user(request):
     })
 
 # Edit user view
-@role_required(allowed_roles=["VP", "DIRECTOR"])
+@role_required(allowed_roles=["VP", "DIRECTOR"], require_confirmed=True)
 def edit_user(request, id):
     User = get_user_model()
     user = get_object_or_404(User, id=id)
@@ -519,7 +542,7 @@ def edit_user(request, id):
 # Verify/Unverify user views
 from django.http import HttpResponseRedirect
 
-@role_required(allowed_roles=["VP", "DIRECTOR"])
+@role_required(allowed_roles=["VP", "DIRECTOR"], require_confirmed=True)
 def verify_user(request, id):
     User = get_user_model()
     user = get_object_or_404(User, id=id)
@@ -527,7 +550,7 @@ def verify_user(request, id):
     user.save()
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
 
-@role_required(allowed_roles=["VP", "DIRECTOR"])
+@role_required(allowed_roles=["VP", "DIRECTOR"], require_confirmed=True)
 def unverify_user(request, id):
     User = get_user_model()
     user = get_object_or_404(User, id=id)
@@ -540,12 +563,93 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse
 
 # Delete user view with confirmation
-@role_required(allowed_roles=["VP", "DIRECTOR"])
+@role_required(allowed_roles=["VP", "DIRECTOR"], require_confirmed=True)
 def delete_user(request, id):
     User = get_user_model()
     user = get_object_or_404(User, id=id)
     user.delete()
     return HttpResponseRedirect(reverse('manage_user'))
+
+####################################################################################################
+
+# User Profile View
+from django.contrib.auth.decorators import login_required
+from django.db.models import Q
+
+@login_required
+def profile_view(request):
+    user = request.user
+
+    base_template = get_templates(request)
+    
+    # Get campus display name
+    campus_display = dict(User.Campus.choices).get(user.campus, user.campus) if user.campus else "N/A"
+    
+    # Get college name and logo
+    college_name = user.college.name if user.college else "N/A"
+    college_logo = user.college.logo.url if user.college and user.college.logo else None
+    
+    # Get content items based on role
+    content_items = []
+    
+    if user.role in [User.Role.FACULTY, User.Role.IMPLEMENTER]:
+        # Get projects where user is leader or provider
+        from shared.projects.models import Project
+        content_items = Project.objects.filter(
+            Q(project_leader=user) | Q(providers=user)
+        ).distinct().select_related(
+            'project_leader', 'agenda'
+        ).prefetch_related(
+            'providers', 'sdgs'
+        ).order_by('-start_date')
+        
+    elif user.role in [User.Role.PROGRAM_HEAD, User.Role.DEAN, User.Role.COORDINATOR]:
+        # Get projects from user's college
+        from shared.projects.models import Project
+        if user.college:
+            content_items = Project.objects.filter(
+                project_leader__college=user.college
+            ).distinct().select_related(
+                'project_leader', 'agenda'
+            ).prefetch_related(
+                'providers', 'sdgs'
+            ).order_by('-start_date')
+        else:
+            content_items = Project.objects.none()
+            
+    elif user.role == User.Role.CLIENT:
+        # Get client requests
+        from shared.request.models import ClientRequest
+        content_items = ClientRequest.objects.filter(
+            client=user
+        ).order_by('-created_at')
+    
+    return render(request, 'users/profile.html', {
+        'campus_display': campus_display,
+        'college_name': college_name,
+        'college_logo': college_logo,
+        'content_items': content_items,
+        'base_template': base_template,
+    })
+
+
+@login_required
+def update_bio(request):
+    if request.method == 'POST':
+        bio = request.POST.get('bio', '').strip()
+        user = request.user
+        user.bio = bio
+        user.save(update_fields=['bio'])
+    return redirect('profile')
+
+
+@login_required
+def update_profile_picture(request):
+    if request.method == 'POST' and request.FILES.get('profile_picture'):
+        user = request.user
+        user.profile_picture = request.FILES['profile_picture']
+        user.save(update_fields=['profile_picture'])
+    return redirect('profile')
 
 ####################################################################################################
 

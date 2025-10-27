@@ -17,7 +17,7 @@ from openpyxl.styles import Alignment
 from io import BytesIO
 
 
-@role_required(allowed_roles=["UESO", "VP", "DIRECTOR"])
+@role_required(allowed_roles=["UESO", "VP", "DIRECTOR"], require_confirmed=True)
 def exports_view(request):
     requests = ExportRequest.objects.all()
 
@@ -85,13 +85,18 @@ def exports_view(request):
 ########################################################################################################################
 
 
-@role_required(allowed_roles=["UESO", "VP", "DIRECTOR"])
+@role_required(allowed_roles=["UESO", "VP", "DIRECTOR"], require_confirmed=True)
 def approve_export_request(request, request_id):
     try:
         export_request = ExportRequest.objects.get(id=request_id, status='PENDING')
     except ExportRequest.DoesNotExist:
         return JsonResponse({'error': 'Export request not found or already processed.'}, status=404)
+    
+    # Set who approved it and when
+    from django.utils import timezone
     export_request.status = 'APPROVED'
+    export_request.reviewed_by = request.user
+    export_request.reviewed_at = timezone.now()
     export_request.save()
 
     user = export_request.submitted_by
@@ -194,12 +199,18 @@ def approve_export_request(request, request_id):
 
 
 @require_POST
+@role_required(allowed_roles=["UESO", "VP", "DIRECTOR"], require_confirmed=True)
 def reject_export_request(request, request_id):
     try:
         export_request = ExportRequest.objects.get(id=request_id, status='PENDING')
     except ExportRequest.DoesNotExist:
         return JsonResponse({'error': 'Export request not found or already processed.'}, status=404)
+    
+    # Set who rejected it and when
+    from django.utils import timezone
     export_request.status = 'REJECTED'
+    export_request.reviewed_by = request.user
+    export_request.reviewed_at = timezone.now()
     export_request.save()
     return JsonResponse({'message': 'Export request rejected.'})
 
@@ -361,7 +372,7 @@ def export_download(request, request_id):
 
 
 @require_GET
-@role_required(allowed_roles=["UESO", "VP", "DIRECTOR"])
+@role_required(allowed_roles=["UESO", "VP", "DIRECTOR"], require_confirmed=True)
 def export_manage_user(request):
     user = request.user
     UserModel = User
@@ -466,6 +477,7 @@ def export_manage_user(request):
 
 
 @require_GET
+@role_required(allowed_roles=["UESO", "VP", "DIRECTOR", "DEAN", "PROGRAM_HEAD", "COORDINATOR"], require_confirmed=True)
 def export_project(request):
     user = request.user
     from django.db.models import Q
@@ -575,7 +587,7 @@ from system.logs.models import LogEntry
 from system.users.models import User
 
 @require_GET
-@role_required(allowed_roles=["VP", "DIRECTOR"])
+@role_required(allowed_roles=["VP", "DIRECTOR"], require_confirmed=True)
 def export_log(request):
     # Get filter parameters (match logs_view)
     sort_by = request.GET.get('sort_by', 'timestamp')

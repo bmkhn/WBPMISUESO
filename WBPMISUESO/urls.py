@@ -44,7 +44,7 @@ urlpatterns = [
     # SYSTEM APPS
     path('logs/', include('system.logs.urls')),                     # Logs
     path('exports/', include('system.exports.urls')),               # Exports
-    # Notifications (None Yet)
+    path('notifications/', include('system.notifications.urls')),   # Notifications
     # Settings (None Yet)
     path('', include('system.users.urls')),                         # Users
 ] 

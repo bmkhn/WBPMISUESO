@@ -155,13 +155,20 @@ class Command(BaseCommand):
 				given_name = fake.first_name()
 				last_name = fake.last_name()
 				email = fake.unique.email()
-				username = email.split('@')[0]
+				base_username = email.split('@')[0]
+				username = base_username
 				campus = random.choice(campuses)
 				college = random.choice(colleges) if colleges else None
-				
+
 				# Pick a realistic degree-expertise pair
 				degree, expertise = random.choice(degree_expertise_pairs)
-				
+
+				# Ensure username is unique
+				suffix = 1
+				while User.objects.filter(username=username).exists():
+					username = f"{base_username}{suffix}"
+					suffix += 1
+
 				user = User.objects.create_user(
 					username=username,
 					email=email,
@@ -176,6 +183,7 @@ class Command(BaseCommand):
 					role=role,
 					is_confirmed=True,
 					is_expert=True,
+					bio=fake.paragraph(nb_sentences=3),
 					degree=degree,
 					expertise=expertise,
 					created_by=director_user,

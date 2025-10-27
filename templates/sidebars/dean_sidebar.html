@@ -84,9 +84,9 @@
 			<!-- Other -->
 			<div class="sidebar-tab-group-label">OTHER</div>
 
-			<a href="/notification/" class="sidebar-tab {% if '/notification/' in request.path %}active{% endif %}">
+			<a href="{% url 'notifications' %}" class="sidebar-tab {% if '/notifications/' in request.path %}active{% endif %}">
 				<svg class="sidebar-tab-icon" width="20" height="24"><use href="#icon-notification"/></svg>
-				<span class="table-text">Notification</span>
+				<span class="table-text">Notifications</span>
 			</a>
 
 			<a href="/settings/" class="sidebar-tab {% if '/settings/' in request.path %}active{% endif %}">
@@ -103,10 +103,29 @@
 
 	<!-- Topbar -->
 	<div class="topbar">
-		<svg class="topbar-button" width="30" height="30"><use href="#icon-topbar-notification"/></svg>
-		<svg class="topbar-button" width="30" height="30"><use href="#icon-topbar-settings"/></svg>
-		<div class="topbar-button">
-			<img src="{{ request.user.profile_picture_or_initial }}" alt="Profile Picture" style="object-fit:cover;width:35px;height:35px;">
+		<div class="logo-circle" id="profilePicContainer" style="position:relative;">
+			<img src="{{ request.user.profile_picture_or_initial }}" alt="Profile Picture" id="profilePic" style="object-fit: cover; cursor:pointer;">
+			
+			<!-- Notification Badge on Profile Picture -->
+			{% if unread_notifications_count > 0 %}
+			<span id="profileNotificationBadge" style="position:absolute;top:-5px;right:-5px;background:#FF3300;color:white;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:bold;border:2px solid white;box-shadow:0 2px 4px rgba(0,0,0,0.2);z-index:100;">
+				{{ unread_notifications_count }}
+			</span>
+			{% endif %}
+			
+			<div id="profileModal">
+				<a href="{% url 'profile' %}">Profile</a>
+				<a href="{% url 'notifications' %}" style="display:flex;justify-content:space-between;align-items:center;">
+					<span>Notifications</span>
+					{% if unread_notifications_count > 0 %}
+					<span style="background:#FF3300;color:white;border-radius:12px;padding:2px 8px;font-size:11px;font-weight:bold;margin-left:10px;">
+						{{ unread_notifications_count }}
+					</span>
+					{% endif %}
+				</a>
+				<a href="/settings/">Settings</a>
+				<a href="{% url 'logout' %}" style="color:#E53E3E;">Log Out</a>
+			</div>
 		</div>
 	</div>
 
@@ -372,7 +391,59 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 <script>
-
+	document.addEventListener('DOMContentLoaded', function() {
+		const profilePic = document.getElementById('profilePic');
+		const profileModal = document.getElementById('profileModal');
+		const profilePicContainer = document.getElementById('profilePicContainer');
+		
+		if (profilePic && profileModal) {
+			// Toggle modal on profile picture click
+			profilePic.addEventListener('click', function(e) {
+				e.stopPropagation();
+				if (profileModal.style.display === 'none' || profileModal.style.display === '') {
+					profileModal.style.display = 'block';
+					setTimeout(() => {
+						profileModal.style.opacity = '1';
+						profileModal.style.transform = 'translateY(0)';
+					}, 10);
+				} else {
+					profileModal.style.opacity = '0';
+					profileModal.style.transform = 'translateY(-10px)';
+					setTimeout(() => {
+						profileModal.style.display = 'none';
+					}, 200);
+				}
+			});
+			
+			// Close modal when clicking outside
+			document.addEventListener('click', function(e) {
+				if (!profilePicContainer.contains(e.target)) {
+					profileModal.style.opacity = '0';
+					profileModal.style.transform = 'translateY(-10px)';
+					setTimeout(() => {
+						profileModal.style.display = 'none';
+					}, 200);
+				}
+			});
+			
+			// Add hover effects to modal links
+			const modalLinks = profileModal.querySelectorAll('a');
+			modalLinks.forEach(link => {
+				link.addEventListener('mouseenter', function() {
+					if (this.textContent.trim() !== 'Log Out') {
+						this.style.backgroundColor = '#f7f3f1';
+						this.style.color = '#00681a';
+					}
+				});
+				link.addEventListener('mouseleave', function() {
+					this.style.backgroundColor = 'transparent';
+					if (this.textContent.trim() !== 'Log Out') {
+						this.style.color = '#333';
+					}
+				});
+			});
+		}
+	});
 </script>
 
 </html>

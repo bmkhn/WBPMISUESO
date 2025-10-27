@@ -1313,8 +1313,17 @@
     let events = {};
     const calendar = document.getElementById('calendar');
     const eventList = document.getElementById('event-list');
+    
+    // Check if there's an initial date from query parameter
+    {% if initial_date %}
+    const initialDate = new Date('{{ initial_date }}');
+    let currentYear = initialDate.getFullYear();
+    let currentMonth = initialDate.getMonth();
+    {% else %}
     let currentYear = new Date().getFullYear();
     let currentMonth = new Date().getMonth();
+    {% endif %}
+    
     let selectedDate = null;
 
     // Populate year dropdown (current-10 to current+10)
@@ -1348,6 +1357,11 @@
                 events = data;
                 renderCalendar(currentYear, currentMonth);
                 fetchEvents();
+                
+                // Highlight date if coming from notification
+                {% if initial_date %}
+                highlightDate('{{ initial_date }}');
+                {% endif %}
             })
             .catch(err => {
                 alert('Could not load events: ' + err.message);
@@ -1422,6 +1436,34 @@
     // --- Initial render ---
     renderCalendar(currentYear, currentMonth);
     fetchEvents();
+    
+    // Function to highlight a specific date from notification
+    function highlightDate(dateStr) {
+        setTimeout(() => {
+            const cell = document.querySelector(`.calendar-day[data-date="${dateStr}"]`);
+            if (cell) {
+                // Scroll to the calendar if needed
+                cell.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                // Add a prominent highlight
+                cell.style.border = '3px solid rgba(0, 0, 0, 0.2)';
+                cell.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.5)';
+                cell.style.transform = 'scale(1.1)';
+                cell.style.zIndex = '10';
+                cell.style.position = 'relative';
+                
+                // Click the date to show events
+                cell.click();
+                
+                // Remove the extra highlight after 3 seconds (keep the events open)
+                setTimeout(() => {
+                    cell.style.transform = '';
+                    cell.style.zIndex = '';
+                    cell.style.position = '';
+                }, 3000);
+            }
+        }, 500); // Wait for calendar to render
+    }
 </script>
 
 </body>

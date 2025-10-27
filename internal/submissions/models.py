@@ -65,6 +65,20 @@ def log_submission_action(sender, instance, created, **kwargs):
 	user = instance.updated_by or instance.submitted_by or instance.created_by or None
 	# project_submissions_details view expects (request, pk, submission_id) -> provide pk and submission_id for reverse
 	url = reverse('project_submissions_details', args=[instance.project.pk, instance.id])
+	
+	# Create better detail messages
+	if created:
+		details = f"New submission for {instance.project.title} - {instance.downloadable.name}"
+	else:
+		status_messages = {
+			'SUBMITTED': 'Submission has been submitted for review',
+			'FORWARDED': 'Submission has been forwarded to administration',
+			'REVISION_REQUESTED': 'Revision has been requested for this submission',
+			'APPROVED': 'Submission has been approved',
+			'REJECTED': 'Submission has been rejected',
+		}
+		details = status_messages.get(instance.status, f"Submission status: {instance.get_status_display()}")
+	
 	# Only log creation if created
 	if created:
 		LogEntry.objects.create(
@@ -72,8 +86,8 @@ def log_submission_action(sender, instance, created, **kwargs):
 			action='CREATE',
 			model='Submission',
 			object_id=instance.id,
-			object_repr=str(instance),
-			details=f"Status: {instance.status}",
+			object_repr=f"{instance.project.title} - {instance.downloadable.name}",
+			details=details,
 			url=url,
 			is_notification=True
 		)
@@ -84,8 +98,8 @@ def log_submission_action(sender, instance, created, **kwargs):
 			action='UPDATE',
 			model='Submission',
 			object_id=instance.id,
-			object_repr=str(instance),
-			details=f"Status: {instance.status}",
+			object_repr=f"{instance.project.title} - {instance.downloadable.name}",
+			details=details,
 			url=url,
 			is_notification=True
 		)

@@ -39,17 +39,33 @@ class MeetingEvent(models.Model):
 @receiver(post_save, sender=MeetingEvent)
 def log_meeting_event_action(sender, instance, created, **kwargs):
 	from system.logs.models import LogEntry
+	from django.urls import reverse
+	
 	# Skip logging if this is being called from within a signal to avoid duplicates
 	if hasattr(instance, '_skip_log'):
 		return
 	action = 'CREATE' if created else 'UPDATE'
+	
+	# URL to calendar with date parameter to jump to the event's date
+	# Format the date as YYYY-MM-DD for the query parameter
+	event_date = instance.datetime.strftime('%Y-%m-%d')
+	url = f"{reverse('calendar')}?date={event_date}"
+	
+	# Create better detail messages
+	if created:
+		details = f"New meeting scheduled for {instance.datetime.strftime('%B %d, %Y at %I:%M %p')}"
+	else:
+		details = f"Meeting has been updated"
+	
 	LogEntry.objects.create(
 		user=instance.created_by if created else instance.updated_by,
 		action=action,
 		model='MeetingEvent',
 		object_id=instance.id,
-		object_repr=str(instance),
-		details=f"Status: {instance.get_status_display()}"
+		object_repr=instance.title,
+		details=details,
+		url=url,
+		is_notification=True
 	)
 
 
@@ -62,5 +78,6 @@ def log_meeting_event_delete(sender, instance, **kwargs):
 		model='MeetingEvent',
 		object_id=instance.id,
 		object_repr=str(instance),
-		details=f"Status: {instance.get_status_display()}"
+		details=f"Status: {instance.get_status_display()}",
+		is_notification=True
 	)

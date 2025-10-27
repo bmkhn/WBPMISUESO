@@ -36,6 +36,7 @@ class ClientRegistrationForm(forms.ModelForm):
         confirm_password = cleaned_data.get("confirm_password")
         if password and confirm_password and password != confirm_password:
             self.add_error('confirm_password', "Passwords Do Not Match.")
+        return cleaned_data
 
 
 class FacultyRegistrationForm(forms.ModelForm):
@@ -55,6 +56,7 @@ class FacultyRegistrationForm(forms.ModelForm):
         confirm_password = cleaned_data.get("confirm_password")
         if password and confirm_password and password != confirm_password:
             self.add_error('confirm_password', "Passwords Do Not Match.")
+        return cleaned_data
 
 
 class ImplementerRegistrationForm(forms.ModelForm):
@@ -74,3 +76,4 @@ class ImplementerRegistrationForm(forms.ModelForm):
         confirm_password = cleaned_data.get("confirm_password")
         if password and confirm_password and password != confirm_password:
             self.add_error('confirm_password', "Passwords Do Not Match.")
+        return cleaned_data

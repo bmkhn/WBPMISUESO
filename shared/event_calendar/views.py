@@ -8,12 +8,16 @@ from system.users.decorators import role_required
 from shared.projects.models import ProjectEvent, Project
 
 
-@role_required(allowed_roles=["DIRECTOR", "VP", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD", "FACULTY", "IMPLEMENTER"])
+@role_required(allowed_roles=["DIRECTOR", "VP", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD", "FACULTY", "IMPLEMENTER"], require_confirmed=True)
 def calendar_view(request):
     from system.users.models import User
     current_user = request.user
     users = User.objects.exclude(role='CLIENT')
     from .models import MeetingEvent
+    
+    # Get date parameter from query string if present
+    initial_date = request.GET.get('date', None)
+    
     # Gather all events, group by date
     events_qs = MeetingEvent.objects.all()
     project_events_qs = ProjectEvent.objects.select_related('project').filter(placeholder=False)
@@ -61,19 +65,23 @@ def calendar_view(request):
         })
     import json
     events_json = json.dumps(events_by_date)
+    
+    context = {
+        'users': users,
+        'events_json': events_json,
+    }
+    
+    # Add initial date to context if present
+    if initial_date:
+        context['initial_date'] = initial_date
+    
     if current_user.role == 'FACULTY' or current_user.role == 'IMPLEMENTER':
-        return render(request, 'event_calendar/calendar.html', {
-            'users': users,
-            'events_json': events_json,
-        })
+        return render(request, 'event_calendar/calendar.html', context)
     elif current_user.role in ['VP', 'DIRECTOR', 'UESO', 'COORDINATOR', 'DEAN', 'PROGRAM_HEAD']:
-        return render(request, 'event_calendar/calendar_admin.html', {
-            'users': users,
-            'events_json': events_json,
-        })  
+        return render(request, 'event_calendar/calendar_admin.html', context)  
 
 
-@role_required(allowed_roles=["DIRECTOR", "VP", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD", "FACULTY", "IMPLEMENTER"])
+@role_required(allowed_roles=["DIRECTOR", "VP", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD", "FACULTY", "IMPLEMENTER"], require_confirmed=True)
 def add_event(request):
     if request.method == "POST":
         try:
@@ -115,7 +123,7 @@ def add_event(request):
 
 from django.views.decorators.http import require_GET
 
-@role_required(allowed_roles=["DIRECTOR", "VP", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD", "FACULTY", "IMPLEMENTER"])
+@role_required(allowed_roles=["DIRECTOR", "VP", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD", "FACULTY", "IMPLEMENTER"], require_confirmed=True)
 @require_GET
 def events_json(request):
     from .models import MeetingEvent
@@ -190,7 +198,7 @@ def events_json(request):
 
 
 from django.views.decorators.csrf import csrf_exempt
-@role_required(allowed_roles=["DIRECTOR", "VP", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD", "FACULTY", "IMPLEMENTER"])
+@role_required(allowed_roles=["DIRECTOR", "VP", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD", "FACULTY", "IMPLEMENTER"], require_confirmed=True)
 @csrf_exempt
 def edit_event(request):
     if request.method == "POST":
@@ -257,7 +265,7 @@ def edit_event(request):
 
 
 # Delete Event View
-@role_required(allowed_roles=["DIRECTOR", "VP", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD", "FACULTY", "IMPLEMENTER"])
+@role_required(allowed_roles=["DIRECTOR", "VP", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD", "FACULTY", "IMPLEMENTER"], require_confirmed=True)
 @csrf_exempt
 def delete_event(request, event_id):
     if request.method == "POST":

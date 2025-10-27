@@ -2,15 +2,13 @@
 from .forms import AgendaForm
 from .models import Agenda
 from system.users.decorators import role_required
-from system.users.decorators import user_confirmed
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from shared.projects.models import Project
 
 
 # Agenda View
-@user_confirmed
-@role_required(allowed_roles=["VP", "DIRECTOR"])
+@role_required(allowed_roles=["VP", "DIRECTOR"], require_confirmed=True)
 def agenda_view(request):
     agendas = Agenda.objects.prefetch_related('concerned_colleges', 'projects').all()
     # Use the related_name 'projects' to get all projects for each agenda
@@ -22,8 +20,7 @@ def agenda_view(request):
 
 
 # Add Agenda View
-@user_confirmed
-@role_required(allowed_roles=["VP", "DIRECTOR"])
+@role_required(allowed_roles=["VP", "DIRECTOR"], require_confirmed=True)
 def add_agenda_view(request):
     if request.method == 'POST':
         form = AgendaForm(request.POST)
@@ -37,8 +34,7 @@ from django.shortcuts import render
 
 
 # Edit Agenda View
-@user_confirmed
-@role_required(allowed_roles=["VP", "DIRECTOR"])
+@role_required(allowed_roles=["VP", "DIRECTOR"], require_confirmed=True)
 def edit_agenda_view(request, agenda_id):
     try:
         agenda = Agenda.objects.get(id=agenda_id)
@@ -68,8 +64,7 @@ def edit_agenda_view(request, agenda_id):
 
 
 # Delete Agenda View
-@user_confirmed
-@role_required(allowed_roles=["VP", "DIRECTOR"])
+@role_required(allowed_roles=["VP", "DIRECTOR"], require_confirmed=True)
 def delete_agenda_view(request, agenda_id):
     agenda = Agenda.objects.get(id=agenda_id)
     agenda.delete()
