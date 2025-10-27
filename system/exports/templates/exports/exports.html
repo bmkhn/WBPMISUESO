@@ -61,7 +61,7 @@
                     </div>
                     <div class="filter-actions">
                         <button type="submit" class="filter-apply">Apply</button>
-                        <button type="button" id="closeFilter" class="filter-close">Close</button>
+                        <button type="button" id="closeFilter" class="filter-close">Clear Filters</button>
                     </div>
                 </div>
             </form>
@@ -207,7 +207,8 @@
     if (closeFilter && filterDropdown) {
         closeFilter.addEventListener('click', function(e) {
             e.preventDefault();
-            filterDropdown.style.display = 'none';
+            // Clear filters by redirecting to base URL without query parameters
+            window.location.href = window.location.pathname;
         });
     }
     // Hide dropdown when clicking outside

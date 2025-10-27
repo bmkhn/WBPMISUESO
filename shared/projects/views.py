@@ -1033,6 +1033,11 @@ def admin_project(request):
     page_obj = paginator.get_page(page_number)
     page_range = paginator.get_elided_page_range(page_obj.number)
 
+    # Check for success message from add_project
+    success = request.GET.get('success', '')
+    new_project_id = request.GET.get('new_project_id', '')
+    project_title = request.GET.get('project_title', '')
+
     return render(request, 'projects/admin_project.html', {
         'projects': page_obj,
         'colleges': colleges,
@@ -1057,6 +1062,9 @@ def admin_project(request):
         'querystring': request.GET.urlencode().replace('&page='+str(page_obj.number), '') if page_obj else '',
         "ADMIN_ROLES": ADMIN_ROLES,
         "SUPERUSER_ROLES": SUPERUSER_ROLES,
+        'success': success,
+        'new_project_id': new_project_id,
+        'project_title': project_title,
     })
 
 
@@ -1180,18 +1188,9 @@ def add_project_view(request):
                         updated_at=timezone.now()
                     )
 
-                return render(request, 'projects/add_project.html', {
-                    'form': ProjectForm(),
-                    'success': True,
-                    'error': error,
-                    'faculty_users': faculty_users,
-                    'provider_users': provider_users,
-                    'agendas': agendas,
-                    'sdgs': sdgs,
-                    'colleges': colleges,
-                    'campus_choices': campus_choices,
-                    'logistics_type': logistics_type,
-                })
+                # Redirect to admin_project with success message and new project ID
+                from urllib.parse import quote
+                return redirect(f'/projects/?success=true&new_project_id={project.id}&project_title={quote(project.title)}')
             except Exception as e:
                 error = str(e)
         else:

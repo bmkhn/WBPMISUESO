@@ -184,6 +184,14 @@ class Project(models.Model):
 	def __str__(self):
 		return self.title
 
+	def get_display_image_url(self):
+		"""Return the latest non-placeholder event image or default project image"""
+		# Try to get the latest event with an image that is not a placeholder
+		latest_event = self.events.filter(placeholder=False, image__isnull=False).order_by('-datetime', '-created_at').first()
+		if latest_event and latest_event.image:
+			return latest_event.image.url
+		return '/static/image.png'
+
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
 		self._old_status = self.status
@@ -332,6 +340,12 @@ class ProjectEvent(models.Model):
 
 	def get_status_display(self):
 		return dict(self.STATUS_CHOICES).get(self.status, self.status)
+
+	def get_image_url(self):
+		"""Return the event image URL or default image"""
+		if self.image and hasattr(self.image, 'url'):
+			return self.image.url
+		return '/static/image.png'
 
 	def __str__(self):
 		return f"{self.title} ({self.project.title})"

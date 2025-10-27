@@ -64,7 +64,7 @@
 					<svg width="20" height="20"> <use href="#icon-filter"></use> </svg>
 				</button>
 				
-				<div id="filterDropdown" class="filter-dropdown">
+				<div id="filterDropdown" class="filter-dropdown" style="top:350px;">
 					<div class="filter-grid">
 
 						
@@ -108,16 +108,15 @@
                         </label>
 					</div>
 
-					<!-- Buttons Row -->
-					<div style="display:flex;justify-content:flex-end;gap:10px;margin-top:24px;">
-					<button type="submit" class="filter-apply">Apply</button>
-					<button type="button" id="closeFilter" class="filter-close">Close</button>
-					</div>
+
+				<!-- Buttons Row -->
+				<div style="display:flex;justify-content:flex-end;gap:10px;margin-top:24px;">
+				<button type="submit" class="filter-apply">Apply</button>
+				<button type="button" id="closeFilter" class="filter-close">Clear Filters</button>
 				</div>
-			</form>
-		</div>
-		
-        <table class="table">
+			</div>
+		</form>
+	</div>        <table class="table">
             <thead>
                 <tr>
                     <th>Title</th>
@@ -130,15 +129,15 @@
             <tbody>
                 {% for project in projects %}
                 <tr>
-                    <td>
-                        <a href="{% url 'project_profile' project.id %}" class="name-link" title="{{ project.title }}">
-                            {{ project.title|truncatechars:20 }}
+                    <td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                        <a href="{% url 'project_profile' project.id %}" class="name-link" title="{{ project.title }}" style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                            {{ project.title }}
                         </a>
                     </td> 
-                    <td>{{ project.progress_display }}</td>
-                    <td>{{ project.start_date|date:"Y-m-d" }}</td>
-                    <td>{{ project.updated_at|date:"Y-m-d" }}</td>
-                    <td>{{ project.get_status_display }}</td>
+                    <td style="white-space:nowrap;">{{ project.progress_display }}</td>
+                    <td style="white-space:nowrap;">{{ project.start_date|date:"Y-m-d" }}</td>
+                    <td style="white-space:nowrap;">{{ project.updated_at|date:"Y-m-d" }}</td>
+                    <td style="white-space:nowrap;">{{ project.get_status_display }}</td>
                 </tr>
                 {% empty %}
                 <tr><td colspan="5" style="text-align:center;">No projects found.</td></tr>
@@ -275,7 +274,8 @@
 	if (closeFilter && filterDropdown) {
 		closeFilter.addEventListener('click', function(e) {
 			e.preventDefault();
-			filterDropdown.style.display = 'none';
+			// Clear filters by redirecting to base URL without query parameters
+			window.location.href = window.location.pathname;
 		});
 	}
 	// Hide dropdown when clicking outside

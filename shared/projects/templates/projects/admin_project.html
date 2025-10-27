@@ -99,7 +99,7 @@
                     </div>
                     <div class="filter-actions">
                         <button type="submit" class="filter-apply">Apply</button>
-                        <button type="button" id="closeFilter" class="filter-close">Close</button>
+                        <button type="button" id="closeFilter" class="filter-close">Clear Filters</button>
                     </div>
                 </div>
             </form>
@@ -139,16 +139,16 @@
             <tbody>
                 {% for project in projects %}
                 <tr>
-                    <td>
-                        <a href="{% url 'project_profile' project.id %}" class="name-link" title="{{ project.title }}">
-                            {{ project.title|truncatechars:20 }}
+                    <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                        <a href="{% url 'project_profile' project.id %}" class="name-link" title="{{ project.title }}" style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                            {{ project.title }}
                         </a>
                     </td>
                     <td>{{ project.project_leader.get_full_name }}</td>
                     <td>{% if project.project_leader.college %}{{ project.project_leader.college.name }}{% else %}<em>-</em>{% endif %}</td>
-                    <td>{{ project.updated_at|date:"Y-m-d" }}</td>
-                    <td>{{ project.start_date|date:"Y-m-d" }}</td>
-                    <td>{{ project.progress_display }}</td>
+                    <td style="white-space:nowrap;">{{ project.updated_at|date:"Y-m-d" }}</td>
+                    <td style="white-space:nowrap;">{{ project.start_date|date:"Y-m-d" }}</td>
+                    <td style="white-space:nowrap;">{{ project.progress_display }}</td>
                     <td>{{ project.get_status_display }}</td>
                 </tr>
                 {% empty %}
@@ -301,7 +301,8 @@ function showExportRequestModal() {
     if (closeFilter && filterDropdown) {
         closeFilter.addEventListener('click', function(e) {
             e.preventDefault();
-            filterDropdown.style.display = 'none';
+            // Clear filters by redirecting to base URL without query parameters
+            window.location.href = window.location.pathname;
         });
     }
     // Hide dropdown when clicking outside
@@ -361,6 +362,97 @@ document.addEventListener('DOMContentLoaded', function() {
                 alert('Export failed.');
             });
         });
+    }
+});
+</script>
+
+<!-- Success Toast -->
+<div id="successToast" style="display:none;position:fixed;top:20px;right:20px;background:#10b981;color:white;padding:1rem 1.5rem;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:10000;font-size:1rem;font-weight:500;min-width:300px;">
+    <div style="display:flex;align-items:center;gap:0.75rem;">
+        <i class="fa-solid fa-check-circle" style="font-size:1.5rem;"></i>
+        <div>
+            <div style="font-weight:600;margin-bottom:0.25rem;">Project Created Successfully!</div>
+            <div id="toastProjectTitle" style="font-size:0.875rem;opacity:0.9;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Events Modal -->
+<div id="addEventsModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;">
+    <div style="background:white;padding:2rem 2.5rem;border-radius:16px;box-shadow:0 4px 32px rgba(0,0,0,0.25);max-width:500px;margin:auto;display:flex;flex-direction:column;">
+        <div style="font-size:1.5rem;font-weight:600;color:#00538E;margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem;">
+            <i class="fa-solid fa-calendar-days"></i>
+            Set Up Project Events
+        </div>
+        <div style="font-size:1rem;color:#444;margin-bottom:2rem;line-height:1.6;">
+            Would you like to add events to "<span id="modalProjectTitle" style="font-weight:600;color:#00538E;"></span>" now? 
+            You can set up event details and schedule submissions for each event.
+        </div>
+        <div style="display:flex;gap:1rem;justify-content:flex-end;">
+            <button id="skipEventsBtn" style="background:#e5e7eb;color:#374151;padding:0.75rem 1.5rem;border-radius:8px;font-size:1rem;font-weight:500;border:none;cursor:pointer;transition:all 0.2s;" 
+                onmouseover="this.style.background='#d1d5db'" onmouseout="this.style.background='#e5e7eb'">
+                Skip for Now
+            </button>
+            <button id="addEventsBtn" style="background:#00538E;color:white;padding:0.75rem 1.5rem;border-radius:8px;font-size:1rem;font-weight:500;border:none;cursor:pointer;transition:all 0.2s;"
+                onmouseover="this.style.background='#004070'" onmouseout="this.style.background='#00538E'">
+                <i class="fa-solid fa-plus"></i> Add Events
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if success parameter exists
+    const urlParams = new URLSearchParams(window.location.search);
+    const success = urlParams.get('success');
+    const newProjectId = urlParams.get('new_project_id');
+    const projectTitle = urlParams.get('project_title');
+
+    if (success === 'true' && newProjectId && projectTitle) {
+        // Show success toast
+        const toast = document.getElementById('successToast');
+        const toastTitle = document.getElementById('toastProjectTitle');
+        toastTitle.textContent = projectTitle;
+        toast.style.display = 'block';
+
+        // Auto-hide toast after 4 seconds
+        setTimeout(function() {
+            toast.style.opacity = '0';
+            toast.style.transition = 'opacity 0.3s';
+            setTimeout(function() {
+                toast.style.display = 'none';
+                toast.style.opacity = '1';
+            }, 300);
+        }, 4000);
+
+        // Show add events modal after a short delay
+        setTimeout(function() {
+            const modal = document.getElementById('addEventsModal');
+            const modalTitle = document.getElementById('modalProjectTitle');
+            modalTitle.textContent = projectTitle;
+            modal.style.display = 'flex';
+
+            // Add Events button
+            document.getElementById('addEventsBtn').onclick = function() {
+                window.location.href = '/projects/' + newProjectId + '/events/';
+            };
+
+            // Skip button
+            document.getElementById('skipEventsBtn').onclick = function() {
+                modal.style.display = 'none';
+                // Clean URL
+                window.history.replaceState({}, document.title, '/projects/');
+            };
+
+            // Close on background click
+            modal.onclick = function(e) {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                    window.history.replaceState({}, document.title, '/projects/');
+                }
+            };
+        }, 500);
     }
 });
 </script>

@@ -1,5 +1,6 @@
 {% extends "base_internal.html" %}
 {% block content %}
+{% load static %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -8,6 +9,7 @@
 <title>Pool of Experts</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<link href="{% static 'shared/projects/a_module_styles.css' %}" rel="stylesheet">
 
 <!-- Top Section Styles -->
 <style>
@@ -112,7 +114,6 @@
 	}
 
 	.expert-card {
-		width: 100%;
 		height: auto;
 		border: 0.8px solid rgba(0,0,0,0.4);
 		border-radius: 12px;
@@ -174,26 +175,6 @@
 		color: #333;
 	}
 
-	/* List view */
-	.expert-list {
-		width: 100%;
-		border-collapse: collapse;
-	}
-
-	.expert-list th, .expert-list td {
-		border: 1px solid #ccc;
-		padding: 12px;
-		text-align: left;
-	}
-
-	.expert-list th {
-		background: #eee;
-	}
-
-	.expert-list td:last-child {
-		text-align: center;
-	}
-
 	/* Pagination */
 	.pagination {
 		display: flex;
@@ -241,7 +222,6 @@
 	}
 
 	.hidden { display: none !important; }
-    .visible { display: flex !important; }
 </style>
 
 <!-- Modal Styles -->
@@ -761,6 +741,17 @@
 	}
 </style>
 
+<style>
+	.name-link {
+		color: #0099FF;
+		text-decoration: none;
+	}
+
+	.name-link:hover {
+		text-decoration: underline;
+	}
+</style>
+
 </head>
 <body>
 	<div class="main-container">
@@ -772,12 +763,58 @@
 		</div>
 
 		<!-- Search + Form Controls -->
-		<div class="search-container">
-			<div class="search-bar">
-				<svg width="20" height="20"> <use href="#icon-search"></use> </svg>
-				<input type="text" placeholder="Search"/>
-				<svg width="20" height="20"> <use href="#icon-filter"></use> </svg>
-			</div>
+
+        <!-- Search Bar & Filter (3x2 Grid) -->
+        <div class="search-container" style="box-shadow: none;">
+            <form class="search-bar" style="box-shadow: 0 0 15px rgba(0, 0, 0, 0.08);" method="get" action="">
+                <svg width="16" height="16" style="margin-right:10px;"> <use href="#icon-search"></use> </svg>
+                <input type="text" name="search" placeholder="Search Expert Name" value="{{ search_query|default:'' }}"/>
+                <button type="button" id="filterBtn" style="background:none;border:none;padding:0;margin-right:5px;cursor:pointer;">
+                    <svg width="16" height="16"> <use href="#icon-filter"></use> </svg>
+                </button>
+                <div id="filterDropdown" class="filter-dropdown" style="top:310px; right:200px;">
+                    <div class="filter-grid" style="grid-template-columns: repeat(2, 1fr);">
+                        <!-- Sort By -->
+                        <label>Sort By
+                            <select name="sort_by">
+                                <option value="name" {% if sort_by == 'name' %}selected{% endif %}>Name</option>
+                                <option value="projects" {% if sort_by == 'projects' %}selected{% endif %}>No. of Projects</option>
+                                <option value="campus" {% if sort_by == 'campus' %}selected{% endif %}>Campus</option>
+                                <option value="college" {% if sort_by == 'college' %}selected{% endif %}>College</option>
+                            </select>
+                        </label>
+                        <!-- Order By -->
+                        <label>Order
+                            <select name="order">
+                                <option value="asc" {% if order == 'asc' %}selected{% endif %}>Ascending</option>
+                                <option value="desc" {% if order == 'desc' %}selected{% endif %}>Descending</option>
+                            </select>
+                        </label>
+                        <!-- Campus Filter -->
+                        <label>Campus
+                            <select name="campus">
+                                <option value="">All Campuses</option>
+                                {% for campus_value, campus_name in campuses %}
+                                <option value="{{ campus_value }}" {% if campus_filter == campus_value %}selected{% endif %}>{{ campus_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                        <!-- College Filter -->
+                        <label>College
+                            <select name="college">
+                                <option value="">All Colleges</option>
+                                {% for college in colleges %}
+                                <option value="{{ college.id }}" {% if college_filter == college.id|stringformat:"s" %}selected{% endif %}>{{ college.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                    </div>
+                    <div class="filter-actions">
+                        <button type="submit" class="filter-apply">Apply</button>
+                        <button type="button" id="closeFilter" class="filter-close">Clear Filters</button>
+                    </div>
+                </div>
+            </form>
 
 			<div class="view-buttons">
 				<svg class="view-btn active" id="gridViewBtn" width="28" height="28"><use id="gridIconUse" href="#icon-grid-active"></use></svg>
@@ -788,7 +825,7 @@
 		<!-- Expert Grid -->
 		<div class="expert-container visible" id="expertGrid">
 		{% for expert in experts %}
-		<a href="profile/" class="expert-card" style="text-decoration:none; color:inherit;">
+		<a href="{% url 'expert_profile' expert.id %}" class="expert-card" style="text-decoration:none; color:inherit;">
 			<div class="campus-tag">{{ expert.get_campus_display|default:"N/A" }}</div>
 			{% if expert.college and expert.college.logo %}
 			<img src="{{ expert.college.logo.url }}" class="college-logo" alt="{{ expert.college.name }}">
@@ -802,7 +839,7 @@
 			{% endif %}
 			<div class="expert-name">{{ expert.get_full_name }}</div>
 			<div class="expert-degree">{{ expert.degree|default:"No Degree Listed" }}</div>
-			<div class="expert-projects">Projects: {{ expert.total_projects|default:0 }}</div>
+			<div class="expert-projects">Projects: {{ expert.led_completed|add:expert.member_completed }}</div>
 		</a>
 		{% empty %}
 		<div style="grid-column: 1 / -1; text-align:center; padding:40px; color:#666;">No experts found.</div>
@@ -812,8 +849,8 @@
 		<!-- Pagination for Grid View -->
 		<div class="pagination visible" id="gridPagination">
 			{% if page_obj.has_previous %}
-			<a href="?page=1">&laquo; First</a>
-			<a href="?page={{ page_obj.previous_page_number }}">Previous</a>
+			<a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if campus_filter %}&campus={{ campus_filter }}{% endif %}{% if college_filter %}&college={{ college_filter }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if order %}&order={{ order }}{% endif %}">&laquo; First</a>
+			<a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if campus_filter %}&campus={{ campus_filter }}{% endif %}{% if college_filter %}&college={{ college_filter }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if order %}&order={{ order }}{% endif %}">Previous</a>
 			{% else %}
 			<span class="disabled">&laquo; First</span>
 			<span class="disabled">Previous</span>
@@ -823,13 +860,13 @@
 			{% if num == page_obj.number %}
 			<span class="current">{{ num }}</span>
 			{% else %}
-			<a href="?page={{ num }}">{{ num }}</a>
+			<a href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if campus_filter %}&campus={{ campus_filter }}{% endif %}{% if college_filter %}&college={{ college_filter }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if order %}&order={{ order }}{% endif %}">{{ num }}</a>
 			{% endif %}
 			{% endfor %}
 
 			{% if page_obj.has_next %}
-			<a href="?page={{ page_obj.next_page_number }}">Next</a>
-			<a href="?page={{ paginator.num_pages }}">Last &raquo;</a>
+			<a href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if campus_filter %}&campus={{ campus_filter }}{% endif %}{% if college_filter %}&college={{ college_filter }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if order %}&order={{ order }}{% endif %}">Next</a>
+			<a href="?page={{ paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if campus_filter %}&campus={{ campus_filter }}{% endif %}{% if college_filter %}&college={{ college_filter }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if order %}&order={{ order }}{% endif %}">Last &raquo;</a>
 			{% else %}
 			<span class="disabled">Next</span>
 			<span class="disabled">Last &raquo;</span>
@@ -837,28 +874,26 @@
 		</div>
 
 		<!-- Expert List (toggle alternative) -->
-		<table class="expert-list hidden" id="expertList">
+		<table class="user-table" id="expertList">
 		<thead>
 			<tr>
-			<th>Name</th>
-			<th>Campus</th>
-			<th>College</th>
-			<th>No. of Projects</th>
-			<th>Settings</th>
+				<th>Name</th>
+				<th>Campus</th>
+				<th>College</th>
+				<th>No. of Projects</th>
 			</tr>
 		</thead>
 		<tbody>
 			{% for expert in experts %}
 			<tr>
-			<td><a href="profile/">{{ expert.get_full_name }}</a></td>
-			<td>{{ expert.get_campus_display|default:"N/A" }}</td>
-			<td>{{ expert.college.name|default:"N/A" }}</td>
-			<td>{{ expert.total_projects|default:0 }}</td>
-			<td><svg width="16" height="4"><use href="#icon-settings"></use></svg></td>
+				<td><a href="{% url 'expert_profile' expert.id %}" class="name-link">{{ expert.get_full_name }}</a></td>
+				<td>{{ expert.get_campus_display|default:"N/A" }}</td>
+				<td>{{ expert.college.name|default:"N/A" }}</td>
+				<td>{{ expert.led_completed|add:expert.member_completed }}</td>
 			</tr>
 			{% empty %}
 			<tr>
-			<td colspan="5" style="text-align:center; color:#666;">No experts found.</td>
+			<td colspan="4" style="text-align:center; color:#666;">No experts found.</td>
 			</tr>
 			{% endfor %}
 		</tbody>
@@ -867,8 +902,8 @@
 		<!-- Pagination for List View -->
 		<div class="pagination hidden" id="listPagination">
 			{% if page_obj.has_previous %}
-			<a href="?page=1">&laquo; First</a>
-			<a href="?page={{ page_obj.previous_page_number }}">Previous</a>
+			<a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if campus_filter %}&campus={{ campus_filter }}{% endif %}{% if college_filter %}&college={{ college_filter }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if order %}&order={{ order }}{% endif %}">&laquo; First</a>
+			<a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if campus_filter %}&campus={{ campus_filter }}{% endif %}{% if college_filter %}&college={{ college_filter }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if order %}&order={{ order }}{% endif %}">Previous</a>
 			{% else %}
 			<span class="disabled">&laquo; First</span>
 			<span class="disabled">Previous</span>
@@ -878,26 +913,18 @@
 			{% if num == page_obj.number %}
 			<span class="current">{{ num }}</span>
 			{% else %}
-			<a href="?page={{ num }}">{{ num }}</a>
+			<a href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if campus_filter %}&campus={{ campus_filter }}{% endif %}{% if college_filter %}&college={{ college_filter }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if order %}&order={{ order }}{% endif %}">{{ num }}</a>
 			{% endif %}
 			{% endfor %}
 
 			{% if page_obj.has_next %}
-			<a href="?page={{ page_obj.next_page_number }}">Next</a>
-			<a href="?page={{ paginator.num_pages }}">Last &raquo;</a>
+			<a href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if campus_filter %}&campus={{ campus_filter }}{% endif %}{% if college_filter %}&college={{ college_filter }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if order %}&order={{ order }}{% endif %}">Next</a>
+			<a href="?page={{ paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if campus_filter %}&campus={{ campus_filter }}{% endif %}{% if college_filter %}&college={{ college_filter }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if order %}&order={{ order }}{% endif %}">Last &raquo;</a>
 			{% else %}
 			<span class="disabled">Next</span>
 			<span class="disabled">Last &raquo;</span>
 			{% endif %}
 		</div>
-
-		<!-- Pagination -->
-		<div class="pagination">
-			<button>1</button>
-			<button>2</button>
-			<button>3</button>
-		</div>
-
 	</div>
 
 	<!-- Modal Overlay -->
@@ -1032,6 +1059,31 @@
 </svg>
 
 <script>
+
+    // Filter dropdown logic
+    const filterBtn = document.getElementById('filterBtn');
+    const filterDropdown = document.getElementById('filterDropdown');
+    const closeFilter = document.getElementById('closeFilter');
+    if (filterBtn && filterDropdown) {
+        filterBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            filterDropdown.style.display = 'block';
+        });
+    }
+    if (closeFilter && filterDropdown) {
+        closeFilter.addEventListener('click', function(e) {
+            e.preventDefault();
+            // Clear filters by redirecting to base URL without query parameters
+            window.location.href = window.location.pathname;
+        });
+    }
+    // Hide dropdown when clicking outside
+    document.addEventListener('mousedown', function(e) {
+        if (filterDropdown && !filterDropdown.contains(e.target) && e.target !== filterBtn) {
+            filterDropdown.style.display = 'none';
+        }
+    });
+
     // View toggle functionality for experts
     const gridViewBtn = document.getElementById('gridViewBtn');
     const listViewBtn = document.getElementById('listViewBtn');

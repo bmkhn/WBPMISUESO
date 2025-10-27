@@ -78,7 +78,7 @@
             <div class="user-details-row cols-2">
                 <div>
                     <div class="user-details-label">Agenda <span class="required">*</span></div>
-                    <select name="agenda" class="user-details-value">
+                    <select name="agenda" class="user-details-value" style="transition: none;">
                         <option value="" selected disabled>Select Agenda</option>
                         {% for agenda in agendas %}
                         <option value="{{ agenda.id }}">{{ agenda.name }}</option>
@@ -87,7 +87,7 @@
                 </div>
                 <div>
                     <div class="user-details-label">Project Type <span class="required">*</span></div>
-                    <select name="project_type" class="user-details-value">
+                    <select name="project_type" class="user-details-value" style="transition: none;">
                         <option value="" selected disabled>Select Type</option>
                         <option value="NEEDS_BASED">Needs Based</option>
                         <option value="RESEARCH_BASED">Research Based</option>
@@ -154,7 +154,7 @@
                     <span class="info-tooltip">Choose Internal if project is funded solely by PalSU, External if funded solely by a sponsor, and Both if funded by both.</span>
                 </div>
                 </span>
-                <select name="logistics_type" class="user-details-value">
+                <select name="logistics_type" class="user-details-value" style="transition: none;">
                     <option value="BOTH">Both</option>
                     <option value="INTERNAL">Internal</option>
                     <option value="EXTERNAL">External</option>
@@ -229,7 +229,7 @@
                             <input class="file-input" type="file" name="proposal_document" id="id_proposal_document" style="display:none;" accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
                         </div>
                     </div>
-                    <div class="file-preview" id="proposal-file-preview" style="display:none;">
+                    <div class="file-preview" id="proposal-file-preview" style="display:none;margin-top:15px;">
                         <div class="file-info" style="flex:1;">
                             <svg width="16" height="16"><use href="#icon-upload"></use></svg>
                             <span id="proposal-file-name"></span>
@@ -461,11 +461,13 @@
                 if (preview) preview.style.display = 'flex';
                 preview.style.alignItems = 'center';
                 preview.style.justifyContent = 'space-between';
+                preview.style.marginTop = '15px';
                 const info = document.createElement('div');
                 info.className = 'file-info';
                 info.innerHTML = `<svg width="16" height="16"><use href="#icon-upload"></use></svg> <span>${file.name}</span>`;
                 const removeBtn = document.createElement('button');
                 removeBtn.textContent = '✕';
+
                 removeBtn.type = 'button';
                 removeBtn.className = 'remove-x';
                 removeBtn.onclick = function() {

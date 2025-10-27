@@ -308,16 +308,15 @@
 								{% endif %}
 							</div>
 
-							<!-- Buttons Row -->
-							<div style="display:flex;justify-content:flex-end;gap:10px;margin-top:24px;">
-							<button type="submit" class="filter-apply">Apply</button>
-							<button type="button" id="closeFilter" class="filter-close">Close</button>
-							</div>
-						</div>
-				</form>
-			</div>
 
-			<!-- Downloadable Items Grid -->
+						<!-- Buttons Row -->
+						<div style="display:flex;justify-content:flex-end;gap:10px;margin-top:24px;">
+						<button type="submit" class="filter-apply">Apply</button>
+						<button type="button" id="closeFilter" class="filter-close">Clear Filters</button>
+						</div>
+					</div>
+			</form>
+		</div>			<!-- Downloadable Items Grid -->
 			<div class="item-group">
 				{% for downloadable in page_obj %}
 				<article class="item" style="position:relative;">
@@ -420,7 +419,8 @@
 	if (closeFilter && filterDropdown) {
 		closeFilter.addEventListener('click', function(e) {
 			e.preventDefault();
-			filterDropdown.style.display = 'none';
+			// Clear filters by redirecting to base URL without query parameters
+			window.location.href = window.location.pathname;
 		});
 	}
 

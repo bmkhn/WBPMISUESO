@@ -41,6 +41,7 @@
         margin: 0.25rem 0 1rem 0;
         color: #222; 
         text-decoration: none;
+        cursor: auto;
     } 
 
     .campus {
@@ -545,7 +546,8 @@
     if (closeFilter && filterDropdown) {
         closeFilter.addEventListener('click', function(e) {
             e.preventDefault();
-            filterDropdown.style.display = 'none';
+            // Clear filters by redirecting to base URL without query parameters
+            window.location.href = window.location.pathname;
         });
     }
     // Hide dropdown when clicking outside

@@ -105,16 +105,16 @@
                 <tbody>
                     {% for project in agenda_projects|get_item:agenda.id %}
                     <tr>
-                        <td>
-                            <a href="{% url 'project_profile' project.id %}" class="name-link" title="{{ project.title }}">
-                                {{ project.title|truncatechars:20 }}
+                        <td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                            <a href="{% url 'project_profile' project.id %}" class="name-link" title="{{ project.title }}" style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                                {{ project.title }}
                             </a>
                         </td>
                         <td>{{ project.project_leader.get_full_name }}</td>
                         <td>{% if project.project_leader.college %}{{ project.project_leader.college.name }}{% else %}<em>-</em>{% endif %}</td>
-                        <td>{{ project.updated_at|date:"Y-m-d" }}</td>
-                        <td>{{ project.start_date|date:"Y-m-d" }}</td>
-                        <td>{{ project.progress_display }}</td>
+                        <td style="white-space:nowrap;">{{ project.updated_at|date:"Y-m-d" }}</td>
+                        <td style="white-space:nowrap;">{{ project.start_date|date:"Y-m-d" }}</td>
+                        <td style="white-space:nowrap;">{{ project.progress_display }}</td>
                         <td>{{ project.get_status_display }}</td>
                     </tr>
                     {% empty %}

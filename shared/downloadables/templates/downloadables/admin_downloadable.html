@@ -69,7 +69,7 @@
                     </div>
                     <div class="filter-actions">
                         <button type="submit" class="filter-apply">Apply</button>
-                        <button type="button" id="closeFilter" class="filter-close">Close</button>
+                        <button type="button" id="closeFilter" class="filter-close">Clear Filters</button>
                     </div>
                 </div>
             </form>
@@ -104,11 +104,11 @@
             <tbody>
                 {% for downloadable in page_obj %}
                 <tr>
-                    <td>
+                    <td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
                         {% if downloadable.file.url %}
-                            <a href="{{ downloadable.file.url }}" target="_blank" class="name-link">{{ downloadable.name }}</a>
+                            <a href="{{ downloadable.file.url }}" target="_blank" class="name-link" title="{{ downloadable.name }}" style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ downloadable.name }}</a>
                         {% else %}
-                            {{ downloadable.name }}
+                            <span title="{{ downloadable.name }}" style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ downloadable.name }}</span>
                         {% endif %}
                     </td>
                     <td>{{ downloadable.file_type|upper }}</td>
@@ -310,7 +310,8 @@
     if (closeFilter && filterDropdown) {
         closeFilter.addEventListener('click', function(e) {
             e.preventDefault();
-            filterDropdown.style.display = 'none';
+            // Clear filters by redirecting to base URL without query parameters
+            window.location.href = window.location.pathname;
         });
     }
     // Hide dropdown when clicking outside

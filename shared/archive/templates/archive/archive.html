@@ -54,7 +54,7 @@
                     </div>
                     <div class="filter-actions">
                         <button type="submit" class="filter-apply">Apply</button>
-                        <button type="button" id="closeFilter" class="filter-close">Close</button>
+                        <button type="button" id="closeFilter" class="filter-close">Clear Filters</button>
                     </div>
                 </div>
             </form>
@@ -420,7 +420,8 @@
     if (document.getElementById('closeFilter') && document.getElementById('filterDropdown')) {
         document.getElementById('closeFilter').addEventListener('click', function(e) {
             e.preventDefault();
-            document.getElementById('filterDropdown').style.display = 'none';
+            // Clear filters by redirecting to base URL without query parameters
+            window.location.href = window.location.pathname;
         });
     }
 

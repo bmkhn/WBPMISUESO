@@ -212,7 +212,7 @@
 	.filter-dropdown {
 		display: none;
 		position: absolute;
-		top: 420px;
+		top: 380px;
 		right: 120px;
 		z-index: 1000;
 		background: white;
@@ -529,7 +529,7 @@
 					<!-- Buttons Row -->
 					<div style="display:flex;justify-content:flex-end;gap:10px;margin-top:24px;">
 					<button type="submit" class="filter-apply">Apply</button>
-					<button type="button" id="closeFilter" class="filter-close">Close</button>
+					<button type="button" id="closeFilter" class="filter-close">Clear Filters</button>
 					</div>
 				</div>
 			</form>
@@ -547,10 +547,10 @@
 			<tbody>
 				{% for req in requests %}
 				<tr>
-					<td><a href="{% url 'request_details_dispatcher' req.pk %}" style="color:#063A1C;font-weight:600;text-decoration:underline;" title="{{ req.title }}">{{ req.title|truncatechars:15 }}</a></td>
-					<td>{{ req.submitted_at|date:'Y-m-d H:i' }}</td>
-					<td>{{ req.updated_at|date:'Y-m-d H:i' }}</td>
-					<td>{{ req.get_status_display }}</td>
+					<td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><a href="{% url 'request_details_dispatcher' req.pk %}" style="color:#063A1C;font-weight:600;text-decoration:underline;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="{{ req.title }}">{{ req.title }}</a></td>
+					<td style="white-space:nowrap;">{{ req.submitted_at|date:'Y-m-d H:i' }}</td>
+					<td style="white-space:nowrap;">{{ req.updated_at|date:'Y-m-d H:i' }}</td>
+					<td style="white-space:nowrap;">{{ req.get_status_display }}</td>
 				</tr>
 				{% empty %}
 				<tr><td colspan="4" style="text-align:center;color:gray;padding:2rem;">No requests found.</td></tr>
@@ -765,7 +765,8 @@
 	if (closeFilter && filterDropdown) {
 		closeFilter.addEventListener('click', function(e) {
 			e.preventDefault();
-			filterDropdown.style.display = 'none';
+			// Clear filters by redirecting to base URL without query parameters
+			window.location.href = window.location.pathname;
 		});
 	}
 	// Hide dropdown when clicking outside

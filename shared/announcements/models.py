@@ -25,6 +25,12 @@ class Announcement(models.Model):
 	def __str__(self):
 		return self.title
 	
+	def get_cover_photo_url(self):
+		"""Return the cover photo URL or default image"""
+		if self.cover_photo and hasattr(self.cover_photo, 'url'):
+			return self.cover_photo.url
+		return '/static/announce.png'
+	
 	def save(self, *args, **kwargs):
 		# Only set updated_at if this is an update (object already exists)
 		if self.pk:

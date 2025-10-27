@@ -60,7 +60,7 @@
                     </div>
                     <div class="filter-actions">
                         <button type="submit" class="filter-apply">Apply</button>
-                        <button type="button" id="closeFilter" class="filter-close">Close</button>
+                        <button type="button" id="closeFilter" class="filter-close">Clear Filters</button>
                     </div>
                 </div>
             </form>
@@ -89,9 +89,9 @@
             <tbody>
                 {% for request in requests %}
                 <tr>
-                    <td>
-                        <a href="{% url 'admin_request_details_entry' request.id %}" class="name-link" title="{{ request.title }}">
-                            {{ request.title|truncatechars:20 }}
+                    <td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                        <a href="{% url 'admin_request_details_entry' request.id %}" class="name-link" title="{{ request.title }}" style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                            {{ request.title }}
                         </a>
                     </td>
                     <td>{{ request.organization }}</td>
@@ -193,7 +193,8 @@
     if (closeFilter && filterDropdown) {
         closeFilter.addEventListener('click', function(e) {
             e.preventDefault();
-            filterDropdown.style.display = 'none';
+            // Clear filters by redirecting to base URL without query parameters
+            window.location.href = window.location.pathname;
         });
     }
     // Hide dropdown when clicking outside
