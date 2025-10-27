@@ -174,10 +174,6 @@ body {
     transform: translateY(-1px); 
     cursor: pointer;
 }
- 
-button:hover {
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
 
 .settings-icon {
     width: 16px;

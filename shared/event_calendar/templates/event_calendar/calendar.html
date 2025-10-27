@@ -53,25 +53,29 @@
         <form id="add-event-form" method="post" enctype="multipart/form-data" action="/calendar/events/">
             {% csrf_token %}
             <div class="form-group">
-                <label class="form-label">Title <span class="required">*</span></label>
-                <input type="text" name="title" id="add_event_title" required style="flex:1;">
+                <label class="user-details-label">Title <span class="required">*</span></label>
+                <input class="user-details-value" type="text" name="title" id="add_event_title" required style="flex:1;">
             </div>
             <div class="form-group">
-                <label class="form-label">Description <span class="required">*</span></label>
-                <textarea name="description" id="add_event_description" rows="2" required style="flex:1;border-radius:8px;border:1px solid #e5e7eb;padding:0.75rem;font-size:1rem;"></textarea>
+                <label class="user-details-label">Description <span class="required">*</span></label>
+                <textarea class="user-details-value" name="description" id="add_event_description" rows="2" required></textarea>
+            </div>
+            <div class="one">
+                <div class="two">
+                    <label class="user-details-label">Date <span class="required">*</span></label>
+                    <input class="user-details-value" type="date" name="date" id="add_event_date" required style="flex:1; color: #888; pointer-events: none;" readonly tabindex="-1">
+                </div>
+                <div class="two">
+                    <label class="user-details-label">Time <span class="required">*</span></label>
+                <input class="user-details-value" type="time" name="time" id="add_event_time" required style="flex:1;">
+                </div>
             </div>
             <div class="form-group">
-                <label class="form-label">Date <span class="required">*</span></label>
-                <input type="date" name="date" id="add_event_date" required style="flex:1; color: #888; pointer-events: none;" readonly tabindex="-1">
-                <label class="form-label" style="margin-left:1rem;">Time <span class="required">*</span></label>
-                <input type="time" name="time" id="add_event_time" required style="flex:1;">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Location <span class="required">*</span></label>
-                <input type="text" name="location" id="add_event_location" required style="flex:1;">
+                <label class="user-details-label">Location <span class="required">*</span></label>
+                <input class="user-details-value" type="text" name="location" id="add_event_location" required style="flex:1;">
             </div>
             <div class="form-group" style="flex-direction: column; gap:0.5rem;">
-                <label class="form-label">Add to Other's Calendar</label>
+                <label class="user-details-label">Add to Other's Calendar</label>
                 <div id="participants-tag-row" class="tag-row"></div>
                 <select id="participants-options-template" style="display:none;" multiple>
                     <option value="">Select Participant</option>
@@ -82,12 +86,12 @@
             </div>
 
             <div class="form-group">
-                <label class="form-label">Notes (Optional)</label>
-                <textarea name="notes" id="add_event_notes" rows="2" style="flex:1;border-radius:8px;border:1px solid #e5e7eb;padding:0.75rem;font-size:1rem;"></textarea>
+                <label class="user-details-label">Notes (Optional)</label>
+                <textarea class="user-details-value" name="notes" id="add_event_notes" rows="2"></textarea>
             </div>
             <div class="form-actions" style="justify-content:flex-end;">
-                <button type="button" class="back-btn" id="cancel-add-event-modal">Cancel</button>
-                <button type="submit" class="submit-btn">Add Event</button>
+                <button type="button" class="back" id="cancel-add-event-modal">Cancel</button>
+                <button type="submit" class="save">Add Event</button>
             </div>
         </form>
     </div>
@@ -95,32 +99,36 @@
 
 <!-- Edit Event Modal -->
 <div id="edit-event-modal" class="event-modal" style="display:none;align-items:center;justify-content:center;">
-    <div class="event-modal-content" style="max-width:600px;">
+    <div class="event-modal-content">
         <span class="close" id="close-edit-event-modal">&times;</span>
         <h2 id="edit-event-modal-title">Edit Event</h2>
-        <form id="edit-event-form" method="post" enctype="multipart/form-data" action="/calendar/edit_event/">
+        <form id="edit-event-form" method="post" enctype="multipart/form-data">
             {% csrf_token %}
             <input type="hidden" name="event_id" id="edit_event_id">
             <div class="form-group">
-                <label class="form-label">Title <span class="required">*</span></label>
-                <input type="text" name="title" id="edit_event_title" required style="flex:1;">
+                <label class="form-label user-details-label">Title <span class="required">*</span></label>
+                <input class="user-details-value" type="text" name="title" id="edit_event_title" required style="flex:1;">
             </div>
             <div class="form-group">
-                <label class="form-label">Description <span class="required">*</span></label>
-                <textarea name="description" id="edit_event_description" rows="2" required style="flex:1;border-radius:8px;border:1px solid #e5e7eb;padding:0.75rem;font-size:1rem;"></textarea>
+                <label class="form-label user-details-label">Description <span class="required">*</span></label>
+                <textarea class="user-details-value" name="description" id="edit_event_description" rows="2" required></textarea>
+            </div>
+            <div class="one">
+                <div class="two">
+                    <label class="user-details-label">Date <span class="required">*</span></label>
+                    <input class="user-details-value" type="date" name="date" id="edit_event_date" required style="flex:1; color: #888;">
+                </div>
+                <div class="two">
+                    <label class="user-details-label">Time <span class="required">*</span></label>
+                <input class="user-details-value" type="time" name="time" id="edit_event_time" required style="flex:1;"> 
+                </div>
             </div>
             <div class="form-group">
-                <label class="form-label">Date <span class="required">*</span></label>
-                <input type="date" name="date" id="edit_event_date" required style="flex:1; color: #888;">
-                <label class="form-label" style="margin-left:1rem;">Time <span class="required">*</span></label>
-                <input type="time" name="time" id="edit_event_time" required style="flex:1;">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Location <span class="required">*</span></label>
-                <input type="text" name="location" id="edit_event_location" required style="flex:1;">
+                <label class="form-label user-details-label">Location <span class="required">*</span></label>
+                <input class="user-details-value" type="text" name="location" id="edit_event_location" required style="flex:1;">
             </div>
             <div class="form-group" style="flex-direction: column; gap:0.5rem;">
-                <label class="form-label">Participants</label>
+                <label class="form-label user-details-label">Participants</label>
                 <div id="edit-participants-tag-row" class="tag-row"></div>
                 <select id="edit-participants-options-template" style="display:none;" multiple>
                     <option value="">Select Participant</option>
@@ -131,12 +139,12 @@
                 <script id="participants-data" type="application/json"></script>
             </div>
             <div class="form-group">
-                <label class="form-label">Notes (Optional)</label>
-                <textarea name="notes" id="edit_event_notes" rows="2" style="flex:1;border-radius:8px;border:1px solid #e5e7eb;padding:0.75rem;font-size:1rem;"></textarea>
+                <label class="form-label user-details-label">Notes (Optional)</label>
+                <textarea class="user-details-value" name="notes" id="edit_event_notes" rows="2"></textarea>
             </div>
             <div class="form-actions" style="justify-content:flex-end;">
-                <button type="button" class="back-btn" id="cancel-edit-event-modal">Cancel</button>
-                <button type="submit" class="submit-btn">Save Changes</button>
+                <button type="button" class="back" id="cancel-edit-event-modal">Cancel</button>
+                <button type="submit" class="save">Save Changes</button>
             </div>
         </form>
     </div>
@@ -182,16 +190,16 @@
         document.getElementById('edit_event_id').value = eventObj.id;
         document.getElementById('edit_event_title').value = eventObj.title || '';
         document.getElementById('edit_event_description').value = eventObj.description || '';
-        document.getElementById('edit_event_date').value = eventObj.date || '';
-        document.getElementById('edit_event_time').value = eventObj.time || '';
+        document.getElementById('edit_event_date').value = eventObj.date || ''; // Use edit_event_date
+        document.getElementById('edit_event_time').value = eventObj.time || ''; // Use edit_event_time
         document.getElementById('edit_event_location').value = eventObj.location || '';
         document.getElementById('edit_event_notes').value = eventObj.notes || '';
         // Participants tag UI
         const tagRow = document.getElementById('edit-participants-tag-row');
         while (tagRow.firstChild) tagRow.removeChild(tagRow.firstChild);
-        // Set JSON data for participants
         document.getElementById('participants-data').textContent = JSON.stringify(eventObj.participants || []);
         renderParticipantTags();
+        document.getElementById('edit-event-modal').style.display = 'flex';
     }
 
     function renderParticipantTags() {
@@ -199,7 +207,7 @@
         const optionsTemplate = document.getElementById('edit-participants-options-template');
         let selectedParticipants = [];
         try {
-            selectedParticipants = JSON.parse(document.getElementById('participants-data').textContent);
+            selectedParticipants = JSON.parse(document.getElementById('participants-data').textContent || '[]');
         } catch (e) {
             selectedParticipants = [];
         }
@@ -215,7 +223,7 @@
                 removeBtn.className = 'tag-remove';
                 removeBtn.innerHTML = '&times;';
                 removeBtn.onclick = function() {
-                    selectedParticipants = selectedParticipants.filter(pid => pid !== id);
+                    selectedParticipants = selectedParticipants.filter(pid => String(pid) !== stringId);
                     document.getElementById('participants-data').textContent = JSON.stringify(selectedParticipants);
                     renderParticipantTags();
                 };
@@ -264,12 +272,14 @@
             });
         };
         tagRow.appendChild(addBtn);
+
+        // Add hidden input fields for form submission
         selectedParticipants.forEach(id => {
             const hidden = document.createElement('input');
             hidden.type = 'hidden';
-            hidden.name = 'participants[]';
+            hidden.name = 'participants[]'; // Important for backend processing
             hidden.value = id;
-            tagRow.appendChild(hidden);
+            tagRow.appendChild(hidden); // Append hidden input *after* the button
         });
     }
     document.getElementById('close-edit-event-modal').onclick = function() {
@@ -284,53 +294,94 @@
         }
     };
     // Handle edit event form submit
+    const editEventForm = document.getElementById('edit-event-form'); // <-- ADD THIS LINE
     editEventForm.onsubmit = function(e) {
-        e.preventDefault();
+        e.preventDefault(); // Prevent default form submission
         const event_id = document.getElementById('edit_event_id').value;
         const title = document.getElementById('edit_event_title').value.trim();
         const description = document.getElementById('edit_event_description').value.trim();
-        const date = document.getElementById('edit_event_date').value;
+        const date = document.getElementById('edit_event_date').value
         const time = document.getElementById('edit_event_time').value;
         const location = document.getElementById('edit_event_location').value.trim();
-        const participants = Array.from(document.querySelectorAll('#edit-participants-tag-row input[name="participants[]"]')).map(input => input.value);
         const notes = document.getElementById('edit_event_notes').value.trim();
+
+        // Get participants from the temporary data store script tag
+        let participants = [];
+        try {
+            participants = JSON.parse(document.getElementById('participants-data').textContent || '[]');
+        } catch (parseError) {
+            console.error("Error parsing participants data on submit:", parseError);
+            alert("Error processing participant list. Please try again.");
+            return; // Stop submission if participant data is invalid
+        }
+
+        // Basic validation
         if (!event_id || !title || !description || !date || !time || !location) {
             alert('Please fill in all required fields.');
             return;
         }
+
+        // Get CSRF token
         const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
-        
-        // MODIFIED: Use new RESTful URL and PUT method
-        fetch('/calendar/events/' + event_id + '/', {
-            method: 'PUT',
+
+        // Send the PUT request to update the specific event
+        fetch('/calendar/events/' + event_id + '/', { // Correct RESTful URL for specific event
+            method: 'PUT',                            // Use PUT method for updates
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRFToken': csrfToken
+                'X-CSRFToken': csrfToken           // Include CSRF token
             },
-            body: JSON.stringify({
-                event_id, title, description, date, time, location, participants, notes
+            body: JSON.stringify({                   // Send data as JSON
+                title, description, date, time, location, participants, notes
             })
-        }).then(r => r.json()).then(resp => {
-            if (resp.status === 'success') {
-                editEventModal.style.display = 'none';
-                
-                // MODIFIED: Fetch latest events from new endpoint
-                fetch('/calendar/events/')
-                  .then(r => r.json())
-                  .then(data => {
-                      events = data;
-                      renderCalendar(currentYear, currentMonth);
-                      fetchEvents();
-                  })
-                  .catch(err => {
-                      alert('Could not refresh events: ' + err.message);
-                      renderCalendar(currentYear, currentMonth);
-                      fetchEvents();
-                  });
-            } else {
-                alert('Error: ' + JSON.stringify(resp.errors || resp));
+        })
+        .then(response => { // First step: check if the server response indicates success (HTTP status 2xx)
+            if (!response.ok) {
+                // If response status is not OK (e.g., 400, 403, 500), read response text and throw error
+                return response.text().then(text => {
+                    throw new Error(`Server error: ${response.status} - ${text}`);
+                });
             }
-        }).catch(err => alert('Network error: ' + err.message));
+            // If response is OK, try to parse it as JSON
+            return response.json();
+        })
+        .then(resp => { // Second step: Process the JSON response from the server
+            // Check if the backend specifically confirmed success (adjust 'status' if your backend uses a different key)
+            if (resp && resp.status === 'success') {
+                document.getElementById('edit-event-modal').style.display = 'none'; // Close the modal
+
+                // --- REFRESH THE CALENDAR VIEW ---
+                // Fetch the entire updated list of events
+                fetch('/calendar/events/') // Use GET request (default) to fetch all events
+                .then(listResponse => {
+                    if (!listResponse.ok) { // Check if fetching the list failed
+                        throw new Error(`Failed to refresh event list: ${listResponse.status}`);
+                    }
+                    return listResponse.json(); // Parse the new list
+                })
+                .then(updatedEventsData => {
+                    // *** CRITICAL STEP: Update the global 'events' variable ***
+                    events = updatedEventsData;
+
+                    // Re-render the calendar grid and the sidebar list with the new data
+                    renderCalendar(currentYear, currentMonth);
+                    fetchEvents(); // This updates the sidebar list
+                })
+                .catch(refreshError => { // Catch errors during the refresh fetch
+                    console.error('Error refreshing events after edit:', refreshError);
+                    alert('Event updated successfully, but could not refresh the calendar view automatically. Please reload the page. Error: ' + refreshError.message);
+                });
+                // --- END REFRESH ---
+
+            } else {
+                // Handle cases where the server responded OK, but indicated a logical error in the JSON
+                alert('Error updating event: ' + (JSON.stringify(resp.errors || resp.message || resp)));
+            }
+        })
+        .catch(error => { // Catch network errors or errors thrown from the first .then() block
+            console.error('Error submitting edit event form:', error);
+            alert('Could not update event. ' + error.message);
+        });
     };
     
     // Placeholder for fetchEvents function
