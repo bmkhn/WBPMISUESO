@@ -503,7 +503,7 @@
 					{% if announcement.cover_photo %}
 						<img src="{{ announcement.cover_photo.url }}" alt="Cover Photo" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" />
 					{% else %}
-						📢
+						<img src="{% static 'announce.png' %}" alt="Default Announcement" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" />
 					{% endif %}
 				</div>
 				<div class="announce-text-container">

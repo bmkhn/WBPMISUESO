@@ -1,0 +1,84 @@
+body {
+    background: #F9F9F9;
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+}
+.main-container {
+    margin: 60px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 800px;
+}
+.details-card {
+    background: white;
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    padding: 32px;
+    width: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.details-thumb {
+    width: 100%;
+    height: 100%; /* Changed from 100 to 100% */
+    background: linear-gradient(135deg, #0A6C44, #1f7c57); /* Fallback background */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white; /* For potential text overlay or icons */
+    font-size: 3rem; /* Example size for fallback icon/text */
+    border-radius: 8px;
+    overflow: hidden; /* Keep rounded corners */
+}
+
+.details-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 8px; 
+}
+.details-title {
+    margin: 4px 0 0 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #063A1C;
+}
+.details-meta {
+    display: flex;
+    gap: 5px;
+    font-size: 1rem;
+    color: #E37910;
+    flex-direction: column;
+}
+
+.details-date {
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.orange-text {
+    color: #E37910;
+}
+
+.green-text {
+    color: #1f7c57;
+}
+
+.details-author {
+    color: #374151;
+    font-size: 0.9rem;
+    margin-left: auto;
+    text-align: right;
+}
+
+.details-body {
+    color: #625C56;
+    font-size: 0.95rem;
+    line-height: 1.7;
+    white-space: pre-line;
+    word-break: break-word;
+    margin-top: 1rem;
+}
