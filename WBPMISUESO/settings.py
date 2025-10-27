@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     'system.logs',              # Logs
     'system.users',             # Custom User
     'system.notifications',     # Notifications
+    'system.settings',          # Settings
     'rest_framework',           # Django REST Framework
 ]
 

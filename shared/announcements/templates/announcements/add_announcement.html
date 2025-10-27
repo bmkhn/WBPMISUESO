@@ -40,33 +40,32 @@
 					<textarea class="user-details-value" name="body" id="id_body">{{ form.body.value|default:'' }}</textarea>
 				</div>
 
-				<div class="form-group">
-					<label class="user-details-label" for="id_cover_photo">Attach Cover Photo:</label>
-					<div class="upload-area" onclick="document.getElementById('id_cover_photo').click()">
-						<svg class="upload-icon"><use href="#icon-upload"></use></svg>
-						<span class="upload-text">Click to upload</span>
-						<input class="file-input user-details-value" type="file" name="cover_photo" id="id_cover_photo" style="display: none;" accept="image/*" value="{{ form.cover_photo.value|default:'' }}">
-					</div>
-				</div>
 
-				<div class="form-group">
-					<label class="user-details-label" for="id_scheduled_at">Schedule Post:</label>
-					<div class="schedule-button" onclick="toggleSchedule()">
-						<svg class="clock-icon"><use href="#icon-clock"></use></svg>
-						<span id="schedule-text">Now</span>
-					</div>
-					<input class="form-input user-details-value" type="hidden" name="scheduled_at" id="id_scheduled_at" value="{{ now|date:'Y-m-d\\TH:i' }}">
+			<div class="form-group">
+				<label class="user-details-label" for="id_cover_photo">Attach Cover Photo:</label>
+				<div class="upload-area" onclick="document.getElementById('id_cover_photo').click()">
+					<svg class="upload-icon"><use href="#icon-upload"></use></svg>
+					<span class="upload-text">Click to upload</span>
+					<input class="file-input user-details-value" type="file" name="cover_photo" id="id_cover_photo" style="display: none;" accept="image/jpeg,image/png,image/jpg,image/gif,image/webp" value="{{ form.cover_photo.value|default:'' }}">
 				</div>
-
+				
 				<div class="file-preview" id="file-preview" style="display: none;">
 					<div class="file-info">
 						<svg width="16" height="16"><use href="#icon-upload"></use></svg>
 						<span id="file-name"></span>
 					</div>
 				</div> 
-			</div> 
+			</div>
 
-			<div class="form-actions">
+			<div class="form-group">
+				<label class="user-details-label">Schedule Post:</label>
+				<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+					<input type="checkbox" id="publish_now" name="publish_now" checked style="width: auto; cursor: pointer;">
+					<label for="publish_now" style="margin: 0; cursor: pointer; font-weight: normal;">Publish now</label>
+				</div>
+				<input class="form-input user-details-value" type="datetime-local" name="scheduled_at" id="id_scheduled_at" style="display: none;">
+			</div>
+		</div>			<div class="form-actions">
 				<a href="{% url 'announcement_dispatcher' %}" class="back btn">Back</a>
 				<button type="submit" class="save btn" id="submit-btn">Submit</button>
 			</div>
@@ -153,31 +152,28 @@
 	// File Upload Handling
 	document.getElementById('id_cover_photo').addEventListener('change', function(e) {
 		const file = e.target.files[0];
+		const preview = document.getElementById('file-preview');
 		if (file) {
 			document.getElementById('file-name').textContent = file.name;
-			document.getElementById('file-preview').classList.add('show');
+			preview.style.display = 'block';
 		} else {
-			document.getElementById('file-preview').classList.remove('show');
+			preview.style.display = 'none';
 		}
 	});
 
-	// Schedule Handling
-	function toggleSchedule() {
-		const scheduleText = document.getElementById('schedule-text');
+	// Schedule Handling - Checkbox toggle
+	document.getElementById('publish_now').addEventListener('change', function(e) {
 		const scheduleInput = document.getElementById('id_scheduled_at');
-
-		if (scheduleInput.type === 'hidden') {
-			scheduleText.textContent = 'Schedule for later';
-			scheduleInput.type = 'datetime-local';
-			scheduleInput.style.display = 'block';
-			scheduleInput.required = true;
-		} else {
-			scheduleText.textContent = 'Now';
-			scheduleInput.type = 'hidden';
+		
+		if (e.target.checked) {
 			scheduleInput.style.display = 'none';
 			scheduleInput.required = false;
+			scheduleInput.value = '';
+		} else {
+			scheduleInput.style.display = 'block';
+			scheduleInput.required = true;
 		}
-	}
+	});
 </script>
 
 </body>

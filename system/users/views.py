@@ -1,7 +1,9 @@
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout, authenticate, get_user_model
+from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
+from django.db.models import Q
 
 from system.users.models import College
 from system.users.decorators import role_required
@@ -576,9 +578,27 @@ def delete_user(request, id):
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 
+
+def profile_role_constants():
+    HAS_COLLEGE_CAMPUS = ["FACULTY", "PROGRAM_HEAD", "DEAN", "COORDINATOR"]
+    HAS_DEGREE_EXPERTISE = ["FACULTY", "IMPLEMENTER"]
+    HAS_COMPANY_INDUSTRY = ["CLIENT"]
+    return HAS_COLLEGE_CAMPUS, HAS_DEGREE_EXPERTISE, HAS_COMPANY_INDUSTRY
+
+
 @login_required
-def profile_view(request):
-    user = request.user
+def profile_view(request, id=None):
+    # If id is provided, show that user's profile, otherwise show logged-in user's profile
+    User = get_user_model()
+    if id:
+        try:
+            user = User.objects.get(id=id)
+        except User.DoesNotExist:
+            return redirect('profile')  # Fallback to own profile if user not found
+    else:
+        user = request.user
+    
+    HAS_COLLEGE_CAMPUS, HAS_DEGREE_EXPERTISE, HAS_COMPANY_INDUSTRY = profile_role_constants()
 
     base_template = get_templates(request)
     
@@ -621,15 +641,21 @@ def profile_view(request):
         # Get client requests
         from shared.request.models import ClientRequest
         content_items = ClientRequest.objects.filter(
-            client=user
-        ).order_by('-created_at')
+            submitted_by=user
+        ).order_by('-submitted_at')
     
     return render(request, 'users/profile.html', {
+        'profile_user': user,  # The user whose profile is being viewed
+        'can_edit': request.user.id == user.id,  # Can only edit own profile
         'campus_display': campus_display,
         'college_name': college_name,
         'college_logo': college_logo,
         'content_items': content_items,
         'base_template': base_template,
+
+        'HAS_COLLEGE_CAMPUS': HAS_COLLEGE_CAMPUS,
+        'HAS_DEGREE_EXPERTISE': HAS_DEGREE_EXPERTISE,
+        'HAS_COMPANY_INDUSTRY': HAS_COMPANY_INDUSTRY,
     })
 
 

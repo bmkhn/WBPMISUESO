@@ -47,6 +47,7 @@ urlpatterns = [
 
     # User Profile URLs
     path('profile/', profile_view, name='profile'),                             # User Profile
+    path('profile/<int:id>/', profile_view, name='user_profile'),               # View Any User Profile
     path('profile/update-bio/', update_bio, name='update_bio'),                 # Update Bio
     path('profile/update-picture/', update_profile_picture, name='update_profile_picture'),  # Update Profile Picture
 

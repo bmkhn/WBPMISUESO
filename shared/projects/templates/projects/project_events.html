@@ -230,6 +230,21 @@
     <section class="events-section">
         <div class="event-card">
             {% for event in events %}
+            {% if not event.placeholder or request.user.role in ADMIN_ROLES %}
+            {% if event.placeholder and request.user.role in ADMIN_ROLES %}
+            <!-- Placeholder event - admin only sees edit button -->
+            <div class="event-details" style="justify-content:center;gap:1rem;">
+                <button type="button" class="submit-btn" onclick="document.getElementById('edit-event-modal-{{ event.id }}').style.display='flex'" style="display:flex;align-items:center;gap:0.5rem;">
+                    <i class="fa-solid fa-calendar-plus"></i>
+                    Set Up Event
+                </button>
+                <button type="button" class="back-btn" onclick="openDeleteEventModal('{{ event.id }}')" style="display:flex;align-items:center;gap:0.5rem;background:#E53E3E;color:white;" onmouseover="this.style.background='#C53030'" onmouseout="this.style.background='#E53E3E'">
+                    <i class="fa-solid fa-trash"></i>
+                    Delete
+                </button>
+            </div>
+            {% else %}
+            <!-- Regular event display -->
             <div class="event-details">
                 <div class="event-info">
                     <div style="display:flex;align-items:center;gap:0.5rem;">
@@ -259,9 +274,8 @@
                         {% endif %}
                     </div>
                     <p>{{ event.description|default:'No description.' }}</p>
-                    {% if event.placeholder %}{% else %}<p>{{ event.datetime|date:'F d, Y' }} at {{ event.datetime|date:'g:i A' }}</p>{% endif %}
-                    {% if event.location %}<p><strong>Location:</strong> {{ event.location }}</p>{% else %}{% endif %}
-                    {% if event.placeholder and request.user.role in ADMIN_ROLES %}<p style="color:red;">Set Date Time and Location to be able to Add Submission</p>{% endif %}
+                    <p>{{ event.datetime|date:'F d, Y' }} at {{ event.datetime|date:'g:i A' }}</p>
+                    {% if event.location %}<p><strong>Location:</strong> {{ event.location }}</p>{% endif %}
                 </div>
                 <div style="height:15rem;display:flex; text-align: center; align-items: center;">
                 {% if event.image %}
@@ -271,8 +285,11 @@
                 {% endif %}
                 </div>
             </div>
+            {% endif %}
+            {% endif %}
 
             <!-- Edit Event Modal for this specific event -->
+            {% if request.user.role in ADMIN_ROLES %}
             <div id="edit-event-modal-{{ event.id }}" class="event-modal" style="display:none;">
                 <div class="event-modal-content">
                     <span class="close" onclick="document.getElementById('edit-event-modal-{{ event.id }}').style.display='none'">&times;</span>
@@ -311,11 +328,27 @@
                     }
                 };
             </script>
+            {% endif %}
 
             {% empty %}
             <style>.event-details { display: flex; flex-direction: column; align-items: center; }</style>
             <section><div class="event-details"><div class="event-info" style="width: auto;"><h4 style="text-align: center;">No events scheduled.</h4></div></div></section>
             {% endfor %}
+            
+            {# Show "No events" message if all events are placeholders and user is not admin #}
+            {% if events and request.user.role not in ADMIN_ROLES %}
+                {% with all_placeholder=True %}
+                    {% for event in events %}
+                        {% if not event.placeholder %}
+                            {% with all_placeholder=False %}{% endwith %}
+                        {% endif %}
+                    {% endfor %}
+                    {% if all_placeholder %}
+                        <style>.event-details { display: flex; flex-direction: column; align-items: center; margin-top:30px; }</style>
+                        <section><div class="event-details"><div class="event-info" style="width: auto;"><h4 style="text-align: center;">No events scheduled.</h4></div></div></section>
+                    {% endif %}
+                {% endwith %}
+            {% endif %}
         </div>
     </div>
 </section>

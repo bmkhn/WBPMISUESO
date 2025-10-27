@@ -15,11 +15,11 @@
 	<div class="main-container">
         <!-- Top Section -->
 
-        <!-- Search Bar & Filter (4x2 Grid) -->
+        <!-- Search Bar & Filter (3x2 Grid) -->
         <div class="search-container">
             <form class="search-bar" method="get" action="">
                 <svg width="16" height="16" style="margin-right:10px;"> <use href="#icon-search"></use> </svg>
-                <input type="text" name="search" placeholder="Search by project title" value="{{ search|default:'' }}"/>
+                <input type="text" name="search" placeholder="Search Export Type" value="{{ search|default:'' }}"/>
                 <button type="button" id="filterBtn" style="background:none;border:none;padding:0;margin-right:5px;cursor:pointer;">
                     <svg width="16" height="16"> <use href="#icon-filter"></use> </svg>
                 </button>
@@ -28,8 +28,7 @@
                         <label>Sort By
                             <select name="sort_by">
                                 <option value="type" {% if sort_by == 'type' %}selected{% endif %}>Type</option>
-                                <option value="submitted_at" {% if sort_by == 'submitted_at' %}selected{% endif %}>Date Submitted</option>
-                                <option value="submitted_by" {% if sort_by == 'submitted_by' %}selected{% endif %}>Submitted By</option>
+                                <option value="date_submitted" {% if sort_by == 'date_submitted' %}selected{% endif %}>Date Submitted</option>
                                 <option value="status" {% if sort_by == 'status' %}selected{% endif %}>Status</option>
                             </select>
                         </label>
@@ -37,6 +36,14 @@
                             <select name="order">
                                 <option value="asc" {% if order == 'asc' %}selected{% endif %}>Ascending</option>
                                 <option value="desc" {% if order == 'desc' %}selected{% endif %}>Descending</option>
+                            </select>
+                        </label>
+                        <label>Type
+                            <select name="type">
+                                <option value="">All Types</option>
+                                {% for t in all_types %}
+                                <option value="{{ t.0 }}" {% if export_type == t.0 %}selected{% endif %}>{{ t.1 }}</option>
+                                {% endfor %}
                             </select>
                         </label>
                         <label>Status
@@ -89,7 +96,7 @@
                 <tr id="export-{{ export.id }}">
                     <td>{{ export.get_type_display }}</td>
                     <td>{{ export.date_submitted|date:"Y-m-d" }}</td>
-                    <td>{{ export.submitted_by.get_full_name }}</td>
+                    <td><a href="{% url 'user_profile' export.submitted_by.id %}" class="name-link">{{ export.submitted_by.get_full_name }}</a></td>
                     <td style="text-align:center;">
                         {% if export.type == 'PROJECT' %}
                             <a href="{% url 'export_project' %}?{{ export.querystring|safe }}" style="color:#2EA8FF;">Download</a>

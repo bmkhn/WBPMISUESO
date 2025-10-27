@@ -126,7 +126,7 @@
 		height: 70px;
 		border-radius: 50%;
 		background-color: #f8f9fa;
-		border: 3px solid #dc3545;
+		border: 1px solid #000;
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -192,6 +192,7 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
+		margin-bottom: 20px;
 	}
 
 	.card-title {
@@ -468,68 +469,81 @@
 			<div class="profile-header">
 				<div class="profile-main">
 					<div class="profile-left">
-						<div class="profile-image" onclick="openImageModal()">
-							{% if user.profile_picture %}
-							<img src="{{ user.profile_picture.url }}" alt="{{ user.get_full_name }}" id="profileImg">
+						<div class="profile-image" {% if can_edit %}onclick="openImageModal()"{% endif %}>
+							{% if profile_user.profile_picture %}
+							<img src="{{ profile_user.profile_picture.url }}" alt="{{ profile_user.get_full_name }}" id="profileImg">
 							{% else %}
 							<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#e9ecef; color:#6c757d; font-size:48px; font-weight:600;" id="profileInitials">
-								{{ user.given_name.0 }}{{ user.last_name.0 }}
+								{{ profile_user.given_name.0 }}{{ profile_user.last_name.0 }}
 							</div>
 							{% endif %}
+							{% if can_edit %}
 							<div class="edit-overlay">
 								<i class="fa-solid fa-camera"></i> Change Photo
 							</div>
-						</div>
-					</div>
-					<div class="profile-middle">
-						<h1 class="profile-name">{{ user.get_full_name }}</h1>
-						<div class="profile-location">
-							<span class="location-icon"><i class="fa-solid fa-location-dot"></i></span>
-							<span>{{ campus_display }}</span>
-						</div>
-						<div class="university-logo">
-							{% if college_logo %}
-							<img src="{{ college_logo }}" alt="{{ college_name }}">
-							{% else %}
-							<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#f8f9fa; color:#6c757d; font-size:24px; font-weight:600;">
-								{{ college_name.0|default:"?" }}
-							</div>
 							{% endif %}
 						</div>
 					</div>
+
+					<div class="profile-middle">
+						<h1 class="profile-name">{{ profile_user.get_full_name }}</h1>
+						{% if profile_user.role in HAS_COLLEGE_CAMPUS %}
+						<div class="profile-location">
+							<span class="location-icon"><i class="fa-solid fa-location-dot"></i></span>
+							<span >{{ campus_display }}</span>
+						</div>
+						{% endif %}
+
+						{% if profile_user.role in HAS_COLLEGE_CAMPUS %}
+						<div class="university-logo">
+							<img src="{{ college_logo }}" alt="{{ college_name }}" title="{{ college_name }}">
+						</div>
+						{% endif %}
+					</div>
+
 					<div class="profile-info">
 						<div class="expertise-section">
-							{% if user.role in "FACULTY,IMPLEMENTER" %}
+							{% if profile_user.role in HAS_DEGREE_EXPERTISE %}
 							<div class="expertise-item">
 								<span class="expertise-label">Field of Expertise:</span>
-								<span class="expertise-value">{{ user.expertise|default:"Not specified" }}</span>
+								<span class="expertise-value">{{ profile_user.expertise|default:"Not specified" }}</span>
 							</div>
+							{% if college_name and college_name != "N/A" %}
 							<div class="expertise-item">
-								<span class="expertise-label">{{ user.degree|default:"Degree Not Listed" }}</span>
+								<span class="expertise-label">{{ profile_user.degree|default:"Degree Not Listed" }}</span>
 								<span class="expertise-value">{{ college_name }}</span>
 							</div>
-							{% elif user.role == "CLIENT" %}
+							{% endif %}
+							{% elif profile_user.role in HAS_COMPANY_INDUSTRY %}
 							<div class="expertise-item">
 								<span class="expertise-label">Company:</span>
-								<span class="expertise-value">{{ user.company|default:"Not specified" }}</span>
+								<span class="expertise-value">{{ profile_user.company|default:"Not specified" }}</span>
 							</div>
 							<div class="expertise-item">
 								<span class="expertise-label">Industry:</span>
-								<span class="expertise-value">{{ user.industry|default:"Not specified" }}</span>
+								<span class="expertise-value">{{ profile_user.industry|default:"Not specified" }}</span>
 							</div>
 							{% else %}
 							<div class="expertise-item">
 								<span class="expertise-label">Role:</span>
-								<span class="expertise-value">{{ user.get_role_display }}</span>
+								<span class="expertise-value">{{ profile_user.get_role_display }}</span>
 							</div>
+							{% if college_name and college_name != "N/A" %}
 							<div class="expertise-item">
 								<span class="expertise-label">College:</span>
 								<span class="expertise-value">{{ college_name }}</span>
 							</div>
 							{% endif %}
+							{% endif %}
+						</div>
+					</div>
+
+					<div class="profile-info">
+						<div class="expertise-section">
 							<div class="expertise-item">
 								<span class="expertise-label">Contact:</span>
-								<span class="expertise-value">{{ user.email }}</span>
+								<span class="expertise-value">{{ profile_user.email }}</span>
+								<span class="expertise-value">{{ profile_user.contact_no }}</span>
 							</div>
 						</div>
 					</div>
@@ -546,20 +560,24 @@
 					<div class="bio-content">
 						<div class="bio-display">
 							<div class="bio-text">
-								{{ user.bio|linebreaksbr|default:"You haven't added a bio yet." }}
+								{{ profile_user.bio|linebreaksbr|default:"No bio added yet." }}
 							</div>
+							{% if can_edit %}
 							<button class="edit-bio-btn" onclick="toggleBioEditor(true)">Edit Bio</button>
+							{% endif %}
 						</div>
+						{% if can_edit %}
 						<div class="bio-editor">
 							<form id="bioForm" method="POST" action="{% url 'update_bio' %}">
 								{% csrf_token %}
-								<textarea name="bio" id="bioTextarea">{{ user.bio|default:"" }}</textarea>
+								<textarea name="bio" id="bioTextarea">{{ profile_user.bio|default:"" }}</textarea>
 								<div class="bio-editor-actions">
 									<button type="submit" class="save-bio-btn">Save</button>
 									<button type="button" class="cancel-bio-btn" onclick="toggleBioEditor(false)">Cancel</button>
 								</div>
 							</form>
 						</div>
+						{% endif %}
 					</div>
 				</div>
 
@@ -567,12 +585,12 @@
 				<div class="content-card">
 					<div class="card-header">
 						<h2 class="card-title">
-							{% if user.role in "FACULTY,IMPLEMENTER" %}
-							My Projects ({{ content_items.count }})
-							{% elif user.role in "PROGRAM_HEAD,DEAN,COORDINATOR" %}
+							{% if profile_user.role in "FACULTY,IMPLEMENTER" %}
+							{% if can_edit %}My Projects{% else %}Projects{% endif %} ({{ content_items.count }})
+							{% elif profile_user.role in "PROGRAM_HEAD,DEAN,COORDINATOR" %}
 							College Projects ({{ content_items.count }})
-							{% elif user.role == "CLIENT" %}
-							My Requests ({{ content_items.count }})
+							{% elif profile_user.role == "CLIENT" %}
+							{% if can_edit %}My Requests{% else %}Requests{% endif %} ({{ content_items.count }})
 							{% else %}
 							Projects ({{ content_items.count }})
 							{% endif %}
@@ -585,7 +603,7 @@
 									<option value="date-asc">Date (Oldest First)</option>
 									<option value="title-asc">Title (A-Z)</option>
 									<option value="title-desc">Title (Z-A)</option>
-									{% if user.role != "CLIENT" %}
+									{% if profile_user.role != "CLIENT" %}
 									<option value="status">Status</option>
 									{% endif %}
 								</select>
@@ -606,7 +624,7 @@
 		<h3>Change Profile Picture</h3>
 		<form id="imageForm" method="POST" action="{% url 'update_profile_picture' %}" enctype="multipart/form-data">
 			{% csrf_token %}
-			<input type="file" name="profile_picture" accept="image/*" required>
+			<input type="file" name="profile_picture" accept="image/jpeg,image/png,image/jpg,image/gif,image/webp" required>
 			<div class="modal-actions">
 				<button type="submit" class="upload-btn">Upload</button>
 				<button type="button" class="cancel-btn" onclick="closeImageModal()">Cancel</button>
@@ -642,7 +660,7 @@ function toggleBioEditor(show) {
 
 // Content data and rendering
 const contentData = [
-	{% if user.role == "CLIENT" %}
+	{% if profile_user.role == "CLIENT" %}
 		{% for request in content_items %}
 		{
 			id: {{ request.id }},
@@ -684,8 +702,8 @@ function renderContent(items) {
 	const container = document.getElementById('contentList');
 	
 	if (items.length === 0) {
-		{% if user.role == "CLIENT" %}
-		container.innerHTML = '<div style="text-align: center; padding: 40px; color: #666;">You have no requests yet.</div>';
+		{% if profile_user.role == "CLIENT" %}
+		container.innerHTML = '<div style="text-align: center; padding: 40px; color: #666;">{% if can_edit %}You have{% else %}This user has{% endif %} no requests yet.</div>';
 		{% else %}
 		container.innerHTML = '<div style="text-align: center; padding: 40px; color: #666;">No projects found.</div>';
 		{% endif %}
@@ -701,7 +719,7 @@ function renderContent(items) {
 					<div class="project-tags">
 						<span class="project-tag" style="background-color: #007bff; color: white;">${item.status}</span>
 					</div>
-					<a href="/requests/${item.id}/" class="project-action">View</a>
+					<a href="/request/details/${item.id}/" class="project-action">View</a>
 				</div>
 			`;
 		} else {

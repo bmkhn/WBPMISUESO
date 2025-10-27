@@ -374,6 +374,12 @@ def edit_announcement_view(request, id):
 
     announcement = get_object_or_404(Announcement, id=id)
     if request.method == 'POST':
+        # Check if user wants to remove the cover photo
+        if request.POST.get('remove_cover_photo') == 'true':
+            if announcement.cover_photo:
+                announcement.cover_photo.delete(save=False)
+                announcement.cover_photo = None
+        
         form = AnnouncementForm(request.POST, request.FILES, instance=announcement)
         if form.is_valid():
             edited = form.save(commit=False)

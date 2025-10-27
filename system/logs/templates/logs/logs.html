@@ -449,7 +449,7 @@
             {% for log in logs %}
             <tr>
                 <td>
-                    {{ log.user.get_full_name|default:'-' }}
+                    {% if log.user %}<a href="{% url 'user_profile' log.user.id %}" class="name-link">{{ log.user.get_full_name }}</a>{% else %}-{% endif %}
                     {% if log.user and log.user.email %}
                         <span class="user-email">{{ log.user.email }}</span>
                     {% endif %}

@@ -25,6 +25,7 @@ def exports_view(request):
     sort_by = request.GET.get('sort_by', 'date_submitted')
     order = request.GET.get('order', 'desc')
     status = request.GET.get('status', '')
+    export_type = request.GET.get('type', '')
     date_from = request.GET.get('date_from', '')
     date_to = request.GET.get('date_to', '')
     search = request.GET.get('search', '').strip()
@@ -33,17 +34,15 @@ def exports_view(request):
     # Apply filters
     if status:
         requests = requests.filter(status__iexact=status)
+    if export_type:
+        requests = requests.filter(type=export_type)
     if date_from:
         requests = requests.filter(date_submitted__date__gte=date_from)
     if date_to:
         requests = requests.filter(date_submitted__date__lte=date_to)
     if search:
         from django.db.models import Q
-        requests = requests.filter(
-            Q(submitted_by__given_name__icontains=search) |
-            Q(submitted_by__last_name__icontains=search) |
-            Q(submitted_by__email__icontains=search)
-        )
+        requests = requests.filter(type__icontains=search)
 
     requests = requests.distinct()
 
@@ -60,7 +59,8 @@ def exports_view(request):
         requests = requests.order_by(sort_field)
 
     # Filter Options
-    all_statuses = [status[1] for status in ExportRequest._meta.get_field('status').choices]
+    all_statuses = ExportRequest._meta.get_field('status').choices
+    all_types = ExportRequest._meta.get_field('type').choices
 
     # Pagination
     paginator = Paginator(requests, 20)
@@ -73,7 +73,9 @@ def exports_view(request):
         'sort_by': sort_by,
         'order': order,
         'all_statuses': all_statuses,
+        'all_types': all_types,
         'status': status,
+        'export_type': export_type,
         'date_from': date_from,
         'date_to': date_to,
         'page_obj': page_obj,

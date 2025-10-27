@@ -419,11 +419,11 @@
 							<div class="project-contributors">
 								{% if project.project_leader %}
 								<div class="contributor-avatar">{{ project.project_leader.given_name.0 }}{{ project.project_leader.last_name.0 }}</div>
-								<span class="contributor-name">{{ project.project_leader.get_full_name }}</span>
+								<a href="{% url 'expert_profile' project.project_leader.id %}" class="contributor-name">{{ project.project_leader.get_full_name }}</a>
 								{% endif %}
 								{% for provider in project.providers.all|slice:":3" %}
 								<div class="contributor-avatar">{{ provider.given_name.0 }}{{ provider.last_name.0 }}</div>
-								<span class="contributor-name">{{ provider.get_full_name }}</span>
+								<a href="{% url 'expert_profile' provider.id %}" class="contributor-name">{{ provider.get_full_name }}</a>
 								{% endfor %}
 								{% if project.providers.count > 3 %}
 								<span class="contributor-name">+{{ project.providers.count|add:"-3" }} more</span>

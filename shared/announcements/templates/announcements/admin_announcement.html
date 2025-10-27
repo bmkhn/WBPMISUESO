@@ -19,7 +19,7 @@
 		<div class="search-container">
 		       <form class="search-bar" method="get" action="">
 					<svg width="16" height="16" style="margin-right:10px;"> <use href="#icon-search"></use> </svg>
-					<input type="text" name="search" placeholder="Search by title "/>
+					<input type="text" name="search" placeholder="Search Announcement Title "/>
 					<button type="button" id="filterBtn" style="background:none;border:none;padding:0;margin-right:5px;cursor:pointer;">
 						<svg width="16" height="16"> <use href="#icon-filter"></use> </svg>
 					</button>
@@ -167,7 +167,7 @@
 						{% else %}
 							<p>{{ announcement.body }}</p>
 						{% endif %}
-						<p class="announce-author">by: {{ announcement.published_by.get_full_name|default:announcement.published_by.username }}</p>
+						<p class="announce-author">by: <a href="{% url 'expert_profile' announcement.published_by.id %}" class="name-link">{{ announcement.published_by.get_full_name|default:announcement.published_by.username }}</a></p>
 					</div>
 				</div>
 			{% empty %}	

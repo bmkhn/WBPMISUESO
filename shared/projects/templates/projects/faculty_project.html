@@ -21,34 +21,66 @@
 		</div>
 		<div class="my-alerts-list">
 			{% if my_alerts %}
-				<ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:25px;max-height:500px;overflow-y:auto;">
 				{% for alert in my_alerts %}
-					<li>
-						{% if alert.submission_id %}
-							<a href="{% url 'project_submissions_details' alert.project_id alert.submission_id %}"
-							   class="my-alert-link{% if not alert.viewed %} my-alert-unviewed{% endif %} my-alert-block">
-						{% else %}
-							<a href="{% url 'project_profile' alert.project_id %}"
-							   class="my-alert-link{% if not alert.viewed %} my-alert-unviewed{% endif %} my-alert-block">
+				<div class="alert-item" onclick="window.location.href='{% if alert.submission_id %}{% url 'project_submissions_details' alert.project_id alert.submission_id %}{% else %}{% url 'project_profile' alert.project_id %}{% endif %}'">
+					<div class="alert-project">{{ alert.project.title }}</div>
+					<div class="alert-status">{{ alert.message }}</div>
+					<div class="alert-date">
+						{{ alert.updated_at|date:"M d, Y - h:i A" }}
+						{% if not alert.viewed %}
+							<span style="background:#E37910;color:white;border-radius:8px;padding:2px 8px;font-size:11px;margin-left:8px;">New</span>
 						{% endif %}
-							<div>
-								{{ alert.message }}
-								<div style="font-size:0.95em;color:#888;margin-top:8px;">
-									{{ alert.updated_at|date:'M d, Y H:i' }}
-									{% if not alert.viewed %}
-										<span style="background:#E37910;color:white;border-radius:8px;padding:2px 8px;font-size:0.8em;margin-left:8px;">New</span>
-									{% endif %}
-								</div>
-							</div>
-						</a>
-					</li>
+					</div>
+				</div>
 				{% endfor %}
-				</ul>
 			{% else %}
-				<div style="color:#888;font-size:1em; text-align:center;">No recent alerts.</div>
+				<div class="no-data">No alerts at this time</div>
 			{% endif %}
 		</div>
 	</div>
+	
+	<style>
+	.alert-item {
+		padding: 15px;
+		border-bottom: 1px solid #f0f0f0;
+		display: flex;
+		flex-direction: column;
+		gap: 5px;
+		transition: background 0.2s;
+		cursor: pointer;
+	}
+
+	.alert-item:last-child {
+		border-bottom: none;
+	}
+
+	.alert-item:hover {
+		background: #f9f9f9;
+	}
+
+	.alert-project {
+		font-weight: 600;
+		color: #063A1C;
+		font-size: 14px;
+	}
+
+	.alert-status {
+		font-size: 13px;
+		color: #666;
+	}
+
+	.alert-date {
+		font-size: 12px;
+		color: #999;
+	}
+	
+	.no-data {
+		text-align: center;
+		color: #999;
+		padding: 30px;
+		font-size: 14px;
+	}
+	</style>
 
 	<div class="list">
 		<div class="files-header">
@@ -59,7 +91,7 @@
 		<div class="search-container">
 			<form class="search-bar" method="get" action="">
 				<svg width="20" height="20"> <use href="#icon-search"></use> </svg>
-				<input type="text" name="search" placeholder="Search" value="{{ search|default:'' }}"/>
+				<input type="text" name="search" placeholder="Search Project Title" value="{{ search|default:'' }}"/>
 				<button type="button" id="filterBtn" style="background:none;border:none;padding:0;margin-right:5px;cursor:pointer;">
 					<svg width="20" height="20"> <use href="#icon-filter"></use> </svg>
 				</button>
@@ -221,7 +253,7 @@
             </div>
             <div class="form-group">
                 <label class="form-label">Letter of Intent <span class="required">*</span></label>
-                <input type="file" name="letter_of_intent" id="request_letter_of_intent" required style="flex:1;">
+                <input type="file" name="letter_of_intent" id="request_letter_of_intent" required style="flex:1;" accept="application/pdf">
             </div>
             <div class="form-actions" style="justify-content:flex-end;">
                 <button type="button" class="back-btn" id="cancel-submit-request-modal">Cancel</button>

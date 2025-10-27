@@ -151,7 +151,7 @@
 				{% if about.director_image %}
 					<img src="{{ about.director_image.url }}" alt="Director Image" style="max-width: 200px; display:block; margin-bottom:8px;">
 				{% endif %}
-				<input type="file" id="director_image" name="director_image" class="form-input">
+				<input type="file" id="director_image" name="director_image" class="form-input" accept="image/jpeg,image/png,image/jpg,image/gif,image/webp">
 			</div>
 		</div>
 		<div class="form-group">
@@ -160,7 +160,7 @@
 				{% if about.org_chart_image %}
 					<img src="{{ about.org_chart_image.url }}" alt="Org Chart Image" style="max-width: 200px; display:block; margin-bottom:8px;">
 				{% endif %}
-				<input type="file" id="org_chart_image" name="org_chart_image" class="form-input">
+				<input type="file" id="org_chart_image" name="org_chart_image" class="form-input" accept="image/jpeg,image/png,image/jpg,image/gif,image/webp">
 			</div>
 		</div>
 		<div class="form-actions">
