@@ -616,7 +616,7 @@ select.user-details-value {
     display: none; align-items: center; justify-content: center;
 }
 
-.modal-content {
+.modal-content, .event-modal-content {
     background: #fff;
     border-radius: 12px;
     padding: 2.5rem 3.5rem;
@@ -819,7 +819,7 @@ select.user-details-value {
 .submission-list {
     display: flex;
     flex-direction: column; 
-    gap: 1.5rem;
+    gap: 1.25rem;
 }
 
 .submission-card {
@@ -845,7 +845,11 @@ select.user-details-value {
     text-align: left;
 }
 
-.submission-card .admin-button {
+.required {
+    color: #DC2626;
+}
+
+.admin-button {
     margin-top: 1rem;
     font-size: 0.95rem;
     padding: 0.5rem 1.5rem;
@@ -866,7 +870,7 @@ select.user-details-value {
     display: flex; align-items: center; justify-content: center;
 }
 
-.submission-card:hover {
+.submission-card:hover, .evaluation-card:hover {
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     transform: translateY(-2px);
 }
@@ -942,17 +946,19 @@ select.user-details-value {
 .evaluation-list {
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    gap: 1.25rem;
     margin-top: 1rem;
 }
 
-.evaluation-card {
+.evaluation-card, .submission-card {
     background: #fff;
     border-radius: 0.75rem;
-    padding: 1.5rem;
+    padding: 1.1rem 2rem;
     box-shadow: 0 0 0 1px #e5e7eb;
     display: flex;
+    width: 64rem;
     flex-direction: column;
+    align-self: center;
 }
 
 .evaluation-header {
@@ -963,9 +969,11 @@ select.user-details-value {
 }
 
 .stars {
-    font-size: 1.3rem;
+    font-size: 1.5rem;
     color: #FFD700;
-    letter-spacing: 0.1rem;
+    letter-spacing: 0.05rem;
+    margin: 0;
+    padding: 0;
 }
 
 .evaluator {
@@ -979,9 +987,10 @@ select.user-details-value {
 }
 
 .evaluation-comment {
-    margin-top: 0.5rem;
+    margin-top: 0.35rem;
     font-size: 1.05rem;
     color: #333;
+    text-align: left;
 }
 
 .evaluation-edited {
@@ -993,4 +1002,108 @@ select.user-details-value {
 
 .eval {
     width: 30rem;
+}
+
+.event-card {
+    display: grid;
+    grid-auto-rows: auto;
+    gap: 2rem;
+}
+
+.events-section {
+    margin-top: 1.5rem;
+}
+
+.event-card > section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.event-card img {
+    max-width: 30rem;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    border-radius: 0.75rem;
+    cursor: pointer;
+    border: 0.08rem solid #525252;
+}
+
+.event-details {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-direction: row;
+    width: 100%;
+}
+
+.event-info {
+    min-width: 20rem;
+    max-width: 30rem;
+    text-align: justify;
+    max-height: 15rem;
+    overflow-y: auto;
+    word-break: break-word;
+    white-space: normal;
+}
+
+.event-info p {
+    margin: 0.5rem 0;
+    overflow-wrap: break-word;  
+    word-break: break-word;     
+    white-space: normal;    
+}
+
+.status-text {
+    font-weight: bold;
+    margin-bottom: 1rem;
+}
+
+.status-text span {
+    font-weight: normal;
+}
+
+.progress {
+    display: inline-block;
+    width: 85%;
+    height: 0.5rem;
+    background-color: #ddd;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 1rem;
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #0a8927, #17f058);
+    transition: width 0.5s ease;
+}
+
+.overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.8);
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.overlay img {
+    max-width: 90%;
+    max-height: 90%;
+    border-radius: 0.5rem;
+    object-fit: contain;
+}
+
+.tracker-box { 
+    background-color: whitesmoke;
+    border: 1px solid #ccc;
+    border-radius: 2rem;
+    justify-content: center; 
+    align-items: center;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
