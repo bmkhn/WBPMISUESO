@@ -93,10 +93,13 @@
 				<svg class="sidebar-tab-icon" width="25" height="24"><use href="#icon-manageuser"/></svg>
 				<span class="table-text">Manage User</span>
 			</a>
-			<a href="{% url 'exports' %}" class="sidebar-tab {% if '/exports/' in request.path %}active{% endif %}">
+			{% url 'exports' as exports_url %}
+			{% if exports_url %}
+			<a href="{{ exports_url }}" class="sidebar-tab {% if '/exports/' in request.path %}active{% endif %}">
 				<svg class="sidebar-tab-icon" width="18" height="22"><use href="#icon-exports"/></svg>
 				<span class="table-text">Exports</span>
 			</a>
+			{% endif %}
 			<a href="{% url 'logs' %}" class="sidebar-tab {% if '/logs/' in request.path %}active{% endif %}">
 				<svg class="sidebar-tab-icon" width="26" height="18"><use href="#icon-logs"/></svg>
 				<span class="table-text">Logs</span>
