@@ -48,7 +48,7 @@ urlpatterns = [
     # User Profile URLs
     path('profile/', profile_view, name='profile'),                             # User Profile
     path('profile/<int:id>/', profile_view, name='user_profile'),               # View Any User Profile
-    path('profile/update/', views.update_profile_view, name='update_profile')
+    path('profile/update/', update_profile_view, name='update_profile'),
 
     path('', role_redirect, name='role_redirect'),              # Default Redirector
 

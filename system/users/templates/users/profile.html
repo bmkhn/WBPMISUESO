@@ -10,7 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
 
-<link href="{% static 'internal/experts/prof.css' %}" rel="stylesheet">
+<link href="{% static 'internal/experts/editprof.css' %}" rel="stylesheet">
 
 <style>
     /* Hide input fields by default */
@@ -21,14 +21,15 @@
     /* When edit mode is active */
     main.edit-mode .edit-mode-field { display: block; } /* Show input fields */
     main.edit-mode .display-mode-field { display: none; } /* Hide display fields */
-    main.edit-mode .edit-mode-controls { display: flex; gap: 10px; margin-top: 15px; } /* Show Save/Cancel buttons */
+    main.edit-mode .edit-mode-controls { display: flex; gap: 10px; margin-top: 15px; justify-content: flex-end; /* Align buttons right */ } /* Show Save/Cancel buttons */
     main.edit-mode .edit-profile-picture-trigger { display: block; cursor: pointer; color: #007bff; text-align: center; margin-top: 10px; font-size: 0.9em;} /* Show Change Picture link */
     main.edit-mode .edit-overlay { display: none; } /* Hide default hover overlay in edit mode */
 
-    /* Style inputs to somewhat match display */
+    /* Style inputs */
     .edit-mode-field input[type="text"],
     .edit-mode-field input[type="email"],
     .edit-mode-field input[type="tel"],
+    .edit-mode-field select, /* Style select dropdown */
     .edit-mode-field textarea {
         width: 100%;
         padding: 8px;
@@ -37,17 +38,23 @@
         border-radius: 4px;
         font-family: inherit;
         font-size: inherit;
+        box-sizing: border-box; /* Include padding and border in width */
+    }
+    .edit-mode-field select {
+        height: 38px; /* Match input height */
+        background-color: white; /* Ensure select is visible */
     }
     .edit-mode-field textarea {
         min-height: 100px;
         resize: vertical;
     }
-    
+
     /* Style for the main Edit Profile button */
     .edit-profile-button-container {
       position: absolute; /* Position relative to the section */
       top: 1rem;
       right: 1rem;
+      z-index: 10;
     }
 
     .edit-profile-button {
@@ -64,7 +71,7 @@
     }
 
     /* Adjust profile picture container for edit mode */
-     main.edit-mode .propic { cursor: default; } /* Remove pointer cursor in edit mode */
+     main.edit-mode .propic { cursor: default; }
 
      /* Make sure labels are visible */
      .edit-mode-field label {
@@ -76,7 +83,7 @@
      }
 
      /* Standardize button styles used in edit mode */
-    .save-bio-btn, .cancel-bio-btn {
+    .save-changes-btn, .cancel-edit-btn { /* More generic names */
         padding: 8px 16px;
         border: none;
         border-radius: 6px;
@@ -84,15 +91,24 @@
         font-size: 14px;
         font-weight: 500;
     }
-    .save-bio-btn {
+    .save-changes-btn {
         background: linear-gradient(90deg, #9409FF 0%, #FF3300 100%);
         color: white;
     }
-    .cancel-bio-btn {
+    .cancel-edit-btn {
         background: #6c757d;
         color: white;
     }
 
+    /* Ensure sections have some minimum height if content collapses */
+    .personal-info, .expertise, .contact, .bio {
+        min-height: 100px; /* Adjust as needed */
+    }
+
+    /* Adjust header in edit mode to hold buttons */
+    .lower-header .edit-mode-controls {
+        margin-top: 0; /* Reset margin for header */
+    }
 
 </style>
 
@@ -118,15 +134,10 @@
                             {{ profile_user.given_name.0 }}{{ profile_user.last_name.0 }}
                         </div>
                         {% endif %}
-                        {% if can_edit %}
-                        <div class="edit-overlay">
-                            <i class="fa-solid fa-camera"></i> Change Photo (Click Edit)
-                        </div>
-                        {% endif %}
                     </div>
-                    <div class="edit-mode-field">
+                    <div class="edit-mode-field" id="imagePreviewContainer">
                          {% if profile_user.profile_picture %}
-                            <img src="{{ profile_user.profile_picture.url }}" alt="{{ profile_user.get_full_name }}" id="profileImgEdit" style="width:100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                            <img src="{{ profile_user.profile_picture.url }}" alt="Current profile picture" id="profileImgEdit" style="width:100%; height: 100%; object-fit: cover; border-radius: 50%;">
                          {% else %}
                              <div class="propic-placeholder" id="profileInitialsEdit" style="font-size: 6rem;">{{ profile_user.given_name.0 }}{{ profile_user.last_name.0 }}</div>
                          {% endif %}
@@ -151,6 +162,7 @@
                         <div class="edit-mode-field">
                            <label for="id_campus">Campus:</label>
                            <select name="campus" id="id_campus">
+                               <option value="">---------</option> {# Empty option allows setting to None #}
                                {% for value, display in profile_user.Campus.choices %}
                                    <option value="{{ value }}" {% if profile_user.campus == value %}selected{% endif %}>{{ display }}</option>
                                {% endfor %}
@@ -181,18 +193,18 @@
                             {% if college_name and college_name != "N/A" %}
                             <h5 class="display-mode-field">{{ profile_user.degree|default:"Degree Not Listed" }}</h5>
                             <p class="display-mode-field">{{ college_name }}</p>
-                            <div class="edit-mode-field">
+                             <div class="edit-mode-field">
                                 <label for="id_degree">Degree:</label>
                                 <input type="text" name="degree" id="id_degree" value="{{ profile_user.degree|default:"" }}">
-                                <p style="font-size: 0.9em; color: #666;">College: {{ college_name }} (Cannot be changed here)</p>
+                                <p style="font-size: 0.9em; color: #666;">College: {{ college_name }} (Not editable)</p>
                             </div>
                             {% endif %}
                         {% elif profile_user.role in HAS_COMPANY_INDUSTRY %}
-                             <h5 class="display-mode-field">Company:</h5>
+                            <h5 class="display-mode-field">Company:</h5>
                             <p class="display-mode-field">{{ profile_user.company|default:"Not specified" }}</p>
                             <h5 class="display-mode-field">Industry:</h5>
                             <p class="display-mode-field">{{ profile_user.industry|default:"Not specified" }}</p>
-                             <div class="edit-mode-field">
+                            <div class="edit-mode-field">
                                 <label for="id_company">Company:</label>
                                 <input type="text" name="company" id="id_company" value="{{ profile_user.company|default:"" }}">
                                 <label for="id_industry">Industry:</label>
@@ -227,8 +239,8 @@
                     <div class="lower-header">
                         <h1>Bio</h1>
                         <div class="edit-mode-controls">
-                            <button type="submit" class="save-bio-btn">Save Changes</button>
-                            <button type="button" class="cancel-bio-btn" onclick="toggleEditMode(false)">Cancel</button>
+                            <button type="submit" class="save-changes-btn">Save Changes</button>
+                            <button type="button" class="cancel-edit-btn" onclick="toggleEditMode(false)">Cancel</button>
                         </div>
                     </div>
                     <div class="bio-content">
@@ -237,7 +249,7 @@
                                 {{ profile_user.bio|linebreaksbr|default:"No bio added yet." }}
                             </p>
                         </div>
-                        <div class="bio-editor edit-mode-field">
+                        <div class="bio-editor edit-mode-field"> {# Use bio-editor for styling compatibility if needed #}
                              <label for="id_bio">Bio:</label>
                              <textarea name="bio" id="id_bio">{{ profile_user.bio|default:"" }}</textarea>
                         </div>
@@ -252,9 +264,10 @@
                                 {% elif profile_user.role in "PROGRAM_HEAD,DEAN,COORDINATOR" %}College Projects 
                                 {% elif profile_user.role == "CLIENT" %}{% if can_edit %}My Requests{% else %}Requests{% endif %} 
                                 {% else %}Projects{% endif %}
+                                <span class="display-mode-field edit-mode-field">({{ content_items.count }})</span> {# Always show count #}
                             </h1>   
                         </div>
-                        <div style="display: flex; flex-shrink: 3; align-items: center; gap: 0.5rem;">
+                        <div style="display: flex; flex-shrink: 3; align-items: center; gap: 0.5rem;" class="display-mode-field edit-mode-field"> {# Always show sort #}
                             <span style="font-size: 1.1rem; font-weight: 500; color: #444; width: 6rem;">Sort by:</span>
                             <select id="sortContent" class="dropdown-btn" style="margin: 0.75rem 0;">
                                 <option value="date-desc">Newest First</option>
@@ -292,30 +305,36 @@
         const fileInput = event.target;
         
         reader.onload = function(){
-            const outputImg = document.getElementById('profileImgEdit');
-            const outputInitials = document.getElementById('profileInitialsEdit');
+            const previewContainer = document.getElementById('imagePreviewContainer'); 
+            if (!previewContainer) return;
 
-            // If the element for image preview exists (either img or initials div)
-            const previewContainer = outputImg ? outputImg.parentNode : (outputInitials ? outputInitials.parentNode : null);
-            if (!previewContainer) return; // Should not happen
+            // Find existing preview image or placeholder
+            let previewElement = previewContainer.querySelector('img') || previewContainer.querySelector('.propic-placeholder');
 
-            let imgElement = document.getElementById('profileImgEdit');
-
-            // If the preview element is currently the initials div, replace it with an img tag
-            if (outputInitials && !imgElement) {
-                 imgElement = document.createElement('img');
-                 imgElement.id = 'profileImgEdit';
-                 imgElement.style.width = '100%';
-                 imgElement.style.height = '100%';
-                 imgElement.style.objectFit = 'cover';
-                 imgElement.style.borderRadius = '50%';
-                 outputInitials.parentNode.replaceChild(imgElement, outputInitials);
+            if (previewElement) {
+                // If it's the placeholder, replace it with an image tag
+                if (previewElement.classList.contains('propic-placeholder')) {
+                    const img = document.createElement('img');
+                    img.id = 'profileImgEdit'; // Give it the correct ID
+                    img.style.width = '100%';
+                    img.style.height = '100%';
+                    img.style.objectFit = 'cover';
+                    img.style.borderRadius = '50%';
+                    previewElement.parentNode.replaceChild(img, previewElement);
+                    previewElement = img; // Update reference to the new image
+                }
+                // Update the image source
+                 if (previewElement.tagName === 'IMG') {
+                    previewElement.src = reader.result;
+                 }
             }
-            
-            // Set the src for the img element (either existing or newly created)
-            if(imgElement) {
-                imgElement.src = reader.result;
-            }
+             // Ensure trigger link is still there (it might get overwritten if previewContainer.innerHTML was used)
+             if (!previewContainer.querySelector('.edit-profile-picture-trigger')) {
+                 previewContainer.insertAdjacentHTML('beforeend', `
+                    <input type="file" name="profile_picture" id="profilePictureInput" style="display: none;" accept="image/*" onchange="previewImage(event)">
+                    <a class="edit-profile-picture-trigger" onclick="document.getElementById('profilePictureInput').click();">Change Picture</a>
+                 `);
+             }
         };
 
         if (fileInput.files && fileInput.files[0]) {
@@ -323,17 +342,14 @@
         }
     }
 
-    function resetImagePreview() {
+     function resetImagePreview() {
          const displayImgSrc = document.getElementById('profileImgDisplay')?.src;
          const displayInitialsHTML = document.getElementById('profileInitialsDisplay')?.innerHTML;
          
-         const editPreviewContainer = document.querySelector('.edit-mode-field .propic') || document.querySelector('.propic .edit-mode-field'); // Find the container holding the preview
-         const editImg = document.getElementById('profileImgEdit');
-         const editInitials = document.getElementById('profileInitialsEdit'); 
-         const fileInput = document.getElementById('profilePictureInput');
-
+         const editPreviewContainer = document.getElementById('imagePreviewContainer'); 
+         
          if (editPreviewContainer) {
-             // Clear current preview
+             // Clear current preview content
              editPreviewContainer.innerHTML = ''; 
 
              // Restore based on original display state
@@ -341,7 +357,7 @@
                  const img = document.createElement('img');
                  img.src = displayImgSrc;
                  img.alt = "{{ profile_user.get_full_name }}";
-                 img.id = 'profileImgEdit';
+                 img.id = 'profileImgEdit'; 
                  img.style.width = '100%';
                  img.style.height = '100%';
                  img.style.objectFit = 'cover';
@@ -350,39 +366,57 @@
              } else if (displayInitialsHTML) {
                  const initialsDiv = document.createElement('div');
                  initialsDiv.className = 'propic-placeholder';
-                 initialsDiv.id = 'profileInitialsEdit';
+                 initialsDiv.id = 'profileInitialsEdit'; 
                  initialsDiv.style.fontSize = '6rem';
                  initialsDiv.innerHTML = displayInitialsHTML;
                  editPreviewContainer.appendChild(initialsDiv);
              }
-             // Re-add the hidden file input and trigger link which might have been removed
+             // Always re-add the hidden file input and trigger link
              editPreviewContainer.insertAdjacentHTML('beforeend', `
                 <input type="file" name="profile_picture" id="profilePictureInput" style="display: none;" accept="image/*" onchange="previewImage(event)">
                 <a class="edit-profile-picture-trigger" onclick="document.getElementById('profilePictureInput').click();">Change Picture</a>
              `);
          }
-
-         // Clear the file input value
-         if (fileInput) {
-             fileInput.value = ''; 
+         
+         // Clear the file input value just in case
+         const finalFileInput = document.getElementById('profilePictureInput');
+         if (finalFileInput) {
+             finalFileInput.value = ''; 
          }
     }
 
 
-    // --- Content data and rendering (Keep this section as it was) ---
+    // --- Content data and rendering ---
     const contentData = [
         {% if profile_user.role == "CLIENT" %}
             {% for request in content_items %} { id: {{ request.id }}, title: "{{ request.title|escapejs }}", date: "{{ request.created_at|date:'Y-m-d' }}", dateDisplay: "{{ request.created_at|date:'F j, Y' }}", status: "{{ request.status }}", type: "request" }{% if not forloop.last %},{% endif %} {% endfor %}
         {% else %}
-            {% for project in content_items %} { id: {{ project.id }}, title: "{{ project.title|escapejs }}", date: "{{ project.start_date|date:'Y-m-d' }}", dateDisplay: "{{ project.start_date|date:'F j, Y' }}", status: "{{ project.status }}", leaderCampus: "{{ project.project_leader.get_campus_display|default:'N/A'|escapejs }}", agenda: "{{ project.agenda.name|default:''|escapejs }}", leaderName: "{{ project.project_leader.get_full_name|escapejs }}", leaderInitials: "{{ project.project_leader.given_name.0 }}{{ project.project_leader.last_name.0 }}", providers: [ {% for provider in project.providers.all %} { id: {{ provider.id }}, name: "{{ provider.get_full_name|escapejs }}", initials: "{{ provider.given_name.0 }}{{ provider.last_name.0 }}" }{% if not forloop.last %},{% endif %} {% endfor %} ], providersCount: {{ project.providers.count }}, type: "project" }{% if not forloop.last %},{% endif %} {% endfor %}
+            {% for project in content_items %} { 
+                id: {{ project.id }}, 
+                title: "{{ project.title|escapejs }}", 
+                date: "{{ project.start_date|date:'Y-m-d' }}", 
+                dateDisplay: "{{ project.start_date|date:'F j, Y' }}", 
+                status: "{{ project.status }}", 
+                leaderCampus: "{{ project.project_leader.get_campus_display|default:'N/A'|escapejs }}", 
+                agenda: "{{ project.agenda.name|default:''|escapejs }}", 
+                leader: { // Pass leader object for ID
+                    id: {{ project.project_leader.id|default:0 }},
+                    name: "{{ project.project_leader.get_full_name|escapejs }}",
+                    initials: "{{ project.project_leader.given_name.0 }}{{ project.project_leader.last_name.0 }}"
+                },
+                leaderName: "{{ project.project_leader.get_full_name|escapejs }}", // Keep for backward compat if needed?
+                leaderInitials: "{{ project.project_leader.given_name.0 }}{{ project.project_leader.last_name.0 }}", 
+                providers: [ {% for provider in project.providers.all %} { 
+                    id: {{ provider.id }}, 
+                    name: "{{ provider.get_full_name|escapejs }}", 
+                    initials: "{{ provider.given_name.0 }}{{ provider.last_name.0 }}" 
+                }{% if not forloop.last %},{% endif %} {% endfor %} ], 
+                providersCount: {{ project.providers.count }}, 
+                type: "project" 
+            }{% if not forloop.last %},{% endif %} {% endfor %}
         {% endif %}
     ];
 
-    function renderContent(items) { /* ... Same rendering logic as before ... */ }
-    document.getElementById('sortContent').addEventListener('change', function(e) { /* ... Same sort logic as before ... */ });
-    renderContent(contentData); // Initial render
-
-    // --- Paste the full renderContent function logic here ---
     function renderContent(items) {
         const container = document.getElementById('contentList');
         if (items.length === 0) {
@@ -395,24 +429,37 @@
             if (item.type === 'request') {
                 return `<div><h5>${item.dateDisplay}</h5><a href="/request/details/${item.id}/" class="title">${item.title}</a><section class="project-tags"><button class="status" style="color: #007bff; border-color: #007bff;">${item.status}</button></section><a href="/request/details/${item.id}/" class="view">View</a></div>`;
             } else {
-                let statusTag = '';
+                let statusTag = ''; // Generate statusTag as before
                 if (item.status === 'COMPLETED') { statusTag = '<button class="status" style="color: #1CB889; border-color: #1CB889;">Completed</button>'; }
                 else if (item.status === 'IN_PROGRESS') { statusTag = '<button class="status" style="color: #007bff; border-color: #007bff;">Ongoing</button>'; }
                 else if (item.status === 'NOT_STARTED') { statusTag = '<button class="status" style="color: #6c757d; border-color: #6c757d;">Not Started</button>'; }
                 else if (item.status === 'ON_HOLD') { statusTag = '<button class="status" style="color: #ffc107; border-color: #ffc107;">On Hold</button>'; }
                 else if (item.status === 'CANCELLED') { statusTag = '<button class="status" style="color: #dc3545; border-color: #dc3545;">Cancelled</button>'; }
                 else { statusTag = `<button class="status" style="color: #6c757d; border-color: #6c757d;">${item.status}</button>`; }
-                let authorsHTML = '';
-                if (item.leaderName) { authorsHTML += `<content><div class="avatar-placeholder">${item.leaderInitials}</div><a href="/experts/profile/${item.id}/">${item.leaderName}</a></content>`; } // NOTE: Used item.id here for leader profile link, might need adjustment if leader ID is different
+                
+                let authorsHTML = ''; // Generate authorsHTML using item.leader.id
+                if (item.leader && item.leader.id && item.leader.name) { 
+                    authorsHTML += `<content><div class="avatar-placeholder">${item.leaderInitials}</div><a href="/experts/profile/${item.leader.id}/">${item.leader.name}</a></content>`; 
+                } else if (item.leaderName) { // Fallback
+                     authorsHTML += `<content><div class="avatar-placeholder">${item.leaderInitials}</div><span>${item.leaderName}</span></content>`;
+                }
                 const providersList = item.providers.slice(0, 2).map(p => `<content><div class="avatar-placeholder">${p.initials}</div><a href="/experts/profile/${p.id}/">${p.name}</a></content>`).join('');
                 authorsHTML += providersList;
                 const moreProviders = item.providersCount > 2 ? `<content style="align-items: center;"><a href="/projects/${item.id}/">+${item.providersCount - 2} more</a></content>` : '';
                 authorsHTML += moreProviders;
+                
                 return `<div><h5>${item.dateDisplay}</h5><a href="/projects/${item.id}/" class="title">${item.title}</a><section class="project-tags"><button class="campus">${item.leaderCampus}</button>${item.agenda ? `<button class="agenda">${item.agenda}</button>` : ''}${statusTag}</section><section class="project-authors">${authorsHTML}</section><a href="/projects/${item.id}/" class="view">View</a></div>`;
             }
         }).join('');
     }
-    // --- End of pasted renderContent ---
+    
+    // --- Sort logic ---
+    document.getElementById('sortContent').addEventListener('change', function(e) {
+        const sortBy = e.target.value;
+        let sorted = [...contentData];
+        switch(sortBy) { /* ... Same sort cases as before ... */ }
+        renderContent(sorted);
+    });
 
     // --- Paste the full sort logic here ---
     document.getElementById('sortContent').addEventListener('change', function(e) {
@@ -425,7 +472,6 @@
             case 'title-desc': sorted.sort((a, b) => b.title.localeCompare(a.title)); break;
             case 'status':
                 const statusOrder = {'COMPLETED': 1, 'IN_PROGRESS': 2, 'NOT_STARTED': 3, 'ON_HOLD': 4, 'CANCELLED': 5};
-                // Ensure requests (which might not have standard status) are handled, e.g., put them last
                 sorted.sort((a, b) => {
                      const aOrder = a.type === 'project' ? (statusOrder[a.status] || 99) : 100;
                      const bOrder = b.type === 'project' ? (statusOrder[b.status] || 99) : 100;
@@ -435,11 +481,12 @@
         }
         renderContent(sorted);
     });
-    // --- End of pasted sort logic ---
+
+    // Initial Render
+    renderContent(contentData);
 
 </script>
 
 </body>
 </html>
-
 {% endblock %}
