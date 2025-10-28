@@ -86,19 +86,32 @@
                     </div>
                 </div>
 
-                <!-- Calendar Container (blank, with expand icon) -->
-                <div class="calendar-container">
-                    <canvas id="agendaPieChart" width="340" height="340"></canvas>
-                    <div class="expand-icon-container">
-                        <svg class="expand-icon" width="16" height="16">
-                          <use href="#icon-expand"></use>
-                        </svg>
+                <div class="mini-calendar-widget">
+                    <div class="mini-calendar-header">
+                        <button class="prev-month" title="Previous Month">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <div class="current-month-year">October 2025</div>
+                        <button class="next-month" title="Next Month">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
                     </div>
+                    <div class="mini-calendar-body">
+                        <div class="weekdays">
+                            <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+                        </div>
+                        <div class="days-grid"></div>
+                    </div>
+                </div>
+
+                <div class="expand-icon-container">
+                    <svg class="expand-icon" width="16" height="16">
+                    <use href="#icon-expand"></use>
+                    </svg>
                 </div>
             </div>
         </div>
-
-            <!-- Project Summary Table now below charts and calendar -->
+            <div class="summary-text" style="margin-bottom: -2rem ;">Projects</div>
             <table class="user-table">
             <thead>
                 <tr>
@@ -181,7 +194,96 @@
         <path d="M2 16C1.45 16 0.979167 15.8042 0.5875 15.4125C0.195833 15.0208 0 14.55 0 14C0 13.45 0.195833 12.9792 0.5875 12.5875C0.979167 12.1958 1.45 12 2 12C2.55 12 3.02083 12.1958 3.4125 12.5875C3.80417 12.9792 4 13.45 4 14C4 14.55 3.80417 15.0208 3.4125 15.4125C3.02083 15.8042 2.55 16 2 16ZM2 10C1.45 10 0.979167 9.80417 0.5875 9.4125C0.195833 9.02083 0 8.55 0 8C0 7.45 0.195833 6.97917 0.5875 6.5875C0.979167 6.19583 1.45 6 2 6C2.55 6 3.02083 6.19583 3.4125 6.5875C3.80417 6.97917 4 7.45 4 8C4 8.55 3.80417 9.02083 3.4125 9.4125C3.02083 9.80417 2.55 10 2 10ZM2 4C1.45 4 0.979167 3.80417 0.5875 3.4125C0.195833 3.02083 0 2.55 0 2C0 1.45 0.195833 0.979167 0.5875 0.5875C0.979167 0.195833 1.45 0 2 0C2.55 0 3.02083 0.195833 3.4125 0.5875C3.80417 0.979167 4 1.45 4 2C4 2.55 3.80417 3.02083 3.4125 3.4125C3.02083 3.80417 2.55 4 2 4Z" fill="#1D1B20"/>
     </symbol>
 </svg>
+<script>
+    // DEFINE GLOBAL EVENT DATA (e.g., from Django context variable events_json)
+    const EVENTS_DATA = {{ events_json|safe }}; 
+    
+    // The rest of the calendar script goes here:
+    
+    (function() {
+        // Use a set for quick date lookup
+        const eventDates = new Set();
+        // EVENTS_DATA is expected to be an object where keys are 'YYYY-MM-DD' dates
+        // Extract the keys and add them to the set
+        if (EVENTS_DATA && typeof EVENTS_DATA === 'object') {
+            Object.keys(EVENTS_DATA).forEach(date => eventDates.add(date));
+        }
 
+        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        let currentDate = new Date();
+
+        const headerEl = document.querySelector('.current-month-year');
+        const daysGridEl = document.querySelector('.days-grid');
+        const prevButton = document.querySelector('.prev-month');
+        const nextButton = document.querySelector('.next-month');
+        
+        function renderCalendar() {
+            const currentYear = currentDate.getFullYear();
+            const currentMonth = currentDate.getMonth();
+            
+            headerEl.textContent = `${monthNames[currentMonth]} ${currentYear}`;
+            daysGridEl.innerHTML = ''; 
+
+            const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay(); // 0 (Sun) - 6 (Sat)
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            const today = new Date();
+            
+            // Render empty cells for preceding month days
+            for (let i = 0; i < firstDayOfMonth; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.classList.add('day-cell', 'empty-day');
+                daysGridEl.appendChild(emptyCell);
+            }
+
+            // Render days of the month
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayCell = document.createElement('div');
+                dayCell.classList.add('day-cell');
+                dayCell.textContent = day;
+
+                const dateString = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                
+                // Mark today's date
+                if (currentYear === today.getFullYear() && currentMonth === today.getMonth() && day === today.getDate()) {
+                    dayCell.classList.add('today');
+                }
+                
+                // Mark event dates
+                if (eventDates.has(dateString)) {
+                    dayCell.classList.add('has-event');
+                    // Add an invisible link/data for utility, pointing to the full calendar view
+                    dayCell.setAttribute('data-event-date', dateString);
+                    dayCell.title = "Events scheduled today. Click for full calendar."
+                }
+                
+                // Navigation to the full calendar view (assuming URL is /calendar/)
+                dayCell.addEventListener('click', () => {
+                     if (!dayCell.classList.contains('empty-day')) {
+                        const targetDate = dayCell.getAttribute('data-event-date') || dateString;
+                        window.location.href = `/calendar/?date=${targetDate}`;
+                     }
+                });
+
+
+                daysGridEl.appendChild(dayCell);
+            }
+        }
+
+        prevButton.addEventListener('click', () => {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar();
+        });
+
+        nextButton.addEventListener('click', () => {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar();
+        });
+
+        // Initial render
+        renderCalendar();
+    })();
+
+</script>
 </body>
 </html>
 

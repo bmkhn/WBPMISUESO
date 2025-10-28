@@ -106,24 +106,24 @@
 		<!-- Pagination for Grid View -->
 		<div class="pagination-container" id="gridPagination">
 			{% if page_obj.has_previous %}
-			<a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if campus_filter %}&campus={{ campus_filter }}{% endif %}{% if college_filter %}&college={{ college_filter }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if order %}&order={{ order }}{% endif %}">&laquo; First</a>
-			<a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if campus_filter %}&campus={{ campus_filter }}{% endif %}{% if college_filter %}&college={{ college_filter }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if order %}&order={{ order }}{% endif %}">Previous</a>
+				<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page=1">First</a>
+				<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a>
 			{% else %}
 				<button class="pagination-button" disabled>First</button>
 				<button class="pagination-button" disabled>Previous</button>
 			{% endif %}
 
 			{% for num in page_range %}
-			{% if num == page_obj.number %}
-			<span class="current">{{ num }}</span>
-			{% else %}
-			<a href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if campus_filter %}&campus={{ campus_filter }}{% endif %}{% if college_filter %}&college={{ college_filter }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if order %}&order={{ order }}{% endif %}">{{ num }}</a>
-			{% endif %}
+				{% if num == page_obj.number %}
+					<button class="pagination-button current" disabled>{{ num }}</button>
+				{% else %}
+					<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ num }}">{{ num }}</a>
+				{% endif %}
 			{% endfor %}
 
 			{% if page_obj.has_next %}
-				<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if campus_filter %}&campus={{ campus_filter }}{% endif %}{% if college_filter %}&college={{ college_filter }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if order %}&order={{ order }}{% endif %}">Next</a>
-				<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if campus_filter %}&campus={{ campus_filter }}{% endif %}{% if college_filter %}&college={{ college_filter }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if order %}&order={{ order }}{% endif %}">Last</a>
+				<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.next_page_number }}">Next</a>
+				<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ paginator.num_pages }}">Last</a>
 			{% else %}
 				<button class="pagination-button" disabled>Next</button>
 				<button class="pagination-button" disabled>Last</button>
@@ -159,8 +159,8 @@
 		<!-- Pagination for List View -->
 		<div class="pagination-container" id="listPagination">
 			{% if page_obj.has_previous %}
-				<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if campus_filter %}&campus={{ campus_filter }}{% endif %}{% if college_filter %}&college={{ college_filter }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if order %}&order={{ order }}{% endif %}">First</a>
-				<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if campus_filter %}&campus={{ campus_filter }}{% endif %}{% if college_filter %}&college={{ college_filter }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if order %}&order={{ order }}{% endif %}">Previous</a>
+				<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page=1">First</a>
+				<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a>
 			{% else %}
 				<button class="pagination-button" disabled>First</button>
 				<button class="pagination-button" disabled>Previous</button>
@@ -170,13 +170,13 @@
 				{% if num == page_obj.number %}
 					<button class="pagination-button active" disabled>{{ num }}</button>
 				{% else %}
-					<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if campus_filter %}&campus={{ campus_filter }}{% endif %}{% if college_filter %}&college={{ college_filter }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if order %}&order={{ order }}{% endif %}">{{ num }}</a>
+					<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ num }}">{{ num }}</a>
 				{% endif %}
 			{% endfor %}
 
 			{% if page_obj.has_next %}
-				<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if campus_filter %}&campus={{ campus_filter }}{% endif %}{% if college_filter %}&college={{ college_filter }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if order %}&order={{ order }}{% endif %}">Next</a>
-				<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if campus_filter %}&campus={{ campus_filter }}{% endif %}{% if college_filter %}&college={{ college_filter }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if order %}&order={{ order }}{% endif %}">Last</a>
+				<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.next_page_number }}">Next</a>
+				<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ paginator.num_pages }}">Last</a>
 			{% else %}
 				<button class="pagination-button" disabled>Next</button>
 				<button class="pagination-button" disabled>Last</button>

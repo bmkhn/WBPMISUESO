@@ -52,7 +52,7 @@
     /* Style for the main Edit Profile button */
     .edit-profile-button-container {
       position: absolute; /* Position relative to the section */
-      top: 1rem;
+      bottom: 1rem; /* CHANGED: Moved from top to bottom */
       right: 1rem;
       z-index: 10;
     }
@@ -262,7 +262,7 @@
                             <h1>
                                 {% if profile_user.role in "FACULTY,IMPLEMENTER" %}{% if can_edit %}My Projects{% else %}Projects{% endif %}
                                 {% elif profile_user.role in "PROGRAM_HEAD,DEAN,COORDINATOR" %}College Projects 
-                                {% elif profile_user.role == "CLIENT" %}{% if can_edit %}My Requests{% else %}Requests{% endif %} 
+                                {% elif profile_user.role == "CLIENT" %{% if can_edit %}My Requests{% else %}Requests{% endif %} 
                                 {% else %}Projects{% endif %}
                                 <span class="display-mode-field edit-mode-field">({{ content_items.count }})</span> {# Always show count #}
                             </h1>   

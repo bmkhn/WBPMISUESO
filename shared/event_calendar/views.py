@@ -8,7 +8,6 @@ from system.users.decorators import role_required
 from shared.projects.models import ProjectEvent, Project
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
 
-# Import services
 from . import services
 
 @role_required(allowed_roles=["DIRECTOR", "VP", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD", "FACULTY", "IMPLEMENTER"], require_confirmed=True)
@@ -16,11 +15,8 @@ def calendar_view(request):
     current_user = request.user
     users = User.objects.exclude(role='CLIENT')
     
-    # Get date parameter from query string if present
     initial_date = request.GET.get('date', None)
     
-    # Use service to get events for all users (for the initial JSON blob)
-    # We pass `for_main_calendar_view=True` to signal this.
     events_by_date = services.get_events_by_date(request.user, for_main_calendar_view=True)
     
     events_json = json.dumps(events_by_date)
@@ -30,7 +26,6 @@ def calendar_view(request):
         'events_json': events_json,
     }
     
-    # Add initial date to context if present
     if initial_date:
         context['initial_date'] = initial_date
     
@@ -39,7 +34,6 @@ def calendar_view(request):
     elif current_user.role in ['VP', 'DIRECTOR', 'UESO', 'COORDINATOR', 'DEAN', 'PROGRAM_HEAD']:
         return render(request, 'event_calendar/calendar_admin.html', context)
     else:
-        # Fallback for roles that passed decorator but not in logic
         return render(request, 'event_calendar/calendar.html', context)
 
 
@@ -47,11 +41,7 @@ def calendar_view(request):
 @role_required(allowed_roles=["DIRECTOR", "VP", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD", "FACULTY", "IMPLEMENTER"], require_confirmed=True)
 @require_http_methods(["GET", "POST"])
 def meeting_event_list(request):
-    """
-    Handles GET (list events) and POST (create event).
-    """
     if request.method == "GET":
-        # Get events filtered by the requesting user's role
         events_by_date = services.get_events_by_date(request.user, for_main_calendar_view=False)
         return JsonResponse(events_by_date)
         
@@ -61,32 +51,34 @@ def meeting_event_list(request):
             meeting, errors = services.create_meeting_event(data, request.user)
             if errors:
                 return JsonResponse({"status": "error", "errors": errors.get("errors")}, status=400)
-            # Return a success response with the new event's ID
             return JsonResponse({"status": "success", "event_id": meeting.id}, status=201) 
         except Exception as e:
             return JsonResponse({"status": "error", "errors": str(e)}, status=500)
 
 @csrf_exempt
 @role_required(allowed_roles=["DIRECTOR", "VP", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD", "FACULTY", "IMPLEMENTER"], require_confirmed=True)
-@require_http_methods(["PUT", "DELETE"]) # Using PUT for updates
+@require_http_methods(["PUT", "DELETE"]) 
 def meeting_event_detail(request, event_id):
-    """
-    Handles PUT (update event) and DELETE (delete event).
-    """
     event = get_object_or_404(MeetingEvent, id=event_id)
     
     if request.method == "PUT":
+        if event.created_by != request.user:
+            return JsonResponse({"status": "error", "errors": "Permission denied. Only the event creator can edit this meeting."}, status=403)
+            
         try:
             data = json.loads(request.body)
             event, errors = services.update_meeting_event(event, data, request.user)
             if errors:
                 status_code = 403 if errors.get("errors") == "Permission denied." else 400
                 return JsonResponse({"status": "error", "errors": errors.get("errors")}, status=status_code)
-            return JsonResponse({"status": "success"})
+            return JsonResponse({"status": "success", "event_id": event.id})
         except Exception as e:
             return JsonResponse({"status": "error", "errors": str(e)}, status=500)
             
     elif request.method == "DELETE":
+        if event.created_by != request.user:
+            return JsonResponse({"status": "error", "errors": "Permission denied. Only the event creator can delete this meeting."}, status=403)
+            
         try:
             success, errors = services.delete_meeting_event(event, request.user)
             if errors:

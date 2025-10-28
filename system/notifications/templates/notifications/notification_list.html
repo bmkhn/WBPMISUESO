@@ -49,13 +49,9 @@
                  onclick="markAsReadNoRedirect({{ notification.id }})"
                  style="cursor:default;">
             {% endif %}
-                <div class="notification-icon {% if not notification.actor %}ai-icon{% endif %}">
+                <div class="notification-icon">
                     {% if notification.actor %}
-                        {% if notification.actor.profile_picture %}
-                            <img src="{{ notification.actor.profile_picture.url }}" alt="{{ notification.actor.get_full_name }}">
-                        {% else %}
-                            {{ notification.actor.first_name.0 }}{{ notification.actor.last_name.0 }}
-                        {% endif %}
+                        {{ notification.actor.first_name.0 }}{{ notification.actor.last_name.0 }}
                     {% else %}
                         S
                     {% endif %}
@@ -63,7 +59,7 @@
                 <div class="notification-content">
                     <div class="notification-header">
                         <div class="notification-actor">
-                            {% if notification.actor %}<a href="{% url 'user_profile' notification.actor.id %}" class="name-link">{{ notification.actor.get_full_name }}</a>{% else %}System{% endif %}
+                            {{ notification.actor.get_full_name|default:"System" }}
                         </div>
                         <div class="notification-time">
                             {{ notification.created_at|timesince }} ago
