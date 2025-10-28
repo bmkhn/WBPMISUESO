@@ -1,0 +1,761 @@
+{% extends base_template %}
+{% load humanize %}
+{% block content %}
+
+<!DOCTYPE html>
+<!-- VP BUDGET DASHBOARD TEMPLATE - DYNAMIC & DB CONNECTED -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>VP Budget Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0rem;
+            padding: 0rem;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            font-family: Helvetica, Arial, sans-serif;
+            background-color: #f5f5f5;
+        }
+        main {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start; 
+            align-items: stretch;
+            margin: 0 5rem 2rem 5rem;
+            gap: 2rem;  
+            padding: 1rem 3rem;
+        }
+        footer {
+            background-color: #245F3E;
+            position: relative;
+            bottom: 0;
+            width: 100%;
+            height: 20rem;
+        }    
+        header {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 1.25rem; 
+            margin: 0;
+            padding: 0.5rem 1rem;
+            border: 1px solid #e0e0e0;
+            background-color: #f5f5f5;
+            position: relative;
+            top: 0;
+        } 
+        header img {
+            border-radius: 50%; 
+            border: 4px solid #e4c600;
+            margin-right: 0.75rem;
+            width: 3.25rem;
+            height: 3.25rem;
+            object-fit: cover;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }   
+        header i {
+            font-size: 1.75rem;
+            color: black; 
+            margin-right: 0.75rem;
+            font-weight: 400;  
+            text-decoration: none;
+        }
+        a {
+            text-decoration: none;   
+        }  
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+        }
+        th, td {
+            text-align: left;
+            padding: 1rem;
+            font-size: 0.95rem;
+        }
+        thead {
+            background-color: #f6f6f6;
+        }
+        th {
+            font-weight: 550;
+            border-bottom: 1px solid #ddd;
+        }
+        tr:not(:last-child) td {
+            border-bottom: 1px solid #eee;
+        }
+        .table-container table {
+            width: 100%;
+            margin-bottom: 1rem;
+            border-collapse: collapse;
+        }
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        .files-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid #e9ecef;
+        }
+        .files-header h3 {
+            margin: 0;
+            color: #2d5a3d;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        .files-header i {
+            margin-right: 0.5rem;
+            color: #0A6C44;
+        }
+        .budget-overview {
+            background: linear-gradient(135deg, #0A6C44 0%, #063A1C 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 16px;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(6, 58, 28, 0.3);
+        }
+        .budget-details {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .budget-text {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            opacity: 0.9;
+        }
+        .budget-amount {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0.5rem 0;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .budget-comparison {
+            font-size: 1.2rem;
+            margin-top: 1rem;
+        }
+        .percentage-highlight {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #ffc107;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            display: block;
+            line-height: 1;
+        }
+        .charts-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        .chart-container {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .chart-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2d5a3d;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        .donut-chart-container {
+            width: 100%;
+            height: 300px;
+            position: relative;
+        }
+        .line-chart-container {
+            width: 100%;
+            height: 300px;
+        }
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 1rem;
+            justify-content: center;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .settings-icon {
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: 4px;
+            transition: background-color 0.2s ease;
+        }
+        .settings-icon:hover {
+            background-color: #f8f9fa;
+        }
+        .dropdown-container {
+            position: relative;
+            display: inline-block;
+        }
+        .dropdown-btn2 {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: #333;
+            min-width: 120px;
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .dropdown-btn2:hover {
+            border-color: #0A6C44;
+        }
+        .dropdown-menu2 {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            min-width: 120px;
+            display: none;
+        }
+        .dropdown-menu2.hidden {
+            display: none;
+        }
+        .dropdown-item2 {
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: #333;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .dropdown-item2:hover {
+            background-color: #f8f9fa;
+        }
+        .dropdown-item2:last-child {
+            border-bottom: none;
+        }
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+            gap: 8px;
+        }
+        .pagination-btn {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            background: white;
+            color: #333;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+        .pagination-btn:hover {
+            background-color: #f5f5f5;
+            border-color: #0A6C44;
+        }
+        .pagination-btn.active {
+            background-color: #0A6C44;
+            color: white;
+            border-color: #0A6C44;
+        }
+        .pagination-btn.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        @media (max-width: 768px) {
+            main {
+                margin: 0 1rem 2rem 1rem;
+                padding: 1rem;
+            }
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+            .budget-amount {
+                font-size: 2rem;
+            }
+            .percentage-highlight {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <!-- Budget Overview Section -->
+        <section class="budget-overview">
+            <div class="budget-details">
+                <p class="budget-text">Your current budget for this quarter is</p>
+                <p class="budget-amount">₱{{ total_remaining|floatformat:2|intcomma }}. It is</p>
+                <p class="budget-comparison">
+                    <span class="percentage-highlight">{{ current_vs_historical|floatformat:1 }}%</span><br>
+                    {{ historical_comparison_text }}.
+                </p>
+            </div>
+            
+            <!-- Charts Section -->
+            <div class="charts-container">
+                <div class="chart-container">
+                    <div class="chart-title">Budget Allocation by College</div>
+                    <div class="donut-chart-container">
+                        <canvas id="budgetChart"></canvas>
+                    </div>
+                    <div class="legend" id="chartLegend"></div>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-title">Historical Budget Trends</div>
+                    <div class="line-chart-container">
+                        <canvas id="historicalChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Detailed View Section -->
+        <section>
+            <div class="files-header">
+                <h3><i class="fas fa-chart-bar"></i> Detailed View</h3>
+                <div class="dropdown-container">
+                    <button class="dropdown-btn2" onclick="toggleDropdown()">
+                        Highest Total ▾
+                    </button>
+                    <div class="dropdown-menu2 hidden" id="dropdownMenu2">
+                        <div class="dropdown-item2" onclick="sortTable('highest')">Highest Total</div>
+                        <div class="dropdown-item2" onclick="sortTable('lowest')">Lowest Total</div>
+                        <div class="dropdown-item2" onclick="sortTable('college')">College Name</div>
+                        <div class="dropdown-item2" onclick="sortTable('campus')">Campus</div>
+                    </div>
+                </div>
+            </div>
+            <div class="table-container">
+                <table>
+                    <colgroup>
+                        <col style="width: 25%">
+                        <col style="width: 20%">
+                        <col style="width: 20%">
+                        <col style="width: 20%">
+                        <col style="width: 15%">
+                    </colgroup>
+                    <thead>
+                    <tr>
+                        <th>CCRD/College</th>
+                        <th>Total Assigned</th>
+                        <th>Total Remaining</th>
+                        <th>Total Spent</th>
+                        <th>Settings</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for allocation in budget_allocations %}
+                    <tr>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                {% if allocation.college %}
+                                    <span style="font-weight: 600;">{{ allocation.college.name }}</span>
+                                    <span style="font-size: 0.8rem; color: #6c757d; background: #e9ecef; padding: 0.25rem 0.5rem; border-radius: 4px;">
+                                        {{ allocation.college.campus }}
+                                    </span>
+                                {% elif allocation.project %}
+                                    <span style="font-weight: 600;">{{ allocation.project.title }}</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>₱{{ allocation.total_assigned|floatformat:2|intcomma }}</td>
+                        <td>₱{{ allocation.total_remaining|floatformat:2|intcomma }}</td>
+                        <td>₱{{ allocation.total_spent|floatformat:2|intcomma }}</td>
+                        <td>
+                            <div class="settings-icon">
+                                <svg width="20" height="20" style="fill: currentColor;">
+                                    <use href="#threedots"/>
+                                </svg>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center">No budget allocations found</td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- External Fundings Section -->
+        <section>
+            <div class="files-header">
+                <h3><i class="fas fa-external-link-alt"></i> External Fundings</h3>
+            </div>
+            <div class="table-container">
+                <table>
+                    <colgroup>
+                        <col style="width: 25%">
+                        <col style="width: 35%">
+                        <col style="width: 20%">
+                        <col style="width: 20%">
+                    </colgroup>
+                    <thead>
+                    <tr>
+                        <th>Sponsor</th>
+                        <th>Title</th>
+                        <th>Project Status</th>
+                        <th>Total</th>
+                        <th>Settings</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for funding in external_fundings %}
+                    <tr>
+                        <td>{{ funding.sponsor_name }}</td>
+                        <td>{{ funding.project.title|default:"No Project" }}</td>
+                        <td>{{ funding.get_status_display }}</td>
+                        <td>₱{{ funding.amount_offered|floatformat:2|intcomma }}</td>
+                        <td>
+                            <div class="settings-icon">
+                                <svg width="20" height="20" style="fill: currentColor;">
+                                    <use href="#threedots"/>
+                                </svg>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center">No external funding records found</td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- See More Button for External Fundings -->
+            <div style="text-align: right; margin-top: 1rem;">
+                <a href="{% url 'budget_sponsors' %}" style="color: #063A1C; text-decoration: underline;">
+                    See More →
+                </a>
+            </div>
+        </section>
+
+        <!-- History Section -->
+        <section>
+            <div class="files-header">
+                <h3><i class="fas fa-history"></i> History</h3>
+            </div>
+            <div class="table-container">
+                <table>
+                    <colgroup>
+                        <col style="width: 20%">
+                        <col style="width: 20%">
+                        <col style="width: 30%">
+                        <col style="width: 15%">
+                        <col style="width: 15%">
+                    </colgroup>
+                    <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Action</th>
+                        <th>Subject</th>
+                        <th>Datetime</th>
+                        <th>Settings</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for history in budget_history %}
+                    <tr>
+                        <td>{{ history.user.get_full_name|default:"System" }}</td>
+                        <td>
+                            {% if history.action == 'ALLOCATED' or history.action == 'UPDATED' %}
+                                <span style="color: #28a745; font-weight: bold;">+₱{{ history.amount|floatformat:0|intcomma }}</span>
+                            {% elif history.action == 'SPENT' %}
+                                <span style="color: #dc3545; font-weight: bold;">-₱{{ history.amount|floatformat:0|intcomma }}</span>
+                            {% else %}
+                                {{ history.get_action_display }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if history.budget_allocation %}
+                                {% if history.budget_allocation.college %}
+                                    {{ history.budget_allocation.college.name }}
+                                {% elif history.budget_allocation.project %}
+                                    {{ history.budget_allocation.project.title }}
+                                {% else %}
+                                    Budget Allocation
+                                {% endif %}
+                            {% elif history.external_funding %}
+                                {{ history.external_funding.sponsor_name }}
+                            {% else %}
+                                General
+                            {% endif %}
+                        </td>
+                        <td>{{ history.timestamp|date:"M d, Y H:i" }}</td>
+                        <td>
+                            <div class="settings-icon">
+                                <svg width="20" height="20" style="fill: currentColor;">
+                                    <use href="#threedots"/>
+                                </svg>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center">No budget history found</td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- See More Button for History -->
+            <div style="text-align: right; margin-top: 1rem;">
+                <a href="{% url 'budget_history' %}" style="color: #063A1C; text-decoration: underline;">
+                    See More →
+                </a>
+            </div>
+        </section>
+    </main>
+    
+    <footer>
+        <p>test</p>
+    </footer>
+    
+    <!-- SVG Icons -->
+    <svg style="display: none;">
+        <!-- threedots -->
+        <symbol id="threedots" viewBox="0 0 24 24" fill="currentColor">
+            <circle cx="12" cy="5" r="2"/>
+            <circle cx="12" cy="12" r="2"/>
+            <circle cx="12" cy="19" r="2"/>
+        </symbol>
+    </svg>
+
+    <!-- JSON data for JavaScript -->
+    <script id="chart-data" type="application/json">{{ chart_data_json|safe }}</script>
+    <script id="historical-data" type="application/json">{{ historical_data_json|safe }}</script>
+    
+    <script>
+        // Chart.js configuration
+        document.addEventListener('DOMContentLoaded', function() {
+            // Parse JSON data
+            let chartData, historicalData;
+            try {
+                const chartDataElement = document.getElementById('chart-data');
+                const historicalDataElement = document.getElementById('historical-data');
+                
+                if (chartDataElement && chartDataElement.textContent) {
+                    chartData = JSON.parse(chartDataElement.textContent);
+                }
+                if (historicalDataElement && historicalDataElement.textContent) {
+                    historicalData = JSON.parse(historicalDataElement.textContent);
+                }
+            } catch (e) {
+                console.error('Error parsing chart data:', e);
+            }
+
+            // Fallback data if JSON is not available
+            if (!chartData) {
+                chartData = {
+                    labels: ['College A', 'College B', 'College C', 'Unassigned'],
+                    data: [30, 25, 20, 25],
+                    colors: ['#0A6C44', '#28a745', '#20c997', '#6c757d']
+                };
+            }
+
+            if (!historicalData) {
+                historicalData = {
+                    labels: ['Q1-2023', 'Q2-2023', 'Q3-2023', 'Q4-2023', 'Q1-2024', 'Q2-2024'],
+                    data: [1000000, 1200000, 1100000, 1300000, 1400000, 1500000]
+                };
+            }
+
+            // Donut Chart
+            const donutCtx = document.getElementById('budgetChart').getContext('2d');
+            new Chart(donutCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: chartData.labels,
+                    datasets: [{
+                        data: chartData.data,
+                        backgroundColor: chartData.colors,
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${label}: ₱${value.toLocaleString()} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Line Chart
+            const lineCtx = document.getElementById('historicalChart').getContext('2d');
+            new Chart(lineCtx, {
+                type: 'line',
+                data: {
+                    labels: historicalData.labels,
+                    datasets: [{
+                        label: 'Budget Allocation',
+                        data: historicalData.data,
+                        borderColor: '#0A6C44',
+                        backgroundColor: 'rgba(10, 108, 68, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `Budget: ₱${context.parsed.y.toLocaleString()}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '₱' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Populate legend
+            populateLegend(chartData);
+        });
+
+        function populateLegend(data) {
+            const legendContainer = document.getElementById('chartLegend');
+            if (!legendContainer || !data) return;
+
+            legendContainer.innerHTML = '';
+            data.labels.forEach((label, index) => {
+                const legendItem = document.createElement('div');
+                legendItem.className = 'legend-item';
+                legendItem.innerHTML = `
+                    <div class="legend-color" style="background-color: ${data.colors[index]}"></div>
+                    <span>${label}</span>
+                `;
+                legendContainer.appendChild(legendItem);
+            });
+        }
+
+        // Dropdown functionality
+        function toggleDropdown() {
+            const dropdown = document.getElementById('dropdownMenu2');
+            dropdown.classList.toggle('hidden');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('dropdownMenu2');
+            const button = document.querySelector('.dropdown-btn2');
+            if (!button.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+
+        // Sorting functionality for detailed view
+        function sortTable(sortType) {
+            const tableBody = document.querySelector('.table-container tbody');
+            if (!tableBody) return;
+            
+            const rows = Array.from(tableBody.querySelectorAll('tr'));
+            rows.sort((a, b) => {
+                switch(sortType) {
+                    case 'highest':
+                        return getTotalSpent(b) - getTotalSpent(a);
+                    case 'lowest':
+                        return getTotalSpent(a) - getTotalSpent(b);
+                    case 'college':
+                        return getCollegeName(a).localeCompare(getCollegeName(b));
+                    case 'campus':
+                        return getCampus(a).localeCompare(getCampus(b));
+                    default:
+                        return 0;
+                }
+            });
+            
+            tableBody.innerHTML = '';
+            rows.forEach(row => tableBody.appendChild(row));
+        }
+
+        function getTotalSpent(row) {
+            const spentCell = row.cells[3];
+            if (!spentCell) return 0;
+            const text = spentCell.textContent.replace(/[₱,]/g, '');
+            return parseFloat(text) || 0;
+        }
+
+        function getCollegeName(row) {
+            const nameCell = row.cells[0];
+            if (!nameCell) return '';
+            return nameCell.textContent.trim();
+        }
+
+        function getCampus(row) {
+            const nameCell = row.cells[0];
+            if (!nameCell) return '';
+            const campusSpan = nameCell.querySelector('span:last-child');
+            return campusSpan ? campusSpan.textContent.trim() : '';
+        }
+    </script>
+</body>
+</html>
+
+{% endblock %}
