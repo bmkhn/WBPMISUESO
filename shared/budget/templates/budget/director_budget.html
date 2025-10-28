@@ -213,9 +213,10 @@
             box-shadow: 0 0 0 2px rgba(45, 90, 61, 0.1);
         }
         
-        /* Overall Budget Chart Styles */
+        /* Overall Budget Section - match reference layout */
         .overall-budget-section {
-            display: flex;
+            display: grid;
+            grid-template-columns: 1.2fr 1fr; /* left donut/text, right line chart */
             gap: 2rem;
             margin-bottom: 2rem;
             padding: 1.5rem;
@@ -223,32 +224,36 @@
             border-radius: 0.5rem;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        
-        .budget-chart-container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
+        .left-pane {
+            display: grid;
+            grid-template-columns: 280px 1fr; /* donut + legend */
+            gap: 1.25rem;
             align-items: center;
         }
-        
         .budget-chart-title {
-            font-size: 1.25rem;
+            font-size: 1.1rem;
             font-weight: 600;
-            margin-bottom: 1rem;
+            margin: 0 0 0.75rem 0;
             color: #333;
         }
-        
         .donut-chart-wrapper {
             position: relative;
-            width: 200px;
-            height: 200px;
-            margin-bottom: 1rem;
+            width: 240px;
+            height: 240px;
         }
-        
+        .donut-center-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.2rem;
+            color: #333;
+            font-weight: 600;
+        }
         .chart-legend {
             display: flex;
             flex-direction: column;
-            gap: 0.5rem;
+            gap: 0.6rem;
         }
         
         .legend-item {
@@ -598,19 +603,11 @@
             <!-- Left Column: Overall Budget -->
             <div class="overall-budget-column">
                 <h2 class="section-title">Overall Budget</h2>
-                
-                <!-- Donut Chart -->
-                <div class="donut-chart-container">
-                    <canvas id="donutChart" width="300" height="300"></canvas>
+                <div class="donut-chart-wrapper">
+                    <canvas id="donutChart" width="240" height="240"></canvas>
+                    <div id="donutCenter" class="donut-center-text">&nbsp;</div>
                 </div>
-                
-                <!-- Legend -->
-                <div class="chart-legend" id="chart-legend">
-                    <!-- Legend will be populated by JavaScript -->
-                </div>
-                
-                <!-- Budget Details -->
-                <div class="budget-details">
+                <div class="budget-details" style="margin-top: 1.25rem; text-align: left;">
                     <p class="budget-text">Your current budget for this quarter is</p>
                     <p class="budget-amount">₱{{ total_remaining|floatformat:2|intcomma }}. It is</p>
                     <p class="budget-comparison">
@@ -623,8 +620,9 @@
             <!-- Right Column: Historical Summary -->
             <div class="historical-summary-column">
                 <h2 class="section-title">Historical Summary</h2>
-                
-                <!-- Line Chart -->
+                <!-- Colleges/Legend on top right -->
+                <div class="chart-legend" id="chart-legend" style="align-self: start; margin-bottom: 1rem;"></div>
+                <!-- Line Chart below the legend -->
                 <div class="line-chart-container">
                     <canvas id="lineChart" width="400" height="300"></canvas>
                 </div>
@@ -1009,7 +1007,7 @@
                                 data: chartData.data,
                                 backgroundColor: chartData.colors.slice(0, chartData.data.length),
                                 borderWidth: 0,
-                                cutout: '60%'
+                                cutout: '68%'
                             }]
                         },
                         options: {
@@ -1035,6 +1033,19 @@
                     
                     // Populate legend
                     populateLegend(chartData);
+
+                    // Center text: percent assigned (excluding Unassigned budget if present)
+                    try {
+                        const total = chartData.data.reduce((a,b)=>a+b,0);
+                        let unassignedIdx = -1;
+                        if (chartData.labels) {
+                            unassignedIdx = chartData.labels.findIndex(l => String(l).toLowerCase().includes('unassigned'));
+                        }
+                        const unassigned = unassignedIdx >= 0 ? (chartData.data[unassignedIdx]||0) : 0;
+                        const assignedPct = Math.round(((total - unassigned) / (total || 1)) * 100);
+                        const center = document.getElementById('donutCenter');
+                        if (center) center.textContent = assignedPct + '%';
+                    } catch(e) { console.warn('Center text calc failed', e); }
                 } catch (error) {
                     console.error('Error creating donut chart:', error);
                 }
