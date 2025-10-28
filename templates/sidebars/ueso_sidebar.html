@@ -85,10 +85,13 @@
 
 			<!-- Other -->
 			<div class="sidebar-tab-group-label">OTHER</div>
-			<a href="{% url 'exports' %}" class="sidebar-tab {% if '/exports/' in request.path %}active{% endif %}">
+			{% url 'exports' as exports_url %}
+			{% if exports_url %}
+			<a href="{{ exports_url }}" class="sidebar-tab {% if '/exports/' in request.path %}active{% endif %}">
 				<svg class="sidebar-tab-icon" width="18" height="22"><use href="#icon-exports"/></svg>
 				<span class="table-text">Exports</span>
 			</a>
+			{% endif %}
 			<a href="{% url 'notifications' %}" class="sidebar-tab {% if '/notifications/' in request.path %}active{% endif %}">
 				<svg class="sidebar-tab-icon" width="20" height="24"><use href="#icon-notification"/></svg>
 				<span class="table-text">Notifications</span>
