@@ -1,7 +1,6 @@
 {% extends "base_internal.html" %}
 {% block content %}
 {% load static %}
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,758 +8,11 @@
 <title>Pool of Experts</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
-<link href="{% static 'shared/projects/a_module_styles.css' %}" rel="stylesheet">
-
-<!-- Top Section Styles -->
-<style>
-	body {
-		background-color: #F9F9F9;
-		font-family: 'Inter', sans-serif;
-		margin: 0;
-		padding: 0;
-	}
-
-	.main-container {
-		margin: 75px;
-		display: flex;
-		flex-direction: column;
-		gap: 30px;
-	}
-
-	.text-generate {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-	}
-
-	.title {
-		font-size: 32px;
-		font-weight: 400;
-	}
-
-	.generate-btn {
-		width: 200px;
-		height: 55px;
-		background: linear-gradient(90deg, #9409FF 0%, #FF3300 100%);
-		color: #fff;
-		font-size: 20px;
-		font-weight: 500;
-		border: none;
-		border-radius: 20px;
-		cursor: pointer;
-		box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.2);
-	}
-
-	.search-container {
-		width: 100%;
-		display: flex;
-		gap: 10px;
-	}
-
-	.search-bar {
-		width: 100%;
-		height: 52px;
-		background: #F2F4F8;
-		display: flex;
-		align-items: center;
-		padding: 0 16px;
-		border-bottom: 1.09px solid #535353;
-		border-radius: 8px;
-		box-sizing: border-box;
-	}
-
-	.search-bar input {
-		flex: 1;
-		border: none;
-		outline: none;
-		background: transparent;
-		font-size: 18px;
-		font-family: 'Inter', sans-serif;
-		font-weight: 400;
-		color: #5A5252;
-		padding: 0 10px;
-	}
-
-	.view-buttons {
-		display: flex;
-		gap: 10px;
-	}
-
-	.view-btn {
-		display: flex;
-		padding: 10px;
-		width: 32px;
-		height: 32px;
-		border-radius: 15px;
-		background: #F9F9F9;
-		cursor: pointer;
-		border: none;
-	}
-	
-	.view-btn.active {
-        background: #000000;
-        color: #FFFFFF;
-    }
-</style>
-
-<!-- Content Section Styles -->
-<style>
-	/* Expert Cards */
-	.expert-container {
-		display: grid;
-		grid-template-columns: repeat(3, 1fr);
-		gap: 30px;
-		margin-bottom: 30px;
-	}
-
-	.expert-card {
-		height: auto;
-		border: 0.8px solid rgba(0,0,0,0.4);
-		border-radius: 12px;
-		padding: 30px;
-		display: flex;
-		flex-direction: column;
-		gap: 15px;
-		background: #fff;
-		position: relative;
-	}
-
-	.campus-tag {
-		position: absolute;
-		top: 10px;
-		left: 10px;
-		background: #F8A959;
-		color: #4B331B;
-		padding: 4px 8px;
-		font-size: 14px;
-		font-weight: 500;
-	}
-
-	.college-logo {
-		position: absolute;
-		top: 10px;
-		right: 10px;
-		width: 60px;
-		height: 60px;
-		background: #ddd;
-		border-radius: 50%;
-		object-fit: cover;
-	}
-
-	.profile-icon {
-		width: 200px;
-		height: 200px;
-		border-radius: 50%;
-		background: #ddd;
-		margin: 20px auto 10px auto;
-	}
-
-	.expert-name {
-		text-align: center;
-		font-size: 20px;
-		font-weight: 500;
-		color: #21272A;
-	}
-
-	.expert-degree {
-		text-align: center;
-		font-size: 16px;
-		color: #21272A;
-		font-weight: 500;
-	}
-
-	.expert-projects {
-		text-align: center;
-		font-size: 14px;
-		color: #333;
-	}
-
-	/* Pagination */
-	.pagination {
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		gap: 8px;
-		margin-top: 30px;
-	}
-
-	.pagination a,
-	.pagination span {
-		padding: 8px 12px;
-		border: 1px solid #ddd;
-		background: #fff;
-		border-radius: 6px;
-		text-decoration: none;
-		color: #333;
-		cursor: pointer;
-		transition: all 0.2s ease;
-		font-size: 14px;
-		min-width: 36px;
-		text-align: center;
-	}
-
-	.pagination a:hover {
-		background: #f0f0f0;
-		border-color: #9409FF;
-	}
-
-	.pagination .current {
-		background: linear-gradient(90deg, #9409FF 0%, #FF3300 100%);
-		color: white;
-		border-color: #9409FF;
-		font-weight: 600;
-	}
-
-	.pagination .disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
-		pointer-events: none;
-	}
-	
-	.expert-list td a {
-		text-decoration: none;
-	}
-
-	.hidden { display: none !important; }
-</style>
-
-<!-- Modal Styles -->
-<style>
-	.modal-overlay {
-		display: none;
-		position: fixed;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
-		background: rgba(0, 0, 0, 0.5);
-		z-index: 9998;
-	}
-
-	.modal-overlay.show {
-		display: block;
-	}
-
-	.modal-container {
-		display: none;
-		position: fixed;
-		top: 50%;
-		left: 50%;
-		transform: translate(-50%, -50%);
-		background: white;
-		border-radius: 20px;
-		padding: 40px;
-		max-width: 900px;
-		width: 90%;
-		max-height: 90vh;
-		overflow: hidden;
-		z-index: 9999;
-		box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-	}
-
-	.modal-container.show {
-		display: block;
-	}
-
-	.modal-header {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		margin-bottom: 30px;
-	}
-
-	.modal-title {
-		font-size: 28px;
-		font-weight: 500;
-		background: linear-gradient(90deg, #9409FF 0%, #FF3300 100%);
-		-webkit-background-clip: text;
-		-webkit-text-fill-color: transparent;
-		background-clip: text;
-	}
-
-	.modal-close {
-		background: none;
-		border: none;
-		font-size: 30px;
-		cursor: pointer;
-		color: #666;
-		padding: 0;
-		width: 30px;
-		height: 30px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-
-	.modal-close:hover {
-		color: #000;
-	}
-
-	/* Form View */
-	.form-view {
-		display: block;
-	}
-
-	.form-view.hidden {
-		display: none;
-	}
-
-	.form-group {
-		margin-bottom: 20px;
-	}
-
-	.form-group label {
-		display: block;
-		font-size: 16px;
-		font-weight: 500;
-		margin-bottom: 8px;
-		color: #333;
-	}
-
-	.form-group input,
-	.form-group select {
-		width: 100%;
-		padding: 12px;
-		font-size: 16px;
-		border: 1px solid #ddd;
-		border-radius: 8px;
-		font-family: 'Inter', sans-serif;
-		box-sizing: border-box;
-	}
-
-	.form-group input:focus,
-	.form-group select:focus {
-		outline: none;
-		border-color: #9409FF;
-	}
-
-	.generate-team-btn {
-		width: 100%;
-		height: 55px;
-		background: linear-gradient(90deg, #9409FF 0%, #FF3300 100%);
-		color: #fff;
-		font-size: 20px;
-		font-weight: 500;
-		border: none;
-		border-radius: 12px;
-		cursor: pointer;
-		box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.2);
-		margin-top: 10px;
-	}
-
-	.generate-team-btn:hover {
-		opacity: 0.9;
-	}
-
-	.generate-team-btn:disabled {
-		opacity: 0.6;
-		cursor: not-allowed;
-	}
-
-	/* Results View */
-	.results-view {
-		display: none;
-		height: calc(90vh - 140px);
-		overflow: hidden;
-	}
-
-	.results-view.show {
-		display: flex;
-		flex-direction: column;
-	}
-
-	.back-btn {
-		display: inline-flex;
-		align-items: center;
-		gap: 8px;
-		background: none;
-		border: none;
-		color: #9409FF;
-		font-size: 16px;
-		font-weight: 500;
-		cursor: pointer;
-		padding: 8px 0;
-		margin-bottom: 15px;
-		flex-shrink: 0;
-	}
-
-	.back-btn:hover {
-		opacity: 0.8;
-	}
-
-	.results-header {
-		font-size: 18px;
-		color: #666;
-		margin-bottom: 20px;
-		flex-shrink: 0;
-	}
-
-	.results-content {
-		display: flex;
-		gap: 20px;
-		flex: 1;
-		overflow: hidden;
-	}
-
-	.team-members-list {
-		flex: 1;
-		overflow-y: auto;
-		padding-right: 10px;
-	}
-
-	.member-item {
-		background: #fff;
-		border: 1px solid #e0e0e0;
-		border-radius: 12px;
-		padding: 15px;
-		margin-bottom: 12px;
-		cursor: pointer;
-		transition: all 0.3s ease;
-		display: flex;
-		align-items: center;
-		gap: 15px;
-		position: relative;
-	}
-
-	.member-item:hover {
-		border-color: #9409FF;
-		box-shadow: 0 2px 8px rgba(148, 9, 255, 0.15);
-	}
-
-	.member-item.active {
-		border-color: #9409FF;
-		background: #f9f5ff;
-	}
-
-	.member-item.selected {
-		border-color: #9409FF;
-		background: #f0e6ff;
-	}
-
-	.member-item.leader {
-		border-color: #FFD700;
-		background: #fffbea;
-		border-width: 2px;
-	}
-
-	.member-checkbox {
-		width: 20px;
-		height: 20px;
-		cursor: pointer;
-		flex-shrink: 0;
-	}
-
-	.leader-badge {
-		position: absolute;
-		top: 10px;
-		right: 10px;
-		background: #FFD700;
-		color: #000;
-		padding: 4px 10px;
-		border-radius: 12px;
-		font-size: 11px;
-		font-weight: 600;
-		display: none;
-	}
-
-	.member-item.leader .leader-badge {
-		display: block;
-	}
-
-	.create-project-btn {
-		width: 100%;
-		height: 50px;
-		background: linear-gradient(90deg, #9409FF 0%, #FF3300 100%);
-		color: #fff;
-		font-size: 18px;
-		font-weight: 600;
-		border: none;
-		border-radius: 12px;
-		cursor: pointer;
-		margin-bottom: 15px;
-		display: none;
-		transition: all 0.3s ease;
-	}
-
-	.create-project-btn:hover {
-		opacity: 0.9;
-		transform: translateY(-2px);
-		box-shadow: 0 4px 12px rgba(148, 9, 255, 0.3);
-	}
-
-	.create-project-btn.show {
-		display: block;
-	}
-
-	.create-project-btn:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
-	}
-
-	.member-avatar {
-		width: 60px;
-		height: 60px;
-		border-radius: 50%;
-		background: linear-gradient(135deg, #9409FF 0%, #FF3300 100%);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		color: white;
-		font-size: 24px;
-		font-weight: 500;
-		flex-shrink: 0;
-	}
-
-	.member-avatar img {
-		width: 100%;
-		height: 100%;
-		border-radius: 50%;
-		object-fit: cover;
-	}
-
-	.member-info {
-		flex: 1;
-	}
-
-	.member-name {
-		font-size: 16px;
-		font-weight: 500;
-		color: #000;
-		margin-bottom: 4px;
-	}
-
-	.member-score {
-		font-size: 14px;
-		color: #666;
-	}
-
-	/* Side Panel (like YT Shorts) */
-	.details-panel {
-		width: 350px;
-		background: #f9f9f9;
-		border-radius: 12px;
-		padding: 20px;
-		overflow-y: auto;
-		flex-shrink: 0;
-		display: none;
-	}
-
-	.details-panel.show {
-		display: block;
-	}
-
-	.details-panel-placeholder {
-		width: 350px;
-		background: #f9f9f9;
-		border-radius: 12px;
-		padding: 40px 20px;
-		text-align: center;
-		color: #999;
-		font-size: 14px;
-		flex-shrink: 0;
-	}
-
-	.panel-header {
-		margin-bottom: 20px;
-		padding-bottom: 15px;
-		border-bottom: 2px solid #e0e0e0;
-	}
-
-	.panel-name {
-		font-size: 18px;
-		font-weight: 500;
-		color: #000;
-		margin-bottom: 8px;
-	}
-
-	.panel-score {
-		font-size: 24px;
-		font-weight: 600;
-		background: linear-gradient(90deg, #9409FF 0%, #FF3300 100%);
-		-webkit-background-clip: text;
-		-webkit-text-fill-color: transparent;
-		background-clip: text;
-	}
-
-	.details-grid {
-		display: grid;
-		grid-template-columns: 1fr;
-		gap: 12px;
-		margin-bottom: 20px;
-	}
-
-	.detail-item {
-		font-size: 14px;
-	}
-
-	.detail-label {
-		font-weight: 500;
-		color: #333;
-		display: block;
-		margin-bottom: 4px;
-	}
-
-	.detail-value {
-		color: #666;
-	}
-
-	.scores-section {
-		background: white;
-		border-radius: 8px;
-		padding: 15px;
-		margin-top: 15px;
-	}
-
-	.scores-title {
-		font-size: 15px;
-		font-weight: 500;
-		color: #333;
-		margin-bottom: 15px;
-	}
-
-	.score-item {
-		margin-bottom: 15px;
-	}
-
-	.score-header {
-		display: flex;
-		justify-content: space-between;
-		align-items: baseline;
-		margin-bottom: 8px;
-	}
-
-	.score-label {
-		font-size: 13px;
-		color: #666;
-	}
-
-	.score-values {
-		font-size: 12px;
-		color: #999;
-		text-align: right;
-	}
-
-	.score-raw {
-		font-weight: 500;
-		color: #333;
-	}
-
-	.score-weighted {
-		color: #9409FF;
-		font-weight: 600;
-	}
-
-	.score-bar-bg {
-		width: 100%;
-		height: 6px;
-		background: #e0e0e0;
-		border-radius: 3px;
-		overflow: hidden;
-		position: relative;
-	}
-
-	.score-bar-fill {
-		height: 100%;
-		border-radius: 3px;
-		transition: width 0.5s ease;
-		min-width: 2px;
-	}
-
-	.score-bar-semantic {
-		background: linear-gradient(90deg, #9409FF 0%, #FF3300 100%);
-	}
-
-	.score-bar-rating {
-		background: #4CAF50;
-	}
-
-	.score-bar-availability {
-		background: #2196F3;
-	}
-
-	.score-bar-final {
-		background: linear-gradient(90deg, #FF3300 0%, #FFD700 100%);
-	}
-
-	.final-score-item {
-		margin-top: 20px;
-		padding-top: 15px;
-		border-top: 2px solid #e0e0e0;
-	}
-
-	.loading-spinner {
-		display: none;
-		text-align: center;
-		padding: 40px 20px;
-		font-size: 16px;
-		color: #666;
-	}
-
-	.loading-spinner.show {
-		display: block;
-	}
-
-	.spinner-icon {
-		border: 3px solid #f3f3f3;
-		border-top: 3px solid #9409FF;
-		border-radius: 50%;
-		width: 40px;
-		height: 40px;
-		animation: spin 1s linear infinite;
-		margin: 0 auto 15px;
-	}
-
-	@keyframes spin {
-		0% { transform: rotate(0deg); }
-		100% { transform: rotate(360deg); }
-	}
-
-	.error-message {
-		display: none;
-		padding: 15px;
-		background: #fee;
-		border: 1px solid #fcc;
-		border-radius: 8px;
-		color: #c00;
-		margin-top: 15px;
-	}
-
-	.error-message.show {
-		display: block;
-	}
-
-	.required {
-		color: red;
-	}
-
-	.no-results {
-		text-align: center;
-		padding: 40px 20px;
-		color: #666;
-		font-size: 16px;
-	}
-</style>
-
-<style>
-	.name-link {
-		color: #0099FF;
-		text-decoration: none;
-	}
-
-	.name-link:hover {
-		text-decoration: underline;
-	}
-</style>
-
-</head>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
+<link href="{% static 'internal/experts/styles.css' %}" rel="stylesheet">
+</head> 
 <body>
 	<div class="main-container">
-
-		<!-- Title + Generate -->
-		<div class="text-generate">
-			<div class="title">Pool of Experts</div>
-			<button class="generate-btn" id="openModalBtn">Generate Team</button>
-		</div>
 
 		<!-- Search + Form Controls -->
 
@@ -820,6 +72,11 @@
 				<svg class="view-btn active" id="gridViewBtn" width="28" height="28"><use id="gridIconUse" href="#icon-grid-active"></use></svg>
 				<svg class="view-btn" id="listViewBtn" width="28" height="28"><use id="listIconUse" href="#icon-list"></use></svg>
 			</div>
+		</div> 
+		 
+		<div class="container-a">
+			<div class="project-text">Pool of Experts</div>
+			<button class="generate-btn" id="openModalBtn">Generate Team</button>
 		</div>
 
 		<!-- Expert Grid -->
@@ -847,29 +104,29 @@
 		</div>
 
 		<!-- Pagination for Grid View -->
-		<div class="pagination visible" id="gridPagination">
+		<div class="pagination-container" id="gridPagination">
 			{% if page_obj.has_previous %}
-			<a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if campus_filter %}&campus={{ campus_filter }}{% endif %}{% if college_filter %}&college={{ college_filter }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if order %}&order={{ order }}{% endif %}">&laquo; First</a>
-			<a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if campus_filter %}&campus={{ campus_filter }}{% endif %}{% if college_filter %}&college={{ college_filter }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if order %}&order={{ order }}{% endif %}">Previous</a>
+				<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page=1">First</a>
+				<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a>
 			{% else %}
-			<span class="disabled">&laquo; First</span>
-			<span class="disabled">Previous</span>
+				<button class="pagination-button" disabled>First</button>
+				<button class="pagination-button" disabled>Previous</button>
 			{% endif %}
 
 			{% for num in page_range %}
-			{% if num == page_obj.number %}
-			<span class="current">{{ num }}</span>
-			{% else %}
-			<a href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if campus_filter %}&campus={{ campus_filter }}{% endif %}{% if college_filter %}&college={{ college_filter }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if order %}&order={{ order }}{% endif %}">{{ num }}</a>
-			{% endif %}
+				{% if num == page_obj.number %}
+					<button class="pagination-button current" disabled>{{ num }}</button>
+				{% else %}
+					<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ num }}">{{ num }}</a>
+				{% endif %}
 			{% endfor %}
 
 			{% if page_obj.has_next %}
-			<a href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if campus_filter %}&campus={{ campus_filter }}{% endif %}{% if college_filter %}&college={{ college_filter }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if order %}&order={{ order }}{% endif %}">Next</a>
-			<a href="?page={{ paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if campus_filter %}&campus={{ campus_filter }}{% endif %}{% if college_filter %}&college={{ college_filter }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if order %}&order={{ order }}{% endif %}">Last &raquo;</a>
+				<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.next_page_number }}">Next</a>
+				<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ paginator.num_pages }}">Last</a>
 			{% else %}
-			<span class="disabled">Next</span>
-			<span class="disabled">Last &raquo;</span>
+				<button class="pagination-button" disabled>Next</button>
+				<button class="pagination-button" disabled>Last</button>
 			{% endif %}
 		</div>
 
@@ -900,31 +157,39 @@
 		</table>
 
 		<!-- Pagination for List View -->
-		<div class="pagination hidden" id="listPagination">
+		<div class="pagination-container" id="listPagination">
 			{% if page_obj.has_previous %}
-			<a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if campus_filter %}&campus={{ campus_filter }}{% endif %}{% if college_filter %}&college={{ college_filter }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if order %}&order={{ order }}{% endif %}">&laquo; First</a>
-			<a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if campus_filter %}&campus={{ campus_filter }}{% endif %}{% if college_filter %}&college={{ college_filter }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if order %}&order={{ order }}{% endif %}">Previous</a>
+				<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page=1">First</a>
+				<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a>
 			{% else %}
-			<span class="disabled">&laquo; First</span>
-			<span class="disabled">Previous</span>
+				<button class="pagination-button" disabled>First</button>
+				<button class="pagination-button" disabled>Previous</button>
 			{% endif %}
 
 			{% for num in page_range %}
-			{% if num == page_obj.number %}
-			<span class="current">{{ num }}</span>
-			{% else %}
-			<a href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if campus_filter %}&campus={{ campus_filter }}{% endif %}{% if college_filter %}&college={{ college_filter }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if order %}&order={{ order }}{% endif %}">{{ num }}</a>
-			{% endif %}
+				{% if num == page_obj.number %}
+					<button class="pagination-button active" disabled>{{ num }}</button>
+				{% else %}
+					<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ num }}">{{ num }}</a>
+				{% endif %}
 			{% endfor %}
 
 			{% if page_obj.has_next %}
-			<a href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if campus_filter %}&campus={{ campus_filter }}{% endif %}{% if college_filter %}&college={{ college_filter }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if order %}&order={{ order }}{% endif %}">Next</a>
-			<a href="?page={{ paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if campus_filter %}&campus={{ campus_filter }}{% endif %}{% if college_filter %}&college={{ college_filter }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if order %}&order={{ order }}{% endif %}">Last &raquo;</a>
+				<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.next_page_number }}">Next</a>
+				<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ paginator.num_pages }}">Last</a>
 			{% else %}
-			<span class="disabled">Next</span>
-			<span class="disabled">Last &raquo;</span>
+				<button class="pagination-button" disabled>Next</button>
+				<button class="pagination-button" disabled>Last</button>
 			{% endif %}
 		</div>
+
+		<!-- Pagination -->
+		<div class="pagination hidden">
+			<button>1</button>
+			<button>2</button>
+			<button>3</button>
+		</div>
+
 	</div>
 
 	<!-- Modal Overlay -->
@@ -1234,11 +499,13 @@
 		showFormView();
 	});
 
-	// Show form view
 	function showFormView() {
 		formView.classList.remove('hidden');
 		resultsView.classList.remove('show');
 		loadingSpinner.classList.remove('show');
+		
+		// NEW: Set modal to narrow width (40%)
+		generateModal.classList.remove('wide'); 
 		
 		// Reset selections
 		selectedMembers = [];
@@ -1249,6 +516,9 @@
 	function showResultsView() {
 		formView.classList.add('hidden');
 		resultsView.classList.add('show');
+		
+		// NEW: Set modal to wide width (80%)
+		generateModal.classList.add('wide'); 
 	}
 
 	// Form submission

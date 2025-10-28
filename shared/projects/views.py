@@ -700,21 +700,7 @@ def project_expenses(request, pk):
             'amount': 5000.00,
             'date': '2025-09-20',
             'receipt': 'https://via.placeholder.com/120x120.png?text=Receipt',
-        },
-        {
-            'title': 'Food & Catering',
-            'reason': 'Lunch for participants',
-            'amount': 3200.50,
-            'date': '2025-09-21',
-            'receipt': '',
-        },
-        {
-            'title': 'Materials',
-            'reason': 'Printed handouts and supplies',
-            'amount': 1500.75,
-            'date': '2025-09-22',
-            'receipt': 'https://via.placeholder.com/120x120.png?text=Receipt',
-        },
+        }
     ]
     return render(request, 'projects/project_expenses.html', {
         'project': project, 

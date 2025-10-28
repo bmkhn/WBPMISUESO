@@ -1,0 +1,293 @@
+{% extends base_template %}
+{% load humanize %}
+{% load budget_filters %}
+{% block content %}
+
+<!DOCTYPE html>
+<!-- BUDGET EDIT PAGE TEMPLATE - CACHE BUST: 2024-10-21 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Edit Budget - Super Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+        }
+
+        .edit-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .edit-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .edit-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2d5a3d;
+            margin: 0;
+        }
+
+        .save-btn {
+            background-color: #2d5a3d;
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .save-btn:hover {
+            background-color: #1e3d2a;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(45, 90, 61, 0.3);
+        }
+
+        .campus-section {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .campus-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #2d5a3d;
+        }
+
+        .college-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .college-row:last-child {
+            border-bottom: none;
+        }
+
+        .college-name {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #333;
+            flex: 1;
+        }
+
+        .budget-input {
+            width: 200px;
+            padding: 0.5rem 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 1rem;
+            text-align: right;
+            transition: border-color 0.3s ease;
+        }
+
+        .budget-input:focus {
+            outline: none;
+            border-color: #2d5a3d;
+            box-shadow: 0 0 0 3px rgba(45, 90, 61, 0.1);
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+
+        .back-link {
+            color: #2d5a3d;
+            text-decoration: none;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .back-link:hover {
+            color: #1e3d2a;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .edit-container {
+                padding: 1rem;
+            }
+            
+            .edit-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+            
+            .college-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+            
+            .budget-input {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="edit-container">
+        <a href="{% url 'budget_dashboard' %}" class="back-link">
+            <i class="fas fa-arrow-left"></i>
+            Back to Budget Dashboard
+        </a>
+
+        <div class="edit-header">
+            <h1 class="edit-title">Edit</h1>
+            <button class="save-btn" onclick="saveBudget()">
+                <i class="fas fa-save"></i>
+                Save
+            </button>
+        </div>
+
+        <!-- Budget Status Card - Total Remaining Only -->
+        <div class="budget-status-cards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+            <div class="status-card" style="background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-left: 4px solid #ffc107;">
+                <div class="card-title" style="font-size: 0.9rem; color: #6c757d; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">Total Remaining</div>
+                <div class="card-amount" style="font-size: 2rem; font-weight: 700; color: #2d5a3d; margin: 0;">₱{{ total_remaining|floatformat:2|intcomma }}</div>
+            </div>
+        </div>
+
+        <form id="budgetEditForm" method="post">
+            {% csrf_token %}
+            
+            <!-- Tiniguiban Campus Section -->
+            <div class="campus-section">
+                <h2 class="campus-title">Tiniguiban Campus</h2>
+                
+                {% for college in tiniguiban_colleges %}
+                <div class="college-row">
+                    <span class="college-name">{{ college.name }}</span>
+                    <input type="number" class="budget-input" name="college_{{ college.id }}" value="{{ college_allocations|lookup:college.id|default:0|floatformat:2 }}" step="0.01" min="0">
+                </div>
+                {% empty %}
+                <div class="college-row">
+                    <span class="college-name">No colleges found for Tiniguiban Campus</span>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- External Campus Section -->
+            <div class="campus-section">
+                <h2 class="campus-title">External Campus</h2>
+                
+                {% for college in external_colleges %}
+                <div class="college-row">
+                    <span class="college-name">{{ college.name }}</span>
+                    <input type="number" class="budget-input" name="college_{{ college.id }}" value="{{ college_allocations|lookup:college.id|default:0|floatformat:2 }}" step="0.01" min="0">
+                </div>
+                {% empty %}
+                <div class="college-row">
+                    <span class="college-name">No colleges found for External Campus</span>
+                </div>
+                {% endfor %}
+            </div>
+
+        </form>
+    </div>
+
+    <script>
+        function saveBudget() {
+            // Add loading state
+            const saveBtn = document.querySelector('.save-btn');
+            const originalText = saveBtn.innerHTML;
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            saveBtn.disabled = true;
+
+            // Submit the form
+            document.getElementById('budgetEditForm').submit();
+        }
+
+        function cancelEdit() {
+            if (confirm('Are you sure you want to cancel? Any unsaved changes will be lost.')) {
+                window.location.href = "{% url 'budget_dashboard' %}";
+            }
+        }
+
+        // Format numbers as user types
+        document.querySelectorAll('.budget-input').forEach(input => {
+            input.addEventListener('blur', function() {
+                if (this.value) {
+                    this.value = parseFloat(this.value).toFixed(2);
+                }
+            });
+        });
+
+        // Prevent form submission on Enter key in input fields
+        document.querySelectorAll('.budget-input').forEach(input => {
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    saveBudget();
+                }
+            });
+        });
+    </script>
+
+    <style>
+        @media (max-width: 768px) {
+            .budget-status-cards {
+                grid-template-columns: 1fr !important;
+            }
+            
+            .edit-header {
+                flex-direction: column !important;
+                gap: 1rem !important;
+                text-align: center !important;
+            }
+        }
+    </style>
+</body>
+</html>
+
+
+{% endblock %}

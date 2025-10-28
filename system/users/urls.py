@@ -3,8 +3,8 @@ from .views import login_view, logout_view, register_view, quick_login, role_red
 from .views import registration_client_view, registration_faculty_view, registration_implementer_view, client_verify_view, faculty_verify_view, implementer_verify_view, thank_you_view
 from .views import not_authenticated_view, no_permission_view, not_confirmed_view
 from .views import manage_user, add_user, user_details_view, edit_user, check_email_view, verify_user, unverify_user, delete_user
-from .views import profile_view, update_bio, update_profile_picture
-from .views import newp_view, otp_view, end  # Temp views for testing
+from .views import profile_view, update_profile_view
+from .views import newp_view, otp_view, end  
 
 urlpatterns = [
     #test
@@ -48,8 +48,7 @@ urlpatterns = [
     # User Profile URLs
     path('profile/', profile_view, name='profile'),                             # User Profile
     path('profile/<int:id>/', profile_view, name='user_profile'),               # View Any User Profile
-    path('profile/update-bio/', update_bio, name='update_bio'),                 # Update Bio
-    path('profile/update-picture/', update_profile_picture, name='update_profile_picture'),  # Update Profile Picture
+    path('profile/update/', update_profile_view, name='update_profile'),
 
     path('', role_redirect, name='role_redirect'),              # Default Redirector
 

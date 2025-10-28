@@ -1,241 +1,72 @@
 {% extends "projects/base_project_profile.html" %}
 {% block profile_content %}
-
-<style>
-    .infoseg {
-        display: grid;
-        grid-template-columns: 1fr 1fr 1fr 1fr;
-        gap: 1.25rem 2rem;
-        align-items: start;
-        font-size: 0.95rem;
-        text-align: left;
-    }
-
-    .infoseg div {
-        display: flex;
-        align-items: center;
-    }
-
-    .infoseg strong {
-        margin-left: 0.4rem;
-        font-weight: 600;
-    }
-
-    .infoseg div:nth-child(2n) {
-        justify-content: left;
-        text-align: left;
-    }
-</style>
-
-<!-- Form Styles -->
-<style>
-    .form-group {
-		display: flex;
-		align-items: flex-start;
-		gap: 1rem;
-        margin-bottom: 0.5rem;
-	}
-
-	.form-label {
-		font-weight: 600;
-		color: #374151;
-		font-size: 0.95rem;
-        margin-top: 10px;
-	}
-
-    .required {
-        color: #DC2626;
-    }
-
-    .form-actions {
-        display: flex;
-        gap: 1rem;
-        margin-top: 1.5rem;
-    }
-
-    select {
-        font-weight: 500;
-        color: #374151;
-        font-size: 1.08rem;
-        word-break: break-word;
-        background: #f7f7f7;
-        border-radius: 0.5rem;
-        padding: 0.7rem 14px;
-        border: 1px solid #e5e7eb;
-        min-height: 21px;
-        display: block;
-        width: 100%;
-        box-sizing: border-box;
-		appearance: none;
-		-webkit-appearance: none;
-		-moz-appearance: none;
-		padding-right: 2rem;
-		background: url("data:image/svg+xml;utf8,<svg width='16' height='11' viewBox='0 0 16 11' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M7.99976 7.19417L13.9025 1.29147C14.0125 1.17758 14.144 1.08674 14.2895 1.02424C14.435 0.961746 14.5915 0.92885 14.7498 0.927474C14.9082 0.926098 15.0652 0.95627 15.2117 1.01623C15.3583 1.07619 15.4914 1.16473 15.6034 1.27669C15.7153 1.38866 15.8039 1.5218 15.8638 1.66835C15.9238 1.8149 15.954 1.97192 15.9526 2.13026C15.9512 2.28859 15.9183 2.44506 15.8558 2.59055C15.7933 2.73604 15.7025 2.86762 15.5886 2.97762L8.84283 9.72339C8.61921 9.94694 8.31596 10.0725 7.99976 10.0725C7.68356 10.0725 7.38031 9.94694 7.15669 9.72339L0.41092 2.97762C0.297028 2.86762 0.206183 2.73604 0.143687 2.59055C0.0811915 2.44506 0.0482959 2.28859 0.04692 2.13026C0.0455441 1.97192 0.0757155 1.8149 0.135674 1.66835C0.195632 1.5218 0.284176 1.38866 0.39614 1.27669C0.508103 1.16473 0.641244 1.07619 0.787794 1.01623C0.934343 0.95627 1.09137 0.926098 1.2497 0.927474C1.40804 0.92885 1.56451 0.961746 1.71 1.02424C1.85548 1.08674 1.98706 1.17758 2.09706 1.29147L7.99976 7.19417Z' fill='%23374151'/></svg>")
-        		no-repeat right 0.75rem center;
-  		background-size: 13px 8px;
-    }
-
-    .submit-btn {
-        background-color: #0A6C44;
-        color: white;
-        padding: 10px 20px;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 1rem;
-        font-weight: 600;
-    }
-
-    .submit-btn:hover {
-        background-color: #07532F;
-    }
-
-    .back-btn {
-        background-color: #E5E7EB;
-        color: #374151;
-        padding: 10px 20px;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 1rem;
-        font-weight: 600;
-    }
-
-    .back-btn:hover {
-        background-color: #D1D5DB;
-    }
-
-    textarea {
-        resize: none;
-    }
-
-    input[type="text"], input[type="date"], textarea, input[type="file"], input[type="datetime-local"], input[type="number"] {
-        flex: 1;
-        border-radius: 8px;
-        border: 1px solid #e5e7eb;
-        padding: 0.75rem;
-        font-size: 1rem;
-        font-family: 'Inter', sans-serif;
-    }
-</style>
-
-<!-- Bordered Box -->
-<style>
-    .college-tag {
-        background: #F8F8F8;
-        border: 1px solid #000;
-        border-radius: 5px;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.35rem 0.85rem 0.35rem 0.5rem;
-        font-size: 0.95rem;
-        font-family: 'Inter', Arial, sans-serif;
-        vertical-align: middle;
-    }
-    
-    .college-tag .remove-x {
-        color: #E53E3E;
-        font-weight: bold;
-        font-size: 1.1rem;
-        margin-left: 3px;
-        margin-right: 1px;
-        cursor: pointer;
-        border: none;
-        background: none;
-        padding: 0;
-    }
-
-    .add-college-btn {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        background: #F0F0F0;
-        border: 1px solid rgba(0,0,0,0.16);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: box-shadow 0.2s;
-        font-family: 'Inter', Arial, sans-serif;
-    }
-
-    .add-college-btn:hover {
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    }
-
-    .college-select-modal {
-        display: none;
-        position: absolute;
-        z-index: 1000;
-        background: white;
-        border: 1px solid #E5E7EB;
-        border-radius: 8px;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-        padding: 1rem;
-    }
-
-    .college-row {
-        display: flex;
-        align-items: center;
-        flex-wrap: wrap;
-        position: relative;
-        gap: 10px;
-        margin-bottom: 15px;
-        margin-top: 5px;
-    }
-</style>
-
-<!-- Modal Styles -->
-<style>
-    .modal {
-        position: fixed;
-     
-        z-index: 9999;
-        left: 0; top: 0; width: 100vw; height: 100vh;
-        background: rgba(0,0,0,0.25);
-        display: none; align-items: center; justify-content: center;
-    }
-    
-    .modal-content {
-        background: #fff;
-        border-radius: 12px;
-        padding: 2rem 2rem 2rem 2rem;
-        width: 55vw;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-        position: relative;
-    }
-
-    .modal-content h2 { margin-top:0; font-size:1.5rem; color:#000; font-weight: 400; }
-    .modal-content .close {
-        position: absolute; right: 1.5rem; top: 1.25rem;
-        font-size: 1.5rem; color: #888; cursor: pointer;
-    }
-</style>
+{% load static %} 
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
+<link href="{% static 'shared/projects/view.css' %}" rel="stylesheet">
 
 <div class="card-header">
     <h3>Overview</h3>
     {% if request.user.role in ADMIN_ROLES %}
-        <button class="admin-button" onclick="openEditProjectModal()">Edit</button>
+        <button class="admin-button edit" onclick="openEditProjectModal()">Edit</button>
     {% endif %}
 </div>
 
 <div class="card">
     <div class="card-body">
         <div class="infoseg">
-            <div><i class="fa-regular fa-circle-question"></i> <strong>Date Added</strong></div>
+            <div>
+                <span class="detail-icon">
+                    <svg width="24" height="24"><use href="#detail-icon"/></svg>
+                    <span class="detail-tooltip">When this project was created.</span>
+                </span>
+                <strong>Date Added</strong>
+            </div>
             <div>{{ project.created_at|date:'F d, Y' }}</div>
-            <div><i class="fa-regular fa-circle-question"></i> <strong>Last Updated</strong></div>
+            
+            <div>
+                <span class="detail-icon">
+                    <svg width="24" height="24"><use href="#detail-icon"/></svg>
+                    <span class="detail-tooltip">When this project was last modified.</span>
+                </span>
+                <strong>Last Updated</strong>
+            </div>
             <div>{{ project.updated_at|date:'F d, Y' }}</div>
 
-            <div><i class="fa-regular fa-circle-question"></i> <strong>Project Status</strong></div>
+            <div>
+                <span class="detail-icon">
+                    <svg width="24" height="24"><use href="#detail-icon"/></svg>
+                    <span class="detail-tooltip">Current status of the project.</span>
+                </span>
+                <strong>Project Status</strong>
+            </div>
             <div>{{ project.get_status_display }}</div>
-            <div><i class="fa-regular fa-circle-question"></i> <strong>Project Type</strong></div>
+            
+            <div>
+                <span class="detail-icon">
+                    <svg width="24" height="24"><use href="#detail-icon"/></svg>
+                    <span class="detail-tooltip">Category or classification of the project.</span>
+                </span>
+                <strong>Project Type</strong>
+            </div>
             <div>{{ project.get_project_type_display|default:project.project_type }}</div>
 
-            <div><i class="fa-regular fa-circle-question"></i> <strong>Agenda</strong></div>
+            <div>
+                <span class="detail-icon">
+                    <svg width="24" height="24"><use href="#detail-icon"/></svg>
+                    <span class="detail-tooltip">The agenda this project addresses.</span>
+                </span>
+                <strong>Agenda</strong>
+            </div>
             <div>{{ project.agenda }}</div>
-            <div><i class="fa-regular fa-circle-question"></i> <strong>SDGs</strong></div>
+            
+            <div>
+                <span class="detail-icon">
+                    <svg width="24" height="24"><use href="#detail-icon"/></svg>
+                    <span class="detail-tooltip">Sustainable Development Goals aligned with this project.</span>
+                </span>
+                <strong>SDGs</strong>
+            </div>
             <div style="flex-direction:column; align-items:flex-start; display:flex;">
                 {% for sdg in project.sdgs.all %}
                     <span class="badge bg-success" style="align-self:flex-start;">{{ sdg.name }}{% if not forloop.last %}, {% endif %}</span>
@@ -244,14 +75,40 @@
                 {% endfor %}
             </div>
 
-            <div><i class="fa-regular fa-circle-question"></i> <strong>Beneficiary</strong></div>
+            <div>
+                <span class="detail-icon">
+                    <svg width="24" height="24"><use href="#detail-icon"/></svg>
+                    <span class="detail-tooltip">Primary group or community who will benefit.</span>
+                </span>
+                <strong>Beneficiary</strong>
+            </div>
             <div>{{ project.primary_beneficiary }}</div>
-            <div><i class="fa-regular fa-circle-question"></i> <strong>Estimated Events</strong></div>
+            
+            <div>
+                <span class="detail-icon">
+                    <svg width="24" height="24"><use href="#detail-icon"/></svg>
+                    <span class="detail-tooltip">Expected number of events to be conducted.</span>
+                </span>
+                <strong>Estimated Events</strong>
+            </div>
             <div>{{ project.estimated_events }}</div>
 
-            <div><i class="fa-regular fa-circle-question"></i> <strong>Location</strong></div>
+            <div>
+                <span class="detail-icon">
+                    <svg width="24" height="24"><use href="#detail-icon"/></svg>
+                    <span class="detail-tooltip">Primary location where the project will take place.</span>
+                </span>
+                <strong>Location</strong>
+            </div>
             <div>{{ project.primary_location }}</div>
-            <div><i class="fa-regular fa-circle-question"></i> <strong>Estimated Trained Individuals</strong></div>
+            
+            <div>
+                <span class="detail-icon">
+                    <svg width="24" height="24"><use href="#detail-icon"/></svg>
+                    <span class="detail-tooltip">Expected number of individuals to be trained.</span>
+                </span>
+                <strong>Estimated Trained Individuals</strong>
+            </div>
             <div>
                 {{ project.estimated_trainees }}
                 {% if request.user.role in ADMIN_ROLES or request.user == project.project_leader or request.user in project.providers.all %}
@@ -259,9 +116,22 @@
                 {% endif %}
             </div>
           
-            <div><i class="fa-regular fa-circle-question"></i> <strong>Start Date</strong></div>
+            <div>
+                <span class="detail-icon">
+                    <svg width="24" height="24"><use href="#detail-icon"/></svg>
+                    <span class="detail-tooltip">When the project is scheduled to begin.</span>
+                </span>
+                <strong>Start Date</strong>
+            </div>
             <div>{{ project.start_date|date:'F d, Y' }}</div>
-            <div><i class="fa-regular fa-circle-question"></i> <strong>Estimated End</strong></div>
+            
+            <div>
+                <span class="detail-icon">
+                    <svg width="24" height="24"><use href="#detail-icon"/></svg>
+                    <span class="detail-tooltip">Expected completion date of the project.</span>
+                </span>
+                <strong>Estimated End</strong>
+            </div>
             <div>{{ project.estimated_end_date|date:'F d, Y' }}</div>
 
         </div>
@@ -279,23 +149,23 @@
             {% csrf_token %}
             <div class="form-group">
                 <label class="form-label">Title <span class="required">*</span></label>
-                <input type="text" name="title" id="edit_project_title" value="{{ project.title }}" required style="flex:1;">
+                <input class="user-details-value" type="text" name="title" id="edit_project_title" value="{{ project.title }}" required style="flex:1;">
             </div>
 
             <div class="form-grid-2x2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0px 30px;">
                 <div class="form-group">
                     <label class="form-label">Start Date <span class="required">*</span></label>
-                    <input type="date" name="start_date" id="edit_project_start_date" value="{{ project.start_date|date:'Y-m-d' }}" style="flex:1;">
+                    <input class="user-details-value" type="date" name="start_date" id="edit_project_start_date" value="{{ project.start_date|date:'Y-m-d' }}" style="flex:1;">
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">Estimated End <span class="required">*</span></label>
-                    <input type="date" name="estimated_end_date" id="edit_project_end_date" value="{{ project.estimated_end_date|date:'Y-m-d' }}" style="flex:1;">
+                    <input class="user-details-value" type="date" name="estimated_end_date" id="edit_project_end_date" value="{{ project.estimated_end_date|date:'Y-m-d' }}" style="flex:1;">
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">Agenda <span class="required">*</span></label>
-                    <select name="agenda" id="edit_project_agenda" style="flex:1;">
+                    <select class="user-details-value" name="agenda" id="edit_project_agenda" style="flex:1;">
                         {% for agenda in agendas %}
                             <option value="{{ agenda.id }}" {% if project.agenda and project.agenda.id == agenda.id %}selected{% endif %}>{{ agenda.name }}</option>
                         {% endfor %}
@@ -304,7 +174,7 @@
 
                 <div class="form-group">
                     <label class="form-label">Project Type <span class="required">*</span></label>
-                    <select name="project_type" id="edit_project_type" required style="flex:1;">
+                    <select class="user-details-value" name="project_type" id="edit_project_type" required style="flex:1;">
                         {% for val, label in project.PROJECT_TYPE_CHOICES %}
                             <option value="{{ val }}" {% if project.project_type == val %}selected{% endif %}>{{ label }}</option>
                         {% endfor %}
@@ -316,7 +186,7 @@
                 <label class="form-label">SDGs <span class="required">*</span></label>
                 <div id="edit-sdgs-tag-row" class="college-row" data-selected-sdgs="{% for sdg in project.sdgs.all %}{{ sdg.id }}{% if not forloop.last %},{% endif %}{% endfor %}"></div>
                 <!-- Hidden select template for SDG options -->
-                <select id="edit-sdgs-options-template" style="display:none;">
+                <select class="user-details-value" id="edit-sdgs-options-template" style="display:none;">
                     {% for sdg in all_sdgs %}
                         <option value="{{ sdg.id }}">{{ sdg.name }}</option>
                     {% endfor %}
@@ -326,27 +196,27 @@
             <div class="form-grid-2x2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0px 30px;">
                 <div class="form-group">
                     <label class="form-label">Beneficiary <span class="required">*</span></label>
-                    <input type="text" name="primary_beneficiary" id="edit_project_beneficiary" value="{{ project.primary_beneficiary }}" style="flex:1;">
+                    <input class="user-details-value" type="text" name="primary_beneficiary" id="edit_project_beneficiary" value="{{ project.primary_beneficiary }}" style="flex:1;">
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">Expected Events <span class="required">*</span></label>
-                    <input type="number" name="estimated_events" id="edit_project_events" value="{{ project.estimated_events }}" style="flex:1;">
+                    <input class="user-details-value" type="number" name="estimated_events" id="edit_project_events" value="{{ project.estimated_events }}" style="flex:1;">
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">Location <span class="required">*</span></label>
-                    <input type="text" name="primary_location" id="edit_project_location" value="{{ project.primary_location }}" style="flex:1;">
+                    <input class="user-details-value" type="text" name="primary_location" id="edit_project_location" value="{{ project.primary_location }}" style="flex:1;">
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">Expected Trained Individuals <span class="required">*</span></label>
-                    <input type="number" name="estimated_trainees" id="edit_project_trainees" value="{{ project.estimated_trainees }}" style="flex:1;">
+                    <input class="user-details-value" type="number" name="estimated_trainees" id="edit_project_trainees" value="{{ project.estimated_trainees }}" style="flex:1;">
                 </div>
 
-            </div> <div class="form-actions" style="justify-content:flex-end;">
-                <button type="button" class="back-btn" id="cancel-edit-project-modal">Cancel</button>
-                <button type="submit" class="submit-btn">Save Changes</button>
+            </div> <div class="form-actions" style="justify-content:center;">
+                <button type="button" class="back-btn back" id="cancel-edit-project-modal">Cancel</button>
+                <button type="submit" class="submit-btn save">Save Changes</button>
             </div>
         </form>
     </div>
@@ -359,6 +229,11 @@
     <!-- Add Icon -->
     <symbol id="icon-add" viewBox="0 0 16 16">
         <path d="M6.80039 14.4004C6.80039 14.7187 6.92682 15.0239 7.15186 15.2489C7.37691 15.474 7.68213 15.6004 8.00039 15.6004C8.31865 15.6004 8.62388 15.474 8.84892 15.2489C9.07396 15.0239 9.20039 14.7187 9.20039 14.4004V9.20039H14.4004C14.7187 9.20039 15.0239 9.07396 15.2489 8.84892C15.474 8.62388 15.6004 8.31865 15.6004 8.00039C15.6004 7.68213 15.474 7.37691 15.2489 7.15186C15.0239 6.92682 14.7187 6.80039 14.4004 6.80039H9.20039V1.60039C9.20039 1.28213 9.07396 0.976906 8.84892 0.751863C8.62388 0.526819 8.31865 0.400391 8.00039 0.400391C7.68213 0.400391 7.37691 0.526819 7.15186 0.751863C6.92682 0.976906 6.80039 1.28213 6.80039 1.60039V6.80039H1.60039C1.28213 6.80039 0.976906 6.92682 0.751863 7.15186C0.526819 7.37691 0.400391 7.68213 0.400391 8.00039C0.400391 8.31865 0.526819 8.62388 0.751863 8.84892C0.976906 9.07396 1.28213 9.20039 1.60039 9.20039H6.80039V14.4004Z" fill="black"/>
+    </symbol>
+    
+    <symbol xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info-circle" id="detail-icon" viewBox="0 0 16 16">
+        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+        <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
     </symbol>
 
 </svg>

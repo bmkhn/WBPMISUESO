@@ -40,22 +40,30 @@
 					<textarea class="user-details-value" name="body" id="id_body">{{ form.body.value|default:'' }}</textarea>
 				</div>
 
-
-			<div class="form-group">
-				<label class="user-details-label" for="id_cover_photo">Attach Cover Photo:</label>
-				<div class="upload-area" onclick="document.getElementById('id_cover_photo').click()">
-					<svg class="upload-icon"><use href="#icon-upload"></use></svg>
-					<span class="upload-text">Click to upload</span>
-					<input class="file-input user-details-value" type="file" name="cover_photo" id="id_cover_photo" style="display: none;" accept="image/jpeg,image/png,image/jpg,image/gif,image/webp" value="{{ form.cover_photo.value|default:'' }}">
-				</div>
-				
-				<div class="file-preview" id="file-preview" style="display: none;">
-					<div class="file-info">
-						<svg width="16" height="16"><use href="#icon-upload"></use></svg>
-						<span id="file-name"></span>
+				<div class="form-group">
+					<label class="user-details-label" for="id_cover_photo">Attach Cover Photo:</label>
+					<div class="upload-area" onclick="document.getElementById('id_cover_photo').click()">
+						<svg class="upload-icon"><use href="#icon-upload"></use></svg>
+						<span class="upload-text">Click to upload</span>
+						<input class="file-input user-details-value" type="file" name="cover_photo" id="id_cover_photo" style="display: none;" accept="image/*" value="{{ form.cover_photo.value|default:'' }}">
 					</div>
-				</div> 
-			</div>
+					<div class="file-preview" id="file-preview" style="display: none; margin-top: 5px;">
+						<div class="file-info">
+							<svg width="16" height="16"><use href="#icon-upload"></use></svg>
+							<span id="file-name"></span>
+						</div>
+					</div> 
+				</div>
+
+				<div class="form-group">
+					<label class="user-details-label" for="id_scheduled_at">Schedule Post:</label>
+					<div class="schedule-button" onclick="toggleSchedule()">
+						<svg class="clock-icon"><use href="#icon-clock"></use></svg>
+						<span id="schedule-text">Now</span>
+					</div>
+					<input class="form-input user-details-value" type="hidden" name="scheduled_at" id="id_scheduled_at" value="{{ now|date:'Y-m-d\\TH:i' }}">
+				</div>
+			</div> 
 
 			<div class="form-group">
 				<label class="user-details-label">Schedule Post:</label>
@@ -89,91 +97,136 @@
 </svg>
 
 <script>
-	// Form Validation for required fields and scheduled_at
-	document.querySelector('.announcement-form').addEventListener('submit', function(e) {
-		let valid = true;
-		const titleInput = document.getElementById('id_title');
-		const bodyInput = document.getElementById('id_body');
-		const scheduledInput = document.getElementById('id_scheduled_at');
+    // Form Validation (Keep as is)
+    document.querySelector('.announcement-form').addEventListener('submit', function(e) {
+        let valid = true;
+        const titleInput = document.getElementById('id_title');
+        const bodyInput = document.getElementById('id_body');
+        const scheduledInput = document.getElementById('id_scheduled_at');
 
-		// Remove previous error states
-		titleInput.classList.remove('error-input');
-		bodyInput.classList.remove('error-input');
-		if (scheduledInput) scheduledInput.classList.remove('error-input');
-		let titleError = document.getElementById('title-error');
-		let bodyError = document.getElementById('body-error');
-		let scheduledError = document.getElementById('scheduled-error');
-		if (titleError) titleError.remove();
-		if (bodyError) bodyError.remove();
-		if (scheduledError) scheduledError.remove();
+        // Remove previous error states
+        titleInput.classList.remove('error-input');
+        bodyInput.classList.remove('error-input');
+        if (scheduledInput) scheduledInput.classList.remove('error-input');
+        let titleError = document.getElementById('title-error');
+        let bodyError = document.getElementById('body-error');
+        let scheduledError = document.getElementById('scheduled-error');
+        if (titleError) titleError.remove();
+        if (bodyError) bodyError.remove();
+        if (scheduledError) scheduledError.remove();
 
-		if (!titleInput.value.trim()) {
-			valid = false;
-			titleInput.classList.add('error-input');
-			const err = document.createElement('div');
-			err.id = 'title-error';
-			err.textContent = 'Title is required.';
-			err.style.color = '#E53E3E';
-			err.style.fontSize = '0.95rem';
-			err.style.marginTop = '0.25rem';
-			titleInput.parentNode.appendChild(err);
-		}
-		if (!bodyInput.value.trim()) {
-			valid = false;
-			bodyInput.classList.add('error-input');
-			const err = document.createElement('div');
-			err.id = 'body-error';
-			err.textContent = 'Body is required.';
-			err.style.color = '#E53E3E';
-			err.style.fontSize = '0.95rem';
-			err.style.marginTop = '0.25rem';
-			bodyInput.parentNode.appendChild(err);
-		}
-		if (scheduledInput && scheduledInput.type !== 'hidden' && scheduledInput.value) {
-			const scheduledDate = new Date(scheduledInput.value);
-			const now = new Date();
-			if (scheduledDate < now) {
-				valid = false;
-				scheduledInput.classList.add('error-input');
-				const err = document.createElement('div');
-				err.id = 'scheduled-error';
-				err.textContent = 'You cannot select a past date/time for scheduling.';
-				err.style.color = '#E53E3E';
-				err.style.fontSize = '0.95rem';
-				err.style.marginTop = '0.25rem';
-				scheduledInput.parentNode.appendChild(err);
-			}
-		}
-		if (!valid) {
-			e.preventDefault();
-		}
-	});
+        if (!titleInput.value.trim()) {
+            valid = false;
+            titleInput.classList.add('error-input');
+            const err = document.createElement('div');
+            err.id = 'title-error';
+            err.textContent = 'Title is required.';
+            err.style.color = '#E53E3E';
+            err.style.fontSize = '0.95rem';
+            err.style.marginTop = '0.25rem';
+            titleInput.parentNode.appendChild(err);
+        }
+        if (!bodyInput.value.trim()) {
+            valid = false;
+            bodyInput.classList.add('error-input');
+            const err = document.createElement('div');
+            err.id = 'body-error';
+            err.textContent = 'Body is required.';
+            err.style.color = '#E53E3E';
+            err.style.fontSize = '0.95rem';
+            err.style.marginTop = '0.25rem';
+            bodyInput.parentNode.appendChild(err);
+        }
+        if (scheduledInput && scheduledInput.type !== 'hidden' && scheduledInput.value) {
+            const scheduledDate = new Date(scheduledInput.value);
+            const now = new Date();
+            // Allow scheduling for the current minute or future
+            now.setSeconds(0, 0); // Ignore seconds/milliseconds for comparison
+            if (scheduledDate < now) {
+                valid = false;
+                scheduledInput.classList.add('error-input');
+                const err = document.createElement('div');
+                err.id = 'scheduled-error';
+                err.textContent = 'You cannot select a past date/time for scheduling.';
+                err.style.color = '#E53E3E';
+                err.style.fontSize = '0.95rem';
+                err.style.marginTop = '0.25rem';
+                // Insert error message after the input's direct parent if it's inside the schedule-button div
+                const parentContainer = scheduledInput.closest('.form-group');
+                 if (parentContainer) {
+                     parentContainer.appendChild(err);
+                 } else {
+                     scheduledInput.parentNode.appendChild(err);
+                 }
+            }
+        }
+        if (!valid) {
+            e.preventDefault();
+        }
+    });
 
-	// File Upload Handling
-	document.getElementById('id_cover_photo').addEventListener('change', function(e) {
-		const file = e.target.files[0];
-		const preview = document.getElementById('file-preview');
-		if (file) {
-			document.getElementById('file-name').textContent = file.name;
-			preview.style.display = 'block';
-		} else {
-			preview.style.display = 'none';
-		}
-	});
+    // MODIFIED File Upload Handling
+    document.getElementById('id_cover_photo').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        const filePreview = document.getElementById('file-preview'); // Get the preview element
+        const fileNameSpan = document.getElementById('file-name'); // Get the span for the name
 
-	// Schedule Handling - Checkbox toggle
-	document.getElementById('publish_now').addEventListener('change', function(e) {
-		const scheduleInput = document.getElementById('id_scheduled_at');
-		
-		if (e.target.checked) {
-			scheduleInput.style.display = 'none';
-			scheduleInput.required = false;
-			scheduleInput.value = '';
-		} else {
-			scheduleInput.style.display = 'block';
-			scheduleInput.required = true;
-		}
-	});
+        if (file && filePreview && fileNameSpan) {
+            fileNameSpan.textContent = file.name;
+            filePreview.style.display = 'block'; 
+        } else if (filePreview) {
+            filePreview.style.display = 'none';
+            if (fileNameSpan) {
+                 fileNameSpan.textContent = ''; 
+            }
+        }
+    });
+
+    // Schedule Handling (Keep as is)
+    function toggleSchedule() {
+        const scheduleText = document.getElementById('schedule-text');
+        const scheduleInput = document.getElementById('id_scheduled_at');
+        const scheduleButton = scheduleText.closest('.schedule-button'); // Get the button div
+
+        if (!scheduleInput || !scheduleText || !scheduleButton) return; // Safety check
+
+        if (scheduleInput.type === 'hidden') {
+            scheduleText.textContent = 'Scheduled for:'; // Change text
+            scheduleInput.type = 'datetime-local';
+            scheduleInput.style.display = 'inline-block';
+            scheduleButton.parentNode.insertBefore(scheduleInput, scheduleButton.nextSibling);
+            scheduleInput.required = true;
+
+             // Set min attribute to prevent selecting past dates/times
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset()); // Adjust for local timezone
+            now.setSeconds(0,0); // Optional: zero out seconds/ms
+            const minDateTime = now.toISOString().slice(0, 16);
+            scheduleInput.min = minDateTime;
+
+        } else {
+            scheduleText.textContent = 'Now'; 
+            scheduleInput.type = 'hidden';
+            scheduleInput.style.display = 'none';
+            scheduleInput.required = false;
+            scheduleInput.value = '';
+            let scheduledError = document.getElementById('scheduled-error');
+            if (scheduledError) scheduledError.remove();
+            scheduleInput.classList.remove('error-input');
+        }
+    }
+
+    // Set initial state for schedule input based on form value (if editing)
+    document.addEventListener('DOMContentLoaded', function() {
+        const scheduleInput = document.getElementById('id_scheduled_at');
+        if (scheduleInput && scheduleInput.value && scheduleInput.type === 'hidden') {
+        }
+         // Ensure initial value is cleared if starting fresh and hidden
+        else if (scheduleInput && scheduleInput.type === 'hidden') {
+             scheduleInput.value = '';
+        }
+    });
+
 </script>
 
 </body>

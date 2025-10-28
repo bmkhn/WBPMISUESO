@@ -291,41 +291,50 @@ body {
 }
 
 .archive-card {
-    background-color: #ffffff;
-    border: 1px solid #E0E0E0; 
-    width: 12.5rem; 
-    height: 10rem;
-    border-radius: 1rem;
-    padding: 2rem;
-    text-align: center;
+    background: linear-gradient(135deg, #28a745, #ffc107);
+    color: white;
     text-decoration: none;
-    color: inherit;
-    transition: all 0.3s ease;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 150px; /* Ensure a base height */
+    overflow: hidden;
 }
-
 .archive-card:hover {
-    background-color: #f2f2f2;
-    border-color: #ff9900;
+    background: linear-gradient(135deg, #218838, #e0a800);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.25);
     transform: translateY(-3px);
-    box-shadow: 0 6px 15px #ff9900;
-    cursor: pointer;
 }
-
 .archive-card .title {
-    font-size: 1.3rem;
+    height: 70%; /* Title area takes 70% */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
     font-weight: 700;
-    color: #00681a; /* Use primary color for emphasis */
-    margin-bottom: 8px;
+    line-height: 1.1; /* Keep line height tight */
+    overflow: hidden; /* Hide overflow during resize */
+    padding: 5px; /* Minimal padding */
+    word-break: break-word;
+    /* Start large, JS will reduce if needed */
+    font-size: 30px; /* Start fairly large (pixels are easier for JS loop) */
 }
-
 .archive-card .projects-info {
-    font-size: 0.9rem;
-    color: #808080;
+    height: 30%; /* Info area takes 30% */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 500;
+    font-size: 0.95rem;
+    background: rgba(0,0,0,0.15);
+    padding: 5px;
 }
-
-.archive-card .projects-count {
-    font-weight: 600;
-    color: #333333;
+ 
+button:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 .user-table {
@@ -679,4 +688,24 @@ body {
     border: 1px solid #ccc;
     border-radius: 4px;
     box-sizing: border-box;
+}
+.breadcrumb-nav {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #333;
+    padding: 10px 0;
+}
+.breadcrumb-nav .breadcrumb-item a {
+    color: #444; /* Link color */
+    text-decoration: none;
+    font-weight: 700;
+}
+.breadcrumb-nav .breadcrumb-item.active {
+    color: #555; /* Active/current page color */
+    font-weight: 700;
+}
+.breadcrumb-nav .breadcrumb-separator {
+    margin: 0 10px;
+    color: #888;
 }

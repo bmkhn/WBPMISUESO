@@ -23,7 +23,6 @@ class MeetingEvent(models.Model):
 	status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="SCHEDULED")
 
 	def save(self, *args, **kwargs):
-		# Only set updated_at if this is an update (object already exists)
 		if self.pk:
 			from django.utils import timezone
 			self.updated_at = timezone.now()
@@ -41,24 +40,22 @@ def log_meeting_event_action(sender, instance, created, **kwargs):
 	from system.logs.models import LogEntry
 	from django.urls import reverse
 	
-	# Skip logging if this is being called from within a signal to avoid duplicates
 	if hasattr(instance, '_skip_log'):
 		return
 	action = 'CREATE' if created else 'UPDATE'
 	
-	# URL to calendar with date parameter to jump to the event's date
-	# Format the date as YYYY-MM-DD for the query parameter
 	event_date = instance.datetime.strftime('%Y-%m-%d')
 	url = f"{reverse('calendar')}?date={event_date}"
 	
-	# Create better detail messages
 	if created:
 		details = f"New meeting scheduled for {instance.datetime.strftime('%B %d, %Y at %I:%M %p')}"
 	else:
 		details = f"Meeting has been updated"
 	
+	log_user = instance.updated_by if instance.updated_by else instance.created_by
+	
 	LogEntry.objects.create(
-		user=instance.created_by if created else instance.updated_by,
+		user=log_user,
 		action=action,
 		model='MeetingEvent',
 		object_id=instance.id,
@@ -72,8 +69,9 @@ def log_meeting_event_action(sender, instance, created, **kwargs):
 @receiver(post_delete, sender=MeetingEvent)
 def log_meeting_event_delete(sender, instance, **kwargs):
 	from system.logs.models import LogEntry
+	log_user = instance.updated_by if instance.updated_by else instance.created_by
 	LogEntry.objects.create(
-		user=instance.updated_by,
+		user=log_user,
 		action='DELETE',
 		model='MeetingEvent',
 		object_id=instance.id,

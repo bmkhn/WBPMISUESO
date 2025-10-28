@@ -1,147 +1,14 @@
 {% extends "projects/base_project_profile.html" %}
 {% block profile_content %}
-
-<style>
-    .evaluation-list {
-        display: flex;
-        flex-direction: column;
-        gap: 2rem;
-        margin-top: 1rem;
-    }
-
-    .evaluation-card {
-        background: #fff;
-        border-radius: 0.75rem;
-        padding: 1.5rem;
-        box-shadow: 0 0 0 1px #e5e7eb;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .evaluation-header {
-        display: flex;
-        align-items: center;
-        gap: 1.5rem;
-        margin-bottom: 0.5rem;
-    }
-
-    .stars {
-        font-size: 1.3rem;
-        color: #FFD700;
-        letter-spacing: 0.1rem;
-    }
-
-    .evaluator {
-        font-weight: 500;
-        color: #245F3E;
-    }
-
-    .eval-date {
-        color: #888;
-        font-size: 0.95rem;
-    }
-
-    .evaluation-comment {
-        margin-top: 0.5rem;
-        font-size: 1.05rem;
-        color: #333;
-    }
-
-    .evaluation-edited {
-        margin-top: 0.5rem;
-        font-size: 0.9rem;
-        color: #888;
-        font-style: italic;
-}
-</style>
-
-<style>
-    .form-group {
-		display: flex;
-		align-items: flex-start;
-		gap: 1rem;
-        margin-bottom: 0.5rem;
-	}
-
-	.form-label {
-		font-weight: 600;
-		color: #374151;
-		font-size: 0.95rem;
-	}
-
-    .required {
-        color: #DC2626;
-    }
-
-    .form-actions {
-        display: flex;
-        gap: 1rem;
-        margin-top: 1.5rem;
-    }
-
-    .submit-btn {
-        background-color: #0A6C44;
-        color: white;
-        padding: 10px 20px;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 1rem;
-        font-weight: 600;
-    }
-
-    .submit-btn:hover {
-        background-color: #07532F;
-    }
-
-    .back-btn {
-        background-color: #E5E7EB;
-        color: #374151;
-        padding: 10px 20px;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 1rem;
-        font-weight: 600;
-    }
-
-    .back-btn:hover {
-        background-color: #D1D5DB;
-    }
-
-    textarea {
-        resize: none;
-    }
-</style>
-
-<style>
-    .eval-modal {
-        position: fixed;
-        z-index: 9999;
-        left: 0; top: 0; width: 100vw; height: 100vh;
-        background: rgba(0,0,0,0.25);
-        display: flex; align-items: center; justify-content: center;
-    }
-    .eval-modal-content {
-        background: #fff;
-        border-radius: 12px;
-        padding: 2rem 2rem 2rem 2rem;
-        min-width: 400px;
-        max-width: 95vw;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-        position: relative;
-    }
-    .eval-modal-content h2 { margin-top:0; font-size:1.5rem; color:#000; font-weight: 400; }
-    .eval-modal-content .close {
-        position: absolute; right: 1.5rem; top: 1.25rem;
-        font-size: 1.5rem; color: #888; cursor: pointer;
-    }
-</style>
+{% load static %} 
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
+<link href="{% static 'shared/projects/view.css' %}" rel="stylesheet">
 
 <div class="card-header">
     <h3>Evaluations</h3>
     {% if request.user.role in ADMIN_ROLES %}
-    <button class="admin-button" id="open-eval-modal-header" type="button">Add Evaluation</button>
+    <button class="admin-button edit" id="open-eval-modal-header" type="button">Add Evaluation</button>
     {% endif %}
 </div>
 <div class="card-body">
@@ -174,8 +41,8 @@
     </div>
 </div>
 
-<div id="eval-modal" class="eval-modal" style="display:none;">
-    <div class="eval-modal-content">
+<div id="eval-modal" class="modal" style="display:none;">
+    <div class="modal-content eval">
         <span class="close" id="close-eval-modal">&times;</span>
         <h2>Add Evaluation</h2>
         <form id="eval-form" method="post" enctype="multipart/form-data" action="">
@@ -191,11 +58,11 @@
             </div>
             <div class="form-group">
                 <label class="form-label" for="id_comment">Comment</label>
-                <textarea name="comment" id="id_comment" rows="3" style="width:100%;border-radius:8px;border:1px solid #e5e7eb;padding:0.75rem;font-size:1rem;"></textarea>
+                <textarea class="user-details-value" name="comment" id="id_comment" rows="3" style="width:100%;border-radius:8px;border:1px solid #e5e7eb;padding:0.75rem;font-size:1rem;"></textarea>
             </div>
             <div class="form-actions" style="justify-content:flex-end;">
-                <button type="button" class="back-btn" id="cancel-eval-modal">Cancel</button>
-                <button type="submit" class="submit-btn">Submit</button>
+                <button type="button" class="admin-button not" id="cancel-eval-modal">Cancel</button>
+                <button type="submit" class="admin-button edit">Submit</button>
             </div>
         </form>
     </div>

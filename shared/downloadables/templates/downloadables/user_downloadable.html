@@ -1,6 +1,6 @@
 {% extends "base_public.html" %}
 {% block content %}
-
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,316 +9,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:700&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
+<link href="{% static 'shared/downloadable/styles.css' %}" rel="stylesheet">
+<link href="{% static 'user/announce.css' %}" rel="stylesheet">
 
-<!-- Downloadables Styles -->
-<style>
-	body{
-		background: #F9F9F9;
-        font-family: 'Inter', sans-serif;
-	}
-
-	.downloadable-container{
-        display: flex;
-        flex-direction: row;
-        gap: 30px;
-        margin: 70px;
-	}
-
-	.left{
-        display: flex;
-        flex-direction: column;
-        gap: 40px;
-        flex: 2;
-	}
-
-	.left__title{
-		font-size: 33px;   
-		font-weight: 500;
-		color: #000000;     
-		line-height: 1.25;
-		margin: 0;
-	}
-
-	.item-group {
-		display: grid;
-		grid-template-columns: repeat(2, 1fr);
-		gap: 20px;
-		align-items: stretch;
-		justify-items: stretch;
-		width: 100%;
-	}
-
-	.item {
-		display: flex;
-		flex-direction: column;
-		gap: 15px;
-		width: 100%;
-		box-sizing: border-box;
-		background: #fff;
-		border-radius: 12px;
-		box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-		padding: 18px;
-		transition: box-shadow 0.2s;
-	}
-
-	.item:hover {
-		box-shadow: 0 4px 16px rgba(0,0,0,0.10);
-	}
-
-	.item__thumb{
-		width: 100%;
-		aspect-ratio: 16 / 9;
-		background: #E9E9E9;
-		border-radius: 12px;
-	}
-
-	.item__title{
-		font-weight: 600;
-		font-size: 18px;
-		margin: 0;
-	}
-
-	.item__desc{
-		font-size: 14px;
-		margin: 0;
-		color: #333;
-	}
-</style>
-
-<!-- Announcement Section -->
-<style>
-    .right-container {
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
-        flex: 1;
-    }
-
-    .announce-text {
-        font-family: 'Inter', sans-serif;
-        font-weight: 400;
-        font-size: 28px;
-    }
-
-    .announce-box {
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
-    }
-
-    .announce-item {
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
-        border: 0.7px solid #DDE1E6;
-    }
-
-    .announce-pic {
-        background: #ECECEC;
-        height: 200px;
-        border-bottom: 0.7px solid #DDE1E6;
-    }
-
-    .announce-date {
-        padding: 20px 20px 20px 20px;
-        font-family: 'Inter', sans-serif;
-        font-weight: 500;
-        font-size: 14px;
-        color: #E37910;
-    }
-
-    .announce-title {
-        padding: 0 20px 20px 20px;
-        font-family: 'Inter', sans-serif;
-        font-weight: 700;
-        font-size: 20px;
-        color: #625C56;
-    }
-
-    .announce-more {
-        font-family: 'Inter', sans-serif;
-        font-weight: 400;
-        font-size: 20px;
-        color: #2EA8FF;
-		text-decoration: none;
-        margin-top: 10px;
-        cursor: pointer;
-    }
-
-    .empty {
-        padding-top: 20px;
-        text-align: center;
-    }
-</style>
-
-<!-- Search Bar Styles -->
-<style>
-	.search-container {
-		width: 100%;
-		display: flex;
-		gap: 10px;
-	}
-
-	.search-bar {
-		width: 100%;
-		height: 52px;
-		background: #F2F4F8;
-		display: flex;
-		align-items: center;
-		padding: 0 16px;
-		border-bottom: 1.09px solid #535353;
-		border-radius: 8px;
-		box-sizing: border-box;
-	}
-
-	.search-bar input {
-		flex: 1;
-		border: none;
-		outline: none;
-		background: transparent;
-		font-size: 18px;
-		font-family: 'Inter', sans-serif;
-		font-weight: 400;
-		color: #5A5252;
-		padding: 0 10px;
-	}
-</style>
-
-<!-- Sort/Filter Styles -->
-<style>
-	.filter-dropdown {
-		z-index: 1000;
-		background: white;
-		border: 1px solid #e5e7eb;
-		border-radius: 12px;
-		box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-		padding: 24px 32px;
-		display: none;
-		position: absolute;
-		top: 315px;
-		right: 36.5%;
-	}
-	
-	.filter-grid {
-		display: grid;
-		grid-gap: 24px;
-		grid-template-columns: repeat(2, 1fr); 
-	}
-
-	.filter-dropdown label {
-		font-weight: 500;
-		color: #374151;
-		display: flex;
-		flex-direction: column;
-	}
-
-	.filter-dropdown select,
-	.filter-dropdown input[type="date"] {
-		width: 100%;
-		margin-top: 6px;
-		border: 1px solid #e5e7eb;
-		border-radius: 6px;
-		padding: 6px 10px;
-		font-size: 15px;
-		font-family: 'Inter', Arial, sans-serif;
-		background: #f9f9f9;
-		color: #374151;
-	}
-
-	.filter-dropdown select {
-		appearance: none;
-		-webkit-appearance: none;
-		-moz-appearance: none;
-		padding-right: 2rem;
-		background: url("data:image/svg+xml;utf8,<svg width='16' height='11' viewBox='0 0 16 11' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M7.99976 7.19417L13.9025 1.29147C14.0125 1.17758 14.144 1.08674 14.2895 1.02424C14.435 0.961746 14.5915 0.92885 14.7498 0.927474C14.9082 0.926098 15.0652 0.95627 15.2117 1.01623C15.3583 1.07619 15.4914 1.16473 15.6034 1.27669C15.7153 1.38866 15.8039 1.5218 15.8638 1.66835C15.9238 1.8149 15.954 1.97192 15.9526 2.13026C15.9512 2.28859 15.9183 2.44506 15.8558 2.59055C15.7933 2.73604 15.7025 2.86762 15.5886 2.97762L8.84283 9.72339C8.61921 9.94694 8.31596 10.0725 7.99976 10.0725C7.68356 10.0725 7.38031 9.94694 7.15669 9.72339L0.41092 2.97762C0.297028 2.86762 0.206183 2.73604 0.143687 2.59055C0.0811915 2.44506 0.0482959 2.28859 0.04692 2.13026C0.0455441 1.97192 0.0757155 1.8149 0.135674 1.66835C0.195632 1.5218 0.284176 1.38866 0.39614 1.27669C0.508103 1.16473 0.641244 1.07619 0.787794 1.01623C0.934343 0.95627 1.09137 0.926098 1.2497 0.927474C1.40804 0.92885 1.56451 0.961746 1.71 1.02424C1.85548 1.08674 1.98706 1.17758 2.09706 1.29147L7.99976 7.19417Z' fill='%23374151'/></svg>")
-        		no-repeat right 0.75rem center;
-  		background-size: 13px 8px;
-	}
-
-	.filter-actions {
-		display: flex;
-		justify-content: flex-end;
-		gap: 10px;
-		margin-top: 24px;
-	}
-
-	.filter-apply {
-		background: #063A1C;
-		color: white;
-		padding: 10px 28px;
-		border-radius: 8px;
-		font-size: 16px;
-		font-family: 'Inter', Arial, sans-serif;
-		font-weight: 500;
-		cursor: pointer;
-		transition: background 0.2s;
-		border: none;
-	}
-
-	.filter-close {
-		background: #e5e7eb;
-		color: #374151;
-		padding: 10px 18px;
-		border-radius: 8px;
-		font-size: 16px;
-		font-family: 'Inter', Arial, sans-serif;
-		font-weight: 500;
-		cursor: pointer;
-		border: none;
-	}
-</style>
-
-<!-- Pagination Styles -->
-<style>
-	.pagination-container {
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		margin-top: 3rem;
-		gap: 0.5rem;
-	}
-
-	.pagination-button {
-		padding: 0.75rem 1rem;
-		border: 1px solid #E5E7EB;
-		background: white;
-		color: #4B5563;
-		border-radius: 8px;
-		cursor: pointer;
-		transition: all 0.2s ease;
-		font-weight: 500;
-		text-decoration: none;
-	}
-
-	.pagination-button:hover {
-		background: #F3F4F6;
-		border-color: #0A6C44;
-		color: #0A6C44;
-	}
-
-	.pagination-button.active {
-		background: #0A6C44;
-		color: white;
-		border-color: #0A6C44;
-	}
-
-	.pagination-button:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
-	}
-
-	.page-info {
-		margin: 0 1rem;
-		color: #4B5563;
-		font-weight: 500;
-	}
-</style>
-
-</head>
-<body>
+<body class="lbody">
 	<div class="downloadable-container">
 		<div class="left">
-			<h1 class="left__title">Downloadables</h1>
 	
 			<!-- Search Bar -->
 			<div class="search-container">
@@ -380,15 +77,18 @@
 								{% endif %}
 							</div>
 
-
-						<!-- Buttons Row -->
-						<div style="display:flex;justify-content:flex-end;gap:10px;margin-top:24px;">
-						<button type="submit" class="filter-apply">Apply</button>
-						<button type="button" id="closeFilter" class="filter-close">Clear Filters</button>
+							<!-- Buttons Row -->
+							<div style="display:flex;justify-content:flex-end;gap:10px;margin-top:24px;">
+							<button type="submit" class="filter-apply">Apply</button>
+							<button type="button" id="closeFilter" class="filter-close">Close</button>
+							</div>
 						</div>
-					</div>
-			</form>
-		</div>			<!-- Downloadable Items Grid -->
+				</form>
+			</div>
+			
+			<h1 class="left__title">Downloadables</h1>
+
+			<!-- Downloadable Items Grid -->
 			<div class="item-group">
 				{% for downloadable in page_obj %}
 				<article class="item" style="position:relative;">
@@ -424,35 +124,6 @@
 				<p style="text-align: center;">No downloadable files found.</p>
 				{% endfor %}
 			</div>
-
-			<!-- Pagination -->
-			<div class="pagination-container">
-				{% if page_obj.has_previous %}
-					<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page=1">First</a>
-					<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a>
-				{% else %}
-					<button class="pagination-button" disabled>First</button>
-					<button class="pagination-button" disabled>Previous</button>
-				{% endif %}
-
-				{% for num in page_range %}
-					{% if num == page_obj.number %}
-						<button class="pagination-button active" disabled>{{ num }}</button>
-					{% else %}
-						<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ num }}">{{ num }}</a>
-					{% endif %}
-				{% endfor %}
-
-				{% if page_obj.has_next %}
-					<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.next_page_number }}">Next</a>
-					<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ paginator.num_pages }}">Last</a>
-				{% else %}
-					<button class="pagination-button" disabled>Next</button>
-					<button class="pagination-button" disabled>Last</button>
-				{% endif %}
-
-				<span class="page-info">Page {{ page_obj.number }} of {{ paginator.num_pages }}</span>
-			</div>
 		</div>
 
 		<!-- Right Container -->
@@ -478,6 +149,60 @@
 			<a href="{% url 'announcement_dispatcher' %}" class="announce-more">View More Announcements →</a>
         </div>
 	</div>
+
+
+		<!-- Right Container -->
+        <div class="right-container">
+			<div class="announce-text">Latest Announcements</div>
+			<div class="announce-box">
+				{% for announcement in latest_announcements %}
+				<div class="announce-item">
+					<a href="{% url 'announcement_details' announcement.id %}" style="text-decoration:none;color:inherit;display:block;">
+						<div class="announce-pic">
+							{% if announcement.cover_photo %}
+								<img src="{{ announcement.cover_photo.url }}" alt="Cover Photo" style="width:100%;height:100%;object-fit:cover;" />
+							{% endif %}
+						</div>
+						<div class="announce-details">
+							<div class="announce-date">{{ announcement.published_at|date:"F d, Y" }}</div>
+							<div class="announce-title">{{ announcement.title }}</div>
+						</div>
+					</a>
+				</div>
+				{% empty %}
+				<div class="announce-item"><div class="announce-title empty">No announcements found.</div></div>
+				{% endfor %}
+			</div>
+			<a href="{% url 'announcement_dispatcher' %}" class="announce-more">View More Announcements →</a>
+        </div>
+	</div>
+	
+<!-- Pagination -->
+<div class="pagination-container">
+	{% if page_obj.has_previous %}
+		<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page=1">First</a>
+		<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a>
+	{% else %}
+		<button class="pagination-button" disabled>First</button>
+		<button class="pagination-button" disabled>Previous</button>
+	{% endif %}
+
+	{% for num in page_range %}
+		{% if num == page_obj.number %}
+			<button class="pagination-button active" disabled>{{ num }}</button>
+		{% else %}
+			<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ num }}">{{ num }}</a>
+		{% endif %}
+	{% endfor %}
+
+	{% if page_obj.has_next %}
+		<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.next_page_number }}">Next</a>
+		<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ paginator.num_pages }}">Last</a>
+	{% else %}
+		<button class="pagination-button" disabled>Next</button>
+		<button class="pagination-button" disabled>Last</button>
+	{% endif %}
+</div>
 
 <!-- SVG Sprite Section -->
 <svg style="display:none;">

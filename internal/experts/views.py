@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from system.users.decorators import role_required
+from system.users.decorators import role_required
 from system.users.models import College, User
 from .ai_team_generator import get_team_generator
 import json
@@ -112,7 +113,7 @@ def experts_view(request):
 
     # Pagination
     page_number = request.GET.get('page', 1)
-    paginator = Paginator(experts, 6)  # 6 items per page for grid view (3x2)
+    paginator = Paginator(experts, 12)  
     page_obj = paginator.get_page(page_number)
     
     # Calculate page range for pagination UI
