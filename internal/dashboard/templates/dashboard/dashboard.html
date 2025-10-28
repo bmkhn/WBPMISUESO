@@ -34,7 +34,7 @@
                 {% endif %}
             </div>
             <div class="container-1B">
-                <div class="quarter-text">This Quarter</div>
+                <div class="quarter-text">Date here</div>
                 <div class="dropdown-arrow">
                     <!-- Simple dropdown arrow SVG -->
                     <svg width="16" height="16" viewBox="0 0 16 16">
@@ -46,23 +46,40 @@
 
         <!-- Overview Section -->
         <div class="overview-section">
-            <div class="overview-text">Overview</div>
             <div class="container-2">
                 <a class="container-2A" href="{% url 'request_dispatcher' %}?status=PENDING">
+                    <div class="card-icon-wrapper">
+                        <div class="circle">
+                            <i class="fas fa-clipboard-list"></i> 
+                        </div>
+                    </div>
                     <div class="container-2A-number">{{ pending_requests.count }}</div>
                     <div class="container-2A-name">Request Pending</div>
                 </a>
                 <a class="container-2A" href="{% url 'project_dispatcher' %}?status=IN_PROGRESS">
+                    <div class="card-icon-wrapper">
+                        <div class="circle">
+                            <i class="fas fa-cogs"></i> 
+                        </div>
+                    </div>
                     <div class="container-2A-number">{{ inprogress_projects.count }}</div>
                     <div class="container-2A-name">Ongoing Projects</div>
                 </a>
                 <a class="container-2A" href="{% url 'experts' %}">
+                    <div class="card-icon-wrapper">
+                        <div class="circle">
+                            <i class="fas fa-users"></i> 
+                        </div>
+                    </div>
                     <div class="container-2A-number">{{ expert_users.count }}</div>
                     <div class="container-2A-name">Experts Active</div>
                 </a>
 
                 {% if request.user.role == "UESO" or request.user.role == "VP" or request.user.role == "DIRECTOR" %}
                 <a class="container-2A" href="{% url 'calendar' %}">
+                    <div class="card-icon-wrapper">
+                        <div class="circle"><i class="fas fa-calendar-alt"></i></div>
+                    </div>
                     <div class="container-2A-number">{{ events_in_calendar }}</div>
                     <div class="container-2A-name">Events in Calendar</div>
                 </a>
@@ -86,28 +103,24 @@
                     </div>
                 </div>
 
-                <div class="mini-calendar-widget">
-                    <div class="mini-calendar-header">
-                        <button class="prev-month" title="Previous Month">
-                            <i class="fas fa-chevron-left"></i>
-                        </button>
-                        <div class="current-month-year">October 2025</div>
-                        <button class="next-month" title="Next Month">
-                            <i class="fas fa-chevron-right"></i>
-                        </button>
-                    </div>
-                    <div class="mini-calendar-body">
-                        <div class="weekdays">
-                            <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+                <div class="calendar-container">
+                    <div class="mini-calendar-widget">
+                        <div class="mini-calendar-header">
+                            <button class="prev-month" title="Previous Month">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <div class="current-month-year">October 2025</div>
+                            <button class="next-month" title="Next Month">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
                         </div>
-                        <div class="days-grid"></div>
+                        <div class="mini-calendar-body">
+                            <div class="weekdays">
+                                <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+                            </div>
+                            <div class="days-grid"></div>
+                        </div>
                     </div>
-                </div>
-
-                <div class="expand-icon-container">
-                    <svg class="expand-icon" width="16" height="16">
-                    <use href="#icon-expand"></use>
-                    </svg>
                 </div>
             </div>
         </div>
