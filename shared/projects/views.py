@@ -11,7 +11,6 @@ import os
 from django.db import models
 from django.db.models import Q, BooleanField, ExpressionWrapper
 
-
 def get_role_constants():
     ADMIN_ROLES = ["VP", "DIRECTOR", "UESO"]
     SUPERUSER_ROLES = ["PROGRAM_HEAD", "DEAN", "COORDINATOR"]
@@ -709,7 +708,7 @@ def project_expenses(request, pk):
         "ADMIN_ROLES": ADMIN_ROLES,
         "SUPERUSER_ROLES": SUPERUSER_ROLES,
         "FACULTY_ROLE": FACULTY_ROLE
-    })
+    }) 
 
 
 @role_required(allowed_roles=["UESO", "VP", "DIRECTOR", "PROGRAM_HEAD", "DEAN", "COORDINATOR", "FACULTY", "IMPLEMENTER"], require_confirmed=True)
@@ -1195,3 +1194,98 @@ def add_project_view(request):
         'campus_choices': campus_choices,
         'logistics_type': logistics_type,
     })
+    
+
+# shared/projects/views.py
+from django.contrib import messages
+from django.db import transaction
+from decimal import Decimal
+
+from .models import Project, FacultyExpense
+from .forms import FacultyExpenseForm
+
+
+@role_required(allowed_roles=["FACULTY", "IMPLEMENTER"], require_confirmed=True)
+def project_addexpenses(request, pk):
+    project = get_object_or_404(Project, pk=pk)
+    base_template = get_templates(request)
+
+    if not (project.faculty.filter(pk=request.user.pk).exists() or \
+            project.implementers.filter(pk=request.user.pk).exists()):
+         messages.error(request, "You are not assigned to this project or role.")
+         return redirect('users:profile') # Adjust redirect if needed
+
+    if request.method == 'POST':
+        form = FacultyExpenseForm(request.POST, request.FILES)
+        if form.is_valid():
+            try:
+                with transaction.atomic():
+                    expense = form.save(commit=False)
+                    expense.project = project
+                    expense.submitted_by = request.user
+                    expense_amount = Decimal(str(expense.amount))
+
+                    if hasattr(project, 'current_budget') and project.current_budget is not None:
+                        current_budget_decimal = Decimal(str(project.current_budget))
+                        if current_budget_decimal >= expense_amount:
+                            project.current_budget = current_budget_decimal - expense_amount
+                            project.save(update_fields=['current_budget'])
+                            expense.save()
+                            messages.success(request, f'Expense of ₱{expense.amount} added. Budget updated.')
+                            return redirect('projects:project_addexpenses', pk=project.pk)
+                        else:
+                            messages.error(request, 'Error: Expense amount (₱{:.2f}) exceeds the current project budget (₱{:.2f}).'.format(expense_amount, current_budget_decimal))
+                    else:
+                        expense.save()
+                        messages.warning(request, f'Expense of ₱{expense.amount} added, but project budget field not found/handled.')
+                        return redirect('projects:project_addexpenses', pk=project.pk)
+
+            except Exception as e:
+                messages.error(request, f"An error occurred saving the expense: {e}")
+        else:
+            messages.error(request, 'Error adding expense. Please check the form details.')
+    else:
+        form = FacultyExpenseForm()
+
+    expense_list = FacultyExpense.objects.filter(project=project).order_by('-date_submitted')
+    paginator = Paginator(expense_list, 10)
+    page_number = request.GET.get('page')
+    expenses_page = paginator.get_page(page_number)
+
+    _, _, FACULTY_ROLES_LIST, _ = get_role_constants()
+
+    context = {
+        'project': project,
+        'base_template': base_template,
+        'faculty_expense_form': form,
+        'expenses_page': expenses_page,
+        'FACULTY_ROLES_LIST': FACULTY_ROLES_LIST
+    }
+    return render(request, 'projects/project_addexpenses.html', context)
+
+
+@role_required(allowed_roles=["FACULTY", "IMPLEMENTER"], require_confirmed=True)
+def project_invoices(request, pk):
+    project = get_object_or_404(Project, pk=pk)
+    base_template = get_templates(request)
+
+    if not (project.faculty.filter(pk=request.user.pk).exists() or \
+            project.implementers.filter(pk=request.user.pk).exists()):
+         messages.error(request, "You are not assigned to this project or role.")
+         return redirect('users:profile') # Adjust redirect if needed
+
+    invoice_list = FacultyExpense.objects.filter(project=project).exclude(receipt='').order_by('-date_submitted')
+
+    paginator = Paginator(invoice_list, 12) # Example: 12 invoices per page
+    page_number = request.GET.get('page')
+    invoices_page = paginator.get_page(page_number)
+
+    _, _, FACULTY_ROLES_LIST, _ = get_role_constants()
+
+    context = {
+        'project': project,
+        'base_template': base_template,
+        'invoices_page': invoices_page, # Pass the paginated object
+        'FACULTY_ROLES_LIST': FACULTY_ROLES_LIST
+    }
+    return render(request, 'projects/project_invoices.html', context)

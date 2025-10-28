@@ -1,0 +1,38 @@
+{% extends "projects/base_project_profile.html" %}
+{% block profile_content %}
+{% load static %} 
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
+<link href="{% static 'shared/projects/view.css' %}" rel="stylesheet">
+
+<div class="card-header">
+    <h3>invoices</h3>
+</div>
+<div class="file-list">
+        {% if faculty_invoices %}
+            {% for expense in faculty_invoices %}
+                 <div class="file-card">
+                     <a href="{{ expense.receipt.url }}" target="_blank" title="View full receipt for {{ expense.reason }}">
+                         <img src="{{ expense.receipt.url }}" alt="Receipt for {{ expense.reason }}">
+                     </a>
+                     <h5>{{ expense.reason|truncatechars:35 }}</h5>
+                     <p>Amount: ₱ {{ expense.amount|floatformat:2 }}<br>
+                        Notes: {{ expense.notes|truncatechars:40|default:"-" }}<br>
+                        Added: {{ expense.date_submitted|date:"M d, Y" }}
+                     </p>
+                     <div class="btn-group" role="group">
+                         <a href="{{ expense.receipt.url }}" target="_blank" class="btn btn-sm btn-outline-primary">View</a>
+                         <a href="{{ expense.receipt.url }}" download="{{ project.title|slugify }}_receipt_{{ expense.id }}.{{ expense.receipt.name|slice:"-3:" }}" class="btn btn-sm btn-outline-secondary">Download</a> {# Basic download naming #}
+                     </div>
+                 </div>
+            {% endfor %}
+        {% else %}
+            <p class="text-center w-100">No receipts found for faculty expenses in this project.</p> {# Make text span grid #}
+        {% endif %}
+    </div>
+
+    {# Add pagination links here if implemented in the view #}
+
+</div>
+{% endblock %}
+

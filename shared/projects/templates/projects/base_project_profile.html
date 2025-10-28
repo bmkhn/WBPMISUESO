@@ -106,6 +106,10 @@
                 <button type="button" data-tab="evaluations" class="{% if '/evaluations/' in request.path %}active{% endif %}">Evaluations</button>
                 {% if request.user.role in ADMIN_ROLES %}
                     <button type="button" data-tab="expenses" class="{% if '/expenses/' in request.path %}active{% endif %}">Expenses</button>
+                {% endif %} 
+                {% if request.user.role in FACULTY_ROLE %}
+                    <button type="button" data-tab="addexpenses" class="{% if '/addexpenses/' in request.path %}active{% endif %}">Expenses</button>
+                    <button type="button" data-tab="invoices" class="{% if '/invoices/' in request.path %}active{% endif %}">Invoices</button>
                 {% endif %}
             </div>
         </div> 
@@ -148,7 +152,10 @@
             files: `/projects/${pk}/files/`,
             submission: `/projects/${pk}/submission/`,
             evaluations: `/projects/${pk}/evaluations/`,
+            invoices: `/projects/${pk}/invoices/`,
+            addexpenses: `/projects/${pk}/addexpenses/`,
             expenses: `/projects/${pk}/expenses/`
+            
         };
         tabButtons.forEach(btn => {
             btn.addEventListener('click', function() {
