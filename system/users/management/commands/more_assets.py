@@ -374,6 +374,87 @@ class Command(BaseCommand):
 			project.save(update_fields=['proposal_document'])
 			project.additional_documents.set(additional_docs)
 			self.stdout.write(self.style.SUCCESS(f"Created project: {project.title} (Leader: {leader.get_full_name()}"))
+			
+			# ADD 5 COMPLETED PROJECTS FOR FACULTY T. USER
+			completed_project_titles = [
+				'Community Environmental Awareness Program',
+				'Digital Literacy Training for Rural Schools',
+				'Sustainable Agriculture Workshop Series',
+				'Youth Leadership Development Initiative',
+				'Health and Wellness Community Outreach'
+			]
+			
+			for idx, title in enumerate(completed_project_titles):
+				# Set dates in the past
+				start_date = timezone.now().date() - datetime.timedelta(days=random.randint(180, 365))
+				end_date = start_date + datetime.timedelta(days=random.randint(60, 120))
+				
+				completed_proj = Project.objects.create(
+					title=title,
+					project_leader=leader,
+					agenda=agenda,
+					project_type=random.choice(['NEEDS_BASED', 'RESEARCH_BASED']),
+					estimated_events=random.randint(3, 7),
+					estimated_trainees=random.randint(20, 80),
+					primary_beneficiary=fake.company(),
+					primary_location=fake.city(),
+					logistics_type=random.choice(['BOTH', 'EXTERNAL', 'INTERNAL']),
+					internal_budget=random.uniform(15000, 80000),
+					external_budget=random.uniform(10000, 60000),
+					sponsor_name=fake.company(),
+					start_date=start_date,
+					estimated_end_date=end_date,
+					created_by=director_user,
+					status='COMPLETED',
+				)
+				
+				# Add ProjectEvents for completed project
+				for eidx in range(completed_proj.estimated_events):
+					ProjectEvent.objects.create(
+						project=completed_proj,
+						title=f"Event {eidx+1}",
+						description=fake.sentence(nb_words=10),
+						datetime=timezone.make_aware(
+							datetime.datetime.combine(
+								start_date + datetime.timedelta(days=random.randint(10, 60)),
+								datetime.time(hour=random.randint(9, 16), minute=0)
+							)
+						),
+						location=fake.city(),
+						created_at=timezone.now(),
+						created_by=leader,
+						updated_at=timezone.now(),
+						updated_by=leader,
+						image=None,
+						placeholder=False
+					)
+				
+				if sdgs:
+					completed_proj.sdgs.set(random.sample(sdgs, min(len(sdgs), random.randint(2, 4))))
+				
+				# Add proposal and additional documents
+				proposal_doc_completed = ProjectDocument.objects.create(
+					project=completed_proj,
+					file=file_path,
+					document_type='PROPOSAL',
+					description=f'{title} proposal document',
+				)
+				additional_docs_completed = []
+				for i in range(random.randint(1, 3)):
+					additional_doc_completed = ProjectDocument.objects.create(
+						project=completed_proj,
+						file=file_path,
+						document_type='ADDITIONAL',
+						description=f'Additional document {i+1}',
+					)
+					additional_docs_completed.append(additional_doc_completed)
+				completed_proj.proposal_document = proposal_doc_completed
+				completed_proj.save(update_fields=['proposal_document'])
+				completed_proj.additional_documents.set(additional_docs_completed)
+				
+				self.stdout.write(self.style.SUCCESS(f"Created completed project {idx+1}/5: {title}"))
+			
+			self.stdout.write(self.style.SUCCESS(f"Added 5 completed projects for Faculty T. User"))
 		else:
 			self.stdout.write(self.style.WARNING("Faculty T. User not found. Test project not created."))
 

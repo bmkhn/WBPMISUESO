@@ -69,7 +69,7 @@
                 </div>
                 <div class="filter-actions">
                     <button type="submit" class="filter-apply">Apply</button>
-                    <button type="button" id="closeFilter" class="filter-close">Close</button>
+                    <button type="button" id="closeFilter" class="filter-close">Clear Filters</button>
                 </div>
             </div>
         </form>
@@ -101,7 +101,7 @@
             {% for log in logs %}
             <tr>
                 <td>
-                    {{ log.user.get_full_name|default:'-' }}
+                    {% if log.user %}<a href="{% url 'user_profile' log.user.id %}" class="name-link">{{ log.user.get_full_name }}</a>{% else %}-{% endif %}
                     {% if log.user and log.user.email %}
                         <span class="user-email">{{ log.user.email }}</span>
                     {% endif %}
@@ -109,9 +109,9 @@
                 <td>{{ log.get_action_display }}</td>
                 <td>{{ log.model }}</td>
                 <td>{{ log.object_id }}</td>
-                <td title="{{ log.object_repr }}">{{ log.object_repr|truncatechars:7 }}</td>
+                <td style="max-width:50px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="{{ log.object_repr }}">{{ log.object_repr }}</td>
                 <td>{{ log.timestamp|date:"Y-m-d H:i:s" }}</td>
-                <td title="{{ log.details }}">{{ log.details|truncatechars:30 }}</td>
+                <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="{{ log.details }}">{{ log.details }}</td>
                 <td>
                     {% if log.url %}
                         <a href="{{ log.url  }}" class="name-link">Link</a>
@@ -189,7 +189,8 @@
     if (closeFilter && filterDropdown) {
         closeFilter.addEventListener('click', function(e) {
             e.preventDefault();
-            filterDropdown.style.display = 'none';
+            // Clear filters by redirecting to base URL without query parameters
+            window.location.href = window.location.pathname;
         });
     }
     // Hide dropdown when clicking outside

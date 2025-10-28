@@ -45,7 +45,7 @@ urlpatterns = [
     path('logs/', include('system.logs.urls')),                     # Logs
     path('exports/', include('system.exports.urls')),               # Exports
     path('notifications/', include('system.notifications.urls')),   # Notifications
-    # Settings (None Yet)
+    path('settings/', include('system.settings.urls')),             # Settings
     path('', include('system.users.urls')),                         # Users
 ] 
 

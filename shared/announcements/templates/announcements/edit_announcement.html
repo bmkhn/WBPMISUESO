@@ -46,33 +46,52 @@
 					<div class="upload-area" onclick="document.getElementById('id_cover_photo').click()">
 						<svg class="upload-icon"><use href="#icon-upload"></use></svg>
 						<span class="upload-text">Click to upload</span>
-						<input class="file-input" style="display:none;" type="file" name="cover_photo" id="id_cover_photo" accept="image/*" value="{{ form.cover_photo.value|default:'' }}">
+						<input class="file-input" style="display:none;" type="file" name="cover_photo" id="id_cover_photo" accept="image/jpeg,image/png,image/jpg,image/gif,image/webp" value="{{ form.cover_photo.value|default:'' }}">
 					</div>
-				</div> 
-				 
-				{% if announcement.cover_photo %}
-				<div class="file-preview show" id="file-preview">
-					<div class="file-info">
-						<svg width="16" height="16"><use href="#icon-upload"></use></svg>
-						<span id="file-name">Current: <a href="{{ announcement.cover_photo.url }}" target="_blank">{{ announcement.title }}</a></span>
+					
+					{% if announcement.cover_photo %}
+					<div class="file-preview show" id="existing-file-preview">
+						<div class="file-info">
+							<svg width="16" height="16"><use href="#icon-upload"></use></svg>
+							<span id="existing-file-name">Current: <a href="{{ announcement.cover_photo.url }}" target="_blank">{{ announcement.title }}</a></span>
+						</div>
+						<button type="button" class="remove-file-btn" onclick="removeExistingFile()" title="Remove file">
+							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+								<line x1="18" y1="6" x2="6" y2="18"></line>
+								<line x1="6" y1="6" x2="18" y2="18"></line>
+							</svg>
+						</button>
+					</div>
+					{% endif %}
+					
+					<div class="file-preview" id="new-file-preview" style="display: none;">
+						<div class="file-info">
+							<svg width="16" height="16"><use href="#icon-upload"></use></svg>
+							<span id="file-name"></span>
+						</div>
+						<button type="button" class="remove-file-btn" onclick="removeNewFile()" title="Remove file">
+							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+								<line x1="18" y1="6" x2="6" y2="18"></line>
+								<line x1="6" y1="6" x2="18" y2="18"></line>
+							</svg>
+						</button>
 					</div>
 				</div>
-				{% endif %}
 
-				<div class="form-group">
-					<label class="user-details-label" for="id_scheduled_at">Schedule Post:</label>
-					<div class="schedule-button" onclick="toggleSchedule()" {% if announcement.published_at or posted %}style="pointer-events:none;opacity:0.5;"{% endif %}>
-						<svg class="clock-icon"><use href="#icon-clock"></use></svg>
-						<span id="schedule-text">Now</span>
-					</div>
-					<input class="user-details-value" type="hidden" name="scheduled_at" id="id_scheduled_at" value="{{ form.scheduled_at.value|default:'' }}" {% if announcement.published_at or posted %}disabled {% endif %}>
+			<div class="form-group">
+				<label class="user-details-label">Schedule Post:</label>
+				<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+					<input type="checkbox" id="publish_now" name="publish_now" {% if not announcement.scheduled_at or announcement.published_at or posted %}checked{% endif %} {% if announcement.published_at or posted %}disabled{% endif %} style="width: auto; cursor: pointer;">
+					<label for="publish_now" style="margin: 0; cursor: pointer; font-weight: normal;">Publish now</label>
 				</div>
+				<input class="user-details-value" type="datetime-local" name="scheduled_at" id="id_scheduled_at" value="{{ form.scheduled_at.value|default:'' }}" {% if not announcement.scheduled_at or announcement.published_at or posted %}style="display: none;"{% endif %} {% if announcement.published_at or posted %}disabled{% endif %}>
+			</div>
 
-				{% if announcement.scheduled_at %}
-				<div style="margin-top:0.5rem;color:#E37910;font-size:0.95rem;">
-					Current scheduled date: {{ announcement.scheduled_at|date:"F d, Y H:i" }}
-				</div>
-				{% endif %}
+			{% if announcement.scheduled_at %}
+			<div style="margin-top:0.5rem;color:#E37910;font-size:0.95rem;">
+				Current scheduled date: {{ announcement.scheduled_at|date:"F d, Y H:i" }}
+			</div>
+			{% endif %}
 			</div>
 			
 			<div class="form-actions">
@@ -96,6 +115,54 @@
 		<path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M16.2,16.2L11,13V7H12.5V12.2L17,14.9L16.2,16.2Z" />
 	</symbol>
 </svg>
+
+<style>
+	.file-preview {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 12px;
+		background: #f9fafb;
+		border-radius: 8px;
+		margin-top: 8px;
+		border: 1px solid #e5e7eb;
+	}
+	
+	.file-preview.show {
+		display: flex;
+	}
+	
+	.file-info {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		flex: 1;
+	}
+	
+	.file-info svg {
+		color: #6b7280;
+	}
+	
+	.remove-file-btn {
+		background: #fee2e2;
+		border: none;
+		border-radius: 6px;
+		padding: 6px;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition: all 0.2s;
+	}
+	
+	.remove-file-btn:hover {
+		background: #fecaca;
+	}
+	
+	.remove-file-btn svg {
+		color: #dc2626;
+	}
+</style>
 
 <script>
 	// Form Validation for required fields and scheduled_at
@@ -161,40 +228,72 @@
 	// File Upload Handling
 	document.getElementById('id_cover_photo').addEventListener('change', function(e) {
 		const file = e.target.files[0];
+		const newPreview = document.getElementById('new-file-preview');
+		const existingPreview = document.getElementById('existing-file-preview');
+		
 		if (file) {
 			document.getElementById('file-name').textContent = file.name;
-			document.getElementById('file-preview').classList.add('show');
+			newPreview.style.display = 'flex';
+			if (existingPreview) {
+				existingPreview.style.display = 'none';
+			}
 		} else {
-			document.getElementById('file-preview').classList.remove('show');
+			newPreview.style.display = 'none';
+			if (existingPreview) {
+				existingPreview.style.display = 'flex';
+			}
 		}
 	});
-
-	// Schedule Handling
-	function toggleSchedule() {
-		const scheduleText = document.getElementById('schedule-text');
-		const scheduleInput = document.getElementById('id_scheduled_at');
-
-		if (scheduleInput.type === 'hidden') {
-			scheduleText.textContent = 'Schedule for later';
-			scheduleInput.type = 'datetime-local';
-			scheduleInput.style.display = 'block';
-			scheduleInput.required = true;
-		} else {
-			scheduleText.textContent = 'Now';
-			scheduleInput.type = 'hidden';
-			scheduleInput.style.display = 'none';
-			scheduleInput.required = false;
-			scheduleInput.value = '';
+	
+	// Remove existing file
+	function removeExistingFile() {
+		const existingPreview = document.getElementById('existing-file-preview');
+		const fileInput = document.getElementById('id_cover_photo');
+		
+		// Add a hidden input to mark the file for deletion
+		let removeInput = document.getElementById('remove_cover_photo');
+		if (!removeInput) {
+			removeInput = document.createElement('input');
+			removeInput.type = 'hidden';
+			removeInput.name = 'remove_cover_photo';
+			removeInput.id = 'remove_cover_photo';
+			removeInput.value = 'true';
+			document.querySelector('.announcement-form').appendChild(removeInput);
+		}
+		
+		existingPreview.style.display = 'none';
+	}
+	
+	// Remove new file
+	function removeNewFile() {
+		const newPreview = document.getElementById('new-file-preview');
+		const existingPreview = document.getElementById('existing-file-preview');
+		const fileInput = document.getElementById('id_cover_photo');
+		
+		fileInput.value = '';
+		newPreview.style.display = 'none';
+		
+		if (existingPreview) {
+			existingPreview.style.display = 'flex';
 		}
 	}
 
-	// Ensure scheduled_at is cleared if 'Now' is selected (input hidden) on submit
-	document.querySelector('.announcement-form').addEventListener('submit', function(e) {
-		var scheduleInput = document.getElementById('id_scheduled_at');
-		if (scheduleInput.type === 'hidden') {
-			scheduleInput.value = '';
-		}
-	});
+	// Schedule Handling - Checkbox toggle
+	const publishNowCheckbox = document.getElementById('publish_now');
+	if (publishNowCheckbox && !publishNowCheckbox.disabled) {
+		publishNowCheckbox.addEventListener('change', function(e) {
+			const scheduleInput = document.getElementById('id_scheduled_at');
+			
+			if (e.target.checked) {
+				scheduleInput.style.display = 'none';
+				scheduleInput.required = false;
+				scheduleInput.value = '';
+			} else {
+				scheduleInput.style.display = 'block';
+				scheduleInput.required = true;
+			}
+		});
+	}
 
 </script>
 

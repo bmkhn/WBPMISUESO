@@ -18,7 +18,7 @@
         <div class="search-container">
             <form class="search-bar" method="get" action="">
                 <svg width="16" height="16" style="margin-right:10px;"> <use href="#icon-search"></use> </svg>
-                <input type="text" name="search" placeholder="Search by title" value="{{ search|default:'' }}"/>
+                <input type="text" name="search" placeholder="Search Request Title" value="{{ search|default:'' }}"/>
                 <button type="button" id="filterBtn" style="background:none;border:none;padding:0;margin-right:5px;cursor:pointer;">
                     <svg width="16" height="16"> <use href="#icon-filter"></use> </svg>
                 </button>
@@ -60,7 +60,7 @@
                     </div>
                     <div class="filter-actions">
                         <button type="submit" class="filter-apply">Apply</button>
-                        <button type="button" id="closeFilter" class="filter-close">Close</button>
+                        <button type="button" id="closeFilter" class="filter-close">Clear Filters</button>
                     </div>
                 </div>
             </form>
@@ -89,16 +89,16 @@
             <tbody>
                 {% for request in requests %}
                 <tr>
-                    <td>
-                        <a href="{% url 'admin_request_details_entry' request.id %}" class="name-link" title="{{ request.title }}">
-                            {{ request.title|truncatechars:20 }}
+                    <td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                        <a href="{% url 'admin_request_details_entry' request.id %}" class="name-link" title="{{ request.title }}" style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                            {{ request.title }}
                         </a>
                     </td>
                     <td>{{ request.organization }}</td>
                     <td>{{ request.submitted_at|date:"Y-m-d H:i" }}</td>
-                    <td>{{ request.submitted_by.get_full_name }}</td>
+                    <td><a href="{% url 'user_profile' request.submitted_by.id %}" class="name-link">{{ request.submitted_by.get_full_name }}</a></td>
                     <td>{{ request.updated_at|date:"Y-m-d H:i" }}</td>
-                    <td>{{ request.updated_by.get_full_name|default:"N/A" }}</td>
+                    <td>{% if request.updated_by %}<a href="{% url 'user_profile' request.updated_by.id %}" class="name-link">{{ request.updated_by.get_full_name }}</a>{% else %}N/A{% endif %}</td>
                     <td>{{ request.get_status_display }}</td>
                 </tr>
                 {% empty %}
@@ -193,7 +193,8 @@
     if (closeFilter && filterDropdown) {
         closeFilter.addEventListener('click', function(e) {
             e.preventDefault();
-            filterDropdown.style.display = 'none';
+            // Clear filters by redirecting to base URL without query parameters
+            window.location.href = window.location.pathname;
         });
     }
     // Hide dropdown when clicking outside

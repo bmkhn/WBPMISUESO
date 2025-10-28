@@ -66,8 +66,8 @@
                                 </a>
                             </div>
                         </div>
-                        <div class="agenda-card-text" onclick="cardClick(event, '{{ agenda.id }}')" style="cursor:pointer;">{{ agenda.name }}</div>
-                        <div class="agenda-card-desc" onclick="cardClick(event, '{{ agenda.id }}')" style="cursor:pointer;">
+                        <div class="agenda-card-text">{{ agenda.name }}</div>
+                        <div class="agenda-card-desc">
                             {{ agenda.description }}
                         </div>
                         <div style="margin-bottom: 10px;"></div>
@@ -105,16 +105,16 @@
                 <tbody>
                     {% for project in agenda_projects|get_item:agenda.id %}
                     <tr>
-                        <td>
-                            <a href="{% url 'project_profile' project.id %}" class="name-link" title="{{ project.title }}">
-                                {{ project.title|truncatechars:20 }}
+                        <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                            <a href="{% url 'project_profile' project.id %}" class="name-link" title="{{ project.title }}" style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                                {{ project.title }}
                             </a>
                         </td>
-                        <td>{{ project.project_leader.get_full_name }}</td>
+                        <td><a href="{% url 'user_profile' project.project_leader.id %}" class="name-link">{{ project.project_leader.get_full_name }}</a></td>
                         <td>{% if project.project_leader.college %}{{ project.project_leader.college.name }}{% else %}<em>-</em>{% endif %}</td>
-                        <td>{{ project.updated_at|date:"Y-m-d" }}</td>
-                        <td>{{ project.start_date|date:"Y-m-d" }}</td>
-                        <td>{{ project.progress_display }}</td>
+                        <td style="white-space:nowrap;">{{ project.updated_at|date:"Y-m-d" }}</td>
+                        <td style="white-space:nowrap;">{{ project.start_date|date:"Y-m-d" }}</td>
+                        <td style="white-space:nowrap;">{{ project.progress_display }}</td>
                         <td>{{ project.get_status_display }}</td>
                     </tr>
                     {% empty %}
@@ -181,14 +181,6 @@
             }
         }
     });
-
-    // Card Click
-    function cardClick(event, id) {
-        if (event.target.closest('.agenda-card-kebab') || event.target.closest('.delete-modal-link')) {
-            return;
-        }
-        window.location.href = '/agenda/details/' + id + '/';
-    }
 
     // --- COLOR PALETTE ---
     const CARD_BACKGROUNDS = [

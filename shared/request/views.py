@@ -21,6 +21,14 @@ def request_details_dispatcher(request, pk):
     # Only allow the submitter or privileged roles to view
     req = get_object_or_404(ClientRequest, pk=pk)
 
+    # If admin/director/VP is viewing a RECEIVED request, change it to UNDER_REVIEW
+    if request.user.role in ['UESO', 'VP', 'DIRECTOR'] and req.status == 'RECEIVED':
+        req.status = 'UNDER_REVIEW'
+        req.reviewed_by = request.user
+        req.review_at = timezone.now()
+        req.updated_by = request.user
+        req.save()
+
     updates_qs = RequestUpdate.objects.filter(user=request.user).order_by('-updated_at')[:10]
     updates = []
     for update in updates_qs:
@@ -300,13 +308,22 @@ def admin_request_action(request, pk):
                 req.updated_by = request.user
                 req.reason = request.POST.get('reason', '')
                 req.save()
-        elif req.status == 'APPROVED' and action == 'endorse':
-            req.status = 'ENDORSED'
-            req.endorsed_by = request.user
-            req.endorsed_at = timezone.now()
-            req.updated_at = timezone.now()
-            req.updated_by = request.user
-            req.save()
+        elif req.status == 'APPROVED':
+            if action == 'endorse':
+                req.status = 'ENDORSED'
+                req.endorsed_by = request.user
+                req.endorsed_at = timezone.now()
+                req.updated_at = timezone.now()
+                req.updated_by = request.user
+                req.save()
+            elif action == 'deny':
+                req.status = 'DENIED'
+                req.endorsed_by = request.user
+                req.endorsed_at = timezone.now()
+                req.updated_at = timezone.now()
+                req.updated_by = request.user
+                req.reason = request.POST.get('reason', '')
+                req.save()
             
         # Create or update RequestUpdate for the submitter
         if req.submitted_by:

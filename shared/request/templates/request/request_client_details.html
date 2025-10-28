@@ -375,59 +375,66 @@
 		</div>
 		<div class="my-updates-list">
 			{% if my_updates %}
-				<ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:25px;max-height:500px;overflow-y:auto;">
 				{% for update in my_updates %}
-					<li>
-						<a href="{% url 'request_details_dispatcher' update.request_id %}"
-						   class="my-update-link{% if not update.viewed %} my-update-unviewed{% endif %} my-update-block">
-							<div>
-								{{ update.message }}
-								<div style="font-size:0.95em;color:#888;margin-top:8px;">
-									{{ update.updated_at|date:'M d, Y H:i' }}
-									{% if not update.viewed %}
-										<span style="background:#E37910;color:white;border-radius:8px;padding:2px 8px;font-size:0.8em;margin-left:8px;">New</span>
-									{% endif %}
-								</div>
-							</div>
-						</a>
-					</li>
+				<div class="update-item" onclick="window.location.href='{% url 'request_details_dispatcher' update.request_id %}'">
+					<div class="update-title">{{ update.request.title }}</div>
+					<div class="update-status">{{ update.message }}</div>
+					<div class="update-date">
+						{{ update.updated_at|date:"M d, Y - h:i A" }}
+						{% if not update.viewed %}
+							<span style="background:#E37910;color:white;border-radius:8px;padding:2px 8px;font-size:11px;margin-left:8px;">New</span>
+						{% endif %}
+					</div>
+				</div>
 				{% endfor %}
-				</ul>
-				<style>
-				.my-update-link {
-					color: #000000;
-					text-decoration: none;
-					font-weight: 400;
-				}
-				.my-update-link.my-update-unviewed {
-					font-weight: 700;
-				}
-				.my-update-block {
-					display: block;
-					padding: 8px 10px;
-					border-radius: 8px;
-					transition: background 0.15s;
-				}
-				.my-update-block:hover {
-					background: #f3f4f6;
-					text-decoration: none;
-				}
-				.my-updates-list ul::-webkit-scrollbar {
-					width: 8px;
-				}
-				.my-updates-list ul::-webkit-scrollbar-thumb {
-					background: #e5e7eb;
-					border-radius: 6px;
-				}
-				.my-updates-list ul {
-					scrollbar-width: thin;
-					scrollbar-color: #e5e7eb #fff;
-				}
-				</style>
 			{% else %}
-				<div style="color:#888;font-size:1em; text-align:center;">No recent updates.</div>
+				<div class="no-data">No updates at this time</div>
 			{% endif %}
 		</div>
+	</div>
+	
+	<style>
+	.update-item {
+		padding: 15px;
+		border-bottom: 1px solid #f0f0f0;
+		display: flex;
+		flex-direction: column;
+		gap: 5px;
+		transition: background 0.2s;
+		cursor: pointer;
+	}
+
+	.update-item:last-child {
+		border-bottom: none;
+	}
+
+	.update-item:hover {
+		background: #f9f9f9;
+	}
+
+	.update-title {
+		font-weight: 600;
+		color: #063A1C;
+		font-size: 14px;
+	}
+
+	.update-status {
+		font-size: 13px;
+		color: #666;
+	}
+
+	.update-date {
+		font-size: 12px;
+		color: #999;
+	}
+	
+	.no-data {
+		text-align: center;
+		color: #999;
+		padding: 30px;
+		font-size: 14px;
+	}
+	</style>
 	</div>
 
 	<div class="right-container">
@@ -464,6 +471,9 @@
 				{% if req.status == 'ENDORSED' %}
 				<div class="progress-svg"><svg><use href="#icon-request-endorsed-done"></use></svg></div>
 				<div class="progress-text">Request<br>Endorsed</div>
+				{% elif req.status == 'DENIED' %}
+				<div class="progress-svg"><svg><use href="#icon-waiting-approval-rejected"></use></svg></div>
+				<div class="progress-text">Request<br>Denied</div>
 				{% else %}
 				<div class="progress-svg"><svg><use href="#icon-request-endorsed"></use></svg></div>
 				<div class="progress-text">Request<br>Endorsed</div>
@@ -499,8 +509,16 @@
                 
 				{% elif req.status == 'ENDORSED' %}
 				<div class="step-text">STEP 4: Your request has been endorsed</div>
-				<div class="content-text">Our office has endorsed your request and your request shall be sent to the President’s Office to be officially approved.</div>
+				<div class="content-text">Our office has endorsed your request and your request shall be sent to the President's Office to be officially approved.</div>
 				<div class="from-text">University Extension Services Office</div>
+
+				{% elif req.status == 'DENIED' %}
+				<div class="step-text">STEP 4: Your request has been denied</div>
+				<div class="content-text">After reviewing your letter of intent, we regret to inform you that your request has been denied for the following reason(s):</div>
+				<div class="content-text" style="font-weight: 600; color: #c62828;">{{ req.reason }}</div>
+				<div class="content-text">If you believe this decision was made in error or if you would like to address the concerns raised, you may submit a new request with the necessary corrections.</div>
+				<div class="from-text">University Extension Services Office</div>
+
 				{% else %}
 				<div style="text-align:center;">None</div>
 
@@ -528,11 +546,11 @@
 						<span class="file-text">{{ req.title }}</span>
 						<span>{{ req.organization }}</span>
 						<span>{{ req.submitted_by.email }} • {{ req.submitted_by.contact_no|default:'-' }} </span>
-						<span class="grey-text">Submitted: {{ req.submitted_at|date:"F j, Y, H:i" }} • {{ req.submitted_by.get_full_name }} </span>
+						<span class="grey-text">Submitted: {{ req.submitted_at|date:"F j, Y, H:i" }} • <a href="{% url 'user_profile' req.submitted_by.id %}" class="name-link">{{ req.submitted_by.get_full_name }}</a> </span>
 						{% if req.status != 'PENDING' and req.status != 'UNDER_REVIEW' %}
-						<span class="grey-text">Reviewed: {{ req.reviewed_at|date:"F j, Y, H:i" }} • {{ req.reviewed_by.get_full_name }} </span>
+						<span class="grey-text">Reviewed: {{ req.reviewed_at|date:"F j, Y, H:i" }} • <a href="{% url 'user_profile' req.reviewed_by.id %}" class="name-link">{{ req.reviewed_by.get_full_name }}</a> </span>
 						{% elif req.status != 'RECEIVED' and req.status != 'UNDER_REVIEW' and req.status != 'APPROVED' and req.status != 'REJECTED' and req.status != 'ENDORSED' and req.status != 'DENIED' %}
-						<span class="grey-text">Endorsed: {{ req.endorsed_at|date:"F j, Y, H:i" }} • {{ req.endorsed_by.get_full_name }} </span>
+						<span class="grey-text">Endorsed: {{ req.endorsed_at|date:"F j, Y, H:i" }} • <a href="{% url 'user_profile' req.endorsed_by.id %}" class="name-link">{{ req.endorsed_by.get_full_name }}</a> </span>
 						{% endif %}
 					</div>
 
@@ -552,8 +570,10 @@
 
 					<div class="content-right">
 						<a class="name-link notes-text" href="{{ req.letter_of_intent.url }}" target="_blank">Letter of Intent</a>
-						{% if req.reason %}
+						{% if req.reason and req.status == 'REJECTED' %}
 						<span class="notes-text"><strong class="red">Reason/s for Rejection</strong><br>{{ req.reason }}</span>
+						{% elif req.reason and req.status == 'DENIED' %}
+						<span class="notes-text"><strong class="red">Reason/s for Denial</strong><br>{{ req.reason }}</span>
 						{% endif %}
 					</div>
 				</div>

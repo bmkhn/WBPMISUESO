@@ -23,7 +23,7 @@
 		<div class="search-container">
 		       <form class="search-bar" method="get" action="">
 					<svg width="20" height="20"> <use href="#icon-search"></use> </svg>
-					<input type="text" name="search" placeholder="Search Title" value="{{ search_query|default:'' }}"/>
+					<input type="text" name="search" placeholder="Search Announcement Title" value="{{ search_query|default:'' }}"/>
 					<button type="button" id="filterBtn" style="background:none;border:none;padding:0;margin-right:5px;cursor:pointer;">
 						<svg width="20" height="20"> <use href="#icon-filter"></use> </svg>
 					</button>
@@ -63,17 +63,16 @@
 							</label>
 						</div>
 
-						<!-- Buttons Row -->
-						<div style="display:flex;justify-content:flex-end;gap:10px;margin-top:24px;">
-						<button type="submit" class="filter-apply">Apply</button>
-						<button type="button" id="closeFilter" class="filter-close">Close</button>
-						</div>
+
+					<!-- Buttons Row -->
+					<div style="display:flex;justify-content:flex-end;gap:10px;margin-top:24px;">
+					<button type="submit" class="filter-apply">Apply</button>
+					<button type="button" id="closeFilter" class="filter-close">Clear Filters</button>
 					</div>
+				</div>
 
 		       </form>
-		</div>
-	
-		<div class="announce-grid">
+		</div>		<div class="announce-grid">
 
 			<!-- Dynamic Announcements -->
 			{% for announcement in announcements %}
@@ -194,7 +193,8 @@
        if (closeFilter && filterDropdown) {
 	       closeFilter.addEventListener('click', function(e) {
 		       e.preventDefault();
-		       filterDropdown.style.display = 'none';
+		       // Clear filters by redirecting to base URL without query parameters
+		       window.location.href = window.location.pathname;
 	       });
        }
        // Hide dropdown when clicking outside
