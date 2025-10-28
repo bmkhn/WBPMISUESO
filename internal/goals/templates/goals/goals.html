@@ -1,248 +1,2203 @@
 {% extends "base_internal.html" %}
 {% block content %}
 
-<!DOCTYPE html>
+<!DOCTYPE HTML>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Goals</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
-
-<!-- Page, Goals Text, Add Goal Button -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="">
+    <title>Goals</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.css' rel='stylesheet'/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.js'></script>
 <style>
     body {
-        background: #F9F9F9;
-        margin: 0;
-        font-family: 'Inter', Arial, sans-serif;
-    }
-
-    .main-container {
-        margin: 60px;
+        font-family: Arial, sans-serif;
+        margin: 0rem;
+        padding: 0rem;
         display: flex;
         flex-direction: column;
-        gap: 30px;
+        min-height: 100vh;
+        font-family: Helvetica, Arial, sans-serif;
+        background-color: #f9f9f9;
+    }
+    /* Use base sidebar; avoid overriding its styles here */
+
+    .content {
+        margin-left: 0;
+        padding: 0 20px 20px 20px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
     }
 
-    .container-a {
+    header {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 1.25rem; 
+        margin: 0;
+        padding: 0.75rem 1.25rem;
+        border-bottom: 1px solid #e0e0e0;
+        background-color: #f5f5f5;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        width: 100%;
+    } 
+
+    header a {
+        color: #111;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    header i {
+        font-size: 1.75rem;
+        line-height: 1;
+        cursor: pointer;
+        transition: transform 0.2s ease;
+    }
+
+    header i:hover {
+        transform: scale(1.1);
+    }
+    
+    header img {
+        border-radius: 50%; 
+        border: 4px solid #e4c600;
+        margin-right: 0.75rem;
+        width: 3.25rem;
+        height: 3.25rem;
+        object-fit: cover;
+        cursor: pointer;
+        transition: transform 0.2s ease;
+    }  
+
+    header img:hover {
+        transform: scale(1.05);
+    }
+
+    .ellipsis-btn {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1.3rem; 
+        color: #090909;
+        transition: color 0.2s;
+        z-index: 100;
+    }
+
+    .goals-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .goals-header h1 {
+        font-size: 1.75rem;
+        font-weight: 500;
+        margin: 10 0 1.25rem 0;
+    }
+
+    .ListView-header h1 {
+        font-size: 1.75rem;
+        font-weight: 500;
+        margin: 10 0 1.25rem 0;
+    }
+
+    .add-goal {
+      background: #004225;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .add-goal:hover {
+        background: #006633;
+    }
+
+    .goal {
         display: flex;
         flex-direction: row;
+        gap: 1.5rem;
+        padding: 1rem;
+        margin: 0 0 1rem 0;
+        justify-content: center;
+        flex-grow: 1;
+        height: auto; 
+    }
+
+    .goal > div {
+        background-color: #ffffff;
+        border: 0.08rem solid rgb(114, 114, 114);
+        box-shadow: 0 0 0.1rem rgba(0, 0, 0, 0.1);
+        border-radius: 1rem;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 15rem;
+        position: relative;
+    }
+
+    /* Ellipsis dropdown menu */
+    .goal-menu {
+        position: absolute;
+        top: 2.25rem;
+        right: 1rem;
+        background: #ffffff;
+        border: 1px solid #ccc;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        border-radius: 8px;
+        min-width: 140px;
+        z-index: 200;
+        display: none;
+        overflow: hidden;
+    }
+
+    .goal-menu.open {
+        display: block;
+    }
+
+    .goal-menu button {
+        width: 100%;
+        padding: 10px 12px;
+        text-align: left;
+        background: white;
+        border: none;
+        cursor: pointer;
+        font-size: 14px;
+    }
+
+    .goal-menu button:hover {
+        background: #f3f3f3;
+    }
+
+    .goal canvas {
+        width: 75% !important;
+        height: 75% !important;
+    }
+
+    .goal-title {
+        margin-top: 0rem;
+        text-align: center;
+        font-size: 12px;
+        font-weight: 300;
+        max-width: 80%;   
+        word-wrap: break-word;
+        font-family: Helvetica;
+    }
+
+    .ellipsis-btn:hover {
+        color: gray;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        overflow: hidden;
+        border: 1px solid gray;
+    }
+
+    th, td {
+        text-align: left;
+        padding: 8px;
+        font-size: 0.95rem;
+    }
+
+    .ListView-btn {
+        border: none;
+        padding: 0;
+        background: none;
+        font-family: Arial, sans-serif;
+        color: #0077B6;
+        cursor: pointer;
+    }
+
+    .ListView-btn:hover {
+        color: blue;
+    }
+
+    .table-header {
+        border-collapse: collapse;
+        border: 1px solid gray;
+    }
+
+    /* Remove old sidebar helper classes to prevent collisions */
+
+    /* Overlay modal styles */
+    .overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.6);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 20px;
+    }
+
+    .overlay.open {
+        display: flex;
+    }
+
+    .overlay-card {
+        background: #fff;
+        width: 100%;
+        max-width: 1000px;
+        max-height: 90vh;
+        border-radius: 14px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+    }
+
+    .overlay-header {
+        display: flex;
         align-items: center;
         justify-content: space-between;
+        padding: 20px 24px;
+        border-bottom: 1px solid #e5e7eb;
     }
 
-    .container-a-text {
-        font-family: 'Inter', Arial, sans-serif;
-        font-weight: 400;
-        font-size: 32px;
-
+    .overlay-title {
+        font-size: 26px;
+        font-weight: 600;
     }
 
-    .container-a-button {
-        padding: 15px 45px;
-        font-family: 'Inter', Arial, sans-serif;
-        font-weight: 500;
-        font-size: 18px;
-        color: #FFFFFF;
-        background: #063A1C;
-        border: none;
-        border-radius: 18px;
-        cursor: pointer;
-        transition: background 0.2s;
-    }
-
-    .container-a-button:hover {
-        background: #04521c;
-    }
-</style>
-
-<!-- Goal Tile Card -->
-<style>
-    .container-b {
+    .overlay-actions {
         display: flex;
-        flex-direction: row;
-        gap: 15px;
+        gap: 12px;
+        align-items: center;
+    }
+
+    .btn-export {
+        background: #0052cc;
+        color: #fff;
+        padding: 10px 18px;
+        border-radius: 10px;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+    }
+
+    .btn-export:hover { background: #003f9e; }
+
+    .overlay-close {
+        background: transparent;
+        border: none;
+        font-size: 20px;
+        cursor: pointer;
+        padding: 8px;
+    }
+
+    .overlay-body {
+        overflow: auto;
+    }
+
+    .qualifiers-table {
         width: 100%;
+        border-collapse: collapse;
+    }
+
+    .qualifiers-table th,
+    .qualifiers-table td {
+        padding: 18px 20px;
+        border-bottom: 1px solid #e5e7eb;
+        vertical-align: middle;
+        font-size: 15px;
+    }
+
+    .qualifiers-table thead th {
+        background: #f9fafb;
+        text-align: left;
+        font-weight: 600;
+        color: #111827;
+    }
+
+    .table-settings { text-align: right; width: 70px; position: relative; }
+
+    .row-ellipsis {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 18px;
+        line-height: 1;
+        padding: 6px 8px;
+        color: #111827;
+    }
+
+    .row-ellipsis:hover { color: #374151; }
+
+    .row-menu {
+        position: absolute;
+        top: 2.25rem;
+        right: 0.75rem;
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+        border-radius: 8px;
+        min-width: 140px;
+        z-index: 10;
+        display: none;
+        overflow: hidden;
+    }
+
+    .row-menu.open { display: block; }
+
+    .row-menu button {
+        width: 100%;
+        padding: 10px 12px;
+        text-align: left;
+        background: white;
+        border: none;
+        cursor: pointer;
+        font-size: 14px;
+    }
+
+    .row-menu button:hover { background: #f3f4f6; }
+
+    .pagination {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        justify-content: center;
+        padding: 14px 20px;
+    }
+
+    .page-btn,
+    .page-num {
+        background: transparent;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        color: #374151;
+    }
+
+    .page-num.active { background: #111827; color: #fff; }
+
+    .page-btn.disabled,
+    .page-num.disabled {
+        opacity: 0.4;
+        pointer-events: none;
+    }
+
+    /* Add Goal modal */
+    .goal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.7);
+        backdrop-filter: blur(8px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1100;
+        padding: 20px;
+        opacity: 0;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .goal-overlay.open { 
+        display: flex; 
+        opacity: 1;
+        animation: overlayFadeIn 0.3s ease-out;
+    }
+
+    @keyframes overlayFadeIn {
+        from {
+            opacity: 0;
+            backdrop-filter: blur(0px);
+        }
+        to {
+            opacity: 1;
+            backdrop-filter: blur(8px);
+        }
     }
 
     .goal-card {
-        position: relative;
-        flex: 1;
-        background: #fff;
-        border-radius: 18px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-        padding: 40px;
+        background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+        width: 100%;
+        max-width: 900px;
+        max-height: 95vh;
+        border-radius: 24px;
+        overflow: hidden;
         display: flex;
         flex-direction: column;
-        align-items: center;
-        border: 1px solid rgba(0, 0, 0, 0.42);
-        box-sizing: border-box;
+        box-shadow: 
+            0 32px 80px rgba(0,0,0,0.15),
+            0 16px 40px rgba(0,0,0,0.1),
+            0 0 0 1px rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.2);
+        backdrop-filter: blur(10px);
+        position: relative;
+        transform: scale(0.9) translateY(20px);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    .goal-card-kebab {
+    .goal-overlay.open .goal-card {
+        transform: scale(1) translateY(0);
+        animation: modalSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @keyframes modalSlideIn {
+        from {
+            transform: scale(0.9) translateY(20px);
+            opacity: 0;
+        }
+        to {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .goal-card::before {
+        content: '';
         position: absolute;
-        top: 20px;
-        right: 20px;
-        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #004225 0%, #32CD32 50%, #004225 100%);
+        border-radius: 24px 24px 0 0;
     }
 
-    .goal-card-percent {
-        font-family: 'Inter', Arial, sans-serif;
-        font-weight: 900;
-        font-size: 32px;
-        color: #000000;
-        text-align: center;
-        margin-top: 40px;
+    .goal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 32px 32px 16px 32px;
+        background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+        border-bottom: 1px solid rgba(0,66,37,0.1);
+        position: relative;
     }
 
-    .goal-card-title {
-        margin-top: 35px;
-        font-family: 'Inter', Arial, sans-serif;
-        font-weight: 400;
-        font-size: 15px;
-        color: #000000;
-        text-align: center;
+    .goal-header::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 32px;
+        right: 32px;
+        height: 1px;
+        background: linear-gradient(90deg, transparent 0%, #004225 50%, transparent 100%);
+        opacity: 0.3;
     }
 
-    .kebab-svg {
-        width: 16px;
-        height: 16px;
-    }
-</style>
-
-<!-- List View -->
-<style>
-    .list-view-text {
-        font-family: 'Inter', Arial, sans-serif;
-        font-weight: 400;
-        font-size: 32px;
-        color: #000000;
-        margin-top: 10px;
-        margin-bottom: 10px;
+    .goal-modal-title {
+        font-size: 36px;
+        line-height: 1.2;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        color: #111827;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: linear-gradient(135deg, #004225 0%, #32CD32 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
     }
 
-    .container-c {
-        width: 100%;
-    }
 
-    .goals-table {
-        width: 100%;
-        border-collapse: collapse;
-        background: #FEFCFC;
-        overflow: hidden;
-        border: 1px solid rgba(0,0,0,0.4);
-    }
 
-    .goals-table th {
-        font-size: 18px;
-        font-weight: bold;
-        background: #FEFCFC;
-        border-bottom: 1px solid rgba(0,0,0,0.4);
-        padding: 18px 16px;
-        text-align: left;
-        font-family: 'Inter', Arial, sans-serif;
-    }
-
-    .goals-table td {
-        font-size: 16px;
-        font-weight: 400;
+    .goal-close {
+        background: linear-gradient(145deg, #f3f4f6 0%, #e5e7eb 100%);
         border: none;
-        padding: 18px 16px;
-        text-align: left;
-        font-family: 'Inter', Arial, sans-serif;
+        font-size: 20px;
+        cursor: pointer;
+        padding: 12px;
+        color: #6b7280;
+        border-radius: 12px;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        width: 44px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
-    .qualifier-link {
+    .goal-close:hover {
+        background: linear-gradient(145deg, #ef4444 0%, #dc2626 100%);
+        color: white;
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(239,68,68,0.3);
+    }
+
+    .goal-body {
+        padding: 32px;
+        background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+        overflow-y: auto;
+        max-height: calc(95vh - 120px);
+    }
+
+    .goal-body::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .goal-body::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 3px;
+    }
+
+    .goal-body::-webkit-scrollbar-thumb {
+        background: linear-gradient(180deg, #004225 0%, #32CD32 100%);
+        border-radius: 3px;
+    }
+
+    .goal-body::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(180deg, #003018 0%, #28a745 100%);
+    }
+
+    .field-label {
         font-size: 18px;
-        font-family: 'Inter', Arial, sans-serif;
-        font-weight: 400;
-        color: #0077B6;
-        text-decoration: none;
+        font-weight: 700;
+        margin: 24px 0 12px 0;
+        color: #1f2937;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        position: relative;
+    }
+
+    .field-label::before {
+        content: '';
+        width: 4px;
+        height: 20px;
+        background: linear-gradient(180deg, #004225 0%, #32CD32 100%);
+        border-radius: 2px;
+        margin-right: 4px;
+    }
+
+    .field-label:first-child {
+        margin-top: 0;
+    }
+
+    .select-input, .text-input, .date-input {
+        width: 100%;
+        box-sizing: border-box;
+        display: block;
+        padding: 16px 20px;
+        border-radius: 16px;
+        border: 2px solid #e2e8f0;
+        background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+        font-size: 16px;
+        line-height: 1.4;
+        height: 60px;
+        min-height: 60px;
+        outline: none;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 
+            0 1px 3px rgba(0,0,0,0.1),
+            inset 0 1px 0 rgba(255,255,255,0.6);
+        position: relative;
+    }
+
+    .select-input:focus, .text-input:focus, .date-input:focus {
+        border-color: #004225;
+        box-shadow: 
+            0 0 0 4px rgba(0,66,37,0.1),
+            0 4px 12px rgba(0,66,37,0.15),
+            inset 0 1px 0 rgba(255,255,255,0.6);
+        background: #ffffff;
+        transform: translateY(-1px);
+    }
+
+    .select-input:hover, .text-input:hover, .date-input:hover {
+        border-color: #cbd5e1;
+        box-shadow: 
+            0 2px 8px rgba(0,0,0,0.1),
+            inset 0 1px 0 rgba(255,255,255,0.6);
+        transform: translateY(-1px);
+    }
+
+    .text-input::placeholder {
+        color: #94a3b8;
+        font-style: italic;
+        transition: color 0.2s ease;
+    }
+
+    .text-input:focus::placeholder {
+        color: #cbd5e1;
+    }
+
+    .row-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-top: 6px;
+    }
+
+    .row-2 > div { min-width: 0; }
+
+    @media (max-width: 700px) {
+        .row-2 { grid-template-columns: 1fr; }
+    }
+
+    /* Normalize native controls */
+    .select-input {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        background-image: none; /* keep plain look (screenshot shows simple caret) */
+    }
+
+    .date-input {
+        -webkit-appearance: none;
+        appearance: none;
+    }
+
+    .btn-submit {
+        display: block;
+        margin: 32px auto 8px auto;
+        background: linear-gradient(135deg, #004225 0%, #32CD32 100%);
+        color: #fff;
+        font-weight: 700;
+        font-size: 20px;
+        padding: 18px 48px;
+        border-radius: 50px;
+        border: none;
         cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 
+            0 8px 25px rgba(0,66,37,0.3),
+            0 4px 12px rgba(0,66,37,0.2);
+        position: relative;
+        overflow: hidden;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        min-width: 200px;
+    }
+
+    .btn-submit::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: left 0.5s;
+    }
+
+    .btn-submit:hover {
+        background: linear-gradient(135deg, #003018 0%, #28a745 100%);
+        transform: translateY(-2px);
+        box-shadow: 
+            0 12px 35px rgba(0,66,37,0.4),
+            0 6px 16px rgba(0,66,37,0.3);
+    }
+
+    .btn-submit:hover::before {
+        left: 100%;
+    }
+
+    .btn-submit:active {
+        transform: translateY(-1px);
+        box-shadow: 
+            0 6px 20px rgba(0,66,37,0.3),
+            0 3px 8px rgba(0,66,37,0.2);
+    }
+
+    /* Filter Section Styles */
+    .filter-section {
+        margin: 24px 0;
+        padding: 28px;
+        background: linear-gradient(145deg, #f1f5f9 0%, #e2e8f0 100%);
+        border-radius: 20px;
+        border: 1px solid rgba(0,66,37,0.1);
+        box-shadow: 
+            0 4px 16px rgba(0,0,0,0.05),
+            inset 0 1px 0 rgba(255,255,255,0.6);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .filter-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #004225 0%, #32CD32 50%, #004225 100%);
+    }
+
+    .filter-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 20px;
+        margin-top: 12px;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .filter-label {
+        font-size: 14px;
+        font-weight: 700;
+        color: #374151;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin: 0;
+    }
+
+    .filter-select {
+        width: 100%;
+        padding: 14px 16px;
+        border-radius: 12px;
+        border: 2px solid #cbd5e1;
+        background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+        font-size: 15px;
+        color: #374151;
+        outline: none;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        box-shadow: 
+            0 1px 3px rgba(0,0,0,0.1),
+            inset 0 1px 0 rgba(255,255,255,0.6);
+    }
+
+    .filter-select:focus {
+        border-color: #004225;
+        box-shadow: 
+            0 0 0 4px rgba(0,66,37,0.1),
+            0 4px 12px rgba(0,66,37,0.15),
+            inset 0 1px 0 rgba(255,255,255,0.6);
+        background: #ffffff;
+        transform: translateY(-1px);
+    }
+
+    .filter-select:hover {
+        border-color: #94a3b8;
+        box-shadow: 
+            0 2px 8px rgba(0,0,0,0.1),
+            inset 0 1px 0 rgba(255,255,255,0.6);
+        transform: translateY(-1px);
+    }
+
+    /* Filter status indicators */
+    .filter-status {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 8px;
+        padding: 8px 12px;
+        background: #f3f4f6;
+        border-radius: 6px;
+        font-size: 13px;
+        color: #6b7280;
+    }
+
+    .filter-status.active {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .filter-status .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #9ca3af;
+    }
+
+    .filter-status.active .status-dot {
+        background: #16a34a;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 900px) {
+        .filter-grid {
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+    }
+
+    @media (max-width: 700px) {
+        .filter-section {
+            padding: 16px;
+        }
+        
+        .filter-select {
+            font-size: 14px;
+            padding: 10px 12px;
+        }
+    }
+
+    /* Reset Filters Button */
+    .reset-filters-btn {
+        margin-top: 20px;
+        padding: 12px 24px;
+        background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        box-shadow: 
+            0 4px 12px rgba(107,114,128,0.3),
+            0 2px 6px rgba(107,114,128,0.2);
+        position: relative;
+        overflow: hidden;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        min-width: 140px;
+    }
+
+    .reset-filters-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: left 0.5s;
+    }
+
+    .reset-filters-btn:hover {
+        background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+        transform: translateY(-2px);
+        box-shadow: 
+            0 6px 16px rgba(107,114,128,0.4),
+            0 3px 8px rgba(107,114,128,0.3);
+    }
+
+    .reset-filters-btn:hover::before {
+        left: 100%;
+    }
+
+    .reset-filters-btn:active {
+        transform: translateY(-1px);
+        box-shadow: 
+            0 4px 12px rgba(107,114,128,0.3),
+            0 2px 6px rgba(107,114,128,0.2);
     }
 </style>
-
 </head>
 <body>
-    <div class="main-container">
-        <!-- Container for Page Title and Add Goal Button -->
-        <div class="container-a">
-            <div class="container-a-text">Goals</div>
-            <button class="container-a-button">Add Goal</button>
-        </div>
+    
 
-        <!-- Container for Goal Cards -->
-        <div class="container-b">
-            <div class="goal-card">
-                <div class="goal-card-kebab"> <svg class="kebab-svg"><use href="#kebab-icon"/></svg> </div>
-                <div class="goal-card-percent">75%</div>
-                <div class="goal-card-title">100 Extension Projects for 2025</div>
+    <!-- Add Goal Modal -->
+    <div class="goal-overlay" id="addGoalOverlay" aria-hidden="true">
+        <div class="goal-card" role="dialog" aria-modal="true" aria-labelledby="addGoalTitle">
+            <div class="goal-header">
+                <div class="goal-modal-title" id="addGoalTitle">Add Goal</div>
+                <button class="goal-close" id="addGoalClose" title="Close">✕</button>
             </div>
-            <div class="goal-card">
-                <div class="goal-card-kebab"> <svg class="kebab-svg"><use href="#kebab-icon"/></svg> </div>
-                <div class="goal-card-percent">30%</div>
-                <div class="goal-card-title">10 SDG Extension Projects for 2025</div>
-            </div>
-            <div class="goal-card">
-                <div class="goal-card-kebab"> <svg class="kebab-svg"><use href="#kebab-icon"/></svg> </div>
-                <div class="goal-card-percent">90%</div>
-                <div class="goal-card-title">5 Student Involved Extension Projects for 2025</div>
-            </div>
-            <div class="goal-card">
-                <div class="goal-card-kebab"> <svg class="kebab-svg"><use href="#kebab-icon"/></svg> </div>
-                <div class="goal-card-percent">50%</div>
-                <div class="goal-card-title">10 Eco-Tourism Projects for 2025</div>
+            <div class="goal-body">
+                <div>
+                    <div class="field-label">📝 Title</div>
+                    <input type="text" class="text-input" id="goalTitle" placeholder="Enter goal title" />
+                </div>
+                <!-- Filter Section -->
+                <div class="filter-section">
+                    <div class="field-label">🔍 Filter Criteria</div>
+                    <div class="filter-grid">
+                        <!-- AGENDA Filter -->
+                        <div class="filter-group">
+                            <label class="filter-label">AGENDA</label>
+                            <select class="filter-select" id="agendaFilter">
+                                <option value="all">ALL</option>
+                                <option value="economics">Economics, Entrepreneurship, and Livelihood Enhancement</option>
+                                <option value="environmental">Environmental IEC and Culture Sensitivity</option>
+                                <option value="hospitality">Hospitality and Tourism Industry Enhancement</option>
+                                <option value="agriculture">Agriculture, Environmental Protection, Conservation and Resource Management</option>
+                                <option value="health">Promotive and Preventive Health and Nutrition and Gender Sensitivity</option>
+                                <option value="literacy">Literacy and Alternative Learning Systems</option>
+                                <option value="engineering">Engineering, Architecture and Appropriate Technology</option>
+                                <option value="safety">Public Safety & Security, Disaster Risk Management and Governance</option>
+                                <option value="leadership">Leadership Enhancement and Governance</option>
+                            </select>
+                        </div>
+
+                        <!-- SDG Filter -->
+                        <div class="filter-group">
+                            <label class="filter-label">SDG</label>
+                            <select class="filter-select" id="sdgFilter">
+                                <option value="all">ALL</option>
+                                <option value="1">SDG 1 - No Poverty</option>
+                                <option value="2">SDG 2 - Zero Hunger</option>
+                                <option value="3">SDG 3 - Good Health and Well-being</option>
+                                <option value="4">SDG 4 - Quality Education</option>
+                                <option value="5">SDG 5 - Gender Equality</option>
+                                <option value="6">SDG 6 - Clean Water and Sanitation</option>
+                                <option value="7">SDG 7 - Affordable and Clean Energy</option>
+                                <option value="8">SDG 8 - Decent Work and Economic Growth</option>
+                                <option value="9">SDG 9 - Industry, Innovation and Infrastructure</option>
+                                <option value="10">SDG 10 - Reduced Inequalities</option>
+                                <option value="11">SDG 11 - Sustainable Cities and Communities</option>
+                                <option value="12">SDG 12 - Responsible Consumption and Production</option>
+                                <option value="13">SDG 13 - Climate Action</option>
+                                <option value="14">SDG 14 - Life Below Water</option>
+                                <option value="15">SDG 15 - Life on Land</option>
+                                <option value="16">SDG 16 - Peace, Justice and Strong Institutions</option>
+                                <option value="17">SDG 17 - Partnerships for the Goals</option>
+                            </select>
+                        </div>
+
+                        <!-- PROJECT STATUS Filter -->
+                        <div class="filter-group">
+                            <label class="filter-label">PROJECT STATUS</label>
+                            <select class="filter-select" id="statusFilter">
+                                <option value="all">ALL</option>
+                                <option value="ongoing">ONGOING</option>
+                                <option value="completed">COMPLETED</option>
+                                <option value="planning">PLANNING</option>
+                                <option value="on-hold">ON HOLD</option>
+                                <option value="cancelled">CANCELLED</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="button" class="reset-filters-btn" onclick="resetFilters()">Reset Filters</button>
+                </div>
+                <div class="row-2">
+                    <div>
+                        <div class="field-label">🔢 Goal in Numbers</div>
+                        <input type="number" class="text-input" id="goalNumber" value="10" />
+                    </div>
+                    <div>
+                        <div class="field-label">📅 Goal Deadline</div>
+                        <input type="date" class="date-input" id="goalDeadline" value="2025-01-01" />
+                    </div>
+                </div>
+                <button class="btn-submit" id="addGoalSubmit">Submit</button>
             </div>
         </div>
+    </div>
 
-        <!-- List View -->
-        <div class="list-view-text">List View</div>
-        <div class="container-c">
-            <table class="goals-table">
-                <thead>
-                    <tr>
-                        <th>Goal</th>
+    <div class="content">
+
+    <main>
+        <div>
+            <div class="goals-header">
+                <h1>Goals</h1>
+                <button class="add-goal">Add Goal</button>
+            </div> 
+            <div class="goal" id="goalsContainer">
+                <!-- Goals will be dynamically loaded here -->
+            </div>
+        </div>
+        <div>
+            <div class="ListView-header">
+                <h1>List View</h1>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                    <tr class="table-header">
+                        <th>Goals</th>
                         <th>List of Qualifiers</th>
                         <th>Progress</th>
                     </tr>
-                </thead>
-                <tbody>
+                    </thead>
+                    <tbody>
                     <tr>
-                        <td>100 Extension Projects for 2025</td>
-                        <td><span class="qualifier-link">View List</span></td>
-                        <td>75%</td>
+                        <td>10 extension projects for 2024 </td>
+                        <td><button class="ListView-btn">View List</button></td>
+                        <td class="progress">75%</td>
                     </tr>
                     <tr>
-                        <td>10 SDG Extension Projects for 2025</td>
-                        <td><span class="qualifier-link">View List</span></td>
-                        <td>30%</td>
+                        <td>10 SDG extension projects for 2024</td>
+                        <td><button class="ListView-btn">View List</button></td>
+                        <td class="progress">30%</td>
                     </tr>
                     <tr>
-                        <td>5 Student Involved Extension Projects for 2025</td>
-                        <td><span class="qualifier-link">View List</span></td>
-                        <td>90%</td>
+                        <td>5 student involved extension projects for 2024</td>
+                        <td><button class="ListView-btn">View List</button></td>
+                        <td class="progress">90%</td>
                     </tr>
                     <tr>
-                        <td>10 Eco-Tourism Projects for 2025</td>
-                        <td><span class="qualifier-link">View List</span></td>
-                        <td>50%</td>
+                        <td>10 eco tourism projects for 2024</td>
+                        <td><button class="ListView-btn">View List</button></td>
+                        <td class="progress">50%</td>
                     </tr>
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
+            </div>
         </div>
-
+    </main>
     </div>
 
-<!-- SVG Sprite Section -->
-<svg style="display:none;">
+    <!-- Overlay Modal -->
+    <div class="overlay" id="qualifiersOverlay" aria-hidden="true">
+        <div class="overlay-card" role="dialog" aria-modal="true" aria-labelledby="overlayTitle">
+            <div class="overlay-header">
+                <div class="overlay-title" id="overlayTitle">List of Qualifiers</div>
+                <div class="overlay-actions">
+                    <button class="btn-export">Export</button>
+                    <button class="overlay-close" id="overlayClose" title="Close">✕</button>
+                </div>
+            </div>
+            <div class="overlay-body">
+                <table class="qualifiers-table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Team Leader</th>
+                            <th>Start Date</th>
+                            <th>Status</th>
+                            <th class="table-settings">Settings</th>
+                        </tr>
+                    </thead>
+                    <tbody id="qualifiersTbody">
+                        <!-- rows injected via JS -->
+                    </tbody>
+                </table>
+                <div class="pagination" id="pagination"></div>
+            </div>
+        </div>
+    </div>
 
-    <!-- Kebab -->
-    <symbol id="kebab-icon" viewBox="0 0 4 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M2 16C1.45 16 0.979167 15.8042 0.5875 15.4125C0.195833 15.0208 0 14.55 0 14C0 13.45 0.195833 12.9792 0.5875 12.5875C0.979167 12.1958 1.45 12 2 12C2.55 12 3.02083 12.1958 3.4125 12.5875C3.80417 12.9792 4 13.45 4 14C4 14.55 3.80417 15.0208 3.4125 15.4125C3.02083 15.8042 2.55 16 2 16ZM2 10C1.45 10 0.979167 9.80417 0.5875 9.4125C0.195833 9.02083 0 8.55 0 8C0 7.45 0.195833 6.97917 0.5875 6.5875C0.979167 6.19583 1.45 6 2 6C2.55 6 3.02083 6.19583 3.4125 6.5875C3.80417 6.97917 4 7.45 4 8C4 8.55 3.80417 9.02083 3.4125 9.4125C3.02083 9.80417 2.55 10 2 10ZM2 4C1.45 4 0.979167 3.80417 0.5875 3.4125C0.195833 3.02083 0 2.55 0 2C0 1.45 0.195833 0.979167 0.5875 0.5875C0.979167 0.195833 1.45 0 2 0C2.55 0 3.02083 0.195833 3.4125 0.5875C3.80417 0.979167 4 1.45 4 2C4 2.55 3.80417 3.02083 3.4125 3.4125C3.02083 3.80417 2.55 4 2 4Z" fill="#1D1B20"/>
-    </symbol>
-    
-</svg>
+    <script>
+        // Export function for qualifiers
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.btn-export')) {
+                exportQualifiersToCSV();
+            }
+        });
 
+        function exportQualifiersToCSV() {
+            if (dataset.length === 0) {
+                alert('No data to export');
+                return;
+            }
+
+            // Create CSV content
+            const headers = ['Title', 'Team Leader', 'Start Date', 'Status'];
+            const csvRows = [headers.join(',')];
+
+            dataset.forEach(row => {
+                const values = [
+                    `"${row.title}"`,
+                    `"${row.lead}"`,
+                    `"${row.start}"`,
+                    `"${row.status}"`
+                ];
+                csvRows.push(values.join(','));
+            });
+
+            const csvContent = csvRows.join('\n');
+            
+            // Create and download file
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'goal_qualifiers.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Plugin to draw percentage text inside the chart
+        const centerTextPlugin = {
+            id: 'centerText',
+            beforeDraw(chart) {
+                const { width, height, ctx } = chart;
+                ctx.save();
+                const dataset = chart.data.datasets[0].data;
+                const value = dataset[0];
+
+                // Ensure value is valid for display
+                const displayValue = (value !== null && value !== undefined && !isNaN(value)) ? value : 0;
+
+                ctx.font = 'bold 3.5rem Arial'; 
+                ctx.fillStyle = '#333'; 
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(displayValue + '%', width / 2, height / 1.75);
+                ctx.restore();
+            }
+        };
+        function createHalfDoughnut(ctx, value, title) {
+            // Ensure value is a valid number, default to 0 if undefined/null
+            const progressValue = (value !== null && value !== undefined && !isNaN(value)) ? value : 0;
+            
+            return new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    datasets: [{
+                        data: [progressValue, 100 - progressValue],
+                        backgroundColor: ['#32CD32', '#D2042D'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                rotation: -90,
+                circumference: 180,
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '85%',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { enabled: false },
+                    title: { display: false },
+                    subtitle: { display: false},
+                    padding: { top: 10 }
+                    }
+                },
+                plugins: [centerTextPlugin] 
+            });
+        }
+
+        // Ellipsis dropdown behavior - REMOVED CONFLICTING EVENT DELEGATION
+        // Now using onclick handlers directly on buttons
+        
+        // Close menus when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.goal-menu') && !e.target.closest('.ellipsis-btn')) {
+                document.querySelectorAll('.goal-menu').forEach(menu => {
+                    menu.classList.remove('open');
+                });
+            }
+        });
+
+        // Delegate menu actions (Edit/Delete) - REMOVED OLD DELETE LOGIC
+        document.addEventListener('click', (e) => {
+            const editBtn = e.target.closest('.menu-edit');
+            if (editBtn) {
+                const card = editBtn.closest('.goal > div');
+                const title = card?.querySelector('.goal-title')?.textContent?.trim() || '';
+                alert('Edit: ' + title);
+            }
+            // Delete button now uses onclick handlers, not event delegation
+        });
+
+        // Modal logic
+        const overlay = document.getElementById('qualifiersOverlay');
+        const overlayClose = document.getElementById('overlayClose');
+        function openOverlay() { overlay.classList.add('open'); }
+        function closeOverlay() { overlay.classList.remove('open'); }
+        overlayClose.addEventListener('click', closeOverlay);
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) closeOverlay();
+        });
+
+        // Add Goal modal wiring
+        const addGoalOverlay = document.getElementById('addGoalOverlay');
+        const addGoalClose = document.getElementById('addGoalClose');
+        const addGoalBtn = document.querySelector('.add-goal');
+        
+        function openAddGoalModal() { 
+            addGoalOverlay.classList.add('open'); 
+        }
+        
+        function openAddGoal() { 
+            // Reset form to ensure clean state for adding new goal
+            resetGoalForm();
+            openAddGoalModal();
+        }
+        
+        function closeAddGoal() { addGoalOverlay.classList.remove('open'); }
+        
+        // Add event listener to existing button
+        if (addGoalBtn) {
+            addGoalBtn.addEventListener('click', openAddGoal);
+        }
+        
+        // Add event delegation for dynamically created buttons
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('add-goal') || e.target.closest('.add-goal')) {
+                openAddGoal();
+            }
+        });
+        
+        addGoalClose.addEventListener('click', closeAddGoal);
+        addGoalOverlay.addEventListener('click', (e) => { if (e.target === addGoalOverlay) closeAddGoal(); });
+
+        // Handle form submission
+        document.addEventListener('DOMContentLoaded', function() {
+            const submitButton = document.getElementById('addGoalSubmit');
+            if (submitButton) {
+                submitButton.addEventListener('click', async function() {
+                    // Show loading state
+                    const originalText = this.textContent;
+                    this.textContent = 'Submitting...';
+                    this.disabled = true;
+                    
+                    try {
+                        const title = document.getElementById('goalTitle').value.trim();
+                        const agenda = document.getElementById('agendaFilter').value;
+                        const sdg = document.getElementById('sdgFilter').value;
+                        const status = document.getElementById('statusFilter').value;
+                        const goalNumber = parseInt(document.getElementById('goalNumber').value);
+                        const deadline = document.getElementById('goalDeadline').value;
+
+                        // Enhanced validation
+                        if (!title) {
+                            alert('Please enter a goal title');
+                            return;
+                        }
+
+                        if (isNaN(goalNumber) || goalNumber <= 0) {
+                            alert('Please enter a valid goal number');
+                            return;
+                        }
+
+                        if (!deadline) {
+                            alert('Please select a deadline');
+                            return;
+                        }
+
+                        const goalData = {
+                            title: title,
+                            agenda: agenda,
+                            sdg: sdg,
+                            status: status,
+                            goal_number: goalNumber,
+                            deadline: deadline, // Keep as YYYY-MM-DD format as backend expects
+                            progress: 0 // New goals start with 0% progress
+                        };
+
+                        console.log('Submitting goal data:', goalData);
+
+                        const goalId = this.getAttribute('data-goal-id');
+                        let success = false;
+                        
+                        if (goalId) {
+                            // Update existing goal
+                            goalData.id = parseInt(goalId);
+                            console.log('Updating goal with ID:', goalId);
+                            
+                            const response = await fetch(`/goals/api/goals/${goalId}/`, {
+                                method: 'PUT',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRFToken': getCSRFToken()
+                                },
+                                body: JSON.stringify(goalData)
+                            });
+                            
+                            console.log('Update response status:', response.status);
+                            
+                            if (!response.ok) {
+                                throw new Error(`HTTP error! status: ${response.status}`);
+                            }
+                            
+                            const result = await response.json();
+                            console.log('Update response:', result);
+                            
+                            if (result.success) {
+                                success = true;
+                                showSuccessMessage('Goal updated successfully!');
+                            } else {
+                                showErrorMessage('Error updating goal: ' + (result.error || 'Unknown error'));
+                            }
+                        } else {
+                            // Add new goal
+                            console.log('Adding new goal');
+                            success = await addGoalToDatabase(goalData);
+                            if (success) {
+                                showSuccessMessage('Goal added successfully!');
+                            }
+                        }
+                        
+                        if (success) {
+                            // Reset form and close modal
+                            resetGoalForm();
+                            closeAddGoal();
+                            // Reload goals from database for real-time update
+                            await loadGoals();
+                        }
+                        
+                    } catch (error) {
+                        console.error('Error saving goal:', error);
+                        showErrorMessage('Error saving goal: ' + error.message);
+                    } finally {
+                        // Restore button state
+                        this.textContent = originalText;
+                        this.disabled = false;
+                    }
+                });
+            } else {
+                console.error('Submit button not found!');
+            }
+        });
+
+        // Notification functions
+        function showSuccessMessage(message) {
+            // Create a beautiful success notification
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                color: white;
+                padding: 16px 24px;
+                border-radius: 12px;
+                box-shadow: 0 8px 32px rgba(16, 185, 129, 0.3);
+                z-index: 10000;
+                font-weight: 600;
+                font-size: 16px;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                animation: slideInRight 0.3s ease-out;
+                max-width: 400px;
+            `;
+            
+            notification.innerHTML = `
+                <div style="font-size: 24px;">✅</div>
+                <div>${message}</div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Auto remove after 4 seconds
+            setTimeout(() => {
+                notification.style.animation = 'slideOutRight 0.3s ease-in';
+                setTimeout(() => notification.remove(), 300);
+            }, 4000);
+        }
+
+        function showErrorMessage(message) {
+            // Create a beautiful error notification
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+                color: white;
+                padding: 16px 24px;
+                border-radius: 12px;
+                box-shadow: 0 8px 32px rgba(239, 68, 68, 0.3);
+                z-index: 10000;
+                font-weight: 600;
+                font-size: 16px;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                animation: slideInRight 0.3s ease-out;
+                max-width: 400px;
+            `;
+            
+            notification.innerHTML = `
+                <div style="font-size: 24px;">❌</div>
+                <div>${message}</div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                notification.style.animation = 'slideOutRight 0.3s ease-in';
+                setTimeout(() => notification.remove(), 300);
+            }, 5000);
+        }
+
+        // Add CSS animations for notifications
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideInRight {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+            
+            @keyframes slideOutRight {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Reset form function
+        function resetGoalForm() {
+            document.getElementById('goalTitle').value = '';
+            document.getElementById('agendaFilter').value = 'all';
+            document.getElementById('sdgFilter').value = 'all';
+            document.getElementById('statusFilter').value = 'all';
+            document.getElementById('goalNumber').value = '10';
+            document.getElementById('goalDeadline').value = '2025-01-01';
+            document.getElementById('addGoalSubmit').removeAttribute('data-goal-id');
+            document.getElementById('addGoalSubmit').textContent = 'Submit';
+            document.getElementById('addGoalTitle').textContent = 'Add Goal';
+            resetFilters();
+        }
+
+        // Filter functionality for Add Goal modal
+        let currentFilters = {
+            agenda: 'all',
+            sdg: 'all',
+            status: 'all'
+        };
+
+        // Filter change handlers
+        document.getElementById('agendaFilter').addEventListener('change', (e) => {
+            currentFilters.agenda = e.target.value;
+            updateFilterDisplay();
+            applyFilters();
+        });
+
+        document.getElementById('sdgFilter').addEventListener('change', (e) => {
+            currentFilters.sdg = e.target.value;
+            updateFilterDisplay();
+            applyFilters();
+        });
+
+        document.getElementById('statusFilter').addEventListener('change', (e) => {
+            currentFilters.status = e.target.value;
+            updateFilterDisplay();
+            applyFilters();
+        });
+
+        function updateFilterDisplay() {
+            // Update visual indicators for active filters
+            const agendaFilter = document.getElementById('agendaFilter');
+            const sdgFilter = document.getElementById('sdgFilter');
+            const statusFilter = document.getElementById('statusFilter');
+
+            // Add/remove active class based on filter selection
+            agendaFilter.classList.toggle('active', currentFilters.agenda !== 'all');
+            sdgFilter.classList.toggle('active', currentFilters.sdg !== 'all');
+            statusFilter.classList.toggle('active', currentFilters.status !== 'all');
+
+            // Update filter summary (optional)
+            updateFilterSummary();
+        }
+
+        function updateFilterSummary() {
+            // Create a summary of active filters
+            const activeFilters = [];
+            if (currentFilters.agenda !== 'all') {
+                const agendaText = document.querySelector('#agendaFilter option:checked').textContent;
+                activeFilters.push(`AGENDA: ${agendaText}`);
+            }
+            if (currentFilters.sdg !== 'all') {
+                const sdgText = document.querySelector('#sdgFilter option:checked').textContent;
+                activeFilters.push(`SDG: ${sdgText}`);
+            }
+            if (currentFilters.status !== 'all') {
+                const statusText = document.querySelector('#statusFilter option:checked').textContent;
+                activeFilters.push(`STATUS: ${statusText}`);
+            }
+
+            // Log or display the active filters
+            console.log('Active filters:', activeFilters.length > 0 ? activeFilters.join(', ') : 'No filters applied');
+        }
+
+        function applyFilters() {
+            // This function would apply the filters to the goal data
+            // For now, we'll just log the filter values
+            console.log('Applying filters:', currentFilters);
+            
+            // Here you would typically:
+            // 1. Filter the goals data based on current filter values
+            // 2. Update the UI to show only matching goals
+            // 3. Update goal counts and progress indicators
+            
+            // Example filter logic:
+            // const filteredGoals = goals.filter(goal => {
+            //     const agendaMatch = currentFilters.agenda === 'all' || goal.agenda === currentFilters.agenda;
+            //     const sdgMatch = currentFilters.sdg === 'all' || goal.sdg === currentFilters.sdg;
+            //     const statusMatch = currentFilters.status === 'all' || goal.status === currentFilters.status;
+            //     return agendaMatch && sdgMatch && statusMatch;
+            // });
+        }
+
+        // Reset filters function
+        function resetFilters() {
+            currentFilters = {
+                agenda: 'all',
+                sdg: 'all',
+                status: 'all'
+            };
+            
+            document.getElementById('agendaFilter').value = 'all';
+            document.getElementById('sdgFilter').value = 'all';
+            document.getElementById('statusFilter').value = 'all';
+            
+            updateFilterDisplay();
+            applyFilters();
+        }
+
+        // Add reset filters button functionality (optional)
+        function addResetFiltersButton() {
+            const filterSection = document.querySelector('.filter-section');
+            const resetButton = document.createElement('button');
+            resetButton.textContent = 'Reset Filters';
+            resetButton.className = 'reset-filters-btn';
+            resetButton.style.cssText = `
+                margin-top: 12px;
+                padding: 8px 16px;
+                background: #6b7280;
+                color: white;
+                border: none;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 14px;
+                transition: background 0.2s;
+            `;
+            resetButton.addEventListener('click', resetFilters);
+            resetButton.addEventListener('mouseenter', () => {
+                resetButton.style.background = '#4b5563';
+            });
+            resetButton.addEventListener('mouseleave', () => {
+                resetButton.style.background = '#6b7280';
+            });
+            
+            filterSection.appendChild(resetButton);
+        }
+
+        // Initialize filter display
+        updateFilterDisplay();
+
+        // Make resetFilters function globally accessible
+        window.resetFilters = resetFilters;
+
+        // Load goals when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set CSRF token in meta tag
+            const csrfToken = getCSRFToken();
+            if (csrfToken) {
+                const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+                if (csrfMeta) {
+                    csrfMeta.setAttribute('content', csrfToken);
+                }
+            }
+            
+            loadGoals();
+        });
+
+        // Database integration functions
+        let goals = []; // Store goals data
+
+        // Load goals from database
+        async function loadGoals() {
+            try {
+                console.log('=== LOADING GOALS FROM API ===');
+                const response = await fetch('/goals/api/goals/');
+                const data = await response.json();
+                
+                console.log('API Response:', data);
+                
+                if (data.goals && data.goals.length > 0) {
+                    console.log('Raw goals from API:', data.goals);
+                    
+                    // Validate and normalize goal data
+                    goals = data.goals.map(goal => ({
+                        ...goal,
+                        progress: (goal.progress !== null && goal.progress !== undefined && !isNaN(goal.progress)) ? goal.progress : 0,
+                        goal_number: goal.goal_number || 0,
+                        title: goal.title || 'Untitled Goal'
+                    }));
+                    
+                    console.log('Processed goals array:', goals);
+                    console.log('Goals array length:', goals.length);
+                    
+                    renderGoals();
+                    updateListView();
+                } else {
+                    console.log('No goals found in API response');
+                    // No goals in database - show empty state
+                    goals = [];
+                    renderEmptyState();
+                    updateListView();
+                }
+            } catch (error) {
+                console.error('Error loading goals from database:', error);
+                // API failed - show empty state with error message
+                goals = [];
+                renderEmptyState(true);
+                updateListView();
+            }
+        }
+
+        // Render empty state when no goals exist
+        function renderEmptyState(hasError = false) {
+            const goalContainer = document.getElementById('goalsContainer');
+            if (!goalContainer) return;
+
+            goalContainer.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 3rem 2rem; color: #6b7280;">
+                    <div style="font-size: 4rem; margin-bottom: 1rem; opacity: 0.5;">
+                        ${hasError ? '⚠️' : '📋'}
+                    </div>
+                    <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem; color: #374151;">
+                        ${hasError ? 'Unable to Load Goals' : 'No Goals Yet'}
+                    </h3>
+                    <p style="font-size: 1rem; margin-bottom: 1.5rem; max-width: 400px; margin-left: auto; margin-right: auto;">
+                        ${hasError 
+                            ? 'There was an error loading goals from the database. Please check your connection and try again.' 
+                            : 'Start by adding your first goal using the "Add Goal" button above. Your goals will appear here once created.'
+                        }
+                    </p>
+                    ${!hasError ? `
+                        <button class="add-goal" style="margin-top: 1rem;">
+                            <i class="fa-solid fa-plus" style="margin-right: 0.5rem;"></i>
+                            Add Your First Goal
+                        </button>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        // Render goals in the UI
+        function renderGoals() {
+            const goalContainer = document.getElementById('goalsContainer');
+            if (!goalContainer) return;
+
+            // Clear existing goals
+            goalContainer.innerHTML = '';
+
+            // If no goals, show empty state
+            if (goals.length === 0) {
+                renderEmptyState();
+                return;
+            }
+
+            // Show first 4 goals
+            const goalsToShow = goals.slice(0, 4);
+            
+            goalsToShow.forEach((goal, index) => {
+                console.log(`Rendering goal ${index}: ID=${goal.id}, Title="${goal.title}"`);
+                const goalDiv = document.createElement('div');
+                goalDiv.innerHTML = `
+                    <button class="ellipsis-btn" onclick="toggleGoalMenu(${index})">...</button>
+                    <div class="goal-menu" id="goal-menu-${index}">
+                        <button class="menu-edit" onclick="editGoal(${goal.id})">Edit</button>
+                        <button class="menu-delete" style="color:#d2042d;" onclick="deleteGoal(${goal.id})">Delete</button>
+                    </div>
+                    <canvas id="goal${index + 1}"></canvas>
+                    <div class="goal-title">${goal.title}</div>
+                `;
+                goalContainer.appendChild(goalDiv);
+
+                // Create chart for this goal
+                setTimeout(() => {
+                    createHalfDoughnut(
+                        document.getElementById(`goal${index + 1}`).getContext('2d'), 
+                        goal.progress, 
+                        goal.title
+                    );
+                }, 100);
+            });
+        }
+
+        // Update list view with real data
+        function updateListView() {
+            const tbody = document.querySelector('tbody');
+            if (!tbody) return;
+
+            tbody.innerHTML = '';
+            
+            if (goals.length === 0) {
+                // Show empty state in table
+                const emptyRow = document.createElement('tr');
+                emptyRow.innerHTML = `
+                    <td colspan="3" style="text-align: center; padding: 2rem; color: #6b7280; font-style: italic;">
+                        No goals available. Add a goal to see it here.
+                    </td>
+                `;
+                tbody.appendChild(emptyRow);
+                return;
+            }
+
+            goals.forEach(goal => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${goal.title}</td>
+                    <td><button class="ListView-btn" onclick="viewQualifiers(${goal.id})">View List</button></td>
+                    <td class="progress">${goal.progress}%</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Add new goal to database
+        async function addGoalToDatabase(goalData) {
+            try {
+                console.log('Attempting to add goal:', goalData);
+                
+                const csrfToken = getCSRFToken();
+                console.log('CSRF Token:', csrfToken ? 'Found' : 'Not found');
+                
+                const response = await fetch('/goals/api/goals/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify(goalData)
+                });
+
+                console.log('Add goal response status:', response.status);
+                console.log('Add goal response headers:', response.headers);
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Response error:', errorText);
+                    throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+                }
+
+                const result = await response.json();
+                console.log('Add goal response:', result);
+                
+                if (result.success) {
+                    // Reload goals from database for real-time update
+                    await loadGoals();
+                    return true;
+                } else {
+                    console.error('Error adding goal:', result.error);
+                    showErrorMessage('Error adding goal: ' + (result.error || 'Unknown error'));
+                    return false;
+                }
+            } catch (error) {
+                console.error('Error adding goal:', error);
+                showErrorMessage('Error adding goal: ' + error.message);
+                return false;
+            }
+        }
+
+        // Delete goal from database
+        async function deleteGoalFromDatabase(goalId) {
+            try {
+                console.log('Attempting to delete goal ID:', goalId);
+                console.log('CSRF Token:', getCSRFToken() ? 'Found' : 'Not found');
+                
+                const response = await fetch(`/goals/api/goals/${goalId}/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCSRFToken()
+                    }
+                });
+
+                console.log('Delete response status:', response.status);
+                console.log('Delete response headers:', response.headers);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Delete response error:', errorText);
+                    throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+                }
+                
+                const result = await response.json();
+                console.log('Delete response:', result);
+                
+                if (result.success) {
+                    // Reload goals from database for real-time update
+                    await loadGoals();
+                    return true;
+                } else {
+                    console.error('Error deleting goal:', result.error);
+                    showErrorMessage('Error deleting goal: ' + result.error);
+                    return false;
+                }
+            } catch (error) {
+                console.error('Error deleting goal:', error);
+                showErrorMessage('Error deleting goal: ' + error.message);
+                return false;
+            }
+        }
+
+        // Get CSRF token
+        function getCSRFToken() {
+            // Try to get CSRF token from cookies
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                const [name, value] = cookie.trim().split('=');
+                if (name === 'csrftoken') {
+                    return value;
+                }
+            }
+            
+            // Try to get CSRF token from meta tag
+            const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+            if (csrfMeta) {
+                return csrfMeta.getAttribute('content');
+            }
+            
+            // Try to get CSRF token from form
+            const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
+            if (csrfInput) {
+                return csrfInput.value;
+            }
+            
+            console.warn('CSRF token not found');
+            return '';
+        }
+
+        // Enhanced goal menu functions
+        function toggleGoalMenu(index) {
+            console.log('toggleGoalMenu called with index:', index);
+            // Close all menus
+            document.querySelectorAll('.goal-menu').forEach(menu => {
+                menu.classList.remove('open');
+            });
+            
+            // Toggle current menu
+            const menu = document.getElementById(`goal-menu-${index}`);
+            console.log('Found menu element:', menu);
+            if (menu) {
+                menu.classList.toggle('open');
+                console.log('Menu toggled, is open:', menu.classList.contains('open'));
+            }
+        }
+
+        // Edit goal function
+        function editGoal(goalId) {
+            console.log('editGoal called with ID:', goalId, 'Type:', typeof goalId);
+            const goal = goals.find(g => g.id === parseInt(goalId)); // Convert string to number
+            console.log('Found goal for editing:', goal);
+            if (goal) {
+                // Populate the form with existing data
+                document.getElementById('goalTitle').value = goal.title;
+                document.getElementById('agendaFilter').value = goal.agenda;
+                document.getElementById('sdgFilter').value = goal.sdg;
+                document.getElementById('statusFilter').value = goal.status;
+                document.getElementById('goalNumber').value = goal.goal_number;
+                document.getElementById('goalDeadline').value = goal.deadline;
+                
+                // Update modal title and button text
+                document.getElementById('addGoalTitle').textContent = 'Update Goal';
+                document.getElementById('addGoalSubmit').textContent = 'Update Goal';
+                
+                // Store the goal ID for updating
+                document.getElementById('addGoalSubmit').setAttribute('data-goal-id', goalId);
+                
+                // Open the modal without resetting the form
+                openAddGoalModal();
+            } else {
+                console.log('Goal not found for editing');
+            }
+        }
+
+        // Delete goal function
+        async function deleteGoal(goalId) {
+            console.log('=== DELETE DEBUG START ===');
+            console.log('deleteGoal called with ID:', goalId, 'Type:', typeof goalId);
+            console.log('Current goals array:', goals);
+            console.log('Goals array length:', goals.length);
+            console.log('Looking for goal with ID:', parseInt(goalId));
+            
+            // Log all goal IDs for comparison
+            goals.forEach((g, index) => {
+                console.log(`Goal ${index}: ID=${g.id} (type: ${typeof g.id}), Title="${g.title}"`);
+            });
+            
+            const goal = goals.find(g => g.id === parseInt(goalId)); // Convert string to number
+            console.log('Found goal:', goal);
+            
+            if (goal) {
+                console.log('Goal found! Showing custom confirmation dialog...');
+                const confirmed = await showDeleteConfirmation(goal.title);
+                console.log('User confirmation result:', confirmed);
+                
+                if (confirmed) {
+                    console.log('User confirmed deletion');
+                    const success = await deleteGoalFromDatabase(goalId);
+                    if (success) {
+                        showSuccessMessage('Goal deleted successfully!');
+                    }
+                } else {
+                    console.log('User cancelled deletion');
+                }
+            } else {
+                console.log('❌ Goal not found in array');
+                console.log('Available goal IDs:', goals.map(g => g.id));
+                console.log('Looking for ID:', parseInt(goalId));
+            }
+            console.log('=== DELETE DEBUG END ===');
+        }
+
+        // Custom delete confirmation dialog
+        function showDeleteConfirmation(goalTitle) {
+            return new Promise((resolve) => {
+                // Create overlay
+                const overlay = document.createElement('div');
+                overlay.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.7);
+                    z-index: 10000;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    animation: fadeIn 0.3s ease-out;
+                `;
+                
+                // Create dialog
+                const dialog = document.createElement('div');
+                dialog.style.cssText = `
+                    background: white;
+                    border-radius: 16px;
+                    padding: 32px;
+                    max-width: 400px;
+                    width: 90%;
+                    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+                    text-align: center;
+                    animation: slideIn 0.3s ease-out;
+                `;
+                
+                dialog.innerHTML = `
+                    <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
+                    <h3 style="margin: 0 0 16px 0; color: #1f2937; font-size: 20px;">Delete Goal</h3>
+                    <p style="margin: 0 0 24px 0; color: #6b7280; line-height: 1.5;">
+                        Are you sure you want to delete<br>
+                        <strong style="color: #1f2937;">"${goalTitle}"</strong>?
+                    </p>
+                    <div style="display: flex; gap: 12px; justify-content: center;">
+                        <button id="cancelDelete" style="
+                            background: #6b7280;
+                            color: white;
+                            border: none;
+                            padding: 12px 24px;
+                            border-radius: 8px;
+                            cursor: pointer;
+                            font-weight: 600;
+                            transition: background 0.2s;
+                        ">Cancel</button>
+                        <button id="confirmDelete" style="
+                            background: #dc2626;
+                            color: white;
+                            border: none;
+                            padding: 12px 24px;
+                            border-radius: 8px;
+                            cursor: pointer;
+                            font-weight: 600;
+                            transition: background 0.2s;
+                        ">Delete</button>
+                    </div>
+                `;
+                
+                overlay.appendChild(dialog);
+                document.body.appendChild(overlay);
+                
+                // Add CSS animations
+                const style = document.createElement('style');
+                style.textContent = `
+                    @keyframes fadeIn {
+                        from { opacity: 0; }
+                        to { opacity: 1; }
+                    }
+                    @keyframes slideIn {
+                        from { transform: translateY(-20px); opacity: 0; }
+                        to { transform: translateY(0); opacity: 1; }
+                    }
+                `;
+                document.head.appendChild(style);
+                
+                // Event listeners
+                document.getElementById('cancelDelete').addEventListener('click', () => {
+                    overlay.remove();
+                    style.remove();
+                    resolve(false);
+                });
+                
+                document.getElementById('confirmDelete').addEventListener('click', () => {
+                    overlay.remove();
+                    style.remove();
+                    resolve(true);
+                });
+                
+                // Close on overlay click
+                overlay.addEventListener('click', (e) => {
+                    if (e.target === overlay) {
+                        overlay.remove();
+                        style.remove();
+                        resolve(false);
+                    }
+                });
+                
+                // Close on Escape key
+                const handleEscape = (e) => {
+                    if (e.key === 'Escape') {
+                        overlay.remove();
+                        style.remove();
+                        document.removeEventListener('keydown', handleEscape);
+                        resolve(false);
+                    }
+                };
+                document.addEventListener('keydown', handleEscape);
+            });
+        }
+
+        // View qualifiers function
+        async function viewQualifiers(goalId) {
+            const goal = goals.find(g => g.id === goalId);
+            if (goal) {
+                // Update overlay title
+                document.getElementById('overlayTitle').textContent = `Qualifiers for: ${goal.title}`;
+                
+                // Show loading state
+                const tbody = document.getElementById('qualifiersTbody');
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem;">Loading...</td></tr>';
+                
+                openOverlay();
+                
+                try {
+                    // Fetch projects that match this goal's criteria
+                    const response = await fetch(`/goals/api/goals/${goalId}/qualifiers/`);
+                    const data = await response.json();
+                    
+                    if (data.success && data.projects) {
+                        // Update the dataset with real project data
+                        dataset = data.projects.map(project => ({
+                            title: project.title,
+                            lead: project.team_leader,
+                            start: project.start_date,
+                            status: project.status
+                        }));
+                        
+                        // Render the first page
+                        renderTablePage(1);
+                    } else {
+                        // Show error state
+                        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: #dc2626;">Error loading projects</td></tr>';
+                    }
+                } catch (error) {
+                    console.error('Error fetching qualifiers:', error);
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: #dc2626;">Error loading projects: ' + error.message + '</td></tr>';
+                }
+            }
+        }
+        
+        // Make functions globally accessible
+        window.deleteGoal = deleteGoal;
+        window.editGoal = editGoal;
+        window.toggleGoalMenu = toggleGoalMenu;
+        window.viewQualifiers = viewQualifiers;
+
+        // Client-side pagination
+        const PAGE_SIZE = 5;
+        let currentPage = 1;
+        let dataset = [];
+
+        function renderTablePage(page) {
+            currentPage = page;
+            const start = (page - 1) * PAGE_SIZE;
+            const end = start + PAGE_SIZE;
+            const slice = dataset.slice(start, end);
+            const tbody = document.getElementById('qualifiersTbody');
+            tbody.innerHTML = slice.map((row, idx) => `
+                <tr>
+                    <td>${row.title}</td>
+                    <td>${row.lead}</td>
+                    <td>${row.start}</td>
+                    <td>${row.status}</td>
+                    <td class="table-settings">
+                        <button class="row-ellipsis" aria-haspopup="true" aria-expanded="false">···</button>
+                        <div class="row-menu">
+                            <button class="row-edit">Edit</button>
+                            <button class="row-delete" style="color:#d2042d;">Delete</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+            renderPagination();
+        }
+
+        function renderPagination() {
+            const totalPages = Math.max(1, Math.ceil(dataset.length / PAGE_SIZE));
+            const container = document.getElementById('pagination');
+            const btnPrev = `<button class="page-btn ${currentPage === 1 ? 'disabled' : ''}" data-page="prev">← Previous</button>`;
+            const btnNext = `<button class="page-btn ${currentPage === totalPages ? 'disabled' : ''}" data-page="next">Next →</button>`;
+
+            // Build numbered pages with ellipses
+            const pages = [];
+            const windowSize = 2; // neighbors around current
+            for (let p = 1; p <= totalPages; p++) {
+                const isEdge = p === 1 || p === totalPages;
+                const inWindow = Math.abs(p - currentPage) <= windowSize;
+                if (isEdge || inWindow) {
+                    pages.push(p);
+                }
+            }
+            // insert ellipses
+            const uniquePages = [...new Set(pages)].sort((a,b)=>a-b);
+            const parts = [];
+            uniquePages.forEach((p, idx) => {
+                if (idx > 0 && p - uniquePages[idx-1] > 1) parts.push('<span>…</span>');
+                parts.push(`<button class="page-num ${p === currentPage ? 'active' : ''}" data-page="${p}">${p}</button>`);
+            });
+
+            container.innerHTML = btnPrev + parts.join('') + btnNext;
+        }
+
+        document.getElementById('pagination').addEventListener('click', (e) => {
+            const btn = e.target.closest('button');
+            if (!btn) return;
+            const totalPages = Math.max(1, Math.ceil(dataset.length / PAGE_SIZE));
+            const tag = btn.getAttribute('data-page');
+            if (tag === 'prev' && currentPage > 1) renderTablePage(currentPage - 1);
+            else if (tag === 'next' && currentPage < totalPages) renderTablePage(currentPage + 1);
+            else if (!isNaN(parseInt(tag))) renderTablePage(parseInt(tag));
+        });
+
+        // Row ellipsis menu interactions for Settings column
+        document.addEventListener('click', (e) => {
+            const ellipsis = e.target.closest('.row-ellipsis');
+            const anyMenus = document.querySelectorAll('.row-menu');
+            // Close all menus by default
+            anyMenus.forEach(m => m.classList.remove('open'));
+            if (ellipsis) {
+                const cell = ellipsis.parentElement;
+                const menu = cell.querySelector('.row-menu');
+                if (menu) {
+                    menu.classList.add('open');
+                }
+            }
+        });
+
+        // Handle Edit/Delete in Settings column
+        document.addEventListener('click', (e) => {
+            const edit = e.target.closest('.row-edit');
+            const del = e.target.closest('.row-delete');
+            if (edit) {
+                const row = edit.closest('tr');
+                const title = row?.children?.[0]?.textContent?.trim() || '';
+                alert('Edit qualifier: ' + title);
+            }
+            if (del) {
+                const row = del.closest('tr');
+                const title = row?.children?.[0]?.textContent?.trim() || '';
+                const ok = confirm('Delete this qualifier?\n\n' + title);
+                if (ok) row?.remove();
+            }
+        });
+
+        // Note: View List buttons are now handled by viewQualifiers function
+        // The onclick handlers are set directly in the HTML when rows are rendered
+    </script>
 </body>
 </html>
 
