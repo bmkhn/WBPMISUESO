@@ -51,14 +51,14 @@
                 <content>
                     {% if project.project_leader %}
                         <img src="{{ project.project_leader.profile_picture_or_initial }}" alt="">
-                        <a href="#">{{ project.project_leader.get_full_name|default:project.project_leader.username }}</a>
+                        <a href="{% url 'user_profile' project.project_leader.id %}">{{ project.project_leader.get_full_name|default:project.project_leader.username }}</a>
                     {% endif %}
                 </content>
                 {% with all_authors=project.providers.all %}
                     {% for provider in all_authors|slice:":2" %}
                         <content>
                             <img src="{{ provider.profile_picture_or_initial }}" alt="">
-                            <a href="#">{{ provider.get_full_name|default:provider.username }}</a>
+                            <a href="{% url 'user_profile' provider.id %}">{{ provider.get_full_name|default:provider.username }}</a>
                         </content>
                     {% endfor %}
                     {% if all_authors|length > 3 %}
@@ -68,7 +68,7 @@
                                 {% for provider in all_authors|slice:"3:" %}
                                     <div style="display:flex; align-items:center; gap:0.75rem; padding:8px 12px; border-bottom:1px solid #eee;">
                                         <img src="{{ provider.profile_picture_or_initial }}" alt="" style="width:2rem; height:2rem; border-radius:50%; object-fit:cover; border:0.08rem solid #ccc;">
-                                        <a href="#" style="font-size:0.9rem; color:#000; text-decoration:none;">{{ provider.get_full_name|default:provider.username }}</a>
+                                        <a href="{% url 'user_profile' provider.id %}" style="font-size:0.9rem; color:#000; text-decoration:none;">{{ provider.get_full_name|default:provider.username }}</a>
                                     </div>
                                 {% endfor %}
                             </div>
@@ -190,7 +190,8 @@
     if (closeFilter && filterDropdown) {
         closeFilter.addEventListener('click', function(e) {
             e.preventDefault();
-            filterDropdown.style.display = 'none';
+            // Clear filters by redirecting to base URL without query parameters
+            window.location.href = window.location.pathname;
         });
     }
     // Hide dropdown when clicking outside

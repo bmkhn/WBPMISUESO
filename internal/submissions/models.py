@@ -6,6 +6,8 @@ from shared.downloadables.models import Downloadable
 from system.logs.models import LogEntry
 from django.dispatch import receiver
 from django.db.models.signals import post_save
+import os
+
 
 class Submission(models.Model):
 	project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='submissions')
@@ -30,6 +32,7 @@ class Submission(models.Model):
 	num_trained_individuals = models.PositiveIntegerField(null=True, blank=True)
 	image_event = models.ImageField(upload_to='submissions/event_images/', null=True, blank=True)
 	image_description = models.TextField(blank=True, null=True)
+
 
 	# Status/Review
 	SUBMISSION_STATUS_CHOICES = [
@@ -58,6 +61,23 @@ class Submission(models.Model):
 	def get_status_display(self):
 		return dict(self.SUBMISSION_STATUS_CHOICES).get(self.status, self.status)
 
+	@property
+	def submitted_form_name(self):
+		if self.file:
+			base = os.path.basename(self.file.name)
+			return os.path.splitext(base)[0]
+		elif self.image_event:
+			base = os.path.basename(self.image_event.name)
+			return os.path.splitext(base)[0]
+		return ""
+
+	@property
+	def submitted_form_name_with_ext(self):
+		if self.file:
+			return os.path.basename(self.file.name)
+		elif self.image_event:
+			return os.path.basename(self.image_event.name)
+		return ""
 
 # Log creation and update actions for Submission
 @receiver(post_save, sender=Submission)

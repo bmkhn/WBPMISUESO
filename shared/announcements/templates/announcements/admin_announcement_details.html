@@ -22,11 +22,7 @@
         
         <div class="details-card">
             <div class="details-thumb">
-                {% if announcement.cover_photo %}
-                    <img src="{{ announcement.cover_photo.url }}" alt="Cover Photo" />
-                {% else %}
-                    📢
-                {% endif %}
+                <img src="{{ announcement.get_cover_photo_url }}" alt="Cover Photo" />
             </div>
             <div class="details-title">{{ announcement.title }}</div>
             <div class="details-meta" style="gap: 12px;">

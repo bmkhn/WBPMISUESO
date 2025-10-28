@@ -896,14 +896,14 @@
                 <content>
                     {% if project.project_leader %}
                         <img src="{{ project.project_leader.profile_picture_or_initial }}" alt="">
-                        <a href="#">{{ project.project_leader.get_full_name|default:project.project_leader.username }}</a>
+                        <a href="{% url 'user_profile' project.project_leader.id %}">{{ project.project_leader.get_full_name|default:project.project_leader.username }}</a>
                     {% endif %}
                 </content>
                 {% with all_authors=project.providers.all %}
                     {% for provider in all_authors|slice:":3" %}
                         <content>
                             <img src="{{ provider.profile_picture_or_initial }}" alt="">
-                            <a href="#">{{ provider.get_full_name|default:provider.username }}</a>
+                            <a href="{% url 'user_profile' provider.id %}">{{ provider.get_full_name|default:provider.username }}</a>
                         </content>
                     {% endfor %}
                     {% if all_authors|length > 3 %}
@@ -912,7 +912,7 @@
                             {% for provider in all_authors|slice:"3:" %}
                                 <content>
                                     <img src="{{ provider.profile_picture_or_initial }}" alt="">
-                                    <a href="#">{{ provider.get_full_name|default:provider.username }}</a>
+                                    <a href="{% url 'user_profile' provider.id %}">{{ provider.get_full_name|default:provider.username }}</a>
                                 </content>
                             {% endfor %}
                         </span>
@@ -1015,7 +1015,7 @@
                                 <img src="{{ provider.profile_picture_or_initial }}" alt="profile" class="prof">
                             </section>
                             <section style="text-align: center;">
-                                <h3>{{ provider.get_full_name|default:provider.username }}</h3>
+                                <a href="{% url 'user_profile' provider.id %}"><h3>{{ provider.get_full_name|default:provider.username }}</h3></a>
                                 <h5>{{ provider.degree }}</h5>
                             </section>
                         </div>
@@ -1117,7 +1117,7 @@
                     <div class="search-container">
                         <form class="search-bar" method="get" action="">
                             <svg width="20" height="20"> <use href="#icon-search"></use> </svg>
-                            <input type="text" name="search" placeholder="Search by file name..." value="{{ search|default:'' }}"/>
+                            <input type="text" name="search" placeholder="Search File Name" value="{{ search|default:'' }}"/>
                             <input type="hidden" name="tab" id="activeTabInput" value="files" />
                             <button type="button" id="filterBtn" style="background:none;border:none;padding:0;margin-right:5px;cursor:pointer;">
                                 <svg width="20" height="20"> <use href="#icon-filter"></use> </svg>
@@ -1156,7 +1156,7 @@
                                 </div>
                                 <div class="filter-actions">
                                     <button type="submit" class="filter-apply">Apply</button>
-                                    <button type="button" id="closeFilter" class="filter-close">Close</button>
+                                    <button type="button" id="closeFilter" class="filter-close">Clear Filters</button>
                                 </div>
                             </div>
                         </form>
@@ -1471,7 +1471,8 @@
     if (closeFilter && filterDropdown) {
         closeFilter.addEventListener('click', function(e) {
             e.preventDefault();
-            filterDropdown.style.display = 'none';
+            // Clear filters by redirecting to base URL without query parameters
+            window.location.href = window.location.pathname;
         });
     }
     // Hide dropdown when clicking outside

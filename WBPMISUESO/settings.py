@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.humanize',
 
     # External Apps
     'external.home',            # Home
@@ -65,6 +66,7 @@ INSTALLED_APPS = [
     'system.logs',              # Logs
     'system.users',             # Custom User
     'system.notifications',     # Notifications
+    'system.settings',          # Settings
     'rest_framework',           # Django REST Framework
 ]
 

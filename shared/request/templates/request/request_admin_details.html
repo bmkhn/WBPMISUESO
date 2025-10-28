@@ -178,61 +178,61 @@
                 </div>
             </form>
         </div>
-    </div>  
-</div>
-     
-<svg style="display:none;">
-    
-    <symbol id="icon-arrow-right" viewBox="0 0 18 19">  
-        <path d="M13.3925 10.4L7.2325 16.56L8.8 18.1L17.6 9.3L8.8 0.5L7.2325 2.04L13.3925 8.2H0V10.4H13.3925Z" fill="#0099FF"/>
-    </symbol> 
-    
-    <symbol id="icon-arrow-left" viewBox="0 0 18 19">
-        <path d="M4.60755 10.4L10.7675 16.56L9.20005 18.1L0.400047 9.3L9.20005 0.5L10.7675 2.04L4.60755 8.2H18V10.4H4.60755Z" fill="#0099FF"/>
-    </symbol>
-    
-    <symbol xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info-circle" id="detail-icon" viewBox="0 0 16 16">
-        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-        <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
-    </symbol>
-    
-</svg> 
+        <div class="modal" id="modal-deny" style="display:none;">
+            <div class="modal-title">Deny Request</div>
+            <div class="modal-content">Please provide a reason for denial:</div>
+            <form method="post" action="{% url 'admin_request_action' req.id %}" style="width:100%;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="deny" />
+                <textarea name="reason" rows="3" required placeholder="Enter reason..." style="resize:vertical;"></textarea>
+                <div class="modal-actions">
+                    <button type="button" class="back-btn" id="cancel-deny">Cancel</button>
+                    <button type="submit" class="reject-btn">Deny</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-</body>
-<script>
-// Modal logic
-function showModal(which) {
-    document.getElementById('modal-bg').style.display = 'flex';
-    document.getElementById('modal-reject').style.display = (which === 'reject') ? 'flex' : 'none';
-    document.getElementById('modal-approve').style.display = (which === 'approve') ? 'flex' : 'none';
-    document.getElementById('modal-endorse').style.display = (which === 'endorse') ? 'flex' : 'none';
-}
-function hideModal() {
-    document.getElementById('modal-bg').style.display = 'none';
-    document.getElementById('modal-reject').style.display = 'none';
-    document.getElementById('modal-approve').style.display = 'none';
-    document.getElementById('modal-endorse').style.display = 'none';
-}
-document.addEventListener('DOMContentLoaded', function() {
-    var rejectBtn = document.getElementById('reject-btn');
-    var approveBtn = document.getElementById('approve-btn');
-    var endorseBtn = document.getElementById('endorse-btn');
-    if (rejectBtn) rejectBtn.onclick = function() { showModal('reject'); };
-    if (approveBtn) approveBtn.onclick = function() { showModal('approve'); };
-    if (endorseBtn) endorseBtn.onclick = function() { showModal('endorse'); };
-    // Cancel buttons
-    var cancelReject = document.getElementById('cancel-reject');
-    var cancelApprove = document.getElementById('cancel-approve');
-    var cancelEndorse = document.getElementById('cancel-endorse');
-    if (cancelReject) cancelReject.onclick = hideModal;
-    if (cancelApprove) cancelApprove.onclick = hideModal;
-    if (cancelEndorse) cancelEndorse.onclick = hideModal;
-    // Hide modal when clicking outside
-    document.getElementById('modal-bg').addEventListener('click', function(e) {
-        if (e.target === this) hideModal();
+    <script>
+    // Modal logic
+    function showModal(which) {
+        document.getElementById('modal-bg').style.display = 'flex';
+        document.getElementById('modal-reject').style.display = (which === 'reject') ? 'flex' : 'none';
+        document.getElementById('modal-approve').style.display = (which === 'approve') ? 'flex' : 'none';
+        document.getElementById('modal-endorse').style.display = (which === 'endorse') ? 'flex' : 'none';
+        document.getElementById('modal-deny').style.display = (which === 'deny') ? 'flex' : 'none';
+    }
+    function hideModal() {
+        document.getElementById('modal-bg').style.display = 'none';
+        document.getElementById('modal-reject').style.display = 'none';
+        document.getElementById('modal-approve').style.display = 'none';
+        document.getElementById('modal-endorse').style.display = 'none';
+        document.getElementById('modal-deny').style.display = 'none';
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+        var rejectBtn = document.getElementById('reject-btn');
+        var approveBtn = document.getElementById('approve-btn');
+        var endorseBtn = document.getElementById('endorse-btn');
+        var denyBtn = document.getElementById('deny-btn');
+        if (rejectBtn) rejectBtn.onclick = function() { showModal('reject'); };
+        if (approveBtn) approveBtn.onclick = function() { showModal('approve'); };
+        if (endorseBtn) endorseBtn.onclick = function() { showModal('endorse'); };
+        if (denyBtn) denyBtn.onclick = function() { showModal('deny'); };
+        // Cancel buttons
+        var cancelReject = document.getElementById('cancel-reject');
+        var cancelApprove = document.getElementById('cancel-approve');
+        var cancelEndorse = document.getElementById('cancel-endorse');
+        var cancelDeny = document.getElementById('cancel-deny');
+        if (cancelReject) cancelReject.onclick = hideModal;
+        if (cancelApprove) cancelApprove.onclick = hideModal;
+        if (cancelEndorse) cancelEndorse.onclick = hideModal;
+        if (cancelDeny) cancelDeny.onclick = hideModal;
+        // Hide modal when clicking outside
+        document.getElementById('modal-bg').addEventListener('click', function(e) {
+            if (e.target === this) hideModal();
+        });
     });
-});
-</script>
+    </script>
 
 </body>
 </html>

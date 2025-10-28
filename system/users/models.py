@@ -5,13 +5,19 @@ from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 
 class College(models.Model):
+    CAMPUS_CHOICES = [
+        ('TINIGUIBAN', 'Tiniguiban Campus'),
+        ('EXTERNAL', 'External Campus'),
+    ]
+    
+    name = models.CharField(max_length=255)
+    campus = models.CharField(max_length=20, choices=CAMPUS_CHOICES, default='TINIGUIBAN')
+    logo = models.ImageField(upload_to='colleges/logos/', blank=True, null=True)
+
     def delete(self, *args, **kwargs):
         if self.logo and self.logo.storage and self.logo.storage.exists(self.logo.name):
             self.logo.storage.delete(self.logo.name)
         super().delete(*args, **kwargs)
-
-    name = models.CharField(max_length=255)
-    logo = models.ImageField(upload_to='colleges/logos/', blank=True, null=True)
 
     def __str__(self):
         return self.name

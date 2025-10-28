@@ -41,6 +41,12 @@ class Downloadable(models.Model):
         return ""
 
     @property
+    def name_with_ext(self):
+        if self.file:
+            return os.path.basename(self.file.name)
+        return ""
+
+    @property
     def size(self):
         if self.file and hasattr(self.file, 'size'):
             mb = self.file.size / (1024 * 1024)

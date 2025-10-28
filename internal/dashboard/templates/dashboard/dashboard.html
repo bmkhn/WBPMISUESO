@@ -60,10 +60,13 @@
                     <div class="container-2A-number">{{ expert_users.count }}</div>
                     <div class="container-2A-name">Experts Active</div>
                 </a>
+
+                {% if request.user.role == "UESO" or request.user.role == "VP" or request.user.role == "DIRECTOR" %}
                 <a class="container-2A" href="{% url 'calendar' %}">
                     <div class="container-2A-number">{{ events_in_calendar }}</div>
                     <div class="container-2A-name">Events in Calendar</div>
                 </a>
+                {% endif %}
             </div>
         </div>
 
@@ -116,7 +119,7 @@
                             {{ project.title|truncatechars:20 }}
                         </a>
                     </td>
-                    <td>{{ project.project_leader.get_full_name }}</td>
+                    <td><a href="{% url 'user_profile' project.project_leader.id %}" class="name-link">{{ project.project_leader.get_full_name }}</a></td>
                     <td>{% if project.project_leader.college %}{{ project.project_leader.college.name }}{% else %}<em>-</em>{% endif %}</td>
                     <td>{{ project.updated_at|date:"Y-m-d" }}</td>
                     <td>{{ project.start_date|date:"Y-m-d" }}</td>
@@ -132,7 +135,7 @@
         <!-- Goal Section (keep existing goals for VP/Director) -->
         {% if vpde_content %}
         <div class="goal-section">
-            <div class="goal-text">Goals</div>
+            <div class="goal-text">Goals <span style="color:gray; font-size:medium;">(Not yet implemented)</span></div>
             <div class="goal-card-container">
             <div class="goal-card">
                 <div class="goal-card-kebab"> <svg class="kebab-svg"><use href="#kebab-icon"/></svg> </div>
