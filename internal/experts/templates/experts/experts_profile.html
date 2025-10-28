@@ -12,240 +12,201 @@
 <link href="{% static 'internal/experts/prof.css' %}" rel="stylesheet">
 </head> 
 <body>
-	<!-- Main Content -->
-	<div class="main-container">
-		<!-- Content Area -->
-		<div class="content-area">
-			<!-- Profile Header -->
-			<div class="profile-header">
-				<div class="profile-main">
-					<div class="profile-left">
-						<div class="profile-image">
-							{% if expert.profile_picture %}
-							<img src="{{ expert.profile_picture.url }}" alt="{{ expert.get_full_name }}">
-							{% else %}
-							<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#e9ecef; color:#6c757d; font-size:48px; font-weight:600;">
-								{{ expert.given_name.0 }}{{ expert.last_name.0 }}
-							</div>
-							{% endif %}
-						</div>
-					</div>
-					<div class="profile-middle">
-						<h1 class="profile-name">{{ expert.get_full_name }}</h1>
-						<div class="profile-location">
-							<span class="location-icon"><i class="fa-solid fa-location-dot"></i></span>
-							<span>{{ campus_display }}</span>
-						</div>
-						<div class="university-logo">
-							{% if college_logo %}
-							<img src="{{ college_logo }}" alt="{{ college_name }}">
-							{% else %}
-							<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#f8f9fa; color:#6c757d; font-size:24px; font-weight:600;">
-								{{ college_name.0|default:"?" }}
-							</div>
-							{% endif %}
-						</div>
-					</div>
-					<div class="profile-info">
-						<div class="expertise-section">
-							<div class="expertise-item">
-								<span class="expertise-label">Field of Expertise:</span>
-								<span class="expertise-value">{{ expert.expertise|default:"Not specified" }}</span>
-							</div>
-							<div class="expertise-item">
-								<span class="expertise-label">{{ expert.degree|default:"Degree Not Listed" }}</span>
-								<span class="expertise-value">{{ college_name }}</span>
-							</div>
-							<div class="expertise-item">
-								<span class="expertise-label">Contact:</span>
-								<span class="expertise-value">{{ expert.email }}</span>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
+    <main> 
+        <section>
+            <div class="propic">
+                {% if expert.profile_picture %}
+                <img src="{{ expert.profile_picture.url }}" alt="{{ expert.get_full_name }}">
+                {% else %}
+                <div class="propic-placeholder">
+                    {{ expert.given_name.0 }}
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="profile-info-grid">
+                <div class="personal-info">
+                    <h2>{{ expert.get_full_name }}</h2>
+                    <h4><i class="fas fa-map-marker-alt" style="color:red; margin-right:0.5rem;"></i> {{ campus_display }}</h4>
+                    {% if college_logo %}
+                    <img src="{{ college_logo }}" alt="{{ college_name }}">
+                    {% else %}
+                    <div class="college-logo-placeholder">
+                        {{ college_name.0|default:"?" }}
+                    </div>
+                    {% endif %}
+                </div>
+            
+                <div class="expertise">
+                    <h5>Field of Expertise:</h5>
+                    <p>{{ expert.expertise|default:"Not specified" }}</p>
+                    <h5>{{ expert.degree|default:"Degree Not Listed" }}</h5>
+                    <p>{{ college_name }}</p>
+                </div>
+                <div class="contact">
+                    <h5>Contact:</h5>
+                    <p>{{ expert.email }}</p>
+                </div>
 
-			<!-- Content Cards -->
-			<div class="content-cards">
-				<!-- Bio Card -->
-				<div class="content-card">
-					<div class="card-header">
-						<h2 class="card-title">Bio</h2>
-					</div>
-					<div class="bio-content">
-						<div style="margin-bottom: 20px;">
-							{{ expert.bio|linebreaksbr|default:"This expert has not provided a bio." }}
-						</div>
-					</div>
-				</div>
-
-				<!-- Projects Card -->
-				<div class="content-card">
-					<div class="card-header">
-						<h2 class="card-title">Projects ({{ projects.count }})</h2>
-						<div class="sort-controls">
-							<span class="sort-icon">☰</span>
-							<div class="sort-dropdown">
-								<select id="sortProjects" style="padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;">
-									<option value="date-desc">Date (Newest First)</option>
-									<option value="date-asc">Date (Oldest First)</option>
-									<option value="title-asc">Title (A-Z)</option>
-									<option value="title-desc">Title (Z-A)</option>
-									<option value="status">Status</option>
-								</select>
-							</div>
-						</div>
-					</div>
-					<div class="projects-list" id="projectsList">
-						{% for project in projects %}
-						<!-- Project Item -->
-						<div class="project-item">
-							<div class="project-date">{{ project.start_date|date:"F Y" }}</div>
-							<h3 class="project-title">{{ project.title }}</h3>
-							<div class="project-tags">
-								<span class="project-tag tag-orange">{{ project.project_leader.get_campus_display|default:"N/A" }}</span>
-								{% if project.agenda %}
-								<span class="project-tag tag-green">{{ project.agenda.name }}</span>
-								{% endif %}
-								{% if project.status == 'COMPLETED' %}
-								<span class="project-tag tag-completed">Completed</span>
-								{% elif project.status == 'IN_PROGRESS' %}
-								<span class="project-tag tag-ongoing">Ongoing</span>
-								{% elif project.status == 'NOT_STARTED' %}
-								<span class="project-tag" style="background-color: #6c757d; color: white;">Not Started</span>
-								{% elif project.status == 'ON_HOLD' %}
-								<span class="project-tag" style="background-color: #ffc107; color: white;">On Hold</span>
-								{% elif project.status == 'CANCELLED' %}
-								<span class="project-tag" style="background-color: #dc3545; color: white;">Cancelled</span>
-								{% endif %}
-							</div>
-							<div class="project-contributors">
-								{% if project.project_leader %}
-								<div class="contributor-avatar">{{ project.project_leader.given_name.0 }}{{ project.project_leader.last_name.0 }}</div>
-								<a href="{% url 'expert_profile' project.project_leader.id %}" class="contributor-name">{{ project.project_leader.get_full_name }}</a>
-								{% endif %}
-								{% for provider in project.providers.all|slice:":3" %}
-								<div class="contributor-avatar">{{ provider.given_name.0 }}{{ provider.last_name.0 }}</div>
-								<a href="{% url 'expert_profile' provider.id %}" class="contributor-name">{{ provider.get_full_name }}</a>
-								{% endfor %}
-								{% if project.providers.count > 3 %}
-								<span class="contributor-name">+{{ project.providers.count|add:"-3" }} more</span>
-								{% endif %}
-							</div>
-							<a href="{% url 'project_profile' project.id %}" class="project-action">View</a>
-						</div>
-						{% empty %}
-						<div style="text-align: center; padding: 40px; color: #666;">
-							No projects found for this expert.
-						</div>
-						{% endfor %}
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+            </div>
+        </section>
+        <section class="lower">
+            <div class="bio">
+                <div class="lower-header">
+                    <h1>Bio</h1>
+                </div>
+                <p style="margin-top: 1rem;">
+                    {{ expert.bio|linebreaksbr|default:"This expert has not provided a bio." }}
+                </p>
+            </div>
+            <div class="project">
+                <div class="lower-header"> 
+                    <div>
+                        <h1>Projects</h1>   
+                    </div>
+                    <div style="display: flex; flex-shrink: 3; align-items: center; gap: 0.5rem;">
+                        <span style="font-size: 1.1rem; font-weight: 500; color: #444; width: 6rem;">Sort by:</span>
+                        <select id="sortProjects" class="dropdown-btn" style="margin: 0.75rem 0;">
+                            <option value="date-desc">Newest First</option>
+                            <option value="date-asc">Oldest First</option>
+                            <option value="title-asc">Title (A-Z)</option>
+                            <option value="title-desc">Title (Z-A)</option>
+                            <option value="status">Status</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="project-card" id="projectsList"> 
+                    </div>
+            </div>
+        </section>
+    </main>
 
 <script>
-// Project sorting functionality
 const projectsData = [
-	{% for project in projects %}
-	{
-		id: {{ project.id }},
-		title: "{{ project.title|escapejs }}",
-		date: "{{ project.start_date|date:'Y-m-d' }}",
-		dateDisplay: "{{ project.start_date|date:'F Y' }}",
-		status: "{{ project.status }}",
-		statusDisplay: "{% if project.status == 'COMPLETED' %}Completed{% elif project.status == 'IN_PROGRESS' %}Ongoing{% elif project.status == 'NOT_STARTED' %}Not Started{% elif project.status == 'ON_HOLD' %}On Hold{% elif project.status == 'CANCELLED' %}Cancelled{% endif %}",
-		leaderCampus: "{{ project.project_leader.get_campus_display|default:'N/A'|escapejs }}",
-		agenda: "{{ project.agenda.name|default:''|escapejs }}",
-		leaderName: "{{ project.project_leader.get_full_name|escapejs }}",
-		leaderInitials: "{{ project.project_leader.given_name.0 }}{{ project.project_leader.last_name.0 }}",
-		providers: [
-			{% for provider in project.providers.all %}
-			{
-				name: "{{ provider.get_full_name|escapejs }}",
-				initials: "{{ provider.given_name.0 }}{{ provider.last_name.0 }}"
-			}{% if not forloop.last %},{% endif %}
-			{% endfor %}
-		],
-		providersCount: {{ project.providers.count }}
-	}{% if not forloop.last %},{% endif %}
-	{% endfor %}
+    {% for project in projects %}
+    {
+        id: {{ project.id }},
+        title: "{{ project.title|escapejs }}",
+        date: "{{ project.start_date|date:'Y-m-d' }}",
+        // CHANGE 2: Changed date format from 'F Y' to 'F j, Y' (e.g., "October 28, 2025")
+        dateDisplay: "{{ project.start_date|date:'F j, Y' }}",
+        status: "{{ project.status }}",
+        statusDisplay: "{% if project.status == 'COMPLETED' %}Completed{% elif project.status == 'IN_PROGRESS' %}Ongoing{% elif project.status == 'NOT_STARTED' %}Not Started{% elif project.status == 'ON_HOLD' %}On Hold{% elif project.status == 'CANCELLED' %}Cancelled{% endif %}",
+        leaderCampus: "{{ project.project_leader.get_campus_display|default:'N/A'|escapejs }}",
+        agenda: "{{ project.agenda.name|default:''|escapejs }}",
+        leader: {
+            id: {{ project.project_leader.id|default:0 }},
+            name: "{{ project.project_leader.get_full_name|escapejs }}",
+            // FIX 3: Corrected initials
+            initials: "{{ project.project_leader.given_name.0 }}"
+        },
+        providers: [
+            {% for provider in project.providers.all %}
+            {
+                id: {{ provider.id }},
+                name: "{{ provider.get_full_name|escapejs }}",
+                // FIX 3: Corrected initials
+                initials: "{{ provider.given_name.0 }}"
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ],
+        providersCount: {{ project.providers.count }}
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
 ];
 
+
 function renderProjects(projects) {
-	const container = document.getElementById('projectsList');
-	if (projects.length === 0) {
-		container.innerHTML = '<div style="text-align: center; padding: 40px; color: #666;">No projects found for this expert.</div>';
-		return;
-	}
-	
-	container.innerHTML = projects.map(project => {
-		let statusTag = '';
-		if (project.status === 'COMPLETED') {
-			statusTag = '<span class="project-tag tag-completed">Completed</span>';
-		} else if (project.status === 'IN_PROGRESS') {
-			statusTag = '<span class="project-tag tag-ongoing">Ongoing</span>';
-		} else if (project.status === 'NOT_STARTED') {
-			statusTag = '<span class="project-tag" style="background-color: #6c757d; color: white;">Not Started</span>';
-		} else if (project.status === 'ON_HOLD') {
-			statusTag = '<span class="project-tag" style="background-color: #ffc107; color: white;">On Hold</span>';
-		} else if (project.status === 'CANCELLED') {
-			statusTag = '<span class="project-tag" style="background-color: #dc3545; color: white;">Cancelled</span>';
-		}
-		
-		const providersList = project.providers.slice(0, 3).map(p => 
-			`<div class="contributor-avatar">${p.initials}</div><span class="contributor-name">${p.name}</span>`
-		).join('');
-		
-		const moreProviders = project.providersCount > 3 ? 
-			`<span class="contributor-name">+${project.providersCount - 3} more</span>` : '';
-		
-		return `
-			<div class="project-item">
-				<div class="project-date">${project.dateDisplay}</div>
-				<h3 class="project-title">${project.title}</h3>
-				<div class="project-tags">
-					<span class="project-tag tag-orange">${project.leaderCampus}</span>
-					${project.agenda ? `<span class="project-tag tag-green">${project.agenda}</span>` : ''}
-					${statusTag}
-				</div>
-				<div class="project-contributors">
-					<div class="contributor-avatar">${project.leaderInitials}</div>
-					<span class="contributor-name">${project.leaderName}</span>
-					${providersList}
-					${moreProviders}
-				</div>
-				<a href="/projects/${project.id}/" class="project-action">View</a>
-			</div>
-		`;
-	}).join('');
+    const container = document.getElementById('projectsList');
+    if (projects.length === 0) {
+        container.innerHTML = '<div style="padding: 1rem 3rem; color: #666; margin-top: 1rem;">No projects found for this expert.</div>';
+        return;
+    }
+    
+    container.innerHTML = projects.map(project => {
+        // --- Status Tag Logic ---
+        let statusTag = '';
+        if (project.status === 'COMPLETED') {
+            statusTag = '<button class="status" style="color: #1CB889; border-color: #1CB889;">Completed</button>';
+        } else if (project.status === 'IN_PROGRESS') {
+            statusTag = '<button class="status" style="color: #007bff; border-color: #007bff;">Ongoing</button>';
+        } else if (project.status === 'NOT_STARTED') {
+            statusTag = '<button class="status" style="color: #6c757d; border-color: #6c757d;">Not Started</button>';
+        } else if (project.status === 'ON_HOLD') {
+            statusTag = '<button class="status" style="color: #ffc107; border-color: #ffc107;">On Hold</button>';
+        } else if (project.status === 'CANCELLED') {
+            statusTag = '<button class="status" style="color: #dc3545; border-color: #dc3545;">Cancelled</button>';
+        } else {
+            statusTag = `<button class="status" style="color: #6c757d; border-color: #6c757d;">${project.status}</button>`;
+        }
+
+        // --- Authors/Providers Logic (Show leader + 2 providers) ---
+        let authorsHTML = '';
+        if (project.leader) {
+            authorsHTML += `
+            <content>
+                <div class="avatar-placeholder">${project.leader.initials}</div>
+                <a href="/experts/profile/${project.leader.id}/">${project.leader.name}</a> 
+            </content>
+            `;
+        }
+        
+        const providersList = project.providers.slice(0, 2).map(p => 
+            `<content>
+                <div class="avatar-placeholder">${p.initials}</div>
+                <a href="/experts/profile/${p.id}/">${p.name}</a> 
+            </content>`
+        ).join('');
+        authorsHTML += providersList;
+        
+        const moreProviders = project.providersCount > 2 ? 
+            `<content style="align-items: center;"><a href="/projects/${project.id}/">+${project.providersCount - 2} more</a></content>` : '';
+        authorsHTML += moreProviders;
+
+        // --- Final HTML for the card ---
+        return `
+            <div>
+                <h5>${project.dateDisplay}</h5>
+                <a href="/projects/${project.id}/" class="title">${project.title}</a>
+                <section class="project-tags">
+                    <button class="campus">${project.leaderCampus}</button>
+                    ${project.agenda ? `<button class="agenda">${project.agenda}</button>` : ''}
+                    ${statusTag}
+                </section>
+                <section class="project-authors"> 
+                    ${authorsHTML}
+                </section>
+                <a href="/projects/${project.id}/" class="view">View</a> 
+            </div>
+        `;
+    }).join('');
 }
 
+// Original sort event listener
 document.getElementById('sortProjects').addEventListener('change', function(e) {
-	const sortBy = e.target.value;
-	let sorted = [...projectsData];
-	
-	switch(sortBy) {
-		case 'date-desc':
-			sorted.sort((a, b) => new Date(b.date) - new Date(a.date));
-			break;
-		case 'date-asc':
-			sorted.sort((a, b) => new Date(a.date) - new Date(b.date));
-			break;
-		case 'title-asc':
-			sorted.sort((a, b) => a.title.localeCompare(b.title));
-			break;
-		case 'title-desc':
-			sorted.sort((a, b) => b.title.localeCompare(a.title));
-			break;
-		case 'status':
-			const statusOrder = {'COMPLETED': 1, 'IN_PROGRESS': 2, 'NOT_STARTED': 3, 'ON_HOLD': 4, 'CANCELLED': 5};
-			sorted.sort((a, b) => (statusOrder[a.status] || 99) - (statusOrder[b.status] || 99));
-			break;
-	}
-	
-	renderProjects(sorted);
+    const sortBy = e.target.value;
+    let sorted = [...projectsData];
+    
+    switch(sortBy) {
+        case 'date-desc':
+            sorted.sort((a, b) => new Date(b.date) - new Date(a.date));
+            break;
+        case 'date-asc':
+            sorted.sort((a, b) => new Date(a.date) - new Date(b.date));
+            break;
+        case 'title-asc':
+            sorted.sort((a, b) => a.title.localeCompare(b.title));
+            break;
+        case 'title-desc':
+            sorted.sort((a, b) => b.title.localeCompare(a.title));
+            break;
+        case 'status':
+            const statusOrder = {'COMPLETED': 1, 'IN_PROGRESS': 2, 'NOT_STARTED': 3, 'ON_HOLD': 4, 'CANCELLED': 5};
+            sorted.sort((a, b) => (statusOrder[a.status] || 99) - (statusOrder[b.status] || 99));
+            break;
+    }
+    
+    renderProjects(sorted);
 });
 
 // Initial render
