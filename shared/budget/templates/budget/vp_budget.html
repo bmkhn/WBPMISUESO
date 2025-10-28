@@ -487,9 +487,19 @@
         }
         
         .donut-chart-container {
-            margin-bottom: 1rem;
-            width: 300px;
-            height: 300px;
+            margin-bottom: 0.5rem;
+            width: 240px;
+            height: 240px;
+            position: relative;
+        }
+        .donut-center-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #333;
         }
         
         .chart-legend {
@@ -599,14 +609,15 @@
             <div class="overall-budget-column">
                 <h2 class="section-title">Overall Budget</h2>
                 
-                <!-- Donut Chart -->
-                <div class="donut-chart-container">
-                    <canvas id="donutChart" width="300" height="300"></canvas>
-                </div>
-                
-                <!-- Legend -->
-                <div class="chart-legend" id="chart-legend">
-                    <!-- Legend will be populated by JavaScript -->
+                <!-- Donut + Legend - grid like reference -->
+                <div style="display: grid; grid-template-columns: 240px 1fr; align-items: center; gap: 1rem;">
+                    <div class="donut-chart-container">
+                        <canvas id="donutChart" width="240" height="240"></canvas>
+                        <div id="donutCenterVP" class="donut-center-text">&nbsp;</div>
+                    </div>
+                    <div class="chart-legend" id="chart-legend">
+                        <!-- legend populated by JS -->
+                    </div>
                 </div>
                 
                 <!-- Budget Details -->
@@ -623,8 +634,9 @@
             <!-- Right Column: Historical Summary -->
             <div class="historical-summary-column">
                 <h2 class="section-title">Historical Summary</h2>
-                
-                <!-- Line Chart -->
+                <!-- Legend on top-right -->
+                <div class="chart-legend" id="chart-legend" style="align-self: start; margin-bottom: 1rem;"></div>
+                <!-- Line Chart below legend -->
                 <div class="line-chart-container">
                     <canvas id="lineChart" width="400" height="300"></canvas>
                 </div>
@@ -1009,7 +1021,7 @@
                                 data: chartData.data,
                                 backgroundColor: chartData.colors.slice(0, chartData.data.length),
                                 borderWidth: 0,
-                                cutout: '60%'
+                                cutout: '68%'
                             }]
                         },
                         options: {
@@ -1035,6 +1047,19 @@
                     
                     // Populate legend
                     populateLegend(chartData);
+
+                    // Center text percentage (exclude unassigned)
+                    try {
+                        const total = chartData.data.reduce((a,b)=>a+b,0);
+                        let uIdx = -1;
+                        if (chartData.labels) {
+                            uIdx = chartData.labels.findIndex(l => String(l).toLowerCase().includes('unassigned'));
+                        }
+                        const unassigned = uIdx >= 0 ? (chartData.data[uIdx]||0) : 0;
+                        const percent = Math.round(((total - unassigned) / (total || 1)) * 100);
+                        const center = document.getElementById('donutCenterVP');
+                        if (center) center.textContent = percent + '%';
+                    } catch(e) { console.warn('Center text calc failed', e); }
                 } catch (error) {
                     console.error('Error creating donut chart:', error);
                 }
