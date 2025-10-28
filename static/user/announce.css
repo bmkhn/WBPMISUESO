@@ -8,7 +8,7 @@
 .announce-text {
     font-family: 'Inter', sans-serif;
     font-weight: 400;
-    font-size: 28px;
+    font-size: 19px;
 }
 
 .announce-box {
@@ -20,8 +20,10 @@
 .announce-item {
     display: flex;
     flex-direction: column;
+    border-radius: 2px;
     gap: 15px;
     border: 0.7px solid #DDE1E6;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.08);
 }
 
 .announce-pic {
@@ -42,14 +44,14 @@
     padding: 0 20px 20px 20px;
     font-family: 'Inter', sans-serif;
     font-weight: 700;
-    font-size: 20px;
+    font-size: 19px;
     color: #625C56;
 }
 
-.announce-more {
+.announce-more, .project-more {
     font-family: 'Inter', sans-serif;
     font-weight: 400;
-    font-size: 20px;
+    font-size: 13px;
     color: #2EA8FF;
     text-decoration: none;
     margin-top: 10px;

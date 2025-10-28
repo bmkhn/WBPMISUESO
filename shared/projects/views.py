@@ -1,22 +1,16 @@
-# views.py (Corrected)
-
 from django.shortcuts import get_object_or_404, render, redirect
 from shared import request
 from system.users.decorators import role_required
-from .models import SustainableDevelopmentGoal, Project, ProjectEvaluation, ProjectEvent, ProjectUpdate, FacultyExpense
+from .models import SustainableDevelopmentGoal, Project, ProjectEvaluation, ProjectEvent, ProjectUpdate
 from internal.submissions.models import Submission
 from system.users.models import College, User
 from internal.agenda.models import Agenda
-from .forms import ProjectForm, ProjectEventForm, FacultyExpenseForm
+from .forms import ProjectForm, ProjectEventForm
 from django.core.paginator import Paginator
 import os
 from django.db import models
 from django.db.models import Q, BooleanField, ExpressionWrapper
-from django.utils import timezone # <-- ADDED
-from django.db import transaction # <-- ADDED
-from decimal import Decimal # <-- ADDED
-from django.contrib import messages
-from django.db.models import F, Value
+
 
 def get_role_constants():
     ADMIN_ROLES = ["VP", "DIRECTOR", "UESO"]
@@ -376,6 +370,7 @@ def project_files(request, pk):
 def project_submissions(request, pk):
     ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE, COORDINATOR_ROLE = get_role_constants()
     from internal.submissions.models import Submission
+    from django.utils import timezone
     # Get all submissions for this project
     all_submissions = Submission.objects.filter(project__pk=pk)
     events = ProjectEvent.objects.filter(project__pk=pk).order_by('datetime')
@@ -552,6 +547,7 @@ def project_submissions_details(request, pk, submission_id):
 
     # Handle submission POST requests
     if request.method == "POST":
+        from django.utils import timezone
         action = request.POST.get('action')
         
         # Handle Submission Upload
@@ -609,6 +605,7 @@ def project_submissions_details(request, pk, submission_id):
 @role_required(allowed_roles=["UESO", "VP", "DIRECTOR", "COORDINATOR", "FACULTY", "IMPLEMENTER"], require_confirmed=True)
 def admin_submission_action(request, pk, submission_id):
     submission = get_object_or_404(Submission, pk=submission_id, project__pk=pk)
+    from django.utils import timezone
     if request.method == 'POST':
         action = request.POST.get('action')
         if submission.status == 'SUBMITTED' and request.user.role in ["FACULTY", "IMPLEMENTER"]:
@@ -685,85 +682,34 @@ def admin_submission_action(request, pk, submission_id):
     return redirect('project_submissions_details', pk=pk, submission_id=submission_id)
 
 
-# *** RENAMED function from project_addexpenses to project_expenses ***
-# *** UPDATED render path to 'projects/project_expenses.html' ***
-@role_required(allowed_roles=["FACULTY", "IMPLEMENTER"], require_confirmed=True)
 def project_expenses(request, pk):
-    project = get_object_or_404(Project, pk=pk)
-    base_template = get_templates(request)
     ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE, COORDINATOR_ROLE = get_role_constants()
 
-    # Security Check
-    if not (request.user == project.project_leader or \
-            project.providers.filter(pk=request.user.pk).exists()):
-         messages.error(request, "You are not assigned to this project or role.")
-         return redirect('users:profile') # Adjust redirect if needed
-
-    if request.method == 'POST':
-        form = FacultyExpenseForm(request.POST, request.FILES)
-        if form.is_valid():
-            try:
-                with transaction.atomic():
-                    expense = form.save(commit=False)
-                    expense.project = project
-                    expense.submitted_by = request.user
-                    expense_amount = Decimal(str(expense.amount))
-
-                    # Budget Check/Subtraction
-                    current_internal = project.internal_budget if project.internal_budget is not None else Decimal(0)
-                    current_external = project.external_budget if project.external_budget is not None else Decimal(0)
-                    total_available = current_internal + current_external
-
-                    if total_available >= expense_amount:
-                        subtract_from_internal = min(expense_amount, current_internal)
-                        subtract_from_external = expense_amount - subtract_from_internal
-                        project.internal_budget = current_internal - subtract_from_internal
-                        project.external_budget = current_external - subtract_from_external
-                        project.save(update_fields=['internal_budget', 'external_budget'])
-                        expense.save()
-                        messages.success(request, f'Expense of ₱{expense.amount} added successfully. Budget updated.')
-                        # *** Use redirect(request.path) like in evaluations ***
-                        return redirect(request.path)
-                    else:
-                        messages.error(request, 'Error: Expense amount (₱{:.2f}) exceeds the total available project budget (₱{:.2f}).'.format(expense_amount, total_available))
-                        # Fall through to re-render form with error
-
-            except Exception as e:
-                messages.error(request, f"An error occurred while saving: {e}")
-                # Fall through to re-render form with error
-        else:
-            messages.error(request, 'Error adding expense. Please check the form details below.')
-            # Fall through to re-render form with error
+    user_role = getattr(request.user, 'role', None)
+    if user_role in ["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
+        base_template = "base_internal.html"
     else:
-        # GET request
-        form = FacultyExpenseForm()
+        base_template = "base_public.html"
 
-    # --- Prepare context for GET or failed POST ---
-    expense_list = FacultyExpense.objects.filter(project=project).order_by('-date_submitted')
-    paginator = Paginator(expense_list, 10)
-    page_number = request.GET.get('page')
-    expenses_page = paginator.get_page(page_number)
+    project = get_object_or_404(Project, pk=pk)
 
-    # Calculate budgets for display
-    current_remaining_budget_display = project.current_budget # Use the property
-    all_faculty_expenses = FacultyExpense.objects.filter(project=project)
-    total_spent = sum(exp.amount for exp in all_faculty_expenses if exp.amount is not None)
-    initial_total_budget_display = current_remaining_budget_display + (total_spent if total_spent is not None else Decimal(0))
-
-    context = {
-        'project': project,
+    expenses = [
+        {
+            'title': 'Venue Rental',
+            'reason': 'Rented hall for event',
+            'amount': 5000.00,
+            'date': '2025-09-20',
+            'receipt': 'https://via.placeholder.com/120x120.png?text=Receipt',
+        }
+    ]
+    return render(request, 'projects/project_expenses.html', {
+        'project': project, 
         'base_template': base_template,
-        'faculty_expense_form': form,
-        'expenses_page': expenses_page,
-        'ADMIN_ROLES': ADMIN_ROLES,
-        'SUPERUSER_ROLES': SUPERUSER_ROLES,
-        'FACULTY_ROLE': FACULTY_ROLE,
-        'COORDINATOR_ROLE': COORDINATOR_ROLE,
-        'initial_total_budget': initial_total_budget_display,
-        'current_remaining_budget': current_remaining_budget_display,
-    }
-    # *** FIXED TEMPLATE PATH ***
-    return render(request, 'projects/project_expenses.html', context)
+        'expenses': expenses,
+        "ADMIN_ROLES": ADMIN_ROLES,
+        "SUPERUSER_ROLES": SUPERUSER_ROLES,
+        "FACULTY_ROLE": FACULTY_ROLE
+    })
 
 
 @role_required(allowed_roles=["UESO", "VP", "DIRECTOR", "PROGRAM_HEAD", "DEAN", "COORDINATOR", "FACULTY", "IMPLEMENTER"], require_confirmed=True)
@@ -809,6 +755,7 @@ from django.views.decorators.http import require_POST
 @role_required(allowed_roles=["VP", "DIRECTOR", "UESO"], require_confirmed=True)
 @require_POST
 def cancel_project(request, pk):
+    from django.utils import timezone
     project = get_object_or_404(Project, pk=pk)
     project.status = 'CANCELLED'
     project.save()
@@ -831,14 +778,14 @@ def cancel_project(request, pk):
                 }
             )
     
-    # *** FIXED REDIRECT ***
-    return redirect('projects:project_overview', pk=pk)
+    return redirect(f'/projects/{pk}/overview/')
 
 # Undo cancel
 @role_required(allowed_roles=["VP", "DIRECTOR", "UESO"], require_confirmed=True)
 @require_POST
 def undo_cancel_project(request, pk):
     from datetime import date as dtdate
+    from django.utils import timezone
     project = get_object_or_404(Project, pk=pk)
     today = dtdate.today()
     old_status = project.status
@@ -872,8 +819,7 @@ def undo_cancel_project(request, pk):
                     }
                 )
     
-    # *** FIXED REDIRECT ***
-    return redirect('projects:project_overview', pk=pk)
+    return redirect(f'/projects/{pk}/overview/')
 
 
 ########################################################################################################################
@@ -1111,6 +1057,9 @@ def admin_project(request):
 ########################################################################################################################
 
 
+from django.utils import timezone
+
+
 @role_required(allowed_roles=["VP", "DIRECTOR", "UESO"], require_confirmed=True)
 def add_project_view(request):
     error = None
@@ -1246,34 +1195,3 @@ def add_project_view(request):
         'campus_choices': campus_choices,
         'logistics_type': logistics_type,
     })
-    
-
-# shared/projects/views.py
-@role_required(allowed_roles=["FACULTY", "IMPLEMENTER"], require_confirmed=True)
-def project_invoices(request, pk):
-    project = get_object_or_404(Project, pk=pk)
-    base_template = get_templates(request)
-
-    ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE, COORDINATOR_ROLE = get_role_constants()
-
-    if not (request.user == project.project_leader or \
-            project.providers.filter(pk=request.user.pk).exists()):
-         messages.error(request, "You are not assigned to this project or role.")
-         return redirect('users:profile') # Adjust redirect if needed
-
-    invoice_list = FacultyExpense.objects.filter(project=project).exclude(receipt='').order_by('-date_submitted')
-
-    paginator = Paginator(invoice_list, 12)
-    page_number = request.GET.get('page')
-    invoices_page = paginator.get_page(page_number)
-
-    context = {
-        'project': project,
-        'base_template': base_template,
-        'invoices_page': invoices_page,
-        'ADMIN_ROLES': ADMIN_ROLES,
-        'SUPERUSER_ROLES': SUPERUSER_ROLES,
-        'FACULTY_ROLE': FACULTY_ROLE,
-        'COORDINATOR_ROLE': COORDINATOR_ROLE,
-    }
-    return render(request, 'projects/project_invoices.html', context)

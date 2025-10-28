@@ -104,11 +104,8 @@
                 <button type="button" data-tab="submission" class="{% if '/submission/' in request.path %}active{% endif %}">Submissions</button>
                 {% endif %}
                 <button type="button" data-tab="evaluations" class="{% if '/evaluations/' in request.path %}active{% endif %}">Evaluations</button>
-                {% if request.user.role in ADMIN_ROLES or request.user.role in FACULTY_ROLE %}
+                {% if request.user.role in ADMIN_ROLES %}
                     <button type="button" data-tab="expenses" class="{% if '/expenses/' in request.path %}active{% endif %}">Expenses</button>
-                {% endif %} 
-                {% if request.user.role in FACULTY_ROLE %}
-                    <button type="button" data-tab="invoices" class="{% if '/invoices/' in request.path %}active{% endif %}">Invoices</button>
                 {% endif %}
             </div>
         </div> 
@@ -132,8 +129,6 @@
 	</symbol>
 </svg>  
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
-
 </body>
 
 <script>
@@ -153,9 +148,7 @@
             files: `/projects/${pk}/files/`,
             submission: `/projects/${pk}/submission/`,
             evaluations: `/projects/${pk}/evaluations/`,
-            invoices: `/projects/${pk}/invoices/`,
             expenses: `/projects/${pk}/expenses/`
-            
         };
         tabButtons.forEach(btn => {
             btn.addEventListener('click', function() {

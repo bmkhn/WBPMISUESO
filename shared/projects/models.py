@@ -149,7 +149,7 @@ class Project(models.Model):
 
 	proposal_document = models.OneToOneField('ProjectDocument', on_delete=models.SET_NULL, null=True, blank=True, related_name='proposal_for_project')
 	additional_documents = models.ManyToManyField('ProjectDocument', blank=True, related_name='additional_for_projects')
-	
+    
 	created_at = models.DateTimeField(auto_now_add=True)
 	created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='created_projects')
 	updated_at = models.DateTimeField(auto_now=True)
@@ -164,7 +164,7 @@ class Project(models.Model):
 	]
 
 	status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="NOT_STARTED")
-	
+
 	def get_status_display(self):
 		return dict(self.STATUS_CHOICES).get(self.status, self.status)
 
@@ -173,12 +173,6 @@ class Project(models.Model):
 		if self.estimated_events:
 			return (self.event_progress, self.estimated_events)
 
-	@property 
-	def current_budget(self):
-		internal = self.internal_budget if self.internal_budget is not None else Decimal(0)
-		external = self.external_budget if self.external_budget is not None else Decimal(0)
-		return internal + external
-	
 	@property
 	def progress_display(self):
 		done, total = self.progress
@@ -395,31 +389,3 @@ def create_project_alerts(sender, instance, created, **kwargs):
                         'updated_at': timezone.now(),
                     }
                 )
-				
-# shared/projects/models.py
-from django.db import models
-from django.conf import settings 
-from decimal import Decimal 
-
-def faculty_expense_receipt_path(instance, filename):
-    return f'projects/{instance.project.id}/faculty_receipts/{filename}'
-
-class FacultyExpense(models.Model):
-    # Link to the Project model within the same app
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='faculty_expenses')
-    reason = models.CharField(max_length=255)
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
-    notes = models.TextField(blank=True, null=True)
-    # Define where receipts are uploaded
-    receipt = models.ImageField(upload_to=faculty_expense_receipt_path)
-    # Link to the User model (ensure settings.AUTH_USER_MODEL is correct)
-    submitted_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    date_submitted = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"Expense: {self.reason} for {self.project.title}"
-
-    def clean(self):
-        if self.amount is not None and self.amount <= 0:
-            from django.core.exceptions import ValidationError
-            raise ValidationError({'amount': "Amount must be positive."})

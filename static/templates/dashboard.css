@@ -652,3 +652,16 @@ body {
     border-radius: 50%;
 }
 
+.chart-container {
+    width: 100%;
+    max-width: 600px;
+    margin-bottom: 20px;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: white;
+}
+
+.chart-container canvas {
+    max-height: 400px;
+}

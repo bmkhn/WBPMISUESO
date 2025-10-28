@@ -1,98 +1,46 @@
 {% extends "projects/base_project_profile.html" %}
-{% load static %}
 {% block profile_content %}
-<link href="https.fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+{% load static %} 
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
 <link href="{% static 'shared/projects/view.css' %}" rel="stylesheet">
 
-<div class="card-header d-flex justify-content-between align-items-center">
+<div class="card-header">
     <h3>Expenses</h3>
-    {% if request.user.role in FACULTY_ROLE %}
-        <button class="admin-button edit" id="open-eval-modal-header" type="button">Add Expenses</button>
-    {% endif %}
 </div>
-
 <div class="card-body">
-    <div class="modal fade" id="addExpenseModal" tabindex="-1" aria-labelledby="addExpenseModalLabel" aria-hidden="true">
-        <form method="post" action="{% url 'projects:project_expenses' project.id %}" enctype="multipart/form-data">
-            {% csrf_token %}
-            <div class="modal-header">
-                <h5 class="modal-title" id="addExpenseModalLabel">Add New Faculty Expense</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                removed for now
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="admin-button not" data-bs-dismiss="modal">Close</button>
-                <button type="submit" class="admin-button edit">Submit</button>
-            </div>
-        </form>
-    </div>
-    <div>
-        <div>
-            {% if expenses_page and expenses_page.object_list %}
-                <div class="table-responsive">
-                    <table class="user-table">
-                        <thead>
-                            <tr>
-                                <th>Reason</th>
-                                <th>Amount</th>
-                                <th>Notes</th>
-                                <th>Submitted By</th>
-                                <th>Date</th>
-                                <th>Receipt</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for expense in expenses_page %}
-                                <tr>
-                                    <td>{{ expense.reason }}</td>
-                                    <td>₱ {{ expense.amount|floatformat:2 }}</td>
-                                    <td>{{ expense.notes|default:"-"|linebreaksbr }}</td>
-                                    <td>{{ expense.submitted_by.get_full_name|default:expense.submitted_by.username }}</td>
-                                    <td>{{ expense.date_submitted|date:"M d, Y H:i" }}</td>
-                                    <td>
-                                        {% if expense.receipt %}
-                                            <a href="{{ expense.receipt.url }}" target="_blank" class="btn btn-sm btn-outline-primary">View</a>
-                                        {% else %}
-                                            N/A
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-
-                {# --- Pagination --- #}
-                {% if expenses_page.has_other_pages %}
-                <nav aria-label="Expense Pagination">
-                    <ul class="pagination justify-content-center">
-                        {% if expenses_page.has_previous %}
-                            <li class="page-item"><a class="page-link" href="?page=1">&laquo; First</a></li>
-                            <li class="page-item"><a class="page-link" href="?page={{ expenses_page.previous_page_number }}">Previous</a></li>
+    <div class="table-container">
+        <table class="user-table">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Reason(s)</th>
+                    <th style="text-align: center;">Amount</th>
+                    <th style="text-align: center;">Date</th>
+                    <th style="text-align: center;">Receipt</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for expense in expenses %}
+                <tr>
+                    <td>{{ expense.title }}</td>
+                    <td>{{ expense.reason }}</td>
+                    <td style="text-align: center;">₱{{ expense.amount|floatformat:2 }}</td>
+                    <td style="text-align: center;">{{ expense.date|date:'M d, Y' }}</td>
+                    <td style="text-align: center;">
+                        {% if expense.receipt %}
+                            <a href="{{ expense.receipt.url }}" target="_blank" class="name-link" style="text-decoration: none;"> View</a>
                         {% else %}
-                             <li class="page-item disabled"><span class="page-link">&laquo; First</span></li>
-                             <li class="page-item disabled"><span class="page-link">Previous</span></li>
+                            <span style="color:#aaa;font-size:0.95rem;">No receipt</span>
                         {% endif %}
-
-                        <li class="page-item disabled"><span class="page-link">Page {{ expenses_page.number }} of {{ expenses_page.paginator.num_pages }}.</span></li>
-
-                        {% if expenses_page.has_next %}
-                            <li class="page-item"><a class="page-link" href="?page={{ expenses_page.next_page_number }}">Next</a></li>
-                            <li class="page-item"><a class="page-link" href="?page={{ expenses_page.paginator.num_pages }}">Last &raquo;</a></li>
-                        {% else %}
-                            <li class="page-item disabled"><span class="page-link">Next</span></li>
-                            <li class="page-item disabled"><span class="page-link">Last &raquo;</span></li>
-                        {% endif %}
-                    </ul>
-                </nav>
-                {% endif %}
-            {% else %}
-                <p class="text-center">No faculty expenses have been submitted for this project yet.</p>
-            {% endif %}
-        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" style="text-align:center;color:#888;font-size:1.1rem;">No expenses found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
+
 {% endblock %}
