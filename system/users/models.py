@@ -136,36 +136,10 @@ class User(AbstractUser):
         super().save(*args, **kwargs)
 
 
-@receiver(post_save, sender=User)
-def log_user_action(sender, instance, created, **kwargs):
-    from system.logs.models import LogEntry
-    # Skip logging if this is being called from within a signal to avoid duplicates
-    if hasattr(instance, '_skip_log'):
-        return
-    action = 'CREATE' if created else 'UPDATE'
-    
-    # Only notify on UPDATE (not CREATE), and only for certain changes
-    is_notification = not created
-    
-    LogEntry.objects.create(
-        user=instance.created_by if created else instance,
-        action=action,
-        model='User',
-        object_id=instance.id,
-        object_repr=str(instance),
-        details=f"Role: {instance.role}",
-        is_notification=is_notification
-    )
-
-
-@receiver(post_delete, sender=User)
-def log_user_delete(sender, instance, **kwargs):
-    from system.logs.models import LogEntry
-    LogEntry.objects.create(
-        user=None,  # User is being deleted, can't reference them
-        action='DELETE',
-        model='User',
-        object_id=instance.id,
-        object_repr=str(instance),
-        details=f"Role: {instance.role}"
-    )
+# User logging is now handled manually in views for specific actions only:
+# - Registration (CREATE)
+# - Password Change
+# - Edit Bio or Profile Picture
+# - Added by UESO/Director/VP (CREATE)
+# - Edited by UESO/Director/VP (UPDATE)
+# This prevents excessive logging of every user save operation

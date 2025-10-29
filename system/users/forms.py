@@ -19,61 +19,64 @@ class LoginForm(AuthenticationForm):
     )
 
 
-class ClientRegistrationForm(forms.ModelForm):
-    password = forms.CharField(widget=forms.PasswordInput)
-    confirm_password = forms.CharField(widget=forms.PasswordInput)
-
+class UnifiedRegistrationForm(forms.ModelForm):
+    """Unified registration form for Faculty, Implementer, and Client roles"""
+    password = forms.CharField(widget=forms.PasswordInput, required=True)
+    confirm_password = forms.CharField(widget=forms.PasswordInput, required=True)
+    
     class Meta:
         model = User
         fields = [
             'given_name', 'middle_initial', 'last_name', 'suffix', 'sex', 'email', 'contact_no',
-            'company', 'industry', 'password', 'confirm_password', 'preferred_id', 'valid_id'  
+            'campus', 'college', 'degree', 'expertise', 'company', 'industry',
+            'password', 'confirm_password', 'preferred_id', 'valid_id'
         ]
-
+    
+    def __init__(self, *args, role=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.role = role
+        
+        # Make all optional fields not required initially
+        for field_name in ['middle_initial', 'suffix', 'campus', 'college', 'degree', 
+                          'expertise', 'company', 'industry', 'preferred_id', 'valid_id']:
+            if field_name in self.fields:
+                self.fields[field_name].required = False
+        
+        # Set required fields based on role
+        if role == 'FACULTY':
+            self.fields['campus'].required = True
+            self.fields['college'].required = True
+            self.fields['degree'].required = True
+            self.fields['expertise'].required = True
+        elif role == 'IMPLEMENTER':
+            self.fields['degree'].required = True
+            self.fields['expertise'].required = True
+        elif role == 'CLIENT':
+            self.fields['company'].required = True
+            self.fields['industry'].required = True
+    
     def clean(self):
         cleaned_data = super().clean()
         password = cleaned_data.get("password")
         confirm_password = cleaned_data.get("confirm_password")
+        
         if password and confirm_password and password != confirm_password:
             self.add_error('confirm_password', "Passwords Do Not Match.")
+        
         return cleaned_data
 
 
-class FacultyRegistrationForm(forms.ModelForm):
-    password = forms.CharField(widget=forms.PasswordInput)
-    confirm_password = forms.CharField(widget=forms.PasswordInput)
-
-    class Meta:
-        model = User
-        fields = [
-            'given_name', 'middle_initial', 'last_name', 'suffix', 'sex', 'email', 'contact_no',
-            'campus', 'college', 'degree', 'expertise', 'password', 'confirm_password', 'preferred_id', 'valid_id'  
-        ]
-
-    def clean(self):
-        cleaned_data = super().clean()
-        password = cleaned_data.get("password")
-        confirm_password = cleaned_data.get("confirm_password")
-        if password and confirm_password and password != confirm_password:
-            self.add_error('confirm_password', "Passwords Do Not Match.")
-        return cleaned_data
+# Keep old forms for backward compatibility (can be removed later)
+class ClientRegistrationForm(UnifiedRegistrationForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, role='CLIENT', **kwargs)
 
 
-class ImplementerRegistrationForm(forms.ModelForm):
-    password = forms.CharField(widget=forms.PasswordInput)
-    confirm_password = forms.CharField(widget=forms.PasswordInput)
+class FacultyRegistrationForm(UnifiedRegistrationForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, role='FACULTY', **kwargs)
 
-    class Meta:
-        model = User
-        fields = [
-            'given_name', 'middle_initial', 'last_name', 'suffix', 'sex', 'email', 'contact_no',
-            'degree', 'expertise', 'password', 'confirm_password', 'preferred_id', 'valid_id'
-        ]
 
-    def clean(self):
-        cleaned_data = super().clean()
-        password = cleaned_data.get("password")
-        confirm_password = cleaned_data.get("confirm_password")
-        if password and confirm_password and password != confirm_password:
-            self.add_error('confirm_password', "Passwords Do Not Match.")
-        return cleaned_data
+class ImplementerRegistrationForm(UnifiedRegistrationForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, role='IMPLEMENTER', **kwargs)

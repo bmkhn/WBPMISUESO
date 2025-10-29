@@ -1,492 +1,801 @@
 {% extends base_template %}
 {% block content %}
-{% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
 <title>My Profile</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
-
-<link href="{% static 'internal/experts/editprof.css' %}" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
 <style>
-    /* Hide input fields by default */
-    .edit-mode-field { display: none; }
-    .edit-mode-controls { display: none; }
-    .edit-profile-picture-trigger { display: none; }
+	body {
+		background-color: #F9F9F9;
+		font-family: 'Inter', sans-serif;
+		margin: 0;
+		padding: 0;
+	}
 
-    /* When edit mode is active */
-    main.edit-mode .edit-mode-field { display: block; } /* Show input fields */
-    main.edit-mode .display-mode-field { display: none; } /* Hide display fields */
-    main.edit-mode .edit-mode-controls { display: flex; gap: 10px; margin-top: 15px; justify-content: flex-end; /* Align buttons right */ } /* Show Save/Cancel buttons */
-    main.edit-mode .edit-profile-picture-trigger { display: block; cursor: pointer; color: #007bff; text-align: center; margin-top: 10px; font-size: 0.9em;} /* Show Change Picture link */
-    main.edit-mode .edit-overlay { display: none; } /* Hide default hover overlay in edit mode */
+	.main-container {
+		margin: 75px;
+		display: flex;
+		flex-direction: column;
+		gap: 30px;
+	}
 
-    /* Style inputs */
-    .edit-mode-field input[type="text"],
-    .edit-mode-field input[type="email"],
-    .edit-mode-field input[type="tel"],
-    .edit-mode-field select, /* Style select dropdown */
-    .edit-mode-field textarea {
-        width: 100%;
-        padding: 8px;
-        margin-top: 5px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        font-family: inherit;
-        font-size: inherit;
-        box-sizing: border-box; /* Include padding and border in width */
-    }
-    .edit-mode-field select {
-        height: 38px; /* Match input height */
-        background-color: white; /* Ensure select is visible */
-    }
-    .edit-mode-field textarea {
-        min-height: 100px;
-        resize: vertical;
-    }
+	/* Profile Header */
+	.profile-header {
+		background-color: white;
+		border-radius: 12px;
+		padding: 30px;
+		margin-bottom: 30px;
+		box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+	}
 
-    /* Style for the main Edit Profile button */
-    .edit-profile-button-container {
-      position: absolute; /* Position relative to the section */
-      bottom: 1rem; /* CHANGED: Moved from top to bottom */
-      right: 1rem;
-      z-index: 10;
-    }
+	.profile-main {
+		display: flex;
+		align-items: flex-start;
+		gap: 40px;
+	}
 
-    .edit-profile-button {
-      padding: 8px 16px;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 0.9em;
-    }
-    .edit-profile-button:hover {
-      background-color: #0056b3;
-    }
+	.profile-left {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 20px;
+		flex-shrink: 0;
+	}
 
-    /* Adjust profile picture container for edit mode */
-     main.edit-mode .propic { cursor: default; }
+	.profile-image {
+		width: 160px;
+		height: 160px;
+		border-radius: 50%;
+		background-color: #e9ecef;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		overflow: hidden;
+		border: 3px solid #f8f9fa;
+		box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+		position: relative;
+		cursor: pointer;
+	}
 
-     /* Make sure labels are visible */
-     .edit-mode-field label {
-         display: block;
-         margin-top: 10px;
-         font-weight: bold;
-         font-size: 0.9em;
-         color: #333;
-     }
+	.profile-image img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		border-radius: 50%;
+	}
 
-     /* Standardize button styles used in edit mode */
-    .save-changes-btn, .cancel-edit-btn { /* More generic names */
-        padding: 8px 16px;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 14px;
-        font-weight: 500;
-    }
-    .save-changes-btn {
-        background: linear-gradient(90deg, #9409FF 0%, #FF3300 100%);
-        color: white;
-    }
-    .cancel-edit-btn {
-        background: #6c757d;
-        color: white;
-    }
+	.profile-image:hover .edit-overlay {
+		opacity: 1;
+	}
 
-    /* Ensure sections have some minimum height if content collapses */
-    .personal-info, .expertise, .contact, .bio {
-        min-height: 100px; /* Adjust as needed */
-    }
+	.edit-overlay {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background: rgba(0,0,0,0.6);
+		border-radius: 50%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		opacity: 0;
+		transition: opacity 0.3s;
+		color: white;
+		font-size: 14px;
+	}
 
-    /* Adjust header in edit mode to hold buttons */
-    .lower-header .edit-mode-controls {
-        margin-top: 0; /* Reset margin for header */
-    }
+	.profile-middle {
+		display: flex;
+		flex-direction: column;
+		gap: 20px;
+		flex: 1;
+	}
 
+	.profile-name {
+		font-size: 32px;
+		font-weight: 700;
+		color: #333;
+		margin: 0;
+		text-align: left;
+		line-height: 1.2;
+	}
+
+	.profile-location {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		color: #333;
+		font-size: 16px;
+		text-align: left;
+	}
+
+	.location-icon {
+		color: #dc3545;
+		font-size: 18px;
+	}
+
+	.university-logo {
+		width: 70px;
+		height: 70px;
+		border-radius: 50%;
+		background-color: #f8f9fa;
+		border: 1px solid #000;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		overflow: hidden;
+		box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+	}
+
+	.university-logo img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		border-radius: 50%;
+	}
+
+	.profile-info {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		gap: 30px;
+		padding-top: 0;
+	}
+
+	.expertise-section {
+		display: flex;
+		flex-direction: column;
+		gap: 20px;
+	}
+
+	.expertise-item {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+	}
+
+	.expertise-label {
+		font-weight: 700;
+		color: #333;
+		font-size: 16px;
+		margin-bottom: 5px;
+	}
+
+	.expertise-value {
+		color: #666;
+		font-size: 15px;
+		line-height: 1.4;
+	}
+
+	/* Content Cards */
+	.content-cards {
+		display: grid;
+		grid-template-columns: 30% 67.5%;
+		gap: 30px;
+	}
+
+	.content-card {
+		background-color: white;
+		border-radius: 12px;
+		padding: 25px;
+		box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+	}
+
+	.card-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 20px;
+	}
+
+	.card-title {
+		font-size: 20px;
+		font-weight: 600;
+		color: #333;
+	}
+
+	.sort-controls {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		color: #666;
+		font-size: 14px;
+	}
+
+	.sort-icon {
+		width: 16px;
+		height: 16px;
+		cursor: pointer;
+	}
+
+	/* Bio Content */
+	.bio-content {
+		color: #666;
+		line-height: 1.6;
+		font-size: 14px;
+		position: relative;
+	}
+
+	.bio-text {
+		margin-bottom: 20px;
+	}
+
+	.edit-bio-btn {
+		background: linear-gradient(90deg, #9409FF 0%, #FF3300 100%);
+		color: white;
+		border: none;
+		padding: 8px 16px;
+		border-radius: 6px;
+		cursor: pointer;
+		font-size: 14px;
+		font-weight: 500;
+	}
+
+	.edit-bio-btn:hover {
+		opacity: 0.9;
+	}
+
+	.bio-editor {
+		display: none;
+	}
+
+	.bio-editor.active {
+		display: block;
+	}
+
+	.bio-editor textarea {
+		width: 100%;
+		min-height: 150px;
+		padding: 12px;
+		border: 1px solid #ddd;
+		border-radius: 6px;
+		font-family: 'Inter', sans-serif;
+		font-size: 14px;
+		resize: vertical;
+		margin-bottom: 10px;
+	}
+
+	.bio-editor-actions {
+		display: flex;
+		gap: 10px;
+	}
+
+	.save-bio-btn {
+		background: linear-gradient(90deg, #9409FF 0%, #FF3300 100%);
+		color: white;
+		border: none;
+		padding: 8px 16px;
+		border-radius: 6px;
+		cursor: pointer;
+		font-size: 14px;
+		font-weight: 500;
+	}
+
+	.cancel-bio-btn {
+		background: #6c757d;
+		color: white;
+		border: none;
+		padding: 8px 16px;
+		border-radius: 6px;
+		cursor: pointer;
+		font-size: 14px;
+		font-weight: 500;
+	}
+
+	/* Projects/Requests List */
+	.projects-list {
+		display: flex;
+		flex-direction: column;
+		gap: 20px;
+	}
+
+	.project-item, .request-item {
+		padding-bottom: 20px;
+		border-bottom: 1px solid #e9ecef;
+	}
+
+	.project-item:last-child, .request-item:last-child {
+		border-bottom: none;
+		padding-bottom: 0;
+	}
+
+	.project-date {
+		font-size: 12px;
+		color: #999;
+		margin-bottom: 8px;
+	}
+
+	.project-title {
+		font-size: 16px;
+		font-weight: 600;
+		color: #333;
+		margin-bottom: 12px;
+	}
+
+	.project-tags {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+		margin-bottom: 15px;
+	}
+
+	.project-tag {
+		padding: 4px 12px;
+		border-radius: 20px;
+		font-size: 12px;
+		font-weight: 500;
+	}
+
+	.tag-orange {
+		background-color: #ffc107;
+		color: white;
+	}
+
+	.tag-green {
+		background-color: #d4edda;
+		color: #155724;
+	}
+
+	.tag-completed {
+		background-color: #28a745;
+		color: white;
+	}
+
+	.tag-ongoing {
+		background-color: #fd7e14;
+		color: white;
+	}
+
+	.project-contributors {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		margin-bottom: 10px;
+	}
+
+	.contributor-avatar {
+		width: 32px;
+		height: 32px;
+		border-radius: 50%;
+		background-color: #e9ecef;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 12px;
+		color: #6c757d;
+		font-weight: 600;
+	}
+
+	.contributor-name {
+		font-size: 12px;
+		color: #666;
+	}
+
+	.project-action {
+		color: #007bff;
+		text-decoration: none;
+		font-size: 14px;
+		font-weight: 500;
+	}
+
+	.project-action:hover {
+		text-decoration: underline;
+	}
+
+	/* Modal */
+	.modal-overlay {
+		display: none;
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background: rgba(0,0,0,0.5);
+		z-index: 1000;
+	}
+
+	.modal-overlay.active {
+		display: block;
+	}
+
+	.modal {
+		display: none;
+		position: fixed;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		background: white;
+		padding: 30px;
+		border-radius: 12px;
+		z-index: 1001;
+		max-width: 400px;
+		width: 90%;
+	}
+
+	.modal.active {
+		display: block;
+	}
+
+	.modal h3 {
+		margin-top: 0;
+		margin-bottom: 20px;
+	}
+
+	.modal input[type="file"] {
+		margin-bottom: 20px;
+		width: 100%;
+	}
+
+	.modal-actions {
+		display: flex;
+		gap: 10px;
+		justify-content: flex-end;
+	}
+
+	.modal-actions button {
+		padding: 8px 16px;
+		border: none;
+		border-radius: 6px;
+		cursor: pointer;
+		font-size: 14px;
+		font-weight: 500;
+	}
+
+	.modal-actions .upload-btn {
+		background: linear-gradient(90deg, #9409FF 0%, #FF3300 100%);
+		color: white;
+	}
+
+	.modal-actions .cancel-btn {
+		background: #6c757d;
+		color: white;
+	}
 </style>
 
 </head>
 <body>
-    <form id="profileForm" method="POST" action="{% url 'update_profile' %}" enctype="multipart/form-data">
-        {% csrf_token %}
-        <main> 
-            <section style="position: relative;"> 
-                
-                {% if can_edit %}
-                <div class="edit-profile-button-container display-mode-field">
-                    <button type="button" class="edit-profile-button" onclick="toggleEditMode(true)">Edit Profile</button>
-                </div>
-                {% endif %}
+	<!-- Main Content -->
+	<div class="main-container">
+		<!-- Content Area -->
+		<div class="content-area">
+			<!-- Profile Header -->
+			<div class="profile-header">
+				<div class="profile-main">
+					<div class="profile-left">
+						<div class="profile-image" {% if can_edit %}onclick="openImageModal()"{% endif %}>
+							{% if profile_user.profile_picture %}
+							<img src="{{ profile_user.profile_picture.url }}" alt="{{ profile_user.get_full_name }}" id="profileImg">
+							{% else %}
+							<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#e9ecef; color:#6c757d; font-size:48px; font-weight:600;" id="profileInitials">
+								{{ profile_user.given_name.0 }}{{ profile_user.last_name.0 }}
+							</div>
+							{% endif %}
+							{% if can_edit %}
+							<div class="edit-overlay">
+								<i class="fa-solid fa-camera"></i> Change Photo
+							</div>
+							{% endif %}
+						</div>
+					</div>
 
-                <div class="propic">
-                    <div class="display-mode-field">
-                        {% if profile_user.profile_picture %}
-                        <img src="{{ profile_user.profile_picture.url }}" alt="{{ profile_user.get_full_name }}" id="profileImgDisplay">
-                        {% else %}
-                        <div class="propic-placeholder" id="profileInitialsDisplay">
-                            {{ profile_user.given_name.0 }}{{ profile_user.last_name.0 }}
-                        </div>
-                        {% endif %}
-                    </div>
-                    <div class="edit-mode-field" id="imagePreviewContainer">
-                         {% if profile_user.profile_picture %}
-                            <img src="{{ profile_user.profile_picture.url }}" alt="Current profile picture" id="profileImgEdit" style="width:100%; height: 100%; object-fit: cover; border-radius: 50%;">
-                         {% else %}
-                             <div class="propic-placeholder" id="profileInitialsEdit" style="font-size: 6rem;">{{ profile_user.given_name.0 }}{{ profile_user.last_name.0 }}</div>
-                         {% endif %}
-                        <input type="file" name="profile_picture" id="profilePictureInput" style="display: none;" accept="image/*" onchange="previewImage(event)">
-                        <a class="edit-profile-picture-trigger" onclick="document.getElementById('profilePictureInput').click();">Change Picture</a>
-                    </div>
-                </div>
+					<div class="profile-middle">
+						<h1 class="profile-name">{{ profile_user.get_full_name }}</h1>
+						{% if profile_user.role in HAS_COLLEGE_CAMPUS %}
+						<div class="profile-location">
+							<span class="location-icon"><i class="fa-solid fa-location-dot"></i></span>
+							<span >{{ campus_display }}</span>
+						</div>
+						{% endif %}
 
-                <div class="profile-info-grid">
-                    
-                    <div class="personal-info">
-                        <h2 class="display-mode-field">{{ profile_user.get_full_name }}</h2>
-                        <div class="edit-mode-field">
-                            <label for="id_given_name">First Name:</label>
-                            <input type="text" name="given_name" id="id_given_name" value="{{ profile_user.given_name }}">
-                            <label for="id_last_name">Last Name:</label>
-                            <input type="text" name="last_name" id="id_last_name" value="{{ profile_user.last_name }}">
-                        </div>
+						{% if profile_user.role in HAS_COLLEGE_CAMPUS %}
+						<div class="university-logo">
+							<img src="{{ college_logo }}" alt="{{ college_name }}" title="{{ college_name }}">
+						</div>
+						{% endif %}
+					</div>
 
-                        {% if profile_user.role in HAS_COLLEGE_CAMPUS %}
-                        <h4 class="display-mode-field"><i class="fas fa-map-marker-alt" style="color:red; margin-right:0.5rem;"></i> {{ campus_display }}</h4>
-                        <div class="edit-mode-field">
-                           <label for="id_campus">Campus:</label>
-                           <select name="campus" id="id_campus">
-                               <option value="">---------</option> {# Empty option allows setting to None #}
-                               {% for value, display in profile_user.Campus.choices %}
-                                   <option value="{{ value }}" {% if profile_user.campus == value %}selected{% endif %}>{{ display }}</option>
-                               {% endfor %}
-                           </select>
-                        </div>
-                        {% endif %}
+					<div class="profile-info">
+						<div class="expertise-section">
+							{% if profile_user.role in HAS_DEGREE_EXPERTISE %}
+							<div class="expertise-item">
+								<span class="expertise-label">Field of Expertise:</span>
+								<span class="expertise-value">{{ profile_user.expertise|default:"Not specified" }}</span>
+							</div>
+							{% if college_name and college_name != "N/A" %}
+							<div class="expertise-item">
+								<span class="expertise-label">{{ profile_user.degree|default:"Degree Not Listed" }}</span>
+								<span class="expertise-value">{{ college_name }}</span>
+							</div>
+							{% endif %}
+							{% elif profile_user.role in HAS_COMPANY_INDUSTRY %}
+							<div class="expertise-item">
+								<span class="expertise-label">Company:</span>
+								<span class="expertise-value">{{ profile_user.company|default:"Not specified" }}</span>
+							</div>
+							<div class="expertise-item">
+								<span class="expertise-label">Industry:</span>
+								<span class="expertise-value">{{ profile_user.industry|default:"Not specified" }}</span>
+							</div>
+							{% else %}
+							<div class="expertise-item">
+								<span class="expertise-label">Role:</span>
+								<span class="expertise-value">{{ profile_user.get_role_display }}</span>
+							</div>
+							{% if college_name and college_name != "N/A" %}
+							<div class="expertise-item">
+								<span class="expertise-label">College:</span>
+								<span class="expertise-value">{{ college_name }}</span>
+							</div>
+							{% endif %}
+							{% endif %}
+						</div>
+					</div>
 
-                        {% if profile_user.role in HAS_COLLEGE_CAMPUS %}
-                            {% if college_logo %}
-                            <img class="display-mode-field edit-mode-field" src="{{ college_logo }}" alt="{{ college_name }}" title="{{ college_name }}">
-                            {% else %}
-                            <div class="college-logo-placeholder display-mode-field edit-mode-field">
-                                {{ college_name.0|default:"?" }}
-                            </div>
-                            {% endif %}
-                        {% endif %}
-                    </div>
-                    
-                    <div class="expertise">
-                        {% if profile_user.role in HAS_DEGREE_EXPERTISE %}
-                            <h5 class="display-mode-field">Field of Expertise:</h5>
-                            <p class="display-mode-field">{{ profile_user.expertise|default:"Not specified" }}</p>
-                            <div class="edit-mode-field">
-                                <label for="id_expertise">Field of Expertise:</label>
-                                <input type="text" name="expertise" id="id_expertise" value="{{ profile_user.expertise|default:"" }}">
-                            </div>
+					<div class="profile-info">
+						<div class="expertise-section">
+							<div class="expertise-item">
+								<span class="expertise-label">Contact:</span>
+								<span class="expertise-value">{{ profile_user.email }}</span>
+								<span class="expertise-value">{{ profile_user.contact_no }}</span>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
 
-                            {% if college_name and college_name != "N/A" %}
-                            <h5 class="display-mode-field">{{ profile_user.degree|default:"Degree Not Listed" }}</h5>
-                            <p class="display-mode-field">{{ college_name }}</p>
-                             <div class="edit-mode-field">
-                                <label for="id_degree">Degree:</label>
-                                <input type="text" name="degree" id="id_degree" value="{{ profile_user.degree|default:"" }}">
-                                <p style="font-size: 0.9em; color: #666;">College: {{ college_name }} (Not editable)</p>
-                            </div>
-                            {% endif %}
-                        {% elif profile_user.role in HAS_COMPANY_INDUSTRY %}
-                            <h5 class="display-mode-field">Company:</h5>
-                            <p class="display-mode-field">{{ profile_user.company|default:"Not specified" }}</p>
-                            <h5 class="display-mode-field">Industry:</h5>
-                            <p class="display-mode-field">{{ profile_user.industry|default:"Not specified" }}</p>
-                            <div class="edit-mode-field">
-                                <label for="id_company">Company:</label>
-                                <input type="text" name="company" id="id_company" value="{{ profile_user.company|default:"" }}">
-                                <label for="id_industry">Industry:</label>
-                                <input type="text" name="industry" id="id_industry" value="{{ profile_user.industry|default:"" }}">
-                            </div>
-                        {% else %}
-                            <h5>Role:</h5>
-                            <p>{{ profile_user.get_role_display }}</p>
-                            {% if college_name and college_name != "N/A" %}
-                            <h5>College:</h5>
-                            <p>{{ college_name }}</p>
-                            {% endif %}
-                        {% endif %}
-                    </div>
+			<!-- Content Cards -->
+			<div class="content-cards">
+				<!-- Bio Card -->
+				<div class="content-card">
+					<div class="card-header">
+						<h2 class="card-title">Bio</h2>
+					</div>
+					<div class="bio-content">
+						<div class="bio-display">
+							<div class="bio-text">
+								{{ profile_user.bio|linebreaksbr|default:"No bio added yet." }}
+							</div>
+							{% if can_edit %}
+							<button class="edit-bio-btn" onclick="toggleBioEditor(true)">Edit Bio</button>
+							{% endif %}
+						</div>
+						{% if can_edit %}
+						<div class="bio-editor">
+							<form id="bioForm" method="POST" action="{% url 'update_bio' %}">
+								{% csrf_token %}
+								<textarea name="bio" id="bioTextarea">{{ profile_user.bio|default:"" }}</textarea>
+								<div class="bio-editor-actions">
+									<button type="submit" class="save-bio-btn">Save</button>
+									<button type="button" class="cancel-bio-btn" onclick="toggleBioEditor(false)">Cancel</button>
+								</div>
+							</form>
+						</div>
+						{% endif %}
+					</div>
+				</div>
 
-                    <div class="contact">
-                        <h5 class="display-mode-field">Contact:</h5>
-                        <p class="display-mode-field">{{ profile_user.email }}</p>
-                        <p class="display-mode-field">{{ profile_user.contact_no|default:"" }}</p>
-                        <div class="edit-mode-field">
-                            <label for="id_email">Email:</label>
-                            <input type="email" name="email" id="id_email" value="{{ profile_user.email }}">
-                            <label for="id_contact_no">Contact No:</label>
-                            <input type="tel" name="contact_no" id="id_contact_no" value="{{ profile_user.contact_no|default:"" }}">
-                        </div>
-                    </div>
-                </div>
-            </section>
+				<!-- Dynamic Content Card -->
+				<div class="content-card">
+					<div class="card-header">
+						<h2 class="card-title">
+							{% if profile_user.role in "FACULTY,IMPLEMENTER" %}
+							{% if can_edit %}My Projects{% else %}Projects{% endif %} ({{ content_items.count }})
+							{% elif profile_user.role in "PROGRAM_HEAD,DEAN,COORDINATOR" %}
+							College Projects ({{ content_items.count }})
+							{% elif profile_user.role == "CLIENT" %}
+							{% if can_edit %}My Requests{% else %}Requests{% endif %} ({{ content_items.count }})
+							{% else %}
+							Projects ({{ content_items.count }})
+							{% endif %}
+						</h2>
+						<div class="sort-controls">
+							<span class="sort-icon">☰</span>
+							<div class="sort-dropdown">
+								<select id="sortContent" style="padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;">
+									<option value="date-desc">Date (Newest First)</option>
+									<option value="date-asc">Date (Oldest First)</option>
+									<option value="title-asc">Title (A-Z)</option>
+									<option value="title-desc">Title (Z-A)</option>
+									{% if profile_user.role != "CLIENT" %}
+									<option value="status">Status</option>
+									{% endif %}
+								</select>
+							</div>
+						</div>
+					</div>
+					<div class="projects-list" id="contentList">
+						<!-- Will be populated by JavaScript -->
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
 
-            <section class="lower">
-                <div class="bio">
-                    <div class="lower-header">
-                        <h1>Bio</h1>
-                        <div class="edit-mode-controls">
-                            <button type="submit" class="save-changes-btn">Save Changes</button>
-                            <button type="button" class="cancel-edit-btn" onclick="toggleEditMode(false)">Cancel</button>
-                        </div>
-                    </div>
-                    <div class="bio-content">
-                        <div class="bio-display display-mode-field" style="margin-top: 1rem;">
-                            <p class="bio-text">
-                                {{ profile_user.bio|linebreaksbr|default:"No bio added yet." }}
-                            </p>
-                        </div>
-                        <div class="bio-editor edit-mode-field"> {# Use bio-editor for styling compatibility if needed #}
-                             <label for="id_bio">Bio:</label>
-                             <textarea name="bio" id="id_bio">{{ profile_user.bio|default:"" }}</textarea>
-                        </div>
-                    </div>
-                </div>
+	<!-- Image Upload Modal -->
+	<div class="modal-overlay" id="imageModalOverlay" onclick="closeImageModal()"></div>
+	<div class="modal" id="imageModal">
+		<h3>Change Profile Picture</h3>
+		<form id="imageForm" method="POST" action="{% url 'update_profile_picture' %}" enctype="multipart/form-data">
+			{% csrf_token %}
+			<input type="file" name="profile_picture" accept="image/jpeg,image/png,image/jpg,image/gif,image/webp" required>
+			<div class="modal-actions">
+				<button type="submit" class="upload-btn">Upload</button>
+				<button type="button" class="cancel-btn" onclick="closeImageModal()">Cancel</button>
+			</div>
+		</form>
+	</div>
 
-                <div class="project">
-                    <div class="lower-header"> 
-                        <div>
-                            <h1>
-                                {% if profile_user.role in "FACULTY,IMPLEMENTER" %}{% if can_edit %}My Projects{% else %}Projects{% endif %}
-                                {% elif profile_user.role in "PROGRAM_HEAD,DEAN,COORDINATOR" %}College Projects 
-                                {% elif profile_user.role == "CLIENT" %{% if can_edit %}My Requests{% else %}Requests{% endif %} 
-                                {% else %}Projects{% endif %}
-                                <span class="display-mode-field edit-mode-field">({{ content_items.count }})</span> {# Always show count #}
-                            </h1>   
-                        </div>
-                        <div style="display: flex; flex-shrink: 3; align-items: center; gap: 0.5rem;" class="display-mode-field edit-mode-field"> {# Always show sort #}
-                            <span style="font-size: 1.1rem; font-weight: 500; color: #444; width: 6rem;">Sort by:</span>
-                            <select id="sortContent" class="dropdown-btn" style="margin: 0.75rem 0;">
-                                <option value="date-desc">Newest First</option>
-                                <option value="date-asc">Oldest First</option>
-                                <option value="title-asc">Title (A-Z)</option>
-                                <option value="title-desc">Title (Z-A)</option>
-                                {% if profile_user.role != "CLIENT" %}
-                                <option value="status">Status</option>
-                                {% endif %}
-                            </select>
-                        </div>
-                    </div>
-                    <div class="project-card" id="contentList"> 
-                        </div>
-                </div>
-            </section>
-        </main>
-    </form> <script>
-    const mainElement = document.querySelector('main');
+<script>
+// Image modal
+function openImageModal() {
+	document.getElementById('imageModalOverlay').classList.add('active');
+	document.getElementById('imageModal').classList.add('active');
+}
 
-    function toggleEditMode(enable) {
-        if (enable) {
-            mainElement.classList.add('edit-mode');
-        } else {
-            mainElement.classList.remove('edit-mode');
-            // Reset form fields to original values on cancel
-             document.getElementById('profileForm').reset(); 
-             // Reset image preview if cancelled
-             resetImagePreview();
-        }
-    }
+function closeImageModal() {
+	document.getElementById('imageModalOverlay').classList.remove('active');
+	document.getElementById('imageModal').classList.remove('active');
+}
 
-    function previewImage(event) {
-        const reader = new FileReader();
-        const fileInput = event.target;
-        
-        reader.onload = function(){
-            const previewContainer = document.getElementById('imagePreviewContainer'); 
-            if (!previewContainer) return;
+// Bio editor
+function toggleBioEditor(show) {
+	const display = document.querySelector('.bio-display');
+	const editor = document.querySelector('.bio-editor');
+	
+	if (show) {
+		display.style.display = 'none';
+		editor.classList.add('active');
+	} else {
+		display.style.display = 'block';
+		editor.classList.remove('active');
+	}
+}
 
-            // Find existing preview image or placeholder
-            let previewElement = previewContainer.querySelector('img') || previewContainer.querySelector('.propic-placeholder');
+// Content data and rendering
+const contentData = [
+	{% if profile_user.role == "CLIENT" %}
+		{% for request in content_items %}
+		{
+			id: {{ request.id }},
+			title: "{{ request.title|escapejs }}",
+			date: "{{ request.created_at|date:'Y-m-d' }}",
+			dateDisplay: "{{ request.created_at|date:'F Y' }}",
+			status: "{{ request.status }}",
+			type: "request"
+		}{% if not forloop.last %},{% endif %}
+		{% endfor %}
+	{% else %}
+		{% for project in content_items %}
+		{
+			id: {{ project.id }},
+			title: "{{ project.title|escapejs }}",
+			date: "{{ project.start_date|date:'Y-m-d' }}",
+			dateDisplay: "{{ project.start_date|date:'F Y' }}",
+			status: "{{ project.status }}",
+			leaderCampus: "{{ project.project_leader.get_campus_display|default:'N/A'|escapejs }}",
+			agenda: "{{ project.agenda.name|default:''|escapejs }}",
+			leaderName: "{{ project.project_leader.get_full_name|escapejs }}",
+			leaderInitials: "{{ project.project_leader.given_name.0 }}{{ project.project_leader.last_name.0 }}",
+			providers: [
+				{% for provider in project.providers.all %}
+				{
+					name: "{{ provider.get_full_name|escapejs }}",
+					initials: "{{ provider.given_name.0 }}{{ provider.last_name.0 }}"
+				}{% if not forloop.last %},{% endif %}
+				{% endfor %}
+			],
+			providersCount: {{ project.providers.count }},
+			type: "project"
+		}{% if not forloop.last %},{% endif %}
+		{% endfor %}
+	{% endif %}
+];
 
-            if (previewElement) {
-                // If it's the placeholder, replace it with an image tag
-                if (previewElement.classList.contains('propic-placeholder')) {
-                    const img = document.createElement('img');
-                    img.id = 'profileImgEdit'; // Give it the correct ID
-                    img.style.width = '100%';
-                    img.style.height = '100%';
-                    img.style.objectFit = 'cover';
-                    img.style.borderRadius = '50%';
-                    previewElement.parentNode.replaceChild(img, previewElement);
-                    previewElement = img; // Update reference to the new image
-                }
-                // Update the image source
-                 if (previewElement.tagName === 'IMG') {
-                    previewElement.src = reader.result;
-                 }
-            }
-             // Ensure trigger link is still there (it might get overwritten if previewContainer.innerHTML was used)
-             if (!previewContainer.querySelector('.edit-profile-picture-trigger')) {
-                 previewContainer.insertAdjacentHTML('beforeend', `
-                    <input type="file" name="profile_picture" id="profilePictureInput" style="display: none;" accept="image/*" onchange="previewImage(event)">
-                    <a class="edit-profile-picture-trigger" onclick="document.getElementById('profilePictureInput').click();">Change Picture</a>
-                 `);
-             }
-        };
+function renderContent(items) {
+	const container = document.getElementById('contentList');
+	
+	if (items.length === 0) {
+		{% if profile_user.role == "CLIENT" %}
+		container.innerHTML = '<div style="text-align: center; padding: 40px; color: #666;">{% if can_edit %}You have{% else %}This user has{% endif %} no requests yet.</div>';
+		{% else %}
+		container.innerHTML = '<div style="text-align: center; padding: 40px; color: #666;">No projects found.</div>';
+		{% endif %}
+		return;
+	}
+	
+	container.innerHTML = items.map(item => {
+		if (item.type === 'request') {
+			return `
+				<div class="request-item">
+					<div class="project-date">${item.dateDisplay}</div>
+					<h3 class="project-title">${item.title}</h3>
+					<div class="project-tags">
+						<span class="project-tag" style="background-color: #007bff; color: white;">${item.status}</span>
+					</div>
+					<a href="/request/details/${item.id}/" class="project-action">View</a>
+				</div>
+			`;
+		} else {
+			let statusTag = '';
+			if (item.status === 'COMPLETED') {
+				statusTag = '<span class="project-tag tag-completed">Completed</span>';
+			} else if (item.status === 'IN_PROGRESS') {
+				statusTag = '<span class="project-tag tag-ongoing">Ongoing</span>';
+			} else if (item.status === 'NOT_STARTED') {
+				statusTag = '<span class="project-tag" style="background-color: #6c757d; color: white;">Not Started</span>';
+			} else if (item.status === 'ON_HOLD') {
+				statusTag = '<span class="project-tag" style="background-color: #ffc107; color: white;">On Hold</span>';
+			} else if (item.status === 'CANCELLED') {
+				statusTag = '<span class="project-tag" style="background-color: #dc3545; color: white;">Cancelled</span>';
+			}
+			
+			const providersList = item.providers.slice(0, 3).map(p => 
+				`<div class="contributor-avatar">${p.initials}</div><span class="contributor-name">${p.name}</span>`
+			).join('');
+			
+			const moreProviders = item.providersCount > 3 ? 
+				`<span class="contributor-name">+${item.providersCount - 3} more</span>` : '';
+			
+			return `
+				<div class="project-item">
+					<div class="project-date">${item.dateDisplay}</div>
+					<h3 class="project-title">${item.title}</h3>
+					<div class="project-tags">
+						<span class="project-tag tag-orange">${item.leaderCampus}</span>
+						${item.agenda ? `<span class="project-tag tag-green">${item.agenda}</span>` : ''}
+						${statusTag}
+					</div>
+					<div class="project-contributors">
+						<div class="contributor-avatar">${item.leaderInitials}</div>
+						<span class="contributor-name">${item.leaderName}</span>
+						${providersList}
+						${moreProviders}
+					</div>
+					<a href="/projects/${item.id}/" class="project-action">View</a>
+				</div>
+			`;
+		}
+	}).join('');
+}
 
-        if (fileInput.files && fileInput.files[0]) {
-            reader.readAsDataURL(fileInput.files[0]);
-        }
-    }
+document.getElementById('sortContent').addEventListener('change', function(e) {
+	const sortBy = e.target.value;
+	let sorted = [...contentData];
+	
+	switch(sortBy) {
+		case 'date-desc':
+			sorted.sort((a, b) => new Date(b.date) - new Date(a.date));
+			break;
+		case 'date-asc':
+			sorted.sort((a, b) => new Date(a.date) - new Date(b.date));
+			break;
+		case 'title-asc':
+			sorted.sort((a, b) => a.title.localeCompare(b.title));
+			break;
+		case 'title-desc':
+			sorted.sort((a, b) => b.title.localeCompare(a.title));
+			break;
+		case 'status':
+			const statusOrder = {'COMPLETED': 1, 'IN_PROGRESS': 2, 'NOT_STARTED': 3, 'ON_HOLD': 4, 'CANCELLED': 5};
+			sorted.sort((a, b) => (statusOrder[a.status] || 99) - (statusOrder[b.status] || 99));
+			break;
+	}
+	
+	renderContent(sorted);
+});
 
-     function resetImagePreview() {
-         const displayImgSrc = document.getElementById('profileImgDisplay')?.src;
-         const displayInitialsHTML = document.getElementById('profileInitialsDisplay')?.innerHTML;
-         
-         const editPreviewContainer = document.getElementById('imagePreviewContainer'); 
-         
-         if (editPreviewContainer) {
-             // Clear current preview content
-             editPreviewContainer.innerHTML = ''; 
-
-             // Restore based on original display state
-             if (displayImgSrc) {
-                 const img = document.createElement('img');
-                 img.src = displayImgSrc;
-                 img.alt = "{{ profile_user.get_full_name }}";
-                 img.id = 'profileImgEdit'; 
-                 img.style.width = '100%';
-                 img.style.height = '100%';
-                 img.style.objectFit = 'cover';
-                 img.style.borderRadius = '50%';
-                 editPreviewContainer.appendChild(img);
-             } else if (displayInitialsHTML) {
-                 const initialsDiv = document.createElement('div');
-                 initialsDiv.className = 'propic-placeholder';
-                 initialsDiv.id = 'profileInitialsEdit'; 
-                 initialsDiv.style.fontSize = '6rem';
-                 initialsDiv.innerHTML = displayInitialsHTML;
-                 editPreviewContainer.appendChild(initialsDiv);
-             }
-             // Always re-add the hidden file input and trigger link
-             editPreviewContainer.insertAdjacentHTML('beforeend', `
-                <input type="file" name="profile_picture" id="profilePictureInput" style="display: none;" accept="image/*" onchange="previewImage(event)">
-                <a class="edit-profile-picture-trigger" onclick="document.getElementById('profilePictureInput').click();">Change Picture</a>
-             `);
-         }
-         
-         // Clear the file input value just in case
-         const finalFileInput = document.getElementById('profilePictureInput');
-         if (finalFileInput) {
-             finalFileInput.value = ''; 
-         }
-    }
-
-
-    // --- Content data and rendering ---
-    const contentData = [
-        {% if profile_user.role == "CLIENT" %}
-            {% for request in content_items %} { id: {{ request.id }}, title: "{{ request.title|escapejs }}", date: "{{ request.created_at|date:'Y-m-d' }}", dateDisplay: "{{ request.created_at|date:'F j, Y' }}", status: "{{ request.status }}", type: "request" }{% if not forloop.last %},{% endif %} {% endfor %}
-        {% else %}
-            {% for project in content_items %} { 
-                id: {{ project.id }}, 
-                title: "{{ project.title|escapejs }}", 
-                date: "{{ project.start_date|date:'Y-m-d' }}", 
-                dateDisplay: "{{ project.start_date|date:'F j, Y' }}", 
-                status: "{{ project.status }}", 
-                leaderCampus: "{{ project.project_leader.get_campus_display|default:'N/A'|escapejs }}", 
-                agenda: "{{ project.agenda.name|default:''|escapejs }}", 
-                leader: { // Pass leader object for ID
-                    id: {{ project.project_leader.id|default:0 }},
-                    name: "{{ project.project_leader.get_full_name|escapejs }}",
-                    initials: "{{ project.project_leader.given_name.0 }}{{ project.project_leader.last_name.0 }}"
-                },
-                leaderName: "{{ project.project_leader.get_full_name|escapejs }}", // Keep for backward compat if needed?
-                leaderInitials: "{{ project.project_leader.given_name.0 }}{{ project.project_leader.last_name.0 }}", 
-                providers: [ {% for provider in project.providers.all %} { 
-                    id: {{ provider.id }}, 
-                    name: "{{ provider.get_full_name|escapejs }}", 
-                    initials: "{{ provider.given_name.0 }}{{ provider.last_name.0 }}" 
-                }{% if not forloop.last %},{% endif %} {% endfor %} ], 
-                providersCount: {{ project.providers.count }}, 
-                type: "project" 
-            }{% if not forloop.last %},{% endif %} {% endfor %}
-        {% endif %}
-    ];
-
-    function renderContent(items) {
-        const container = document.getElementById('contentList');
-        if (items.length === 0) {
-            {% if profile_user.role == "CLIENT" %} container.innerHTML = '<div style="padding: 1rem 3rem; color: #666; margin-top: 1rem;">{% if can_edit %}You have{% else %}This user has{% endif %} no requests yet.</div>';
-            {% else %} container.innerHTML = '<div style="padding: 1rem 3rem; color: #666; margin-top: 1rem;">No projects found.</div>';
-            {% endif %}
-            return;
-        }
-        container.innerHTML = items.map(item => {
-            if (item.type === 'request') {
-                return `<div><h5>${item.dateDisplay}</h5><a href="/request/details/${item.id}/" class="title">${item.title}</a><section class="project-tags"><button class="status" style="color: #007bff; border-color: #007bff;">${item.status}</button></section><a href="/request/details/${item.id}/" class="view">View</a></div>`;
-            } else {
-                let statusTag = ''; // Generate statusTag as before
-                if (item.status === 'COMPLETED') { statusTag = '<button class="status" style="color: #1CB889; border-color: #1CB889;">Completed</button>'; }
-                else if (item.status === 'IN_PROGRESS') { statusTag = '<button class="status" style="color: #007bff; border-color: #007bff;">Ongoing</button>'; }
-                else if (item.status === 'NOT_STARTED') { statusTag = '<button class="status" style="color: #6c757d; border-color: #6c757d;">Not Started</button>'; }
-                else if (item.status === 'ON_HOLD') { statusTag = '<button class="status" style="color: #ffc107; border-color: #ffc107;">On Hold</button>'; }
-                else if (item.status === 'CANCELLED') { statusTag = '<button class="status" style="color: #dc3545; border-color: #dc3545;">Cancelled</button>'; }
-                else { statusTag = `<button class="status" style="color: #6c757d; border-color: #6c757d;">${item.status}</button>`; }
-                
-                let authorsHTML = ''; // Generate authorsHTML using item.leader.id
-                if (item.leader && item.leader.id && item.leader.name) { 
-                    authorsHTML += `<content><div class="avatar-placeholder">${item.leaderInitials}</div><a href="/experts/profile/${item.leader.id}/">${item.leader.name}</a></content>`; 
-                } else if (item.leaderName) { // Fallback
-                     authorsHTML += `<content><div class="avatar-placeholder">${item.leaderInitials}</div><span>${item.leaderName}</span></content>`;
-                }
-                const providersList = item.providers.slice(0, 2).map(p => `<content><div class="avatar-placeholder">${p.initials}</div><a href="/experts/profile/${p.id}/">${p.name}</a></content>`).join('');
-                authorsHTML += providersList;
-                const moreProviders = item.providersCount > 2 ? `<content style="align-items: center;"><a href="/projects/${item.id}/">+${item.providersCount - 2} more</a></content>` : '';
-                authorsHTML += moreProviders;
-                
-                return `<div><h5>${item.dateDisplay}</h5><a href="/projects/${item.id}/" class="title">${item.title}</a><section class="project-tags"><button class="campus">${item.leaderCampus}</button>${item.agenda ? `<button class="agenda">${item.agenda}</button>` : ''}${statusTag}</section><section class="project-authors">${authorsHTML}</section><a href="/projects/${item.id}/" class="view">View</a></div>`;
-            }
-        }).join('');
-    }
-    
-    // --- Sort logic ---
-    document.getElementById('sortContent').addEventListener('change', function(e) {
-        const sortBy = e.target.value;
-        let sorted = [...contentData];
-        switch(sortBy) { /* ... Same sort cases as before ... */ }
-        renderContent(sorted);
-    });
-
-    // --- Paste the full sort logic here ---
-    document.getElementById('sortContent').addEventListener('change', function(e) {
-        const sortBy = e.target.value;
-        let sorted = [...contentData];
-        switch(sortBy) {
-            case 'date-desc': sorted.sort((a, b) => new Date(b.date) - new Date(a.date)); break;
-            case 'date-asc': sorted.sort((a, b) => new Date(a.date) - new Date(b.date)); break;
-            case 'title-asc': sorted.sort((a, b) => a.title.localeCompare(b.title)); break;
-            case 'title-desc': sorted.sort((a, b) => b.title.localeCompare(a.title)); break;
-            case 'status':
-                const statusOrder = {'COMPLETED': 1, 'IN_PROGRESS': 2, 'NOT_STARTED': 3, 'ON_HOLD': 4, 'CANCELLED': 5};
-                sorted.sort((a, b) => {
-                     const aOrder = a.type === 'project' ? (statusOrder[a.status] || 99) : 100;
-                     const bOrder = b.type === 'project' ? (statusOrder[b.status] || 99) : 100;
-                     return aOrder - bOrder;
-                });
-                break;
-        }
-        renderContent(sorted);
-    });
-
-    // Initial Render
-    renderContent(contentData);
-
+// Initial render
+renderContent(contentData);
 </script>
 
 </body>
 </html>
+
 {% endblock %}

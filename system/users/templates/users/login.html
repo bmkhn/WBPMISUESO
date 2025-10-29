@@ -6,12 +6,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Log In</title>
-    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@500&family=Inter:wght@200;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@500&family=Inter:wght@200;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
     <link href="{% static 'users/login_styles.css' %}" rel="stylesheet">
 </head>
 <body>
-    <div class="sign-in-container">
+    <!-- Code Display Modal (Testing - Top Left) -->
+    <div id="login-code-modal" style="display:none; position:fixed; top:20px; left:20px; background:white; padding:1.5rem; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); z-index:2000; min-width:280px; border-left:4px solid #0099FF;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+            <h4 style="margin:0; font-size:0.875rem; font-weight:600; color:#2D3748;">2FA Code (Testing)</h4>
+            <button onclick="closeLoginCodeModal()" style="background:none; border:none; cursor:pointer; color:#A0AEC0; font-size:1.25rem; padding:0; line-height:1;">&times;</button>
+        </div>
+        <div style="background:#F7FAFC; padding:1rem; border-radius:6px; margin-bottom:1rem; text-align:center;">
+            <div style="font-size:0.75rem; color:#718096; margin-bottom:0.25rem;">Your Code:</div>
+            <div id="login-code-value" style="font-size:2rem; font-weight:700; color:#0099FF; letter-spacing:0.5rem; font-family:monospace;"></div>
+        </div>
+        <button onclick="copyLoginCode()" id="copy-login-code-btn" style="width:100%; background:#0099FF; color:white; padding:0.75rem; border:none; border-radius:6px; cursor:pointer; font-size:0.875rem; font-weight:600; transition:all 0.2s;">
+            <i class="fa-solid fa-copy" style="margin-right:0.5rem;"></i>
+            <span id="copy-login-btn-text">Copy Code</span>
+        </button>
+    </div>
+
+    <div class="sign-in-container" id="login-step-1">
         <a href="/home/" class="logo-container">
             <img src="{% static 'ueso.png' %}" class="logo-icon" alt="UESO Logo">
             <div class="logo-text">University Extension<br>Services Office</div>
@@ -21,7 +37,7 @@
                 <div class="welcome-text">Welcome</div>
                 <div class="psu-text">Palawan State University, Extension Services</div>
             </div>
-            <form method="post" style="width:100%;">
+            <form id="login-form" method="post" style="width:100%;">
                 {% csrf_token %}
                 <div class="fillbox-container">
                     <label class="fillbox-label">Email Address</label>
@@ -36,6 +52,7 @@
                         {{ form.password }}
                     </div>
                 </div>
+                <div id="login-error" style="color:#E53E3E; font-size:0.875rem; margin-top:0.5rem; display:none;"></div>
                 <div class="more-container">
                     <div class="remember-container">
                         <input type="checkbox" class="remember-checkbox" id="remember" name="remember">
@@ -64,6 +81,157 @@
             <a href="{% url 'quick_login' role='VP' %}" style="display:inline-block;color:#007bff;font-weight:600;">Vice President</a>
         </div>
     </div>
+
+    <!-- Step 2: 2FA Verification -->
+    <div class="sign-in-container" id="login-step-2" style="display:none;">
+        <a href="/home/" class="logo-container">
+            <img src="{% static 'ueso.png' %}" class="logo-icon" alt="UESO Logo">
+            <div class="logo-text">University Extension<br>Services Office</div>
+        </a>
+        <div class="center-container">
+            <div class="text-container">
+                <div class="welcome-text">Verify Your Login</div>
+                <div class="psu-text">Enter the 6-digit code sent to your email</div>
+            </div>
+            <form id="verify-2fa-form" style="width:100%;">
+                {% csrf_token %}
+                <div class="fillbox-container">
+                    <label class="fillbox-label">Verification Code</label>
+                    <div class="fillbox-field">
+                        <input type="text" name="code" id="verification_code" maxlength="6" placeholder="000000" style="width:100%; border:none; outline:none; text-align:center; font-size:1.5rem; letter-spacing:0.5rem; font-weight:600; font-family:monospace;padding:0.75rem;">
+                    </div>
+                    <p style="font-size:0.875rem; color:#718096; margin-top:0.5rem; text-align:center;">
+                        Didn't receive the code? <a href="#" id="resend-login-code" style="color:#0099FF; text-decoration:underline;">Resend Code</a>
+                    </p>
+                </div>
+                <div id="verify-error" style="color:#E53E3E; font-size:0.875rem; margin-top:0.5rem; display:none;"></div>
+                <button type="submit" class="sign-in-button">VERIFY & LOGIN</button>
+            </form>
+        </div>
+        <div class="bottom-container">
+            <a href="/login/" class="sign-up-text">Back to Login</a>
+        </div>
+    </div>
+
+    <script>
+        // Login Code Modal Functions
+        function showLoginCodeModal(code) {
+            document.getElementById('login-code-value').textContent = code;
+            document.getElementById('login-code-modal').style.display = 'block';
+            setTimeout(() => closeLoginCodeModal(), 30000);
+        }
+
+        function closeLoginCodeModal() {
+            document.getElementById('login-code-modal').style.display = 'none';
+        }
+
+        function copyLoginCode() {
+            const code = document.getElementById('login-code-value').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                const btn = document.getElementById('copy-login-code-btn');
+                const btnText = document.getElementById('copy-login-btn-text');
+                btnText.textContent = 'Copied!';
+                btn.style.background = '#48BB78';
+                setTimeout(() => {
+                    btnText.textContent = 'Copy Code';
+                    btn.style.background = '#0099FF';
+                }, 2000);
+            });
+        }
+
+        // Store login credentials for resend
+        let currentLoginFormData = null;
+
+        // Login Form Submission
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            currentLoginFormData = new FormData(this);
+            const errorDiv = document.getElementById('login-error');
+
+            fetch('/login/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                },
+                body: currentLoginFormData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show 2FA step
+                    document.getElementById('login-step-1').style.display = 'none';
+                    document.getElementById('login-step-2').style.display = 'block';
+                    // Show code modal for testing
+                    if (data.code) {
+                        showLoginCodeModal(data.code);
+                    }
+                } else {
+                    errorDiv.textContent = data.error || 'Invalid credentials.';
+                    errorDiv.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                errorDiv.textContent = 'An error occurred. Please try again.';
+                errorDiv.style.display = 'block';
+            });
+        });
+
+        // Resend login code
+        document.getElementById('resend-login-code').addEventListener('click', function(e) {
+            e.preventDefault();
+            if (currentLoginFormData) {
+                fetch('/login/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    },
+                    body: currentLoginFormData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.code) {
+                        showLoginCodeModal(data.code);
+                    }
+                });
+            }
+        });
+
+        // 2FA Verification Form Submission
+        document.getElementById('verify-2fa-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const errorDiv = document.getElementById('verify-error');
+            
+            // Get CSRF token from the form itself
+            const csrfToken = this.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            fetch('/verify-login-2fa/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                },
+                body: formData
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('Response data:', data);
+                if (data.success) {
+                    window.location.href = '/redirector/';
+                } else {
+                    errorDiv.textContent = data.error || 'Invalid verification code.';
+                    errorDiv.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                console.error('Fetch error:', error);
+                errorDiv.textContent = 'An error occurred. Please try again.';
+                errorDiv.style.display = 'block';
+            });
+        });
+    </script>
 </body>
 </html>
 

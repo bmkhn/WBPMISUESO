@@ -1,0 +1,651 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+<title>{{ role_display }} Registration</title>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
+<link href="{% static 'users/regis_style.css' %}" rel="stylesheet">
+
+
+</head>
+
+<body>
+    <!-- Single Form for All Steps -->
+    <form id="registration-form" method="POST" enctype="multipart/form-data" autocomplete="off">
+        {% csrf_token %}
+        
+        <!-- Step 1 - Personal Details -->
+        <div class="card step-content" id="step1" style="display:block;margin-top:1.5rem;">
+            <h2>Create {{ role_display }} Account</h2>
+            <hr>
+            <p class="subtitle">
+                <i class="fa-regular fa-id-card subtitle-icon" aria-hidden="true"></i>
+                Input your Contact and Personal Details.
+            </p>
+            <div class="form-grid">
+                <div class="form-group">
+                    <div class="form-label">Given Name:<span class="required"> *</span></div>
+                    <input class="form-input" type="text" name="given_name" id="id_given_name" value="{{ form.given_name.value|default:'' }}">
+                </div>
+                <div class="form-group">
+                    <div class="form-label">Email:<span class="required"> *</span></div>
+                    <input class="form-input" type="email" name="email" id="id_email" value="{{ form.email.value|default:'' }}">
+                    <div id="email-error" class="email-error"></div>
+                </div>
+                <div class="form-group">
+                    <div style="display: flex; flex-direction: row; gap: 12px;">
+                        <div>
+                            <div class="form-label">M.I.:</div>
+                            <input class="form-input" type="text" name="middle_initial" id="id_middle_initial" maxlength="1" value="{{ form.middle_initial.value|default:'' }}">
+                        </div>
+                        <div>
+                            <div class="form-label">Suffix:</div>
+                            <input class="form-input" type="text" name="suffix" id="id_suffix" value="{{ form.suffix.value|default:'' }}">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-label">Contact Number:<span class="required"> *</span></div>
+                    <input class="form-input" type="text" name="contact_no" id="id_contact_no" value="{{ form.contact_no.value|default:'' }}">
+                </div>
+                <div class="form-group">
+                    <div class="form-label">Last Name:<span class="required"> *</span></div>
+                    <input class="form-input" type="text" name="last_name" id="id_last_name" value="{{ form.last_name.value|default:'' }}">
+                </div>
+                <div class="form-group">
+                    <div class="form-label">Sex:<span class="required"> *</span></div>
+                    <select class="form-input" name="sex" id="id_sex">
+                        <option value="">Select Sex</option>
+                        <option value="MALE" {% if form.sex.value == "MALE" %}selected{% endif %}>Male</option>
+                        <option value="FEMALE" {% if form.sex.value == "FEMALE" %}selected{% endif %}>Female</option>
+                    </select>
+                </div>
+            </div>
+            <div class="actions">
+                <a class="back-btn" href="/register/">
+                    <svg width="18" height="19" viewBox="0 0 18 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <use xlink:href="#icon-arrow-left" />
+                    </svg>
+                    <span class="back-btn-text">Back to Selection</span>
+                </a>
+                <button class="proceed-btn" type="button" onclick="nextStep(1)">
+                    <span class="back-btn-text">Proceed</span>
+                    <svg width="18" height="19" viewBox="0 0 18 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <use xlink:href="#icon-arrow-right" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 2 - Role-Specific Details & Password -->
+        <div class="card step-content" id="step2" style="display:none;margin-top:1.5rem;">
+            <h2>Create {{ role_display }} Account</h2>
+            <hr>
+            <p class="subtitle">
+                <i class="fa-solid fa-briefcase subtitle-icon"></i>
+                Input your Professional Details and Set Password.
+            </p>
+            <div class="form-grid">
+                {% if role == 'FACULTY' %}
+                    <div class="form-group">
+                        <div class="form-label">Degree:<span class="required"> *</span></div>
+                        <input class="form-input" type="text" name="degree" id="id_degree" value="{{ form.degree.value|default:'' }}">
+                    </div>
+                    <div class="form-group">
+                        <div class="form-label">College:<span class="required"> *</span></div>
+                        <select class="form-input" name="college" id="id_college">
+                            <option value="">Select College</option>
+                            {% for college in colleges %}
+                                <option value="{{ college.id }}" {% if form.college.value == college.id %}selected{% endif %}>{{ college.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-label">Expertise:<span class="required"> *</span></div>
+                        <input class="form-input" type="text" name="expertise" id="id_expertise" value="{{ form.expertise.value|default:'' }}">
+                    </div>
+                    <div class="form-group">
+                        <div class="form-label">Campus:<span class="required"> *</span></div>
+                        <select class="form-input" name="campus" id="id_campus">
+                            <option value="">Select Campus</option>
+                            {% for value, label in form.fields.campus.choices %}
+                                {% if value %}
+                                    <option value="{{ value }}" {% if form.campus.value == value %}selected{% endif %}>{{ label }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                {% elif role == 'IMPLEMENTER' %}
+                    <div class="form-group">
+                        <div class="form-label">Degree:<span class="required"> *</span></div>
+                        <input class="form-input" type="text" name="degree" id="id_degree" value="{{ form.degree.value|default:'' }}">
+                    </div>
+                    <div class="form-group">
+                        <div class="form-label">Expertise:<span class="required"> *</span></div>
+                        <input class="form-input" type="text" name="expertise" id="id_expertise" value="{{ form.expertise.value|default:'' }}">
+                    </div>
+                {% elif role == 'CLIENT' %}
+                    <div class="form-group">
+                        <div class="form-label">Company:<span class="required"> *</span></div>
+                        <input class="form-input" type="text" name="company" id="id_company" value="{{ form.company.value|default:'' }}">
+                    </div>
+                    <div class="form-group">
+                        <div class="form-label">Industry:<span class="required"> *</span></div>
+                        <input class="form-input" type="text" name="industry" id="id_industry" value="{{ form.industry.value|default:'' }}">
+                    </div>
+                {% endif %}
+                
+                <!-- Password Fields in Step 2 -->
+                <div class="form-group">
+                    <div class="form-label">Password:<span class="required"> *</span></div>
+                    <input class="form-input" type="password" name="password" id="id_password">
+                </div>
+                <div class="form-group">
+                    <div class="form-label">Confirm Password:<span class="required"> *</span></div>
+                    <input class="form-input" type="password" name="confirm_password" id="id_confirm_password">
+                </div>
+
+                <div></div>
+
+                <div class="form-group full-width">
+                    <label style="display:flex; align-items:flex-start; font-size:0.875rem; cursor:pointer;">
+                        <input type="checkbox" id="terms_checkbox" style="margin-right:0.5rem; margin-top:0.25rem;width:auto;">
+                        <span>I agree to the <a href="#" style="color:#0099FF; text-decoration:underline;">Terms and Conditions</a> and <a href="#" style="color:#0099FF; text-decoration:underline;">Privacy Policy</a></span>
+                    </label>
+                    <div id="terms-error-container"></div>
+                </div>
+
+            </div>
+            <div class="actions">
+                <a class="back-btn" onclick="prevStep(2)">
+                    <svg width="18" height="19" viewBox="0 0 18 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <use xlink:href="#icon-arrow-left" />
+                    </svg>
+                    <span class="back-btn-text">Back</span>
+                </a>
+                <button class="proceed-btn" type="button" onclick="nextStep(2)">
+                    <span class="back-btn-text">Proceed</span>
+                    <svg width="18" height="19" viewBox="0 0 18 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <use xlink:href="#icon-arrow-right" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 3 - ID Upload & Terms -->
+        <div class="card step-content" id="step3" style="display:none;margin-top:1.5rem;width: auto;">
+            <h2>Create {{ role_display }} Account</h2>
+            <hr>
+            <p class="subtitle">
+                <i class="fa-solid fa-id-card subtitle-icon"></i>
+                Upload Valid ID and Accept Terms.
+            </p>
+            <div class="form-grid" style="display:flex;flex-direction: column;">
+                <div class="form-group full-width">
+                    <div class="form-label">Preferred ID Type:<span class="required"> *</span></div>
+                    <select class="form-input" name="preferred_id" id="id_preferred_id">
+                        <option value="">Select ID Type</option>
+                        {% for value, label in form.fields.preferred_id.choices %}
+                            {% if value %}
+                                <option value="{{ value }}">{{ label }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group full-width">
+                    <div class="form-label">Upload Valid ID:<span class="required"> *</span></div>
+                    <label for="id_valid_id" class="file-upload-label" style="display:inline-flex; align-items:center; background:#F7FAFC; border:2px dashed #CBD5E0; padding:1rem 1.5rem; border-radius:8px; cursor:pointer; transition:all 0.2s; font-size:0.875rem; color:#4A5568; font-weight:500;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="#718096" style="margin-right:0.5rem;">
+                            <use xlink:href="#icon-upload" />
+                        </svg>
+                        Choose File
+                    </label>
+                    <input type="file" id="id_valid_id" name="valid_id" accept="image/*" style="display:none;">
+                    <div id="file-preview" style="display:none; margin-top:0.75rem; padding:0.75rem; background:#EDF2F7; border-radius:6px; font-size:0.875rem; color:#2D3748; display:flex; align-items:center; gap:0.5rem;">
+                        <i class="fa-solid fa-file-image" style="color:#0099FF; font-size:1.25rem;"></i> 
+                        <span id="file-name" style="font-weight:500;"></span>
+                    </div>
+                    <div id="file-error" class="email-error"></div>
+                </div>
+
+            </div>
+            <div class="actions">
+                <a class="back-btn" onclick="prevStep(3)">
+                    <svg width="18" height="19" viewBox="0 0 18 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <use xlink:href="#icon-arrow-left" />
+                    </svg>
+                    <span class="back-btn-text">Back</span>
+                </a>
+                <button class="proceed-btn" type="button" onclick="nextStep(3)">
+                    <span class="back-btn-text">Proceed</span>
+                    <svg width="18" height="19" viewBox="0 0 18 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <use xlink:href="#icon-arrow-right" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 4 - Email Verification -->
+        <div class="card step-content" id="step4" style="display:none;width: auto;">
+            <h2>Email Verification</h2>
+            <hr>
+            <p class="subtitle">
+                <i class="fa-solid fa-envelope subtitle-icon" aria-hidden="true"></i>
+                Enter the 6-digit verification code sent to your email.
+            </p>
+            <div class="form-grid" style="display: flex;justify-content: center;">
+                <div class="form-group full-width">
+                    <div class="form-label">Verification Code:<span class="required"> *</span></div>
+                    <input class="form-input" type="text" name="verification_code" id="id_verification_code" maxlength="6" placeholder="000000" style="text-align:center; font-size:1.5rem; letter-spacing:0.5rem; font-weight:600;">
+                    <div id="code-error" class="email-error"></div>
+                    <p style="font-size:0.875rem; color:#718096; margin-top:0.5rem;">
+                        Didn't receive the code? <a href="#" id="resend-code-link" style="color:#0099FF; text-decoration:underline;">Resend Code</a>
+                    </p>
+                </div>
+            </div>
+            <div class="actions">
+                <a class="back-btn" onclick="prevStep(4)">
+                    <svg width="18" height="19" viewBox="0 0 18 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <use xlink:href="#icon-arrow-left" />
+                    </svg>
+                    <span class="back-btn-text">Back</span>
+                </a>
+                <button class="proceed-btn" type="submit">
+                    <span class="back-btn-text">Verify & Submit</span>
+                    <svg width="18" height="19" viewBox="0 0 18 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <use xlink:href="#icon-arrow-right" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 5 - Thank You (Success Message) -->
+        <div class="card step-content" id="step5" style="display: block; text-align: center; padding: 3rem 2rem;">
+            <h2 style="font-size: 2.75rem;font-weight:600;color:#2D3748;margin-bottom: 2rem;text-align:center;">THANK YOU FOR REGISTERING</h2>
+            <div style="display:inline-flex; align-items:center; justify-content:center; width:80px; height:80px; background:#E6F7FF; border-radius:50%; margin:0 auto 1.5rem;">
+                <i class="fa-solid fa-check" style="font-size:2.5rem; color:#0099FF;"></i>
+            </div>
+            
+            <p style="font-size:1rem;color:#718096;line-height:1.6;/* max-width:400px; */margin:0 auto 2rem;">
+                Your registration has been submitted successfully.<br>
+                We will review your details and send you an email once your account is approved.
+            </p>
+            <a href="/login/" class="proceed-btn" style="display:inline-flex; align-items:center; text-decoration:none; padding:0.75rem 2rem;">
+                <svg width="18" height="19" viewBox="0 0 18 19" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right:0.5rem;">
+                    <use xlink:href="#icon-arrow-left"></use>
+                </svg>
+                <span>Back to Login</span>
+            </a>
+        </div>
+    </form>
+
+    <!-- Custom Modal for Error Messages -->
+    <div id="custom-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+        <div style="background:white; padding:2rem; border-radius:8px; max-width:400px; text-align:center;">
+            <p id="custom-modal-message" style="margin-bottom:1.5rem; font-size:1rem; color:#2D3748;"></p>
+            <button onclick="closePopup()" style="background:#0099FF; color:white; padding:0.5rem 2rem; border:none; border-radius:4px; cursor:pointer; font-size:1rem;">OK</button>
+        </div>
+    </div>
+
+    <!-- Verification Code Display Modal (Testing) -->
+    <div id="code-display-modal" style="display:none; position:fixed; top:20px; right:20px; background:white; padding:1.5rem; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); z-index:2000; min-width:280px; border-left:4px solid #0099FF;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+            <h4 style="margin:0; font-size:0.875rem; font-weight:600; color:#2D3748;">Verification Code (Testing)</h4>
+            <button onclick="closeCodeModal()" style="background:none; border:none; cursor:pointer; color:#A0AEC0; font-size:1.25rem; padding:0; line-height:1;">&times;</button>
+        </div>
+        <div style="background:#F7FAFC; padding:1rem; border-radius:6px; margin-bottom:1rem; text-align:center;">
+            <div style="font-size:0.75rem; color:#718096; margin-bottom:0.25rem;">Your Code:</div>
+            <div id="code-value" style="font-size:2rem; font-weight:700; color:#0099FF; letter-spacing:0.5rem; font-family:monospace;"></div>
+        </div>
+        <button onclick="copyCode()" id="copy-code-btn" style="width:100%; background:#0099FF; color:white; padding:0.75rem; border:none; border-radius:6px; cursor:pointer; font-size:0.875rem; font-weight:600; transition:all 0.2s;">
+            <i class="fa-solid fa-copy" style="margin-right:0.5rem;"></i>
+            <span id="copy-btn-text">Copy Code</span>
+        </button>
+    </div>
+
+    <!-- SVG Sprite Section -->
+    <svg style="display:none;">
+        <symbol id="icon-arrow-right" viewBox="0 0 18 19">
+            <path d="M13.3925 10.4L7.2325 16.56L8.8 18.1L17.6 9.3L8.8 0.5L7.2325 2.04L13.3925 8.2H0V10.4H13.3925Z" fill="#0099FF"/>
+        </symbol>
+        <symbol id="icon-arrow-left" viewBox="0 0 18 19">
+            <path d="M4.60755 10.4L10.7675 16.56L9.20005 18.1L0.400047 9.3L9.20005 0.5L10.7675 2.04L4.60755 8.2H18V10.4H4.60755Z" fill="#0099FF"/>
+        </symbol>
+        <symbol id="icon-upload" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+            <path d="M12,11L8,15H16L12,11Z" />
+        </symbol>
+    </svg>
+
+    <script>
+        const ROLE = '{{ role }}';
+
+        // Email uniqueness check
+        document.addEventListener('DOMContentLoaded', function() {
+            const emailInput = document.getElementById('id_email');
+            const emailError = document.getElementById('email-error');
+            if (emailInput) {
+                emailInput.addEventListener('blur', function() {
+                    const email = emailInput.value.trim();
+                    if (!email) return;
+                    fetch('/check-email/?email=' + encodeURIComponent(email))
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.exists) {
+                                emailError.textContent = 'This email is already registered.';
+                                emailError.style.display = 'block';
+                            } else {
+                                emailError.textContent = '';
+                                emailError.style.display = 'none';
+                            }
+                        })
+                        .catch(() => {
+                            emailError.textContent = 'Error checking email.';
+                            emailError.style.display = 'block';
+                        });
+                });
+            }
+        });
+
+        // File Input Change Handler with hover effect
+        const fileLabel = document.querySelector('.file-upload-label');
+        document.getElementById('id_valid_id').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                document.getElementById('file-name').textContent = file.name;
+                document.getElementById('file-preview').style.display = 'flex';
+                fileLabel.style.background = '#EDF2F7';
+                fileLabel.style.borderColor = '#0099FF';
+                fileLabel.style.color = '#0099FF';
+            } else {
+                document.getElementById('file-preview').style.display = 'none';
+                fileLabel.style.background = '#F7FAFC';
+                fileLabel.style.borderColor = '#CBD5E0';
+                fileLabel.style.color = '#4A5568';
+            }
+        });
+        
+        // Add hover effect for file upload
+        fileLabel.addEventListener('mouseenter', function() {
+            if (!document.getElementById('id_valid_id').files.length) {
+                this.style.background = '#EDF2F7';
+                this.style.borderColor = '#A0AEC0';
+            }
+        });
+        fileLabel.addEventListener('mouseleave', function() {
+            if (!document.getElementById('id_valid_id').files.length) {
+                this.style.background = '#F7FAFC';
+                this.style.borderColor = '#CBD5E0';
+            }
+        });
+
+        // Custom Popup Modal
+        function showPopup(message) {
+            const modal = document.getElementById('custom-modal');
+            const modalMsg = document.getElementById('custom-modal-message');
+            modalMsg.textContent = message;
+            modal.style.display = 'flex';
+        }
+
+        function closePopup() {
+            document.getElementById('custom-modal').style.display = 'none';
+        }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        // Code Display Modal Functions (Testing)
+        function showCodeModal(code) {
+            document.getElementById('code-value').textContent = code;
+            document.getElementById('code-display-modal').style.display = 'block';
+            // Auto-hide after 30 seconds
+            setTimeout(() => {
+                closeCodeModal();
+            }, 30000);
+        }
+
+        function closeCodeModal() {
+            document.getElementById('code-display-modal').style.display = 'none';
+        }
+
+        function copyCode() {
+            const code = document.getElementById('code-value').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                const btn = document.getElementById('copy-code-btn');
+                const btnText = document.getElementById('copy-btn-text');
+                btnText.textContent = 'Copied!';
+                btn.style.background = '#48BB78';
+                setTimeout(() => {
+                    btnText.textContent = 'Copy Code';
+                    btn.style.background = '#0099FF';
+                }, 2000);
+            });
+        }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        // Field Error Handling
+        function showFieldError(fieldId, message) {
+            const field = document.getElementById(fieldId);
+            if (!field) return;
+            if (field.tagName === 'SELECT') {
+                field.classList.add('error-select');
+            } else {
+                field.classList.add('error-input');
+            }
+            const err = document.createElement('div');
+            err.className = 'field-error';
+            err.textContent = message;
+            err.style.color = '#E53E3E';
+            err.style.fontSize = '0.75rem';
+            err.style.marginTop = '0.25rem';
+            field.parentNode.appendChild(err);
+        }
+
+        function clearFieldErrors() {
+            document.querySelectorAll('.error-input').forEach(e => e.classList.remove('error-input'));
+            document.querySelectorAll('.error-select').forEach(e => e.classList.remove('error-select'));
+            document.querySelectorAll('.field-error').forEach(e => e.remove());
+            const termsErr = document.getElementById('terms-error');
+            if (termsErr) termsErr.remove();
+        }
+
+        // Navigation Functions
+        function nextStep(current) {
+            clearFieldErrors();
+            let valid = true;
+
+            // Step 1 Validation (Personal Details)
+            if (current === 1) {
+                const requiredFields = ['id_given_name', 'id_email', 'id_last_name', 'id_contact_no', 'id_sex'];
+                requiredFields.forEach(function(fieldId) {
+                    const field = document.getElementById(fieldId);
+                    if (field && !field.value.trim()) {
+                        valid = false;
+                        showFieldError(fieldId, 'This field is required.');
+                    }
+                });
+                if (!valid) {
+                    showPopup("Please fill out all required fields.");
+                    return;
+                }
+                // Move to Step 2
+                document.getElementById('step1').style.display = 'none';
+                document.getElementById('step2').style.display = 'block';
+            }
+            // Step 2 Validation (Role-Specific Details + Password + Terms)
+            else if (current === 2) {
+                const requiredFields = [];
+                if (ROLE === 'FACULTY') {
+                    requiredFields.push('id_degree', 'id_expertise', 'id_college', 'id_campus');
+                } else if (ROLE === 'IMPLEMENTER') {
+                    requiredFields.push('id_degree', 'id_expertise');
+                } else if (ROLE === 'CLIENT') {
+                    requiredFields.push('id_company', 'id_industry');
+                }
+                
+                // Add password fields to validation
+                requiredFields.push('id_password', 'id_confirm_password');
+
+                requiredFields.forEach(function(fieldId) {
+                    const field = document.getElementById(fieldId);
+                    if (field && !field.value.trim()) {
+                        valid = false;
+                        showFieldError(fieldId, 'This field is required.');
+                    }
+                });
+                
+                // Check password match
+                const password = document.getElementById('id_password').value;
+                const confirmPassword = document.getElementById('id_confirm_password').value;
+                if (password && confirmPassword && password !== confirmPassword) {
+                    valid = false;
+                    showFieldError('id_confirm_password', 'Passwords do not match.');
+                }
+
+                // Check terms and conditions checkbox
+                const termsCheckbox = document.getElementById('terms_checkbox');
+                if (!termsCheckbox.checked) {
+                    valid = false;
+                    const errDiv = document.createElement('div');
+                    errDiv.id = 'terms-error';
+                    errDiv.className = 'field-error';
+                    errDiv.textContent = 'You must agree to the Terms and Conditions and Privacy Policy.';
+                    errDiv.style.color = '#E53E3E';
+                    errDiv.style.fontSize = '0.75rem';
+                    errDiv.style.marginTop = '0.25rem';
+                    document.getElementById('terms-error-container').appendChild(errDiv);
+                }
+
+                if (!valid) {
+                    showPopup("Please fill out all required fields.");
+                    return;
+                }
+                
+                // Move to Step 3
+                document.getElementById('step2').style.display = 'none';
+                document.getElementById('step3').style.display = 'block';
+            }
+            // Step 3 Validation (ID Upload & Preferred ID Type)
+            else if (current === 3) {
+                // Check if preferred ID type is selected
+                const preferredIdField = document.getElementById('id_preferred_id');
+                if (!preferredIdField.value) {
+                    valid = false;
+                    showFieldError('id_preferred_id', 'Please select your ID type.');
+                }
+
+                // Check if valid ID file is uploaded
+                const validIdField = document.getElementById('id_valid_id');
+                if (!validIdField.files || validIdField.files.length === 0) {
+                    valid = false;
+                    showFieldError('id_valid_id', 'Please upload your valid ID.');
+                }
+
+                if (!valid) {
+                    showPopup("Please correct the errors before proceeding.");
+                    return;
+                }
+
+                // Send verification code via AJAX
+                sendVerificationCode();
+            }
+        }
+
+        function prevStep(current) {
+            clearFieldErrors();
+            if (current === 2) {
+                document.getElementById('step2').style.display = 'none';
+                document.getElementById('step1').style.display = 'block';
+            } else if (current === 3) {
+                document.getElementById('step3').style.display = 'none';
+                document.getElementById('step2').style.display = 'block';
+            } else if (current === 4) {
+                document.getElementById('step4').style.display = 'none';
+                document.getElementById('step3').style.display = 'block';
+            }
+        }
+
+        // Send verification code via AJAX
+        function sendVerificationCode() {
+            const email = document.getElementById('id_email').value;
+            const formData = new FormData();
+            formData.append('email', email);
+            formData.append('role', ROLE);
+
+            fetch('/send-verification-code/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Move to Step 4
+                    document.getElementById('step3').style.display = 'none';
+                    document.getElementById('step4').style.display = 'block';
+                    showPopup('Verification code sent to ' + email);
+                    // Show code modal for testing
+                    if (data.code) {
+                        showCodeModal(data.code);
+                    }
+                } else {
+                    showPopup(data.error || 'Failed to send verification code.');
+                }
+            })
+            .catch(error => {
+                showPopup('An error occurred. Please try again.');
+                console.error('Error:', error);
+            });
+        }
+
+        // Resend code link handler
+        document.getElementById('resend-code-link').addEventListener('click', function(e) {
+            e.preventDefault();
+            sendVerificationCode();
+        });
+
+        // Form submission handler
+        document.getElementById('registration-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            clearFieldErrors();
+            
+            const code = document.getElementById('id_verification_code').value.trim();
+            if (!code || code.length !== 6) {
+                showFieldError('id_verification_code', 'Please enter a valid 6-digit code.');
+                return;
+            }
+
+            // Submit the entire form - FormData automatically includes all input fields
+            const formData = new FormData(this);
+
+            // Submit to server
+            fetch(window.location.href, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show thank you step (Step 5)
+                    document.getElementById('step4').style.display = 'none';
+                    document.getElementById('step5').style.display = 'block';
+                } else if (data.error) {
+                    showFieldError('id_verification_code', data.error);
+                }
+            })
+            .catch(error => {
+                showPopup('An error occurred. Please try again.');
+                console.error('Error:', error);
+            });
+        });
+
+    </script>
+</body>
+</html>

@@ -115,6 +115,7 @@ a:hover {
 .fillbox-field input {
     width: 17.5rem; 
     border: 1px solid #B9B9B9;
+    font-family: 'Inter', sans-serif;
     padding: 0.75rem 0.75rem 0.75rem 3.25rem;
     color: #000000;
     border-radius: 0.5rem;
