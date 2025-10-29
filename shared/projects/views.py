@@ -1185,21 +1185,6 @@ def add_project_view(request):
 
                 project.estimated_events = form.cleaned_data.get('estimated_events', 0)
                 now = timezone.now()
-                for i in range(1, project.estimated_events + 1):
-                    from .models import ProjectEvent
-                    ProjectEvent.objects.create(
-                        project=project,
-                        title=f"Event {i}",
-                        description="Description Here",
-                        datetime=None,
-                        status='SCHEDULED',
-                        created_at=now,
-                        created_by=request.user,
-                        updated_at=now,
-                        updated_by=request.user,
-                        image=None,
-                        placeholder=True
-                    )
                 project.save()
 
                 # Create alerts for project members about being added to the project
