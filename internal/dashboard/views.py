@@ -60,14 +60,48 @@ def dashboard_view(request):
 from internal.submissions.models import Submission
 from shared.projects.models import Project
 
+from django.http import JsonResponse
+from django.db.models import Count
+from collections import OrderedDict
+from internal.submissions.models import Submission
+from datetime import datetime, timedelta 
+from django.utils import timezone
+
+
 @role_required(allowed_roles=["VP", "DIRECTOR", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD"], require_confirmed=True)
 def get_submission_status_data(request):
     """
-    Provides data for the Submission Status bar chart.
+    Provides data for the Submission Status bar chart, filtered by date.
     """
-    status_choices = dict(Submission.SUBMISSION_STATUS_CHOICES)
-    status_data = Submission.objects.values('status').annotate(count=Count('status')).order_by('status')
     
+    start_str = request.GET.get('start')
+    end_str = request.GET.get('end')
+    
+    # Get the current time zone from Django settings
+    current_tz = timezone.get_current_timezone()
+
+    if not end_str:
+        # Default 'end' is the end of today (aware)
+        end_date = timezone.now().replace(hour=23, minute=59, second=59)
+    else:
+        # Create an aware datetime for the *end* of the selected day
+        dt = datetime.strptime(end_str, '%Y-%m-%d')
+        end_date = timezone.make_aware(dt.replace(hour=23, minute=59, second=59), current_tz)
+        
+    if not start_str:
+        # Default 'start' is 300 days ago, at the start of that day
+        start_date = (end_date - timedelta(days=300)).replace(hour=0, minute=0, second=0)
+    else:
+        # Create an aware datetime for the *start* of the selected day
+        dt = datetime.strptime(start_str, '%Y-%m-%d')
+        start_date = timezone.make_aware(dt.replace(hour=0, minute=0, second=0), current_tz)
+
+    # This query will now use time-zone-aware dates
+    status_data = Submission.objects.filter(
+        created_at__range=(start_date, end_date)
+    ).values('status').annotate(count=Count('status')).order_by('status')
+    
+    status_choices = dict(Submission.SUBMISSION_STATUS_CHOICES)
     data_dict = OrderedDict((key, 0) for key, label in Submission.SUBMISSION_STATUS_CHOICES)
     
     for item in status_data:
@@ -85,11 +119,32 @@ def get_submission_status_data(request):
 @role_required(allowed_roles=["VP", "DIRECTOR", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD"], require_confirmed=True)
 def get_project_status_data(request):
     """
-    Provides data for the Project Status pie chart.
+    Provides data for the Project Status pie chart, filtered by date.
     """
-    status_choices = dict(Project.STATUS_CHOICES)
-    status_data = Project.objects.values('status').annotate(count=Count('status')).order_by('status')
     
+    start_str = request.GET.get('start')
+    end_str = request.GET.get('end')
+
+    current_tz = timezone.get_current_timezone()
+
+    if not end_str:
+        end_date = timezone.now().replace(hour=23, minute=59, second=59)
+    else:
+        dt = datetime.strptime(end_str, '%Y-%m-%d')
+        end_date = timezone.make_aware(dt.replace(hour=23, minute=59, second=59), current_tz)
+        
+    if not start_str:
+        start_date = (end_date - timedelta(days=300)).replace(hour=0, minute=0, second=0)
+    else:
+        dt = datetime.strptime(start_str, '%Y-%m-%d')
+        start_date = timezone.make_aware(dt.replace(hour=0, minute=0, second=0), current_tz)
+
+    # This query will now use time-zone-aware dates
+    status_data = Project.objects.filter(
+        created_at__range=(start_date, end_date)
+    ).values('status').annotate(count=Count('status')).order_by('status')
+    
+    status_choices = dict(Project.STATUS_CHOICES)
     data_dict = OrderedDict((key, 0) for key, label in Project.STATUS_CHOICES)
     
     for item in status_data:
@@ -103,23 +158,4 @@ def get_project_status_data(request):
         'labels': labels,
         'counts': counts,
     })
-    """
-    Provides data for the Project Status pie chart.
-   
-    """
-    status_choices = dict(Project.STATUS_CHOICES)
-    status_data = Project.objects.values('status').annotate(count=Count('status')).order_by('status')
-    
-    data_dict = OrderedDict((key, 0) for key, label in Project.STATUS_CHOICES)
-    
-    for item in status_data:
-        if item['status'] in data_dict:
-            data_dict[item['status']] = item['count']
-            
-    labels = [status_choices.get(key, key) for key in data_dict.keys()]
-    counts = list(data_dict.values())
-    
-    return JsonResponse({
-        'labels': labels,
-        'counts': counts,
-    })
+
