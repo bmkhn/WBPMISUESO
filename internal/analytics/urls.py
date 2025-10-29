@@ -1,14 +1,9 @@
-# testingsite/urls.py
-
 from django.urls import path
-from . import views # For dashboard_view (rendering HTML)
-from . import api_views # For all data endpoints
-
-app_name = 'testingsite'
+from . import views
+from . import api_views 
 
 urlpatterns = [
-    # 1. Main Dashboard View (Render HTML)
-    path('', views.home_view, name='dashboard'),
+    path('', views.analytics_view, name='analytics'),
 
     # 2. CARD METRIC DATA VIEWS (Mapped to API Views)
     path('data/metric/projects/', api_views.projects_metric_api, name='projects_metric_data'),

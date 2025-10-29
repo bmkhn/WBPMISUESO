@@ -1,3 +1,6 @@
+{% extends "base_internal.html" %}
+{% block content %}
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -859,19 +862,19 @@
 
         const ENDPOINTS = {
             // Chart Data Views
-            active: "{% url 'testingsite:active_projects_chart_data' %}",
-            budget: "{% url 'testingsite:budget_allocation_chart_data' %}",
-            agenda: "{% url 'testingsite:agenda_distribution_chart_data' %}",
-            trained: "{% url 'testingsite:trained_individuals_chart_data' %}",
-            requests: "{% url 'testingsite:request_status_chart_data' %}", 
+            active: "{% url 'active_projects_chart_data' %}",
+            budget: "{% url 'budget_allocation_chart_data' %}",
+            agenda: "{% url 'agenda_distribution_chart_data' %}",
+            trained: "{% url 'trained_individuals_chart_data' %}",
+            requests: "{% url 'request_status_chart_data' %}", 
 
             // Card Metrics Views
-            projects: "{% url 'testingsite:projects_metric_data' %}",
-            events: "{% url 'testingsite:events_metric_data' %}",
-            providers: "{% url 'testingsite:providers_metric_data' %}",
-            individuals: "{% url 'testingsite:individuals_metric_data' %}"
+            projects: "{% url 'projects_metric_data' %}",
+            events: "{% url 'events_metric_data' %}",
+            providers: "{% url 'providers_metric_data' %}",
+            individuals: "{% url 'individuals_metric_data' %}"
         };
-
+        
         let chartsInstance = {}; 
 
         function setDefaultDateRange() {
@@ -1485,3 +1488,5 @@
     </script>
 </body>
 </html>
+
+{% endblock %}

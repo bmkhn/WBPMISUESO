@@ -146,6 +146,8 @@ class Project(models.Model):
 	sponsor_name = models.CharField(max_length=255,  blank=True, null=True)
 	start_date = models.DateField()
 	estimated_end_date = models.DateField()
+	
+	used_budget = models.DecimalField(max_digits=12, decimal_places=2, default=0, help_text="Amount of the budget that has been spent.")
 
 	proposal_document = models.OneToOneField('ProjectDocument', on_delete=models.SET_NULL, null=True, blank=True, related_name='proposal_for_project')
 	additional_documents = models.ManyToManyField('ProjectDocument', blank=True, related_name='additional_for_projects')

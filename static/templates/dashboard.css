@@ -155,7 +155,7 @@ body {
     justify-content: center;
     align-items: center;
     z-index: 5; 
-    transition: transform 0.8s ease;
+    transition: transform 0.3s ease;
 }
 
 .circle {
@@ -180,7 +180,7 @@ body {
 } 
  
 .container-2A:hover .card-icon-wrapper {
-    transform: scale(1.2);  
+    transform: scale(5);  
 }
 .container-2A:hover .circle {
     transform: scale(0); 
@@ -219,7 +219,7 @@ body {
     font-family: 'Inter', sans-serif;
     font-weight: 800; 
     font-size: 38px; 
-    color: #1CB889; 
+    color: #13e3a4; 
     line-height: 1; 
     margin-bottom: 7px; 
     z-index: 9999;
@@ -229,7 +229,7 @@ body {
     font-family: 'Inter', sans-serif;
     font-weight: 500; 
     font-size: 14px; 
-    color: #343a40; 
+    color: #7e7e7e; 
     text-transform: uppercase; 
     letter-spacing: 0.5px;
     z-index: 1000;

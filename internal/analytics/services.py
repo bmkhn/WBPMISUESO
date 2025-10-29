@@ -1,19 +1,12 @@
-# testingsite/services.py
-
 from django.db.models import Count, Sum, F, Q, DecimalField
 from django.db.models.functions import TruncMonth
 from datetime import datetime, date
 from django.utils import timezone
 
-# --- FIXED IMPORTS ---
-from .models import (
-    Project, 
-    Agenda, 
-    ClientRequest, 
-    User,     
-    College,
-    ProjectEvent 
-) 
+from shared.projects.models import Project, ProjectEvent
+from internal.agenda.models import Agenda       
+from shared.request.models import ClientRequest         
+from system.users.models import User, College
 
 # Define active statuses (for use in other functions/charts)
 ACTIVE_STATUSES = ['IN_PROGRESS', 'ON_HOLD']
@@ -110,8 +103,9 @@ def get_budget_allocation_data(start_date, end_date):
     budget_data = projects.annotate(
         period=TruncMonth('start_date')
     ).values('period').annotate(
-        allocated=Sum(F('allocated_budget'), output_field=DecimalField()), 
-        used=Sum(F('used_budget'), output_field=DecimalField())
+        allocated=Sum(F('internal_budget') + F('external_budget'), output_field=DecimalField()), 
+        
+        used=Sum(F('used_budget'), output_field=DecimalField()) 
     ).order_by('period')
 
     labels = [item['period'].strftime("%b %Y") for item in budget_data]
