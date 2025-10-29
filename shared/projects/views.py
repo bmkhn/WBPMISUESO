@@ -1,6 +1,6 @@
 from django.shortcuts import get_object_or_404, render, redirect
 from shared import request
-from system.users.decorators import role_required
+from system.users.decorators import role_required, project_visibility_required
 from .models import SustainableDevelopmentGoal, Project, ProjectEvaluation, ProjectEvent, ProjectUpdate
 from internal.submissions.models import Submission
 from system.users.models import College, User
@@ -28,6 +28,7 @@ def get_templates(request):
     return base_template
 
 
+@project_visibility_required
 def project_profile(request, pk):
     # Check if user is authenticated and has role
     if request.user.is_authenticated and hasattr(request.user, 'role'):
@@ -50,6 +51,7 @@ def project_profile(request, pk):
     return redirect(project_overview, pk=pk)
 
 
+@project_visibility_required
 def project_overview(request, pk):
     ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE, COORDINATOR_ROLE = get_role_constants()
 
@@ -105,6 +107,7 @@ def project_overview(request, pk):
     })
 
 
+@project_visibility_required
 def project_providers(request, pk):
     ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE, COORDINATOR_ROLE = get_role_constants()
     
@@ -150,15 +153,14 @@ def project_providers(request, pk):
                 pass
         return redirect(request.path)
 
-    # Candidates: all confirmed faculty/implementers not already providers and not the project leader
+    # Candidates: all confirmed users except CLIENT, not already providers and not the project leader
     from system.users.models import User
     exclude_ids = list(providers_qs.values_list('id', flat=True))
     if hasattr(project, 'leader') and project.leader:
         exclude_ids.append(project.leader.id)
     provider_candidates = User.objects.filter(
-        is_confirmed=True,
-        role__in=[User.Role.FACULTY, User.Role.IMPLEMENTER]
-    ).exclude(id__in=exclude_ids)
+        is_confirmed=True
+    ).exclude(role=User.Role.CLIENT).exclude(id__in=exclude_ids)
 
     # Pagination
     paginator = Paginator(providers_qs, 3)
@@ -191,6 +193,7 @@ def project_providers(request, pk):
     })
 
 
+@project_visibility_required
 def project_events(request, pk):
     ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE, COORDINATOR_ROLE = get_role_constants()
 
@@ -322,6 +325,7 @@ def project_events(request, pk):
     })
 
 
+@project_visibility_required
 def project_files(request, pk):
     ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE, COORDINATOR_ROLE = get_role_constants()
 
@@ -405,6 +409,7 @@ def project_files(request, pk):
     })
 
 
+@project_visibility_required
 def project_submissions(request, pk):
     ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE, COORDINATOR_ROLE = get_role_constants()
     from internal.submissions.models import Submission
@@ -552,6 +557,7 @@ def project_submissions(request, pk):
     return render(request, "projects/project_submissions.html", context)
 
 
+@project_visibility_required
 def project_submissions_details(request, pk, submission_id):
     ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE, COORDINATOR_ROLE = get_role_constants()
     
@@ -630,11 +636,25 @@ def project_submissions_details(request, pk, submission_id):
             submission_title = submission.downloadable.name if submission.downloadable else "Submission"
             return redirect(f'/projects/{pk}/submission/?success=true&action=submit&title={quote(submission_title)}')
 
+    provider_ids = list(project.providers.values_list('id', flat=True))
+    
+    # Check if project leader has no college (determines if COORDINATOR review is needed)
+    project_leader_has_no_college = project.project_leader and not project.project_leader.college
+    
+    # Check if current user is NOT involved in the project (for admin review buttons)
+    user_not_in_project = (
+        request.user.id != project.project_leader.id and 
+        request.user.id not in provider_ids
+    )
+    
     context = {
         "project": project,
         "base_template": base_template,
         "submission": submission,
         "events": events,
+        "provider_ids": provider_ids,
+        "project_leader_has_no_college": project_leader_has_no_college,
+        "user_not_in_project": user_not_in_project,
         "ADMIN_ROLES": ADMIN_ROLES,
         "COORDINATOR_ROLE": COORDINATOR_ROLE,
         "FACULTY_ROLE": FACULTY_ROLE,
@@ -642,13 +662,20 @@ def project_submissions_details(request, pk, submission_id):
     return render(request, "projects/project_submissions_details.html", context)
 
 # ACTIONS
-@role_required(allowed_roles=["UESO", "VP", "DIRECTOR", "COORDINATOR", "FACULTY", "IMPLEMENTER"], require_confirmed=True)
+@role_required(allowed_roles=["UESO", "VP", "DIRECTOR", "COORDINATOR", "FACULTY", "IMPLEMENTER", "DEAN", "PROGRAM_HEAD"], require_confirmed=True)
 def admin_submission_action(request, pk, submission_id):
     submission = get_object_or_404(Submission, pk=submission_id, project__pk=pk)
     from django.utils import timezone
     if request.method == 'POST':
         action = request.POST.get('action')
-        if submission.status == 'SUBMITTED' and request.user.role in ["FACULTY", "IMPLEMENTER"]:
+        
+        # Check if user is project leader or provider
+        is_project_member = (
+            request.user.id == submission.project.project_leader.id or 
+            submission.project.providers.filter(id=request.user.id).exists()
+        )
+        
+        if submission.status == 'SUBMITTED' and is_project_member:
             if action == 'unsubmit':
                 submission.status = 'PENDING'
                 submission.submitted_by = None
@@ -678,22 +705,54 @@ def admin_submission_action(request, pk, submission_id):
                 submission.updated_by = request.user
                 submission.updated_at = timezone.now()
                 submission.save()
+        # New: Allow UESO/DIRECTOR/VP to approve directly from SUBMITTED if project leader has no college
+        # BUT only if they are NOT involved in the project (not leader or provider)
+        elif submission.status == 'SUBMITTED' and request.user.role in ["VP", "DIRECTOR", "UESO"]:
+            # Check if project leader has no college
+            project_leader_has_no_college = submission.project.project_leader and not submission.project.project_leader.college
+            # Check if admin is NOT involved in the project
+            is_not_project_member = (
+                request.user.id != submission.project.project_leader.id and 
+                not submission.project.providers.filter(id=request.user.id).exists()
+            )
+            if project_leader_has_no_college and is_not_project_member:
+                if action == 'accept':
+                    submission.status = 'APPROVED'
+                    submission.authorized_by = request.user
+                    submission.authorized_at = timezone.now()
+                    submission.updated_by = request.user
+                    submission.updated_at = timezone.now()
+                    submission.save()
+                elif action == 'request_revision':
+                    submission.status = 'REVISION_REQUESTED'
+                    submission.reviewed_by = request.user
+                    submission.reviewed_at = timezone.now()
+                    submission.reason_for_revision = request.POST.get('reason', '')
+                    submission.updated_by = request.user
+                    submission.updated_at = timezone.now()
+                    submission.save()
         elif submission.status == 'FORWARDED' and request.user.role in ["VP", "DIRECTOR", "UESO"]:
-            if action == 'accept':
-                submission.status = 'APPROVED'
-                submission.authorized_by = request.user
-                submission.authorized_at = timezone.now()
-                submission.updated_by = request.user
-                submission.updated_at = timezone.now()
-                submission.save()
-            elif action == 'reject':
-                submission.status = 'REJECTED'
-                submission.authorized_by = request.user
-                submission.authorized_at = timezone.now()
-                submission.reason_for_rejection = request.POST.get('reason', '')
-                submission.updated_by = request.user
-                submission.updated_at = timezone.now()
-                submission.save()
+            # Check if admin is NOT involved in the project
+            is_not_project_member = (
+                request.user.id != submission.project.project_leader.id and 
+                not submission.project.providers.filter(id=request.user.id).exists()
+            )
+            if is_not_project_member:
+                if action == 'accept':
+                    submission.status = 'APPROVED'
+                    submission.authorized_by = request.user
+                    submission.authorized_at = timezone.now()
+                    submission.updated_by = request.user
+                    submission.updated_at = timezone.now()
+                    submission.save()
+                elif action == 'reject':
+                    submission.status = 'REJECTED'
+                    submission.authorized_by = request.user
+                    submission.authorized_at = timezone.now()
+                    submission.reason_for_rejection = request.POST.get('reason', '')
+                    submission.updated_by = request.user
+                    submission.updated_at = timezone.now()
+                    submission.save()
                 
         # Create or update ProjectUpdate for key status changes that affect the project team
         if action in ['forward', 'accept', 'reject', 'request_revision'] and submission.project:
@@ -719,6 +778,7 @@ def admin_submission_action(request, pk, submission_id):
     return redirect(f'/projects/{pk}/submission/?success=true&action={action}&title={quote(submission_title)}')
 
 
+@project_visibility_required
 def project_expenses(request, pk):
     ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE, COORDINATOR_ROLE = get_role_constants()
 
@@ -749,6 +809,7 @@ def project_expenses(request, pk):
     })
 
 
+@project_visibility_required
 def project_evaluations(request, pk):
     ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE, COORDINATOR_ROLE = get_role_constants()
 
@@ -1107,8 +1168,10 @@ from django.utils import timezone
 @role_required(allowed_roles=["VP", "DIRECTOR", "UESO"], require_confirmed=True)
 def add_project_view(request):
     error = None
-    faculty_users = User.objects.filter(role=User.Role.FACULTY, is_confirmed=True)
-    provider_users = User.objects.filter(role__in=[User.Role.FACULTY, User.Role.IMPLEMENTER], is_confirmed=True)
+    # All user roles except CLIENT and IMPLEMENTER can be project leader
+    faculty_users = User.objects.filter(is_confirmed=True).exclude(role__in=[User.Role.CLIENT, User.Role.IMPLEMENTER])
+    # All user roles except CLIENT can be provider
+    provider_users = User.objects.filter(is_confirmed=True).exclude(role=User.Role.CLIENT)
     agendas = Agenda.objects.all()
     sdgs = SustainableDevelopmentGoal.objects.all()
     colleges = College.objects.all()
