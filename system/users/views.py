@@ -794,7 +794,32 @@ def profile_role_constants():
     return HAS_COLLEGE_CAMPUS, HAS_DEGREE_EXPERTISE, HAS_COMPANY_INDUSTRY
 
 
-@login_required
+def can_view_project(user, project):
+    """
+    Check if a user can view a project based on visibility restrictions:
+    - Non-authenticated users: only COMPLETED projects
+    - Project leader/providers: can see their projects regardless of status
+    - Dean/Coordinator/Program Head: can see all projects from their college
+    - UESO/Director/VP: can see everything
+    """
+    # UESO, Director, VP can see everything
+    if user.is_authenticated and hasattr(user, 'role'):
+        if user.role in ["UESO", "DIRECTOR", "VP"]:
+            return True
+        
+        # Project leader or provider can see their own projects
+        if project.project_leader == user or user in project.providers.all():
+            return True
+        
+        # Dean, Coordinator, Program Head can see all projects from their college
+        if user.role in ["DEAN", "COORDINATOR", "PROGRAM_HEAD"]:
+            if user.college and project.project_leader.college == user.college:
+                return True
+    
+    # Non-authenticated or other users can only see COMPLETED projects
+    return project.status == 'COMPLETED'
+
+
 def profile_view(request, id=None):
     # If id is provided, show that user's profile, otherwise show logged-in user's profile
     User = get_user_model()
@@ -821,29 +846,48 @@ def profile_view(request, id=None):
     content_items = []
 
     if user.role in [User.Role.FACULTY, User.Role.IMPLEMENTER]:
-        # Get projects where user is leader or provider
+        # Get projects where the profile user is leader or provider
         from shared.projects.models import Project
-        content_items = Project.objects.filter(
+        all_projects = Project.objects.filter(
             Q(project_leader=user) | Q(providers=user)
         ).distinct().select_related(
             'project_leader', 'agenda'
         ).prefetch_related(
             'providers', 'sdgs'
         ).order_by('-start_date')
+        
+        # Filter projects based on what the VIEWING user can see
+        content_items = [p for p in all_projects if can_view_project(request.user, p)]
 
     elif user.role in [User.Role.PROGRAM_HEAD, User.Role.DEAN, User.Role.COORDINATOR]:
-        # Get projects from user's college
+        # Get projects from the profile user's college
         from shared.projects.models import Project
         if user.college:
-            content_items = Project.objects.filter(
+            all_projects = Project.objects.filter(
                 project_leader__college=user.college
             ).distinct().select_related(
                 'project_leader', 'agenda'
             ).prefetch_related(
                 'providers', 'sdgs'
             ).order_by('-start_date')
+            
+            # Filter projects based on what the VIEWING user can see
+            content_items = [p for p in all_projects if can_view_project(request.user, p)]
         else:
-            content_items = Project.objects.none()
+            content_items = []
+    
+    elif user.role in [User.Role.UESO, User.Role.DIRECTOR, User.Role.VP]:
+        # For admin roles, show all projects in the system
+        from shared.projects.models import Project
+        
+        all_projects = Project.objects.all().distinct().select_related(
+            'project_leader', 'agenda'
+        ).prefetch_related(
+            'providers', 'sdgs'
+        ).order_by('-start_date')
+        
+        # Filter projects based on what the VIEWING user can see
+        content_items = [p for p in all_projects if can_view_project(request.user, p)]
 
     elif user.role == User.Role.CLIENT:
         # Get client requests
@@ -859,6 +903,7 @@ def profile_view(request, id=None):
         'college_name': college_name,
         'college_logo': college_logo,
         'content_items': content_items,
+        'content_items_count': len(content_items),  # Count of visible items
         'base_template': base_template,
 
         'HAS_COLLEGE_CAMPUS': HAS_COLLEGE_CAMPUS,
@@ -872,6 +917,8 @@ def update_bio(request):
     if request.method == 'POST':
         bio = request.POST.get('bio', '').strip()
         user = request.user
+        user.bio = bio
+        user.save(update_fields=['bio'])
         
     return redirect('profile')
 

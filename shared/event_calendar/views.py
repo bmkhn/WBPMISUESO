@@ -10,31 +10,35 @@ from django.views.decorators.http import require_GET, require_POST, require_http
 
 from . import services
 
+
+def get_templates(request):
+    user_role = getattr(request.user, 'role', None)
+    if user_role in ["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
+        base_template = "base_internal.html"
+    else:
+        base_template = "base_public.html"
+    return base_template
+
+
 @role_required(allowed_roles=["DIRECTOR", "VP", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD", "FACULTY", "IMPLEMENTER"], require_confirmed=True)
 def calendar_view(request):
-    current_user = request.user
+    base_template = get_templates(request)
     users = User.objects.exclude(role='CLIENT')
-    
     initial_date = request.GET.get('date', None)
-    
     events_by_date = services.get_events_by_date(request.user, for_main_calendar_view=True)
-    
     events_json = json.dumps(events_by_date)
     
     context = {
         'users': users,
         'events_json': events_json,
+        'base_template': base_template,
     }
     
     if initial_date:
         context['initial_date'] = initial_date
-    
-    if current_user.role == 'FACULTY' or current_user.role == 'IMPLEMENTER':
-        return render(request, 'event_calendar/calendar.html', context)
-    elif current_user.role in ['VP', 'DIRECTOR', 'UESO', 'COORDINATOR', 'DEAN', 'PROGRAM_HEAD']:
-        return render(request, 'event_calendar/calendar_admin.html', context)
-    else:
-        return render(request, 'event_calendar/calendar.html', context)
+
+    return render(request, 'event_calendar/calendar.html', context)
+
 
 
 @csrf_exempt

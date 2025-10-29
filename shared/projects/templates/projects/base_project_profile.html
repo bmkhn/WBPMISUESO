@@ -68,7 +68,8 @@
                                 {% for provider in all_authors|slice:"3:" %}
                                     <div style="display:flex; align-items:center; gap:0.75rem; padding:8px 12px; border-bottom:1px solid #eee;">
                                         <img src="{{ provider.profile_picture_or_initial }}" alt="" style="width:2rem; height:2rem; border-radius:50%; object-fit:cover; border:0.08rem solid #ccc;">
-                                        <a href="{% url 'user_profile' provider.id %}" style="font-size:0.9rem; color:#000; text-decoration:none;">{{ provider.get_full_name|default:provider.username }}</a>
+                                        <style> .dropdown-provider { font-size:0.9rem; color:#000; text-decoration:none; } .dropdown-provider:hover { color:#007bff; } </style>
+                                        <a href="{% url 'user_profile' provider.id %}" class="dropdown-provider">{{ provider.get_full_name|default:provider.username }}</a>
                                     </div>
                                 {% endfor %}
                             </div>

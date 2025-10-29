@@ -1,4 +1,4 @@
-{% extends "base_public.html" %}
+{% extends base_template %}
 {% block content %}
 {% load static %}
 <!DOCTYPE html>
@@ -10,6 +10,27 @@
 <link href="https://fonts.googleapis.com/css?family=Inter:400,500,700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
 <link href="{% static 'shared/calendar/styles.css' %}" rel="stylesheet">
+<style>
+    /* Spinner animation */
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .fa-spinner.fa-spin {
+        animation: spin 1s linear infinite;
+    }
+    
+    /* Past date styling */
+    .calendar-day.past-date {
+        opacity: 0.6;
+        cursor: default !important;
+    }
+    
+    .calendar-day.past-date:hover {
+        background-color: transparent !important;
+    }
+</style>
 </head>
 <body>
 
@@ -102,7 +123,7 @@
     <div class="event-modal-content">
         <span class="close" id="close-edit-event-modal">&times;</span>
         <h2 id="edit-event-modal-title">Edit Event</h2>
-        <form id="edit-event-form" method="post" enctype="multipart/form-data">
+        <form id="edit-event-form" method="post" enctype="multipart/form-data" action="/calendar/edit_event/">
             {% csrf_token %}
             <input type="hidden" name="event_id" id="edit_event_id">
             <div class="form-group">
@@ -120,7 +141,7 @@
                 </div>
                 <div class="two">
                     <label class="user-details-label">Time <span class="required">*</span></label>
-                <input class="user-details-value" type="time" name="time" id="edit_event_time" required style="flex:1;"> 
+                <input class="user-details-value" type="time" name="time" id="edit_event_time" required style="flex:1;">
                 </div>
             </div>
             <div class="form-group">
@@ -153,7 +174,7 @@
 
 <!-- Event Details Modal -->
 <div id="event-details-modal" class="event-modal" style="display:none;align-items:center;justify-content:center;">
-    <div class="event-modal-content" style="max-width:600px;">
+    <div class="event-modal-content" style="max-width:600px;position:relative;">
         <span class="close" id="close-event-details-modal">&times;</span>
         <h2 id="event-details-title" style="margin-bottom:10px;"></h2>
         <div id="event-details-info">
@@ -190,15 +211,19 @@
         document.getElementById('edit_event_id').value = eventObj.id;
         document.getElementById('edit_event_title').value = eventObj.title || '';
         document.getElementById('edit_event_description').value = eventObj.description || '';
-        document.getElementById('edit_event_date').value = eventObj.date || ''; // Use edit_event_date
-        document.getElementById('edit_event_time').value = eventObj.time || ''; // Use edit_event_time
+        document.getElementById('edit_event_date').value = eventObj.date || '';
+        document.getElementById('edit_event_time').value = eventObj.time || '';
         document.getElementById('edit_event_location').value = eventObj.location || '';
         document.getElementById('edit_event_notes').value = eventObj.notes || '';
         // Participants tag UI
         const tagRow = document.getElementById('edit-participants-tag-row');
         while (tagRow.firstChild) tagRow.removeChild(tagRow.firstChild);
+        // Set JSON data for participants
         document.getElementById('participants-data').textContent = JSON.stringify(eventObj.participants || []);
+
+        // Call renderParticipantTags AFTER setting the participants-data
         renderParticipantTags();
+
         document.getElementById('edit-event-modal').style.display = 'flex';
     }
 
@@ -293,94 +318,113 @@
             this.style.display = 'none';
         }
     };
-    // Handle edit event form submit
+    
     const editEventForm = document.getElementById('edit-event-form'); // <-- ADD THIS LINE
     editEventForm.onsubmit = function(e) {
-        e.preventDefault(); // Prevent default form submission
+        e.preventDefault();
         const event_id = document.getElementById('edit_event_id').value;
         const title = document.getElementById('edit_event_title').value.trim();
         const description = document.getElementById('edit_event_description').value.trim();
-        const date = document.getElementById('edit_event_date').value
+        const date = document.getElementById('edit_event_date').value;
         const time = document.getElementById('edit_event_time').value;
         const location = document.getElementById('edit_event_location').value.trim();
         const notes = document.getElementById('edit_event_notes').value.trim();
 
-        // Get participants from the temporary data store script tag
+        // Get participants from the updated data store
         let participants = [];
         try {
             participants = JSON.parse(document.getElementById('participants-data').textContent || '[]');
         } catch (parseError) {
             console.error("Error parsing participants data on submit:", parseError);
-            alert("Error processing participant list. Please try again.");
-            return; // Stop submission if participant data is invalid
+            alert("Error processing participant list.");
+            return; // Prevent submission if data is corrupted
         }
 
-        // Basic validation
         if (!event_id || !title || !description || !date || !time || !location) {
             alert('Please fill in all required fields.');
             return;
         }
-
-        // Get CSRF token
+        
+        // Show loading state
+        const submitBtn = editEventForm.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+        submitBtn.style.opacity = '0.7';
+        submitBtn.style.cursor = 'not-allowed';
+        
+        // Disable all form inputs
+        const formInputs = editEventForm.querySelectorAll('input, textarea, button');
+        formInputs.forEach(input => input.disabled = true);
+        
         const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
 
-        // Send the PUT request to update the specific event
-        fetch('/calendar/events/' + event_id + '/', { // Correct RESTful URL for specific event
-            method: 'PUT',                            // Use PUT method for updates
+        // *** CORRECTED URL and METHOD ***
+        fetch('/calendar/events/' + event_id + '/', { // Use the specific event URL
+            method: 'PUT',                            // Use PUT for updates
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRFToken': csrfToken           // Include CSRF token
+                'X-CSRFToken': csrfToken
             },
-            body: JSON.stringify({                   // Send data as JSON
+            body: JSON.stringify({
+                // event_id is usually not needed in the body for PUT, but include if your backend expects it
                 title, description, date, time, location, participants, notes
             })
         })
-        .then(response => { // First step: check if the server response indicates success (HTTP status 2xx)
+        .then(response => { // Check response status first
             if (!response.ok) {
-                // If response status is not OK (e.g., 400, 403, 500), read response text and throw error
                 return response.text().then(text => {
-                    throw new Error(`Server error: ${response.status} - ${text}`);
+                    throw new Error(`Server responded with status ${response.status}: ${text}`);
                 });
             }
-            // If response is OK, try to parse it as JSON
             return response.json();
         })
-        .then(resp => { // Second step: Process the JSON response from the server
-            // Check if the backend specifically confirmed success (adjust 'status' if your backend uses a different key)
-            if (resp && resp.status === 'success') {
-                document.getElementById('edit-event-modal').style.display = 'none'; // Close the modal
+        .then(resp => {
+            if (resp.status === 'success') {
+                document.getElementById('edit-event-modal').style.display = 'none';
+                
+                // Reset loading state
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.style.opacity = '1';
+                submitBtn.style.cursor = 'pointer';
+                formInputs.forEach(input => input.disabled = false);
 
-                // --- REFRESH THE CALENDAR VIEW ---
-                // Fetch the entire updated list of events
-                fetch('/calendar/events/') // Use GET request (default) to fetch all events
-                .then(listResponse => {
-                    if (!listResponse.ok) { // Check if fetching the list failed
-                        throw new Error(`Failed to refresh event list: ${listResponse.status}`);
-                    }
-                    return listResponse.json(); // Parse the new list
+                // Refresh events list
+                fetch('/calendar/events/') // Fetch the updated list
+                .then(r => {
+                    if (!r.ok) { throw new Error(`Failed to refresh events: ${r.status}`); }
+                    return r.json();
                 })
-                .then(updatedEventsData => {
-                    // *** CRITICAL STEP: Update the global 'events' variable ***
-                    events = updatedEventsData;
-
-                    // Re-render the calendar grid and the sidebar list with the new data
+                .then(data => {
+                    events = data;
                     renderCalendar(currentYear, currentMonth);
-                    fetchEvents(); // This updates the sidebar list
+                    fetchEvents();
                 })
-                .catch(refreshError => { // Catch errors during the refresh fetch
-                    console.error('Error refreshing events after edit:', refreshError);
-                    alert('Event updated successfully, but could not refresh the calendar view automatically. Please reload the page. Error: ' + refreshError.message);
+                .catch(err => {
+                    console.error('Error refreshing events after edit:', err);
+                    alert('Event updated, but could not refresh calendar view: ' + err.message);
                 });
-                // --- END REFRESH ---
-
             } else {
-                // Handle cases where the server responded OK, but indicated a logical error in the JSON
-                alert('Error updating event: ' + (JSON.stringify(resp.errors || resp.message || resp)));
+                // Reset loading state on error
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.style.opacity = '1';
+                submitBtn.style.cursor = 'pointer';
+                formInputs.forEach(input => input.disabled = false);
+                
+                alert('Error updating event: ' + JSON.stringify(resp.errors || resp));
             }
-        })
-        .catch(error => { // Catch network errors or errors thrown from the first .then() block
-            console.error('Error submitting edit event form:', error);
-            alert('Could not update event. ' + error.message);
+        }).catch(err => {
+            // Reset loading state on network error
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnText;
+            submitBtn.style.opacity = '1';
+            submitBtn.style.cursor = 'pointer';
+            formInputs.forEach(input => input.disabled = false);
+            
+            console.error('Error during edit event fetch:', err);
+            alert('Could not update event: ' + err.message);
         });
     };
     
@@ -391,12 +435,13 @@
         eventList.innerHTML = '';
         const todayStr = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`;
         let todayEvents = [], meetings = [], projects = [], done = [];
+        const today = new Date();
         for (const dateStr in events) {
             if (events.hasOwnProperty(dateStr)) {
                 const dateObj = new Date(dateStr);
                 if (dateObj.getFullYear() === currentYear && dateObj.getMonth() === currentMonth) {
                     events[dateStr].forEach(ev => {
-                        const isPast = dateObj < new Date(currentYear, currentMonth, new Date().getDate());
+                        const isPast = dateObj < today;
                         if (isPast) {
                             done.push({...ev, dateStr});
                         } else if (dateStr === todayStr) {
@@ -416,9 +461,13 @@
                 const li = document.createElement('li');
                 li.className = 'sidebar-event-item';
                 li.style.cursor = 'pointer';
-                li.style.color = '#fff';
-                let titleColor = (ev.type === 'meeting') ? '#3A7CA5' : (ev.type === 'project') ? '#245F3E' : '#fff';
-                li.innerHTML = `<span style='font-weight:600;font-size:1.1em;color:${titleColor};'>${ev.title}</span><br><span style='font-size:0.95em;color:#bbb;'>${ev.dateStr}</span>`;
+                li.style.color = '#245F3E'; // Green text color
+                
+                // Determine tag color and label based on event type
+                let tagColor = (ev.type === 'meeting') ? '#fd7e14' : '#007bff'; // Orange for meeting, Blue for project
+                let tagLabel = (ev.type === 'meeting') ? 'Meeting' : 'Project';
+                
+                li.innerHTML = `<span style='font-weight:600;font-size:1.1em;color:#245F3E;'>${ev.title}</span> <span style='background:${tagColor};color:#fff;padding:2px 8px;border-radius:12px;font-size:0.75em;font-weight:600;margin-left:6px;'>${tagLabel}</span><br><span style='font-size:0.95em;color:#bbb;'>${ev.dateStr}</span>`;
                 li.onclick = function(e) {
                     e.stopPropagation();
                     showEventDetails([ev], ev.dateStr);
@@ -437,7 +486,7 @@
         // Meetings
         if (meetings.length) {
             const h = document.createElement('h4');
-            h.textContent = 'Meetings';
+            h.textContent = meetings.length === 1 ? 'Meeting' : 'Meetings';
             h.style.color = '';
             eventList.appendChild(h);
             renderItems(meetings, 'meeting');
@@ -445,7 +494,7 @@
         // Events (Projects)
         if (projects.length) {
             const h = document.createElement('h4');
-            h.textContent = 'Events';
+            h.textContent = projects.length === 1 ? 'Project' : 'Projects';
             h.style.color = '';
             eventList.appendChild(h);
             renderItems(projects, 'project');
@@ -458,11 +507,19 @@
             eventList.appendChild(h);
             done.forEach(ev => {
                 const li = document.createElement('li');
-                li.style.color = '#bbb';
-                li.style.textDecoration = 'line-through';
-                li.style.opacity = '0.7';
-                let titleColor = (ev.type === 'meeting') ? '#3A7CA5' : (ev.type === 'project') ? '#245F3E' : '#bbb';
-                li.innerHTML = `<span style='font-weight:600;font-size:1.1em;color:${titleColor};'>${ev.title}</span><br><span style='font-size:0.95em;color:#bbb;'>${ev.dateStr}</span>`;
+                li.className = 'sidebar-event-item';
+                li.style.cursor = 'pointer';
+                li.style.opacity = '0.5'; // Grayed out
+                
+                // Determine tag color and label based on event type
+                let tagColor = (ev.type === 'meeting') ? '#fd7e14' : '#007bff'; // Orange for meeting, Blue for project
+                let tagLabel = (ev.type === 'meeting') ? 'Meeting' : 'Project';
+                
+                li.innerHTML = `<span style='font-weight:600;font-size:1.1em;color:#245F3E;'>${ev.title}</span> <span style='background:${tagColor};color:#fff;padding:2px 8px;border-radius:12px;font-size:0.75em;font-weight:600;margin-left:6px;'>${tagLabel}</span><br><span style='font-size:0.95em;color:#bbb;'>${ev.dateStr}</span>`;
+                li.onclick = function(e) {
+                    e.stopPropagation();
+                    showEventDetails([ev], ev.dateStr);
+                };
                 eventList.appendChild(li);
             });
         }
@@ -596,76 +653,92 @@
     addEventModal.onclick = function(e) { if (e.target === addEventModal) addEventModal.style.display = 'none'; };
 
     // Intercept form submit for AJAX
-addEventForm.onsubmit = function(e) {
-    e.preventDefault();
-    const title = document.getElementById('add_event_title').value.trim();
-    const description = document.getElementById('add_event_description').value.trim();
-    const date = document.getElementById('add_event_date').value;
-    const time = document.getElementById('add_event_time').value;
-    const location = document.getElementById('add_event_location').value.trim();
-    const participants = Array.from(document.querySelectorAll('#participants-tag-row input[name="participants[]"]')).map(input => input.value);
-    const notes = document.getElementById('add_event_notes').value.trim();
-
-    if (!title || !description || !date || !time || !location) {
-        alert('Please fill in all required fields.');
-        return;
-    }
-
-    const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
-
-    fetch('/calendar/events/', { // Correct RESTful URL
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrfToken
-        },
-        body: JSON.stringify({
-            title, description, date, time, location, participants, notes
+    addEventForm.onsubmit = function(e) {
+        e.preventDefault();
+        const title = document.getElementById('add_event_title').value.trim();
+        const description = document.getElementById('add_event_description').value.trim();
+        const date = document.getElementById('add_event_date').value;
+        const time = document.getElementById('add_event_time').value;
+        const location = document.getElementById('add_event_location').value.trim();
+        const participants = Array.from(document.querySelectorAll('#participants-tag-row input[name="participants[]"]')).map(input => input.value);
+        const notes = document.getElementById('add_event_notes').value.trim();
+        if (!title || !description || !date || !time || !location) {
+            alert('Please fill in all required fields.');
+            return;
+        }
+        
+        // Show loading state
+        const submitBtn = addEventForm.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
+        submitBtn.style.opacity = '0.7';
+        submitBtn.style.cursor = 'not-allowed';
+        
+        // Disable all form inputs
+        const formInputs = addEventForm.querySelectorAll('input, textarea, button');
+        formInputs.forEach(input => input.disabled = true);
+        
+        const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+        
+        // MODIFIED: Use new RESTful URL
+        fetch('/calendar/events/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({
+                title, description, date, time, location, participants, notes
+            })
         })
-    })
-    .then(response => { // First, check if the response status is OK (e.g., 200, 201)
-        if (!response.ok) {
-            // If not OK, read the response as text (could be HTML error page or simple text)
-            return response.text().then(text => {
-                // Throw an error to be caught by the .catch block
-                throw new Error(`Server responded with status ${response.status}: ${text}`);
-            });
-        }
-        // If response is OK, parse it as JSON
-        return response.json();
-    })
-    .then(resp => { // This .then() only runs if response.ok was true
-        if (resp.status === 'success') {
-            addEventModal.style.display = 'none';
-
-            // Fetch updated events list
-            fetch('/calendar/events/') // Correct RESTful URL for fetching
-              .then(r => {
-                  if (!r.ok) { throw new Error(`Failed to refresh events: ${r.status}`); }
-                  return r.json();
-               })
-              .then(data => {
-                  events = data;
-                  renderCalendar(currentYear, currentMonth); // update calendar grid
-                  fetchEvents(); // update sidebar event list
-              })
-              .catch(err => {
-                  console.error('Error refreshing events:', err);
-                  alert('Event added, but could not refresh calendar view: ' + err.message);
-                  // Still try to render/fetch even if refresh fails initially
-                  renderCalendar(currentYear, currentMonth);
-                  fetchEvents();
-              });
-        } else {
-            // Handle JSON responses that indicate an error (e.g., validation errors from backend)
-            alert('Error adding event: ' + JSON.stringify(resp.errors || resp));
-        }
-    })
-    .catch(err => { // Catches network errors or errors thrown from the first .then()
-        console.error('Error during add event fetch:', err);
-        alert('Could not add event: ' + err.message);
-    });
-};
+        .then(function(r) { return r.json(); })
+        .then(function(resp) {
+            if (resp.status === 'success') {
+                addEventModal.style.display = 'none';
+                
+                // Reset loading state
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.style.opacity = '1';
+                submitBtn.style.cursor = 'pointer';
+                formInputs.forEach(input => input.disabled = false);
+                
+                // MODIFIED: Fetch from new events endpoint (This fixes the bug)
+                fetch('/calendar/events/')
+                  .then(function(r) { return r.json(); })
+                  .then(function(data) {
+                      events = data;
+                      renderCalendar(currentYear, currentMonth); // update calendar grid
+                      fetchEvents(); // update sidebar event list
+                  })
+                  .catch(function(err) {
+                      alert('Could not refresh events: ' + err.message);
+                      renderCalendar(currentYear, currentMonth);
+                      fetchEvents();
+                  });
+            } else {
+                // Reset loading state on error
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.style.opacity = '1';
+                submitBtn.style.cursor = 'pointer';
+                formInputs.forEach(input => input.disabled = false);
+                
+                alert('Error: ' + JSON.stringify(resp.errors || resp));
+            }
+        })
+        .catch(function(err) {
+            // Reset loading state on network error
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnText;
+            submitBtn.style.opacity = '1';
+            submitBtn.style.cursor = 'pointer';
+            formInputs.forEach(input => input.disabled = false);
+            
+            alert('Network error: ' + err.message);
+        });
+    };
 
     // Hook up calendar day click to open modal
     function renderCalendar(year, month) {
@@ -687,7 +760,7 @@ addEventForm.onsubmit = function(e) {
                 // Determine if all events are done (past date)
                 const today = new Date();
                 const cellDate = new Date(year, month, d);
-                let isPast = cellDate < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                let isPast = cellDate < today;
                 if (isPast) {
                     // Faded blue/green for done
                     if (hasMeeting && hasProject) {
@@ -732,61 +805,102 @@ addEventForm.onsubmit = function(e) {
     // Event Details Modal Logic
     const eventDetailsModal = document.getElementById('event-details-modal');
     const closeEventDetailsModal = document.getElementById('close-event-details-modal');
-    closeEventDetailsModal.onclick = function() { eventDetailsModal.style.display = 'none'; };
-    eventDetailsModal.onclick = function(e) { if (e.target === eventDetailsModal) eventDetailsModal.style.display = 'none'; };
+    closeEventDetailsModal.onclick = function() { 
+        // Remove floating button when closing modal
+        const floatingBtn = document.getElementById('floating-add-event-btn');
+        if (floatingBtn) floatingBtn.remove();
+        eventDetailsModal.style.display = 'none'; 
+    };
+    eventDetailsModal.onclick = function(e) { 
+        if (e.target === eventDetailsModal) {
+            // Remove floating button when closing modal
+            const floatingBtn = document.getElementById('floating-add-event-btn');
+            if (floatingBtn) floatingBtn.remove();
+            eventDetailsModal.style.display = 'none';
+        }
+    };
 
     function showEventDetails(eventArr, dateStr) {
         eventDetailsModal.style.display = 'flex';
         let html = '';
         const currentUserId = "{{ request.user.id|default:'' }}";
         const currentUserRole = "{{ request.user.role|default:''|escapejs }}";
+        
+        // Check if date is in the past
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const eventDate = new Date(dateStr);
+        eventDate.setHours(0, 0, 0, 0);
+        const isPast = eventDate < today;
+        
         eventArr.forEach(ev => {
             if (ev.type === 'meeting') {
                 let canEdit = false;
                 if (currentUserId !== "" && (ev.created_by == currentUserId || ["DIRECTOR","UESO","VP"].includes(currentUserRole))) {
                     canEdit = true;
                 }
-                html += `<div class="event-details-row" style="display:flex;align-items:center;">
-                    <div style="font-size:1.5rem;font-weight:600;color:#3A7CA5;margin-bottom:0.3rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;flex:1;">${ev.title}</div>
-                    ${canEdit ? `<i class='fa-solid fa-pen-to-square' style='font-size:1.3rem;color:#3A7CA5;cursor:pointer;margin-left:10px;' title='Edit' onclick='window.openEditEventModal(${JSON.stringify(ev)})'></i>` : ''}
-                    ${canEdit ? `<i class='fa-solid fa-trash' style='font-size:1.3rem;color:#E53E3E;cursor:pointer;margin-left:10px;' title='Delete' onclick='window.confirmDeleteEvent(${ev.id}, ${JSON.stringify(ev.title)})'></i>` : ''}
-                </div>
-                <div style="font-size:1.1rem;font-weight:400;color:#222;margin-bottom:0.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">${ev.description}</div>
-                <div style="font-size:1rem;color:#666;margin-bottom:0.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">${ev.date} at ${ev.time}</div>
-                <div style="font-size:1.1rem;color:#333;margin-bottom:0.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">${ev.location}</div>
-                ${ev.participant_names && ev.participant_names.length ? `<div style='font-size:0.95em;color:#555;margin-bottom:0.2rem;'><b>Participants:</b> <span style='font-size:0.95em;'>${ev.participant_names.join(", ")}</span></div>` : ''}
-                ${ev.notes && ev.notes.trim() ? `<div style=\"font-size:1rem;color:#888;margin-top:0.3rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%\">${ev.notes}</div>` : ''}
-                <hr style="margin:10px 0;">`;
+                html += `<div style="background:#f8f9fa;border-left:4px solid #fd7e14;padding:16px;margin-bottom:12px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.08);">
+                    <div class="event-details-row" style="display:flex;align-items:center;margin-bottom:8px;">
+                        <div style="font-size:1.5rem;font-weight:600;color:#fd7e14;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;flex:1;">${ev.title}</div>
+                        ${canEdit ? `<i class='fa-solid fa-pen-to-square' style='font-size:1.3rem;color:#fd7e14;cursor:pointer;margin-left:10px;' title='Edit' onclick='window.openEditEventModal(${JSON.stringify(ev)})'></i>` : ''}
+                        ${canEdit ? `<i class='fa-solid fa-trash' style='font-size:1.3rem;color:#E53E3E;cursor:pointer;margin-left:10px;' title='Delete' onclick='window.confirmDeleteEvent(${ev.id}, ${JSON.stringify(ev.title)})'></i>` : ''}
+                    </div>
+                    <div style="font-size:1.1rem;font-weight:400;color:#222;margin-bottom:6px;">${ev.description}</div>
+                    <div style="font-size:1rem;color:#666;margin-bottom:6px;"><i class="fa-regular fa-clock" style="margin-right:6px;"></i>${ev.date} at ${ev.time}</div>
+                    <div style="font-size:1rem;color:#666;margin-bottom:6px;"><i class="fa-solid fa-location-dot" style="margin-right:6px;"></i>${ev.location}</div>
+                    ${ev.participant_names && ev.participant_names.length ? `<div style='font-size:0.95em;color:#555;margin-bottom:6px;'><i class="fa-solid fa-users" style="margin-right:6px;"></i><b>Participants:</b> ${ev.participant_names.join(", ")}</div>` : ''}
+                    ${ev.notes && ev.notes.trim() ? `<div style="font-size:0.95rem;color:#888;margin-top:8px;font-style:italic;"><i class="fa-regular fa-note-sticky" style="margin-right:6px;"></i>${ev.notes}</div>` : ''}
+                </div>`;
             } else if (ev.type === 'project') {
-                html += `<div class="event-details-row" style="display:flex;align-items:center;">
-                    <div style="font-size:1.5rem;font-weight:600;color:#245F3E;margin-bottom:0.3rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;flex:1;">${ev.title}</div>
-                    <span style='font-size:1.1rem;color:#245F3E;cursor:pointer;margin-left:10px;' title='Go to event' onclick='window.location.href="/projects/${ev.project_id}/"'>Go To Project <i class="fa-solid fa-arrow-right"></i></span>
-                </div>
-                ${ev.project_name ? `<div style='font-size:1.05em;color:#245F3E;margin-bottom:0.2rem;'><b>Project:</b> <span style='font-size:1.05em;'>${ev.project_name}</span></div>` : ''}
-                <div style="font-size:1.1rem;font-weight:400;color:#222;margin-bottom:0.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">${ev.description}</div>
-                <div style="font-size:1rem;color:#666;margin-bottom:0.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">${ev.date} at ${ev.time}</div>
-                <div style="font-size:1.1rem;color:#333;margin-bottom:0.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">${ev.location}</div>
-                ${ev.leader ? `<div style='font-size:0.95em;color:#555;margin-bottom:0.2rem;'><b>Leader:</b> <span style='font-size:0.95em;'>${ev.leader}</span></div>` : ''}
-                ${ev.provider_names && ev.provider_names.length ? `<div style='font-size:0.95em;color:#555;margin-bottom:0.2rem;'><b>Providers:</b> <span style='font-size:0.95em;'>${ev.provider_names.join(", ")}</span></div>` : ''}
-                ${ev.notes && ev.notes.trim() ? `<div style=\"font-size:1rem;color:#888;margin-top:0.3rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%\">${ev.notes}</div>` : ''}
-                <hr style="margin:10px 0;">`;
+                html += `<div style="background:#f8f9fa;border-left:4px solid #007bff;padding:16px;margin-bottom:12px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.08);">
+                    <div class="event-details-row" style="display:flex;align-items:center;margin-bottom:8px;">
+                        <div style="font-size:1.5rem;font-weight:600;color:#007bff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;flex:1;">${ev.title}</div>
+                        <span style='font-size:1rem;color:#007bff;cursor:pointer;margin-left:10px;white-space:nowrap;' title='Go to project' onclick='window.location.href="/projects/${ev.project_id}/"'>Go To Project <i class="fa-solid fa-arrow-right"></i></span>
+                    </div>
+                    ${ev.project_name ? `<div style='font-size:1.05em;color:#007bff;margin-bottom:6px;'><i class="fa-solid fa-diagram-project" style="margin-right:6px;"></i><b>Project:</b> ${ev.project_name}</div>` : ''}
+                    <div style="font-size:1.1rem;font-weight:400;color:#222;margin-bottom:6px;">${ev.description}</div>
+                    <div style="font-size:1rem;color:#666;margin-bottom:6px;"><i class="fa-regular fa-clock" style="margin-right:6px;"></i>${ev.date} at ${ev.time}</div>
+                    <div style="font-size:1rem;color:#666;margin-bottom:6px;"><i class="fa-solid fa-location-dot" style="margin-right:6px;"></i>${ev.location}</div>
+                    ${ev.leader ? `<div style='font-size:0.95em;color:#555;margin-bottom:6px;'><i class="fa-solid fa-user-tie" style="margin-right:6px;"></i><b>Leader:</b> ${ev.leader}</div>` : ''}
+                    ${ev.provider_names && ev.provider_names.length ? `<div style='font-size:0.95em;color:#555;margin-bottom:6px;'><i class="fa-solid fa-handshake" style="margin-right:6px;"></i><b>Providers:</b> ${ev.provider_names.join(", ")}</div>` : ''}
+                    ${ev.notes && ev.notes.trim() ? `<div style="font-size:0.95rem;color:#888;margin-top:8px;font-style:italic;"><i class="fa-regular fa-note-sticky" style="margin-right:6px;"></i>${ev.notes}</div>` : ''}
+                </div>`;
             }
         });
-    // Add button below <hr> and center it
-    html += `<div style='width:100%;text-align:center;margin-top:18px;'><button id='add-another-event-btn' style='background:#245F3E;color:#fff;border:none;border-radius:24px;padding:12px 32px;font-size:1.1rem;box-shadow:0 2px 8px rgba(0,0,0,0.08);cursor:pointer;'>Add Meeting</button></div>`;
+        
         document.getElementById('event-details-title').textContent = eventArr.length === 1 ? '' : `Events on ${dateStr}`;
         document.getElementById('event-details-info').innerHTML = html;
-        // Add event handler for button
-        setTimeout(function() {
-            const btn = document.getElementById('add-another-event-btn');
-            if (btn) {
-                btn.onclick = function(e) {
-                    e.stopPropagation();
-                    eventDetailsModal.style.display = 'none';
-                    openAddEventModal(dateStr);
-                };
-            }
-        }, 0);
+        
+        // Remove any existing floating button first
+        const existingBtn = document.getElementById('floating-add-event-btn');
+        if (existingBtn) {
+            existingBtn.remove();
+        }
+        
+        // Only show Add button if date is not in the past
+        if (!isPast) {
+            // Create floating button and append to modal container (not content)
+            const floatingBtn = document.createElement('button');
+            floatingBtn.id = 'floating-add-event-btn';
+            floatingBtn.title = 'Add Meeting';
+            floatingBtn.innerHTML = '<i class="fa-solid fa-plus" style="margin-right:8px;"></i>Add Meeting';
+            floatingBtn.style.cssText = 'position:fixed;bottom:40px;right:40px;background:#245F3E;color:#fff;border:none;border-radius:28px;padding:14px 24px;font-size:1rem;font-weight:600;box-shadow:0 4px 12px rgba(0,0,0,0.15);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.3s ease;z-index:10000;white-space:nowrap;';
+            floatingBtn.onmouseover = function() {
+                this.style.transform = 'scale(1.05)';
+                this.style.boxShadow = '0 6px 16px rgba(0,0,0,0.2)';
+            };
+            floatingBtn.onmouseout = function() {
+                this.style.transform = 'scale(1)';
+                this.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+            };
+            floatingBtn.onclick = function(e) {
+                e.stopPropagation();
+                eventDetailsModal.style.display = 'none';
+                floatingBtn.remove();
+                openAddEventModal(dateStr);
+            };
+            eventDetailsModal.appendChild(floatingBtn);
+        }
     }
 
     // Delete event logic
@@ -811,12 +925,24 @@ addEventForm.onsubmit = function(e) {
     };
     document.getElementById('confirm-delete-btn').onclick = function() {
         if (pendingDeleteEventId) {
-            deleteEvent(pendingDeleteEventId);
+            // Show loading state on delete button
+            const deleteBtn = document.getElementById('confirm-delete-btn');
+            const cancelBtn = document.getElementById('cancel-delete-modal');
+            const originalBtnText = deleteBtn.innerHTML;
+            deleteBtn.disabled = true;
+            deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+            deleteBtn.style.opacity = '0.7';
+            deleteBtn.style.cursor = 'not-allowed';
+            cancelBtn.disabled = true;
+            cancelBtn.style.opacity = '0.5';
+            
+            deleteEvent(pendingDeleteEventId, deleteBtn, cancelBtn, originalBtnText);
+        } else {
+            document.getElementById('delete-confirm-modal').style.display = 'none';
         }
-        document.getElementById('delete-confirm-modal').style.display = 'none';
     };
 
-    function deleteEvent(eventId) {
+    function deleteEvent(eventId, deleteBtn, cancelBtn, originalBtnText) {
         const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
         
         // MODIFIED: Use new RESTful URL and DELETE method
@@ -831,6 +957,16 @@ addEventForm.onsubmit = function(e) {
         .then(function(r) { return r.json(); })
         .then(function(resp) {
             if (resp.status === 'success') {
+                // Reset loading state
+                deleteBtn.disabled = false;
+                deleteBtn.innerHTML = originalBtnText;
+                deleteBtn.style.opacity = '1';
+                deleteBtn.style.cursor = 'pointer';
+                cancelBtn.disabled = false;
+                cancelBtn.style.opacity = '1';
+                
+                // Hide modals
+                document.getElementById('delete-confirm-modal').style.display = 'none';
                 document.getElementById('event-details-modal').style.display = 'none';
                 
                 // MODIFIED: Fetch from new events endpoint
@@ -847,10 +983,26 @@ addEventForm.onsubmit = function(e) {
                       fetchEvents();
                   });
             } else {
+                // Reset loading state on error
+                deleteBtn.disabled = false;
+                deleteBtn.innerHTML = originalBtnText;
+                deleteBtn.style.opacity = '1';
+                deleteBtn.style.cursor = 'pointer';
+                cancelBtn.disabled = false;
+                cancelBtn.style.opacity = '1';
+                
                 alert('Error: ' + JSON.stringify(resp.errors || resp));
             }
         })
         .catch(function(err) {
+            // Reset loading state on network error
+            deleteBtn.disabled = false;
+            deleteBtn.innerHTML = originalBtnText;
+            deleteBtn.style.opacity = '1';
+            deleteBtn.style.cursor = 'pointer';
+            cancelBtn.disabled = false;
+            cancelBtn.style.opacity = '1';
+            
             alert('Network error: ' + err.message);
         });
     }
@@ -899,6 +1051,7 @@ addEventForm.onsubmit = function(e) {
 
     // Fetch events on initial load to ensure role-restricted view
     window.addEventListener('DOMContentLoaded', function() {
+        // MODIFIED: Fetch from new events endpoint
         fetch('/calendar/events/')
             .then(r => r.json())
             .then(data => {
@@ -927,56 +1080,117 @@ addEventForm.onsubmit = function(e) {
         const firstDay=new Date(year,month,1).getDay();
         const daysInMonth=new Date(year,month+1,0).getDate();
         for(let i=0;i<firstDay;i++){ calendar.appendChild(document.createElement('div')); }
+        
+        // Get today's date once for comparison
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
         for(let d=1;d<=daysInMonth;d++){
             const cell=document.createElement('div');
             const dateStr=`${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
             cell.className='calendar-day';
-            cell.textContent=d;
             cell.dataset.date=dateStr;
+            
+            // Calculate if this date is in the past
+            const cellDate = new Date(year, month, d);
+            cellDate.setHours(0, 0, 0, 0);
+            const isPast = cellDate < today;
+            const isToday = (year === today.getFullYear() && month === today.getMonth() && d === today.getDate());
+            
             if(events[dateStr]){
-                let hasMeeting = events[dateStr].some(ev => ev.type === 'meeting');
-                let hasProject = events[dateStr].some(ev => ev.type === 'project');
-                // Determine if all events are done (past date)
-                const today = new Date();
-                const cellDate = new Date(year, month, d);
-                let isPast = cellDate < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                // Count events by type
+                let projectCount = events[dateStr].filter(ev => ev.type === 'project').length;
+                let meetingCount = events[dateStr].filter(ev => ev.type === 'meeting').length;
+                let totalCount = events[dateStr].length;
+                
+                // Set green background for dates with events
+                cell.style.backgroundColor = '#245F3E'; // Green
+                cell.style.color = 'white';
+                cell.style.position = 'relative';
+                cell.style.cursor = 'pointer';
+                
+                // Gray out past dates with events
                 if (isPast) {
-                    // Faded blue/green for done
-                    if (hasMeeting && hasProject) {
-                        cell.style.background = 'linear-gradient(90deg, #A9C6DD 50%, #B6D3C2 50%)';
-                    } else if (hasMeeting) {
-                        cell.style.backgroundColor = '#A9C6DD';
-                    } else if (hasProject) {
-                        cell.style.backgroundColor = '#B6D3C2';
-                    }
-                    cell.style.color = '#eee';
-                } else {
-                    if (hasMeeting && hasProject) {
-                        cell.style.background = 'linear-gradient(90deg, #3A7CA5 50%, #245F3E 50%)';
-                        cell.style.color = 'white';
-                    } else if (hasMeeting) {
-                        cell.style.backgroundColor = '#3A7CA5';
-                        cell.style.color = 'white';
-                    } else if (hasProject) {
-                        cell.style.backgroundColor = '#245F3E';
-                        cell.style.color = 'white';
-                    }
+                    cell.style.opacity = '0.5';
                 }
-                cell.style.cursor = "pointer";
+                
+                // Create day number
+                const dayNumber = document.createElement('div');
+                dayNumber.textContent = d;
+                dayNumber.style.textAlign = 'center';
+                dayNumber.style.paddingTop = '8px';
+                cell.appendChild(dayNumber);
+                
+                // Create badge container in bottom corners
+                const badgeContainer = document.createElement('div');
+                badgeContainer.style.position = 'absolute';
+                badgeContainer.style.bottom = '4px';
+                badgeContainer.style.left = '4px';
+                badgeContainer.style.right = '4px';
+                badgeContainer.style.display = 'flex';
+                badgeContainer.style.justifyContent = 'space-between';
+                badgeContainer.style.fontSize = '10px';
+                badgeContainer.style.fontWeight = 'bold';
+                
+                // Add project badge (blue) on left if there are projects
+                if (projectCount > 0) {
+                    const projectBadge = document.createElement('span');
+                    projectBadge.textContent = projectCount;
+                    projectBadge.style.backgroundColor = '#007bff'; // Bootstrap primary blue
+                    projectBadge.style.color = 'white';
+                    projectBadge.style.borderRadius = '50%';
+                    projectBadge.style.width = '18px';
+                    projectBadge.style.height = '18px';
+                    projectBadge.style.display = 'flex';
+                    projectBadge.style.alignItems = 'center';
+                    projectBadge.style.justifyContent = 'center';
+                    projectBadge.style.boxShadow = '0 1px 3px rgba(0,0,0,0.3)';
+                    badgeContainer.appendChild(projectBadge);
+                } else {
+                    badgeContainer.appendChild(document.createElement('span')); // Spacer
+                }
+                
+                // Add meeting badge (orange) on right if there are meetings
+                if (meetingCount > 0) {
+                    const meetingBadge = document.createElement('span');
+                    meetingBadge.textContent = meetingCount;
+                    meetingBadge.style.backgroundColor = '#fd7e14'; // Bootstrap orange
+                    meetingBadge.style.color = 'white';
+                    meetingBadge.style.borderRadius = '50%';
+                    meetingBadge.style.width = '18px';
+                    meetingBadge.style.height = '18px';
+                    meetingBadge.style.display = 'flex';
+                    meetingBadge.style.alignItems = 'center';
+                    meetingBadge.style.justifyContent = 'center';
+                    meetingBadge.style.boxShadow = '0 1px 3px rgba(0,0,0,0.3)';
+                    badgeContainer.appendChild(meetingBadge);
+                }
+                
+                cell.appendChild(badgeContainer);
+                
                 cell.onclick = function() {
                     showEventDetails(events[dateStr], dateStr);
                 };
             } else {
-                cell.onclick = function() {
-                    openAddEventModal(dateStr);
-                };
+                // No events on this date
+                cell.textContent = d;
+                if (isPast) {
+                    // Past date with no events - add past-date class and no onclick
+                    cell.classList.add('past-date');
+                } else {
+                    // Future/today date with no events - allow adding new events
+                    cell.onclick = function() {
+                        openAddEventModal(dateStr);
+                    };
+                }
             }
+            
             // Highlight current day
-            const today = new Date();
-            if (year === today.getFullYear() && month === today.getMonth() && d === today.getDate()) {
+            if (isToday) {
                 cell.style.border = '2px solid #FFE066';
                 cell.style.boxShadow = '0 0 0 2px #FFE066';
             }
+            
             calendar.appendChild(cell);
         }
     }
