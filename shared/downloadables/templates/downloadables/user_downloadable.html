@@ -149,33 +149,6 @@
 			<a href="{% url 'announcement_dispatcher' %}" class="announce-more">View More Announcements →</a>
         </div>
 	</div>
-
-
-		<!-- Right Container -->
-        <div class="right-container">
-			<div class="announce-text">Latest Announcements</div>
-			<div class="announce-box">
-				{% for announcement in latest_announcements %}
-				<div class="announce-item">
-					<a href="{% url 'announcement_details' announcement.id %}" style="text-decoration:none;color:inherit;display:block;">
-						<div class="announce-pic">
-							{% if announcement.cover_photo %}
-								<img src="{{ announcement.cover_photo.url }}" alt="Cover Photo" style="width:100%;height:100%;object-fit:cover;" />
-							{% endif %}
-						</div>
-						<div class="announce-details">
-							<div class="announce-date">{{ announcement.published_at|date:"F d, Y" }}</div>
-							<div class="announce-title">{{ announcement.title }}</div>
-						</div>
-					</a>
-				</div>
-				{% empty %}
-				<div class="announce-item"><div class="announce-title empty">No announcements found.</div></div>
-				{% endfor %}
-			</div>
-			<a href="{% url 'announcement_dispatcher' %}" class="announce-more">View More Announcements →</a>
-        </div>
-	</div>
 	
 <!-- Pagination -->
 <div class="pagination-container">

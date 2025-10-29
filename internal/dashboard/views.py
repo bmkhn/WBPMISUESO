@@ -7,8 +7,10 @@ from system.users.views import User
 from itertools import chain
 import json
 
-# Import the calendar service to fetch events
 from shared.event_calendar import services 
+from django.http import JsonResponse
+from django.db.models import Count
+from collections import OrderedDict
 
 
 @role_required(allowed_roles=["VP", "DIRECTOR", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD"], require_confirmed=True)
@@ -54,3 +56,70 @@ def dashboard_view(request):
     }
 
     return render(request, 'dashboard/dashboard.html', context)
+    
+from internal.submissions.models import Submission
+from shared.projects.models import Project
+
+@role_required(allowed_roles=["VP", "DIRECTOR", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD"], require_confirmed=True)
+def get_submission_status_data(request):
+    """
+    Provides data for the Submission Status bar chart.
+    """
+    status_choices = dict(Submission.SUBMISSION_STATUS_CHOICES)
+    status_data = Submission.objects.values('status').annotate(count=Count('status')).order_by('status')
+    
+    data_dict = OrderedDict((key, 0) for key, label in Submission.SUBMISSION_STATUS_CHOICES)
+    
+    for item in status_data:
+        if item['status'] in data_dict:
+            data_dict[item['status']] = item['count']
+            
+    labels = [status_choices.get(key, key) for key in data_dict.keys()]
+    counts = list(data_dict.values())
+    
+    return JsonResponse({
+        'labels': labels,
+        'counts': counts,
+    })
+
+@role_required(allowed_roles=["VP", "DIRECTOR", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD"], require_confirmed=True)
+def get_project_status_data(request):
+    """
+    Provides data for the Project Status pie chart.
+    """
+    status_choices = dict(Project.STATUS_CHOICES)
+    status_data = Project.objects.values('status').annotate(count=Count('status')).order_by('status')
+    
+    data_dict = OrderedDict((key, 0) for key, label in Project.STATUS_CHOICES)
+    
+    for item in status_data:
+        if item['status'] in data_dict:
+            data_dict[item['status']] = item['count']
+            
+    labels = [status_choices.get(key, key) for key in data_dict.keys()]
+    counts = list(data_dict.values())
+    
+    return JsonResponse({
+        'labels': labels,
+        'counts': counts,
+    })
+    """
+    Provides data for the Project Status pie chart.
+   
+    """
+    status_choices = dict(Project.STATUS_CHOICES)
+    status_data = Project.objects.values('status').annotate(count=Count('status')).order_by('status')
+    
+    data_dict = OrderedDict((key, 0) for key, label in Project.STATUS_CHOICES)
+    
+    for item in status_data:
+        if item['status'] in data_dict:
+            data_dict[item['status']] = item['count']
+            
+    labels = [status_choices.get(key, key) for key in data_dict.keys()]
+    counts = list(data_dict.values())
+    
+    return JsonResponse({
+        'labels': labels,
+        'counts': counts,
+    })

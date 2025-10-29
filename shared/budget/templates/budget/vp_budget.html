@@ -1,14 +1,13 @@
 {% extends base_template %}
-{% load humanize %}
 {% block content %}
 
 <!DOCTYPE html>
-<!-- VP BUDGET DASHBOARD TEMPLATE - DYNAMIC & DB CONNECTED -->
+<!-- SUPER ADMIN BUDGET DASHBOARD TEMPLATE - CACHE BUST: 2024-10-21-v2 -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>VP Budget Dashboard</title>
+    <title>Super Admin Budget Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
@@ -99,170 +98,325 @@
             margin-bottom: 1rem;
             border-collapse: collapse;
         }
-        .table-container {
-            background: white;
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 2rem;
+        .table-container th,
+        .table-container td {
+            padding: 1rem 3rem;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }  
+        .expand-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.3rem; 
+            color: #090909;
+            transition: color 0.2s;
+            z-index: 100;
         }
-        .files-header {
+        .expand-btn:hover {
+            color: #37d4ff;
+        }
+        .expand-rev {
+            position: absolute;
+            bottom: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.3rem; 
+            color: #090909;
+            transition: color 0.2s;
+            z-index: 100;
+        }
+        .expand-rev:hover {
+            color: #37d4ff;
+        } 
+        section {   
+            background-color: white; 
+            border: 0.08rem solid rgb(114, 114, 114); 
+            border-radius: 1rem;  
+            position: relative;
+        } 
+        section > h4 { 
+            padding: 1rem 2rem;
+        }
+        
+        /* Overview Header Styles */
+        .overview-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1.5rem;
-            padding-bottom: 0.75rem;
-            border-bottom: 2px solid #e9ecef;
-        }
-        .files-header h3 {
-            margin: 0;
-            color: #2d5a3d;
-            font-size: 1.25rem;
-            font-weight: 600;
-        }
-        .files-header i {
-            margin-right: 0.5rem;
-            color: #0A6C44;
-        }
-        .budget-overview {
-            background: linear-gradient(135deg, #0A6C44 0%, #063A1C 100%);
-            color: white;
-            padding: 2rem;
-            border-radius: 16px;
-            margin-bottom: 2rem;
-            box-shadow: 0 8px 32px rgba(6, 58, 28, 0.3);
-        }
-        .budget-details {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-        .budget-text {
-            font-size: 1.1rem;
-            margin-bottom: 0.5rem;
-            opacity: 0.9;
-        }
-        .budget-amount {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin: 0.5rem 0;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        }
-        .budget-comparison {
-            font-size: 1.2rem;
-            margin-top: 1rem;
-        }
-        .percentage-highlight {
-            font-size: 3rem;
-            font-weight: 800;
-            color: #ffc107;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-            display: block;
-            line-height: 1;
-        }
-        .charts-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2rem;
-            margin-top: 2rem;
-        }
-        .chart-container {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        .chart-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #2d5a3d;
+            padding: 1.5rem 0;
             margin-bottom: 1rem;
-            text-align: center;
+            border-bottom: 1px solid #e0e0e0;
         }
-        .donut-chart-container {
-            width: 100%;
-            height: 300px;
+        
+        .overview-title h1 {
+            margin: 0;
+            font-size: 2rem;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .overview-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .edit-btn {
+            background-color: #2d5a3d;
+            color: white;
+            border: none;
+            padding: 0.5rem 1.5rem;
+            border-radius: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .edit-btn:hover {
+            background-color: #1e3d2a;
+            color: white;
+            text-decoration: none;
+        }
+        
+        .year-dropdown {
             position: relative;
         }
-        .line-chart-container {
-            width: 100%;
-            height: 300px;
+        
+        .year-select {
+            background-color: white;
+            border: 1px solid #d0d0d0;
+            border-radius: 0.5rem;
+            padding: 0.5rem 2rem 0.5rem 1rem;
+            font-size: 0.9rem;
+            color: #333;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 0.7rem center;
+            background-size: 1rem;
+            min-width: 120px;
         }
-        .legend {
+        
+        .year-select:focus {
+            outline: none;
+            border-color: #2d5a3d;
+            box-shadow: 0 0 0 2px rgba(45, 90, 61, 0.1);
+        }
+        
+        /* Overall Budget Chart Styles */
+        .overall-budget-section {
             display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-            margin-top: 1rem;
-            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
+        
+        .budget-chart-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .budget-chart-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+        
+        .donut-chart-wrapper {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            margin-bottom: 1rem;
+        }
+        
+        .chart-legend {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
         .legend-item {
             display: flex;
             align-items: center;
             gap: 0.5rem;
             font-size: 0.9rem;
         }
+        
         .legend-color {
             width: 12px;
             height: 12px;
-            border-radius: 50%;
+            border-radius: 2px;
         }
-        .settings-icon {
-            cursor: pointer;
-            padding: 0.25rem;
-            border-radius: 4px;
-            transition: background-color 0.2s ease;
+        
+        .budget-info {
+            flex: 1;
+            padding-left: 1rem;
         }
-        .settings-icon:hover {
-            background-color: #f8f9fa;
+        
+        .current-budget-info {
+            margin-bottom: 1.5rem;
         }
-        .dropdown-container {
-            position: relative;
-            display: inline-block;
-        }
-        .dropdown-btn2 {
-            background: white;
-            border: 1px solid #ddd;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.9rem;
+        
+        .budget-amount {
+            font-size: 1.5rem;
+            font-weight: 600;
             color: #333;
-            min-width: 120px;
-            text-align: left;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            margin-bottom: 0.5rem;
         }
+        
+        .budget-comparison {
+            font-size: 0.9rem;
+            color: #666;    
+        }
+        
+        .percentage-change {
+            color: #28a745;
+            font-weight: 500;
+        }
+        
+        .historical-summary {
+            margin-top: 1rem;
+        }
+        
+        .historical-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+        
+        .line-chart-wrapper {
+            width: 100%;
+            height: 150px;
+        }
+        
+        @media (max-width: 768px) {
+            .overall-budget-section {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .budget-info {
+                padding-left: 0;
+            }
+        }  
+        .dropdown2 {
+            position: relative;
+            width: 9.5rem;
+        }
+        .dropdown-btn2 { 
+            margin: 0.75rem; 
+            border: none;
+            width: 100%;
+            padding: 0.5rem;
+            border-radius: 0.75rem;
+            background: none;
+            text-align: center;
+            cursor: pointer;
+            font-family: Helvetica, Arial, sans-serif;
+            font-weight: 400;
+            font-size: 1rem; 
+            border: 0.08rem solid #e9e9e9;
+        } 
         .dropdown-btn2:hover {
-            border-color: #0A6C44;
+            border: 0.08rem solid #000000;
         }
         .dropdown-menu2 {
             position: absolute;
-            top: 100%;
-            left: 0;
+            top: calc(100% - 0.7rem);
+            left: 0.8rem;
+            margin: 0;
+            right: 0; 
+            width: 100%;
             background: white;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 1000;
-            min-width: 120px;
-            display: none;
-        }
-        .dropdown-menu2.hidden {
-            display: none;
+            border: 0.08rem solid #ccc;
+            border-radius: 0.75rem; 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            z-index: 10;
+            overflow: hidden;
         }
         .dropdown-item2 {
-            padding: 0.5rem 1rem;
+            padding: 0.75rem;
             cursor: pointer;
-            font-size: 0.9rem;
-            color: #333;
-            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.2s;
+            font-family: Helvetica, Arial, sans-serif;
+            font-weight: 400;
+            text-align: center;
+            border-bottom: 1px solid rgb(196, 196, 196);
         }
         .dropdown-item2:hover {
-            background-color: #f8f9fa;
+            background-color: #000000;
+            color: white;
+        }  
+        .hidden {
+            display: none !important;
+        }  
+        .files-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+        } 
+        .budget-box {
+            border-radius: 1rem;
+            padding: 1.5rem;
+            text-align: left;  
+            font-family: Helvetica, Arial, sans-serif;
         }
-        .dropdown-item2:last-child {
-            border-bottom: none;
+        .budget-text {
+            font-size: 1rem;
+            margin: 0 0 1rem 0;
+            color: #111;
         }
+        .budget-percentage {
+            font-size: 3rem;
+            font-weight: 700;
+            margin: 0.5rem 0;
+            background: linear-gradient(90deg, #a68f2d, #3ea047);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .budget-note {
+            font-size: 1rem;
+            margin: 0;
+            color: #111;
+        } 
+        .summary {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            width: 100%;
+        }
+        .overall-budget, .history {
+            flex: 1;
+            display: flex;
+            flex-direction: row;
+        } 
+        .summary { 
+            padding: 2rem 3.5rem; 
+            background-color: whitesmoke; 
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4); 
+            border: none;
+        }
+        
+        /* Pagination Styles */
         .pagination-container {
             display: flex;
             justify-content: center;
@@ -270,101 +424,250 @@
             margin: 20px 0;
             gap: 8px;
         }
+        
         .pagination-btn {
             padding: 8px 16px;
             border: 1px solid #ddd;
-            background: white;
-            color: #333;
             text-decoration: none;
+            color: #333;
             border-radius: 4px;
+            font-size: 14px;
             transition: all 0.2s ease;
         }
+        
         .pagination-btn:hover {
             background-color: #f5f5f5;
             border-color: #0A6C44;
         }
+        
         .pagination-btn.active {
             background-color: #0A6C44;
             color: white;
             border-color: #0A6C44;
         }
+        
         .pagination-btn.disabled {
             opacity: 0.5;
             cursor: not-allowed;
+            pointer-events: none;
         }
-        @media (max-width: 768px) {
-            main {
-                margin: 0 1rem 2rem 1rem;
-                padding: 1rem;
-            }
-            .charts-container {
-                grid-template-columns: 1fr;
-            }
-            .budget-amount {
-                font-size: 2rem;
-            }
-            .percentage-highlight {
-                font-size: 2.5rem;
-            }
+        
+        /* Budget Dashboard Layout Styles */
+        .budget-dashboard-layout {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            background-color: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        
+        .overall-budget-column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .historical-summary-column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #333;
+        }
+        
+        .donut-chart-container {
+            margin-bottom: 0.5rem;
+            width: 240px;
+            height: 240px;
+            position: relative;
+        }
+        .donut-center-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #333;
+        }
+        
+        .chart-legend {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+        
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+        }
+        
+        .budget-details {
+            text-align: center;
+        }
+        
+        .budget-text {
+            font-size: 1.2rem;
+            color: #333;
+            margin-bottom: 0.8rem;
+            font-weight: 400;
+        }
+        
+        .budget-amount {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+        
+        .budget-comparison {
+            font-size: 1.1rem;
+            color: #333;
+            line-height: 1.4;
+        }
+        
+        .percentage-highlight {
+            background: linear-gradient(90deg, #ffc107, #28a745);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 800;
+            font-size: 3rem;
+            display: block;
+            margin: 0.5rem 0;
+        }
+        
+        .line-chart-container {
+            width: 100%;
+            height: 300px;
         }
     </style>
 </head>
-<body>
-    <main>
-        <!-- Budget Overview Section -->
-        <section class="budget-overview">
-            <div class="budget-details">
-                <p class="budget-text">Your current budget for this quarter is</p>
-                <p class="budget-amount">₱{{ total_remaining|floatformat:2|intcomma }}. It is</p>
-                <p class="budget-comparison">
-                    <span class="percentage-highlight">{{ current_vs_historical|floatformat:1 }}%</span><br>
-                    {{ historical_comparison_text }}.
-                </p>
+<body>  
+    {% load humanize %}
+    <svg style="display: none;">
+        <!-- ascdesc -->
+        <symbol id="ascdesc" viewBox="0 0 640 640" fill="black">
+            <path d="M342.6 81.4C330.1 68.9 309.8 68.9 297.3 81.4L137.3 241.4C124.8 253.9 124.8 274.2 137.3 286.7C149.8 299.2 170.1 299.2 182.6 286.7L288 181.3L288 552C288 569.7 302.3 584 320 584C337.7 584 352 569.7 352 552L352 181.3L457.4 286.7C469.9 299.2 490.2 299.2 502.7 286.7C515.2 274.2 515.2 253.9 502.7 241.4L342.7 81.4z"/> 
+        </symbol> 
+        <!-- expand -->
+        <symbol id="expand" viewBox="0 0 640 640" fill="currentColor">
+             <path d="M408 64L552 64C565.3 64 576 74.7 576 88L576 232C576 241.7 570.2 250.5 561.2 254.2C552.2 257.9 541.9 255.9 535 249L496 210L409 297C399.6 306.4 384.4 306.4 375.1 297L343.1 265C333.7 255.6 333.7 240.4 343.1 231.1L430.1 144.1L391.1 105.1C384.2 98.2 382.2 87.9 385.9 78.9C389.6 69.9 398.3 64 408 64zM232 576L88 576C74.7 576 64 565.3 64 552L64 408C64 398.3 69.8 389.5 78.8 385.8C87.8 382.1 98.1 384.2 105 391L144 430L231 343C240.4 333.6 255.6 333.6 264.9 343L296.9 375C306.3 384.4 306.3 399.6 296.9 408.9L209.9 495.9L248.9 534.9C255.8 541.8 257.8 552.1 254.1 561.1C250.4 570.1 241.7 576 232 576z"/>
+        </symbol>
+        <!-- threedots -->
+        <symbol id="threedots" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+        </symbol>
+    </svg>  
+    <header>
+        extension
+    </header>
+    <main>  
+        <!-- Overview Header Section -->
+        <div class="overview-header">
+            <div class="overview-title">
+                <h1>Overview</h1>
             </div>
-            
-            <!-- Charts Section -->
-            <div class="charts-container">
-                <div class="chart-container">
-                    <div class="chart-title">Budget Allocation by College</div>
+            <div class="overview-controls">
+                <a href="{% url 'budget_edit_dashboard' %}" class="edit-btn">Edit</a>
+                <div class="year-dropdown">
+                    <select class="year-select">
+                        <option value="2024">This Year</option>
+                        <option value="2023">2023</option>
+                        <option value="2022">2022</option>
+                        <option value="2021">2021</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        
+        <!-- Budget Dashboard Layout -->
+        <section class="budget-dashboard-layout">
+            <!-- Left Column: Overall Budget -->
+            <div class="overall-budget-column">
+                <h2 class="section-title">Overall Budget</h2>
+                
+                <!-- Donut + Legend - grid like reference -->
+                <div style="display: grid; grid-template-columns: 240px 1fr; align-items: center; gap: 1rem;">
                     <div class="donut-chart-container">
-                        <canvas id="budgetChart"></canvas>
+                        <canvas id="donutChart" width="240" height="240"></canvas>
+                        <div id="donutCenterVP" class="donut-center-text">&nbsp;</div>
                     </div>
-                    <div class="legend" id="chartLegend"></div>
+                    <div class="chart-legend" id="chart-legend">
+                        <!-- legend populated by JS -->
+                    </div>
                 </div>
                 
-                <div class="chart-container">
-                    <div class="chart-title">Historical Budget Trends</div>
-                    <div class="line-chart-container">
-                        <canvas id="historicalChart"></canvas>
-                    </div>
+                <!-- Budget Details -->
+                <div class="budget-details">
+                    <p class="budget-text">Your current budget for this quarter is</p>
+                    <p class="budget-amount">₱{{ total_remaining|floatformat:2|intcomma }}. It is</p>
+                    <p class="budget-comparison">
+                        <span class="percentage-highlight">{{ current_vs_historical|floatformat:1 }}%</span><br>
+                        {{ historical_comparison_text }}.
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Right Column: Historical Summary -->
+            <div class="historical-summary-column">
+                <h2 class="section-title">Historical Summary</h2>
+                <!-- Legend on top-right -->
+                <div class="chart-legend" id="chart-legend" style="align-self: start; margin-bottom: 1rem;"></div>
+                <!-- Line Chart below legend -->
+                <div class="line-chart-container">
+                    <canvas id="lineChart" width="400" height="300"></canvas>
                 </div>
             </div>
         </section>
-
-        <!-- Detailed View Section -->
         <section>
             <div class="files-header">
-                <h3><i class="fas fa-chart-bar"></i> Detailed View</h3>
-                <div class="dropdown-container">
-                    <button class="dropdown-btn2" onclick="toggleDropdown()">
-                        Highest Total ▾
-                    </button>
-                    <div class="dropdown-menu2 hidden" id="dropdownMenu2">
-                        <div class="dropdown-item2" onclick="sortTable('highest')">Highest Total</div>
-                        <div class="dropdown-item2" onclick="sortTable('lowest')">Lowest Total</div>
-                        <div class="dropdown-item2" onclick="sortTable('college')">College Name</div>
-                        <div class="dropdown-item2" onclick="sortTable('campus')">Campus</div>
+                <h3>Detailed View</h3>
+                <div style="display: flex; flex-shrink: 3;">
+                    <svg width="20" height="20" style="fill: currentColor; margin-top: 1.15rem;">
+                        <use href="#ascdesc"/>
+                    </svg>
+                    <div class="dropdown2">
+                        <button class="dropdown-btn2">Highest Total ▾</button>
+                        <div class="dropdown-menu2 hidden">
+                            <div class="dropdown-item2">Highest Total</div>
+                            <div class="dropdown-item2">Lowest Total</div>
+                            <div class="dropdown-item2">College Name</div>
+                            <div class="dropdown-item2">Campus</div>
+                        </div> 
                     </div>
-                </div>
+                </div> 
             </div>
             <div class="table-container">
-                <table>
+                <table> 
                     <colgroup>
-                        <col style="width: 25%">
+                        <col style="width: 30%">
                         <col style="width: 20%">
                         <col style="width: 20%">
                         <col style="width: 20%">
-                        <col style="width: 15%">
+                        <col style="width: 10%">
                     </colgroup>
                     <thead>
                     <tr>
@@ -379,16 +682,13 @@
                     {% for allocation in budget_allocations %}
                     <tr>
                         <td>
-                            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                {% if allocation.college %}
-                                    <span style="font-weight: 600;">{{ allocation.college.name }}</span>
-                                    <span style="font-size: 0.8rem; color: #6c757d; background: #e9ecef; padding: 0.25rem 0.5rem; border-radius: 4px;">
-                                        {{ allocation.college.campus }}
-                                    </span>
-                                {% elif allocation.project %}
-                                    <span style="font-weight: 600;">{{ allocation.project.title }}</span>
-                                {% endif %}
-                            </div>
+                            {% if allocation.college %}
+                                {{ allocation.college.name }} ({{ allocation.college.campus|default:"Main Campus" }})
+                            {% elif allocation.project %}
+                                {{ allocation.project.title }} (Project)
+                            {% else %}
+                                General Allocation
+                            {% endif %}
                         </td>
                         <td>₱{{ allocation.total_assigned|floatformat:2|intcomma }}</td>
                         <td>₱{{ allocation.total_remaining|floatformat:2|intcomma }}</td>
@@ -403,26 +703,50 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="5" class="text-center">No budget allocations found</td>
+                        <td colspan="5" style="text-align: center; color: #666;">No budget allocations found</td>
                     </tr>
                     {% endfor %}
                     </tbody>
                 </table>
             </div>
-        </section>
+            
+            <!-- Pagination Controls for Detailed View -->
+            {% if detailed_page_obj and detailed_page_obj.paginator.num_pages > 1 %}
+            <div class="pagination-container" style="display: flex; justify-content: center; align-items: center; margin: 20px 0; gap: 8px;">
+                {% if detailed_page_obj.has_previous %}
+                    <a href="?detailed_page={{ detailed_page_obj.previous_page_number }}" class="pagination-btn">← Previous</a>
+                {% else %}
+                    <span class="pagination-btn disabled">← Previous</span>
+                {% endif %}
 
-        <!-- External Fundings Section -->
+                {% for num in detailed_page_obj.paginator.page_range %}
+                    {% if num == detailed_page_obj.number %}
+                        <span class="pagination-btn active">{{ num }}</span>
+                    {% else %}
+                        <a href="?detailed_page={{ num }}" class="pagination-btn">{{ num }}</a>
+                    {% endif %}
+                {% endfor %}
+
+                {% if detailed_page_obj.has_next %}
+                    <a href="?detailed_page={{ detailed_page_obj.next_page_number }}" class="pagination-btn">Next →</a>
+                {% else %}
+                    <span class="pagination-btn disabled">Next →</span>
+                {% endif %}
+            </div>
+            {% endif %}
+        </section> 
         <section>
             <div class="files-header">
-                <h3><i class="fas fa-external-link-alt"></i> External Fundings</h3>
+                <h3>External Fundings</h3>
             </div>
             <div class="table-container">
-                <table>
+                <table>  
                     <colgroup>
-                        <col style="width: 25%">
+                        <col style="width: 20%">
                         <col style="width: 35%">
                         <col style="width: 20%">
                         <col style="width: 20%">
+                        <col style="width: 5%">
                     </colgroup>
                     <thead>
                     <tr>
@@ -450,12 +774,37 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="5" class="text-center">No external funding records found</td>
+                        <td colspan="5" style="text-align: center; color: #666;">No external funding data available</td>
                     </tr>
                     {% endfor %}
                     </tbody>
                 </table>
             </div>
+            
+            <!-- Pagination Controls for External Fundings -->
+            {% if external_page_obj and external_page_obj.paginator.num_pages > 1 %}
+            <div class="pagination-container" style="display: flex; justify-content: center; align-items: center; margin: 20px 0; gap: 8px;">
+                {% if external_page_obj.has_previous %}
+                    <a href="?external_page={{ external_page_obj.previous_page_number }}" class="pagination-btn prev-btn">← Previous</a>
+                {% else %}
+                    <span class="pagination-btn prev-btn disabled">← Previous</span>
+                {% endif %}
+                
+                {% for num in external_page_obj.paginator.page_range %}
+                    {% if num == external_page_obj.number %}
+                        <span class="pagination-btn page-btn active">{{ num }}</span>
+                    {% else %}
+                        <a href="?external_page={{ num }}" class="pagination-btn page-btn">{{ num }}</a>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if external_page_obj.has_next %}
+                    <a href="?external_page={{ external_page_obj.next_page_number }}" class="pagination-btn next-btn">Next →</a>
+                {% else %}
+                    <span class="pagination-btn next-btn disabled">Next →</span>
+                {% endif %}
+            </div>
+            {% endif %}
             
             <!-- See More Button for External Fundings -->
             <div style="text-align: right; margin-top: 1rem;">
@@ -463,21 +812,19 @@
                     See More →
                 </a>
             </div>
-        </section>
-
-        <!-- History Section -->
+        </section> 
         <section>
             <div class="files-header">
-                <h3><i class="fas fa-history"></i> History</h3>
+                <h3>History</h3>
             </div>
             <div class="table-container">
-                <table>
+                <table>  
                     <colgroup>
                         <col style="width: 20%">
                         <col style="width: 20%">
-                        <col style="width: 30%">
-                        <col style="width: 15%">
-                        <col style="width: 15%">
+                        <col style="width: 20%">
+                        <col style="width: 20%">
+                        <col style="width: 20%">
                     </colgroup>
                     <thead>
                     <tr>
@@ -527,12 +874,37 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="5" class="text-center">No budget history found</td>
+                        <td colspan="5" style="text-align: center; color: #666;">No history data available</td>
                     </tr>
                     {% endfor %}
                     </tbody>
                 </table>
             </div>
+            
+            <!-- Pagination Controls for History -->
+            {% if history_page_obj and history_page_obj.paginator.num_pages > 1 %}
+            <div class="pagination-container" style="display: flex; justify-content: center; align-items: center; margin: 20px 0; gap: 8px;">
+                {% if history_page_obj.has_previous %}
+                    <a href="?history_page={{ history_page_obj.previous_page_number }}" class="pagination-btn prev-btn">← Previous</a>
+                {% else %}
+                    <span class="pagination-btn prev-btn disabled">← Previous</span>
+                {% endif %}
+                
+                {% for num in history_page_obj.paginator.page_range %}
+                    {% if num == history_page_obj.number %}
+                        <span class="pagination-btn page-btn active">{{ num }}</span>
+                    {% else %}
+                        <a href="?history_page={{ num }}" class="pagination-btn page-btn">{{ num }}</a>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if history_page_obj.has_next %}
+                    <a href="?history_page={{ history_page_obj.next_page_number }}" class="pagination-btn next-btn">Next →</a>
+                {% else %}
+                    <span class="pagination-btn next-btn disabled">Next →</span>
+                {% endif %}
+            </div>
+            {% endif %}
             
             <!-- See More Button for History -->
             <div style="text-align: right; margin-top: 1rem;">
@@ -542,220 +914,323 @@
             </div>
         </section>
     </main>
-    
     <footer>
         <p>test</p>
     </footer>
-    
-    <!-- SVG Icons -->
-    <svg style="display: none;">
-        <!-- threedots -->
-        <symbol id="threedots" viewBox="0 0 24 24" fill="currentColor">
-            <circle cx="12" cy="5" r="2"/>
-            <circle cx="12" cy="12" r="2"/>
-            <circle cx="12" cy="19" r="2"/>
-        </symbol>
-    </svg>
-
-    <!-- JSON data for JavaScript -->
-    <script id="chart-data" type="application/json">{{ chart_data_json|safe }}</script>
-    <script id="historical-data" type="application/json">{{ historical_data_json|safe }}</script>
-    
     <script>
-        // Chart.js configuration
+        // Overview Header Functionality
         document.addEventListener('DOMContentLoaded', function() {
-            // Parse JSON data
+            // Year dropdown functionality
+            const yearSelect = document.querySelector('.year-select');
+            if (yearSelect) {
+                yearSelect.addEventListener('change', function() {
+                    const selectedYear = this.value;
+                    console.log('Year changed to:', selectedYear);
+                    // Here you can add logic to filter data by year
+                    // For now, we'll just log the selection
+                });
+            }
+            
+            // Edit button functionality - direct navigation to edit page
+            // The href attribute in the HTML will handle the navigation automatically
+            // No additional JavaScript needed since it's already a link
+            
+            // Explicitly prevent any event handlers on the edit button
+            const editBtn = document.querySelector('.edit-btn');
+            if (editBtn) {
+                // Remove any existing event listeners and ensure it works as a normal link
+                editBtn.onclick = null;
+                editBtn.addEventListener('click', function(e) {
+                    // Allow default link behavior - no prevention
+                    return true;
+                });
+            }
+            
+            // Initialize Charts
+            setTimeout(function() {
+                initializeCharts();
+            }, 100); // Small delay to ensure DOM is fully loaded
+        });
+        
+        function initializeCharts() {
+            console.log('Initializing charts...');
+            
+            // Check if Chart.js is loaded
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js is not loaded');
+                return;
+            }
+            
+            console.log('Chart.js is loaded, creating charts...');
+            
+            // Get chart data from template
             let chartData, historicalData;
+            
             try {
                 const chartDataElement = document.getElementById('chart-data');
                 const historicalDataElement = document.getElementById('historical-data');
                 
                 if (chartDataElement && chartDataElement.textContent) {
                     chartData = JSON.parse(chartDataElement.textContent);
+                } else {
+                    console.warn('No chart data found, using fallback');
+                    chartData = {
+                        labels: ['No Data'],
+                        data: [1],
+                        colors: ['#cccccc']
+                    };
                 }
+                
                 if (historicalDataElement && historicalDataElement.textContent) {
                     historicalData = JSON.parse(historicalDataElement.textContent);
+                } else {
+                    console.warn('No historical data found, using fallback');
+                    historicalData = {
+                        labels: ['No Data'],
+                        data: [0],
+                        color: '#cccccc'
+                    };
                 }
-            } catch (e) {
-                console.error('Error parsing chart data:', e);
-            }
-
-            // Fallback data if JSON is not available
-            if (!chartData) {
+            } catch (error) {
+                console.error('Error parsing chart data:', error);
                 chartData = {
-                    labels: ['College A', 'College B', 'College C', 'Unassigned'],
-                    data: [30, 25, 20, 25],
-                    colors: ['#0A6C44', '#28a745', '#20c997', '#6c757d']
+                    labels: ['No Data'],
+                    data: [1],
+                    colors: ['#cccccc']
                 };
-            }
-
-            if (!historicalData) {
                 historicalData = {
-                    labels: ['Q1-2023', 'Q2-2023', 'Q3-2023', 'Q4-2023', 'Q1-2024', 'Q2-2024'],
-                    data: [1000000, 1200000, 1100000, 1300000, 1400000, 1500000]
+                    labels: ['No Data'],
+                    data: [0],
+                    color: '#cccccc'
                 };
             }
-
+            
+            console.log('Chart Data:', chartData);
+            console.log('Historical Data:', historicalData);
+            
             // Donut Chart
-            const donutCtx = document.getElementById('budgetChart').getContext('2d');
-            new Chart(donutCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: chartData.labels,
-                    datasets: [{
-                        data: chartData.data,
-                        backgroundColor: chartData.colors,
-                        borderWidth: 2,
-                        borderColor: '#fff'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
+            const donutCtx = document.getElementById('donutChart');
+            console.log('Donut Chart Canvas:', donutCtx);
+            if (donutCtx) {
+                try {
+                    const donutChart = new Chart(donutCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: chartData.labels,
+                            datasets: [{
+                                data: chartData.data,
+                                backgroundColor: chartData.colors.slice(0, chartData.data.length),
+                                borderWidth: 0,
+                                cutout: '68%'
+                            }]
                         },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const label = context.label || '';
-                                    const value = context.parsed;
-                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                    const percentage = ((value / total) * 100).toFixed(1);
-                                    return `${label}: ₱${value.toLocaleString()} (${percentage}%)`;
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                            const percentage = ((context.parsed / total) * 100).toFixed(1);
+                                            return context.label + ': ₱' + context.parsed.toLocaleString() + ' (' + percentage + '%)';
+                                        }
+                                    }
                                 }
                             }
                         }
-                    }
-                }
-            });
+                    });
+                    console.log('Donut chart created successfully');
+                    
+                    // Populate legend
+                    populateLegend(chartData);
 
+                    // Center text percentage (exclude unassigned)
+                    try {
+                        const total = chartData.data.reduce((a,b)=>a+b,0);
+                        let uIdx = -1;
+                        if (chartData.labels) {
+                            uIdx = chartData.labels.findIndex(l => String(l).toLowerCase().includes('unassigned'));
+                        }
+                        const unassigned = uIdx >= 0 ? (chartData.data[uIdx]||0) : 0;
+                        const percent = Math.round(((total - unassigned) / (total || 1)) * 100);
+                        const center = document.getElementById('donutCenterVP');
+                        if (center) center.textContent = percent + '%';
+                    } catch(e) { console.warn('Center text calc failed', e); }
+                } catch (error) {
+                    console.error('Error creating donut chart:', error);
+                }
+            } else {
+                console.error('Donut chart canvas not found');
+            }
+            
             // Line Chart
-            const lineCtx = document.getElementById('historicalChart').getContext('2d');
-            new Chart(lineCtx, {
-                type: 'line',
-                data: {
-                    labels: historicalData.labels,
-                    datasets: [{
-                        label: 'Budget Allocation',
-                        data: historicalData.data,
-                        borderColor: '#0A6C44',
-                        backgroundColor: 'rgba(10, 108, 68, 0.1)',
-                        borderWidth: 3,
-                        fill: true,
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
+            const lineCtx = document.getElementById('lineChart');
+            console.log('Line Chart Canvas:', lineCtx);
+            if (lineCtx) {
+                try {
+                    const lineChart = new Chart(lineCtx, {
+                        type: 'line',
+                        data: {
+                            labels: historicalData.labels,
+                            datasets: [{
+                                label: 'Budget (Millions)',
+                                data: historicalData.data,
+                                borderColor: historicalData.color,
+                                backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                                borderWidth: 2,
+                                fill: true,
+                                tension: 0.4,
+                                pointBackgroundColor: '#fff',
+                                pointBorderColor: historicalData.color,
+                                pointRadius: 4,
+                                pointHoverRadius: 6
+                            }]
                         },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return `Budget: ₱${context.parsed.y.toLocaleString()}`;
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    grid: {
+                                        display: false
+                                    }
+                                },
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: function(value) {
+                                            return value + 'm';
+                                        }
+                                    }
                                 }
                             }
                         }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return '₱' + value.toLocaleString();
-                                }
-                            }
-                        }
-                    }
+                    });
+                    console.log('Line chart created successfully');
+                } catch (error) {
+                    console.error('Error creating line chart:', error);
                 }
-            });
-
-            // Populate legend
-            populateLegend(chartData);
-        });
-
-        function populateLegend(data) {
-            const legendContainer = document.getElementById('chartLegend');
-            if (!legendContainer || !data) return;
-
+            } else {
+                console.error('Line chart canvas not found');
+            }
+        }
+        
+        function populateLegend(chartData) {
+            const legendContainer = document.getElementById('chart-legend');
+            if (!legendContainer || !chartData.labels) return;
+            
             legendContainer.innerHTML = '';
-            data.labels.forEach((label, index) => {
+            
+            chartData.labels.forEach((label, index) => {
                 const legendItem = document.createElement('div');
                 legendItem.className = 'legend-item';
-                legendItem.innerHTML = `
-                    <div class="legend-color" style="background-color: ${data.colors[index]}"></div>
-                    <span>${label}</span>
-                `;
+                
+                const colorDiv = document.createElement('div');
+                colorDiv.className = 'legend-color';
+                colorDiv.style.backgroundColor = chartData.colors[index] || '#cccccc';
+                
+                const labelSpan = document.createElement('span');
+                labelSpan.textContent = label;
+                
+                legendItem.appendChild(colorDiv);
+                legendItem.appendChild(labelSpan);
                 legendContainer.appendChild(legendItem);
             });
         }
-
-        // Dropdown functionality
-        function toggleDropdown() {
-            const dropdown = document.getElementById('dropdownMenu2');
-            dropdown.classList.toggle('hidden');
-        }
-
-        // Close dropdown when clicking outside
-        document.addEventListener('click', function(e) {
-            const dropdown = document.getElementById('dropdownMenu2');
-            const button = document.querySelector('.dropdown-btn2');
-            if (!button.contains(e.target) && !dropdown.contains(e.target)) {
-                dropdown.classList.add('hidden');
+        
+        // Sorting functionality for detailed view
+        document.addEventListener('DOMContentLoaded', function() {
+            const dropdownBtn = document.querySelector('.dropdown-btn2');
+            const dropdownMenu = document.querySelector('.dropdown-menu2');
+            const dropdownItems = document.querySelectorAll('.dropdown-item2');
+            const tableBody = document.querySelector('.table-container tbody');
+            
+            if (dropdownBtn && dropdownMenu) {
+                // Toggle dropdown
+                dropdownBtn.addEventListener('click', function() {
+                    dropdownMenu.classList.toggle('hidden');
+                });
+                
+                // Close dropdown when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (!dropdownBtn.contains(e.target) && !dropdownMenu.contains(e.target)) {
+                        dropdownMenu.classList.add('hidden');
+                    }
+                });
+                
+                // Handle sorting options
+                dropdownItems.forEach(item => {
+                    item.addEventListener('click', function() {
+                        const sortType = this.textContent.trim();
+                        dropdownBtn.textContent = sortType + ' ▾';
+                        dropdownMenu.classList.add('hidden');
+                        
+                        // Sort the table rows
+                        sortTableRows(sortType);
+                    });
+                });
+            }
+            
+            function sortTableRows(sortType) {
+                if (!tableBody) return;
+                
+                const rows = Array.from(tableBody.querySelectorAll('tr'));
+                
+                rows.sort((a, b) => {
+                    switch(sortType) {
+                        case 'Highest Total':
+                            return getTotalSpent(b) - getTotalSpent(a);
+                        case 'Lowest Total':
+                            return getTotalSpent(a) - getTotalSpent(b);
+                        case 'College Name':
+                            return getCollegeName(a).localeCompare(getCollegeName(b));
+                        case 'Campus':
+                            return getCampus(a).localeCompare(getCampus(b));
+                        default:
+                            return 0;
+                    }
+                });
+                
+                // Clear and re-append sorted rows
+                tableBody.innerHTML = '';
+                rows.forEach(row => tableBody.appendChild(row));
+            }
+            
+            function getTotalSpent(row) {
+                const totalCell = row.cells[3]; // Total Spent column
+                if (!totalCell) return 0;
+                const text = totalCell.textContent.replace(/[₱,]/g, '');
+                return parseFloat(text) || 0;
+            }
+            
+            function getCollegeName(row) {
+                const nameCell = row.cells[0]; // College name column
+                if (!nameCell) return '';
+                return nameCell.textContent.trim();
+            }
+            
+            function getCampus(row) {
+                const nameCell = row.cells[0]; // College name column
+                if (!nameCell) return '';
+                const text = nameCell.textContent;
+                const campusMatch = text.match(/\(([^)]+)\)/);
+                return campusMatch ? campusMatch[1] : '';
             }
         });
-
-        // Sorting functionality for detailed view
-        function sortTable(sortType) {
-            const tableBody = document.querySelector('.table-container tbody');
-            if (!tableBody) return;
-            
-            const rows = Array.from(tableBody.querySelectorAll('tr'));
-            rows.sort((a, b) => {
-                switch(sortType) {
-                    case 'highest':
-                        return getTotalSpent(b) - getTotalSpent(a);
-                    case 'lowest':
-                        return getTotalSpent(a) - getTotalSpent(b);
-                    case 'college':
-                        return getCollegeName(a).localeCompare(getCollegeName(b));
-                    case 'campus':
-                        return getCampus(a).localeCompare(getCampus(b));
-                    default:
-                        return 0;
-                }
-            });
-            
-            tableBody.innerHTML = '';
-            rows.forEach(row => tableBody.appendChild(row));
-        }
-
-        function getTotalSpent(row) {
-            const spentCell = row.cells[3];
-            if (!spentCell) return 0;
-            const text = spentCell.textContent.replace(/[₱,]/g, '');
-            return parseFloat(text) || 0;
-        }
-
-        function getCollegeName(row) {
-            const nameCell = row.cells[0];
-            if (!nameCell) return '';
-            return nameCell.textContent.trim();
-        }
-
-        function getCampus(row) {
-            const nameCell = row.cells[0];
-            if (!nameCell) return '';
-            const campusSpan = nameCell.querySelector('span:last-child');
-            return campusSpan ? campusSpan.textContent.trim() : '';
-        }
     </script>
+    
+    <!-- JSON data for JavaScript -->
+    <script id="chart-data" type="application/json">{{ chart_data_json|safe }}</script>
+    <script id="historical-data" type="application/json">{{ historical_data_json|safe }}</script>
 </body>
 </html>
-
 {% endblock %}

@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
 <link href="{% static 'templates/dashboard.css' %}" rel="stylesheet">
 </head>
-
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <body>
     <div class="main-container">
         <div class="container-1">
@@ -34,7 +34,7 @@
                 {% endif %}
             </div>
             <div class="container-1B">
-                <div class="quarter-text">This Quarter</div>
+                <div class="quarter-text">Date here</div>
                 <div class="dropdown-arrow">
                     <!-- Simple dropdown arrow SVG -->
                     <svg width="16" height="16" viewBox="0 0 16 16">
@@ -46,23 +46,40 @@
 
         <!-- Overview Section -->
         <div class="overview-section">
-            <div class="overview-text">Overview</div>
             <div class="container-2">
                 <a class="container-2A" href="{% url 'request_dispatcher' %}?status=PENDING">
+                    <div class="card-icon-wrapper">
+                        <div class="circle">
+                            <i class="fas fa-clipboard-list"></i> 
+                        </div>
+                    </div>
                     <div class="container-2A-number">{{ pending_requests.count }}</div>
                     <div class="container-2A-name">Request Pending</div>
                 </a>
                 <a class="container-2A" href="{% url 'project_dispatcher' %}?status=IN_PROGRESS">
+                    <div class="card-icon-wrapper">
+                        <div class="circle">
+                            <i class="fas fa-cogs"></i> 
+                        </div>
+                    </div>
                     <div class="container-2A-number">{{ inprogress_projects.count }}</div>
                     <div class="container-2A-name">Ongoing Projects</div>
                 </a>
                 <a class="container-2A" href="{% url 'experts' %}">
+                    <div class="card-icon-wrapper">
+                        <div class="circle">
+                            <i class="fas fa-users"></i> 
+                        </div>
+                    </div>
                     <div class="container-2A-number">{{ expert_users.count }}</div>
                     <div class="container-2A-name">Experts Active</div>
                 </a>
 
                 {% if request.user.role == "UESO" or request.user.role == "VP" or request.user.role == "DIRECTOR" %}
                 <a class="container-2A" href="{% url 'calendar' %}">
+                    <div class="card-icon-wrapper">
+                        <div class="circle"><i class="fas fa-calendar-alt"></i></div>
+                    </div>
                     <div class="container-2A-number">{{ events_in_calendar }}</div>
                     <div class="container-2A-name">Events in Calendar</div>
                 </a>
@@ -75,39 +92,34 @@
             <div class="summary-text">Summary</div>
             <div class="container-3">
                 <!-- Charts Container: two charts inside one bordered box with expand icon -->
-                <div class="charts-container-outer">
-                    <div class="expand-icon-container">
-                        <svg class="expand-icon" width="16" height="16">
-                          <use href="#icon-expand"></use>
-                        </svg>
-                    </div>
-                    <div class="charts-inner">
-                        <!-- Agenda Distribution Here (Distribution of Project Depending on their Agenda) -->
-                    </div>
+                <div class="chart-container" style="width: 100%; max-width: 600px; margin-bottom: 20px; padding: 20px; background: white;">
+                    <h3>Submission Status Breakdown</h3>
+                    <canvas id="submissionStatusChart" style="max-height: 400px;"></canvas>
                 </div>
 
-                <div class="mini-calendar-widget">
-                    <div class="mini-calendar-header">
-                        <button class="prev-month" title="Previous Month">
-                            <i class="fas fa-chevron-left"></i>
-                        </button>
-                        <div class="current-month-year">October 2025</div>
-                        <button class="next-month" title="Next Month">
-                            <i class="fas fa-chevron-right"></i>
-                        </button>
-                    </div>
-                    <div class="mini-calendar-body">
-                        <div class="weekdays">
-                            <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+                <div class="chart-container" style="width: 100%; max-width: 400px; padding: 20px; background: white;">
+                    <h3>Project Status Overview</h3>
+                    <canvas id="projectStatusChart" style="max-height: 400px;"></canvas>
+                </div>
+
+                <div class="calendar-container">
+                    <div class="mini-calendar-widget">
+                        <div class="mini-calendar-header">
+                            <button class="prev-month" title="Previous Month">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <div class="current-month-year">October 2025</div>
+                            <button class="next-month" title="Next Month">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
                         </div>
-                        <div class="days-grid"></div>
+                        <div class="mini-calendar-body">
+                            <div class="weekdays">
+                                <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+                            </div>
+                            <div class="days-grid"></div>
+                        </div>
                     </div>
-                </div>
-
-                <div class="expand-icon-container">
-                    <svg class="expand-icon" width="16" height="16">
-                    <use href="#icon-expand"></use>
-                    </svg>
                 </div>
             </div>
         </div>
@@ -283,6 +295,146 @@
         renderCalendar();
     })();
 
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('=== CHART DEBUGGING START ===');
+    
+    // Check if Chart.js is loaded
+    console.log('Chart.js loaded:', typeof Chart !== 'undefined');
+    
+    // Check if canvas elements exist
+    const subCanvas = document.getElementById('submissionStatusChart');
+    const projCanvas = document.getElementById('projectStatusChart');
+    console.log('Submission canvas found:', subCanvas !== null);
+    console.log('Project canvas found:', projCanvas !== null);
+    
+    if (!subCanvas || !projCanvas) {
+        console.error('Canvas elements not found!');
+        return;
+    }
+    
+    // Check canvas dimensions
+    console.log('Submission canvas dimensions:', subCanvas.offsetWidth, 'x', subCanvas.offsetHeight);
+    console.log('Project canvas dimensions:', projCanvas.offsetWidth, 'x', projCanvas.offsetHeight);
+    
+    // Check parent container
+    console.log('Submission parent:', subCanvas.parentElement);
+    console.log('Project parent:', projCanvas.parentElement);
+
+    // -----------------------------------------------------------------
+    // Chart 1: Submission Status Breakdown (Bar Chart)
+    // -----------------------------------------------------------------
+    const subCtx = subCanvas.getContext('2d');
+    console.log('Submission context:', subCtx);
+    
+    fetch('/dashboard/api/chart/submission-status/')
+        .then(response => {
+            console.log('Submission Status Response:', response);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Submission Status Data:', data);
+            console.log('Creating submission chart...');
+            
+            const submissionChart = new Chart(subCtx, {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Number of Submissions',
+                        data: data.counts,
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.2)',
+                            'rgba(54, 162, 235, 0.2)',
+                            'rgba(255, 206, 86, 0.2)',
+                            'rgba(75, 192, 192, 0.2)',
+                            'rgba(153, 102, 255, 0.2)',
+                            'rgba(255, 159, 64, 0.2)',
+                            'rgba(199, 199, 199, 0.2)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(255, 159, 64, 1)',
+                            'rgba(199, 199, 199, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: { 
+                    }
+                }
+            });
+            
+            console.log('Submission chart created:', submissionChart);
+        })
+        .catch(error => console.error('Error fetching submission chart data:', error));
+
+    // -----------------------------------------------------------------
+    // Chart 2: Project Status Overview (Pie Chart)
+    // -----------------------------------------------------------------
+    const projCtx = projCanvas.getContext('2d');
+    console.log('Project context:', projCtx);
+
+    fetch('/dashboard/api/chart/project-status/')
+        .then(response => {
+            console.log('Project Status Response:', response);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Project Status Data:', data);
+            console.log('Creating project chart...');
+            
+            const projectChart = new Chart(projCtx, {
+                type: 'pie',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Project Status',
+                        data: data.counts,
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.7)',
+                            'rgba(54, 162, 235, 0.7)',
+                            'rgba(75, 192, 192, 0.7)',
+                            'rgba(255, 206, 86, 0.7)',
+                            'rgba(153, 102, 255, 0.7)'
+                        ],
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                    }
+                }
+            });
+            
+            console.log('Project chart created:', projectChart);
+        })
+        .catch(error => console.error('Error fetching project chart data:', error));
+        
+    console.log('=== CHART DEBUGGING END ===');
+});
 </script>
 </body>
 </html>
