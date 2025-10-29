@@ -1,7 +1,8 @@
 from django.shortcuts import render
-from system.users.decorators import role_required
 
+# --- Main Dashboard View ---
+def home_view(request):
+    """Renders the main dashboard HTML template."""
+    return render(request, 'analytics.html')
 
-@role_required(allowed_roles=["VP", "DIRECTOR", "UESO", "DEAN", "PROGRAM_HEAD", "COORDINATOR"], require_confirmed=True)
-def analytics_view(request):
-    return render(request, 'analytics/analytics.html')
+# Note: All other chart/metric data views are now handled in api_views.py

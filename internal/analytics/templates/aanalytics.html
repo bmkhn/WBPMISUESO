@@ -1,4 +1,4 @@
-    <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -6,7 +6,6 @@
     <title>Data</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer"/>
     <style>
         body {
@@ -175,10 +174,6 @@
             font-size: 1.2rem;
             margin: 0;
         }
-        .export {
-            position: relative;
-            display: inline-block;
-        }
         .content {
             display: flex;
             flex-direction: column;
@@ -262,98 +257,6 @@
         .stat-change.negative svg {
             fill: #dc2626;
         }
-
-            .popup-overlay {
-                display: none;
-                position: fixed;
-                inset: 0;
-                background: rgba(0, 0, 0, 0.4);
-                z-index: 99;
-                justify-content: center;
-                align-items: center;
-            }
-            .date-popup.show {
-                transform: scale(1);
-                opacity: 1;
-            }
-            .date-popup {
-                background: white;
-                border-radius: 1rem;
-                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-                padding: 2rem;
-                width: 420px;
-                max-width: 95%;
-                z-index: 100;
-                transform: scale(0.9);
-                opacity: 0;
-                transition: all 0.25s ease;
-            }
-            .date-popup h4 {
-                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-                margin-top: 0;
-                margin-bottom: 1.5rem;
-                font-size: 1.75rem; /* Matches Analytics heading size */
-                font-weight: 500;
-                color: #000000;
-                text-align: center;
-                letter-spacing: -0.5px;
-            }
-            .date-popup label {
-                display: block;
-                font-size: 0.95rem;
-                margin-top: 0.75rem;
-                color: #333;
-            }
-            .date-input {
-            width: 100%;
-                padding: 1rem; /* Bigger input area */
-                border: 1px solid #ccc;
-                border-radius: 0.6rem;
-                margin-top: 0.5rem;
-                font-size: 1.1rem;
-            }
-            .popup-actions {
-                display: flex;
-                justify-content: flex-end;
-                gap: 0.75rem;
-                margin-top: 1.5rem;
-            }
-            .confirm-btn, .cancel-btn {
-                padding: 0.5rem 1rem;
-                border: none;
-                border-radius: 0.5rem;
-                cursor: pointer;
-                font-size: 1rem;
-                font-weight: 500;
-                transition: 0.2s;
-            }
-            .confirm-btn {
-                background-color: black;
-                color: white;
-            }
-            .confirm-btn:hover {
-                background-color: #1b4c32;
-            }
-            .cancel-btn {
-                background-color: #ccc;
-                color: black;
-            }
-            .cancel-btn:hover {
-                background-color: #aaa;
-            }
-            #fileType {
-                width: 100%;
-                padding: 10px;
-                border-radius: 10px;
-                border: 1px solid #ccc;
-                margin-top: 5px;
-                font-size: 14px;
-                background-color: #f9f9f9;
-                cursor: pointer;
-            }
-            #fileType:hover {
-                border-color: #888;
-            }
     </style>
 </head>
 <body> 
@@ -377,43 +280,24 @@
     <main> 
        <div class="upper">
             <div class="time">
-                <h2 style="margin:0;">Analytics</h2>
-
+                <h2 style="margin:0 0 0 0;">Analytics</h2>
                 <div class="dropdown" style="margin-left: 1.5rem;">
                     <button class="dropdown-btn">This Quarter ▾</button>
-
-                    <div id="popupOverlay" class="popup-overlay">
-                        <div id="datePopup" class="date-popup">
-                            <h4>Select Date Range</h4>
-
-                            <label for="startDate">Start Date:</label>
-                            <input type="date" id="startDate" class="date-input">
-
-                            <label for="endDate">End Date:</label>
-                            <input type="date" id="endDate" class="date-input">
-
-                            <div class="popup-actions">
-                                <button id="confirmExport" class="confirm-btn">Confirm</button>
-                                <button id="cancelExport" class="cancel-btn">Cancel</button>
-                            </div>
-                        </div>
+                    <div class="dropdown-menu hidden">
+                        <div class="dropdown-item">Curent Quarter</div>
+                        <div class="dropdown-item">Q2</div>
+                        <div class="dropdown-item">Q3</div>
+                        <div class="dropdown-item">Q4</div>
                     </div>
                 </div>
             </div>
-
             <div class="export">
                 <button id="exportBtn" class="export-btn">
                     <svg width="20" height="20" style="fill: currentColor;">
                         <use href="#file-export"/>
                     </svg>
-                    Export
+                    Export as PDF
                 </button>
-
-                <div id="exportDropdown" class="dropdown-menu hidden" style="right: 0; left: auto; text-align:center;">
-                        <div class="dropdown-item" data-type="pdf">Export as PDF</div>
-                        <div class="dropdown-item" data-type="png">Export as PNG</div>
-                        <div class="dropdown-item" data-type="csv">Export as CSV</div>
-                </div>
             </div>
         </div>
         <div class="content">
@@ -449,136 +333,7 @@
     <footer>
         <p>test</p>
     </footer>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script>
-        const exportBtn = document.getElementById('exportBtn');
-        const popupOverlay = document.getElementById('popupOverlay');
-        const datePopup = document.getElementById('datePopup');
-        const confirmExport = document.getElementById('confirmExport');
-        const cancelExport = document.getElementById('cancelExport');
-        const dateRangeBtn = document.querySelector('.dropdown-btn');
-
-        dateRangeBtn.addEventListener('click', e => {
-            e.stopPropagation();
-            popupOverlay.style.display = 'flex';
-            setTimeout(() => datePopup.classList.add('show'), 10);
-        });
-
-        popupOverlay.addEventListener('click', (e) => {
-            if (e.target === popupOverlay) closePopup();
-        });
-
-        cancelExport.addEventListener('click', closePopup);
-
-        function closePopup() {
-            datePopup.classList.remove('show');
-            setTimeout(() => popupOverlay.style.display = 'none', 200);
-        }
-
-        // Declare globally so all functions can access these
-        let selectedStartDate = '';
-        let selectedEndDate = '';
-
-        confirmExport.addEventListener('click', async () => {
-            const start = document.getElementById('startDate').value;
-            const end = document.getElementById('endDate').value;
-
-            if (!start || !end) {
-                alert('Please select both start and end dates.');
-                return;
-            }
-            if (new Date(start) > new Date(end)) {
-                alert('Start date cannot be after end date.');
-                return;
-            }
-
-            // ✅ Update button text
-            const startText = new Date(start).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-            const endText = new Date(end).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-            dateRangeBtn.textContent = `${startText} – ${endText} ▾`;
-
-            closePopup();
-
-            // ✅ Save selected dates globally (accessible by export)
-            selectedStartDate = start;
-            selectedEndDate = end;
-
-            //alert("Date range selected! Now choose a file type to export.");
-        });
-
-
-
-        // Export as PDF (via html2canvas + jsPDF)
-        async function exportAsPDF(startDate, endDate) {
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    const charts = document.querySelectorAll('canvas');
-    
-    let pageIndex = 0;
-
-    for (const canvas of charts) {
-        const chartTitle = canvas.closest('.card')?.querySelector('h4')?.textContent || 'Chart';
-        const imgData = canvas.toDataURL('image/png');
-
-        // Add page for all charts except the first
-        if (pageIndex > 0) pdf.addPage();
-
-        // Add chart title
-        pdf.setFontSize(16);
-        pdf.text(chartTitle, 10, 15);
-
-        // Fit chart nicely within page
-        const imgWidth = 180;
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-        const yOffset = 30; // space below title
-
-        pdf.addImage(imgData, 'PNG', 15, yOffset, imgWidth, imgHeight);
-        pageIndex++;
-    }
-
-    // Save file
-    pdf.save(`Analytics_${startDate}_to_${endDate}.pdf`);
-}
-
-
-
-        //Export as PNG
-        async function exportAsPNG() {
-            const content = document.querySelector('main');
-            const canvas = await html2canvas(content, { scale: 1.5 });
-            const link = document.createElement('a');
-            link.download = 'Analytics_Report.png';
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-        }
-
-        // Export as CSV (simple table structure)
-        function exportAsCSV() {
-            const rows = [
-                ["Category", "Value"],
-                ["Active Projects", 10],
-                ["Budget Allocated (₱M)", 25],
-                ["Trained Individuals", 320]
-            ];
-
-            let csvContent = "data:text/csv;charset=utf-8,"
-                + rows.map(e => e.join(",")).join("\n");
-
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "Analytics_Report.csv");
-            document.body.appendChild(link);
-            link.click();
-        }
-
-
-        // Main PDF export function (replace with your existing logic)
-        async function exportPDF(startDate, endDate) {
-            // Example — you can replace this with your real export logic
-            alert(`Exporting data from ${startDate} to ${endDate}...`);
-        }
         // Select all dropdown buttons
         document.querySelectorAll('.dropdown-btn').forEach(btn => {
             btn.addEventListener('click', e => {
@@ -591,19 +346,6 @@
                 menu.classList.toggle('hidden');
             });
         });
-
-        // Trigger date popup when clicking "This Quarter"
-        document.querySelector('.dropdown-btn').addEventListener('click', e => {
-            e.stopPropagation();
-
-            // Hide dropdown menu first
-            document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.add('hidden'));
-
-            // Show the date range popup
-            popupOverlay.style.display = 'flex';
-            setTimeout(() => datePopup.classList.add('show'), 10);
-        });
-
         // Dropdown item click
         document.querySelectorAll('.dropdown-item').forEach(item => {
             item.addEventListener('click', e => {
@@ -614,35 +356,6 @@
                 menu.classList.add('hidden');
             });
         });
-
-        const exportDropdown = document.getElementById('exportDropdown');
-
-        exportBtn.addEventListener('click', e => {
-            e.stopPropagation();
-            exportDropdown.classList.toggle('hidden');
-        });
-
-        // Handle export type selection
-        exportDropdown.querySelectorAll('.dropdown-item').forEach(item => {
-            item.addEventListener('click', async e => {
-                const type = e.target.dataset.type;
-                exportDropdown.classList.add('hidden');
-
-                if (!selectedStartDate || !selectedEndDate) {
-                    alert("Please select a date range first before exporting.");
-                    return;
-                }
-
-                if (type === 'pdf') {
-                    await exportAsPDF(selectedStartDate, selectedEndDate);
-                } else if (type === 'png') {
-                    await exportAsPNG();
-                } else if (type === 'csv') {
-                    exportAsCSV();
-                }
-            });
-        });
-
         // Click outside closes all menus
         document.addEventListener('click', () => {
             document.querySelectorAll('.dropdown-menu').forEach(menu => {
@@ -1077,6 +790,5 @@ document.addEventListener('DOMContentLoaded', renderStats);
             }
         });
     </script>
-    {% comment %} ashdk {% endcomment %}
 </body>
 </html>
