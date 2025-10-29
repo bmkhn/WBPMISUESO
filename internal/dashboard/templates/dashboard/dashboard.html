@@ -89,17 +89,16 @@
 
         <!-- Summary Section -->
         <div class="summary-section">
-            <div class="summary-text">Summary</div>
             <div class="container-3">
                 
-                <div class="chart-container" style="width: 100%; max-width: 400px; padding: 20px; background: white;">
+                <div class="chart-container">
                     <h3>Project Status Overview</h3>
-                    <canvas id="projectStatusChart" style="max-height: 400px;"></canvas>
+                    <canvas id="projectStatusChart" style="max-height: 225px;"></canvas>
                 </div>
 
-                <div class="chart-container" style="width: 100%; max-width: 600px; margin-bottom: 20px; padding: 20px; background: white;">
+                <div class="chart-container">
                     <h3>Submission Status Breakdown</h3>
-                    <canvas id="submissionStatusChart" style="max-height: 400px;"></canvas>
+                    <canvas id="submissionStatusChart" style="max-height: 250px;"></canvas>
                 </div>
 
                 <div class="calendar-container">
@@ -342,42 +341,35 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('Creating submission chart...');
             
             const submissionChart = new Chart(subCtx, {
-                type: 'bar',
+                type: 'line',
                 data: {
                     labels: data.labels,
                     datasets: [{
                         label: 'Number of Submissions',
                         data: data.counts,
                         backgroundColor: [
-                            'rgba(255, 99, 132, 0.2)',
-                            'rgba(54, 162, 235, 0.2)',
-                            'rgba(255, 206, 86, 0.2)',
-                            'rgba(75, 192, 192, 0.2)',
-                            'rgba(153, 102, 255, 0.2)',
-                            'rgba(255, 159, 64, 0.2)',
-                            'rgba(199, 199, 199, 0.2)'
+                            'rgba(255, 99, 132, 0.7)',  // Opacity changed to 0.7
+                            'rgba(54, 162, 235, 0.7)',  // Opacity changed to 0.7
+                            'rgba(255, 206, 86, 0.7)',  // Opacity changed to 0.7
+                            'rgba(75, 192, 192, 0.7)',  // Opacity changed to 0.7
+                            'rgba(153, 102, 255, 0.7)', // Opacity changed to 0.7
+                            'rgba(255, 159, 64, 0.7)', // Opacity changed to 0.7
+                            'rgba(199, 199, 199, 0.7)'  // Opacity changed to 0.7
                         ],
-                        borderColor: [
-                            'rgba(255, 99, 132, 1)',
-                            'rgba(54, 162, 235, 1)',
-                            'rgba(255, 206, 86, 1)',
-                            'rgba(75, 192, 192, 1)',
-                            'rgba(153, 102, 255, 1)',
-                            'rgba(255, 159, 64, 1)',
-                            'rgba(199, 199, 199, 1)'
-                        ],
-                        borderWidth: 1
                     }]
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: true,
+                    maintainAspectRatio: false, // CHANGED from true
                     scales: {
                         y: {
                             beginAtZero: true
                         }
                     },
                     plugins: { 
+                        legend: {           // ADDED
+                            display: false  // ADDED
+                        }
                     }
                 }
             });
@@ -423,8 +415,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: true,
+                    maintainAspectRatio: false, // CHANGED from true
                     plugins: {
+                        legend: {           // ADDED
+                            display: false  // ADDED
+                        }
                     }
                 }
             });
@@ -436,6 +431,7 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('=== CHART DEBUGGING END ===');
 });
 </script>
+
 </body>
 </html>
 

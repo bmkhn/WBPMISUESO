@@ -1,3 +1,13 @@
+p, h1, h2, h3, h4, h5, h6, div {
+    cursor: default;
+} 
+
+h3 {
+    font-weight: 500;
+    font-size: 1rem;
+    margin: 0 0 1rem 0;
+}
+
 .dropdown-wrapper {
     position: relative;
     display: inline-block;
@@ -227,8 +237,7 @@ body {
 
 .summary-section {
     display: flex;
-    flex-direction: column;
-    gap: 15px;
+    justify-content: center;
 }
 
 .summary-text {
@@ -237,12 +246,15 @@ body {
     font-size: 18px;
 }
 
+.pie {
+    width: 70%;
+}
+
 .container-3 {
     display: flex;
     flex-direction: row;
-    align-items: center;
-    gap: 30px;
-    height: 17rem;
+    max-height: 18rem;
+    gap: 2rem;
 }
 
 .charts-container-outer {
@@ -543,13 +555,13 @@ body {
 }
 
 
-/* --- MINI-CALENDAR WIDGET STYLES (for dashboard.css) --- */
-
 .calendar-container {
     padding: 20px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    flex-grow: 1;
+    min-width: 21rem;
 }
 
 .mini-calendar-widget {
@@ -652,16 +664,14 @@ body {
     border-radius: 50%;
 }
 
+
 .chart-container {
     width: 100%;
-    max-width: 600px;
     margin-bottom: 20px;
-    padding: 20px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    background: white;
+    padding: 6px;
 }
 
 .chart-container canvas {
-    max-height: 400px;
+    max-height: 275px;
+    max-width: 275px;
 }
