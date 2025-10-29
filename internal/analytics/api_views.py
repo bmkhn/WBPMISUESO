@@ -1,85 +1,118 @@
-# testingsite/api_views.py (Refactored)
-
 from django.http import JsonResponse
-from datetime import datetime
-from . import services # Import the service layer
+from datetime import datetime, timedelta # Make sure timedelta is imported
+from django.utils import timezone # Import timezone for aware datetimes
+from . import services 
 
-# --- Utility Function ---
-def parse_dates_from_request(request):
-    """Parses and validates start_date and end_date from request GET parameters."""
-    start_date_str = request.GET.get('start_date')
-    end_date_str = request.GET.get('end_date')
-
-    if not start_date_str or not end_date_str:
-        return None, None, JsonResponse({'error': 'Missing date parameters (start_date or end_date).'}, status=400)
+# --- Updated Utility Function ---
+def parse_dates_from_request(request, default_days=90): # Added default_days
+    """
+    Parses start_date and end_date from request GET parameters.
+    Uses a default range (last 'default_days') if parameters are missing or empty.
+    Returns aware datetime objects.
+    """
+    start_date_str = request.GET.get('start_date') # Changed from start
+    end_date_str = request.GET.get('end_date')     # Changed from end
     
+    current_tz = timezone.get_current_timezone()
+    now = timezone.now()
+
+    # Default end_date is today (end of day)
+    default_end_date = now.replace(hour=23, minute=59, second=59)
+    # Default start_date is 'default_days' ago (start of day)
+    default_start_date = (default_end_date - timedelta(days=default_days)).replace(hour=0, minute=0, second=0)
+
     try:
-        start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
-        end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+        if end_date_str:
+            dt = datetime.strptime(end_date_str, '%Y-%m-%d')
+            end_date = timezone.make_aware(dt.replace(hour=23, minute=59, second=59), current_tz)
+        else:
+            end_date = default_end_date
+            
+        if start_date_str:
+            dt = datetime.strptime(start_date_str, '%Y-%m-%d')
+            start_date = timezone.make_aware(dt.replace(hour=0, minute=0, second=0), current_tz)
+        else:
+            # If start is missing, calculate based on the (potentially non-default) end_date
+             start_date = (end_date - timedelta(days=default_days)).replace(hour=0, minute=0, second=0)
+
+        # Basic validation: start date should not be after end date
+        if start_date > end_date:
+             # Reset to default range if dates are illogical
+             start_date = default_start_date
+             end_date = default_end_date
+             # Optionally return an error instead:
+             # return None, None, JsonResponse({'error': 'Start date cannot be after end date.'}, status=400)
+
     except ValueError:
         return None, None, JsonResponse({'error': 'Invalid date format. Use YYYY-MM-DD.'}, status=400)
     
-    return start_date, end_date, None
+    return start_date, end_date, None # Return aware datetimes
 
 # ==============================================================================
-# CARD METRIC VIEWS (Simple API Endpoints)
+# CARD METRIC VIEWS (Now use aware datetimes)
 # ==============================================================================
 
 def projects_metric_api(request):
-    start_date, end_date, error_response = parse_dates_from_request(request)
+    # Use default_days=90 consistent with original analytics script
+    start_date, end_date, error_response = parse_dates_from_request(request, default_days=300) 
     if error_response: return error_response
-    # Pass both dates as positional arguments (this is correct)
-    data = services.get_total_projects_count(start_date, end_date) 
+    data = services.get_total_projects_count(start_date, end_date)
     return JsonResponse(data)
 
 def events_metric_api(request):
-    start_date, end_date, error_response = parse_dates_from_request(request)
+    start_date, end_date, error_response = parse_dates_from_request(request, default_days=300)
     if error_response: return error_response
     data = services.get_total_events_count(start_date, end_date)
     return JsonResponse(data)
 
 def providers_metric_api(request):
-    start_date, end_date, error_response = parse_dates_from_request(request)
+    start_date, end_date, error_response = parse_dates_from_request(request, default_days=300)
     if error_response: return error_response
     data = services.get_total_providers_count(start_date, end_date)
     return JsonResponse(data)
 
 def individuals_metric_api(request):
-    start_date, end_date, error_response = parse_dates_from_request(request)
+    start_date, end_date, error_response = parse_dates_from_request(request, default_days=300)
     if error_response: return error_response
-    data = services.get_total_trained_individuals_count(start_date, end_date)
+    data = services.get_total_individuals_trained(start_date, end_date)
     return JsonResponse(data)
 
 # ==============================================================================
-# CHART DATA VIEWS
+# CHART DATA VIEWS (Now use aware datetimes)
 # ==============================================================================
 
 def active_projects_chart_api(request):
-    start_date, end_date, error_response = parse_dates_from_request(request)
+    start_date, end_date, error_response = parse_dates_from_request(request, default_days=300)
     if error_response: return error_response
     data = services.get_active_projects_over_time(start_date, end_date) 
     return JsonResponse(data)
 
 def budget_allocation_chart_api(request):
-    start_date, end_date, error_response = parse_dates_from_request(request)
+    start_date, end_date, error_response = parse_dates_from_request(request, default_days=300)
     if error_response: return error_response
     data = services.get_budget_allocation_data(start_date, end_date)
     return JsonResponse(data)
 
 def agenda_distribution_chart_api(request):
-    start_date, end_date, error_response = parse_dates_from_request(request)
+    start_date, end_date, error_response = parse_dates_from_request(request, default_days=300)
     if error_response: return error_response
     data = services.get_agenda_distribution_data(start_date, end_date)
     return JsonResponse(data)
-
+ 
 def trained_individuals_chart_api(request):
-    start_date, end_date, error_response = parse_dates_from_request(request)
+    start_date, end_date, error_response = parse_dates_from_request(request, default_days=300)
     if error_response: return error_response
-    data = services.get_trained_individuals_data(start_date, end_date)
+    data = services.get_total_individuals_trained(start_date, end_date)
     return JsonResponse(data)
 
 def request_status_chart_api(request):
-    start_date, end_date, error_response = parse_dates_from_request(request)
+    start_date, end_date, error_response = parse_dates_from_request(request, default_days=300)
     if error_response: return error_response
-    data = services.get_request_status_data(start_date, end_date)
+    data = services.get_request_status_distribution(start_date, end_date)
+    return JsonResponse(data)
+    
+def project_trends_api(request):
+    start_date, end_date, error_response = parse_dates_from_request(request, default_days=90) # Use default 90 days
+    if error_response: return error_response
+    data = services.get_project_trends(start_date, end_date)
     return JsonResponse(data)

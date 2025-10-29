@@ -4,621 +4,19 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Data</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Data</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
 
-    
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer"/>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0rem;
-            padding: 0rem;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            font-family: Helvetica, Arial, sans-serif;
-            background-color: #f9f9f9;
-        }
-        main {
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start; 
-            align-items: stretch;
-            margin: 0 5rem 2rem 5rem;
-            gap: 0.5rem; 
-        }
-        footer {
-            background-color: #245F3E;
-            position: relative;
-            bottom: 0;
-            width: 100%;
-            height: 20rem;
-        } 
-        .sub {
-            font-size: 1.5rem;
-            font-weight: 400;  
-            margin-top: 0.7rem;
-            margin-bottom: 2.5rem;  
-            max-width: 90%;
-        } 
-        * {
-            box-sizing: border-box;
-        } 
-        h2 {
-            font-size: 1.75rem;
-            font-weight: 500;
-            margin: 0 0 1.25rem 0;
-        }
-        i {
-            font-size: 1.75rem;
-            color: black; 
-            margin-right: 0.75rem;
-            font-weight: 400;  
-            text-decoration: none;
-        }
-        a {
-            text-decoration: none;   
-        }
-        .header-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            width: 100%;
-            gap: 2rem;  
-            padding: 3rem 0rem 1rem 3rem;
-        }  
-        header {
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-            gap: 1.25rem; 
-            margin: 0;
-            padding: 0.5rem 1rem;
-            border: 1px solid #e0e0e0;
-            background-color: #f5f5f5;
-            position: relative;
-            top: 0;
-        } 
-        header img {
-            border-radius: 50%; 
-            border: 4px solid #e4c600;
-            margin-right: 0.75rem;
-            width: 3.25rem;
-            height: 3.25rem;
-            object-fit: cover;
-            cursor: pointer;
-            transition: transform 0.2s ease;
-        }
-        .dropdown {
-            position: relative;
-            width: 16rem;
-        }
-        .dropdown-btn { 
-            margin: 0;
-            width: 100%;
-            padding: 0.75rem 1rem;
-            border: 0.08rem solid #b6b6b6;
-            border-radius: 0.75rem;
-            background: #f9f9f9;
-            text-align: center;
-            cursor: pointer;
-            font-family: Helvetica, Arial, sans-serif;
-            font-weight: 400;
-            font-size: 1rem;
-        }
-        .dropdown-btn:hover{
-            background-color: #000000;
-            color: white;
-        }
-        .dropdown-menu {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            margin: 0;
-            right: 0;
-            background: white;
-            border: 0.08rem solid #ccc;
-            border-radius: 0.75rem;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            z-index: 10;
-            overflow: hidden;
-        }
-        .dropdown-item {
-            padding: 0.75rem;
-            cursor: pointer;
-            transition: background 0.2s;
-            font-family: Helvetica, Arial, sans-serif;
-            font-weight: 400;
-            text-align: center;
-            border-bottom: 1px solid rgb(196, 196, 196);
-        }
-        .dropdown-item:hover {
-            background-color: #000000;
-            color: white;
-        }
-        .hidden {
-            display: none;
-        }
-        .upper, .time {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem 0;
-        }
-        .export-btn {
-            background-color: #f9f9f9;
-            color: rgb(11, 11, 11);
-            border: 1px solid rgb(171, 171, 171);
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem;
-            font-size: 1rem;
-            font-weight: 500;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: background-color 0.2s;
-        }
-        .export-btn svg {
-            fill: rgb(113, 113, 113);
-            width: 20px;
-            height: 20px;
-            display: inline-block;
-            vertical-align: middle;
-        }
-        .export-btn:hover {
-            background-color: #000000;
-            color: white;
-        }
-
-        .export-btn i {
-            color: white;
-            font-size: 1.2rem;
-            margin: 0;
-        }
-        .export {
-            position: relative;
-            display: inline-block;
-        }
-        .content {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-        .first, .second, .third {
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-        .card {
-            flex: 1;
-            flex-direction: column;
-            min-width: 10rem;
-            min-height: 12rem;
-            background: #fff;
-            border-radius: 15px;
-            border: 0.08rem solid #b6b6b6;
-            display: flex;
-            justify-content: flex-start;
-            align-items: flex-start;
-            padding: 1.75rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        .card h4 {
-            font-size: 1.25rem;
-            font-weight: 400;
-            margin: 0 0 1.25rem 0;
-            width: 100%;
-            text-align: left;
-        } 
-        .card canvas {
-            width: 100%;
-            display: block; 
-            margin-left: auto;
-            margin-right: auto;
-        }
-        .stat-container {
-            flex: 0.33;
-            min-width: 280px;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .stat {
-            background: #fff;
-            border-radius: 0.75rem;
-            border: 0.08rem solid #b6b6b6;
-            padding: 1.75rem;
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-            height: calc(50% - 0.5rem);
-            transition: all 0.2s ease;
-        }
-
-        .stat, .card {
-            transition: transform 0.5s ease-in-out, box-shadow 0.3s ease-in-out, border-color 0.3s ease-in-out;
-        }
-
-        .stat:hover, .card:hover {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            border-color: #999;
-            transform: scale(1.003);
-        }
-        .stat-number {
-            font-size: 2.25rem;
-            font-weight: 600;
-            color: #111;
-            letter-spacing: -0.5px;
-        }
-        .stat-label {
-            font-size: 0.95rem;
-            color: #555;
-            font-weight: 500;
-        }
-        .stat-change {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 1.15rem;
-            color: #16a34a;
-            font-weight: 500;
-        }
-        .stat-change svg {
-            color: #16a34a;
-        }  
-        .stat-change.negative {
-            color: #dc2626;
-        }
-
-        .stat-change.negative svg {
-            fill: #dc2626;
-        }
-        .popup-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.4);
-            z-index: 99;
-            justify-content: center;
-            align-items: center;
-        }
-        .date-popup.show {
-            transform: scale(1);
-            opacity: 1;
-        }
-        .date-popup {
-            background: white;
-            border-radius: 1rem;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-            padding: 2rem;
-            width: 420px;
-            max-width: 95%;
-            z-index: 100;
-            transform: scale(0.9);
-            opacity: 0;
-            transition: all 0.25s ease;
-        }
-        .date-popup h4 {
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            margin-top: 0;
-            margin-bottom: 1.5rem;
-            font-size: 1.75rem; /* Matches Analytics heading size */
-            font-weight: 500;
-            color: #000000;
-            text-align: center;
-            letter-spacing: -0.5px;
-        }
-        .date-popup label {
-            display: block;
-            font-size: 0.95rem;
-            margin-top: 0.75rem;
-            color: #333;
-        }
-        .date-input {
-           width: 100%;
-            padding: 1rem; /* Bigger input area */
-            border: 1px solid #ccc;
-            border-radius: 0.6rem;
-            margin-top: 0.5rem;
-            font-size: 1.1rem;
-        }
-        .popup-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 0.75rem;
-            margin-top: 1.5rem;
-        }
-        .confirm-btn, .cancel-btn {
-            padding: 0.5rem 1rem;
-            border: none;
-            border-radius: 0.5rem;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 500;
-            transition: 0.2s;
-        }
-        .confirm-btn {
-            background-color: black;
-            color: white;
-        }
-        .confirm-btn:hover {
-            background-color: #1b4c32;
-        }
-        .cancel-btn {
-            background-color: #ccc;
-            color: black;
-        }
-        .cancel-btn:hover {
-            background-color: #aaa;
-        }
-        #fileType {
-            width: 100%;
-            padding: 10px;
-            border-radius: 10px;
-            border: 1px solid #ccc;
-            margin-top: 5px;
-            font-size: 14px;
-            background-color: #f9f9f9;
-            cursor: pointer;
-        }
-        #fileType:hover {
-            border-color: #888;
-        }
-        .card-group {
-            display: flex;
-            justify-content: space-between; 
-            align-items: stretch; 
-            flex-wrap: nowrap; 
-            gap: 1rem;
-        }
-        .card-group .card {
-            flex: 1;
-            display: flex;
-            flex-direction: column; 
-            align-items: flex-start; 
-            justify-content: space-between; 
-            padding: 1.5rem;
-            border-radius: 15px;
-            border: 2px solid white; 
-            color: white; 
-            min-height: 12rem;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15); /* Stronger shadow for depth */
-            transition: all 0.4s ease-in-out; 
-        }
-
-        /* --- Content Group Styling --- */
-
-        .card-icon-group {
-            display: flex;
-            align-items: flex-start;
-            gap: 1.25rem; 
-            margin-bottom: 0.5rem; 
-        }
-
-        .card-icon {
-            width: 3rem; 
-            height: 3rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            background-color: rgba(255, 255, 255, 0.2); 
-            flex-shrink: 0;
-        }
-
-        .card-icon svg {
-            width: 1.3rem;
-            height: 1.3rem;
-            fill: white; 
-        }
-
-        .card-description {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            justify-content: center;
-            min-height: 3rem;
-        }
-
-        .card-description p {
-            font-size: 1.15rem; 
-            font-weight: 600; 
-            margin: 0;
-            opacity: 1;
-            color: white;
-        }
-
-        .card-description .sub-description {
-            font-size: 0.85rem;
-            font-weight: 400;
-            color: rgba(255, 255, 255, 0.8); 
-            margin-top: 0.2rem;
-        }
-
-        /* --- Metric Group Styling --- */
-
-        .card-metric-group {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            width: 100%; 
-            margin-top: auto;
-        }
-
-        .card-group .card h2 {
-            font-size: 3.5rem; 
-            font-weight: 900;
-            margin: 0; 
-            letter-spacing: -2px;
-            text-align: left;
-            color: white; /* Ensure the number color is white */
-        }
-        
-        .title-container {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 1.25rem;
-        }
-
-        .info-icon {
-            cursor: help;
-            color: #666;
-            font-size: 1rem;
-            position: relative;
-            display: inline-flex;
-            align-items: flex-start;
-            margin-top: -1.2rem; 
-            margin-left: 0.5rem;
-        }
-
-        .info-tooltip {
-            visibility: hidden;
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            bottom: 100%;
-            width: 200px;
-            background-color: #333;
-            color: white;
-            text-align: center;
-            padding: 0.75rem;
-            border-radius: 0.5rem;
-            font-size: 0.85rem;
-            font-weight: normal;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-            z-index: 1;
-            opacity: 0;
-            transition: opacity 0.2s, visibility 0.2s;
-        }
-
-        .info-icon:hover .info-tooltip {
-            visibility: visible;
-            opacity: 1;
-        }
-
-        /* Arrow at bottom of tooltip */
-        .info-tooltip::after {
-            content: '';
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            margin-left: -5px;
-            border-width: 5px;
-            border-style: solid;
-            border-color: #333 transparent transparent transparent;
-        }
-        .card-status {
-            font-size: 0.9rem;
-            font-weight: 400;
-            color: rgba(255, 255, 255, 0.6);
-            margin-top: 0.2rem;
-        }
-
-        /* 1. Projects - Teal/Green */
-        .card-group .card.color-one {
-            background: linear-gradient(135deg, #1abc9c 0%, #16a085 100%);
-            border-color: #1abc9c; /* Matching Border */
-        }
-        .card-group .card.color-one:hover {
-            background: linear-gradient(315deg, #1abc9c 0%, #16a085 100%);
-            transform: scale(1.03); 
-        }
-
-        /* 2. Events - Blue/Indigo */
-        .card-group .card.color-two {
-            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-            border-color: #3498db; /* Matching Border */
-        }
-        .card-group .card.color-two:hover {
-            background: linear-gradient(315deg, #3498db 0%, #2980b9 100%);
-            transform: scale(1.03); 
-        }
-
-        /* 3. Active Providers - Purple/Violet */
-        .card-group .card.color-three {
-            background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
-            border-color: #9b59b6; /* Matching Border */
-        }
-        .card-group .card.color-three:hover {
-            background: linear-gradient(315deg, #9b59b6 0%, #8e44ad 100%);
-            transform: scale(1.03); 
-        }
-
-        /* 4. Trained Individuals - Orange/Red */
-        .card-group .card.color-four {
-            background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
-            border-color: #e67e22; /* Matching Border */
-        }
-        .card-group .card.color-four:hover {
-            background: linear-gradient(315deg, #e67e22 0%, #d35400 100%);
-            transform: scale(1.03); 
-        }
-        
-        /* Ensure the final CSS block is in your <style> tags */
-        @media print {
-            * {
-                page-break-inside: avoid !important;
-                box-shadow: none !important;
-            }
-            #card-metrics-group {
-                break-after: page !important; 
-                padding: 10mm;
-                margin: 0;
-            }
-            
-            /* Target the newly ID'd parent DIVs */
-            #chart-active-projects,
-            #chart-budget-allocation,
-            #chart-agenda-distribution,
-            #chart-trained-individuals,
-            #chart-client-requests {
-                break-before: page !important; 
-                height: 100vh !important;
-                width: 100vw !important;
-                display: flex;
-                flex-direction: column;
-                justify-content: flex-start;
-                align-items: center;
-                padding: 10mm;
-                margin: 0;
-            }
-            
-            #chart-active-projects canvas,
-            #chart-budget-allocation canvas,
-            #chart-agenda-distribution canvas,
-            #chart-trained-individuals canvas,
-            #chart-client-requests canvas {
-                max-width: 95% !important;
-                max-height: 90vh !important;
-                height: auto !important;
-                width: auto !important;
-            }
-
-            .upper, .export, .time, header, footer, .date-filter-group {
-                display: none !important;
-            }
-        }
-        #chart-active-projects canvas,
-        #chart-budget-allocation canvas,
-        #chart-agenda-distribution canvas,
-        #chart-trained-individuals canvas,
-        #chart-client-requests canvas {
-            max-width: 95% !important;
-            max-height: 90vh !important;
-            height: auto !important; 
-            width: auto !important; 
-        }
-    </style>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
+<link href="{% static 'internal/analytics/styles.css' %}" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer"/>
 </head>
 <body> 
     <svg style="display: none;">
@@ -645,847 +43,545 @@
         </symbol>
         
     </svg>  
-    <header>
-        extension
-    </header>
-    <main> 
-       <div class="upper">
-            <div class="time">
-                <h2 style="margin:0 0 0 0;">Analytics</h2>
+<main> 
+    <div class="upper">
+        <div class="time">
+            <h2 style="margin:0 0 0 0;">Analytics</h2>
 
-                <div class="dropdown" style="margin-left: 1.5rem;">
-                    <button id="dateRangeBtn" class="dropdown-btn">This Quarter ▾</button>
-                    <div id="popupOverlay" class="popup-overlay">
-                        <div id="datePopup" class="date-popup">
-                            <h4>Select Date Range</h4>
+            <div class="dropdown" style="margin-left: 1.5rem;">
+                <button id="dateRangeBtn" class="dropdown-btn">This Quarter ▾</button>
+                <div id="popupOverlay" class="popup-overlay">
+                    <div id="datePopup" class="date-popup">
+                        <h4>Select Date Range</h4>
 
-                            <label for="startDate">Start Date:</label>
-                            <input type="date" id="startDate" class="date-input">
+                        <label for="startDate">Start Date:</label>
+                        <input type="date" id="startDate" class="date-input">
 
-                            <label for="endDate">End Date:</label>
-                            <input type="date" id="endDate" class="date-input">
+                        <label for="endDate">End Date:</label>
+                        <input type="date" id="endDate" class="date-input">
 
-                            <div class="popup-actions">
-                                <button id="confirmExport" class="confirm-btn">Confirm</button>
-                                <button id="cancelExport" class="cancel-btn">Cancel</button>
-                            </div>
+                        <div class="popup-actions">
+                            <button id="confirmExport" class="confirm-btn">Confirm</button>
+                            <button id="cancelExport" class="cancel-btn">Cancel</button>
                         </div>
                     </div>
-                </div>
-            </div>
-
-            <div class="export">
-                <button id="exportBtn" class="export-btn">
-                    <svg width="20" height="20" style="fill: currentColor;">
-                        <use href="#file-export"/>
-                    </svg>
-                    Export
-                </button>
-                <div id="exportDropdown" class="dropdown-menu hidden" style="right: 0; left: auto; text-align:center;">
-                    <div class="dropdown-item" data-type="pdf">Export as PDF</div>
-                    <div class="dropdown-item" data-type="png">Export as PNG</div>
-                    <div class="dropdown-item" data-type="csv">Export as CSV</div>
                 </div>
             </div>
         </div>
-        <div class="content">
-            <div class="card-group" id="card-metrics-group">
-                <div class="card color-one">
-                    <div class="card-icon-group">
-                        <div class="card-icon">
-                            <svg>
-                                <use href="#projects"/>
-                            </svg>
-                        </div>
-                        <div class="card-description">
-                            <p>Projects</p>
-                            <span class="sub-description">Active initiatives in UESO</span>
-                        </div>
-                    </div>
-                    <div class="card-metric-group">
-                        <h2>1000</h2>
-                        <span class="card-status">Based on selected date.</span>
-                    </div>
-                </div>
 
-                <div class="card color-two">
-                    <div class="card-icon-group">
-                        <div class="card-icon">
-                            <svg>
-                                <use href="#events"/>
-                            </svg>
-                        </div>
-                        <div class="card-description">
-                            <p>Events</p>
-                            <span class="sub-description">Total events accomplished</span>
-                        </div>
-                    </div>
-                    <div class="card-metric-group">
-                        <h2>100</h2>
-                        <span class="card-status">Based on selected date.</span>
-                    </div>
-                </div>
-
-                <div class="card color-three">
-                    <div class="card-icon-group">
-                        <div class="card-icon">
-                            <svg>
-                                <use href="#providers"/>
-                            </svg>
-                        </div>
-                        <div class="card-description">
-                            <p>Active Providers</p>
-                            <span class="sub-description">Service partners this period</span>
-                        </div>
-                    </div>
-                    <div class="card-metric-group">
-                        <h2>50</h2>
-                        <span class="card-status">Based on selected date.</span>
-                    </div>
-                </div>
-
-                <div class="card color-four">
-                    <div class="card-icon-group">
-                        <div class="card-icon">
-                            <svg>
-                                <use href="#trained"/>
-                            </svg>
-                        </div>
-                        <div class="card-description">
-                            <p>Trained Individuals</p>
-                            <span class="sub-description">Direct beneficaries of UESO</span>
-                        </div>
-                    </div>
-                    <div class="card-metric-group">
-                        <h2>500</h2>
-                        <span class="card-status">Based on selected date.</span>
-                    </div>
-                </div>
+        <div class="export">
+            <button id="exportBtn" class="export-btn">
+                <svg width="20" height="20" style="fill: currentColor;">
+                    <use href="#file-export"/>
+                </svg>
+                Export
+            </button>
+            <div id="exportDropdown" class="dropdown-menu hidden" style="right: 0; left: auto; text-align:center;">
+                <div class="dropdown-item" data-type="pdf">Export as PDF</div>
+                <div class="dropdown-item" data-type="png">Export as PNG</div>
+                <div class="dropdown-item" data-type="csv">Export as CSV</div>
             </div>
-            <div class="first">
-                <div class="card" id="chart-active-projects">
-                    <div class="title-container">
-                        <h4>Active Projects</h4>
-                        <span class="info-icon">    
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info-circle" viewBox="0 0 16 16">
-                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                                <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
-                            </svg>
-                            <span class="info-tooltip">Shows the trend of active projects over given time.</span>
-                        </span>
+        </div>
+    </div>
+    
+    <div class="content">
+        <div class="card-group" id="card-metrics-group">
+            <div class="card color-one">
+                <div class="card-icon-group">
+                    <div class="card-icon">
+                        <svg>
+                            <use href="#projects"/>
+                        </svg>
                     </div>
-                    <canvas id="activeProjectsChart" width="350" height="115"></canvas>
+                    <div class="card-description">
+                        <p>Projects</p>
+                        <span class="sub-description">Active projects under UESO</span>
+                    </div>
                 </div>
-                <div class="stat-container">
+                <div class="card-metric-group">
+                    <h2 id="metric_active_projects">1000</h2> <span class="card-status">Based on selected date.</span>
                 </div>
             </div>
 
-            <div class="second">
-                <div class="card" style="flex: 3.655;" id="chart-budget-allocation"> 
-                    <div class="title-container">
-                        <h4>Budget Allocation</h4> 
-                        <span class="info-icon">    
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info-circle" viewBox="0 0 16 16">
-                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                                <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
-                            </svg>
-                            <span class="info-tooltip">Shows flow of given budget in constituents.</span>
-                        </span> 
+            <div class="card color-two">
+                <div class="card-icon-group">
+                    <div class="card-icon">
+                        <svg>
+                            <use href="#events"/>
+                        </svg>
                     </div>
-                    <canvas id="budgetMultiLineChart" width="600" height="180"></canvas>
+                    <div class="card-description">
+                        <p>Events</p>
+                        <span class="sub-description">Total events accomplished</span>
+                    </div>
                 </div>
-                <div class="card" id="chart-agenda-distribution"> 
-                    <div class="title-container">
-                        <h4>Agenda Distribution</h4> 
-                        <span class="info-icon">    
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info-circle" viewBox="0 0 16 16">
-                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                                <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
-                            </svg>
-                            <span class="info-tooltip">Shows the distribution of different agenda types and their relative proportions in the overall activities.</span>
-                        </span> 
-                    </div>
-                    <canvas id="agendaDistributionChart"></canvas>
+                <div class="card-metric-group">
+                    <h2 id="metric_total_events">100</h2> <span class="card-status">Based on selected date.</span>
                 </div>
             </div>
 
-            <div class="third">
-                <div class="card" id="chart-trained-individuals"> 
-                    <div class="title-container">
-                        <h4>Trained Individuals</h4> 
-                        <span class="info-icon">    
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info-circle" viewBox="0 0 16 16">
-                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                                <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
-                            </svg>
-                            <span class="info-tooltip">Breakdown of trained individuals across different constituents, showing the reach and impact of training programs.</span>
-                        </span> 
+            <div class="card color-three">
+                <div class="card-icon-group">
+                    <div class="card-icon">
+                        <svg>
+                            <use href="#providers"/>
+                        </svg>
                     </div>
-                    <canvas id="trainedChart" width="900" height="500"></canvas>
+                    <div class="card-description">
+                        <p>Active Providers</p>
+                        <span class="sub-description">Service partners this period</span>
+                    </div>
+                </div>
+                <div class="card-metric-group">
+                    <h2 id="metric_active_providers">50</h2> <span class="card-status">Based on selected date.</span>
                 </div>
             </div>
- 
-            <div class="card" id="chart-client-requests"> 
+
+            <div class="card color-four">
+                <div class="card-icon-group">
+                    <div class="card-icon">
+                        <svg>
+                            <use href="#trained"/>
+                        </svg>
+                    </div>
+                    <div class="card-description">
+                        <p>Trained Individuals</p>
+                        <span class="sub-description">Direct beneficaries of UESO</span>
+                    </div>
+                </div>
+                <div class="card-metric-group">
+                    <h2 id="metric_trained_individuals">500</h2> <span class="card-status">Based on selected date.</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="first">
+            <div class="card" id="chart-active-projects">
                 <div class="title-container">
-                    <h4>Client Requests</h4> 
+                    <h4>Created Projects</h4>
                     <span class="info-icon">    
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info-circle" viewBox="0 0 16 16">
                             <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
                             <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
                         </svg>
-                        <span class="info-tooltip">Overview of client request statuses, showing approved, ongoing, and rejected requests distribution.</span>
-                    </span> 
+                        <span class="info-tooltip">Shows the trend of active projects over given time.</span>
+                    </span>
                 </div>
-                <canvas id="clientRequestsChart" height="30"></canvas>
+                <canvas id="activeProjectsChart" width="350" height="20"></canvas>
+            </div>
+            <div class="stat-container">
             </div>
         </div>
-    </main>
-    <footer>
-        <p>test</p>
-    </footer>
-    <script>
-        let selectedStartDate = null;
-        let selectedEndDate = null;
 
-        const exportBtn = document.getElementById('exportBtn');
-        const exportDropdown = document.getElementById('exportDropdown');
-        const popupOverlay = document.getElementById('popupOverlay');
-        const datePopup = document.getElementById('datePopup');
-        const confirmExport = document.getElementById('confirmExport');
-        const cancelExport = document.getElementById('cancelExport');
-        const dateRangeBtn = document.getElementById('dateRangeBtn');
+        <div class="second">
+            <div class="card" style="flex: 3.655;" id="chart-budget-allocation"> 
+                <div class="title-container">
+                    <h4>Budget Allocation</h4> 
+                    <span class="info-icon">    
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info-circle" viewBox="0 0 16 16">
+                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                            <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
+                        </svg>
+                        <span class="info-tooltip">Shows flow of given budget in constituents.</span>
+                    </span> 
+                </div>
+                <canvas id="budgetMultiLineChart" width="600" height="20"></canvas>
+            </div>
+            <div class="card" id="chart-agenda-distribution"> 
+                <div class="title-container">
+                    <h4>Agenda Distribution</h4> 
+                    <span class="info-icon">    
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info-circle" viewBox="0 0 16 16">
+                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                            <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
+                        </svg>
+                        <span class="info-tooltip">Shows the distribution of different agenda types and their relative proportions in the overall activities.</span>
+                    </span> 
+                </div>
+                <canvas id="agendaDistributionChart"></canvas>
+            </div>
+        </div>
+
+        <div class="third">
+            <div class="card" id="chart-trained-individuals"> 
+                <div class="title-container">
+                    <h4>Trained Individuals</h4> 
+                    <span class="info-icon">    
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info-circle" viewBox="0 0 16 16">
+                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                            <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
+                        </svg>
+                        <span class="info-tooltip">Breakdown of trained individuals across different constituents, showing the reach and impact of training programs.</span>
+                    </span> 
+                </div>
+                <canvas id="trainedChart" width="900" height="20"></canvas>
+            </div>
+        </div>
+
+        <div class="card" id="chart-client-requests"> 
+            <div class="title-container">
+                <h4>Client Requests</h4> 
+                <span class="info-icon">    
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info-circle" viewBox="0 0 16 16">
+                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                        <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
+                    </svg>
+                    <span class="info-tooltip">Overview of client request statuses, showing approved, ongoing, and rejected requests distribution.</span>
+                </span> 
+            </div>
+            <canvas id="clientRequestsChart" height="8"></canvas>
+        </div>
+    </div>
+</main>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('=== ANALYTICS CARDS & TRENDS SCRIPT START ===');
+
+        // --- Define global variables for dates ---
+        let selectedStartDate = '';
+        let selectedEndDate = '';
+
+        // --- API Endpoints ---
+        const baseApiUrl = '/analytics/data';
+        const TRENDS_ENDPOINT = "{% url 'project_trends_data' %}"; // URL for trends
+        const METRIC_ENDPOINTS = { // URLs for card metrics
+            'metric_active_projects': `${baseApiUrl}/metric/projects/`,
+            'metric_total_events': `${baseApiUrl}/metric/events/`,
+            'metric_active_providers': `${baseApiUrl}/metric/providers/`,
+            'metric_trained_individuals': `${baseApiUrl}/metric/individuals/`
+        };
+
+        // Helper to build URLs with dates
+        const buildUrl = (baseUrl, start, end) => `${baseUrl}?start_date=${start}&end_date=${end}`;
+
+        // --- Master Function to Update Cards & Trends ---
+        function updateCardsAndTrends(startStr, endStr) {
+            console.log(`Updating Cards & Trends for: ${startStr || 'default'} to ${endStr || 'default'}`);
+
+            // --- A. Fetch Card Metrics ---
+            Object.entries(METRIC_ENDPOINTS).forEach(([elementId, baseUrl]) => {
+                const url = buildUrl(baseUrl, startStr, endStr);
+                fetch(url)
+                    .then(response => {
+                        if (!response.ok) throw new Error(`HTTP error! status: ${response.status} for ${url}`);
+                        return response.json();
+                    })
+                    .then(data => {
+                        const element = document.getElementById(elementId);
+                        if (element && data.metric !== undefined) {
+                            element.textContent = data.metric;
+                        } else if (element) {
+                            element.textContent = '0';
+                            console.warn(`Metric data missing for ${elementId}. Response:`, data);
+                        } else {
+                            console.warn(`Element with ID ${elementId} not found.`);
+                        }
+                    })
+                    .catch(error => {
+                        console.error(`Error fetching metric for ${elementId}:`, error);
+                        const element = document.getElementById(elementId);
+                        if (element) element.textContent = 'Error';
+                    });
+            });
+
+            // --- B. Fetch and Render Trend Stats ---
+            const trendsUrl = buildUrl(TRENDS_ENDPOINT, startStr, endStr);
+            const statContainer = document.querySelector('.stat-container');
+
+            if (statContainer) {
+                 fetch(trendsUrl)
+                    .then(response => {
+                        if (!response.ok) throw new Error(`HTTP error! status: ${response.status} for trends`);
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log("Trend data:", data);
+                        statContainer.innerHTML = ''; // Clear previous stats
+
+                        const createStatHTML = (statData, label) => { /* ... (same helper function as before) ... */
+                             if (!statData) return '';
+                             const trendIcon = statData.trend === 'down' ? 'downward-trend' : (statData.trend === 'up' ? 'upward-trend' : '');
+                             const changeClass = statData.trend === 'down' ? 'negative' : (statData.trend === 'up' ? 'positive' : '');
+                             const changePrefix = statData.change > 0 ? '+' : '';
+                             const changeText = statData.trend === 'flat' ? 'No change' : `${changePrefix}${statData.change}% vs previous period`;
+                             return `
+                                <div class="stat">
+                                    <div class="stat-label">${label}</div>
+                                    <div class="stat-number">${statData.number}</div>
+                                    <div class="stat-change ${changeClass}">
+                                        ${trendIcon ? `<svg width="20" height="20" style="fill: currentColor; vertical-align: middle; margin-right: 4px;"> <use href="#${trendIcon}"/></svg>` : ''}
+                                        ${changeText}
+                                    </div>
+                                </div>`;
+                        };
+
+                        statContainer.innerHTML += createStatHTML(data.created, "Projects Created");
+                        statContainer.innerHTML += createStatHTML(data.completed, "Projects Completed");
+
+                        if (statContainer.innerHTML === '') {
+                             statContainer.innerHTML = '<div class="stat"><div class="stat-label">Trend data not available.</div></div>';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching or rendering trend data:', error);
+                        if(statContainer) statContainer.innerHTML = '<div class="stat"><div class="stat-label" style="color: red;">Error loading trends.</div></div>';
+                    });
+            } else {
+                 console.warn(".stat-container not found in HTML.");
+            }
+        } // --- End of updateCardsAndTrends ---
+
+        // --- Logic for Custom Date Popup (with Date Validation) ---
+        const openBtn = document.getElementById('dateRangeBtn');
+        const overlay = document.getElementById('popupOverlay');
+        const popup = document.getElementById('datePopup');
+        const confirmBtn = document.getElementById('confirmExport');
+        const cancelBtn = document.getElementById('cancelExport');
         const startDateInput = document.getElementById('startDate');
         const endDateInput = document.getElementById('endDate');
 
-        // CRITICAL: Register the DataLabels plugin
-        Chart.register(ChartDataLabels);
+        if (openBtn && overlay && popup && confirmBtn && cancelBtn && startDateInput && endDateInput) {
+             // Date Validation
+            startDateInput.addEventListener('change', () => { if (startDateInput.value) endDateInput.min = startDateInput.value; });
+            endDateInput.addEventListener('change', () => { if (endDateInput.value) startDateInput.max = endDateInput.value; });
+
+            // Show/Hide Popup
+            const showPopup = (show) => { /* ... (same showPopup function as before) ... */
+                 if (show) {
+                    overlay.style.display = 'flex';
+                     // Set inputs to current selection *before* showing
+                     startDateInput.value = selectedStartDate || ''; // Use global state
+                     endDateInput.value = selectedEndDate || ''; // Use global state
+                    setTimeout(() => { popup.classList.add('show'); }, 10);
+                } else {
+                    popup.classList.remove('show');
+                    setTimeout(() => {
+                        overlay.style.display = 'none';
+                        startDateInput.max = ''; endDateInput.min = '';
+                    }, 250);
+                }
+            };
+
+            // Event Listeners
+            openBtn.addEventListener('click', () => showPopup(true));
+            cancelBtn.addEventListener('click', () => showPopup(false));
+            overlay.addEventListener('click', (event) => { if (event.target === overlay) showPopup(false); });
+
+            // Confirm Button Action
+            confirmBtn.addEventListener('click', () => {
+                const startStr = startDateInput.value;
+                const endStr = endDateInput.value;
+
+                 // Basic validation before proceeding
+                 if (startStr && endStr && new Date(startStr) > new Date(endStr)) {
+                    alert('Start date cannot be after end date.');
+                    return; // Stop processing
+                 }
+
+                // Update global state
+                selectedStartDate = startStr;
+                selectedEndDate = endStr;
+
+                // Format Date for Button Text
+                const formatDate = (dateStr) => { /* ... (same formatDate function) ... */
+                    if (!dateStr) return null;
+                    const date = new Date(dateStr + 'T00:00:00');
+                    if (isNaN(date)) return null;
+                    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+                };
+                const formattedStart = formatDate(startStr);
+                const formattedEnd = formatDate(endStr);
+
+                // Update Button Text
+                if (formattedStart && formattedEnd) openBtn.textContent = `${formattedStart} - ${formattedEnd} ▾`;
+                else if (formattedStart) openBtn.textContent = `From ${formattedStart} ▾`;
+                else if (formattedEnd) openBtn.textContent = `Until ${formattedEnd} ▾`;
+                else openBtn.textContent = 'Last 90 Days ▾'; // Default text
+
+                // --- Call function to update Cards & Trends ---
+                updateCardsAndTrends(selectedStartDate, selectedEndDate);
+
+                // --- Trigger Chart Update (if chart script exists) ---
+                if (typeof window.refreshAnalyticsCharts === 'function') {
+                    window.refreshAnalyticsCharts(selectedStartDate, selectedEndDate);
+                } else {
+                    console.warn("refreshAnalyticsCharts function not found. Ensure chart script is loaded after this script.");
+                }
+
+                showPopup(false); // Close popup
+            });
+
+        } else {
+             if (document.getElementById('dateRangeBtn')) {
+                 console.error("Date filter button or popup elements might be incomplete!");
+             }
+        }
+
+        // --- Initial Load ---
+        // Set default 90-day range for global vars and button text
+        const today = new Date();
+        const ninetyDaysAgo = new Date();
+        ninetyDaysAgo.setDate(today.getDate() - 90);
+        const toISO = (date) => date.toISOString().split('T')[0];
+
+        selectedStartDate = toISO(ninetyDaysAgo);
+        selectedEndDate = toISO(today);
+
+        if (openBtn) {
+            const options = { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' };
+            openBtn.textContent = `${ninetyDaysAgo.toLocaleDateString('en-US', options)} - ${today.toLocaleDateString('en-US', options)} ▾`;
+        }
+        updateCardsAndTrends(selectedStartDate, selectedEndDate); // Fetch initial data
+
+        console.log('=== ANALYTICS CARDS & TRENDS SCRIPT END ===');
+    });
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        let chartInstances = {
+            activeProjectsChart: null,
+            budgetMultiLineChart: null,
+            agendaDistributionChart: null,
+            trainedChart: null,
+            clientRequestsChart: null
+        };
+
+        try {
+            if (typeof ChartDataLabels !== 'undefined' && !Chart.registry.plugins.get('datalabels')) {
+                Chart.register(ChartDataLabels);
+                Chart.defaults.set('plugins.datalabels', {
+                    color: '#444', anchor: 'end', align: 'start', offset: -10,
+                    font: { weight: 'bold' },
+                    formatter: (value) => value > 0 ? value : ''
+                });
+            } else if (typeof ChartDataLabels === 'undefined') {
+                console.warn("ChartDataLabels plugin script not found.");
+            }
+        } catch (e) {
+            console.error("Error registering ChartDataLabels:", e);
+        }
+        Chart.defaults.maintainAspectRatio = false;
+        Chart.defaults.responsive = true;
 
         const ENDPOINTS = {
-            // Chart Data Views
             active: "{% url 'active_projects_chart_data' %}",
             budget: "{% url 'budget_allocation_chart_data' %}",
             agenda: "{% url 'agenda_distribution_chart_data' %}",
             trained: "{% url 'trained_individuals_chart_data' %}",
-            requests: "{% url 'request_status_chart_data' %}", 
-
-            // Card Metrics Views
-            projects: "{% url 'projects_metric_data' %}",
-            events: "{% url 'events_metric_data' %}",
-            providers: "{% url 'providers_metric_data' %}",
-            individuals: "{% url 'individuals_metric_data' %}"
+            requests: "{% url 'request_status_chart_data' %}",
         };
-        
-        let chartsInstance = {}; 
 
-        function setDefaultDateRange() {
-            const today = new Date();
-            const ninetyDaysAgo = new Date();
-            ninetyDaysAgo.setDate(today.getDate() - 90);
-
-            const toISO = (date) => date.toISOString().split('T')[0];
-            const toDisplay = (date) => date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-
-            selectedStartDate = toISO(ninetyDaysAgo);
-            selectedEndDate = toISO(today);
-
-            // Update inputs for display in the popup
-            startDateInput.value = selectedStartDate;
-            endDateInput.value = selectedEndDate;
-
-            // Update the button text
-            const formattedStart = toDisplay(ninetyDaysAgo);
-            const formattedEnd = toDisplay(today);
-            dateRangeBtn.textContent = `${formattedStart} – ${formattedEnd}`;
-        }
-
-        /**
-         * Closes the date selection popup.
-         */
-        function closePopup() {
-            datePopup.classList.remove('show');
-            setTimeout(() => popupOverlay.style.display = 'none', 200);
-        }
-        
-        // --- Data Fetching Functions ---
-
-        /**
-         * Fetches data from a Django endpoint, passing the date range.
-         * @param {string} endpoint - The Django URL endpoint.
-         * @param {string} start - Start date in YYYY-MM-DD format.
-         * @param {string} end - End date in YYYY-MM-DD format.
-         */
         async function fetchChartData(endpoint, start, end) {
-            // Append date range to the endpoint as URL parameters
             const url = `${endpoint}?start_date=${start}&end_date=${end}`;
-            
             try {
                 const response = await fetch(url);
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const json = await response.json();
                 return json;
             } catch (error) {
-                console.warn(`Error fetching ${endpoint}:`, error);
-
-                // === FALLBACK SAMPLE DATA ===
-                if (endpoint.includes('projects_metric')) return { metric: '1000' };
-                if (endpoint.includes('events_metric')) return { metric: '100' };
-                if (endpoint.includes('providers_metric')) return { metric: '50' };
-                if (endpoint.includes('individuals_metric')) return { metric: '500' };
-                
-                if (endpoint.includes('active')) {
-                    return { labels: ["Jan", "Feb", "Mar", "Apr"], data: [5, 7, 6, 9], label: "Active Projects" };
-                } else if (endpoint.includes('budget')) {
-                    return {
-                        labels: ["Q1", "Q2", "Q3", "Q4"],
-                        allocated: [10, 15, 12, 18],
-                        used: [8, 12, 9, 15],
-                        remaining: [2, 3, 3, 3]
-                    };
-                } else if (endpoint.includes('agenda')) {
-                    return { labels: ["Meeting", "Workshop", "Training", "Outreach"], data: [30, 20, 35, 15] };
-                } else if (endpoint.includes('trained')) {
-                    return { labels: ["Dept A", "Dept B", "Dept C"], data: [120, 90, 110] };
-                } else if (endpoint.includes('requests')) {
-                    // Fallback for Client Requests (dynamic data structure with raw counts)
-                    return { labels: ["Received", "Approved", "Rejected"], data: [150, 90, 20] };
-                }
-                else {
-                    return null;
-                }
+                 console.warn(`Error fetching ${endpoint}:`, error, "Using fallback data.");
+                 if (endpoint.includes('active')) return { labels: ["Jan", "Feb", "Mar", "Apr"], counts: [5, 7, 6, 9] };
+                 if (endpoint.includes('budget')) return { labels: ["College A", "College B"], allocations: [15000, 25000] };
+                 if (endpoint.includes('agenda')) return { labels: ["SDG 1", "SDG 4", "Health"], counts: [3, 5, 2] };
+                 if (endpoint.includes('trained')) return { labels: ["Jan", "Feb", "Mar"], counts: [50, 75, 60] };
+                 if (endpoint.includes('requests')) return { labels: ["Approved", "Ongoing", "Rejected"], approved_pct: 60, ongoing_pct: 25, rejected_pct: 15, total_count: 150 };
+                 return null;
             }
         }
 
-        /**
-         * Updates the card metrics with data from the server.
-         */
-        async function updateCardMetrics(start, end) {
-            const metrics = [
-                { id: 'projects', endpoint: ENDPOINTS.projects, selector: '.card.color-one h2' },
-                { id: 'events', endpoint: ENDPOINTS.events, selector: '.card.color-two h2' },
-                { id: 'providers', endpoint: ENDPOINTS.providers, selector: '.card.color-three h2' },
-                { id: 'individuals', endpoint: ENDPOINTS.individuals, selector: '.card.color-four h2' }
-            ];
+        async function refreshCharts(start, end) {
+            console.log(`Refreshing charts for: ${start || 'default'} to ${end || 'default'}`);
 
-            for (const metric of metrics) {
-                const data = await fetchChartData(metric.endpoint, start, end);
-                const element = document.querySelector(metric.selector);
-                if (element && data && data.metric) {
-                    element.textContent = data.metric;
-                }
-            }
-        }
-        
-        /**
-         * Re-initializes or updates all charts and metrics with the new date range.
-         */
-        async function refreshDashboard(start, end) {
-            // 1. Update Card Metrics (Dynamic)
-            await updateCardMetrics(start, end);
-
-            // 2. Update Charts
-            // Destroy existing instances before re-rendering
-            Object.values(chartsInstance).forEach(chart => {
-                if (chart && typeof chart.destroy === 'function') chart.destroy();
-            });
-            chartsInstance = {}; // Clear the storage
-
-            // 3. Render all Dynamic Charts
-            chartsInstance.active = await renderActiveProjectsChart(start, end);
-            chartsInstance.budget = await renderBudgetMultiLineChart(start, end);
-            chartsInstance.agenda = await renderAgendaDistributionChart(start, end);
-            chartsInstance.trained = await renderTrainedChart(start, end);
-            // CRITICAL FIX: Make Client Requests Dynamic and pass dates
-            chartsInstance.requests = await renderClientRequestsChart(start, end);
-
-            // 4. Render Static Elements (KPIs)
-            renderStats(); 
-            
-            // REMOVED: renderAnnualCompletedProjectsChart();
-        }
-        
-        // --- Chart Rendering Functions (Modified to accept date range) ---
-
-        // --- CHART 1: Active Projects (Line Chart) ---
-        async function renderActiveProjectsChart(start, end) {
-            const data = await fetchChartData(ENDPOINTS.active, start, end);
-            if (!data) return;
-            
-            const ctx = document.getElementById('activeProjectsChart').getContext('2d');
-            const activeProjectsChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: data.labels, 
-                    datasets: [{
-                        label: data.label || "Active Projects",
-                        data: data.data,
-                        fill: true,
-                        borderColor: "rgba(75, 192, 192, 1)",
-                        backgroundColor: "rgba(75, 192, 192, 0.2)",
-                        tension: 0.25,
-                        pointBackgroundColor: "#fff",
-                        pointBorderColor: "rgba(75, 192, 192, 1)",
-                        pointRadius: 5,
-                        pointHoverRadius: 7
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: { grid: { display: false }, title: { display: true, text: 'Timeframe', font: { size: 14 } } },
-                        y: { beginAtZero: true, grid: { color: '#f0f0f0' }, title: { display: true, text: 'Projects', font: { size: 14 } } }
-                    }
-                }
-            });
-            return activeProjectsChart;
-        }
-
-        // --- CHART 2: Budget Allocation (Multi-line Chart) ---
-        async function renderBudgetMultiLineChart(start, end) {
-            const data = await fetchChartData(ENDPOINTS.budget, start, end);
-            if (!data) return;
-            
-            const ctxBudget = document.getElementById('budgetMultiLineChart').getContext('2d');
-            const budgetMultiLineChart = new Chart(ctxBudget, {
-                type: 'line',
-                data: {
-                    labels: data.labels,
-                    datasets: [
-                        { label: "Allocated Budget", data: data.allocated, borderColor: "rgba(75, 192, 192, 1)", backgroundColor: "rgba(75, 192, 192, 0.2)", tension: 0.3, fill: false, pointRadius: 5 },
-                        { label: "Used Budget", data: data.used, borderColor: "rgba(255, 99, 132, 1)", backgroundColor: "rgba(255, 99, 132, 0.2)", tension: 0.3, fill: false, pointRadius: 5 },
-                        { label: "Remaining Budget", data: data.remaining, borderColor: "rgba(255, 206, 86, 1)", backgroundColor: "rgba(255, 206, 86, 0.2)", tension: 0.3, fill: false, pointRadius: 5 }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { position: "top", labels: { font: { size: 13 } } },
-                        tooltip: { callbacks: { label: function(context) { return `${context.dataset.label}: ₱${context.raw}M`; } } }
-                    },
-                    scales: {
-                        x: { title: { display: true, text: "" }, ticks: { autoSkip: false, maxRotation: 45, minRotation: 45 } },
-                        y: { beginAtZero: true, title: { display: true, text: "Budget (in Millions)" } }
-                    }
-                }
-            });
-            return budgetMultiLineChart;
-        }
-
-        // --- CHART 3: Agenda Distribution (Pie Chart) ---
-        async function renderAgendaDistributionChart(start, end) {
-            const data = await fetchChartData(ENDPOINTS.agenda, start, end);
-            if (!data) return;
-            
-            const backgroundColors = [
-                "#FF6384","#36A2EB","#FFCE56","#4BC0C0","#9966FF",
-                "#FF9F40","#8BC34A","#E91E63","#00BCD4"
-            ];
-
-            const ctxAgenda = document.getElementById('agendaDistributionChart').getContext('2d');
-            const agendaDistributionChart = new Chart(ctxAgenda, {
-                type: 'pie',
-                data: {
-                    labels: data.labels,
-                    datasets: [{
-                        label: "Agenda Distribution",
-                        data: data.data,
-                        backgroundColor: data.labels.map((_, i) => backgroundColors[i % backgroundColors.length]),
-                        borderColor: "#fff",
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: {
-                            display: false, 
-                            position: "left",
-                            labels: {
-                                boxWidth: 15, padding: 15, font: { size: 11 },
-                                generateLabels: function(chart) {
-                                    const data = chart.data;
-                                    const total = data.datasets[0].data.reduce((a, b) => a + b, 0);
-                                    return data.labels.map((label, i) => {
-                                        const value = data.datasets[0].data[i];
-                                        const percentage = ((value / total) * 100).toFixed(1);
-                                        return {
-                                            text: `${label.substring(0, 30)}... (${percentage}%)`,
-                                            fillStyle: data.datasets[0].backgroundColor[i],
-                                        };
-                                    });
-                                }
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    let total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                                    let value = context.raw;
-                                    let percentage = ((value / total) * 100).toFixed(1);
-                                    return `${context.label}: ${value} (${percentage}%)`;
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-            return agendaDistributionChart;
-        }
-
-        // --- CHART 4: Trained Individuals (Bar Chart) ---
-        async function renderTrainedChart(start, end) {
-            const data = await fetchChartData(ENDPOINTS.trained, start, end);
-            if (!data) return;
-
-            // Sort data by count descending
-            const sortedData = data.labels.map((label, i) => ({ label, count: data.data[i] }))
-                .sort((a, b) => b.count - a.count);
-
-            const trainedLabels = sortedData.map(item => item.label);
-            const trainedData = sortedData.map(item => item.count);
-            
-            const ctxTrained = document.getElementById('trainedChart').getContext('2d');
-            const trainedChart = new Chart(ctxTrained, {
-                type: 'bar',
-                data: {
-                    labels: trainedLabels,
-                    datasets: [{
-                        label: 'Trained Individuals',
-                        data: trainedData,
-                        backgroundColor: trainedLabels.map((_, i) => {
-                            const hue = Math.floor((i / trainedLabels.length) * 270);
-                            return `hsl(${hue} 70% 55%)`;
-                        }),
-                        borderColor: '#ffffff',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    indexAxis: 'y',
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const value = context.raw;
-                                    const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                                    const pct = ((value / total) * 100).toFixed(1);
-                                    return `${context.label}: ${value} (${pct}%)`;
-                                }
-                            }
-                        },
-                        datalabels: {
-                            anchor: 'end',
-                            align: 'right',
-                            formatter: (val) => val,
-                            color: '#111',
-                            font: { weight: 'bold' }
-                        }
-                    }
-                }
-            });
-            return trainedChart;
-        }     
-
-        // --- CHART 6: Client Requests (Horizontal Bar Chart) ---
-        // Now dynamic to consume the raw counts from the API and filter by date range
-        async function renderClientRequestsChart(start, end) {
-        const data = await fetchChartData(ENDPOINTS.requests, start, end);
-        if (!data) return;
-
-        // Data is now expected to contain percentages and the total count:
-        const approved = data.approved_pct;
-        const ongoing = data.ongoing_pct;
-        const rejected = data.rejected_pct;
-        const totalRequests = data.total_count; // <-- NEW: Get the total count
-
-        const ctx = document.getElementById('clientRequestsChart').getContext('2d');
-
-        // Destroy existing chart instance if it exists
-        if (chartsInstance.requests) {
-            chartsInstance.requests.destroy();
-        }
-        
-        // Use a single label for the Y-axis (the line itself)
-        const chartLabels = ['Request Status']; 
-
-        const clientRequestsChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: chartLabels, 
-                datasets: [
-                    {
-                        label: 'Approved',
-                        data: [approved], // Single percentage value
-                        backgroundColor: '#00cc66', // Green
-                        barThickness: 40, // Reduced thickness for a 'line' effect
-                    },
-                    {
-                        label: 'Ongoing',
-                        data: [ongoing], // Single percentage value
-                        backgroundColor: '#ffbb33', // Orange/Yellow
-                        barThickness: 40,
-                    },
-                    {
-                        label: 'Rejected',
-                        data: [rejected], // Single percentage value
-                        backgroundColor: '#ff3333', // Red
-                        barThickness: 40,
-                    }
-                ]
-            },
-            options: {
-                indexAxis: 'y', // Horizontal bar chart
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            boxWidth: 15,
-                            padding: 20
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function (context) {
-                                // context.raw is the percentage value
-                                const percentage = context.raw;
-                                
-                                // CALCULATE THE ACTUAL COUNT based on the percentage and total.
-                                // Round the count to the nearest whole number.
-                                const count = Math.round(totalRequests * (percentage / 100)); // <-- NEW: Calculate count
-                                
-                                return `${context.dataset.label}: ${count} (${percentage}%)`; // <-- NEW: Display both
-                            }
-                        }
-                    },
-                    datalabels: {
-                        display: false,
-                    }
-                },
-                scales: {
-                    x: {
-                        stacked: true, // Key to stacking datasets
-                        max: 100,      // Key to making the bar fill 100% width
-                        display: false, // Hide x-axis labels/ticks/grid
-                        grid: {
-                            display: false
-                        }
-                    },
-                    y: {
-                        stacked: true, // Key to stacking datasets
-                        display: false, // Hide y-axis label
-                        grid: {
-                            display: false
-                        }
-                    }
-                },
-                layout: {
-                    padding: {
-                        top: 10,
-                        bottom: 10,
-                        left: 20,
-                        right: 20
-                    }
-                }
-            }
-        });
-
-        return clientRequestsChart;
-    }
-        
-        // --- Static Chart Rendering Functions (KPIs remain static) ---
-        
-        function renderStats() {
-            const statsData = [
-                { label: "Active Users", number: "247", change: +12, trend: "up" },
-                { label: "Total Visits", number: "1,429", change: -8, trend: "down" }
-            ];
-
-            const statContainer = document.querySelector('.stat-container');
-            if(statContainer) {
-                statContainer.innerHTML = statsData.map(stat => `
-                    <div class="stat">
-                        <div class="stat-label">${stat.label}</div>
-                        <div class="stat-number">${stat.number}</div>
-                        <div class="stat-change ${stat.trend === 'down' ? 'negative' : ''}">
-                            <svg width="50" height="50" style="fill: currentColor;">
-                                <use href="#${stat.trend === 'down' ? 'downward-trend' : 'upward-trend'}"/>
-                            </svg>
-                            ${Math.abs(stat.change)}% from last month
-                        </div>
-                    </div>
-                `).join('');
-            }
-        }
-        
-        // REMOVED: renderAnnualCompletedProjectsChart()
-        // The function for the annual completed projects chart has been removed as requested.
-
-        // --- Event Listeners and Initialization ---
-
-        // Special handler for the date range button
-        dateRangeBtn.addEventListener('click', e => {
-            e.stopPropagation();
-            popupOverlay.style.display = 'flex';
-            // Set inputs to the current selected range before opening
-            startDateInput.value = selectedStartDate;
-            endDateInput.value = selectedEndDate;
-            setTimeout(() => datePopup.classList.add('show'), 10);
-        });
-        
-        // Close popup handlers
-        cancelExport.addEventListener('click', closePopup);
-        popupOverlay.addEventListener('click', (e) => {
-            if (e.target === popupOverlay) closePopup();
-        });
-
-        // Confirm selected date range
-        confirmExport.addEventListener('click', () => {
-            const start = startDateInput.value;
-            const end = endDateInput.value;
-
-            if (!start || !end) {
-                alert('Please select both start and end dates.');
-                return;
-            }
-            if (new Date(start) > new Date(end)) {
-                alert('Start date cannot be after end date.');
-                return;
-            }
-
-            const options = { year: 'numeric', month: 'short', day: 'numeric' };
-            const formattedStart = new Date(start).toLocaleDateString('en-US', options);
-            const formattedEnd = new Date(end).toLocaleDateString('en-US', options);
-
-            // Update global state and button text
-            selectedStartDate = start;
-            selectedEndDate = end;
-            dateRangeBtn.textContent = `${formattedStart} – ${formattedEnd}`;
-
-            // Refresh dashboard with the newly selected range
-            refreshDashboard(selectedStartDate, selectedEndDate);
-            
-            closePopup();
-        });
-
-        // Export dropdown logic (retains original functionality)
-        exportBtn.addEventListener('click', e => {
-            e.stopPropagation();
-            exportDropdown.classList.toggle('hidden');
-        });
-
-        document.addEventListener('click', () => {
-            exportDropdown.classList.add('hidden');
-            document.querySelectorAll('.dropdown-menu').forEach(menu => {
-                menu.classList.add('hidden');
-            });
-        });
-
-        // Handle export type selection
-        exportDropdown.querySelectorAll('.dropdown-item').forEach(item => {
-            item.addEventListener('click', async e => {
-                const type = e.target.dataset.type;
-                exportDropdown.classList.add('hidden');
-
-                // CRITICAL: Check if a date range is selected (it will be by default now)
-                if (!selectedStartDate || !selectedEndDate) {
-                    alert("Please select a date range first before exporting.");
+            const fetchDataAndRenderChart = async (canvasId, apiUrl, chartConfigFn) => {
+                const canvas = document.getElementById(canvasId);
+                if (!canvas) {
+                    console.error(`Canvas element with ID ${canvasId} not found.`);
                     return;
                 }
+                const ctx = canvas.getContext('2d');
 
-                if (type === 'pdf') {
-                    exportAsPDF();
-                } else if (type === 'png') {
-                    await exportAsPNG();
-                } else if (type === 'csv') {
-                    exportAsCSV();
+                if (chartInstances[canvasId]) {
+                    chartInstances[canvasId].destroy();
+                    chartInstances[canvasId] = null;
                 }
+
+                try {
+                    const data = await fetchChartData(apiUrl, start, end);
+                    if (!data || typeof data !== 'object') {
+                        throw new Error(`Invalid data received: ${JSON.stringify(data)}`);
+                    }
+                    chartInstances[canvasId] = new Chart(ctx, chartConfigFn(data));
+                } catch (error) {
+                    console.error(`Error fetching/rendering chart ${canvasId}:`, error);
+                    if (ctx) {
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        ctx.fillStyle = 'grey'; ctx.textAlign = 'center';
+                        ctx.fillText('Could not load chart data.', canvas.width / 2, canvas.height / 2);
+                    }
+                }
+            };
+
+            const activeProjectsConfig = (data) => ({
+                type: 'line', data: { labels: data.labels || [], datasets: [{ label: 'Active Projects', data: data.counts || [], borderColor: 'rgb(75, 192, 192)', backgroundColor: 'rgba(75, 192, 192, 0.2)', tension: 0.1, fill: true }] },
+                options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true } }, plugins: { legend: { display: false }, tooltip: { enabled: (data.labels && data.labels.length > 0) } } }
             });
-        });
 
-        // This function needs access to the global chartsInstance object (assuming it exists)
-        // It uses 'landscape' orientation and synchronous updates for reliability.
-        async function exportAsPDF() {
-            // Assuming chartsInstance.agenda holds the Chart.js instance for the pie chart
-            let agendaChart = chartsInstance.agenda; 
+            const budgetConfig = (data) => ({
+                type: 'bar', data: { labels: data.labels || [], datasets: [{ label: 'Budget Allocation (₱)', data: data.allocations || [], backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'] }] },
+                options: { maintainAspectRatio: false, indexAxis: 'y', scales: { x: { beginAtZero: true, ticks: { callback: value => `₱${value.toLocaleString()}` } } }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => `₱${c.raw.toLocaleString()}` } } } }
+            });
 
-            try {
-                // 1. Prepare Chart for Capture: Ensure pie chart legend is visible
-                if (agendaChart) {
-                    agendaChart.options.plugins.legend.display = true;
-                    // Use 'none' for a synchronous, immediate update before capture
-                    agendaChart.update('none'); 
-                }
+            const agendaConfig = (data) => ({
+                type: 'pie', data: { labels: data.labels || [], datasets: [{ label: 'Projects per Agenda', data: data.counts || [], backgroundColor: ["#FF6384","#36A2EB","#FFCE56","#4BC0C0","#9966FF", "#FF9F40","#8BC34A","#E91E63","#00BCD4"], borderColor: "#fff", borderWidth: 1 }] },
+                options: { maintainAspectRatio: false, plugins: { legend: { position: 'right' }, tooltip: { callbacks: { label: function(context) {
+                     let total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                     let value = context.raw;
+                     let percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                     return `${context.label}: ${value} (${percentage}%)`;
+                 } } } } }
+            });
 
-                const mainContent = document.querySelector('main');
-                const options = {
-                    margin: 10,
-                    filename: 'Analytics_Report.pdf',
-                    image: { type: 'jpeg', quality: 1.0 },
-                    html2canvas: { scale: 1.0, useCORS: true }, 
-                    // *** CRITICAL CHANGE: Sets orientation to landscape ***
-                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' } 
-                };
+            const trainedIndividualsConfig = (data) => ({
+                type: 'line', data: { labels: data.labels || [], datasets: [{ label: 'Individuals Trained', data: data.counts || [], borderColor: '#9966FF', backgroundColor: 'rgba(153, 102, 255, 0.2)', fill: true, tension: 0.1 }] },
+                options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true } }, plugins: { legend: { display: false }, tooltip: { enabled: (data.labels && data.labels.length > 0) } } }
+            });
 
-                // 2. Export the PDF
-                await html2pdf().from(mainContent).set(options).save();
+            const requestStatusConfig = (data) => ({
+                type: 'bar', data: { labels: ['Request Status'], datasets: [
+                    { label: 'Approved', data: [data.approved_pct || 0], backgroundColor: '#00cc66', barThickness: 40 },
+                    { label: 'Ongoing', data: [data.ongoing_pct || 0], backgroundColor: '#ffbb33', barThickness: 40 },
+                    { label: 'Rejected', data: [data.rejected_pct || 0], backgroundColor: '#ff3333', barThickness: 40 }
+                ]},
+                options: { maintainAspectRatio: false, indexAxis: 'y', responsive: true, plugins: { legend: { position: 'bottom', labels: { boxWidth: 15, padding: 20 } }, tooltip: { callbacks: { label: function (context) {
+                     const totalRequests = data.total_count || 0;
+                     const percentage = context.raw;
+                     const count = totalRequests > 0 ? Math.round(totalRequests * (percentage / 100)) : 0;
+                     return `${context.dataset.label}: ${count} (${percentage.toFixed(1)}%)`;
+                 } } }, datalabels: { display: false } }, scales: { x: { stacked: true, max: 100, display: false, grid: { display: false } }, y: { stacked: true, display: false, grid: { display: false } } }, layout: { padding: { top: 10, bottom: 10, left: 20, right: 20 } } }
+            });
 
-            } catch (error) {
-                console.error('PDF export failed:', error);
-                alert('PDF export failed.');
-            } finally {
-                // 3. Revert State: Hide the pie chart legend immediately after export
-                if (agendaChart) {
-                    agendaChart.options.plugins.legend.display = false;
-                    agendaChart.update('none'); 
-                }
-            }
+            await fetchDataAndRenderChart('activeProjectsChart', ENDPOINTS.active, activeProjectsConfig);
+            await fetchDataAndRenderChart('budgetMultiLineChart', ENDPOINTS.budget, budgetConfig);
+            await fetchDataAndRenderChart('agendaDistributionChart', ENDPOINTS.agenda, agendaConfig);
+            await fetchDataAndRenderChart('trainedChart', ENDPOINTS.trained, trainedIndividualsConfig);
+            await fetchDataAndRenderChart('clientRequestsChart', ENDPOINTS.requests, requestStatusConfig);
         }
 
-        // Export as PNG
-        async function exportAsPNG() {
-            const content = document.querySelector('main');
-            const canvas = await html2canvas(content, { scale: 1.5 });
-            const link = document.createElement('a');
-            link.download = 'Analytics_Report.png';
-            link.href = canvas.toDataURL('image/png');
-            link.click();
+        window.refreshAnalyticsCharts = refreshCharts;
+
+        const initialStart = typeof selectedStartDate !== 'undefined' ? selectedStartDate : '';
+        const initialEnd = typeof selectedEndDate !== 'undefined' ? selectedEndDate : '';
+        if (initialStart === '' || initialEnd === '') {
+             console.warn("Initial dates not found globally. Loading charts with default range via empty strings.");
         }
+        refreshCharts(initialStart, initialEnd);
 
-        // Export as CSV (simple table structure)
-        function exportAsCSV() {
-            const rows = [
-                ["Category", "Value"],
-                ["Active Projects", document.querySelector('.card.color-one h2')?.textContent || 'N/A'],
-                ["Events", document.querySelector('.card.color-two h2')?.textContent || 'N/A'],
-                ["Active Providers", document.querySelector('.card.color-three h2')?.textContent || 'N/A'],
-                ["Trained Individuals", document.querySelector('.card.color-four h2')?.textContent || 'N/A']
-            ];
+        console.log('=== ANALYTICS CHARTS SCRIPT END ===');
+    });
+</script>
 
-            let csvContent = "data:text/csv;charset=utf-8,"
-                + rows.map(e => e.join(",")).join("\n");
-
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "Analytics_Report.csv");
-            document.body.appendChild(link);
-            link.click();
-        }
-
-
-        // --- Master Initialization ---
-        document.addEventListener('DOMContentLoaded', () => {
-            setDefaultDateRange();
-            // Load the dashboard with the default 90-day range
-            refreshDashboard(selectedStartDate, selectedEndDate); 
-        });
-
-    </script>
 </body>
 </html>
 

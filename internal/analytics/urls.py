@@ -17,4 +17,6 @@ urlpatterns = [
     path('data/chart/agenda/', api_views.agenda_distribution_chart_api, name='agenda_distribution_chart_data'),
     path('data/chart/trained/', api_views.trained_individuals_chart_api, name='trained_individuals_chart_data'),
     path('data/chart/requests/', api_views.request_status_chart_api, name='request_status_chart_data'),
+    
+    path('data/trends/projects/', api_views.project_trends_api, name='project_trends_data'),
 ]
