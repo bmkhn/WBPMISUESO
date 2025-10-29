@@ -419,13 +419,13 @@
 
             <span class="grey-text">Assigned: {{ submission.created_at|date:"F j, Y, H:i" }}{% if request.user.role in ADMIN_ROLES%} • <a href="{% url 'user_profile' submission.created_by.id %}" class="name-link">{{ submission.created_by.get_full_name }}</a>{% endif %}</span>
          
-            {% if submission.status != "PENDING" %}
+            {% if submission.submitted_by %}
             <span class="grey-text">Submitted:  {{ submission.submitted_at|date:"F j, Y, H:i" }} • <a href="{% url 'user_profile' submission.submitted_by.id %}" class="name-link">{{ submission.submitted_by.get_full_name }}</a></span>
             {% endif %}
-            {% if submission.status != "PENDING" and submission.status != "SUBMITTED" %}
+            {% if submission.reviewed_by %}
             <span class="grey-text">Reviewed:  {{ submission.reviewed_at|date:"F j, Y, H:i" }}{% if request.user.role in ADMIN_ROLES or request.user.role in COORDINATOR_ROLE %} • <a href="{% url 'user_profile' submission.reviewed_by.id %}" class="name-link">{{ submission.reviewed_by.get_full_name }}</a>{% endif %}</span>
             {% endif %}
-            {% if submission.status != "PENDING" and submission.status != "SUBMITTED" and submission.status != "REVISION_REQUESTED" and submission.status != "FORWARDED" %}
+            {% if submission.authorized_by %}
             <span class="grey-text">Authorized: {{ submission.authorized_at|date:"F j, Y, H:i" }}{% if request.user.role in ADMIN_ROLES%} • <a href="{% url 'user_profile' submission.authorized_by.id %}" class="name-link">{{ submission.authorized_by.get_full_name }}</a>{% endif %}</span>
             {% endif %}
         </div>
@@ -462,9 +462,9 @@
 
                 <!-- Submission [Final] Details -->
                 {% elif submission.downloadable.submission_type == "final" %}
-                    <span class="final-text">{% if submission.for_product_production %}<i class="fa-solid fa-check"></i>{% else %}<i class="fa-solid fa-xmark"></i>{% endif %} <span class="final-adjust">For Product Production</span></span>
-                    <span class="final-text">{% if submission.for_research %}<i class="fa-solid fa-check"></i>{% else %}<i class="fa-solid fa-xmark"></i>{% endif %} <span class="final-adjust">For Research</span></span>
-                    <span class="final-text">{% if submission.for_extension %}<i class="fa-solid fa-check"></i>{% else %}<i class="fa-solid fa-xmark"></i>{% endif %} <span class="final-adjust">For Extension</span></span>
+                    <span class="final-text">{% if submission.for_product_production %}<i class="fa-solid fa-check"></i>{% elif submission.for_product_production == False %}<i class="fa-solid fa-xmark"></i>{% else %}_{% endif %} <span class="final-adjust">For Product Production</span></span>
+                    <span class="final-text">{% if submission.for_research %}<i class="fa-solid fa-check"></i>{% elif submission.for_research == False %}<i class="fa-solid fa-xmark"></i>{% else %}_{% endif %} <span class="final-adjust">For Research</span></span>
+                    <span class="final-text">{% if submission.for_extension %}<i class="fa-solid fa-check"></i>{% elif submission.for_extension == False %}<i class="fa-solid fa-xmark"></i>{% else %}_{% endif %} <span class="final-adjust">For Extension</span></span>
                 {% endif %}
             {% endif %}
         </div>
@@ -752,6 +752,41 @@
             modalBg.addEventListener('click', function(e) {
                 if (e.target === this) hideModal();
             });
+        }
+    });
+
+    // Success Toast
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const success = urlParams.get('success');
+        const action = urlParams.get('action');
+        const title = urlParams.get('title');
+
+        if (success === 'true' && action === 'submitted') {
+            const toast = document.createElement('div');
+            toast.id = 'successToast';
+            toast.style.cssText = 'display:block;position:fixed;top:20px;right:20px;background:#10b981;color:white;padding:1rem 1.5rem;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:10000;font-size:1rem;font-weight:500;min-width:300px;';
+            toast.innerHTML = `
+                <div style="display:flex;align-items:center;gap:0.75rem;">
+                    <i class="fa-solid fa-check-circle" style="font-size:1.5rem;"></i>
+                    <div>
+                        <div style="font-weight:600;margin-bottom:0.25rem;">Submitted Successfully!</div>
+                        <div style="font-size:0.875rem;opacity:0.9;">${title ? decodeURIComponent(title) : 'Submission'}</div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(toast);
+
+            // Auto-hide after 4 seconds
+            setTimeout(function() {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.3s';
+                setTimeout(function() {
+                    toast.remove();
+                    // Clean URL
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }, 300);
+            }, 4000);
         }
     });
 </script>

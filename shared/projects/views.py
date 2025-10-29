@@ -29,35 +29,48 @@ def get_templates(request):
 
 
 def project_profile(request, pk):
-    # Mark project alerts as viewed for faculty users
-    if request.user.role in ["FACULTY", "IMPLEMENTER"]:
-        from django.http import HttpResponseRedirect
-        from django.urls import reverse
-        project = get_object_or_404(Project, pk=pk)
-        updated = ProjectUpdate.objects.filter(user=request.user, project=project, viewed=False).update(viewed=True)
-        if updated and request.method == 'GET' and not request.GET.get('new'):
-            url = reverse('project_profile', args=[pk])
-            params = request.GET.copy()
-            params['new'] = '1'
-            url += '?' + params.urlencode()
-            return HttpResponseRedirect(url)
+    # Check if user is authenticated and has role
+    if request.user.is_authenticated and hasattr(request.user, 'role'):
+        # Mark project alerts as viewed for faculty users
+        if request.user.role in ["FACULTY", "IMPLEMENTER"]:
+            from django.http import HttpResponseRedirect
+            from django.urls import reverse
+            project = get_object_or_404(Project, pk=pk)
+            updated = ProjectUpdate.objects.filter(user=request.user, project=project, viewed=False).update(viewed=True)
+            if updated and request.method == 'GET' and not request.GET.get('new'):
+                url = reverse('project_profile', args=[pk])
+                params = request.GET.copy()
+                params['new'] = '1'
+                url += '?' + params.urlencode()
+                return HttpResponseRedirect(url)
+    else:
+        # Non-authenticated users can only view completed projects
+        project = get_object_or_404(Project, pk=pk, status='COMPLETED')
+    
     return redirect(project_overview, pk=pk)
 
 
 def project_overview(request, pk):
     ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE, COORDINATOR_ROLE = get_role_constants()
 
-    user_role = getattr(request.user, 'role', None)
+    # Determine base template and access control
+    user_role = getattr(request.user, 'role', None) if request.user.is_authenticated else None
     if user_role in ["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
         base_template = "base_internal.html"
+        # Authenticated users with roles can see all projects
+        project = get_object_or_404(Project, pk=pk)
     else:
         base_template = "base_public.html"
+        # Non-authenticated users or users without admin roles can only see completed projects
+        if not request.user.is_authenticated:
+            project = get_object_or_404(Project, pk=pk, status='COMPLETED')
+        else:
+            project = get_object_or_404(Project, pk=pk)
 
-    project = get_object_or_404(Project, pk=pk)
     all_sdgs = SustainableDevelopmentGoal.objects.all()
     agendas = Agenda.objects.all()
 
-    if request.method == 'POST' and request.user.role in ADMIN_ROLES:
+    if request.method == 'POST' and user_role in ADMIN_ROLES:
         # Update project fields from form
         project.title = request.POST.get('title', project.title)
         project.start_date = request.POST.get('start_date', project.start_date)
@@ -94,11 +107,26 @@ def project_overview(request, pk):
 
 def project_providers(request, pk):
     ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE, COORDINATOR_ROLE = get_role_constants()
-    project = get_object_or_404(Project, pk=pk)
+    
+    # Determine base template and access control
+    user_role = getattr(request.user, 'role', None) if request.user.is_authenticated else None
+    
+    if user_role in ["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
+        base_template = "base_internal.html"
+        # Authenticated users with roles can see all projects
+        project = get_object_or_404(Project, pk=pk)
+    else:
+        base_template = "base_public.html"
+        # Non-authenticated users or users without admin roles can only see completed projects
+        if not request.user.is_authenticated:
+            project = get_object_or_404(Project, pk=pk, status='COMPLETED')
+        else:
+            project = get_object_or_404(Project, pk=pk)
+    
     providers_qs = project.providers.all()
 
     # Handle add provider POST
-    if request.method == 'POST' and request.user.role in ADMIN_ROLES:
+    if request.method == 'POST' and user_role in ADMIN_ROLES:
         provider_id = request.POST.get('provider_id')
         if provider_id:
             from system.users.models import User
@@ -121,12 +149,6 @@ def project_providers(request, pk):
             except User.DoesNotExist:
                 pass
         return redirect(request.path)
-
-    user_role = getattr(request.user, 'role', None)
-    if user_role in ["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
-        base_template = "base_internal.html"
-    else:
-        base_template = "base_public.html"
 
     # Candidates: all confirmed faculty/implementers not already providers and not the project leader
     from system.users.models import User
@@ -172,13 +194,21 @@ def project_providers(request, pk):
 def project_events(request, pk):
     ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE, COORDINATOR_ROLE = get_role_constants()
 
-    user_role = getattr(request.user, 'role', None)
+    # Determine base template and access control
+    user_role = getattr(request.user, 'role', None) if request.user.is_authenticated else None
+    
     if user_role in ["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
         base_template = "base_internal.html"
+        # Authenticated users with roles can see all projects
+        project = get_object_or_404(Project, pk=pk)
     else:
         base_template = "base_public.html"
+        # Non-authenticated users or users without admin roles can only see completed projects
+        if not request.user.is_authenticated:
+            project = get_object_or_404(Project, pk=pk, status='COMPLETED')
+        else:
+            project = get_object_or_404(Project, pk=pk)
 
-    project = get_object_or_404(Project, pk=pk)
     # Order events: those with datetime=None at the bottom
     from django.db.models import F, Value, BooleanField, ExpressionWrapper
     from internal.submissions.models import Submission
@@ -295,13 +325,21 @@ def project_events(request, pk):
 def project_files(request, pk):
     ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE, COORDINATOR_ROLE = get_role_constants()
 
-    user_role = getattr(request.user, 'role', None)
+    # Determine base template and access control
+    user_role = getattr(request.user, 'role', None) if request.user.is_authenticated else None
+    
     if user_role in ["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
         base_template = "base_internal.html"
+        # Authenticated users with roles can see all projects
+        project = get_object_or_404(Project, pk=pk)
     else:
         base_template = "base_public.html"
-
-    project = get_object_or_404(Project, pk=pk)
+        # Non-authenticated users or users without admin roles can only see completed projects
+        if not request.user.is_authenticated:
+            project = get_object_or_404(Project, pk=pk, status='COMPLETED')
+        else:
+            project = get_object_or_404(Project, pk=pk)
+    
     documents = project.documents.all()
     
 
@@ -588,7 +626,9 @@ def project_submissions_details(request, pk, submission_id):
             submission.updated_at = timezone.now()
             submission.save()
 
-            return redirect('project_submissions_details', pk=pk, submission_id=submission_id)
+            from urllib.parse import quote
+            submission_title = submission.downloadable.name if submission.downloadable else "Submission"
+            return redirect(f'/projects/{pk}/submission/?success=true&action=submit&title={quote(submission_title)}')
 
     context = {
         "project": project,
@@ -619,14 +659,9 @@ def admin_submission_action(request, pk, submission_id):
                 submission.save()
         elif submission.status == 'PENDING' and request.user.role in ["UESO", "VP", "DIRECTOR"]:
             if action == 'delete':
-                # Remove any ProjectUpdate alerts that were created for this submission
                 ProjectUpdate.objects.filter(submission=submission).delete()
-                
-                # Delete the submission itself
                 project_id = submission.project.id
                 submission.delete()
-                
-                return redirect('project_submissions', pk=project_id)
         elif submission.status == 'SUBMITTED' and request.user.role == "COORDINATOR": 
             if action == 'forward':
                 submission.status = 'FORWARDED'
@@ -679,7 +714,9 @@ def admin_submission_action(request, pk, submission_id):
                             'updated_at': timezone.now(),
                         }
                     )
-    return redirect('project_submissions_details', pk=pk, submission_id=submission_id)
+    from urllib.parse import quote
+    submission_title = submission.downloadable.name if submission.downloadable else "Submission"
+    return redirect(f'/projects/{pk}/submission/?success=true&action={action}&title={quote(submission_title)}')
 
 
 def project_expenses(request, pk):
@@ -712,19 +749,26 @@ def project_expenses(request, pk):
     })
 
 
-@role_required(allowed_roles=["UESO", "VP", "DIRECTOR", "PROGRAM_HEAD", "DEAN", "COORDINATOR", "FACULTY", "IMPLEMENTER"], require_confirmed=True)
 def project_evaluations(request, pk):
     ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE, COORDINATOR_ROLE = get_role_constants()
 
-    user_role = getattr(request.user, 'role', None)
+    # Determine base template and access control
+    user_role = getattr(request.user, 'role', None) if request.user.is_authenticated else None
+    
     if user_role in ["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
         base_template = "base_internal.html"
+        # Authenticated users with roles can see all projects
+        project = get_object_or_404(Project, pk=pk)
     else:
         base_template = "base_public.html"
+        # Non-authenticated users or users without admin roles can only see completed projects
+        if not request.user.is_authenticated:
+            project = get_object_or_404(Project, pk=pk, status='COMPLETED')
+        else:
+            project = get_object_or_404(Project, pk=pk)
 
-    project = get_object_or_404(Project, pk=pk)
-
-    if request.method == 'POST':
+    # Only authenticated users with required roles can submit evaluations
+    if request.method == 'POST' and request.user.is_authenticated and user_role in ["UESO", "VP", "DIRECTOR", "PROGRAM_HEAD", "DEAN", "COORDINATOR", "FACULTY", "IMPLEMENTER"]:
         rating = request.POST.get('rating')
         comment = request.POST.get('comment', '')
         evaluated_by = request.user

@@ -43,15 +43,21 @@
             {% if notification.url %}
             <a href="{{ notification.url }}" 
                class="notification-item {% if not notification.is_read %}unread{% endif %}"
+               data-notification-id="{{ notification.id }}"
                onclick="markAsRead({{ notification.id }}, event)">
             {% else %}
             <div class="notification-item {% if not notification.is_read %}unread{% endif %}"
-                 onclick="markAsReadNoRedirect({{ notification.id }})"
+                 data-notification-id="{{ notification.id }}"
+                 onclick="markAsReadNoRedirect({{ notification.id }}, event)"
                  style="cursor:default;">
             {% endif %}
-                <div class="notification-icon">
+                <div class="notification-icon {% if not notification.actor %}ai-icon{% endif %}">
                     {% if notification.actor %}
-                        {{ notification.actor.first_name.0 }}{{ notification.actor.last_name.0 }}
+                        {% if notification.actor.profile_picture %}
+                            <img src="{{ notification.actor.profile_picture.url }}" alt="{{ notification.actor.get_full_name }}">
+                        {% else %}
+                            {{ notification.actor.given_name.0 }}{{ notification.actor.last_name.0 }}
+                        {% endif %}
                     {% else %}
                         S
                     {% endif %}
@@ -59,7 +65,7 @@
                 <div class="notification-content">
                     <div class="notification-header">
                         <div class="notification-actor">
-                            {{ notification.actor.get_full_name|default:"System" }}
+                            {{ notification.actor.get_full_name|default:"System" }}     
                         </div>
                         <div class="notification-time">
                             {{ notification.created_at|timesince }} ago
@@ -124,6 +130,29 @@
         {% endif %}
     </div>
 
+<!-- Rejected Export Modal -->
+<div id="rejectedExportModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:10000; justify-content:center; align-items:center;">
+    <div style="background:white; border-radius:12px; padding:32px; max-width:500px; width:90%; box-shadow:0 4px 24px rgba(0,0,0,0.2);">
+        <div style="text-align:center; margin-bottom:24px;">
+            <div style="width:64px; height:64px; margin:0 auto 16px; background:#FEE2E2; border-radius:50%; display:flex; align-items:center; justify-content:center;">
+                <i class="fa-solid fa-times" style="font-size:32px; color:#DC2626;"></i>
+            </div>
+            <h2 style="margin:0 0 8px; font-size:24px; color:#1F2937;">Export Request Rejected</h2>
+            <p style="margin:0; color:#6B7280; font-size:15px;">Your export request was not approved</p>
+        </div>
+        <div style="background:#F0F9FF; border:1px solid #BFDBFE; border-radius:8px; padding:16px; margin-bottom:24px;">
+            <p style="margin:0; color:#1E40AF; font-size:14px; line-height:1.5; text-align:center;">
+                Don't worry! You can submit a new export request anytime. Please ensure your request meets the required criteria and try again.
+            </p>
+        </div>
+        <div style="display:flex; gap:12px; justify-content:center;">
+            <button onclick="closeRejectedExportModal()" style="padding:12px 24px; background:#0A6C44; color:white; border:none; border-radius:8px; font-size:15px; font-weight:500; cursor:pointer; transition:all 0.2s;">
+                Understood
+            </button>
+        </div>
+    </div>
+</div>
+
     <script>
         function getCookie(name) {
             let cookieValue = null;
@@ -141,6 +170,40 @@
         }
 
         function markAsRead(notificationId, event) {
+            // Prevent default link behavior
+            event.preventDefault();
+            
+            // Get the URL and the notification item element
+            const targetUrl = event.currentTarget.href;
+            const item = event.currentTarget;
+            
+            // Get notification details to check if it's a rejected export
+            const detailsElement = item.querySelector('.notification-details');
+            const details = detailsElement ? detailsElement.textContent.trim() : '';
+            const isRejectedExport = details.toLowerCase().includes('export request has been rejected');
+            
+            // IMMEDIATELY update UI to give instant feedback (the illusion)
+            item.classList.remove('unread');
+            const badge = item.querySelector('.notification-badge');
+            if (badge) {
+                badge.remove();
+            }
+            
+            // Update badge count in navbar immediately
+            const navBadges = document.querySelectorAll('.notification-badge-count');
+            navBadges.forEach(badge => {
+                const currentCount = parseInt(badge.textContent);
+                if (currentCount > 0) {
+                    const newCount = currentCount - 1;
+                    if (newCount === 0) {
+                        badge.parentElement.remove();
+                    } else {
+                        badge.textContent = newCount;
+                    }
+                }
+            });
+            
+            // THEN make the API call in the background
             fetch(`/notifications/mark-as-read/${notificationId}/`, {
                 method: 'POST',
                 headers: {
@@ -149,64 +212,63 @@
                 },
             }).then(response => response.json())
               .then(data => {
-                  if (data.success) {
-                      // Mark the notification as read visually
-                      const item = event.currentTarget;
-                      item.classList.remove('unread');
-                      const badge = item.querySelector('.notification-badge');
-                      if (badge) {
-                          badge.remove();
-                      }
-                      // Update badge count
-                      const navBadges = document.querySelectorAll('.notification-badge-count');
-                      navBadges.forEach(badge => {
-                          const currentCount = parseInt(badge.textContent);
-                          if (currentCount > 0) {
-                              const newCount = currentCount - 1;
-                              if (newCount === 0) {
-                                  badge.parentElement.remove();
-                              } else {
-                                  badge.textContent = newCount;
-                              }
-                          }
-                      });
+                  // If it's a rejected export, show modal instead of redirecting
+                  if (isRejectedExport) {
+                      showRejectedExportModal();
+                  } else {
+                      // Otherwise, redirect normally
+                      window.location.href = targetUrl;
+                  }
+              })
+              .catch(error => {
+                  // If it's a rejected export, show modal even on error
+                  if (isRejectedExport) {
+                      showRejectedExportModal();
+                  } else {
+                      // Otherwise, still redirect (it will sync on refresh)
+                      window.location.href = targetUrl;
                   }
               });
         }
 
         function markAsReadNoRedirect(notificationId, event) {
             event.preventDefault();
+            
+            // Get the notification item element
+            const item = event.currentTarget;
+            
+            // IMMEDIATELY update UI to give instant feedback
+            item.classList.remove('unread');
+            const badge = item.querySelector('.notification-badge');
+            if (badge) {
+                badge.remove();
+            }
+            
+            // Update badge count in navbar immediately
+            const navBadges = document.querySelectorAll('.notification-badge-count');
+            navBadges.forEach(badge => {
+                const currentCount = parseInt(badge.textContent);
+                if (currentCount > 0) {
+                    const newCount = currentCount - 1;
+                    if (newCount === 0) {
+                        badge.parentElement.remove();
+                    } else {
+                        badge.textContent = newCount;
+                    }
+                }
+            });
+            
+            // THEN make the API call in the background
             fetch(`/notifications/mark-as-read/${notificationId}/`, {
                 method: 'POST',
                 headers: {
                     'X-CSRFToken': getCookie('csrftoken'),
                     'Content-Type': 'application/json',
                 },
-            }).then(response => response.json())
-              .then(data => {
-                  if (data.success) {
-                      // Mark the notification as read visually
-                      const item = event.currentTarget;
-                      item.classList.remove('unread');
-                      const badge = item.querySelector('.notification-badge');
-                      if (badge) {
-                          badge.remove();
-                      }
-                      // Update badge count
-                      const navBadges = document.querySelectorAll('.notification-badge-count');
-                      navBadges.forEach(badge => {
-                          const currentCount = parseInt(badge.textContent);
-                          if (currentCount > 0) {
-                              const newCount = currentCount - 1;
-                              if (newCount === 0) {
-                                  badge.parentElement.remove();
-                              } else {
-                                  badge.textContent = newCount;
-                              }
-                          }
-                      });
-                  }
-              });
+            }).catch(error => {
+                // Silently fail - it will sync on refresh
+                console.log('Failed to mark as read, will sync on refresh');
+            });
         }
 
         function markAllAsRead() {
@@ -223,6 +285,21 @@
                       window.location.reload();
                   }
               });
+        }
+        
+        // Modal control functions for rejected export notifications
+        function showRejectedExportModal() {
+            const modal = document.getElementById('rejectedExportModal');
+            if (modal) {
+                modal.style.display = 'flex';
+            }
+        }
+        
+        function closeRejectedExportModal() {
+            const modal = document.getElementById('rejectedExportModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
         }
     </script>
 </body>

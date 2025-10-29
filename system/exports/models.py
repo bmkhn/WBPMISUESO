@@ -51,12 +51,12 @@ def log_export_request_action(sender, instance, created, **kwargs):
     
     # Determine the URL based on status
     # For APPROVED exports, link directly to the download
-    # For REJECTED, no URL (empty string)
+    # For REJECTED, link to exports page with anchor (to show modal)
     # For PENDING, link to exports dashboard
     if instance.status == 'APPROVED':
         url = reverse('export_download', args=[instance.id])
     elif instance.status == 'REJECTED':
-        url = ''  # No URL for rejected exports
+        url = f"{reverse('exports')}#export-{instance.id}"  # Link to exports page to show modal
     else:
         url = f"{reverse('exports')}#export-{instance.id}"
     

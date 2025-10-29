@@ -15,8 +15,8 @@ class Announcement(models.Model):
 	is_scheduled = models.BooleanField(default=False)
 	scheduled_at = models.DateTimeField(null=True, blank=True)
 	scheduled_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='scheduled_announcements')
-	cover_photo = models.ImageField(upload_to='announcements/', null=True, blank=True, default=('announcements/announcements.png'))
-	published_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='published_announcements')
+	cover_photo = models.ImageField(upload_to='announcements/', null=True, blank=True, default=('default/announce.png'))
+	published_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='published_announce')
 	published_at = models.DateTimeField(null=True, blank=True)
 	edited_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='edited_announcements')
 	edited_at = models.DateTimeField(null=True, blank=True)
@@ -29,8 +29,8 @@ class Announcement(models.Model):
 		"""Return the cover photo URL or default image"""
 		if self.cover_photo and hasattr(self.cover_photo, 'url'):
 			return self.cover_photo.url
-		return '/static/announce.png'
-	
+		return 'default/announce.png'
+
 	def save(self, *args, **kwargs):
 		# Only set updated_at if this is an update (object already exists)
 		if self.pk:
