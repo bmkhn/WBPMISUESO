@@ -73,7 +73,7 @@
 
             <!-- Edit Event Modal for this specific event -->
             {% if request.user.role in ADMIN_ROLES %}
-            <div id="edit-event-modal-{{ event.id }}" class="event-modal" style="display:none;">
+            <div id="edit-event-modal-{{ event.id }}" class="event-modal modal" style="display:none;">
                 <div class="event-modal-content">
                     <span class="close" onclick="document.getElementById('edit-event-modal-{{ event.id }}').style.display='none'">&times;</span>
                     <h2>Edit Event</h2>
@@ -82,19 +82,19 @@
                         <input type="hidden" name="event_id" value="{{ event.id }}">
                         <div class="form-group">
                             <label class="form-label">Title <span class="required">*</span></label>
-                            <input type="text" name="title" value="{{ event.title }}" required>
+                            <input class="user-details-value" type="text" name="title" value="{{ event.title }}" required>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Date Time <span class="required">*</span></label>
-                            <input type="datetime-local" name="datetime" value="{{ event.datetime|date:'Y-m-d\\TH:i' }}" required>
+                            <input class="user-details-value" type="datetime-local" name="datetime" value="{{ event.datetime|date:'Y-m-d\\TH:i' }}" required>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Location <span class="required">*</span></label>
-                            <input type="text" name="location" value="{{ event.location }}" required>
+                            <input class="user-details-value" type="text" name="location" value="{{ event.location }}" required>
                         </div>
                         <div class="form-actions" style="justify-content:flex-end;">
-                            <button type="button" class="back-btn" onclick="document.getElementById('edit-event-modal-{{ event.id }}').style.display='none'">Cancel</button>
-                            <button type="submit" class="submit-btn">Save Changes</button>
+                            <button type="button" class="back admin-button" onclick="document.getElementById('edit-event-modal-{{ event.id }}').style.display='none'">Cancel</button>
+                            <button type="submit" class="save admin-button">Save Changes</button>
                         </div>
                     </form>
                 </div>
@@ -118,7 +118,7 @@
 </section>
 
 <!-- Add Event Modal -->
-<div id="add-event-modal" class="event-modal" style="display:none;">
+<div id="add-event-modal" class="event-modal modal" style="display:none;">
     <div class="event-modal-content">
         <span class="close" id="close-add-event-modal">&times;</span>
         <h2 style="margin-top:0;">Add New Event</h2>
@@ -127,19 +127,19 @@
             <input type="hidden" name="add_event" value="1">
             <div class="form-group">
                 <label class="form-label">Event Name <span class="required">*</span></label>
-                <input type="text" name="add_event_title" required>
+                <input class="user-details-value" type="text" name="add_event_title" required>
             </div>
             <div class="form-group">
                 <label class="form-label">Date Time <span class="required">*</span></label>
-                <input type="datetime-local" name="add_event_datetime" required>
+                <input class="user-details-value" type="datetime-local" name="add_event_datetime" required>
             </div>
             <div class="form-group">
                 <label class="form-label">Location <span class="required">*</span></label>
-                <input type="text" name="add_event_location" required>
+                <input class="user-details-value" type="text" name="add_event_location" required>
             </div>
             <div class="form-actions" style="justify-content:flex-end;">
-                <button type="button" class="back-btn" id="cancel-add-event-modal">Cancel</button>
-                <button type="submit" class="submit-btn">Add Event</button>
+                <button type="button" class="back admin-button" id="cancel-add-event-modal">Cancel</button>
+                <button type="submit" class="save admin-button">Add Event</button>
             </div>
         </form>
     </div>
@@ -164,7 +164,7 @@
 </script>
 
 <!-- Delete Event Confirmation Modal -->
-<div id="delete-event-modal" class="event-modal" style="display:none;">
+<div id="delete-event-modal" class="event-modal modal" style="display:none;">
     <div class="event-modal-content" style="min-width:320px;max-width:95vw;">
         <span class="close" id="close-delete-event-modal">&times;</span>
         <h2 style="margin-top:0;font-size:1.3rem;text-align:center;">Delete Event</h2>
@@ -173,8 +173,8 @@
         <form id="delete-event-confirm-form" method="post" style="margin-top:2rem;gap:15px;display:flex;align-items:center;justify-content:center">
             {% csrf_token %}
             <input type="hidden" name="delete_event_id" id="delete_event_id_input" value="">
-            <button type="button" class="back-btn" id="cancel-delete-event-modal">Cancel</button>
-            <button type="submit" class="submit-btn">Confirm Delete</button>
+            <button type="button" class="back admin-button" id="cancel-delete-event-modal">Cancel</button>
+            <button type="submit" class="save admin-button">Confirm Delete</button>
         </form>
     </div>
 </div>

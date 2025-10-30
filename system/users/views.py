@@ -583,9 +583,11 @@ def manage_user(request):
 
 
 def user_details_view(request, id):
+    base_template = get_templates(request)
+
     User = get_user_model()
     user = get_object_or_404(User, id=id)
-    return render(request, 'users/user_details.html', {'user': user})
+    return render(request, 'users/user_details.html', {'user': user, 'base_template': base_template})
 
 
 
@@ -654,6 +656,7 @@ def add_user(request):
 def edit_user(request, id):
     User = get_user_model()
     user = get_object_or_404(User, id=id)
+    base_template = get_templates(request)
     
     # Permission check: Users can edit themselves, or VP/DIRECTOR can edit anyone
     can_edit_role_and_verify = request.user.role in ["VP", "DIRECTOR"]
@@ -787,6 +790,7 @@ def edit_user(request, id):
         'colleges': colleges,
         'campus_choices': campus_choices,
         'roles': roles,
+        'base_template': base_template,
         'can_edit_role_and_verify': can_edit_role_and_verify,
         'is_editing_self': request.user.id == user.id,
     })
