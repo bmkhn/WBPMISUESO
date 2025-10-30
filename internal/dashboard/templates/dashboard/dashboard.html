@@ -6,6 +6,8 @@
 <head>
 <meta charset="UTF-8">
 <title>Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/litepicker/dist/litepicker.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/litepicker/dist/litepicker.css"/>
 <link href="https://fonts.googleapis.com/css?family=Inter:400,700,800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
 <link href="{% static 'templates/dashboard.css' %}" rel="stylesheet">
@@ -34,12 +36,25 @@
                 {% endif %}
             </div>
             <div class="container-1B">
-                <div class="quarter-text">Date here</div>
-                <div class="dropdown-arrow">
-                    <!-- Simple dropdown arrow SVG -->
-                    <svg width="16" height="16" viewBox="0 0 16 16">
-                        <polyline points="4,6 8,10 12,6" fill="none" stroke="#000" stroke-width="2"/>
-                    </svg>
+                <div class="dropdown" style="margin-left: 1.5rem;">
+                    <button id="dateRangeBtn" class="dropdown-btn">
+                    </button>
+                    <div id="popupOverlay" class="popup-overlay">
+                        <div id="datePopup" class="date-popup">
+                            <h4>Select Date Range</h4>
+
+                            <label for="startDate">Start Date:</label>
+                            <input type="date" id="startDate" class="date-input">
+
+                            <label for="endDate">End Date:</label>
+                            <input type="date" id="endDate" class="date-input">
+
+                            <div class="popup-actions">
+                                <button id="confirmExport" class="confirm-btn">Confirm</button>
+                                <button id="cancelExport" class="cancel-btn">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -88,18 +103,17 @@
         </div>
 
         <!-- Summary Section -->
-        <div class="summary-section">
-            <div class="summary-text">Summary</div>
-            <div class="container-3">
-                <!-- Charts Container: two charts inside one bordered box with expand icon -->
-                <div class="chart-container" style="width: 100%; max-width: 600px; margin-bottom: 20px; padding: 20px; background: white;">
-                    <h3>Submission Status Breakdown</h3>
-                    <canvas id="submissionStatusChart" style="max-height: 400px;"></canvas>
+        <div class="summary-section" style="overflow: visible;">
+            <div class="container-3" style="overflow: visible;">
+                
+                <div class="chart-container" style="max-height: 225px; overflow: visible;">
+                    <h3>Project Status Overview</h3>
+                    <canvas id="projectStatusChart"></canvas>
                 </div>
 
-                <div class="chart-container" style="width: 100%; max-width: 400px; padding: 20px; background: white;">
-                    <h3>Project Status Overview</h3>
-                    <canvas id="projectStatusChart" style="max-height: 400px;"></canvas>
+                <div class="chart-container">
+                    <h3>Submission Status Breakdown</h3>
+                    <canvas id="submissionStatusChart" style="max-height: 250px;"></canvas>
                 </div>
 
                 <div class="calendar-container">
@@ -123,6 +137,7 @@
                 </div>
             </div>
         </div>
+        
             <div class="summary-text" style="margin-bottom: -2rem ;">Projects</div>
             <table class="user-table">
             <thead>
@@ -206,6 +221,7 @@
         <path d="M2 16C1.45 16 0.979167 15.8042 0.5875 15.4125C0.195833 15.0208 0 14.55 0 14C0 13.45 0.195833 12.9792 0.5875 12.5875C0.979167 12.1958 1.45 12 2 12C2.55 12 3.02083 12.1958 3.4125 12.5875C3.80417 12.9792 4 13.45 4 14C4 14.55 3.80417 15.0208 3.4125 15.4125C3.02083 15.8042 2.55 16 2 16ZM2 10C1.45 10 0.979167 9.80417 0.5875 9.4125C0.195833 9.02083 0 8.55 0 8C0 7.45 0.195833 6.97917 0.5875 6.5875C0.979167 6.19583 1.45 6 2 6C2.55 6 3.02083 6.19583 3.4125 6.5875C3.80417 6.97917 4 7.45 4 8C4 8.55 3.80417 9.02083 3.4125 9.4125C3.02083 9.80417 2.55 10 2 10ZM2 4C1.45 4 0.979167 3.80417 0.5875 3.4125C0.195833 3.02083 0 2.55 0 2C0 1.45 0.195833 0.979167 0.5875 0.5875C0.979167 0.195833 1.45 0 2 0C2.55 0 3.02083 0.195833 3.4125 0.5875C3.80417 0.979167 4 1.45 4 2C4 2.55 3.80417 3.02083 3.4125 3.4125C3.02083 3.80417 2.55 4 2 4Z" fill="#1D1B20"/>
     </symbol>
 </svg>
+
 <script>
     // DEFINE GLOBAL EVENT DATA (e.g., from Django context variable events_json)
     const EVENTS_DATA = {{ events_json|safe }}; 
@@ -215,8 +231,6 @@
     (function() {
         // Use a set for quick date lookup
         const eventDates = new Set();
-        // EVENTS_DATA is expected to be an object where keys are 'YYYY-MM-DD' dates
-        // Extract the keys and add them to the set
         if (EVENTS_DATA && typeof EVENTS_DATA === 'object') {
             Object.keys(EVENTS_DATA).forEach(date => eventDates.add(date));
         }
@@ -297,145 +311,334 @@
 
 </script>
 
+ 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     console.log('=== CHART DEBUGGING START ===');
-    
-    // Check if Chart.js is loaded
-    console.log('Chart.js loaded:', typeof Chart !== 'undefined');
-    
-    // Check if canvas elements exist
-    const subCanvas = document.getElementById('submissionStatusChart');
-    const projCanvas = document.getElementById('projectStatusChart');
-    console.log('Submission canvas found:', subCanvas !== null);
-    console.log('Project canvas found:', projCanvas !== null);
-    
-    if (!subCanvas || !projCanvas) {
-        console.error('Canvas elements not found!');
-        return;
-    }
-    
-    // Check canvas dimensions
-    console.log('Submission canvas dimensions:', subCanvas.offsetWidth, 'x', subCanvas.offsetHeight);
-    console.log('Project canvas dimensions:', projCanvas.offsetWidth, 'x', projCanvas.offsetHeight);
-    
-    // Check parent container
-    console.log('Submission parent:', subCanvas.parentElement);
-    console.log('Project parent:', projCanvas.parentElement);
 
-    // -----------------------------------------------------------------
-    // Chart 1: Submission Status Breakdown (Bar Chart)
-    // -----------------------------------------------------------------
-    const subCtx = subCanvas.getContext('2d');
-    console.log('Submission context:', subCtx);
+    // --- 1. Define chart variables ---
+    let submissionChart = null;
+    let projectChart = null;
     
-    fetch('/dashboard/api/chart/submission-status/')
-        .then(response => {
-            console.log('Submission Status Response:', response);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log('Submission Status Data:', data);
-            console.log('Creating submission chart...');
-            
-            const submissionChart = new Chart(subCtx, {
-                type: 'bar',
-                data: {
-                    labels: data.labels,
-                    datasets: [{
-                        label: 'Number of Submissions',
-                        data: data.counts,
-                        backgroundColor: [
-                            'rgba(255, 99, 132, 0.2)',
-                            'rgba(54, 162, 235, 0.2)',
-                            'rgba(255, 206, 86, 0.2)',
-                            'rgba(75, 192, 192, 0.2)',
-                            'rgba(153, 102, 255, 0.2)',
-                            'rgba(255, 159, 64, 0.2)',
-                            'rgba(199, 199, 199, 0.2)'
-                        ],
-                        borderColor: [
-                            'rgba(255, 99, 132, 1)',
-                            'rgba(54, 162, 235, 1)',
-                            'rgba(255, 206, 86, 1)',
-                            'rgba(75, 192, 192, 1)',
-                            'rgba(153, 102, 255, 1)',
-                            'rgba(255, 159, 64, 1)',
-                            'rgba(199, 199, 199, 1)'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    },
-                    plugins: { 
-                    }
-                }
-            });
-            
-            console.log('Submission chart created:', submissionChart);
-        })
-        .catch(error => console.error('Error fetching submission chart data:', error));
+    // --- 2. Reusable hover function ---
+    const customOnHover = (event, chartElement) => {
+        const canvas = event.native.target;
+        if (chartElement.length > 0) {
+            canvas.style.cursor = 'pointer';
+        } else {
+            canvas.style.cursor = 'default';
+        }
+    };
 
-    // -----------------------------------------------------------------
-    // Chart 2: Project Status Overview (Pie Chart)
-    // -----------------------------------------------------------------
-    const projCtx = projCanvas.getContext('2d');
-    console.log('Project context:', projCtx);
-
-    fetch('/dashboard/api/chart/project-status/')
-        .then(response => {
-            console.log('Project Status Response:', response);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log('Project Status Data:', data);
-            console.log('Creating project chart...');
-            
-            const projectChart = new Chart(projCtx, {
-                type: 'pie',
-                data: {
-                    labels: data.labels,
-                    datasets: [{
-                        label: 'Project Status',
-                        data: data.counts,
-                        backgroundColor: [
-                            'rgba(255, 99, 132, 0.7)',
-                            'rgba(54, 162, 235, 0.7)',
-                            'rgba(75, 192, 192, 0.7)',
-                            'rgba(255, 206, 86, 0.7)',
-                            'rgba(153, 102, 255, 0.7)'
-                        ],
-                        hoverOffset: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                    }
-                }
-            });
-            
-            console.log('Project chart created:', projectChart);
-        })
-        .catch(error => console.error('Error fetching project chart data:', error));
+    // --- 3. The "Master Function" ---
+    function updateDashboard(startStr, endStr) {
         
+        console.log(`Updating dashboard for: ${startStr || 'default'} to ${endStr || 'default'}`);
+
+        const subApiUrl = `/dashboard/api/chart/submission-status/?start=${startStr}&end=${endStr}`;
+        const projApiUrl = `/dashboard/api/chart/project-status/?start=${startStr}&end=${endStr}`;
+
+        // -----------------------------------------------------------------
+        // Chart 1: Submission Status Breakdown
+        // -----------------------------------------------------------------
+        const subCanvas = document.getElementById('submissionStatusChart');
+        if (!subCanvas) return;
+        const subCtx = subCanvas.getContext('2d');
+        
+        fetch(subApiUrl)
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                return response.json();
+            })
+            .then(data => {
+                if (submissionChart) {
+                    submissionChart.destroy();
+                }
+                
+                submissionChart = new Chart(subCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            label: 'Number of Submissions',
+                            data: data.counts,
+                            backgroundColor: [
+                                'rgba(255, 99, 132, 0.6)', 'rgba(54, 162, 235, 0.6)', 
+                                'rgba(255, 206, 86, 0.6)', 'rgba(75, 192, 192, 0.6)', 
+                                'rgba(153, 102, 255, 0.6)', 'rgba(255, 159, 64, 0.6)'
+                            ],
+                            borderColor: [
+                                'rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)',
+                                'rgba(255, 206, 86, 1)', 'rgba(75, 192, 192, 1)',
+                                'rgba(153, 102, 255, 1)', 'rgba(255, 159, 64, 1)'
+                            ],
+                            borderWidth: 1,
+                            hoverBackgroundColor: [
+                                'rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)',
+                                'rgba(255, 206, 86, 1)', 'rgba(75, 192, 192, 1)',
+                                'rgba(153, 102, 255, 1)', 'rgba(255, 159, 64, 1)'
+                            ],
+                            hoverBorderColor: [
+                                'rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)',
+                                'rgba(255, 206, 86, 1)', 'rgba(75, 192, 192, 1)',
+                                'rgba(153, 102, 255, 1)', 'rgba(255, 159, 64, 1)'
+                            ],
+                            hoverBorderWidth: 3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        indexAxis: 'y',  
+                        onHover: customOnHover,
+                        scales: { x: { beginAtZero: true }, y: { ticks: { display: false } } },
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            })
+            .catch(error => console.error('Error fetching submission chart data:', error));
+
+        // -----------------------------------------------------------------
+        // Chart 2: Project Status Overview
+        // -----------------------------------------------------------------
+        const projCanvas = document.getElementById('projectStatusChart');
+        if (!projCanvas) return;
+        const projCtx = projCanvas.getContext('2d');
+
+        fetch(projApiUrl)
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                return response.json();
+            })
+            .then(data => {
+                if (projectChart) {
+                    projectChart.destroy();
+                }
+                
+                const pieColors = [
+                    'rgba(255, 99, 132, 0.7)',  'rgba(54, 162, 235, 0.7)',
+                    'rgba(75, 192, 192, 0.7)', 'rgba(255, 206, 86, 0.7)',
+                    'rgba(153, 102, 255, 0.7)'
+                ];
+                const pieHoverColors = [
+                    'rgba(255, 119, 152, 1)', 'rgba(74, 182, 255, 1)',
+                    'rgba(95, 212, 212, 1)', 'rgba(255, 216, 106, 1)',
+                    'rgba(173, 122, 255, 1)'
+                ];
+                
+                projectChart = new Chart(projCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            label: 'Project Status',
+                            data: data.counts,
+                            backgroundColor: pieColors,
+                            hoverBackgroundColor: pieHoverColors,
+                            hoverOffset: 20,
+                            hoverBorderColor: '#fff',
+                            hoverBorderWidth: 5
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        onHover: customOnHover,
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            })
+            .catch(error => console.error('Error fetching project chart data:', error));
+    }
+
+    // --- 4. NEW: Logic for your Custom Popup (with Button Text) ---
+    
+    const openBtn = document.getElementById('dateRangeBtn');
+    const overlay = document.getElementById('popupOverlay');
+    const popup = document.getElementById('datePopup');
+    const confirmBtn = document.getElementById('confirmExport');
+    const cancelBtn = document.getElementById('cancelExport');
+    
+    if (openBtn && overlay && popup && confirmBtn && cancelBtn) {
+        
+        // Helper function to format YYYY-MM-DD to "Mmm D, YYYY"
+        const formatDate = (dateStr) => {
+            if (!dateStr) return null;
+            const [year, month, day] = dateStr.split('-');
+            const date = new Date(year, month - 1, day);
+            return date.toLocaleDateString('en-US', { 
+                month: 'short', 
+                day: 'numeric', 
+                year: 'numeric' 
+            });
+        };
+
+        const showPopup = (show) => {
+            if (show) {
+                overlay.style.display = 'flex';
+                setTimeout(() => {
+                    popup.classList.add('show');
+                }, 10);
+            } else {
+                popup.classList.remove('show');
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                }, 250);
+            }
+        };
+
+        openBtn.addEventListener('click', () => {
+            showPopup(true);
+        });
+        
+        cancelBtn.addEventListener('click', () => {
+            showPopup(false);
+        });
+        
+        overlay.addEventListener('click', (event) => {
+            if (event.target === overlay) {
+                showPopup(false);
+            }
+        });
+        
+        // 'Confirm' button logic is updated
+        confirmBtn.addEventListener('click', () => {
+            const startStr = document.getElementById('startDate').value;
+            const endStr = document.getElementById('endDate').value;
+            
+            // --- NEW: Update Button Text ---
+            const formattedStart = formatDate(startStr);
+            const formattedEnd = formatDate(endStr);
+            
+            if (formattedStart && formattedEnd) {
+                openBtn.textContent = `${formattedStart} - ${formattedEnd} ▾`;
+            } else if (formattedStart) {
+                openBtn.textContent = `From ${formattedStart} ▾`;
+            } else if (formattedEnd) {
+                openBtn.textContent = `Until ${formattedEnd} ▾`;
+            } else {
+                openBtn.textContent = 'All Time (Default) ▾';
+            }
+            
+            updateDashboard(startStr, endStr);
+            showPopup(false);
+        });
+    }
+
+    updateDashboard('', ''); 
+    openBtn.textContent = 'Last 300 Days ▾';
+    
     console.log('=== CHART DEBUGGING END ===');
 });
 </script>
+ 
+<script> 
+    const openBtn = document.getElementById('dateRangeBtn');
+    const overlay = document.getElementById('popupOverlay');
+    const popup = document.getElementById('datePopup');
+    const confirmBtn = document.getElementById('confirmExport');
+    const cancelBtn = document.getElementById('cancelExport');
+    
+    // Get the date input elements
+    const startDateInput = document.getElementById('startDate');
+    const endDateInput = document.getElementById('endDate');
+    
+    if (openBtn && overlay && popup && confirmBtn && cancelBtn && startDateInput && endDateInput) {
+        
+        // --- NEW: Date Validation Logic ---
+        startDateInput.addEventListener('change', () => {
+            // When start date changes, end date cannot be before it
+            if (startDateInput.value) {
+                endDateInput.min = startDateInput.value;
+            }
+        });
+        
+        endDateInput.addEventListener('change', () => {
+            // When end date changes, start date cannot be after it
+            if (endDateInput.value) {
+                startDateInput.max = endDateInput.value;
+            }
+        });
+        // --- End of New Logic ---
+
+        const showPopup = (show) => {
+            if (show) {
+                overlay.style.display = 'flex';
+                setTimeout(() => {
+                    popup.classList.add('show');
+                }, 10);
+            } else {
+                popup.classList.remove('show');
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                    // Clear min/max on close so it resets for next time
+                    startDateInput.max = '';
+                    endDateInput.min = '';
+                }, 250); // Matches your CSS transition time
+            }
+        };
+
+        openBtn.addEventListener('click', () => {
+            showPopup(true);
+        });
+        
+        cancelBtn.addEventListener('click', () => {
+            showPopup(false);
+        });
+        
+        overlay.addEventListener('click', (event) => {
+            if (event.target === overlay) {
+                showPopup(false);
+            }
+        });
+        
+        confirmBtn.addEventListener('click', () => {
+            const startStr = startDateInput.value;
+            const endStr = endDateInput.value;
+            
+            // Helper function to format YYYY-MM-DD to "Mmm D, YYYY"
+            const formatDate = (dateStr) => {
+                if (!dateStr) return null;
+                // Add a check for invalid date string
+                const date = new Date(dateStr + 'T00:00:00'); // Use T00:00:00 to avoid timezone issues
+                if (isNaN(date)) return null;
+                return date.toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric', 
+                    year: 'numeric',
+                    timeZone: 'UTC' // Ensure consistent formatting
+                });
+            };
+            
+            const formattedStart = formatDate(startStr);
+            const formattedEnd = formatDate(endStr);
+            
+            if (formattedStart && formattedEnd) {
+                openBtn.textContent = `${formattedStart} - ${formattedEnd} ▾`;
+            } else if (formattedStart) {
+                openBtn.textContent = `From ${formattedStart} ▾`;
+            } else if (formattedEnd) {
+                openBtn.textContent = `Until ${formattedEnd} ▾`;
+            } else {
+                // Keep the default text if no dates are set
+                openBtn.textContent = 'Last 300 Days ▾';
+            }
+            
+            updateDashboard(startStr, endStr);
+            showPopup(false);
+        });
+    }
+
+    // --- 5. Initial Load ---
+    // Load with defaults and set button text
+    updateDashboard('', ''); 
+    if (openBtn) {
+        openBtn.textContent = 'Last 300 Days ▾';
+    }
+    
+    console.log('=== CHART DEBUGGING END ===');
+</script> 
+
 </body>
 </html>
 

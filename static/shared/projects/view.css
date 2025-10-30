@@ -223,6 +223,7 @@ h5 {
 .cancel { background: #10da56; }
 .notcancel { background: #025984; }
 .edit { background: #00681a; }
+.delete { background: #a00101; }
 .not { background: #858585; }
 .filter-apply { background-color: #00681a; }
 .filter-close { background: #808080; }
@@ -492,7 +493,8 @@ select.user-details-value {
 }
 
 .required {
-    color: #DC2626;
+    color: #DC2626; 
+    margin-left: 1px;
 }
 
 /* --- College Tags --- */

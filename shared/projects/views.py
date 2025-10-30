@@ -1273,6 +1273,7 @@ def add_project_view(request):
 
                 # Set estimated_events as limit only (no auto-creation of events)
                 project.estimated_events = form.cleaned_data.get('estimated_events', 0)
+                now = timezone.now()
                 project.save()
 
                 # Create alerts for project members about being added to the project
