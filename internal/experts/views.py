@@ -62,63 +62,24 @@ def experts_view(request):
         member_completed=Count('member_projects', filter=Q(member_projects__status='COMPLETED'), distinct=True)
     )
     
-    # Apply sorting
+    # Filter to only show experts with at least 1 completed project
+    # We need to filter after annotation
+    experts = [e for e in experts if (e.led_completed + e.member_completed) >= 1]
+    
+    # Apply sorting (experts is now a list, not a queryset)
     sort_by = request.GET.get('sort_by', 'name')  # name, projects, campus, college
     order = request.GET.get('order', 'asc')  # asc or desc
     
     if sort_by == 'name':
-        if order == 'desc':
-            experts = experts.order_by('-last_name', '-first_name')
-        else:
-            experts = experts.order_by('last_name', 'first_name')
+        experts.sort(key=lambda x: (x.last_name, x.given_name), reverse=(order == 'desc'))
     elif sort_by == 'projects':
-        # For sorting by projects, we need to add the counts first, then sort
-        # We'll use a custom ordering based on the sum of led and member completed
-        experts = list(experts)
         experts.sort(key=lambda x: x.led_completed + x.member_completed, reverse=(order == 'desc'))
-        # Convert back to queryset-like list for pagination
-        from django.core.paginator import Paginator
-        page_number = request.GET.get('page', 1)
-        paginator = Paginator(experts, 6)
-        page_obj = paginator.get_page(page_number)
-        
-        # Calculate page range
-        current = page_obj.number
-        total = paginator.num_pages
-        if total <= 5:
-            page_range = range(1, total + 1)
-        elif current <= 3:
-            page_range = range(1, 6)
-        elif current >= total - 2:
-            page_range = range(total - 4, total + 1)
-        else:
-            page_range = range(current - 2, current + 3)
-        
-        return render(request, 'experts/experts.html', {
-            'campuses': campuses,
-            'colleges': colleges,
-            'experts': page_obj,
-            'paginator': paginator,
-            'page_obj': page_obj,
-            'page_range': page_range,
-            'search_query': search_query,
-            'campus_filter': campus_filter,
-            'college_filter': college_filter,
-            'sort_by': sort_by,
-            'order': order,
-        })
     elif sort_by == 'campus':
-        if order == 'desc':
-            experts = experts.order_by('-campus', 'last_name', 'first_name')
-        else:
-            experts = experts.order_by('campus', 'last_name', 'first_name')
+        experts.sort(key=lambda x: (x.campus or '', x.last_name, x.given_name), reverse=(order == 'desc'))
     elif sort_by == 'college':
-        if order == 'desc':
-            experts = experts.order_by('-college__name', 'last_name', 'first_name')
-        else:
-            experts = experts.order_by('college__name', 'last_name', 'first_name')
+        experts.sort(key=lambda x: (x.college.name if x.college else '', x.last_name, x.given_name), reverse=(order == 'desc'))
     else:
-        experts = experts.order_by('last_name', 'first_name')
+        experts.sort(key=lambda x: (x.last_name, x.given_name), reverse=(order == 'desc'))
 
     # Pagination
     page_number = request.GET.get('page', 1)
@@ -137,6 +98,9 @@ def experts_view(request):
     else:
         page_range = range(current - 2, current + 3)
     
+    # Check if user can create projects (UESO, DIRECTOR, VP only)
+    can_create_projects = request.user.role in ['UESO', 'DIRECTOR', 'VP']
+    
     return render(request, 'experts/experts.html', {
         'campuses': campuses,
         'colleges': colleges,
@@ -149,6 +113,7 @@ def experts_view(request):
         'college_filter': college_filter,
         'sort_by': sort_by,
         'order': order,
+        'can_create_projects': can_create_projects,
     })
 
 

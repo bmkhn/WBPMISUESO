@@ -195,10 +195,9 @@ def add_submission_requirement(request):
             
 
         
-        # Add success message and redirect to refresh the event availability data
+        # Redirect with toast parameters
         from urllib.parse import quote
         count = len(downloadable_ids)
-        messages.success(request, 'Submission requirements added successfully!')
         return redirect(f'/submissions/?success=true&action=created&count={count}&title={quote(project.title)}')
     else:
         return render(request, 'submissions/add_submissions.html', {

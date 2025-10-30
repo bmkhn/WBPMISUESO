@@ -250,9 +250,11 @@
 				← Back to Search
 			</button>
 
+			{% if can_create_projects %}
 			<button class="create-project-btn" id="createProjectBtn">
 				Create Project with Selected Team
 			</button>
+			{% endif %}
 
 			<div class="results-header" id="resultsHeader">
 				Found <strong id="resultsCount">0</strong> team members for "<strong id="searchKeyword"></strong>"
@@ -577,6 +579,7 @@
 	// Track selected team members
 	let selectedMembers = [];
 	const createProjectBtn = document.getElementById('createProjectBtn');
+	const canCreateProjects = {% if can_create_projects %}true{% else %}false{% endif %};
 
 	// Display results with side panel layout
 	function displayResults(teamMembers) {
@@ -599,8 +602,14 @@
 			const memberItem = document.createElement('div');
 			memberItem.className = 'member-item';
 			memberItem.dataset.memberId = member.id;
+			
+			// Only show checkbox if user can create projects
+			const checkboxHTML = canCreateProjects 
+				? `<input type="checkbox" class="member-checkbox" data-user-id="${member.id}">`
+				: '';
+			
 			memberItem.innerHTML = `
-				<input type="checkbox" class="member-checkbox" data-user-id="${member.id}">
+				${checkboxHTML}
 				<div class="member-avatar">
 					${member.profile_picture ? `<img src="${member.profile_picture}" alt="${member.name}">` : initials}
 				</div>
@@ -611,12 +620,14 @@
 				<span class="leader-badge">👑 Leader</span>
 			`;
 			
-			// Checkbox click handler
-			const checkbox = memberItem.querySelector('.member-checkbox');
-			checkbox.addEventListener('click', (e) => {
-				e.stopPropagation();
-				handleMemberSelection(member.id, checkbox.checked);
-			});
+			// Checkbox click handler (only if checkbox exists)
+			if (canCreateProjects) {
+				const checkbox = memberItem.querySelector('.member-checkbox');
+				checkbox.addEventListener('click', (e) => {
+					e.stopPropagation();
+					handleMemberSelection(member.id, checkbox.checked);
+				});
+			}
 			
 			// Member item click handler (for details)
 			memberItem.addEventListener('click', (e) => {
@@ -668,6 +679,8 @@
 
 	// Update create project button visibility
 	function updateCreateButton() {
+		if (!createProjectBtn) return; // Button doesn't exist for non-privileged users
+		
 		if (selectedMembers.length > 0) {
 			createProjectBtn.classList.add('show');
 		} else {
@@ -675,24 +688,26 @@
 		}
 	}
 
-	// Create project button click handler
-	createProjectBtn.addEventListener('click', () => {
-		if (selectedMembers.length === 0) return;
-		
-		const leader = selectedMembers[0];
-		const providers = selectedMembers.slice(1);
-		
-		// Store team data in localStorage
-		const teamData = {
-			leader: leader,
-			providers: providers,
-			timestamp: Date.now()
-		};
-		localStorage.setItem('aiTeamSelection', JSON.stringify(teamData));
-		
-		// Redirect to add project page
-		window.location.href = '{% url "add_project" %}';
-	});
+	// Create project button click handler (only if button exists)
+	if (createProjectBtn) {
+		createProjectBtn.addEventListener('click', () => {
+			if (selectedMembers.length === 0) return;
+			
+			const leader = selectedMembers[0];
+			const providers = selectedMembers.slice(1);
+			
+			// Store team data in localStorage
+			const teamData = {
+				leader: leader,
+				providers: providers,
+				timestamp: Date.now()
+			};
+			localStorage.setItem('aiTeamSelection', JSON.stringify(teamData));
+			
+			// Redirect to add project page
+			window.location.href = '{% url "add_project" %}';
+		});
+	}
 
 	// Show member details in side panel
 	function showMemberDetails(member, memberItem) {

@@ -2,6 +2,7 @@ from django.db import models
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from system.users.models import User
+from django.templatetags.static import static
 
 class Announcement(models.Model):
 	def delete(self, *args, **kwargs):
@@ -15,7 +16,7 @@ class Announcement(models.Model):
 	is_scheduled = models.BooleanField(default=False)
 	scheduled_at = models.DateTimeField(null=True, blank=True)
 	scheduled_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='scheduled_announcements')
-	cover_photo = models.ImageField(upload_to='announcements/', null=True, blank=True, default=('default/announce.png'))
+	cover_photo = models.ImageField(upload_to='announcements/', null=True, blank=True)
 	published_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='published_announce')
 	published_at = models.DateTimeField(null=True, blank=True)
 	edited_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='edited_announcements')
@@ -25,11 +26,17 @@ class Announcement(models.Model):
 	def __str__(self):
 		return self.title
 	
+	@property
 	def get_cover_photo_url(self):
 		"""Return the cover photo URL or default image"""
-		if self.cover_photo and hasattr(self.cover_photo, 'url'):
-			return self.cover_photo.url
-		return 'default/announce.png'
+		if self.cover_photo:
+			try:
+				return self.cover_photo.url
+			except ValueError:
+				pass
+			except AttributeError:
+				pass
+		return static('announce.png')
 
 	def save(self, *args, **kwargs):
 		# Only set updated_at if this is an update (object already exists)
@@ -37,7 +44,6 @@ class Announcement(models.Model):
 			from django.utils import timezone
 			self.updated_at = timezone.now()
 		super().save(*args, **kwargs)
-
 
 @receiver(post_save, sender=Announcement)
 def log_announcement_action(sender, instance, created, **kwargs):

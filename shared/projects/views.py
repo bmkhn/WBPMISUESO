@@ -1092,6 +1092,11 @@ def admin_project(request):
     search = request.GET.get('search', '')
 
     projects = Project.objects.all()
+    
+    # Filter projects by college for COORDINATOR, DEAN, and PROGRAM_HEAD
+    user_role = getattr(request.user, 'role', None)
+    if user_role in ["COORDINATOR", "DEAN", "PROGRAM_HEAD"] and request.user.college:
+        projects = projects.filter(project_leader__college=request.user.college)
 
     # Apply filters
     if college:
