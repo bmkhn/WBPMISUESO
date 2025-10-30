@@ -147,7 +147,7 @@
             <form method="post" action="{% url 'admin_request_action' req.id %}" style="width:100%;">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="reject" class="user-details-value"/>
-                <textarea name="reason" rows="3" maxlength="500" required placeholder="Enter reason..." style="resize:vertical;"></textarea>
+                <textarea name="reason" rows="3" maxlength="500" required placeholder="Enter reason..." style="resize:vertical; height: 20rem; width: 30rem;"></textarea>
                 <div class="modal-actions">
                     <button type="button" class="action-btn cancel-btn" id="cancel-reject">Cancel</button>
                     <button type="submit" class="action-btn reject-btn">Reject</button>

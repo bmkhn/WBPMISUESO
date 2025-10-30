@@ -1,5 +1,6 @@
 from django.db.models import Count, Sum, F, Q, DecimalField
-from django.db.models.functions import TruncMonth
+# --- MODIFICATION: Import new Trunc functions ---
+from django.db.models.functions import TruncMonth, TruncDay, TruncWeek, TruncYear
 from datetime import datetime, date, timedelta
 from django.utils import timezone
 
@@ -68,23 +69,56 @@ def get_total_individuals_trained(start_date, end_date):
 # CHART DATA FUNCTIONS (All date-filtered)
 # ==============================================================================
 
+# --- NEW HELPER FUNCTION ---
+def _get_timescale_trunc(start_date, end_date):
+    """
+    Determines the appropriate Django Trunc function based on the date range duration.
+    """
+    try:
+        # Ensure we are comparing date objects
+        start_dt = start_date.date() if isinstance(start_date, datetime) else start_date
+        end_dt = end_date.date() if isinstance(end_date, datetime) else end_date
+        
+        diff_days = (end_dt - start_dt).days
+
+        if diff_days <= 31:  # 1 month or less
+            return TruncDay
+        if diff_days <= 180: # 6 months or less
+            return TruncWeek
+        if diff_days <= 1095: # 3 years or less
+            return TruncMonth
+        return TruncYear # More than 3 years
+    except Exception:
+        # Fallback in case of any error
+        return TruncMonth
+
+
+# --- MODIFIED FUNCTION ---
 def get_active_projects_over_time(start_date, end_date):
     """
-    Counts projects CREATED within the date range, grouped by month.
+    Counts projects CREATED within the date range, grouped dynamically by day, week, month, or year.
+    Returns data in a format compatible with Chart.js time scale: {'data': [{'x': 'YYYY-MM-DD', 'y': count}, ...]}
     """
-    monthly_data = Project.objects.filter(
+    TruncFunc = _get_timescale_trunc(start_date, end_date)
+
+    timescale_data = Project.objects.filter(
         created_at__range=[start_date, end_date] # Filter by creation date
     ).annotate(
-        month=TruncMonth('created_at') # Group by creation month
-    ).values('month').annotate(
+        timescale_unit=TruncFunc('created_at') # Group dynamically
+    ).values('timescale_unit').annotate(
         count=Count('id')
-    ).order_by('month')
+    ).order_by('timescale_unit')
 
-    labels = [item['month'].strftime('%b %Y') for item in monthly_data]
-    counts = [item['count'] for item in monthly_data]
+    # Format for Chart.js time scale
+    data = [
+        {
+            "x": item['timescale_unit'].strftime('%Y-%m-%d'), 
+            "y": item['count']
+        } 
+        for item in timescale_data
+    ]
 
-    # Use the same key names as before for JS compatibility
-    return {'labels': labels, 'counts': counts}
+    return {'data': data}
 
 
 def get_budget_allocation_data(start_date, end_date):
@@ -121,20 +155,33 @@ def get_agenda_distribution_data(start_date, end_date):
     return {'labels': labels, 'counts': counts}
 
 
+# --- MODIFIED FUNCTION ---
 def get_trained_individuals_data(start_date, end_date):
-    monthly_data = Submission.objects.filter(
+    """
+    Counts individuals trained within the date range, grouped dynamically by day, week, month, or year.
+    Returns data in a format compatible with Chart.js time scale: {'data': [{'x': 'YYYY-MM-DD', 'y': count}, ...]}
+    """
+    TruncFunc = _get_timescale_trunc(start_date, end_date)
+
+    timescale_data = Submission.objects.filter(
         event__datetime__range=[start_date, end_date],
         num_trained_individuals__isnull=False
     ).annotate(
-        month=TruncMonth('event__datetime')
-    ).values('month').annotate(
+        timescale_unit=TruncFunc('event__datetime')
+    ).values('timescale_unit').annotate(
         total_trained=Sum('num_trained_individuals')
-    ).order_by('month')
+    ).order_by('timescale_unit')
 
-    labels = [item['month'].strftime('%b %Y') for item in monthly_data]
-    counts = [item['total_trained'] for item in monthly_data]
+    # Format for Chart.js time scale
+    data = [
+        {
+            "x": item['timescale_unit'].strftime('%Y-%m-%d'),
+            "y": item['total_trained'] or 0 # Ensure count is not None
+        }
+        for item in timescale_data
+    ]
 
-    return {'labels': labels, 'counts': counts}
+    return {'data': data}
 
 
 def get_request_status_distribution(start_date, end_date):
