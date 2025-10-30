@@ -8,6 +8,15 @@ from .ai_team_generator import get_team_generator
 import json
 
 
+def get_templates(request):
+    user_role = getattr(request.user, 'role', None)
+    if user_role in ["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
+        base_template = "base_internal.html"
+    else:
+        base_template = "base_public.html"
+    return base_template
+
+
 @role_required(allowed_roles=["VP", "DIRECTOR", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD"], require_confirmed=True)
 def experts_view(request):
     from django.core.paginator import Paginator
@@ -143,41 +152,41 @@ def experts_view(request):
     })
 
 
+def can_view_project(user, project):
+    """
+    Check if a user can view a project based on visibility restrictions:
+    - Non-authenticated users: only COMPLETED projects
+    - Project leader/providers: can see their projects regardless of status
+    - Dean/Coordinator/Program Head: can see all projects from their college
+    - UESO/Director/VP: can see everything
+    """
+    # UESO, Director, VP can see everything
+    if user.is_authenticated and hasattr(user, 'role'):
+        if user.role in ["UESO", "DIRECTOR", "VP"]:
+            return True
+        
+        # Project leader or provider can see their own projects
+        if project.project_leader == user or user in project.providers.all():
+            return True
+        
+        # Dean, Coordinator, Program Head can see all projects from their college
+        if user.role in ["DEAN", "COORDINATOR", "PROGRAM_HEAD"]:
+            if user.college and project.project_leader.college == user.college:
+                return True
+    
+    # Non-authenticated or other users can only see COMPLETED projects
+    return project.status == 'COMPLETED'
+
+
 @role_required(allowed_roles=["VP", "DIRECTOR", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD"], require_confirmed=True)
 def expert_profile_view(request, user_id):
+    base_template = get_templates(request)
     from django.shortcuts import get_object_or_404
     from shared.projects.models import Project
-    from django.db.models import Q, Count, Avg
+    from django.db.models import Q
     
     # Get the expert user
     expert = get_object_or_404(User, id=user_id, is_expert=True, is_confirmed=True)
-    
-    # Get projects where the expert is either the leader or a provider
-    projects = Project.objects.filter(
-        Q(project_leader=expert) | Q(providers=expert)
-    ).distinct().select_related(
-        'project_leader', 'agenda'
-    ).prefetch_related(
-        'providers', 'sdgs', 'evaluations'
-    ).order_by('-start_date')
-    
-    # Calculate project statistics
-    total_projects = projects.count()
-    completed_projects = projects.filter(status='COMPLETED').count()
-    ongoing_projects = projects.filter(status='IN_PROGRESS').count()
-    
-    # Calculate average rating from project evaluations
-    avg_rating = 0
-    evaluation_count = 0
-    for project in projects:
-        project_evals = project.evaluations.all()
-        if project_evals.exists():
-            for eval in project_evals:
-                avg_rating += eval.rating
-                evaluation_count += 1
-    
-    if evaluation_count > 0:
-        avg_rating = avg_rating / evaluation_count
     
     # Get campus display name
     campus_display = dict(User.Campus.choices).get(expert.campus, expert.campus) if expert.campus else "N/A"
@@ -186,16 +195,36 @@ def expert_profile_view(request, user_id):
     college_name = expert.college.name if expert.college else "N/A"
     college_logo = expert.college.logo.url if expert.college and expert.college.logo else None
     
+    # Get content items - projects where the expert is leader or provider
+    # Then apply visibility filtering based on what the VIEWING user can see
+    all_projects = Project.objects.filter(
+        Q(project_leader=expert) | Q(providers=expert)
+    ).distinct().select_related(
+        'project_leader', 'agenda'
+    ).prefetch_related(
+        'providers', 'sdgs'
+    ).order_by('-start_date')
+    
+    # Filter projects based on what the VIEWING user can see
+    content_items = [p for p in all_projects if can_view_project(request.user, p)]
+    
+    # Determine role constants for display
+    HAS_COLLEGE_CAMPUS = ["FACULTY", "PROGRAM_HEAD", "DEAN", "COORDINATOR"]
+    HAS_DEGREE_EXPERTISE = ["FACULTY", "IMPLEMENTER"]
+    HAS_COMPANY_INDUSTRY = ["CLIENT"]
+    
     return render(request, 'experts/experts_profile.html', {
-        'expert': expert,
+        'profile_user': expert,  # Using profile_user to match the template
+        'can_edit': False,  # Experts profiles are view-only for others
         'campus_display': campus_display,
         'college_name': college_name,
         'college_logo': college_logo,
-        'projects': projects,
-        'total_projects': total_projects,
-        'completed_projects': completed_projects,
-        'ongoing_projects': ongoing_projects,
-        'avg_rating': round(avg_rating, 1),
+        'content_items': content_items,
+        'content_items_count': len(content_items),
+        'base_template': base_template,
+        'HAS_COLLEGE_CAMPUS': HAS_COLLEGE_CAMPUS,
+        'HAS_DEGREE_EXPERTISE': HAS_DEGREE_EXPERTISE,
+        'HAS_COMPANY_INDUSTRY': HAS_COMPANY_INDUSTRY,
     })
 
 
