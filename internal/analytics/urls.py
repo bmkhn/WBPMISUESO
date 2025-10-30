@@ -19,4 +19,6 @@ urlpatterns = [
     path('data/chart/requests/', api_views.request_status_chart_api, name='request_status_chart_data'),
     
     path('data/trends/projects/', api_views.project_trends_api, name='project_trends_data'),
+    
+    path('export/', views.export_analytics_to_excel, name='export_analytics_data'),
 ]

@@ -75,16 +75,13 @@
 
         <div class="export">
             <button id="exportBtn" class="export-btn">
-                <svg width="20" height="20" style="fill: currentColor;">
-                    <use href="#file-export"/>
-                </svg>
-                Export
+                <a href="{% url 'export_analytics_data' %}" id="export-button" class="action-btn">
+                    <svg width="20" height="20" style="fill: currentColor;">
+                        <use href="#file-export"/>
+                    </svg>
+                    Export
+                </a>
             </button>
-            <div id="exportDropdown" class="dropdown-menu hidden" style="right: 0; left: auto; text-align:center;">
-                <div class="dropdown-item" data-type="pdf">Export as PDF</div>
-                <div class="dropdown-item" data-type="png">Export as PNG</div>
-                <div class="dropdown-item" data-type="csv">Export as CSV</div>
-            </div>
         </div>
     </div>
     
@@ -731,6 +728,49 @@
         }
         refreshCharts(initialStart, initialEnd);
 
+        console.log('=== ANALYTICS CHARTS SCRIPT END ===');
+    });
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // ... (all your existing chart code) ...
+
+        window.refreshAnalyticsCharts = refreshCharts;
+
+        // ... (your existing initialStart/initialEnd logic) ...
+        // refreshCharts(initialStart, initialEnd);
+
+        // ### ADD THIS NEW JAVASCRIPT ###
+        const exportButton = document.getElementById('export-button');
+        const filterForm = document.getElementById('filterForm');
+        const startDateInput = document.getElementById('start_date');
+        const endDateInput = document.getElementById('end_date');
+
+        function updateExportLink() {
+            const startDate = startDateInput.value;
+            const endDate = endDateInput.value;
+
+            let baseUrl = "{% url 'export_analytics_data' %}";
+
+            if (startDate && endDate) {
+                // Pass the dates as URL parameters to the export view
+                exportButton.href = `${baseUrl}?start_date=${startDate}&end_date=${endDate}`;
+            } else {
+                exportButton.href = baseUrl; // Let backend use default dates
+            }
+        }
+
+        // Update the link when the filter form is submitted
+        if (filterForm) {
+            filterForm.addEventListener('submit', updateExportLink);
+        }
+
+        // Update the link on initial page load
+        updateExportLink();
+        // #################################
+
+        // This should already be here, keep it last
         console.log('=== ANALYTICS CHARTS SCRIPT END ===');
     });
 </script>
