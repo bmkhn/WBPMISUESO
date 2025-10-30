@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from internal.agenda.models import Agenda
+from shared.projects.models import SustainableDevelopmentGoal
 from django.utils import timezone
 
 User = get_user_model()
@@ -31,6 +33,11 @@ class Goal(models.Model):
     target_date = models.DateField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    # Optional filters to define what this goal tracks
+    agenda = models.ForeignKey(Agenda, on_delete=models.SET_NULL, null=True, blank=True, related_name='goals')
+    sdg = models.ForeignKey(SustainableDevelopmentGoal, on_delete=models.SET_NULL, null=True, blank=True, related_name='goals')
+    project_status = models.CharField(max_length=20, null=True, blank=True)
     
     @property
     def progress_percentage(self):

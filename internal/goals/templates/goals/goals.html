@@ -919,15 +919,6 @@
                             <label class="filter-label">AGENDA</label>
                             <select class="filter-select" id="agendaFilter">
                                 <option value="all">ALL</option>
-                                <option value="economics">Economics, Entrepreneurship, and Livelihood Enhancement</option>
-                                <option value="environmental">Environmental IEC and Culture Sensitivity</option>
-                                <option value="hospitality">Hospitality and Tourism Industry Enhancement</option>
-                                <option value="agriculture">Agriculture, Environmental Protection, Conservation and Resource Management</option>
-                                <option value="health">Promotive and Preventive Health and Nutrition and Gender Sensitivity</option>
-                                <option value="literacy">Literacy and Alternative Learning Systems</option>
-                                <option value="engineering">Engineering, Architecture and Appropriate Technology</option>
-                                <option value="safety">Public Safety & Security, Disaster Risk Management and Governance</option>
-                                <option value="leadership">Leadership Enhancement and Governance</option>
                             </select>
                         </div>
 
@@ -936,23 +927,6 @@
                             <label class="filter-label">SDG</label>
                             <select class="filter-select" id="sdgFilter">
                                 <option value="all">ALL</option>
-                                <option value="1">SDG 1 - No Poverty</option>
-                                <option value="2">SDG 2 - Zero Hunger</option>
-                                <option value="3">SDG 3 - Good Health and Well-being</option>
-                                <option value="4">SDG 4 - Quality Education</option>
-                                <option value="5">SDG 5 - Gender Equality</option>
-                                <option value="6">SDG 6 - Clean Water and Sanitation</option>
-                                <option value="7">SDG 7 - Affordable and Clean Energy</option>
-                                <option value="8">SDG 8 - Decent Work and Economic Growth</option>
-                                <option value="9">SDG 9 - Industry, Innovation and Infrastructure</option>
-                                <option value="10">SDG 10 - Reduced Inequalities</option>
-                                <option value="11">SDG 11 - Sustainable Cities and Communities</option>
-                                <option value="12">SDG 12 - Responsible Consumption and Production</option>
-                                <option value="13">SDG 13 - Climate Action</option>
-                                <option value="14">SDG 14 - Life Below Water</option>
-                                <option value="15">SDG 15 - Life on Land</option>
-                                <option value="16">SDG 16 - Peace, Justice and Strong Institutions</option>
-                                <option value="17">SDG 17 - Partnerships for the Goals</option>
                             </select>
                         </div>
 
@@ -961,11 +935,6 @@
                             <label class="filter-label">PROJECT STATUS</label>
                             <select class="filter-select" id="statusFilter">
                                 <option value="all">ALL</option>
-                                <option value="ongoing">ONGOING</option>
-                                <option value="completed">COMPLETED</option>
-                                <option value="planning">PLANNING</option>
-                                <option value="on-hold">ON HOLD</option>
-                                <option value="cancelled">CANCELLED</option>
                             </select>
                         </div>
                     </div>
@@ -1591,6 +1560,7 @@
                 }
             }
             
+            loadFilters();
             loadGoals();
         });
 
@@ -1635,6 +1605,47 @@
                 goals = [];
                 renderEmptyState(true);
                 updateListView();
+            }
+        }
+
+        // Fetch and populate dynamic filters from backend
+        async function loadFilters() {
+            try {
+                const resp = await fetch('/goals/api/filters/');
+                if (!resp.ok) return;
+                const data = await resp.json();
+                if (!data.success) return;
+
+                const agendaSel = document.getElementById('agendaFilter');
+                const sdgSel = document.getElementById('sdgFilter');
+                const statusSel = document.getElementById('statusFilter');
+
+                // Preserve ALL option, then replace with dynamic items
+                agendaSel.innerHTML = '<option value="all">ALL</option>';
+                (data.agendas || []).forEach(a => {
+                    const opt = document.createElement('option');
+                    opt.value = String(a.id);
+                    opt.textContent = a.name;
+                    agendaSel.appendChild(opt);
+                });
+
+                sdgSel.innerHTML = '<option value="all">ALL</option>';
+                (data.sdgs || []).forEach(s => {
+                    const opt = document.createElement('option');
+                    opt.value = String(s.id);
+                    opt.textContent = `SDG ${s.goal_number} - ${s.name}`;
+                    sdgSel.appendChild(opt);
+                });
+
+                statusSel.innerHTML = '<option value="all">ALL</option>';
+                (data.statuses || []).forEach(st => {
+                    const opt = document.createElement('option');
+                    opt.value = st.code;
+                    opt.textContent = st.label.toUpperCase();
+                    statusSel.appendChild(opt);
+                });
+            } catch (e) {
+                console.warn('Failed to load filters', e);
             }
         }
 
