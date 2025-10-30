@@ -125,8 +125,8 @@ a {
 .card {
     flex: 1;
     flex-direction: column;
-    min-width: 10rem;
-    min-height: 12rem;
+    min-width: 2rem;
+    min-height: 2rem;
     background: #fff;
     border-radius: 15px;
     border: 0.08rem solid #b6b6b6;
@@ -143,12 +143,7 @@ a {
     width: 100%;
     text-align: left;
 } 
-.card canvas {
-    width: 100%;
-    display: block; 
-    margin-left: auto;
-    margin-right: auto;
-}
+
 .stat-container {
     flex: 0.33;
     min-width: 280px;
@@ -297,13 +292,19 @@ a {
 }
 #fileType:hover {
     border-color: #888;
-}
+} 
+ 
+.card canvas {
+    align-self: center;
+} 
+
 .card-group {
     display: flex;
     justify-content: space-between; 
     align-items: stretch; 
     flex-wrap: nowrap; 
-    gap: 1rem;
+    gap: 1rem; 
+    margin-bottom: 1rem;
 }
 .card-group .card {
     flex: 1;
@@ -315,7 +316,7 @@ a {
     border-radius: 15px;
     border: 2px solid white; 
     color: white; 
-    min-height: 12rem;
+    min-height: 9rem;
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15); /* Stronger shadow for depth */
     transition: all 0.4s ease-in-out; 
 }
@@ -357,7 +358,7 @@ a {
 .card-description p {
     font-size: 1.15rem; 
     font-weight: 600; 
-    margin: 0;
+    margin: 0 ;
     opacity: 1;
     color: white;
 }
@@ -377,7 +378,7 @@ a {
     align-items: flex-start;
     width: 100%; 
     margin-top: 0;
-}
+} 
 
 .card-group .card h2 {
     font-size: 3.5rem; 

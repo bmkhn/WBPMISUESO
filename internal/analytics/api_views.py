@@ -4,7 +4,7 @@ from django.utils import timezone # Import timezone for aware datetimes
 from . import services 
 
 # --- Updated Utility Function ---
-def parse_dates_from_request(request, default_days=90): # Added default_days
+def parse_dates_from_request(request, default_days=300): # Added default_days
     """
     Parses start_date and end_date from request GET parameters.
     Uses a default range (last 'default_days') if parameters are missing or empty.
@@ -102,7 +102,7 @@ def agenda_distribution_chart_api(request):
 def trained_individuals_chart_api(request):
     start_date, end_date, error_response = parse_dates_from_request(request, default_days=300)
     if error_response: return error_response
-    data = services.get_total_individuals_trained(start_date, end_date)
+    data = services.get_trained_individuals_data(start_date, end_date)
     return JsonResponse(data)
 
 def request_status_chart_api(request):
@@ -112,7 +112,7 @@ def request_status_chart_api(request):
     return JsonResponse(data)
     
 def project_trends_api(request):
-    start_date, end_date, error_response = parse_dates_from_request(request, default_days=90) # Use default 90 days
+    start_date, end_date, error_response = parse_dates_from_request(request, default_days=300) # Use default 90 days
     if error_response: return error_response
     data = services.get_project_trends(start_date, end_date)
     return JsonResponse(data)

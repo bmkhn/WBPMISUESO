@@ -231,8 +231,6 @@
     (function() {
         // Use a set for quick date lookup
         const eventDates = new Set();
-        // EVENTS_DATA is expected to be an object where keys are 'YYYY-MM-DD' dates
-        // Extract the keys and add them to the set
         if (EVENTS_DATA && typeof EVENTS_DATA === 'object') {
             Object.keys(EVENTS_DATA).forEach(date => eventDates.add(date));
         }
@@ -391,7 +389,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        indexAxis: 'y', 
+                        indexAxis: 'y',  
                         onHover: customOnHover,
                         scales: { x: { beginAtZero: true }, y: { ticks: { display: false } } },
                         plugins: { legend: { display: false } }
