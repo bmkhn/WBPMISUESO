@@ -583,9 +583,11 @@ def manage_user(request):
 
 
 def user_details_view(request, id):
+    base_template = get_templates(request)
+
     User = get_user_model()
     user = get_object_or_404(User, id=id)
-    return render(request, 'users/user_details.html', {'user': user})
+    return render(request, 'users/user_details.html', {'user': user, 'base_template': base_template})
 
 
 
@@ -650,16 +652,26 @@ def add_user(request):
     })
 
 # Edit user view
-@role_required(allowed_roles=["VP", "DIRECTOR"], require_confirmed=True)
+@login_required
 def edit_user(request, id):
     User = get_user_model()
     user = get_object_or_404(User, id=id)
+    base_template = get_templates(request)
+    
+    # Permission check: Users can edit themselves, or VP/DIRECTOR can edit anyone
+    can_edit_role_and_verify = request.user.role in ["VP", "DIRECTOR"]
+    can_edit_this_user = (request.user.id == user.id) or can_edit_role_and_verify
+    
+    if not can_edit_this_user:
+        return redirect('no_permission')
+    
     error = None
     roles = list(User.Role.choices)
     colleges = College.objects.all()
     campus_choices = User.Campus.choices
 
     success = False
+    email_changed = False
     if request.method == 'POST':
         data = request.POST
         if User.objects.filter(email=data.get('email')).exclude(id=user.id).exists():
@@ -670,32 +682,41 @@ def edit_user(request, id):
                 changes = []
                 old_role = user.role
                 
+                # All users can edit these fields
                 user.last_name = data.get('last_name')
                 user.given_name = data.get('given_name')
                 user.middle_initial = data.get('middle_initial') or None
                 user.suffix = data.get('suffix') or None
                 user.sex = data.get('sex')
-                
-                if user.email != data.get('email'):
-                    changes.append('email')
-                user.email = data.get('email')
                 user.contact_no = data.get('contact_no')
+                
+                # Email change requires verification (handled by frontend modal)
+                new_email = data.get('email')
+                if user.email != new_email:
+                    changes.append('email')
+                    email_changed = True
+                    user.email = new_email
+                    user.username = new_email
 
-                new_role = data.get('role')
-                if user.role != new_role:
-                    changes.append(f'role from {user.get_role_display()} to {dict(User.Role.choices)[new_role]}')
-                user.role = new_role
-                user.username = data.get('email')
+                # Only VP/DIRECTOR can change role
+                if can_edit_role_and_verify:
+                    new_role = data.get('role')
+                    if user.role != new_role:
+                        changes.append(f'role from {user.get_role_display()} to {dict(User.Role.choices)[new_role]}')
+                    user.role = new_role
 
+                # Role-specific field updates
                 if user.role == "CLIENT":
                     user.college = None
                     user.campus = None
                     user.degree = None
                     user.expertise = None
+                    # CLIENT can edit company and industry
                     user.company = data.get('company') or None
                     user.industry = data.get('industry') or None
 
-                elif user.role in ["FACULTY", "PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
+                elif user.role == "FACULTY":
+                    # FACULTY can edit campus, college, degree, and expertise
                     college_id = data.get('college')
                     user.college = College.objects.get(id=college_id) if college_id else None
                     user.campus = data.get('campus') or None
@@ -704,13 +725,35 @@ def edit_user(request, id):
                     user.company = None
                     user.industry = None
 
+                elif user.role in ["PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
+                    # Only VP/DIRECTOR can edit these roles' info
+                    if can_edit_role_and_verify:
+                        college_id = data.get('college')
+                        user.college = College.objects.get(id=college_id) if college_id else None
+                        user.campus = data.get('campus') or None
+                    user.degree = None
+                    user.expertise = None
+                    user.company = None
+                    user.industry = None
+
                 elif user.role == "IMPLEMENTER":
+                    # IMPLEMENTER can edit degree and expertise
                     user.college = None
                     user.campus = None
                     user.degree = data.get('degree') or None
                     user.expertise = data.get('expertise') or None
-                    user.company = data.get('company') or None
-                    user.industry = data.get('industry') or None
+                    user.company = None
+                    user.industry = None
+                
+                else:
+                    # UESO, DIRECTOR, VP - only editable by VP/DIRECTOR
+                    if can_edit_role_and_verify:
+                        user.college = None
+                        user.campus = None
+                        user.degree = None
+                        user.expertise = None
+                        user.company = None
+                        user.industry = None
 
                 # Only update password if provided and not blank
                 password = data.get('password', '').strip()
@@ -738,13 +781,18 @@ def edit_user(request, id):
                 success = True
             except Exception as e:
                 error = str(e)
+    
     return render(request, 'users/edit_user.html', {
         'user': user,
         'error': error,
         'success': success,
+        'email_changed': email_changed,
         'colleges': colleges,
         'campus_choices': campus_choices,
         'roles': roles,
+        'base_template': base_template,
+        'can_edit_role_and_verify': can_edit_role_and_verify,
+        'is_editing_self': request.user.id == user.id,
     })
 
 
@@ -755,6 +803,11 @@ from django.http import HttpResponseRedirect
 def verify_user(request, id):
     User = get_user_model()
     user = get_object_or_404(User, id=id)
+    
+    # VP/DIRECTOR cannot verify themselves
+    if request.user.id == user.id:
+        return redirect('no_permission')
+    
     user.is_confirmed = True
     user.save()
     from urllib.parse import quote
@@ -764,6 +817,11 @@ def verify_user(request, id):
 def unverify_user(request, id):
     User = get_user_model()
     user = get_object_or_404(User, id=id)
+    
+    # VP/DIRECTOR cannot unverify themselves
+    if request.user.id == user.id:
+        return redirect('no_permission')
+    
     user.is_confirmed = False
     user.save()
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
@@ -843,10 +901,19 @@ def profile_view(request, id=None):
     college_logo = user.college.logo.url if user.college and user.college.logo else None
 
     # Get content items based on role
+    # For ALL roles except CLIENT: show only projects where the profile user is leader or provider
+    # Then apply visibility filtering based on what the VIEWING user can see
     content_items = []
 
-    if user.role in [User.Role.FACULTY, User.Role.IMPLEMENTER]:
-        # Get projects where the profile user is leader or provider
+    if user.role == User.Role.CLIENT:
+        # Get client requests
+        from shared.request.models import ClientRequest
+        content_items = ClientRequest.objects.filter(
+            submitted_by=user
+        ).order_by('-submitted_at')
+    
+    else:
+        # For all other roles: Get only THEIR OWN projects (where they are leader or provider)
         from shared.projects.models import Project
         all_projects = Project.objects.filter(
             Q(project_leader=user) | Q(providers=user)
@@ -858,43 +925,6 @@ def profile_view(request, id=None):
         
         # Filter projects based on what the VIEWING user can see
         content_items = [p for p in all_projects if can_view_project(request.user, p)]
-
-    elif user.role in [User.Role.PROGRAM_HEAD, User.Role.DEAN, User.Role.COORDINATOR]:
-        # Get projects from the profile user's college
-        from shared.projects.models import Project
-        if user.college:
-            all_projects = Project.objects.filter(
-                project_leader__college=user.college
-            ).distinct().select_related(
-                'project_leader', 'agenda'
-            ).prefetch_related(
-                'providers', 'sdgs'
-            ).order_by('-start_date')
-            
-            # Filter projects based on what the VIEWING user can see
-            content_items = [p for p in all_projects if can_view_project(request.user, p)]
-        else:
-            content_items = []
-    
-    elif user.role in [User.Role.UESO, User.Role.DIRECTOR, User.Role.VP]:
-        # For admin roles, show all projects in the system
-        from shared.projects.models import Project
-        
-        all_projects = Project.objects.all().distinct().select_related(
-            'project_leader', 'agenda'
-        ).prefetch_related(
-            'providers', 'sdgs'
-        ).order_by('-start_date')
-        
-        # Filter projects based on what the VIEWING user can see
-        content_items = [p for p in all_projects if can_view_project(request.user, p)]
-
-    elif user.role == User.Role.CLIENT:
-        # Get client requests
-        from shared.request.models import ClientRequest
-        content_items = ClientRequest.objects.filter(
-            submitted_by=user
-        ).order_by('-submitted_at')
 
     return render(request, 'users/profile.html', {
         'profile_user': user,  # The user whose profile is being viewed

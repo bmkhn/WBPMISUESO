@@ -1,4 +1,4 @@
-{% extends "base_internal.html" %}
+{% extends base_template %}
 {% block content %}
 {% load static %}
 <!DOCTYPE html>
@@ -40,9 +40,9 @@
             <h2>User Details</h2>
             <div>
                 {% if user.is_confirmed %}
-                    <span class="verification-badge">Verified</span>
+                    <span class="verification-badge">Activated</span>
                 {% else %}
-                    <span class="verification-badge unverified">Unverified</span>
+                    <span class="verification-badge unverified">Deactivated</span>
                 {% endif %}
             </div>
         </div>

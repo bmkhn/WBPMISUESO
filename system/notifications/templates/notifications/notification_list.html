@@ -53,11 +53,7 @@
             {% endif %}
                 <div class="notification-icon {% if not notification.actor %}ai-icon{% endif %}">
                     {% if notification.actor %}
-                        {% if notification.actor.profile_picture %}
-                            <img src="{{ notification.actor.profile_picture.url }}" alt="{{ notification.actor.get_full_name }}">
-                        {% else %}
-                            <span class="notification-icon">{{ notification.actor.given_name.0 }}</span>
-                        {% endif %}
+                        <img src="{{ notification.actor.profile_picture_or_initial }}" alt="{{ notification.actor.get_full_name }}">
                     {% else %}
                         S
                     {% endif %}

@@ -20,11 +20,11 @@
         <div class="search-container" style="box-shadow: none;">
             <form class="search-bar" style="box-shadow: 0 0 15px rgba(0, 0, 0, 0.08);" method="get" action="">
                 <svg width="16" height="16" style="margin-right:10px;"> <use href="#icon-search"></use> </svg>
-                <input type="text" name="search" placeholder="Search Expert Name" value="{{ search_query|default:'' }}"/>
+				<input type="text" name="search" placeholder="Disabled" value="{{ search_query|default:'' }}" disabled style="cursor:not-allowed"/>
                 <button type="button" id="filterBtn" style="background:none;border:none;padding:0;margin-right:5px;cursor:pointer;">
                     <svg width="16" height="16"> <use href="#icon-filter"></use> </svg>
                 </button>
-                <div id="filterDropdown" class="filter-dropdown" style="top:310px; right:200px;">
+                <div id="filterDropdown" class="filter-dropdown" style="top:60px; right:120px;">
                     <div class="filter-grid" style="grid-template-columns: repeat(2, 1fr);">
                         <!-- Sort By -->
                         <label>Sort By
@@ -87,13 +87,9 @@
 			{% if expert.college and expert.college.logo %}
 			<img src="{{ expert.college.logo.url }}" class="college-logo" alt="{{ expert.college.name }}">
 			{% else %}
-			<div class="college-logo"></div>
+			<div class="college-logo" style="background:none;"></div>
 			{% endif %}
-			{% if expert.profile_picture %}
-			<img src="{{ expert.profile_picture.url }}" class="profile-icon" alt="{{ expert.get_full_name }}">
-			{% else %}
-			<div class="profile-icon"></div>
-			{% endif %}
+			<img src="{{ expert.profile_picture_or_initial }}" class="profile-icon" alt="{{ expert.get_full_name }}">
 			<div class="expert-name">{{ expert.get_full_name }}</div>
 			<div class="expert-degree">{{ expert.degree|default:"No Degree Listed" }}</div>
 			<div class="expert-projects">Projects: {{ expert.led_completed|add:expert.member_completed }}</div>
