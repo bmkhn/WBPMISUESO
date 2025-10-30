@@ -128,6 +128,14 @@ body {
     font-weight: 600;
     font-size: 20px;
     flex-shrink: 0;
+    overflow: hidden;
+}
+
+.notification-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
 }
 
 .notification-content {
