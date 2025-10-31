@@ -403,6 +403,10 @@ button:hover {
 .my-alerts-list ul {
     scrollbar-width: thin;
     scrollbar-color: #e5e7eb #fff;
+} 
+ 
+.my-alerts-list {
+    overflow: auto;
 }
 
 /* Submit modal */

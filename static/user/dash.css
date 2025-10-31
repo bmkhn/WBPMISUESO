@@ -2,7 +2,7 @@
     display: flex;
     flex-direction: column;
     gap: 20px;
-    flex: 1;
+    flex: 1; 
 }
 
 .announce-text {
@@ -96,13 +96,13 @@ body {
     display: flex;
     flex-direction: row;
     gap: 30px;
-    margin: 70px;
+    margin: 30px 70px 0px 70px;
 }
 
-.left-container {
+.left-container { 
+    margin-top: 20px;
     display: flex;
     flex-direction: column;
-    gap: auto;
     flex: 2;
     justify-content: space-between;
 }
@@ -187,7 +187,11 @@ body {
 .project-pic {
     background: #ECECEC;
     height: 250px;
-    border-radius: 8px;
+    border-radius: 8px; 
+} 
+ 
+.project-pic img {
+    object-fit: cover;
 }
 
 .project-title {
@@ -245,16 +249,18 @@ body {
 /* Alerts and Calendar Section */
 .alerts-calendar-container {
     display: flex;
-    gap: 30px;
+    gap: 1rem;
     margin-bottom: 30px;
 }
 
 .alerts-container {
-    flex: 1;
+    flex-grow: 1;
     background: #fff;
     border: 1px solid #E0E0E0;
     border-radius: 12px;
     padding: 25px;
+    height: 22rem;
+    overflow: auto;
 }
 
 .alerts-title {
@@ -299,7 +305,7 @@ body {
 }
 
 .calendar-container {
-    flex: 1;
+    flex: 0;
     background: #fff;
     border: 1px solid #E0E0E0;
     border-radius: 12px;
@@ -343,4 +349,113 @@ body {
     color: #999;
     padding: 30px;
     font-size: 14px;
+} 
+ 
+.calendar-container {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    flex-grow: 1;
+    min-width: 21rem;
+}
+
+.mini-calendar-widget {
+    width: 100%;
+    max-width: 300px; 
+    font-family: 'Inter', sans-serif;
+    align-self: center;
+}
+
+.mini-calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.mini-calendar-header button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    color: #343a40;
+    padding: 5px;
+    transition: color 0.2s;
+}
+
+.mini-calendar-header button:hover {
+    color: #1CB889;
+}
+
+.mini-calendar-header .current-month-year {
+    font-weight: 600;
+    font-size: 16px;
+    color: #343a40;
+}
+
+.mini-calendar-body .weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    font-size: 12px;
+    font-weight: 500;
+    color: #6c757d;
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 5px;
+}
+
+.mini-calendar-body .weekdays span {
+    text-transform: uppercase;
+}
+
+.days-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    padding-top: 5px;
+}
+
+.day-cell {
+    position: relative;
+    height: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 14px;
+    color: #495057;
+    border-radius: 4px;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.day-cell:not(.empty-day):hover {
+    background-color: #f8f9fa;
+    cursor: pointer;
+}
+
+.empty-day {
+    visibility: hidden;
+}
+
+.today {
+    font-weight: 700;
+    color: #ffffff !important;
+    background-color: #1CB889; 
+}
+
+.has-event {
+    font-weight: 600;
+    color: #1CB889; 
+}
+
+.has-event::after {
+    content: '';
+    position: absolute;
+    bottom: 3px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    background-color: #1CB889; 
+    border-radius: 50%;
 }
