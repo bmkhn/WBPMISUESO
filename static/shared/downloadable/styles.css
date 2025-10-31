@@ -14,11 +14,11 @@
 }
 
 .left__title {
-    font-size: 33px;
-    font-weight: 500;
-    color: #000000;
-    line-height: 1.25;
+    color: #000;
+    font-family: 'Inter', Arial, sans-serif;
     margin: 0;
+    font-size: 1.65rem;
+    font-weight: 500;
 }
 
 /* --- The file grid --- */
@@ -183,8 +183,8 @@ body {
 .filter-dropdown {
     display: none;
     position: absolute;
-    top: 170px;
-    right: 60px;
+    top: 220px;
+    right: 560px;
     z-index: 1000;
     background: #f8f8f8;
     border: 1px solid #e5e7eb;
@@ -196,8 +196,8 @@ body {
 
 .filter-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    grid-template-rows: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(1, 1fr);
     grid-gap: 24px;
 }
 

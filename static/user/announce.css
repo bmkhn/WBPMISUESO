@@ -45,6 +45,7 @@
     font-family: 'Inter', sans-serif;
     font-weight: 700;
     font-size: 19px;
+    margin-bottom: 2rem;
     color: #625C56;
 }
 
@@ -54,7 +55,7 @@
     font-size: 13px;
     color: #2EA8FF;
     text-decoration: none;
-    margin-top: 10px;
+    margin-top: -10px;
     cursor: pointer;
 }
 
