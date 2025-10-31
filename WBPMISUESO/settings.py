@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-vhc+n8g#3qm1g68newd^ryqd(zj(mx(m!g3b5v8%aaven!ag*$
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.2.113', '127.0.0.1']
+ALLOWED_HOSTS = ['192.168.137.1', '127.0.0.1', '192.168.254.125']
 
 
 # Application definition
@@ -182,16 +182,16 @@ AUTH_USER_MODEL = 'users.User'
 
 
 # Email settings for local testing
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # For production, configure SMTP settings as below
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = 'smtp.gmail.com'
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = 'bab.bmkhn@gmail.com'
-# EMAIL_HOST_PASSWORD = 'rkwk islz dvlo mqrx'
-# DEFAULT_FROM_EMAIL = 'bab.bmkhn@gmail.com'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'bab.bmkhn@gmail.com'
+EMAIL_HOST_PASSWORD = 'rkwk islz dvlo mqrx'
+DEFAULT_FROM_EMAIL = 'bab.bmkhn@gmail.com'
 
 
 # Celery configuration
