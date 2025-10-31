@@ -844,6 +844,45 @@ def verify_user(request, id):
     
     user.is_confirmed = True
     user.save()
+    
+    # Send email notification to the user
+    try:
+        from django.conf import settings
+        site_url = getattr(settings, 'SITE_URL', 'http://localhost:8000')
+        
+        email_subject = 'Your Account Has Been Verified'
+        email_body = f"""
+Hello {user.get_full_name()},
+
+Good news! Your account has been verified by {request.user.get_full_name()} ({request.user.get_role_display()}).
+
+You can now access all features of the WBPMISUESO system.
+
+Account Details:
+- Email: {user.email}
+- Role: {user.get_role_display()}
+- Verified by: {request.user.get_full_name()}
+
+You can log in here: {site_url}/login/
+
+If you have any questions, please contact the administrator.
+
+---
+This is an automated notification from WBPMISUESO.
+"""
+        
+        send_mail(
+            subject=email_subject,
+            message=email_body,
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=[user.email],
+            fail_silently=True,
+        )
+        print(f"✓ Verification email sent to {user.email}")
+        
+    except Exception as e:
+        print(f"✗ Failed to send verification email to {user.email}: {str(e)}")
+    
     from urllib.parse import quote
     return redirect(f'/users/?success=true&action=confirmed&title={quote(user.get_full_name())}')
 
@@ -858,6 +897,45 @@ def unverify_user(request, id):
     
     user.is_confirmed = False
     user.save()
+    
+    # Send email notification to the user
+    try:
+        from django.conf import settings
+        site_url = getattr(settings, 'SITE_URL', 'http://localhost:8000')
+        
+        email_subject = 'Your Account Verification Has Been Revoked'
+        email_body = f"""
+Hello {user.get_full_name()},
+
+This is to inform you that your account verification has been revoked by {request.user.get_full_name()} ({request.user.get_role_display()}).
+
+Account Details:
+- Email: {user.email}
+- Role: {user.get_role_display()}
+- Action taken by: {request.user.get_full_name()}
+
+Your account is now unverified and you will have limited access to the WBPMISUESO system until your account is verified again.
+
+If you believe this is a mistake or have any questions, please contact the administrator immediately.
+
+Contact: {settings.EMAIL_HOST_USER}
+
+---
+This is an automated notification from WBPMISUESO.
+"""
+        
+        send_mail(
+            subject=email_subject,
+            message=email_body,
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=[user.email],
+            fail_silently=True,
+        )
+        print(f"✓ Unverification email sent to {user.email}")
+        
+    except Exception as e:
+        print(f"✗ Failed to send unverification email to {user.email}: {str(e)}")
+    
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
 
 

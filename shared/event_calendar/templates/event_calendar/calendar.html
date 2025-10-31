@@ -665,6 +665,7 @@
     const cancelAddEventModal = document.getElementById('cancel-add-event-modal');
     const addEventForm = document.getElementById('add-event-form');
     const addEventDateInput = document.getElementById('add_event_date');
+    const currentUserId = "{{ request.user.id|default:'' }}";
 
     function openAddEventModal(dateStr) {
         // Reset all form fields
@@ -676,8 +677,11 @@
         // Remove all participant tags
         const tagRow = document.getElementById('participants-tag-row');
         while (tagRow.firstChild) tagRow.removeChild(tagRow.firstChild);
-        // Re-initialize tag UI
-        setupTagUI('participants-tag-row', 'participants-options-template', 'participants');
+        // Re-initialize tag UI and pre-select current user
+        const tagController = setupTagUI('participants-tag-row', 'participants-options-template', 'participants');
+        if (currentUserId) {
+            tagController.setSelected([currentUserId]);
+        }
         addEventDateInput.value = dateStr;
         addEventModal.style.display = 'flex';
     }

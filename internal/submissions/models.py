@@ -82,6 +82,20 @@ class Submission(models.Model):
 			return os.path.basename(self.image_event.name)
 		return ""
 
+	@property
+	def submitted_form_link(self):
+		if self.file:
+			return self.file.url
+		elif self.image_event:
+			return self.image_event.url
+		return ""
+	
+	@property
+	def downloadable_link(self):
+		if self.downloadable and self.downloadable.file:
+			return self.downloadable.file.url
+		return ""
+
 # Log creation and update actions for Submission
 @receiver(post_save, sender=Submission)
 def log_submission_action(sender, instance, created, **kwargs):

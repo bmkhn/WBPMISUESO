@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-vhc+n8g#3qm1g68newd^ryqd(zj(mx(m!g3b5v8%aaven!ag*$
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.137.1', '127.0.0.1', '192.168.254.125']
+ALLOWED_HOSTS = ['192.168.137.1', '127.0.0.1', '192.168.254.125', 'localhost']
 
 
 # Application definition
@@ -78,6 +78,9 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # Custom middleware for enhanced session security
+    'system.users.middleware.SessionSecurityMiddleware',
+    'system.users.middleware.RoleBasedSessionMiddleware',
 ]
 
 ROOT_URLCONF = 'WBPMISUESO.urls'
@@ -193,6 +196,9 @@ EMAIL_HOST_USER = 'bab.bmkhn@gmail.com'
 EMAIL_HOST_PASSWORD = 'rkwk islz dvlo mqrx'
 DEFAULT_FROM_EMAIL = 'bab.bmkhn@gmail.com'
 
+# Site URL for email links (update for production)
+SITE_URL = 'http://localhost:8000'
+
 
 # Celery configuration
 CELERY_BROKER_URL = 'redis://localhost:6379/0'
@@ -210,3 +216,49 @@ CELERY_BEAT_SCHEDULE = {
         'schedule': crontab(),  # every minute
     },
 }
+
+
+# ============================================================
+# SESSION CONFIGURATION
+# ============================================================
+
+SESSION_COOKIE_AGE = 86400                      # 24 hours (1 day)
+SESSION_SAVE_EVERY_REQUEST = True               # Reset timeout on each activity (sliding window)
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False         # Persist across browser restarts (for "Remember Me")
+
+# Session engine (database-backed for persistence)
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+
+# ============================================================
+# SECURITY SETTINGS
+# ============================================================
+
+# Cookie Security
+SESSION_COOKIE_SECURE = False                   # DEVELOPMENT: False | PRODUCTION: True (requires HTTPS)
+SESSION_COOKIE_HTTPONLY = True                  # Prevent JavaScript access (XSS protection)
+SESSION_COOKIE_SAMESITE = 'Lax'                 # CSRF protection (Strict/Lax/None)
+SESSION_COOKIE_NAME = 'wbpmisueso_sessionid'    # Custom name (security through obscurity)
+
+# CSRF Protection
+CSRF_COOKIE_SECURE = False                      # DEVELOPMENT: False | PRODUCTION: True (requires HTTPS)
+CSRF_COOKIE_HTTPONLY = True                     # Prevent JavaScript access
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_NAME = 'wbpmisueso_csrftoken'
+
+# Security Headers
+SECURE_BROWSER_XSS_FILTER = True                # Enable XSS protection
+X_FRAME_OPTIONS = 'DENY'                        # Prevent clickjacking (iframe embedding)
+SECURE_CONTENT_TYPE_NOSNIFF = True              # Prevent MIME-sniffing
+
+# HTTPS Settings (enable in production)
+# SECURE_SSL_REDIRECT = True                    # Redirect all HTTP to HTTPS
+# SECURE_HSTS_SECONDS = 31536000                # HTTP Strict Transport Security (1 year)
+# SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+# SECURE_HSTS_PRELOAD = True
+
+# Password Requirements
+PASSWORD_RESET_TIMEOUT = 3600                   # Password reset link valid for 1 hour
+
+# Login/Logout URLs
+LOGIN_URL = '/login/'
+LOGOUT_REDIRECT_URL = '/login/'
