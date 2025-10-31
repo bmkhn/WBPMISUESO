@@ -21,3 +21,5 @@ staticfiles/
 
 # Migrations backup
 *.bak
+# Celery runtime files
+celerybeat-schedule.dat
