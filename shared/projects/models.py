@@ -71,6 +71,7 @@ class ProjectDocument(models.Model):
 		('PROPOSAL', 'Proposal'),
 		('ADDITIONAL', 'Additional'),
 	]
+
 	project = models.ForeignKey('Project', on_delete=models.CASCADE, related_name='documents')
 	file = models.FileField(upload_to=project_document_upload_to)
 	document_type = models.CharField(max_length=12, choices=DOCUMENT_TYPE_CHOICES)
@@ -122,6 +123,7 @@ class Project(models.Model):
 		('NEEDS_BASED', 'Needs Based'),
 		('RESEARCH_BASED', 'Research Based'),
 	]
+
 	LOGISTICS_TYPE_CHOICES = [
 		('BOTH', 'Both'),
 		('EXTERNAL', 'External'),
@@ -166,6 +168,7 @@ class Project(models.Model):
 	]
 
 	status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="NOT_STARTED")
+	has_final_submission = models.BooleanField(default=False, help_text="True when a final submission type has been approved")
 
 	def get_status_display(self):
 		return dict(self.STATUS_CHOICES).get(self.status, self.status)

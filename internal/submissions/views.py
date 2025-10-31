@@ -92,14 +92,22 @@ def submission_admin_view(request):
 
 
 @role_required(allowed_roles=["UESO", "VP", "DIRECTOR"], require_confirmed=True)
-def add_submission_requirement(request):
+def add_submission_requirement(request, project_id=None):
     from shared.projects.models import ProjectEvent
     import json
     
     projects = Project.objects.exclude(status__in=['CANCELLED', 'COMPLETED'])
     downloadables = Downloadable.objects.filter(is_submission_template=True)
     
-    # Get event availability for each project
+    # Pre-selected project if coming from project page
+    preselected_project = None
+    if project_id:
+        try:
+            preselected_project = Project.objects.get(id=project_id)
+        except Project.DoesNotExist:
+            preselected_project = None
+    
+    # Get event availability and progress for each project
     project_event_availability = {}
     for project in projects:
         available_events = ProjectEvent.objects.filter(
@@ -116,9 +124,15 @@ def add_submission_requirement(request):
                 'datetime': event.datetime.strftime('%Y-%m-%d %H:%M') if event.datetime else 'No date set'
             })
         
+        # Check if all events are completed (event_progress == estimated_events)
+        all_events_completed = (project.event_progress >= project.estimated_events) if project.estimated_events > 0 else False
+        
         project_event_availability[project.id] = {
             'has_available_events': available_events.exists(),
-            'available_events': events_list
+            'available_events': events_list,
+            'all_events_completed': all_events_completed,
+            'event_progress': project.event_progress,
+            'estimated_events': project.estimated_events
         }
     
     # Convert to JSON for template
@@ -143,6 +157,7 @@ def add_submission_requirement(request):
                 'projects': projects,
                 'downloadables': downloadables,
                 'project_event_availability_json': project_event_availability_json,
+                'preselected_project': preselected_project,
                 'error': error,
             })
         # Create a Submission for each downloadable
@@ -204,6 +219,7 @@ def add_submission_requirement(request):
             'projects': projects,
             'downloadables': downloadables,
             'project_event_availability_json': project_event_availability_json,
+            'preselected_project': preselected_project,
         })
 
 

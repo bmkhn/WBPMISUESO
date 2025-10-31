@@ -72,8 +72,8 @@ def project_overview(request, pk):
     all_sdgs = SustainableDevelopmentGoal.objects.all()
     agendas = Agenda.objects.all()
 
-    if request.method == 'POST' and user_role in ADMIN_ROLES:
-        # Update project fields from form
+    if request.method == 'POST' and user_role in ADMIN_ROLES and not project.has_final_submission:
+        # Update project fields from form (only if project doesn't have final submission approved)
         project.title = request.POST.get('title', project.title)
         project.start_date = request.POST.get('start_date', project.start_date)
         project.estimated_end_date = request.POST.get('estimated_end_date', project.estimated_end_date)
@@ -128,8 +128,8 @@ def project_providers(request, pk):
     
     providers_qs = project.providers.all()
 
-    # Handle add provider POST
-    if request.method == 'POST' and user_role in ADMIN_ROLES:
+    # Handle add provider POST (only if project doesn't have final submission approved)
+    if request.method == 'POST' and user_role in ADMIN_ROLES and not project.has_final_submission:
         provider_id = request.POST.get('provider_id')
         if provider_id:
             from system.users.models import User
@@ -230,7 +230,7 @@ def project_events(request, pk):
 
     event_form = None
     event_to_edit = None
-    if request.method == 'POST':
+    if request.method == 'POST' and not project.has_final_submission:
         if request.POST.get('add_event'):
             # Add Event button: create new ProjectEvent with full details
             # Check if we haven't exceeded the estimated_events limit
@@ -260,7 +260,7 @@ def project_events(request, pk):
             new_event = ProjectEvent.objects.create(
                 project=project,
                 title=title,
-                description=description or "No description provided.",
+                description=description or "Pending Submission...",
                 datetime=event_datetime,
                 location=location,
                 created_at=now,
@@ -439,7 +439,7 @@ def project_submissions(request, pk):
     # Mark overdue submissions
     now = timezone.now()
     for sub in all_submissions:
-        if sub.status == "PENDING" and sub.deadline and sub.deadline < now:
+        if sub.status in ["PENDING", "REVISION_REQUESTED", "REJECTED"] and sub.deadline and sub.deadline < now:
             sub.status = "OVERDUE"
             sub.save(update_fields=["status"])
 
@@ -512,7 +512,7 @@ def project_submissions(request, pk):
         print("DEBUG:", action, submission.status)
 
         # Handle Submission Upload
-        if action == "submit" and (submission.status == "PENDING" or submission.status == "REVISION_REQUESTED"):
+        if action == "submit" and (submission.status == "PENDING" or submission.status == "REVISION_REQUESTED" or submission.status == "REJECTED" or submission.status == "OVERDUE"):
             sub_type = submission.downloadable.submission_type
 
             if sub_type == "final":
@@ -529,6 +529,10 @@ def project_submissions(request, pk):
 
             else:  # "file"
                 submission.file = request.FILES.get("file_file")
+
+            # Mark as late submission if it was overdue
+            if submission.status == "OVERDUE":
+                submission.is_late_submission = True
 
             submission.status = "SUBMITTED"
             submission.submitted_at = timezone.now()
@@ -577,6 +581,7 @@ def project_submissions(request, pk):
 
 @project_visibility_required
 def project_submissions_details(request, pk, submission_id):
+    from django.utils import timezone
     ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE, COORDINATOR_ROLE = get_role_constants()
     
     submission = get_object_or_404(Submission, pk=submission_id, project__pk=pk)
@@ -607,13 +612,18 @@ def project_submissions_details(request, pk, submission_id):
     project = get_object_or_404(Project, pk=pk)
     events = ProjectEvent.objects.filter(project__pk=pk).order_by('datetime')
 
+    # Mark submission as overdue if past deadline
+    now = timezone.now()
+    if submission.status in ["PENDING", "REVISION_REQUESTED", "REJECTED"] and submission.deadline and submission.deadline < now:
+        submission.status = "OVERDUE"
+        submission.save(update_fields=["status"])
+
     # Handle submission POST requests
     if request.method == "POST":
-        from django.utils import timezone
         action = request.POST.get('action')
         
         # Handle Submission Upload
-        if action == "submit" and (submission.status == "PENDING" or submission.status == "REVISION_REQUESTED"):
+        if action == "submit" and (submission.status == "PENDING" or submission.status == "REVISION_REQUESTED" or submission.status == "REJECTED" or submission.status == "OVERDUE"):
             sub_type = submission.downloadable.submission_type
 
             if sub_type == "final":
@@ -637,6 +647,10 @@ def project_submissions_details(request, pk, submission_id):
 
             else:  # "file"
                 submission.file = request.FILES.get("file_file")
+
+            # Mark as late submission if it was overdue
+            if submission.status == "OVERDUE":
+                submission.is_late_submission = True
 
             submission.status = "SUBMITTED"
             submission.submitted_at = timezone.now()
@@ -715,6 +729,16 @@ def admin_submission_action(request, pk, submission_id):
                 submission.reviewed_by = request.user
                 submission.reviewed_at = timezone.now()
                 submission.reason_for_revision = request.POST.get('reason', '')
+                submission.revision_count += 1
+                
+                # Update deadline if provided
+                new_deadline = request.POST.get('new_deadline')
+                if new_deadline:
+                    from django.utils.dateparse import parse_datetime
+                    parsed_deadline = parse_datetime(new_deadline)
+                    if parsed_deadline:
+                        submission.deadline = parsed_deadline
+                
                 submission.updated_by = request.user
                 submission.updated_at = timezone.now()
                 submission.save()
@@ -747,6 +771,16 @@ def admin_submission_action(request, pk, submission_id):
                     submission.reviewed_by = request.user
                     submission.reviewed_at = timezone.now()
                     submission.reason_for_revision = request.POST.get('reason', '')
+                    submission.revision_count += 1
+                    
+                    # Update deadline if provided
+                    new_deadline = request.POST.get('new_deadline')
+                    if new_deadline:
+                        from django.utils.dateparse import parse_datetime
+                        parsed_deadline = parse_datetime(new_deadline)
+                        if parsed_deadline:
+                            submission.deadline = parsed_deadline
+                    
                     submission.updated_by = request.user
                     submission.updated_at = timezone.now()
                     submission.save()
@@ -765,16 +799,33 @@ def admin_submission_action(request, pk, submission_id):
                     submission.updated_at = timezone.now()
                     submission.save()
                     
+                    project = submission.project
+                    
                     # Update project's total trained individuals only when approved
                     if submission.downloadable.submission_type == 'event' and submission.num_trained_individuals:
-                        project = submission.project
                         project.total_trained_individuals += int(submission.num_trained_individuals)
-                        project.save()
+                    
+                    # If final submission type is approved, mark project as completed
+                    if submission.downloadable.submission_type == 'final':
+                        project.has_final_submission = True
+                        project.status = 'COMPLETED'
+                    
+                    project.save()
                 elif action == 'reject':
                     submission.status = 'REJECTED'
                     submission.authorized_by = request.user
                     submission.authorized_at = timezone.now()
                     submission.reason_for_rejection = request.POST.get('reason', '')
+                    submission.rejection_count += 1
+                    
+                    # Update deadline if provided
+                    new_deadline = request.POST.get('new_deadline')
+                    if new_deadline:
+                        from django.utils.dateparse import parse_datetime
+                        parsed_deadline = parse_datetime(new_deadline)
+                        if parsed_deadline:
+                            submission.deadline = parsed_deadline
+                    
                     submission.updated_by = request.user
                     submission.updated_at = timezone.now()
                     submission.save()
@@ -1254,6 +1305,7 @@ def add_project_view(request):
                 # Save project (basic fields)
                 project = form.save(commit=False)
                 project.created_by = request.user
+                
                 project.status = 'NOT_STARTED'
                 project.logistics_type = form.cleaned_data['logistics_type']
                 logistics_type = form.cleaned_data['logistics_type']

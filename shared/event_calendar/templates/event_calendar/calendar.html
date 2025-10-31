@@ -498,10 +498,10 @@
                 li.style.color = '#245F3E'; // Green text color
                 
                 // Determine tag color and label based on event type
-                let tagColor = (ev.type === 'meeting') ? '#fd7e14' : '#007bff'; // Orange for meeting, Blue for project
-                let tagLabel = (ev.type === 'meeting') ? 'Meeting' : 'Project';
+                let tagColor = (ev.type === 'meeting') ? '#fd7e14' : '#007bff'; // Orange for meeting, Blue for activity
+                let tagLabel = (ev.type === 'meeting') ? 'Meeting' : 'Activity';
                 
-                li.innerHTML = `<span style='font-weight:600;font-size:1.1em;color:#245F3E;'>${ev.title}</span> <span style='background:${tagColor};color:#fff;padding:2px 8px;border-radius:12px;font-size:0.75em;font-weight:600;margin-left:6px;'>${tagLabel}</span><br><span style='font-size:0.95em;color:#bbb;'>${ev.dateStr}</span>`;
+                li.innerHTML = `<div style='display:flex;align-items:center;gap:6px;'><span style='font-weight:600;font-size:1.1em;color:#245F3E;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'>${ev.title}</span><span style='background:${tagColor};color:#fff;padding:2px 8px;border-radius:12px;font-size:0.75em;font-weight:600;white-space:nowrap;flex-shrink:0;'>${tagLabel}</span></div><span style='font-size:0.95em;color:#bbb;'>${ev.dateStr}</span>`;
                 li.onclick = function(e) {
                     e.stopPropagation();
                     showEventDetails([ev], ev.dateStr);
@@ -525,10 +525,10 @@
             eventList.appendChild(h);
             renderItems(meetings, 'meeting');
         }
-        // Events (Projects)
+        // Activities
         if (projects.length) {
             const h = document.createElement('h4');
-            h.textContent = projects.length === 1 ? 'Project' : 'Projects';
+            h.textContent = projects.length === 1 ? 'Activity' : 'Activities';
             h.style.color = '';
             eventList.appendChild(h);
             renderItems(projects, 'project');
@@ -546,10 +546,10 @@
                 li.style.opacity = '0.5'; // Grayed out
                 
                 // Determine tag color and label based on event type
-                let tagColor = (ev.type === 'meeting') ? '#fd7e14' : '#007bff'; // Orange for meeting, Blue for project
-                let tagLabel = (ev.type === 'meeting') ? 'Meeting' : 'Project';
+                let tagColor = (ev.type === 'meeting') ? '#fd7e14' : '#007bff'; // Orange for meeting, Blue for activity
+                let tagLabel = (ev.type === 'meeting') ? 'Meeting' : 'Activity';
                 
-                li.innerHTML = `<span style='font-weight:600;font-size:1.1em;color:#245F3E;'>${ev.title}</span> <span style='background:${tagColor};color:#fff;padding:2px 8px;border-radius:12px;font-size:0.75em;font-weight:600;margin-left:6px;'>${tagLabel}</span><br><span style='font-size:0.95em;color:#bbb;'>${ev.dateStr}</span>`;
+                li.innerHTML = `<div style='display:flex;align-items:center;gap:6px;'><span style='font-weight:600;font-size:1.1em;color:#245F3E;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'>${ev.title}</span><span style='background:${tagColor};color:#fff;padding:2px 8px;border-radius:12px;font-size:0.75em;font-weight:600;white-space:nowrap;flex-shrink:0;'>${tagLabel}</span></div><span style='font-size:0.95em;color:#bbb;'>${ev.dateStr}</span>`;
                 li.onclick = function(e) {
                     e.stopPropagation();
                     showEventDetails([ev], ev.dateStr);
@@ -894,9 +894,9 @@
                 html += `<div style="background:#f8f9fa;border-left:4px solid #007bff;padding:16px;margin-bottom:12px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.08);">
                     <div class="event-details-row" style="display:flex;align-items:center;margin-bottom:8px;">
                         <div style="font-size:1.5rem;font-weight:600;color:#007bff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;flex:1;">${ev.title}</div>
-                        <span style='font-size:1rem;color:#007bff;cursor:pointer;margin-left:10px;white-space:nowrap;' title='Go to project' onclick='window.location.href="/projects/${ev.project_id}/"'>Go To Project <i class="fa-solid fa-arrow-right"></i></span>
+                        <span style='font-size:1rem;color:#007bff;cursor:pointer;margin-left:10px;white-space:nowrap;' title='Go to activity' onclick='window.location.href="/projects/${ev.project_id}/"'>Go To Activity <i class="fa-solid fa-arrow-right"></i></span>
                     </div>
-                    ${ev.project_name ? `<div style='font-size:1.05em;color:#007bff;margin-bottom:6px;'><i class="fa-solid fa-diagram-project" style="margin-right:6px;"></i><b>Project:</b> ${ev.project_name}</div>` : ''}
+                    ${ev.project_name ? `<div style='font-size:1.05em;color:#007bff;margin-bottom:6px;'><i class="fa-solid fa-diagram-project" style="margin-right:6px;"></i><b>Activity:</b> ${ev.project_name}</div>` : ''}
                     <div style="font-size:1.1rem;font-weight:400;color:#222;margin-bottom:6px;">${ev.description}</div>
                     <div style="font-size:1rem;color:#666;margin-bottom:6px;"><i class="fa-regular fa-clock" style="margin-right:6px;"></i>${ev.date} at ${ev.time}</div>
                     <div style="font-size:1rem;color:#666;margin-bottom:6px;"><i class="fa-solid fa-location-dot" style="margin-right:6px;"></i>${ev.location}</div>
@@ -1142,7 +1142,7 @@
             
             if(events[dateStr]){
                 // Count events by type
-                let projectCount = events[dateStr].filter(ev => ev.type === 'project').length;
+                let activityCount = events[dateStr].filter(ev => ev.type === 'project').length;
                 let meetingCount = events[dateStr].filter(ev => ev.type === 'meeting').length;
                 let totalCount = events[dateStr].length;
                 
@@ -1175,20 +1175,20 @@
                 badgeContainer.style.fontSize = '10px';
                 badgeContainer.style.fontWeight = 'bold';
                 
-                // Add project badge (blue) on left if there are projects
-                if (projectCount > 0) {
-                    const projectBadge = document.createElement('span');
-                    projectBadge.textContent = projectCount;
-                    projectBadge.style.backgroundColor = '#007bff'; // Bootstrap primary blue
-                    projectBadge.style.color = 'white';
-                    projectBadge.style.borderRadius = '50%';
-                    projectBadge.style.width = '18px';
-                    projectBadge.style.height = '18px';
-                    projectBadge.style.display = 'flex';
-                    projectBadge.style.alignItems = 'center';
-                    projectBadge.style.justifyContent = 'center';
-                    projectBadge.style.boxShadow = '0 1px 3px rgba(0,0,0,0.3)';
-                    badgeContainer.appendChild(projectBadge);
+                // Add activity badge (blue) on left if there are activities
+                if (activityCount > 0) {
+                    const activityBadge = document.createElement('span');
+                    activityBadge.textContent = activityCount;
+                    activityBadge.style.backgroundColor = '#007bff'; // Bootstrap primary blue
+                    activityBadge.style.color = 'white';
+                    activityBadge.style.borderRadius = '50%';
+                    activityBadge.style.width = '18px';
+                    activityBadge.style.height = '18px';
+                    activityBadge.style.display = 'flex';
+                    activityBadge.style.alignItems = 'center';
+                    activityBadge.style.justifyContent = 'center';
+                    activityBadge.style.boxShadow = '0 1px 3px rgba(0,0,0,0.3)';
+                    badgeContainer.appendChild(activityBadge);
                 } else {
                     badgeContainer.appendChild(document.createElement('span')); // Spacer
                 }

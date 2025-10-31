@@ -30,7 +30,7 @@
             <div>
                 <div style="flex-direction: row; justify-content: space-between; display: flex; align-items: center; align-items: center;">
                     <a href="#" class="title">{{ project.title }}</a>
-                    {% if request.user.role in ADMIN_ROLES %}
+                    {% if request.user.role in ADMIN_ROLES and not project.has_final_submission %}
                         {% if project.status == 'CANCELLED' %}
                         <form method="post" action="/projects/{{ project.id }}/undo_cancel/" style="display:inline;">
                             {% csrf_token %}

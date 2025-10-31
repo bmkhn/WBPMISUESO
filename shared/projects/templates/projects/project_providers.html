@@ -22,7 +22,7 @@
 
 <div class="card-header">
     <h3>Providers</h3>
-    {% if request.user.role in ADMIN_ROLES %}
+    {% if request.user.role in ADMIN_ROLES and not project.has_final_submission %}
     <button class="admin-button save" id="show-provider-dropdown">Add Provider</button>
     <div id="provider-dropdown" style="display:none; position:absolute; z-index:2; margin-top:5px; margin-left:-30px; min-width:220px; background:#fff; border:1px solid #ccc; border-radius:4px; box-shadow:0 2px 8px rgba(0,0,0,0.1); max-height:220px; overflow-y:auto;">
         <ul style="list-style:none; margin:0; padding:0;">
