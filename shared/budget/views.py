@@ -3,7 +3,7 @@ from django.db.models import Sum, Avg, Count, Q
 from django.utils import timezone
 from django.contrib import messages
 from django.core.paginator import Paginator
-from decimal import Decimal
+from decimal import Decimal, ROUND_DOWN
 import json
 import time
 from system.users.decorators import role_required
@@ -11,7 +11,7 @@ from .models import (
     BudgetAllocation, BudgetCategory, ExternalFunding, 
     BudgetHistory, BudgetTemplate, BudgetPool
 )
-from .forms import BudgetAllocationEditForm, ExternalFundingEditForm, BudgetSearchForm
+from .forms import BudgetAllocationEditForm, ExternalFundingEditForm, BudgetSearchForm, AnnualBudgetForm, EditQuarterBudgetForm
 from system.users.models import College
 from shared.projects.models import Project
 
@@ -52,7 +52,7 @@ def get_budget_context_data(request):
     }
     
     # Get budget allocations based on role
-    if user_role in ["VP", "DIRECTOR"]:
+    if user_role in ["VP", "DIRECTOR", "UESO"]:
         # VP and Director see all budget allocations
         budget_allocations = BudgetAllocation.objects.filter(
             status='ACTIVE',
@@ -63,12 +63,11 @@ def get_budget_context_data(request):
         total_assigned = budget_allocations.aggregate(Sum('total_assigned'))['total_assigned__sum'] or Decimal('0')
         total_spent = budget_allocations.aggregate(Sum('total_spent'))['total_spent__sum'] or Decimal('0')
         
-        # Use budget pool logic for consistent remaining calculation
-        budget_pool, created = BudgetPool.objects.get_or_create(
+        # Ensure a budget pool exists without auto-creating default values
+        budget_pool = BudgetPool.objects.filter(
             quarter=current_quarter,
-            fiscal_year=str(current_year),
-            defaults={'total_available': Decimal('10000000')}  # Default ₱10M budget pool
-        )
+            fiscal_year=str(current_year)
+        ).first()
         
         # Calculate remaining based on current quarter allocations only
         current_quarter_allocated = BudgetAllocation.objects.filter(
@@ -77,7 +76,7 @@ def get_budget_context_data(request):
             status='ACTIVE'
         ).aggregate(total=Sum('total_assigned'))['total'] or Decimal('0')
         
-        total_remaining = budget_pool.total_available - current_quarter_allocated
+        total_remaining = (budget_pool.total_available - current_quarter_allocated) if budget_pool else Decimal('0')
         
         # Historical data (last 3 years for better comparison)
         historical_years = [str(current_year - 1), str(current_year - 2), str(current_year - 3)]
@@ -126,6 +125,13 @@ def get_budget_context_data(request):
             
             historical_comparison_text += " historical total"
         
+        # Percentages relative to the current quarter pool
+        allocation_percentage = 0
+        remaining_percentage = 0
+        if budget_pool and budget_pool.total_available > 0:
+            allocation_percentage = round((current_quarter_allocated / budget_pool.total_available) * 100, 2)
+            remaining_percentage = round((total_remaining / budget_pool.total_available) * 100, 0)
+
         context.update({
             "budget_allocations": budget_allocations,
             "total_assigned": total_assigned,
@@ -133,12 +139,15 @@ def get_budget_context_data(request):
             "total_remaining": total_remaining,
             "budget_pool": budget_pool,
             "current_quarter_allocated": current_quarter_allocated,
-            "utilization_percentage": round((total_spent / total_assigned * 100) if total_assigned > 0 else 0, 2),
+            # For dashboards, show how much of the pool is allocated this quarter
+            "utilization_percentage": allocation_percentage,
             "historical_avg": historical_avg,
             "current_vs_historical": current_vs_historical,
             "historical_comparison_text": historical_comparison_text,
             "total_allocations_count": budget_allocations.count(),
             "active_colleges_count": budget_allocations.values('college').distinct().count(),
+            "needs_budget_setup": budget_pool is None,
+            "remaining_percentage": remaining_percentage,
         })
         
     elif user_role in ["PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
@@ -198,12 +207,9 @@ def get_budget_context_data(request):
     
     context["external_fundings"] = external_fundings
     
-    # Budget history (last 10 entries) - Only college budget allocations
+    # Budget history (last 10 entries) - include pool changes and allocations
     budget_history = BudgetHistory.objects.select_related(
         'user', 'budget_allocation', 'external_funding'
-    ).filter(
-        budget_allocation__isnull=False,  # Only budget allocation entries
-        budget_allocation__college__isnull=False  # Only college allocations (not project allocations)
     ).order_by('-timestamp')[:10]
     
     context["budget_history"] = budget_history
@@ -212,7 +218,7 @@ def get_budget_context_data(request):
     context["budget_categories"] = BudgetCategory.objects.all()
     
     # Chart data for JavaScript
-    if user_role in ["VP", "DIRECTOR"]:
+    if user_role in ["VP", "DIRECTOR", "UESO"]:
         # Prepare chart data for donut chart
         chart_data = {
             'labels': [],
@@ -241,13 +247,10 @@ def get_budget_context_data(request):
                     chart_data['labels'].append(project['project__title'])
                     chart_data['data'].append(float(project['total_assigned']))
         
-        # Add unassigned budget
-        if total_assigned > 0:
-            assigned_total = sum(chart_data['data'])
-            unassigned = float(total_assigned) - assigned_total
-            if unassigned > 0:
-                chart_data['labels'].append('Unassigned')
-                chart_data['data'].append(unassigned)
+        # Add remaining budget slice to the donut chart
+        if budget_pool:
+            chart_data['labels'].append('Remaining')
+            chart_data['data'].append(float(total_remaining))
         
         # Historical data for line chart
         historical_data = {
@@ -328,6 +331,9 @@ def budget_internal_view(request):
     # Ensure context is not None
     if context is None:
         context = {"title": "Budget Dashboard"}
+    # Redirect to setup if no budget pool exists for current year/quarter
+    if context.get('needs_budget_setup'):
+        return redirect('setup_annual_budget')
     
     # Check if there's a custom template configuration
     template_config = context.get('template_config')
@@ -338,7 +344,8 @@ def budget_internal_view(request):
         user_role = getattr(request.user, 'role', None)
         if user_role == "VP":
             template_path = 'budget/vp_budget.html'
-        elif user_role == "DIRECTOR":
+        elif user_role in ["DIRECTOR", "UESO"]:
+            # UESO uses the same dashboard layout as Director
             template_path = 'budget/director_budget.html'
         else:
             template_path = 'budget/internal_budget.html'
@@ -356,70 +363,99 @@ def budget_edit_dashboard(request):
         current_year = timezone.now().year
         current_quarter = f"Q{((timezone.now().month - 1) // 3) + 1}-{current_year}"
         
-        # Get default budget category (you may want to make this configurable)
+        # Get default budget category (ensure one exists)
         default_category = BudgetCategory.objects.first()
         if not default_category:
-            messages.error(request, 'No budget category found. Please create a budget category first.')
-            return redirect('budget_edit_dashboard')
+            default_category, _ = BudgetCategory.objects.get_or_create(
+                name='General',
+                defaults={'description': 'Default category for allocations'}
+            )
         
+        # Ensure budget pool exists for current quarter/year
+        pool = BudgetPool.objects.filter(quarter=current_quarter, fiscal_year=str(current_year)).first()
+        if not pool:
+            messages.error(request, 'No current quarter budget pool found. Please set up the annual budget first.')
+            return redirect('setup_annual_budget')
+
         # Process college budget allocations
         colleges_updated = 0
         
         for key, value in request.POST.items():
-            if key.startswith('college_') and value and float(value) > 0:
-                college_id = key.replace('college_', '')
-                try:
-                    college = College.objects.get(id=college_id)
-                    amount = Decimal(value)
-                    
-                    # Create or update budget allocation
-                    allocation, created = BudgetAllocation.objects.get_or_create(
-                        college=college,
-                        category=default_category,
-                        quarter=current_quarter,
-                        fiscal_year=str(current_year),
-                        defaults={
-                            'total_assigned': amount,
-                            'total_remaining': amount,
-                            'total_spent': Decimal('0'),
-                            'status': 'ACTIVE',
-                            'assigned_by': request.user
-                        }
-                    )
-                    
-                    if not created:
-                        # Update existing allocation
-                        allocation.total_assigned = amount
-                        allocation.total_remaining = amount - allocation.total_spent
-                        allocation.assigned_by = request.user
-                        allocation.save()
-                    
-                    # Only create history entry for NEW allocations (not updates)
-                    if created:
-                        # Add a small delay to ensure unique timestamps
-                        time.sleep(0.1)  # 100ms delay between entries
-                        
+            if not key.startswith('college_'):
+                continue
+            # Normalize and validate numeric input (allow commas)
+            cleaned_str = str(value).replace(',', '').strip() if value is not None else ''
+            if cleaned_str == '':
+                continue
+            try:
+                amount_dec = Decimal(cleaned_str)
+            except Exception:
+                continue
+            if amount_dec <= 0:
+                continue
+            college_id = key.replace('college_', '')
+            try:
+                college = College.objects.get(id=college_id)
+                amount = amount_dec
+                # Create or update budget allocation
+                allocation, created = BudgetAllocation.objects.get_or_create(
+                    college=college,
+                    category=default_category,
+                    quarter=current_quarter,
+                    fiscal_year=str(current_year),
+                    defaults={
+                        'total_assigned': amount,
+                        'total_remaining': amount,
+                        'total_spent': Decimal('0'),
+                        'status': 'ACTIVE',
+                        'assigned_by': request.user
+                    }
+                )
+                
+                if not created:
+                    # Update existing allocation; capture delta for history
+                    previous_assigned = allocation.total_assigned
+                    allocation.total_assigned = amount
+                    allocation.total_remaining = amount - allocation.total_spent
+                    allocation.assigned_by = request.user
+                    allocation.save()
+
+                    # Log adjustment if changed
+                    if amount != previous_assigned:
                         BudgetHistory.objects.create(
                             budget_allocation=allocation,
-                            action='ALLOCATED',
+                            action='ADJUSTED',
                             amount=amount,
-                            description=f'Budget allocated to {college.name}: ₱{amount:,.2f}',
+                            description=f'Budget allocation adjusted for {college.name}: ₱{previous_assigned:,.2f} → ₱{amount:,.2f}',
                             user=request.user
                         )
+
+                # Create history entry for NEW allocations
+                if created:
+                    # Add a small delay to ensure unique timestamps
+                    time.sleep(0.1)  # 100ms delay between entries
                     
-                    colleges_updated += 1
-                    
-                except College.DoesNotExist:
-                    continue
-                except (ValueError, TypeError):
-                    continue
+                    BudgetHistory.objects.create(
+                        budget_allocation=allocation,
+                        action='ALLOCATED',
+                        amount=amount,
+                        description=f'Budget allocated to {college.name}: ₱{amount:,.2f}',
+                        user=request.user
+                    )
+                
+                colleges_updated += 1
+            
+            except College.DoesNotExist:
+                continue
+            except (ValueError, TypeError):
+                continue
         
         if colleges_updated > 0:
             messages.success(request, f'Successfully updated budget allocations for {colleges_updated} colleges.')
         else:
             messages.warning(request, 'No budget allocations were updated.')
         
-        return redirect('budget_edit_dashboard')
+        return redirect('budget_dashboard')
     
     # Get search parameters
     search_query = request.GET.get('search', '')
@@ -459,9 +495,8 @@ def budget_edit_dashboard(request):
         status__in=['APPROVED', 'COMPLETED', 'PENDING']
     )[:10]  # Limit to 10 for dashboard
     
-    # Get colleges organized by campus
-    tiniguiban_colleges = College.objects.filter(campus='TINIGUIBAN').order_by('name')
-    external_colleges = College.objects.filter(campus='EXTERNAL').order_by('name')
+    # Get all colleges (no campus grouping)
+    colleges = College.objects.all().order_by('name')
     
     # Get current budget allocations for each college
     current_year = timezone.now().year
@@ -480,12 +515,11 @@ def budget_edit_dashboard(request):
             college_allocations[allocation.college.id] = allocation.total_assigned
     
     # Calculate total remaining budget
-    # Get or create budget pool for current quarter/year
-    budget_pool, created = BudgetPool.objects.get_or_create(
+    # Get budget pool for current quarter/year if it exists
+    budget_pool = BudgetPool.objects.filter(
         quarter=current_quarter,
-        fiscal_year=str(current_year),
-        defaults={'total_available': Decimal('10000000')}  # Default ₱10M budget pool
-    )
+        fiscal_year=str(current_year)
+    ).first()
     
     total_allocated = BudgetAllocation.objects.filter(
         fiscal_year=str(current_year),
@@ -493,7 +527,7 @@ def budget_edit_dashboard(request):
         status='ACTIVE'
     ).aggregate(total=Sum('total_assigned'))['total'] or Decimal('0')
     
-    total_remaining = budget_pool.total_available - total_allocated
+    total_remaining = (budget_pool.total_available - total_allocated) if budget_pool else Decimal('0')
     
     # Create search form
     search_form = BudgetSearchForm(initial={
@@ -512,13 +546,124 @@ def budget_edit_dashboard(request):
         "total_remaining": total_remaining,
         "total_allocated": total_allocated,
         "budget_pool": budget_pool,
-        "tiniguiban_colleges": tiniguiban_colleges,
-        "external_colleges": external_colleges,
+        "colleges": colleges,
         "college_allocations": college_allocations,
         "title": "Budget Management Dashboard",
     }
     
     return render(request, 'budget/director_edit_budget.html', context)
+
+
+@role_required(["VP", "DIRECTOR", "UESO"], require_confirmed=True)
+def setup_annual_budget(request):
+    current_year = timezone.now().year
+    # If pools already exist for current year, redirect to dashboard
+    if BudgetPool.objects.filter(fiscal_year=str(current_year)).exists():
+        messages.info(request, 'Budget already initialized for this year.')
+        return redirect('budget_dashboard')
+
+    if request.method == 'POST':
+        form = AnnualBudgetForm(request.POST)
+        if form.is_valid():
+            fiscal_year = form.cleaned_data['fiscal_year']
+            annual_total = form.cleaned_data['annual_total']  # Decimal from form clean
+
+            # Treat entered value as current quarter pool only
+            current_quarter = f"Q{((timezone.now().month - 1) // 3) + 1}-{fiscal_year}"
+
+            # Remove any existing pools for this fiscal year to avoid stale values
+            BudgetPool.objects.filter(fiscal_year=str(fiscal_year)).delete()
+
+            # Create only the current quarter pool with the entered value
+            pool = BudgetPool.objects.create(
+                quarter=current_quarter,
+                fiscal_year=str(fiscal_year),
+                total_available=annual_total.quantize(Decimal('0.01'))
+            )
+
+            # Log history for pool initialization
+            try:
+                BudgetHistory.objects.create(
+                    action='ALLOCATED',
+                    amount=pool.total_available,
+                    description=f'Initialized budget pool for {current_quarter}: ₱{pool.total_available:,.2f}',
+                    user=request.user
+                )
+            except Exception:
+                pass
+
+            messages.success(request, f'Set current quarter budget {current_quarter} to ₱{annual_total:,.2f}.')
+            return redirect('budget_dashboard')
+    else:
+        form = AnnualBudgetForm()
+
+    context = {
+        "base_template": get_templates(request),
+        "form": form,
+        "title": "Set Up Annual Budget",
+    }
+    return render(request, 'budget/setup_annual_budget.html', context)
+
+
+@role_required(["VP", "DIRECTOR", "UESO"], require_confirmed=True)
+def edit_quarter_budget(request):
+    current_year = timezone.now().year
+    current_quarter = f"Q{((timezone.now().month - 1) // 3) + 1}-{current_year}"
+    # Clear any prior messages carried over from other views to avoid confusion
+    try:
+        _ = list(messages.get_messages(request))
+    except Exception:
+        pass
+    pool = BudgetPool.objects.filter(quarter=current_quarter, fiscal_year=str(current_year)).first()
+    if not pool:
+        messages.warning(request, 'No budget found for current quarter. Please set up annual budget first.')
+        return redirect('setup_annual_budget')
+
+    # Calculate current allocated to derive remaining
+    current_allocated = BudgetAllocation.objects.filter(
+        fiscal_year=str(current_year),
+        quarter=current_quarter,
+        status='ACTIVE'
+    ).aggregate(total=Sum('total_assigned'))['total'] or Decimal('0')
+
+    if request.method == 'POST':
+        form = EditQuarterBudgetForm(request.POST)
+        if form.is_valid():
+            # Ensure Decimal from cleaned value
+            new_remaining = Decimal(str(form.cleaned_data['total_remaining']))
+            # Ensure total_available = allocated + remaining
+            pool.total_available = (current_allocated + new_remaining).quantize(Decimal('0.01'))
+            pool.save()
+            # Log history for pool adjustment
+            try:
+                BudgetHistory.objects.create(
+                    action='ADJUSTED',
+                    amount=pool.total_available,
+                    description=f'Pool {current_quarter} remaining set to ₱{new_remaining:,.2f}; total available ₱{pool.total_available:,.2f}',
+                    user=request.user
+                )
+            except Exception:
+                pass
+            messages.success(request, 'Quarter budget updated successfully.')
+            return redirect('budget_edit_dashboard')
+        else:
+            # Surface validation errors to the user
+            for field, errs in form.errors.items():
+                for err in errs:
+                    messages.error(request, f"{field}: {err}")
+    else:
+        form = EditQuarterBudgetForm(initial={
+            'fiscal_year': str(current_year),
+            'quarter': current_quarter,
+            'total_remaining': (pool.total_available - current_allocated) if pool else Decimal('0')
+        })
+
+    context = {
+        "base_template": get_templates(request),
+        "form": form,
+        "title": "Edit Current Quarter Budget",
+    }
+    return render(request, 'budget/edit_quarter_budget.html', context)
 
 @role_required(["VP", "DIRECTOR", "UESO"], require_confirmed=True)
 def edit_budget_allocation(request, allocation_id):
@@ -668,12 +813,9 @@ def budget_history_view(request):
     order = request.GET.get('order', 'desc')
     date_filter = request.GET.get('date', '')
     
-    # Base queryset - Only college budget allocations
+    # Base queryset - include pool, allocation, and external funding events
     history_queryset = BudgetHistory.objects.select_related(
         'user', 'budget_allocation', 'external_funding'
-    ).filter(
-        budget_allocation__isnull=False,  # Only budget allocation entries
-        budget_allocation__college__isnull=False  # Only college allocations (not project allocations)
     )
     
     # Apply search filter
@@ -706,18 +848,24 @@ def budget_history_view(request):
         history_queryset = history_queryset.order_by(f'-{sort_field}')
     
     # Pagination
-    paginator = Paginator(history_queryset, 10)
+    paginator = Paginator(history_queryset, 5)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    # Format history data for template
+    # Format history data for template (support pool entries)
     history_data = []
     for history in page_obj:
+        if history.budget_allocation and history.budget_allocation.college:
+            subject = history.budget_allocation.college.name
+        elif history.external_funding:
+            subject = history.external_funding.sponsor_name
+        else:
+            subject = "Budget Pool"
         history_data.append({
             'user': f"{history.user.first_name} {history.user.last_name}" if history.user else "System",
-            'action': history.action,  # Use raw action for amount formatting in template
-            'subject': history.budget_allocation.college.name if history.budget_allocation and history.budget_allocation.college else "Unknown College",
-            'datetime': history.timestamp.strftime("%b %d, %Y %H:%M"),  # Format like "Oct 28, 2025 01:38"
+            'action': history.action,
+            'subject': subject,
+            'datetime': history.timestamp.strftime("%b %d, %Y %H:%M"),
             'notes': history.description,
             'amount': history.amount,
         })
@@ -726,10 +874,6 @@ def budget_history_view(request):
         "base_template": get_templates(request),
         "history_data": history_data,
         "page_obj": page_obj,
-        "search": search_query,
-        "sort_by": sort_by,
-        "order": order,
-        "date": date_filter,
         "title": "Budget History",
     }
     
@@ -811,3 +955,25 @@ def budget_sponsor_view(request):
     }
     
     return render(request, 'budget/budget-sponsor.html', context)
+
+
+@role_required(["VP", "DIRECTOR", "UESO"], require_confirmed=True)
+def budget_detailed_view(request):
+    """Standalone detailed allocations list with pagination"""
+    current_year = timezone.now().year
+    # Base queryset for current fiscal year
+    detailed_qs = BudgetAllocation.objects.select_related('college', 'project', 'category').filter(
+        fiscal_year=str(current_year)
+    ).order_by('-total_assigned')
+
+    # Paginate
+    paginator = Paginator(detailed_qs, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        "base_template": get_templates(request),
+        "page_obj": page_obj,
+        "title": "Budget Detailed View",
+    }
+    return render(request, 'budget/detailed_list.html', context)

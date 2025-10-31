@@ -92,7 +92,7 @@
         font-size: 1.3rem; 
         color: #090909;
         transition: color 0.2s;
-        z-index: 100;
+        z-index: 1; /* keep below global menus like profile dropdown */
     }
 
     .goals-header {
@@ -134,21 +134,39 @@
         margin: 0 0 1rem 0;
         justify-content: center;
         flex-grow: 1;
-        height: auto; 
+        height: auto;
+        overflow: hidden; /* default: no scroll when <= 4 */
     }
 
+    /* Default: auto-stretch 1–4 tiles to fill the row */
     .goal > div {
         background-color: #ffffff;
         border: 0.08rem solid rgb(114, 114, 114);
         box-shadow: 0 0 0.1rem rgba(0, 0, 0, 0.1);
         border-radius: 1rem;
-        width: 100%;
+        flex: 1 1 0;
+        min-width: 0;
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
         height: 15rem;
         position: relative;
+    }
+
+    /* When more than 4 tiles: enable horizontal scrolling and fixed tile width */
+    .goal.scrollable {
+        overflow-x: auto;
+        overflow-y: hidden;
+        justify-content: flex-start;
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
+    }
+    .goal.scrollable > div {
+        /* Keep the same visual size as the 4-tile layout */
+        flex: 0 0 calc((100% - 4.5rem) / 4); /* 3 gaps × 1.5rem = 4.5rem */
+        width: calc((100% - 4.5rem) / 4);
+        min-width: calc((100% - 4.5rem) / 4);
     }
 
     /* Ellipsis dropdown menu */
@@ -898,62 +916,7 @@
 <body>
     
 
-    <!-- Add Goal Modal -->
-    <div class="goal-overlay" id="addGoalOverlay" aria-hidden="true">
-        <div class="goal-card" role="dialog" aria-modal="true" aria-labelledby="addGoalTitle">
-            <div class="goal-header">
-                <div class="goal-modal-title" id="addGoalTitle">Add Goal</div>
-                <button class="goal-close" id="addGoalClose" title="Close">✕</button>
-            </div>
-            <div class="goal-body">
-                <div>
-                    <div class="field-label">📝 Title</div>
-                    <input type="text" class="text-input" id="goalTitle" placeholder="Enter goal title" />
-                </div>
-                <!-- Filter Section -->
-                <div class="filter-section">
-                    <div class="field-label">🔍 Filter Criteria</div>
-                    <div class="filter-grid">
-                        <!-- AGENDA Filter -->
-                        <div class="filter-group">
-                            <label class="filter-label">AGENDA</label>
-                            <select class="filter-select" id="agendaFilter">
-                                <option value="all">ALL</option>
-                            </select>
-                        </div>
-
-                        <!-- SDG Filter -->
-                        <div class="filter-group">
-                            <label class="filter-label">SDG</label>
-                            <select class="filter-select" id="sdgFilter">
-                                <option value="all">ALL</option>
-                            </select>
-                        </div>
-
-                        <!-- PROJECT STATUS Filter -->
-                        <div class="filter-group">
-                            <label class="filter-label">PROJECT STATUS</label>
-                            <select class="filter-select" id="statusFilter">
-                                <option value="all">ALL</option>
-                            </select>
-                        </div>
-                    </div>
-                    <button type="button" class="reset-filters-btn" onclick="resetFilters()">Reset Filters</button>
-                </div>
-                <div class="row-2">
-                    <div>
-                        <div class="field-label">🔢 Goal in Numbers</div>
-                        <input type="number" class="text-input" id="goalNumber" value="10" />
-                    </div>
-                    <div>
-                        <div class="field-label">📅 Goal Deadline</div>
-                        <input type="date" class="date-input" id="goalDeadline" value="2025-01-01" />
-                    </div>
-                </div>
-                <button class="btn-submit" id="addGoalSubmit">Submit</button>
-            </div>
-        </div>
-    </div>
+    <!-- Add Goal Modal removed; using server-rendered add/edit pages -->
 
     <div class="content">
 
@@ -961,7 +924,7 @@
         <div>
             <div class="goals-header">
                 <h1>Goals</h1>
-                <button class="add-goal">Add Goal</button>
+                <a href="{% url 'add_goal' %}" class="add-goal">Add Goal</a>
             </div> 
             <div class="goal" id="goalsContainer">
                 <!-- Goals will be dynamically loaded here -->
@@ -972,6 +935,7 @@
                 <h1>List View</h1>
             </div>
             <div class="table-container">
+                <div id="goalsError" style="display:none; margin: 0 0 12px 0; padding: 12px 14px; border-radius: 8px; background: #fee2e2; color: #991b1b; border: 1px solid #fecaca;"></div>
                 <table>
                     <thead>
                     <tr class="table-header">
@@ -980,27 +944,7 @@
                         <th>Progress</th>
                     </tr>
                     </thead>
-                    <tbody>
-                    <tr>
-                        <td>10 extension projects for 2024 </td>
-                        <td><button class="ListView-btn">View List</button></td>
-                        <td class="progress">75%</td>
-                    </tr>
-                    <tr>
-                        <td>10 SDG extension projects for 2024</td>
-                        <td><button class="ListView-btn">View List</button></td>
-                        <td class="progress">30%</td>
-                    </tr>
-                    <tr>
-                        <td>5 student involved extension projects for 2024</td>
-                        <td><button class="ListView-btn">View List</button></td>
-                        <td class="progress">90%</td>
-                    </tr>
-                    <tr>
-                        <td>10 eco tourism projects for 2024</td>
-                        <td><button class="ListView-btn">View List</button></td>
-                        <td class="progress">50%</td>
-                    </tr>
+                    <tbody id="goalsListTbody">
                     </tbody>
                 </table>
             </div>
@@ -1039,6 +983,14 @@
     </div>
 
     <script>
+        // Endpoint helpers resolved by Django
+        const API_GOALS_URL = "{% url 'api_goals' %}";
+        const API_GOAL_DETAIL_URL_TEMPLATE = "{% url 'api_goal_detail' 0 %}"; // replace 0 with id
+        const API_GOAL_QUALIFIERS_URL_TEMPLATE = "{% url 'api_goal_qualifiers' 0 %}"; // replace 0 with id
+        const EDIT_GOAL_URL_TEMPLATE = "{% url 'edit_goal' 0 %}"; // replace 0 with id
+        function goalDetailUrl(id) { return API_GOAL_DETAIL_URL_TEMPLATE.replace('/0/', `/${id}/`); }
+        function goalQualifiersUrl(id) { return API_GOAL_QUALIFIERS_URL_TEMPLATE.replace('/0/', `/${id}/`); }
+        function editGoalUrl(id) { return EDIT_GOAL_URL_TEMPLATE.replace('/0/', `/${id}/`); }
         // Export function for qualifiers
         document.addEventListener('click', (e) => {
             if (e.target.closest('.btn-export')) {
@@ -1164,146 +1116,9 @@
             if (e.target === overlay) closeOverlay();
         });
 
-        // Add Goal modal wiring
-        const addGoalOverlay = document.getElementById('addGoalOverlay');
-        const addGoalClose = document.getElementById('addGoalClose');
-        const addGoalBtn = document.querySelector('.add-goal');
-        
-        function openAddGoalModal() { 
-            addGoalOverlay.classList.add('open'); 
-        }
-        
-        function openAddGoal() { 
-            // Reset form to ensure clean state for adding new goal
-            resetGoalForm();
-            openAddGoalModal();
-        }
-        
-        function closeAddGoal() { addGoalOverlay.classList.remove('open'); }
-        
-        // Add event listener to existing button
-        if (addGoalBtn) {
-            addGoalBtn.addEventListener('click', openAddGoal);
-        }
-        
-        // Add event delegation for dynamically created buttons
-        document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('add-goal') || e.target.closest('.add-goal')) {
-                openAddGoal();
-            }
-        });
-        
-        addGoalClose.addEventListener('click', closeAddGoal);
-        addGoalOverlay.addEventListener('click', (e) => { if (e.target === addGoalOverlay) closeAddGoal(); });
+        // Removed modal wiring; using server-rendered add/edit pages
 
-        // Handle form submission
-        document.addEventListener('DOMContentLoaded', function() {
-            const submitButton = document.getElementById('addGoalSubmit');
-            if (submitButton) {
-                submitButton.addEventListener('click', async function() {
-                    // Show loading state
-                    const originalText = this.textContent;
-                    this.textContent = 'Submitting...';
-                    this.disabled = true;
-                    
-                    try {
-                        const title = document.getElementById('goalTitle').value.trim();
-                        const agenda = document.getElementById('agendaFilter').value;
-                        const sdg = document.getElementById('sdgFilter').value;
-                        const status = document.getElementById('statusFilter').value;
-                        const goalNumber = parseInt(document.getElementById('goalNumber').value);
-                        const deadline = document.getElementById('goalDeadline').value;
-
-                        // Enhanced validation
-                        if (!title) {
-                            alert('Please enter a goal title');
-                            return;
-                        }
-
-                        if (isNaN(goalNumber) || goalNumber <= 0) {
-                            alert('Please enter a valid goal number');
-                            return;
-                        }
-
-                        if (!deadline) {
-                            alert('Please select a deadline');
-                            return;
-                        }
-
-                        const goalData = {
-                            title: title,
-                            agenda: agenda,
-                            sdg: sdg,
-                            status: status,
-                            goal_number: goalNumber,
-                            deadline: deadline, // Keep as YYYY-MM-DD format as backend expects
-                            progress: 0 // New goals start with 0% progress
-                        };
-
-                        console.log('Submitting goal data:', goalData);
-
-                        const goalId = this.getAttribute('data-goal-id');
-                        let success = false;
-                        
-                        if (goalId) {
-                            // Update existing goal
-                            goalData.id = parseInt(goalId);
-                            console.log('Updating goal with ID:', goalId);
-                            
-                            const response = await fetch(`/goals/api/goals/${goalId}/`, {
-                                method: 'PUT',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-CSRFToken': getCSRFToken()
-                                },
-                                body: JSON.stringify(goalData)
-                            });
-                            
-                            console.log('Update response status:', response.status);
-                            
-                            if (!response.ok) {
-                                throw new Error(`HTTP error! status: ${response.status}`);
-                            }
-                            
-                            const result = await response.json();
-                            console.log('Update response:', result);
-                            
-                            if (result.success) {
-                                success = true;
-                                showSuccessMessage('Goal updated successfully!');
-                            } else {
-                                showErrorMessage('Error updating goal: ' + (result.error || 'Unknown error'));
-                            }
-                        } else {
-                            // Add new goal
-                            console.log('Adding new goal');
-                            success = await addGoalToDatabase(goalData);
-                            if (success) {
-                                showSuccessMessage('Goal added successfully!');
-                            }
-                        }
-                        
-                        if (success) {
-                            // Reset form and close modal
-                            resetGoalForm();
-                            closeAddGoal();
-                            // Reload goals from database for real-time update
-                            await loadGoals();
-                        }
-                        
-                    } catch (error) {
-                        console.error('Error saving goal:', error);
-                        showErrorMessage('Error saving goal: ' + error.message);
-                    } finally {
-                        // Restore button state
-                        this.textContent = originalText;
-                        this.disabled = false;
-                    }
-                });
-            } else {
-                console.error('Submit button not found!');
-            }
-        });
+        // Removed modal submission code
 
         // Notification functions
         function showSuccessMessage(message) {
@@ -1405,115 +1220,7 @@
         `;
         document.head.appendChild(style);
 
-        // Reset form function
-        function resetGoalForm() {
-            document.getElementById('goalTitle').value = '';
-            document.getElementById('agendaFilter').value = 'all';
-            document.getElementById('sdgFilter').value = 'all';
-            document.getElementById('statusFilter').value = 'all';
-            document.getElementById('goalNumber').value = '10';
-            document.getElementById('goalDeadline').value = '2025-01-01';
-            document.getElementById('addGoalSubmit').removeAttribute('data-goal-id');
-            document.getElementById('addGoalSubmit').textContent = 'Submit';
-            document.getElementById('addGoalTitle').textContent = 'Add Goal';
-            resetFilters();
-        }
-
-        // Filter functionality for Add Goal modal
-        let currentFilters = {
-            agenda: 'all',
-            sdg: 'all',
-            status: 'all'
-        };
-
-        // Filter change handlers
-        document.getElementById('agendaFilter').addEventListener('change', (e) => {
-            currentFilters.agenda = e.target.value;
-            updateFilterDisplay();
-            applyFilters();
-        });
-
-        document.getElementById('sdgFilter').addEventListener('change', (e) => {
-            currentFilters.sdg = e.target.value;
-            updateFilterDisplay();
-            applyFilters();
-        });
-
-        document.getElementById('statusFilter').addEventListener('change', (e) => {
-            currentFilters.status = e.target.value;
-            updateFilterDisplay();
-            applyFilters();
-        });
-
-        function updateFilterDisplay() {
-            // Update visual indicators for active filters
-            const agendaFilter = document.getElementById('agendaFilter');
-            const sdgFilter = document.getElementById('sdgFilter');
-            const statusFilter = document.getElementById('statusFilter');
-
-            // Add/remove active class based on filter selection
-            agendaFilter.classList.toggle('active', currentFilters.agenda !== 'all');
-            sdgFilter.classList.toggle('active', currentFilters.sdg !== 'all');
-            statusFilter.classList.toggle('active', currentFilters.status !== 'all');
-
-            // Update filter summary (optional)
-            updateFilterSummary();
-        }
-
-        function updateFilterSummary() {
-            // Create a summary of active filters
-            const activeFilters = [];
-            if (currentFilters.agenda !== 'all') {
-                const agendaText = document.querySelector('#agendaFilter option:checked').textContent;
-                activeFilters.push(`AGENDA: ${agendaText}`);
-            }
-            if (currentFilters.sdg !== 'all') {
-                const sdgText = document.querySelector('#sdgFilter option:checked').textContent;
-                activeFilters.push(`SDG: ${sdgText}`);
-            }
-            if (currentFilters.status !== 'all') {
-                const statusText = document.querySelector('#statusFilter option:checked').textContent;
-                activeFilters.push(`STATUS: ${statusText}`);
-            }
-
-            // Log or display the active filters
-            console.log('Active filters:', activeFilters.length > 0 ? activeFilters.join(', ') : 'No filters applied');
-        }
-
-        function applyFilters() {
-            // This function would apply the filters to the goal data
-            // For now, we'll just log the filter values
-            console.log('Applying filters:', currentFilters);
-            
-            // Here you would typically:
-            // 1. Filter the goals data based on current filter values
-            // 2. Update the UI to show only matching goals
-            // 3. Update goal counts and progress indicators
-            
-            // Example filter logic:
-            // const filteredGoals = goals.filter(goal => {
-            //     const agendaMatch = currentFilters.agenda === 'all' || goal.agenda === currentFilters.agenda;
-            //     const sdgMatch = currentFilters.sdg === 'all' || goal.sdg === currentFilters.sdg;
-            //     const statusMatch = currentFilters.status === 'all' || goal.status === currentFilters.status;
-            //     return agendaMatch && sdgMatch && statusMatch;
-            // });
-        }
-
-        // Reset filters function
-        function resetFilters() {
-            currentFilters = {
-                agenda: 'all',
-                sdg: 'all',
-                status: 'all'
-            };
-            
-            document.getElementById('agendaFilter').value = 'all';
-            document.getElementById('sdgFilter').value = 'all';
-            document.getElementById('statusFilter').value = 'all';
-            
-            updateFilterDisplay();
-            applyFilters();
-        }
+        // Removed modal filter helpers
 
         // Add reset filters button functionality (optional)
         function addResetFiltersButton() {
@@ -1543,11 +1250,7 @@
             filterSection.appendChild(resetButton);
         }
 
-        // Initialize filter display
-        updateFilterDisplay();
-
-        // Make resetFilters function globally accessible
-        window.resetFilters = resetFilters;
+        // Removed calls to undefined filter helpers to avoid halting script
 
         // Load goals when page loads
         document.addEventListener('DOMContentLoaded', function() {
@@ -1560,7 +1263,6 @@
                 }
             }
             
-            loadFilters();
             loadGoals();
         });
 
@@ -1571,11 +1273,23 @@
         async function loadGoals() {
             try {
                 console.log('=== LOADING GOALS FROM API ===');
-                const response = await fetch('/goals/api/goals/');
+                const response = await fetch(API_GOALS_URL, { credentials: 'same-origin' });
+                if (!response.ok) {
+                    const text = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${text.substring(0, 300)}`);
+                }
                 const data = await response.json();
                 
                 console.log('API Response:', data);
                 
+                if (data.success === false) {
+                    showGoalsError(data.error || 'Failed to load goals');
+                    goals = [];
+                    renderEmptyState(true);
+                    updateListView();
+                    return;
+                }
+
                 if (data.goals && data.goals.length > 0) {
                     console.log('Raw goals from API:', data.goals);
                     
@@ -1594,86 +1308,34 @@
                     updateListView();
                 } else {
                     console.log('No goals found in API response');
-                    // No goals in database - show empty state
+                    // No goals in database - show demo tiles so UI remains visible
                     goals = [];
-                    renderEmptyState();
+                    renderEmptyState(false);
                     updateListView();
                 }
             } catch (error) {
                 console.error('Error loading goals from database:', error);
-                // API failed - show empty state with error message
+                showGoalsError('Error loading goals: ' + (error?.message || error));
+                // API failed - show demo tiles instead of hiding the section
                 goals = [];
-                renderEmptyState(true);
+                renderEmptyState(false);
                 updateListView();
             }
         }
 
         // Fetch and populate dynamic filters from backend
-        async function loadFilters() {
-            try {
-                const resp = await fetch('/goals/api/filters/');
-                if (!resp.ok) return;
-                const data = await resp.json();
-                if (!data.success) return;
-
-                const agendaSel = document.getElementById('agendaFilter');
-                const sdgSel = document.getElementById('sdgFilter');
-                const statusSel = document.getElementById('statusFilter');
-
-                // Preserve ALL option, then replace with dynamic items
-                agendaSel.innerHTML = '<option value="all">ALL</option>';
-                (data.agendas || []).forEach(a => {
-                    const opt = document.createElement('option');
-                    opt.value = String(a.id);
-                    opt.textContent = a.name;
-                    agendaSel.appendChild(opt);
-                });
-
-                sdgSel.innerHTML = '<option value="all">ALL</option>';
-                (data.sdgs || []).forEach(s => {
-                    const opt = document.createElement('option');
-                    opt.value = String(s.id);
-                    opt.textContent = `SDG ${s.goal_number} - ${s.name}`;
-                    sdgSel.appendChild(opt);
-                });
-
-                statusSel.innerHTML = '<option value="all">ALL</option>';
-                (data.statuses || []).forEach(st => {
-                    const opt = document.createElement('option');
-                    opt.value = st.code;
-                    opt.textContent = st.label.toUpperCase();
-                    statusSel.appendChild(opt);
-                });
-            } catch (e) {
-                console.warn('Failed to load filters', e);
-            }
-        }
+        // Removed loadFilters
 
         // Render empty state when no goals exist
         function renderEmptyState(hasError = false) {
             const goalContainer = document.getElementById('goalsContainer');
             if (!goalContainer) return;
-
             goalContainer.innerHTML = `
                 <div style="grid-column: 1 / -1; text-align: center; padding: 3rem 2rem; color: #6b7280;">
-                    <div style="font-size: 4rem; margin-bottom: 1rem; opacity: 0.5;">
-                        ${hasError ? '⚠️' : '📋'}
-                    </div>
-                    <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem; color: #374151;">
-                        ${hasError ? 'Unable to Load Goals' : 'No Goals Yet'}
-                    </h3>
-                    <p style="font-size: 1rem; margin-bottom: 1.5rem; max-width: 400px; margin-left: auto; margin-right: auto;">
-                        ${hasError 
-                            ? 'There was an error loading goals from the database. Please check your connection and try again.' 
-                            : 'Start by adding your first goal using the "Add Goal" button above. Your goals will appear here once created.'
-                        }
-                    </p>
-                    ${!hasError ? `
-                        <button class="add-goal" style="margin-top: 1rem;">
-                            <i class="fa-solid fa-plus" style="margin-right: 0.5rem;"></i>
-                            Add Your First Goal
-                        </button>
-                    ` : ''}
+                    <div style="font-size: 4rem; margin-bottom: 1rem; opacity: 0.5;">${hasError ? '⚠️' : '📋'}</div>
+                    <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem; color: #374151;">${hasError ? 'Unable to Load Goals' : 'No Goals Yet'}</h3>
+                    <p style="font-size: 1rem; margin-bottom: 1.5rem; max-width: 400px; margin-left: auto; margin-right: auto;">${hasError ? 'There was an error loading goals from the database. Please check your connection and try again.' : 'Start by adding your first goal using the "Add Goal" button above. Your goals will appear here once created.'}</p>
+                    ${!hasError ? '<a href="/goals/add/" class="add-goal" style="margin-top: 1rem; display:inline-block;"><i class="fa-solid fa-plus" style="margin-right: 0.5rem;"></i>Add Your First Goal</a>' : ''}
                 </div>
             `;
         }
@@ -1692,8 +1354,15 @@
                 return;
             }
 
-            // Show first 4 goals
-            const goalsToShow = goals.slice(0, 4);
+            // Toggle scroll mode if more than 4
+            if (goals.length > 4) {
+                goalContainer.classList.add('scrollable');
+            } else {
+                goalContainer.classList.remove('scrollable');
+            }
+
+            // Render all goals; CSS controls scrolling/fit
+            const goalsToShow = goals;
             
             goalsToShow.forEach((goal, index) => {
                 console.log(`Rendering goal ${index}: ID=${goal.id}, Title="${goal.title}"`);
@@ -1722,7 +1391,7 @@
 
         // Update list view with real data
         function updateListView() {
-            const tbody = document.querySelector('tbody');
+            const tbody = document.getElementById('goalsListTbody');
             if (!tbody) return;
 
             tbody.innerHTML = '';
@@ -1758,7 +1427,7 @@
                 const csrfToken = getCSRFToken();
                 console.log('CSRF Token:', csrfToken ? 'Found' : 'Not found');
                 
-                const response = await fetch('/goals/api/goals/', {
+                const response = await fetch(API_GOALS_URL, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1801,7 +1470,7 @@
                 console.log('Attempting to delete goal ID:', goalId);
                 console.log('CSRF Token:', getCSRFToken() ? 'Found' : 'Not found');
                 
-                const response = await fetch(`/goals/api/goals/${goalId}/`, {
+                const response = await fetch(goalDetailUrl(goalId), {
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1883,30 +1552,7 @@
 
         // Edit goal function
         function editGoal(goalId) {
-            console.log('editGoal called with ID:', goalId, 'Type:', typeof goalId);
-            const goal = goals.find(g => g.id === parseInt(goalId)); // Convert string to number
-            console.log('Found goal for editing:', goal);
-            if (goal) {
-                // Populate the form with existing data
-                document.getElementById('goalTitle').value = goal.title;
-                document.getElementById('agendaFilter').value = goal.agenda;
-                document.getElementById('sdgFilter').value = goal.sdg;
-                document.getElementById('statusFilter').value = goal.status;
-                document.getElementById('goalNumber').value = goal.goal_number;
-                document.getElementById('goalDeadline').value = goal.deadline;
-                
-                // Update modal title and button text
-                document.getElementById('addGoalTitle').textContent = 'Update Goal';
-                document.getElementById('addGoalSubmit').textContent = 'Update Goal';
-                
-                // Store the goal ID for updating
-                document.getElementById('addGoalSubmit').setAttribute('data-goal-id', goalId);
-                
-                // Open the modal without resetting the form
-                openAddGoalModal();
-            } else {
-                console.log('Goal not found for editing');
-            }
+            window.location.href = editGoalUrl(goalId);
         }
 
         // Delete goal function
@@ -2077,7 +1723,7 @@
                 
                 try {
                     // Fetch projects that match this goal's criteria
-                    const response = await fetch(`/goals/api/goals/${goalId}/qualifiers/`);
+                    const response = await fetch(goalQualifiersUrl(goalId));
                     const data = await response.json();
                     
                     if (data.success && data.projects) {
@@ -2107,6 +1753,13 @@
         window.editGoal = editGoal;
         window.toggleGoalMenu = toggleGoalMenu;
         window.viewQualifiers = viewQualifiers;
+
+        function showGoalsError(message) {
+            const box = document.getElementById('goalsError');
+            if (!box) return;
+            box.textContent = message;
+            box.style.display = 'block';
+        }
 
         // Client-side pagination
         const PAGE_SIZE = 5;

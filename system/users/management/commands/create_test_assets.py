@@ -34,7 +34,6 @@ COLLEGES = [
     "PSU Sofronio Española",
     "PSU Taytay",
     "Graduate School",
-    "Center for Transnational Education",
     "School of Law",
     "School of Medicine",
 
@@ -68,30 +67,30 @@ class Command(BaseCommand):
         import random
         User = get_user_model()
 
-        # Populate College table (only create if missing, do not overwrite logos)
+        # Populate College table logos only for existing records (do not create new colleges)
         logo_dir = os.path.join(settings.MEDIA_ROOT, 'colleges', 'logos')
         created = 0
         college_objs = []
         for name in COLLEGES:
-            obj, was_created = College.objects.get_or_create(name=name)
+            obj = College.objects.filter(name=name).first()
+            if not obj:
+                continue
             college_objs.append(obj)
-            if was_created:
-                logo_set = False
-                for ext in ['.png', '.jpg', '.jpeg', '.svg']:
-                    filename = f"{name}{ext}"
-                    filepath = os.path.join(logo_dir, filename)
-                    if os.path.exists(filepath):
-                        obj.logo = f"colleges/logos/{filename}"
-                        obj.save(update_fields=['logo'])
-                        logo_set = True
-                        break
-                if not logo_set:
-                    default_logo_path = os.path.join(logo_dir, 'Default.png')
-                    if os.path.exists(default_logo_path):
-                        obj.logo = "colleges/logos/Default.png"
-                        obj.save(update_fields=['logo'])
-                created += 1
-        self.stdout.write(self.style.SUCCESS(f'Successfully populated {created} new colleges and set logos.'))
+            logo_set = False
+            for ext in ['.png', '.jpg', '.jpeg', '.svg']:
+                filename = f"{name}{ext}"
+                filepath = os.path.join(logo_dir, filename)
+                if os.path.exists(filepath):
+                    obj.logo = f"colleges/logos/{filename}"
+                    obj.save(update_fields=['logo'])
+                    logo_set = True
+                    break
+            if not logo_set:
+                default_logo_path = os.path.join(logo_dir, 'Default.png')
+                if os.path.exists(default_logo_path):
+                    obj.logo = "colleges/logos/Default.png"
+                    obj.save(update_fields=['logo'])
+        self.stdout.write(self.style.SUCCESS('Updated logos for existing colleges only (no new colleges created).'))
 
         # Create test users for each role
         roles = [choice[0] for choice in User.Role.choices]

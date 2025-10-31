@@ -295,69 +295,16 @@
             <path d="M342.6 81.4C330.1 68.9 309.8 68.9 297.3 81.4L137.3 241.4C124.8 253.9 124.8 274.2 137.3 286.7C149.8 299.2 170.1 299.2 182.6 286.7L288 181.3L288 552C288 569.7 302.3 584 320 584C337.7 584 352 569.7 352 552L352 181.3L457.4 286.7C469.9 299.2 490.2 299.2 502.7 286.7C515.2 274.2 515.2 253.9 502.7 241.4L342.7 81.4z"/> 
         </symbol> 
     </svg>  
-    <header>
-        extension  
-    </header>
+    
     <main>   
-        <div class="search-container">
-            <form class="search-bar" method="get" action="">
-                <svg width="20" height="20"> <use href="#icon-search"></use> </svg>
-                <input type="text" name="search" placeholder="Search by user, action, or college..." value="{{ search|default:'' }}"/>
-                <input type="hidden" name="tab" id="activeTabInput" value="files" />
-                <button type="button" id="filterBtn" style="background:none;border:none;padding:0;margin-right:5px;cursor:pointer;">
-                    <svg width="20" height="20"> <use href="#icon-filter"></use> </svg>
-                </button>
-                <div id="filterDropdown" class="filter-dropdown">
-                    <div class="filter-grid" style="grid-template-columns: 1fr 1fr; grid-template-rows: 1fr; grid-gap: 24px;">
-                        <!-- Top Left - Sort By -->
-                        <label>Sort By
-                            <select name="sort_by">
-                                <option value="name" {% if sort_by == 'name' %}selected{% endif %}>User</option>
-                                <option value="size" {% if sort_by == 'size' %}selected{% endif %}>Amount</option>
-                                <option value="date" {% if sort_by == 'date' %}selected{% endif %}>Date</option>
-                                <option value="datetime" {% if sort_by == 'datetime' %}selected{% endif %}>Date & Time</option>
-                            </select>
-                        </label>
-                        <!-- Top Right - Order By -->
-                        <label>Order By
-                            <select name="order">
-                                <option value="asc" {% if order == 'asc' %}selected{% endif %}>Ascending</option>
-                                <option value="desc" {% if order == 'desc' %}selected{% endif %}>Descending</option>
-                            </select>
-                        </label>
-                        <!-- Bottom Right - Date Filter -->
-                        <label>Date
-                            <input type="date" name="date" value="{{ date|default:'' }}" style="width: 87%"/>
-                        </label>
-                    </div>
-                    <div class="filter-actions">
-                        <button type="submit" class="filter-apply">Apply</button>
-                        <button type="button" id="closeFilter" class="filter-close">Close</button>
-                    </div>
-                </div>
-            </form>
-        </div>
+        
         
         <section> 
             <div class="files-header">
-                <h3>History</h3>
-                <div style="display: flex; flex-shrink: 3;">
-                    <svg width="20" height="20" style="fill: currentColor; margin-top: 1.15rem;">
-                        <use href="#ascdesc"/>
-                    </svg>
-                    <div class="dropdown2">
-                        <button class="dropdown-btn2">Sort by ▾</button>
-                        <div class="dropdown-menu2 hidden">
-                            <div class="dropdown-item2">Name</div>
-                            <div class="dropdown-item2">Date Completed</div>
-                            <div class="dropdown-item2">Last Updated</div>
-                            <div class="dropdown-item2">Q4</div>
-                        </div> 
-                    </div>
-                </div> 
+                <h3 style="color:#00681a;">History</h3>
             </div>
             <div class="table-container">
-                <table> 
+                <table style="width:100%; background:#fff; border:1px solid #E5E7EB; border-radius:12px; overflow:hidden;"> 
                     <colgroup>
                         <col style="width: 20%">
                         <col style="width: 20%">
@@ -365,31 +312,34 @@
                         <col style="width: 20%"> 
                         <col style="width: 20%">
                     </colgroup>
-                    <thead>
+                    <thead style="background:#f6f6f6;">
                     <tr>
-                        <th>User</th>
-                        <th>Action</th>
-                        <th>Subject</th>
-                        <th>Datetime</th> 
-                        <th>Notes</th>
+                        <th style="padding:1rem; text-align:left;">User</th>
+                        <th style="padding:1rem; text-align:left;">Action</th>
+                        <th style="padding:1rem; text-align:left;">Subject</th>
+                        <th style="padding:1rem; text-align:left;">Datetime</th> 
+                        <th style="padding:1rem; text-align:left;">Notes</th>
                     </tr>
                     </thead>
                     <tbody>
                     {% for history in history_data %}
                     <tr>
-                        <td>{{ history.user }}</td>
-                        <td>
+                        <td style="padding:1rem; border-bottom:1px solid #eee;">{{ history.user }}</td>
+                        <td style="padding:1rem; border-bottom:1px solid #eee;">
                             {% if history.action == 'ALLOCATED' or history.action == 'UPDATED' %}
                                 <span style="color: #28a745; font-weight: bold;">+₱{{ history.amount|floatformat:0|intcomma }}</span>
                             {% elif history.action == 'SPENT' %}
                                 <span style="color: #dc3545; font-weight: bold;">-₱{{ history.amount|floatformat:0|intcomma }}</span>
+                            {% elif history.action == 'ADJUSTED' %}
+                                <div style="font-weight: 600;">Budget Adjusted</div>
+                                <div style="margin-top: 0.25rem; font-weight: 700; color: #111827;">₱{{ history.amount|floatformat:2|intcomma }}</div>
                             {% else %}
                                 {{ history.action }}
                             {% endif %}
                         </td>
-                        <td>{{ history.subject }}</td>
-                        <td>{{ history.datetime }}</td>
-                        <td>{{ history.notes }}</td>
+                        <td style="padding:1rem; border-bottom:1px solid #eee;">{{ history.subject }}</td>
+                        <td style="padding:1rem; border-bottom:1px solid #eee;">{{ history.datetime }}</td>
+                        <td style="padding:1rem; border-bottom:1px solid #eee;">{{ history.notes }}</td>
                     </tr>
                     {% empty %}
                     <tr>
@@ -407,15 +357,15 @@
                     <div class="pagination-controls" style="display: flex; align-items: center; gap: 1rem;">
                         <!-- Previous Button -->
                         {% if page_obj.has_previous %}
-                        <a href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if order %}&order={{ order }}{% endif %}{% if date %}&date={{ date }}{% endif %}" 
+                        <a href="?page={{ page_obj.previous_page_number }}" 
                            class="pagination-btn prev-btn" 
-                           style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; border: 2px dashed #6c757d; border-radius: 6px; text-decoration: none; color: #6c757d; font-weight: 500; transition: all 0.2s ease;">
+                           style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; border: 2px solid #00681a; border-radius: 6px; text-decoration: none; color: #00681a; font-weight: 600; transition: all 0.2s ease;">
                             <span>←</span>
                             <span>Previous</span>
                         </a>
                         {% else %}
                         <span class="pagination-btn prev-btn disabled" 
-                              style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; border: 2px dashed #dee2e6; border-radius: 6px; color: #dee2e6; font-weight: 500;">
+                              style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; border: 2px solid #cbd5d1; border-radius: 6px; color: #cbd5d1; font-weight: 600;">
                             <span>←</span>
                             <span>Previous</span>
                         </span>
@@ -427,14 +377,14 @@
                                 {% if page_obj.number == num %}
                                 <!-- Current Page -->
                                 <span class="page-number current" 
-                                      style="display: inline-block; padding: 0.75rem 1rem; background-color: #343a40; color: white; border-radius: 6px; font-weight: 600; min-width: 2.5rem; text-align: center;">
+                                      style="display: inline-block; padding: 0.75rem 1rem; background-color: #00681a; color: white; border-radius: 6px; font-weight: 700; min-width: 2.5rem; text-align: center;">
                                     {{ num }}
                                 </span>
                                 {% elif num <= 3 or num > page_obj.paginator.num_pages|add:"-2" %}
                                 <!-- First 3 and Last 2 pages -->
-                                <a href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if order %}&order={{ order }}{% endif %}{% if date %}&date={{ date }}{% endif %}" 
+                                <a href="?page={{ num }}" 
                                    class="page-number" 
-                                   style="display: inline-block; padding: 0.75rem 1rem; color: #495057; text-decoration: none; font-weight: 500; min-width: 2.5rem; text-align: center; transition: color 0.2s ease;">
+                                   style="display: inline-block; padding: 0.75rem 1rem; color: #00681a; text-decoration: none; font-weight: 600; min-width: 2.5rem; text-align: center; transition: color 0.2s ease; border: 1px solid #00681a; border-radius: 6px;">
                                     {{ num }}
                                 </a>
                                 {% elif num == 4 and page_obj.number > 6 %}
@@ -449,15 +399,15 @@
 
                         <!-- Next Button -->
                         {% if page_obj.has_next %}
-                        <a href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if order %}&order={{ order }}{% endif %}{% if date %}&date={{ date }}{% endif %}" 
+                        <a href="?page={{ page_obj.next_page_number }}" 
                            class="pagination-btn next-btn" 
-                           style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; border: 2px dashed #6c757d; border-radius: 6px; text-decoration: none; color: #6c757d; font-weight: 500; transition: all 0.2s ease;">
+                           style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; border: 2px solid #00681a; border-radius: 6px; text-decoration: none; color: #00681a; font-weight: 600; transition: all 0.2s ease;">
                             <span>Next</span>
                             <span>→</span>
                         </a>
                         {% else %}
                         <span class="pagination-btn next-btn disabled" 
-                              style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; border: 2px dashed #dee2e6; border-radius: 6px; color: #dee2e6; font-weight: 500;">
+                              style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; border: 2px solid #cbd5d1; border-radius: 6px; color: #cbd5d1; font-weight: 600;">
                             <span>Next</span>
                             <span>→</span>
                         </span>
@@ -468,91 +418,6 @@
             {% endif %}
         </section> 
     </main>
-    <footer>
-        <p>test</p>
-    </footer>
-    <script>
-        // Filter dropdown functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            const filterBtn = document.getElementById('filterBtn');
-            const filterDropdown = document.getElementById('filterDropdown');
-            const closeFilter = document.getElementById('closeFilter');
-            
-            if (filterBtn && filterDropdown) {
-                filterBtn.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    filterDropdown.style.display = filterDropdown.style.display === 'block' ? 'none' : 'block';
-                });
-                
-                if (closeFilter) {
-                    closeFilter.addEventListener('click', function() {
-                        filterDropdown.style.display = 'none';
-                    });
-                }
-                
-                // Close dropdown when clicking outside
-                document.addEventListener('click', function(e) {
-                    if (!filterDropdown.contains(e.target) && !filterBtn.contains(e.target)) {
-                        filterDropdown.style.display = 'none';
-                    }
-                });
-            }
-            
-            // Sort dropdown functionality
-            const dropdownBtn = document.querySelector('.dropdown-btn2');
-            const dropdownMenu = document.querySelector('.dropdown-menu2');
-            
-            if (dropdownBtn && dropdownMenu) {
-                dropdownBtn.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    dropdownMenu.classList.toggle('hidden');
-                });
-                
-                // Close dropdown when clicking outside
-                document.addEventListener('click', function(e) {
-                    if (!dropdownMenu.contains(e.target) && !dropdownBtn.contains(e.target)) {
-                        dropdownMenu.classList.add('hidden');
-                    }
-                });
-            }
-        });
-        
-        // Pagination hover effects
-        document.addEventListener('DOMContentLoaded', function() {
-            const paginationBtns = document.querySelectorAll('.pagination-btn:not(.disabled)');
-            const pageNumbers = document.querySelectorAll('.page-number');
-            
-            paginationBtns.forEach(btn => {
-                btn.addEventListener('mouseenter', function() {
-                    this.style.backgroundColor = '#e9ecef';
-                    this.style.borderColor = '#495057';
-                    this.style.color = '#495057';
-                });
-                
-                btn.addEventListener('mouseleave', function() {
-                    this.style.backgroundColor = 'transparent';
-                    this.style.borderColor = '#6c757d';
-                    this.style.color = '#6c757d';
-                });
-            });
-            
-            pageNumbers.forEach(page => {
-                page.addEventListener('mouseenter', function() {
-                    this.style.color = '#007bff';
-                });
-                
-                page.addEventListener('mouseleave', function() {
-                    this.style.color = '#495057';
-                });
-            });
-        });
-        
-        function doSearch(event) {
-            event.preventDefault(); 
-            const query = document.getElementById("searchInput").value.trim();
-            if(query){
-            }
-        }
-    </script>
+    
 </body>
 </html>

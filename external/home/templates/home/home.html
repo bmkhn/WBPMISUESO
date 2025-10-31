@@ -114,43 +114,27 @@
 
                 <!-- Calendar/Upcoming Events -->
                 <div class="calendar-container">
-                    <div class="calendar-title">Upcoming Events</div>
-                    {% if upcoming_events %}
-                        {% for event in upcoming_events %}
-                        <div class="event-item">
-                            <div class="event-title-cal">{{ event.title }}</div>
-                            <div class="event-date-cal">{{ event.datetime|date:"F d, Y - h:i A" }}</div>
-                        </div>
-                        {% endfor %}
-                    {% else %}
-                        <div class="no-data">No upcoming events</div>
-                    {% endif %}
-                </div>
-            </div>
-            {% endif %}
-
-            <!-- Project Container -->
-            {% if user.role in FACULTY_ROLES %}
-            <div class="project-container">
-                <div class="project-text">Latest Extension Projects</div>
-                {% if faculty_projects_image %}
-                <div class="project-box">
-                    {% for project in faculty_projects_image %}
-                    <div class="project-item">
-                        <div class="project-pic">
-                            <img src="{{ project.image_url }}" alt="Project Event Image" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" />
-                        </div>
-                        <div class="project-details">
-                            <div class="project-title">{{ project.title }}</div>
-                            <div class="project-desc">{{ project.agenda }}</div>
-                        </div>
+                    <div class="mini-calendar-header">
+                        <button class="prev-month" title="Previous Month">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+                        
+                        <span class="current-month-year">Loading...</span>
+                        
+                        <button class="next-month" title="Next Month">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
                     </div>
-                    {% endfor %}
+
+                    <div class="mini-calendar-body">
+                        <div class="weekdays">
+                            <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+                        </div>
+                        
+                        <div class="days-grid">
+                            </div>
+                    </div>
                 </div>
-                <a href="{% url 'project_dispatcher' %}" class="project-more" style="text-decoration:none;">View More Projects →</a>
-                {% else %}
-                <div class="no-data" style="background:#fff;border:1px solid #E0E0E0;border-radius:12px;padding:40px;">No completed projects found</div>
-                {% endif %}
             </div>
             {% endif %}
 
@@ -182,7 +166,118 @@
         </div>
     </div>
     
+<!-- Project Container -->
+{% if user.role in FACULTY_ROLES %}
+<div class="project-container">
+    <div class="project-text">Latest Extension Projects</div>
+    {% if faculty_projects_image %}
+    <div class="project-box">
+        {% for project in faculty_projects_image %}
+        <div class="project-item">
+            <div class="project-pic">
+                <img src="{{ project.image_url }}" alt="Project Event Image" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" />
+            </div>
+            <div class="project-details">
+                <div class="project-title">{{ project.title }}</div>
+                <div class="project-desc">{{ project.agenda }}</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <a href="{% url 'project_dispatcher' %}" class="project-more" style="text-decoration:none;">View More Projects →</a>
+    {% else %}
+    <div class="no-data" style="background:#fff;border:1px solid #E0E0E0;border-radius:12px;padding:40px;">No completed projects found</div>
+    {% endif %}
+</div>
+{% endif %}
+    
+<script>
+    const EVENTS_DATA = {{ events_json|safe }};
+    
+    // The rest of the calendar script goes here:
+    
+    (function() {
+        // Use a set for quick date lookup
+        const eventDates = new Set();
+        if (EVENTS_DATA && typeof EVENTS_DATA === 'object') {
+            Object.keys(EVENTS_DATA).forEach(date => eventDates.add(date));
+        }
 
+        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        let currentDate = new Date();
+
+        const headerEl = document.querySelector('.current-month-year');
+        const daysGridEl = document.querySelector('.days-grid');
+        const prevButton = document.querySelector('.prev-month');
+        const nextButton = document.querySelector('.next-month');
+        
+        function renderCalendar() {
+            const currentYear = currentDate.getFullYear();
+            const currentMonth = currentDate.getMonth();
+            
+            headerEl.textContent = `${monthNames[currentMonth]} ${currentYear}`;
+            daysGridEl.innerHTML = ''; 
+
+            const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay(); // 0 (Sun) - 6 (Sat)
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            const today = new Date();
+            
+            // Render empty cells for preceding month days
+            for (let i = 0; i < firstDayOfMonth; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.classList.add('day-cell', 'empty-day');
+                daysGridEl.appendChild(emptyCell);
+            }
+
+            // Render days of the month
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayCell = document.createElement('div');
+                dayCell.classList.add('day-cell');
+                dayCell.textContent = day;
+
+                const dateString = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                
+                // Mark today's date
+                if (currentYear === today.getFullYear() && currentMonth === today.getMonth() && day === today.getDate()) {
+                    dayCell.classList.add('today');
+                }
+                
+                // Mark event dates
+                if (eventDates.has(dateString)) {
+                    dayCell.classList.add('has-event');
+                    // Add an invisible link/data for utility, pointing to the full calendar view
+                    dayCell.setAttribute('data-event-date', dateString);
+                    dayCell.title = "Events scheduled today. Click for full calendar."
+                }
+                
+                // Navigation to the full calendar view (assuming URL is /calendar/)
+                dayCell.addEventListener('click', () => {
+                     if (!dayCell.classList.contains('empty-day')) {
+                        const targetDate = dayCell.getAttribute('data-event-date') || dateString;
+                        window.location.href = `/calendar/?date=${targetDate}`;
+                     }
+                });
+
+
+                daysGridEl.appendChild(dayCell);
+            }
+        }
+
+        prevButton.addEventListener('click', () => {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar();
+        });
+
+        nextButton.addEventListener('click', () => {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar();
+        });
+
+        // Initial render
+        renderCalendar();
+    })();
+
+</script>
 
 </body>
 </html>

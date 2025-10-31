@@ -295,74 +295,12 @@
             <path d="M342.6 81.4C330.1 68.9 309.8 68.9 297.3 81.4L137.3 241.4C124.8 253.9 124.8 274.2 137.3 286.7C149.8 299.2 170.1 299.2 182.6 286.7L288 181.3L288 552C288 569.7 302.3 584 320 584C337.7 584 352 569.7 352 552L352 181.3L457.4 286.7C469.9 299.2 490.2 299.2 502.7 286.7C515.2 274.2 515.2 253.9 502.7 241.4L342.7 81.4z"/> 
         </symbol> 
     </svg>  
-    <header>
-        re  
-    </header>
+    
     <main>   
-        <div class="search-container">
-            <form class="search-bar" method="get" action="">
-                <svg width="20" height="20"> <use href="#icon-search"></use> </svg>
-                <input type="text" name="search" placeholder="Search by sponsor, project..." value="{{ search|default:'' }}"/>
-                <input type="hidden" name="tab" id="activeTabInput" value="files" />
-                <button type="button" id="filterBtn" style="background:none;border:none;padding:0;margin-right:5px;cursor:pointer;">
-                    <svg width="20" height="20"> <use href="#icon-filter"></use> </svg>
-                </button>
-                <div id="filterDropdown" class="filter-dropdown">
-                    <div class="filter-grid" style="grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; grid-gap: 24px;">
-                        <!-- Top Left - Sort By -->
-                        <label>Sort By
-                            <select name="sort_by">
-                                <option value="name" {% if sort_by == 'name' %}selected{% endif %}>Sponsor Name</option>
-                                <option value="file_type" {% if sort_by == 'file_type' %}selected{% endif %}>Status</option>
-                                <option value="size" {% if sort_by == 'size' %}selected{% endif %}>Amount</option>
-                                <option value="date" {% if sort_by == 'date' %}selected{% endif %}>Date</option>
-                            </select>
-                        </label>
-                        <!-- Top Right - Order By -->
-                        <label>Order By
-                            <select name="order">
-                                <option value="asc" {% if order == 'asc' %}selected{% endif %}>Ascending</option>
-                                <option value="desc" {% if order == 'desc' %}selected{% endif %}>Descending</option>
-                            </select>
-                        </label>
-                        <!-- Bottom Left - Status Filter -->
-                        <label>Status
-                            <select name="file_type">
-                                <option value="">All Status</option>
-                                <option value="PENDING" {% if file_type == 'PENDING' %}selected{% endif %}>Pending</option>
-                                <option value="APPROVED" {% if file_type == 'APPROVED' %}selected{% endif %}>Approved</option>
-                                <option value="COMPLETED" {% if file_type == 'COMPLETED' %}selected{% endif %}>Completed</option>
-                            </select>
-                        </label>
-                        <!-- Bottom Right - Date Filter -->
-                        <label>Date
-                            <input type="date" name="date" value="{{ date|default:'' }}" style="width: 87%"/>
-                        </label>
-                    </div>
-                    <div class="filter-actions">
-                        <button type="submit" class="filter-apply">Apply</button>
-                        <button type="button" id="closeFilter" class="filter-close">Close</button>
-                    </div>
-                </div>
-            </form>
-        </div>
+        
         <section> 
             <div class="files-header">
                 <h3>External Sponsor</h3>
-                <div style="display: flex; flex-shrink: 3;">
-                    <svg width="20" height="20" style="fill: currentColor; margin-top: 1.15rem;">
-                        <use href="#ascdesc"/>
-                    </svg>
-                    <div class="dropdown2">
-                        <button class="dropdown-btn2">Sort by ▾</button>
-                        <div class="dropdown-menu2 hidden">
-                            <div class="dropdown-item2">Name</div>
-                            <div class="dropdown-item2">Date Completed</div>
-                            <div class="dropdown-item2">Last Updated</div>
-                            <div class="dropdown-item2">Q4</div>
-                        </div> 
-                    </div>
-                </div> 
             </div>
             <div class="table-container">
                 <table>  
