@@ -46,6 +46,9 @@ class Submission(models.Model):
 	]
 
 	status = models.CharField(max_length=32, choices=SUBMISSION_STATUS_CHOICES, default='PENDING')
+	revision_count = models.PositiveIntegerField(default=0)
+	rejection_count = models.PositiveIntegerField(default=0)
+	is_late_submission = models.BooleanField(default=False)
 	reviewed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='reviewed_submissions')
 	reviewed_at = models.DateTimeField(null=True, blank=True)
 	reason_for_revision = models.TextField(blank=True, null=True)

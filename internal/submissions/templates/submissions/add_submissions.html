@@ -27,10 +27,10 @@
                 </div>
                 <div class="form-group">
                     <label class="user-details-label" for="id_project">Project: <span class="required">*</span></label>
-                    <select class="user-details-value" name="project" id="id_project" required>
+                    <select class="user-details-value" name="project" id="id_project" required {% if preselected_project %}data-preselected="true"{% endif %}>
                         <option value="">Select Project</option>
                         {% for project in projects %}
-                            <option value="{{ project.id }}">{{ project.title }}</option>
+                            <option value="{{ project.id }}" {% if preselected_project and preselected_project.id == project.id %}selected{% endif %}>{{ project.title }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -39,11 +39,18 @@
                 <label class="user-details-label">Choose Form/s: <span class="required">*</span></label>
                 <div class="downloadable-checkboxes">
                     {% for downloadable in downloadables %}
-                        <div class="checkbox-item" data-project-dependent="{% if downloadable.submission_type == 'event' %}true{% else %}false{% endif %}">
+                        <div class="checkbox-item" 
+                             data-project-dependent="{% if downloadable.submission_type == 'event' %}true{% else %}false{% endif %}"
+                             data-submission-type="{{ downloadable.submission_type }}"
+                             data-downloadable-id="{{ downloadable.id }}">
                             <input type="checkbox" name="downloadables" id="downloadable_{{ downloadable.id }}" value="{{ downloadable.id }}">
                             <label for="downloadable_{{ downloadable.id }}">{{ downloadable.name }}</label>
                             {% if downloadable.submission_type == 'event' %}
                                 <span class="event-status" id="event_status_{{ downloadable.id }}">Select a project first</span>
+                            {% elif downloadable.submission_type == 'final' %}
+                                <span class="final-status" id="final_status_{{ downloadable.id }}" style="color:#888;font-size:0.875rem;display:none;" title="Final submissions are only available when all activities are completed">
+                                    <i class="fa-solid fa-info-circle"></i> Requires all activities completed
+                                </span>
                             {% endif %}
                         </div>
                     {% endfor %}
@@ -63,11 +70,11 @@
                 <input class="form-input user-details-value" type="datetime-local" name="deadline" id="id_deadline">
             </div>
 
-                <div class="form-group">
-                    <label class="user-details-label" for="id_notes">Notes:</label>
-                    <textarea class="form-input user-details-value" name="notes" id="id_notes"></textarea>
-                </div> 
-            </div>
+            <div class="form-group">
+                <label class="user-details-label" for="id_notes">Notes:</label>
+                <textarea class="form-input user-details-value" name="notes" id="id_notes"></textarea>
+            </div> 
+
 
             <div class="form-actions">
                 <a href="{% url 'submissions_admin' %}" class="back btn">Cancel</a>
@@ -147,7 +154,7 @@
     // Project Event Availability Data
     const projectEventAvailability = {{ project_event_availability_json|safe }};
 
-    // Handle project selection change to update event availability
+    // Handle project selection change to update event availability and final submission eligibility
     document.getElementById('id_project').addEventListener('change', function() {
         const selectedProjectId = this.value;
         const eventSelectionGroup = document.getElementById('event-selection-group');
@@ -196,6 +203,38 @@
             }
         });
         
+        // Update final submission type downloadables
+        document.querySelectorAll('.checkbox-item[data-submission-type="final"]').forEach(function(checkboxItem) {
+            const checkbox = checkboxItem.querySelector('input[type="checkbox"]');
+            const finalStatus = checkboxItem.querySelector('.final-status');
+            
+            if (!selectedProjectId) {
+                checkboxItem.classList.add('disabled');
+                checkbox.disabled = true;
+                checkbox.checked = false;
+                if (finalStatus) finalStatus.style.display = 'none';
+            } else {
+                const availability = projectEventAvailability[selectedProjectId];
+                
+                if (availability && availability.all_events_completed) {
+                    // All events completed - enable final submission
+                    checkboxItem.classList.remove('disabled');
+                    checkbox.disabled = false;
+                    if (finalStatus) finalStatus.style.display = 'none';
+                } else {
+                    // Not all events completed - disable final submission
+                    checkboxItem.classList.add('disabled');
+                    checkbox.disabled = true;
+                    checkbox.checked = false;
+                    if (finalStatus) {
+                        finalStatus.style.display = 'inline';
+                        const progress = availability ? `${availability.event_progress}/${availability.estimated_events}` : '0/0';
+                        finalStatus.innerHTML = `<i class="fa-solid fa-info-circle"></i> Requires all events completed (${progress})`;
+                    }
+                }
+            }
+        });
+        
         // Check if event selection should be shown
         updateEventSelectionVisibility();
     });
@@ -214,8 +253,11 @@
 
     // Add event listeners to downloadable checkboxes
     document.addEventListener('DOMContentLoaded', function() {
-        // Initialize event status display
-        document.getElementById('id_project').dispatchEvent(new Event('change'));
+        // Initialize event status display (especially important when project is preselected)
+        const projectSelect = document.getElementById('id_project');
+        if (projectSelect.value || projectSelect.hasAttribute('data-preselected')) {
+            projectSelect.dispatchEvent(new Event('change'));
+        }
         
         // Add change listeners to all downloadable checkboxes
         document.querySelectorAll('input[name="downloadables"]').forEach(function(checkbox) {

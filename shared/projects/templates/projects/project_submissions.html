@@ -6,15 +6,20 @@
 <link href="{% static 'shared/projects/view.css' %}" rel="stylesheet">
 
 <div class="card-header">
-    <h3>Submissions</h3>
-    <form method="get" id="status-filter-form" style="display:inline;">
-        <select name="status" id="submission-filter" class="submission-dropdown user-details-value" onchange="this.form.submit()">
-            <option value="">All Statuses</option>
-            {% for value, label in status_choices %}
-                <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
-            {% endfor %}
-        </select>
-    </form>
+    <div style="display:flex;align-items:center;gap:1rem;">
+        <h3 style="margin:0;">Submissions</h3>
+        <form method="get" id="status-filter-form" style="display:inline;">
+            <select name="status" id="submission-filter" class="submission-dropdown user-details-value" onchange="this.form.submit()">
+                <option value="">All Statuses</option>
+                {% for value, label in status_choices %}
+                    <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+    {% if request.user.role in ADMIN_ROLES %}
+        <a href="{% url 'add_submission' project.id %}" class="admin-button edit">Add Submission</a>
+    {% endif %}
 </div>
 <div class="card-body">
     {% if submissions %}
@@ -29,7 +34,7 @@
                         {{ sub.deadline|timeuntil }} left
                     </span>
                     <br>
-                    <span>{{ sub.get_status_display }}</span>
+                    <span>{{ sub.get_status_display }}{% if sub.is_late_submission %} <span style="color:#D5110A;font-weight:600;">(Late)</span>{% endif %}</span>
                 </div>
             </div>
             {% endfor %}

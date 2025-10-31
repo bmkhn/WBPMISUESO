@@ -146,6 +146,16 @@
         resize: none;
     }
 
+    .modal input[type="datetime-local"]:disabled {
+        background-color: #f3f4f6;
+        color: #9ca3af;
+        cursor: not-allowed;
+    }
+
+    .modal input[type="datetime-local"]:not(:disabled) {
+        border-color: #0A6C44;
+    }
+
     /* Submission Modal Styles */
     .submission-modal {
         position: fixed;
@@ -432,7 +442,14 @@
 
         <div class="upper-right">
             <span class="deadline-text">Due on {{ submission.deadline|date:"F j, Y, H:i" }}</span>
-            <span class="grey-text">Status: {{ submission.get_status_display }}</span>
+            <span class="grey-text">Status: {{ submission.get_status_display }}{% if submission.is_late_submission %} <span class="red" style="font-weight:600;">(Late Submission)</span>{% endif %}</span>
+            {% if submission.revision_count > 0 or submission.rejection_count > 0 %}
+            <span class="grey-text">
+                {% if submission.revision_count > 0 %}Revisions: {{ submission.revision_count }}{% endif %}
+                {% if submission.revision_count > 0 and submission.rejection_count > 0 %} • {% endif %}
+                {% if submission.rejection_count > 0 %}Rejections: {{ submission.rejection_count }}{% endif %}
+            </span>
+            {% endif %}
         </div>
     </div>
 
@@ -441,8 +458,8 @@
     <div class="content-leftright">
         <div class="content-left">
             {% if submission.notes %} <span class="notes-text">{{ submission.notes }}</span> {% endif %}
-            {% if submission.status == "REVISION_REQUESTED" %} <span class="notes-text"><strong class="red">Reason/s for Requesting Revision</strong><br>{{ submission.reason_for_revision }}</span>{% endif %}
-            {% if submission.status == "REJECTED" %} <span class="notes-text"><strong class="red">Reason/s for Rejection</strong><br>{{ submission.reason_for_rejection }}</span>{% endif %}
+            {% if submission.reason_for_revision %} <span class="notes-text"><strong class="red">Reason/s for Requesting Revision</strong><br>{{ submission.reason_for_revision }}</span>{% endif %}
+            {% if submission.reason_for_rejection %} <span class="notes-text"><strong class="red">Reason/s for Rejection</strong><br>{{ submission.reason_for_rejection }}</span>{% endif %}
             {% if submission.file %} <span class="notes-text"><a href="{{ submission.file.url }}" target="_blank" class="name-link">File Here</a></span>{% endif %}
         </div>
 
@@ -518,6 +535,24 @@
                 <button type="button" class="action-btn" id="submit-revision-btn" 
                         data-submission-type="{{ submission.downloadable.submission_type }}" 
                         data-submission-id="{{ submission.id }}">Submit Revision</button>
+            </div>
+            {% endif %}
+
+        {% elif submission.status == 'REJECTED' %}
+            {% if request.user.id == project.project_leader.id or request.user.id in provider_ids %}
+            <div class="action-form">
+                <button type="button" class="action-btn" id="submit-revision-btn" 
+                        data-submission-type="{{ submission.downloadable.submission_type }}" 
+                        data-submission-id="{{ submission.id }}">Submit</button>
+            </div>
+            {% endif %}
+
+        {% elif submission.status == 'OVERDUE' %}
+            {% if request.user.id == project.project_leader.id or request.user.id in provider_ids %}
+            <div class="action-form">
+                <button type="button" class="action-btn" id="submit-revision-btn" 
+                        data-submission-type="{{ submission.downloadable.submission_type }}" 
+                        data-submission-id="{{ submission.id }}">Submit (Late)</button>
             </div>
             {% endif %}
         {% endif %}
@@ -613,6 +648,13 @@
                 {% csrf_token %}
                 <input type="hidden" name="action" value="reject" />
                 <textarea name="reason" rows="3" required placeholder="Enter reason..." style="resize:vertical;"></textarea>
+                <div style="margin-top:1rem;">
+                    <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.95rem;color:#374151;cursor:pointer;">
+                        <input type="checkbox" id="update-deadline-reject" style="width:18px;height:18px;cursor:pointer;" onchange="document.getElementById('new-deadline-reject').disabled = !this.checked; if(!this.checked) document.getElementById('new-deadline-reject').value = '';">
+                        Update Deadline
+                    </label>
+                    <input type="datetime-local" name="new_deadline" id="new-deadline-reject" disabled style="margin-top:0.5rem;width:100%;" value="{{ submission.deadline|date:'Y-m-d\TH:i' }}">
+                </div>
                 <div class="modal-actions">
                     <button type="button" class="back-btn" id="cancel-reject">Cancel</button>
                     <button type="submit" class="reject-btn">Reject</button>
@@ -626,6 +668,13 @@
                 {% csrf_token %}
                 <input type="hidden" name="action" value="request_revision" />
                 <textarea name="reason" rows="3" required placeholder="Enter reason..." style="resize:vertical;"></textarea>
+                <div style="margin-top:1rem;">
+                    <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.95rem;color:#374151;cursor:pointer;">
+                        <input type="checkbox" id="update-deadline-revision" style="width:18px;height:18px;cursor:pointer;" onchange="document.getElementById('new-deadline-revision').disabled = !this.checked; if(!this.checked) document.getElementById('new-deadline-revision').value = '';">
+                        Update Deadline
+                    </label>
+                    <input type="datetime-local" name="new_deadline" id="new-deadline-revision" disabled style="margin-top:0.5rem;width:100%;" value="{{ submission.deadline|date:'Y-m-d\TH:i' }}">
+                </div>
                 <div class="modal-actions">
                     <button type="button" class="back-btn" id="cancel-request-revision">Cancel</button>
                     <button type="submit" class="reject-btn">Request Revision</button>
