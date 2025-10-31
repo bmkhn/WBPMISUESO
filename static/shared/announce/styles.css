@@ -160,9 +160,12 @@ body {
 }
 
 .announce-card {
-    background: white;
-    border: 0.83px solid rgba(0,0,0,0.5);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    border-radius: 2px;
+    gap: 15px;
+    border: 0.7px solid #DDE1E6;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.08);
     position: relative;
 }
 

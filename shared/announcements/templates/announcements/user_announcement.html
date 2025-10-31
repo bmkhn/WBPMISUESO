@@ -19,10 +19,10 @@
 		<!-- Search Bar -->
 		<div class="search-container">
 		       <form class="search-bar" method="get" action="">
-					<svg width="20" height="20"> <use href="#icon-search"></use> </svg>
+					<svg width="16" height="16"> <use href="#icon-search"></use> </svg>
 					<input type="text" name="search" placeholder="Search Announcement Title" value="{{ search_query|default:'' }}"/>
 					<button type="button" id="filterBtn" style="background:none;border:none;padding:0;margin-right:5px;cursor:pointer;">
-						<svg width="20" height="20"> <use href="#icon-filter"></use> </svg>
+						<svg width="16" height="16"> <use href="#icon-filter"></use> </svg>
 					</button>
 
 					{% if not user.is_authenticated %}
@@ -89,7 +89,7 @@
 			<div class="announce-card" style="cursor:pointer;" onclick="cardClick(event, '{{ announcement.id }}')">
 				<!-- No options for non-admin users -->
 				<div class="announce-thumb">
-					<img src="{{ announcement.get_cover_photo_url }}" alt="Cover Photo" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" />
+					<img src="{{ announcement.get_cover_photo_url }}" alt="Cover Photo" style="width:100%;height:100%;object-fit:cover;" />
 				</div>
 				<div class="announce-text-container">
 					<div class="announce-meta">

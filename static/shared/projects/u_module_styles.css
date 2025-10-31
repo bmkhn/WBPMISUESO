@@ -77,33 +77,8 @@ button:hover {
     height: auto;
     display: flex;
     flex-direction: column;
-    gap: 30px;
+    gap: 20px;
     width: 100%;
-}
-
-.add-request-btn {
-    background: #063A1C;
-    color: white;
-    padding: 15px 45px;
-    border-radius: 8px;
-    font-size: 20px;
-    font-family: 'Inter', sans-serif;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 8px rgba(10, 108, 68, 0.2);
-    text-decoration: none;
-    border-radius: 18px;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-
-.add-request-btn:hover {
-    background: #04521c;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(10, 108, 68, 0.3);
-    text-decoration: none;
-    color: white;
 }
 
 .files-header {
@@ -198,7 +173,7 @@ button:hover {
 .filter-dropdown {
     display: none;
     position: absolute;
-    margin-top: -99px;
+    top: 250px;
     right: 120px;
     z-index: 1000;
     background: #f8f8f8;
@@ -661,4 +636,157 @@ select {
     padding: 0.75rem;
     font-size: 1rem;
     font-family: 'Inter', sans-serif;
+}
+
+.event-modal {
+    position: fixed;
+    z-index: 9999;
+    left: 0; top: 0; width: 100vw; height: 100vh;
+    background: rgba(0,0,0,0.25);
+    display: none; align-items: center; justify-content: center;
+}
+
+.event-modal-content {
+    background: #fff;
+    border-radius: 12px;
+    padding: 2rem 2rem 2rem 2rem;
+    min-width: 700px;
+    max-width: 95vw;
+    min-height: 640px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    position: relative;
+    overflow-y: auto;
+}
+
+.event-modal-content h2 { margin-top:0; font-size:1.5rem; color:#000; font-weight: 400; }
+.event-modal-content .close {
+    position: absolute; right: 1.5rem; top: 1.25rem;
+    font-size: 1.5rem; color: #888; cursor: pointer;
+}
+
+.form-group {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 15px;
+}
+.form-label {
+    font-weight: 400;
+    color: #444;
+    font-size: 0.95rem; 
+    margin-bottom: 0.5rem; 
+    margin-top: 1.2rem;
+}
+
+.submit-btn {
+    background-color: #0A6C44;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.back-btn {
+    background-color: #E5E7EB;
+    color: #374151;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.required { color: #DC2626; }
+.form-actions { display: flex; gap: 1rem; margin-top: 40px; justify-content: center; }
+.submit-btn:hover { background-color: #07532F; }
+.back-btn:hover { background-color: #D1D5DB; }
+textarea { resize: none; }
+
+input[type="text"], input[type="date"], input[type="time"], textarea, select {
+    padding: 0.75rem 1rem;
+    border: 1px solid #8a8a8a;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-family: 'Inter', sans-serif;
+    background: #f8f8f8;
+    transition: all 0.2s ease;
+    width: 100%;
+    min-width: 0; 
+    margin-bottom: 0;
+    box-sizing: border-box;
+} 
+ 
+input:focus {
+    outline: none;
+    border-color: #0A6C44;
+    box-shadow: 0 0 0 3px rgba(10, 108, 68, 0.2);
+    background: #FFFFFF; 
+}
+
+.upload-area {
+    flex: 1;
+    border: 2px dashed #E5E7EB;
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    background: #F9F9F9;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.upload-area:hover {
+    border-color: #0A6C44;
+    background: #F0FDF4;
+}
+
+.upload-icon {
+    width: 24px;
+    height: 24px;
+    color: #4B5563;
+}
+
+.upload-text {
+    color: #4B5563;
+    font-size: 0.95rem;
+}
+
+.file-preview {
+    padding: 1rem;
+    background: #F0FDF4;
+    border: 1px solid #BBF7D0;
+    border-radius: 8px;
+    display: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+.file-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #1f7c57;
+    font-size: 0.95rem;
+    flex: 1;
+}
+
+.remove-x {
+    color: #E53E3E;
+    font-weight: 400;
+    font-size: 1.1rem;
+    margin-left: auto;
+    cursor: pointer;
+    border: none;
+    background: none;
+    padding: 0 6px;
+    align-self: center;
 }

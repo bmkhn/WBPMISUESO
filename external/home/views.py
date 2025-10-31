@@ -43,6 +43,7 @@ def home_view(request):
     ongoing_projects_count = 0
     upcoming_meetings_count = 0
     my_alerts = []
+    events_json = '[]'
     
     if request.user.is_authenticated and getattr(request.user, 'role', None) in FACULTY_ROLES:
         from internal.submissions.models import Submission
@@ -75,6 +76,7 @@ def home_view(request):
         events_json = json.dumps(events_by_date)
 
     latest_announcements = Announcement.objects.filter(published_at__isnull=False, archived=False).order_by('-published_at')[:2]
+    
     if request.user.is_authenticated:
         context = {'is_user': True, 'user_role': getattr(request.user, 'role', None)}
     else:
@@ -92,9 +94,7 @@ def home_view(request):
         'ongoing_projects_count': ongoing_projects_count,
         'upcoming_meetings_count': upcoming_meetings_count,
         'my_alerts': my_alerts,
+        'events_json': events_json,
     }
-
-    if request.user.is_authenticated:
-        render_context['events_json'] = events_json
 
     return render(request, 'home/home.html', render_context)
