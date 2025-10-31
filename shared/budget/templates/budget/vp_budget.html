@@ -813,6 +813,9 @@
                                 <span style="color: #28a745; font-weight: bold;">+₱{{ history.amount|floatformat:0|intcomma }}</span>
                             {% elif history.action == 'SPENT' %}
                                 <span style="color: #dc3545; font-weight: bold;">-₱{{ history.amount|floatformat:0|intcomma }}</span>
+                            {% elif history.action == 'ADJUSTED' %}
+                                <div style="font-weight: 600;">Budget Adjusted</div>
+                                <div style="margin-top: 0.25rem; font-weight: 700; color: #111827;">₱{{ history.amount|floatformat:2|intcomma }}</div>
                             {% else %}
                                 {{ history.get_action_display }}
                             {% endif %}
