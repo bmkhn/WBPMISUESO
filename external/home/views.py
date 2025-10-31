@@ -55,7 +55,7 @@ def home_view(request):
             models.Q(project_leader=request.user) | models.Q(providers=request.user)
         ).distinct().order_by('-updated_at')
         
-        faculty_projects_image = get_project_card_data(faculty_projects.filter(status='COMPLETED')[:2])
+        faculty_projects_image = get_project_card_data(faculty_projects.filter(status='COMPLETED')[:3])
         
         # Get stats
         pending_submissions_count = Submission.objects.filter(
