@@ -116,7 +116,7 @@
                 {% endif %}
             </div>
           
-            <div>
+            <div style="white-space:nowrap;">
                 <span class="detail-icon">
                     <svg width="24" height="24"><use href="#detail-icon"/></svg>
                     <span class="detail-tooltip">When the project is scheduled to begin.</span>
@@ -125,7 +125,7 @@
             </div>
             <div>{{ project.start_date|date:'F d, Y' }}</div>
             
-            <div>
+            <div style="white-space:nowrap;">
                 <span class="detail-icon">
                     <svg width="24" height="24"><use href="#detail-icon"/></svg>
                     <span class="detail-tooltip">Expected completion date of the project.</span>
@@ -155,12 +155,18 @@
             <div class="form-grid-2x2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0px 30px;">
                 <div class="form-group">
                     <label class="form-label">Start Date <span class="required">*</span></label>
-                    <input class="user-details-value" type="date" name="start_date" id="edit_project_start_date" value="{{ project.start_date|date:'Y-m-d' }}" style="flex:1;">
+                    <div style="display:flex; flex-direction:column;flex:1;">
+                        <input class="user-details-value" type="date" name="start_date" id="edit_project_start_date" value="{{ project.start_date|date:'Y-m-d' }}" required>
+                        <small style="color:#666;font-size:0.875rem;margin-top:0.25rem;">Cannot be in the past</small>                        
+                    </div>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">Estimated End <span class="required">*</span></label>
-                    <input class="user-details-value" type="date" name="estimated_end_date" id="edit_project_end_date" value="{{ project.estimated_end_date|date:'Y-m-d' }}" style="flex:1;">
+                    <div style="display:flex; flex-direction:column; flex:1;">
+                        <input class="user-details-value" type="date" name="estimated_end_date" id="edit_project_end_date" value="{{ project.estimated_end_date|date:'Y-m-d' }}" required>
+                        <small style="color:#666;font-size:0.875rem;margin-top:0.25rem;">Must be after start date</small>
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -350,6 +356,56 @@
             selectedSdgs = tagRow.dataset.selectedSdgs.split(',').filter(Boolean);
         }
         setupTagUI('edit-sdgs-tag-row', 'edit-sdgs-options-template', 'sdgs', selectedSdgs);
+        
+        // Date validation for Edit Project
+        const editStartDateInput = document.getElementById('edit_project_start_date');
+        const editEndDateInput = document.getElementById('edit_project_end_date');
+        
+        if (editStartDateInput && editEndDateInput) {
+            // Set minimum start date to today
+            const today = new Date().toISOString().split('T')[0];
+            editStartDateInput.setAttribute('min', today);
+            
+            // Update end date minimum when start date changes
+            editStartDateInput.addEventListener('change', function() {
+                if (this.value) {
+                    editEndDateInput.setAttribute('min', this.value);
+                    // If end date is before start date, clear it
+                    if (editEndDateInput.value && editEndDateInput.value < this.value) {
+                        editEndDateInput.value = '';
+                    }
+                }
+            });
+            
+            // Set initial minimum for end date based on current start date
+            if (editStartDateInput.value) {
+                editEndDateInput.setAttribute('min', editStartDateInput.value);
+            }
+            
+            // Validate on form submit
+            const editForm = editStartDateInput.closest('form');
+            if (editForm) {
+                editForm.addEventListener('submit', function(e) {
+                    const startDate = new Date(editStartDateInput.value);
+                    const endDate = new Date(editEndDateInput.value);
+                    const todayDate = new Date(today);
+                    
+                    if (startDate < todayDate) {
+                        e.preventDefault();
+                        alert('Start date cannot be in the past.');
+                        editStartDateInput.focus();
+                        return false;
+                    }
+                    
+                    if (endDate <= startDate) {
+                        e.preventDefault();
+                        alert('Estimated end date must be after the start date.');
+                        editEndDateInput.focus();
+                        return false;
+                    }
+                });
+            }
+        }
     });
 </script>
 

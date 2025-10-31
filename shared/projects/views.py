@@ -260,7 +260,7 @@ def project_events(request, pk):
             new_event = ProjectEvent.objects.create(
                 project=project,
                 title=title,
-                description=description or "Pending Submission...",
+                description=description,
                 datetime=event_datetime,
                 location=location,
                 created_at=now,

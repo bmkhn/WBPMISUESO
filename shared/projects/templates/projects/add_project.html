@@ -207,11 +207,13 @@
             <div class="user-details-row cols-2">
                 <div>
                     <div class="user-details-label">Start Date <span class="required">*</span></div>
-                    <input type="date" name="start_date" class="user-details-value">
+                    <input type="date" name="start_date" id="id_start_date" class="user-details-value" required>
+                    <small style="color:#666;font-size:0.875rem;margin-top:0.25rem;display:block;">Cannot be in the past</small>
                 </div>
                 <div>
                     <div class="user-details-label">Estimated End Date <span class="required">*</span></div>
-                    <input type="date" name="estimated_end_date" class="user-details-value">
+                    <input type="date" name="estimated_end_date" id="id_estimated_end_date" class="user-details-value" required>
+                    <small style="color:#666;font-size:0.875rem;margin-top:0.25rem;display:block;">Must be after start date</small>
                 </div>
             </div>
 
@@ -752,6 +754,48 @@
         if (logisticsSelects) {
             logisticsSelects.addEventListener('change', updateLogisticsBlocks);
             updateLogisticsBlocks();
+        }
+
+        // Date validation for Project
+        const startDateInput = document.getElementById('id_start_date');
+        const endDateInput = document.getElementById('id_estimated_end_date');
+        
+        if (startDateInput && endDateInput) {
+            // Set minimum start date to today
+            const today = new Date().toISOString().split('T')[0];
+            startDateInput.setAttribute('min', today);
+            
+            // Update end date minimum when start date changes
+            startDateInput.addEventListener('change', function() {
+                if (this.value) {
+                    endDateInput.setAttribute('min', this.value);
+                    // If end date is before start date, clear it
+                    if (endDateInput.value && endDateInput.value < this.value) {
+                        endDateInput.value = '';
+                    }
+                }
+            });
+            
+            // Validate on form submit
+            document.querySelector('form').addEventListener('submit', function(e) {
+                const startDate = new Date(startDateInput.value);
+                const endDate = new Date(endDateInput.value);
+                const todayDate = new Date(today);
+                
+                if (startDate < todayDate) {
+                    e.preventDefault();
+                    alert('Start date cannot be in the past.');
+                    startDateInput.focus();
+                    return false;
+                }
+                
+                if (endDate <= startDate) {
+                    e.preventDefault();
+                    alert('Estimated end date must be after the start date.');
+                    endDateInput.focus();
+                    return false;
+                }
+            });
         }
     });
 </script>
