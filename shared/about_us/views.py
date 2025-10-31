@@ -47,7 +47,7 @@ def edit_about_us(request):
 			about.edited_by = request.user
 			about.edited_at = timezone.now()
 			about.save()
-			return redirect('about_us_dispatcher')
+			return redirect('/about-us/?success=true&action=updated')
 	else:
 		form = AboutUsForm(instance=about)
 	return render(request, 'about_us/edit_about_us.html', {'about': about, 'form': form})

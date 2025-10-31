@@ -208,6 +208,32 @@
 
 <!-- Participants Tagging -->
 <script>
+    // Toast Notification Function
+    function showToast(message, title) {
+        const toast = document.createElement('div');
+        toast.id = 'successToast';
+        toast.style.cssText = 'display:block;position:fixed;top:20px;right:20px;background:#10b981;color:white;padding:1rem 1.5rem;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:10000;font-size:1rem;font-weight:500;min-width:300px;';
+        toast.innerHTML = `
+            <div style="display:flex;align-items:center;gap:0.75rem;">
+                <i class="fa-solid fa-check-circle" style="font-size:1.5rem;"></i>
+                <div>
+                    <div style="font-weight:600;margin-bottom:0.25rem;">${message}</div>
+                    ${title ? `<div style="font-size:0.875rem;opacity:0.9;">${title}</div>` : ''}
+                </div>
+            </div>
+        `;
+        document.body.appendChild(toast);
+
+        // Auto-hide after 4 seconds
+        setTimeout(function() {
+            toast.style.opacity = '0';
+            toast.style.transition = 'opacity 0.3s';
+            setTimeout(function() {
+                toast.remove();
+            }, 300);
+        }, 4000);
+    }
+
     // Edit modal logic (adapted from project_events.html)
     function openEditEventModal(eventObj) {
         document.getElementById('event-details-modal').style.display = 'none';
@@ -393,6 +419,10 @@
                 submitBtn.style.opacity = '1';
                 submitBtn.style.cursor = 'pointer';
                 formInputs.forEach(input => input.disabled = false);
+
+                // Show toast
+                const eventTitle = document.getElementById('edit_event_title').value;
+                showToast('Meeting Event Updated Successfully!', eventTitle);
 
                 // Refresh events list
                 fetch('/calendar/events/') // Fetch the updated list
@@ -705,9 +735,14 @@
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = originalBtnText;
                 submitBtn.style.opacity = '1';
+                submitBtn.style.opacity = '1';
                 submitBtn.style.cursor = 'pointer';
                 formInputs.forEach(input => input.disabled = false);
                 
+                // Show toast
+                const eventTitle = document.getElementById('add_event_title').value;
+                showToast('Meeting Event Created Successfully!', eventTitle);
+
                 // MODIFIED: Fetch from new events endpoint (This fixes the bug)
                 fetch('/calendar/events/')
                   .then(function(r) { return r.json(); })
@@ -968,6 +1003,10 @@
                 deleteBtn.style.cursor = 'pointer';
                 cancelBtn.disabled = false;
                 cancelBtn.style.opacity = '1';
+                
+                // Show toast
+                const eventTitle = document.getElementById('event-details-title').textContent;
+                showToast('Meeting Event Deleted Successfully!', eventTitle);
                 
                 // Hide modals
                 document.getElementById('delete-confirm-modal').style.display = 'none';
