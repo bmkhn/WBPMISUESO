@@ -299,6 +299,7 @@ class ProjectEvaluation(models.Model):
 	project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='evaluations')
 	evaluated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='project_evaluations')
 	created_at = models.DateField(auto_now_add=True)
+	edited_at = models.DateTimeField(null=True, blank=True)
 	comment = models.TextField()
 	rating = models.PositiveSmallIntegerField() 
 

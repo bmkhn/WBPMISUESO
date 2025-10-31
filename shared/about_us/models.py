@@ -6,14 +6,34 @@ from system.logs.models import LogEntry
 from django.urls import reverse
 
 class AboutUs(models.Model):
-	hero_text = models.TextField(blank=False, null=False, default="Hero Text")
-	vision_text = models.TextField(blank=False, null=False, default="Vision Text")
-	mission_text = models.TextField(blank=False, null=False, default="Mission Text")
-	thrust_text = models.TextField(blank=False, null=False, default="Thrust Text")
-	leadership_description = models.TextField(blank=False, null=False, default="Leadership Description")
-	director_name = models.CharField(max_length=255, blank=True, null=True, default="Director Name")
-	director_image = models.ImageField(upload_to='about_us/director/', blank=True, null=True, default=None)
-	org_chart_image = models.ImageField(upload_to='about_us/org_chart/', blank=True, null=True, default=None)
+	hero_text = models.TextField(
+		blank=False, 
+		null=False, 
+		default="Welcome to the University Extension Services Office (UESO). We are dedicated to fostering community engagement and extending the university's knowledge and resources to serve society."
+	)
+	vision_text = models.TextField(
+		blank=False, 
+		null=False, 
+		default="To be a leading center of excellence in university extension services, creating meaningful partnerships between the academe and the community for sustainable development."
+	)
+	mission_text = models.TextField(
+		blank=False, 
+		null=False, 
+		default="To deliver innovative extension programs and services that address community needs, promote social responsibility, and contribute to nation-building through collaborative partnerships and knowledge sharing."
+	)
+	thrust_text = models.TextField(
+		blank=False, 
+		null=False, 
+		default="Our strategic thrust focuses on community empowerment, sustainable development, technology transfer, and capacity building to create lasting positive impact in the communities we serve."
+	)
+	leadership_description = models.TextField(
+		blank=False, 
+		null=False, 
+		default="Our leadership team is committed to excellence in extension services, guided by principles of integrity, innovation, and inclusive development. We work collaboratively to ensure that university resources reach and benefit the wider community."
+	)
+	director_name = models.CharField(max_length=255, blank=True, null=True, default="Dr. Liezl F. Tangonan")
+	director_image = models.ImageField(upload_to='about_us/director/', blank=True, null=True, default='static/image.png')
+	org_chart_image = models.ImageField(upload_to='about_us/org_chart/', blank=True, null=True, default='static/UESO ORG CHART.png')
     
 	edited_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, blank=True, null=True, related_name='aboutus_edits')
 	edited_at = models.DateTimeField(auto_now=True)

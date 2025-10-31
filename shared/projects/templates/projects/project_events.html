@@ -71,6 +71,7 @@
                 </div>
             </div>
 
+            <!-- Edit Event Modal for this specific event -->
             {% if request.user.role in ADMIN_ROLES %}
             <div id="edit-event-modal-{{ event.id }}" class="event-modal modal" style="display:none;">
                 <div class="event-modal-content">
@@ -196,5 +197,8 @@
         }
     };
 </script>
+
+
+
 
 {% endblock %}

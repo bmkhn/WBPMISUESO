@@ -104,8 +104,13 @@ class AITeamGenerator:
         # Load model
         model = self._load_model()
         
-        # Fetch expert users
-        users = User.objects.filter(is_expert=True)
+        # Fetch expert users - must be is_expert=True, have at least 1 completed project,
+        # and have an eligible role (FACULTY, PROGRAM_HEAD, DEAN, COORDINATOR, DIRECTOR, VP)
+        eligible_roles = ['FACULTY', 'PROGRAM_HEAD', 'DEAN', 'COORDINATOR', 'DIRECTOR', 'VP']
+        users = User.objects.filter(
+            is_expert=True,
+            role__in=eligible_roles
+        )
         
         # Apply filters
         if campus_filter:
@@ -123,6 +128,11 @@ class AITeamGenerator:
             user_projects = Project.objects.filter(
                 Q(project_leader=user) | Q(providers=user)
             ).distinct()
+            
+            # Count completed projects - user must have at least 1
+            completed_projects = user_projects.filter(status='COMPLETED').count()
+            if completed_projects == 0:
+                continue  # Skip users without any completed projects
             
             # Count total projects and ongoing projects
             total_projects = user_projects.count()

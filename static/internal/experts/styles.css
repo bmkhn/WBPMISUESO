@@ -2,6 +2,10 @@ p, h1, h2, h3, h4, h5, h6, div {
     cursor: default;
 }
 
+.sidebar-tabs > a:hover {
+    text-decoration: none;
+}
+
 body {
     background: #f8f8f8;
     margin: 0;

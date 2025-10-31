@@ -865,7 +865,8 @@ def project_evaluations(request, pk):
                 comment=comment,
                 rating=int(rating)
             )
-        return redirect(request.path)
+        from urllib.parse import quote
+        return redirect(f'/projects/{pk}/evaluations/?success=true&action=added&title={quote(project.title)}')
     evaluations = project.evaluations.select_related('evaluated_by').order_by('-created_at')
     return render(request, 'projects/project_evaluations.html', {
         'project': project, 
@@ -875,6 +876,44 @@ def project_evaluations(request, pk):
         "SUPERUSER_ROLES": SUPERUSER_ROLES,
         "FACULTY_ROLE": FACULTY_ROLE
     })
+
+
+@role_required(allowed_roles=["UESO", "VP", "DIRECTOR", "PROGRAM_HEAD", "DEAN", "COORDINATOR", "FACULTY", "IMPLEMENTER"], require_confirmed=True)
+def edit_project_evaluation(request, pk, eval_id):
+    from urllib.parse import quote
+    project = get_object_or_404(Project, pk=pk)
+    evaluation = get_object_or_404(ProjectEvaluation, pk=eval_id, project=project)
+    
+    # Only the evaluator can edit their own evaluation
+    if evaluation.evaluated_by != request.user:
+        return redirect('project_evaluations', pk=pk)
+    
+    if request.method == 'POST':
+        rating = request.POST.get('rating')
+        comment = request.POST.get('comment', '')
+        if rating:
+            evaluation.rating = int(rating)
+            evaluation.comment = comment
+            evaluation.edited_at = timezone.now()
+            evaluation.save()
+        return redirect(f'/projects/{pk}/evaluations/?success=true&action=edited&title={quote(project.title)}')
+    
+    return redirect('project_evaluations', pk=pk)
+
+
+@role_required(allowed_roles=["UESO", "VP", "DIRECTOR", "PROGRAM_HEAD", "DEAN", "COORDINATOR", "FACULTY", "IMPLEMENTER"], require_confirmed=True)
+def delete_project_evaluation(request, pk, eval_id):
+    from urllib.parse import quote
+    project = get_object_or_404(Project, pk=pk)
+    evaluation = get_object_or_404(ProjectEvaluation, pk=eval_id, project=project)
+    
+    # Only the evaluator can delete their own evaluation
+    if evaluation.evaluated_by != request.user:
+        return redirect('project_evaluations', pk=pk)
+    
+    project_title = project.title
+    evaluation.delete()
+    return redirect(f'/projects/{pk}/evaluations/?success=true&action=deleted&title={quote(project_title)}')
 
 
 ########################################################################################################################
@@ -1092,6 +1131,11 @@ def admin_project(request):
     search = request.GET.get('search', '')
 
     projects = Project.objects.all()
+    
+    # Filter projects by college for COORDINATOR, DEAN, and PROGRAM_HEAD
+    user_role = getattr(request.user, 'role', None)
+    if user_role in ["COORDINATOR", "DEAN", "PROGRAM_HEAD"] and request.user.college:
+        projects = projects.filter(project_leader__college=request.user.college)
 
     # Apply filters
     if college:

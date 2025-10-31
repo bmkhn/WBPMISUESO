@@ -1,7 +1,7 @@
 from django.http import HttpResponseRedirect, HttpResponse, Http404
 from django.urls import reverse
 from .forms import DownloadableForm
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from system.users.decorators import role_required
 from django.core.paginator import Paginator
 from .models import Downloadable
@@ -286,7 +286,8 @@ def add_downloadable(request):
                 if submission_type in dict(downloadable.SUBMISSION_TYPE_CHOICES):
                     downloadable.submission_type = submission_type
                 downloadable.save()
-                return render(request, 'downloadables/add_downloadable.html', {'form': DownloadableForm(), 'success': True, 'submission_type_choices': submission_type_choices})
+                from urllib.parse import quote
+                return redirect(f'/downloadables/?success=true&action=created&name={quote(downloadable.name)}')
             except Exception as e:
                 error = str(e)
         else:
@@ -316,9 +317,11 @@ def downloadable_download(request, pk):
 def downloadable_delete(request, pk):
     try:
         downloadable = Downloadable.objects.get(pk=pk)
+        name = downloadable.name
         downloadable.file.delete(save=False)
         downloadable.delete()
-        return HttpResponseRedirect(reverse('downloadable_dispatcher'))
+        from urllib.parse import quote
+        return redirect(f'/downloadables/?success=true&action=deleted&name={quote(name)}')
     except Downloadable.DoesNotExist:
         raise Http404("Downloadable not found.")
 
@@ -328,9 +331,11 @@ def downloadable_delete(request, pk):
 def downloadable_archive(request, pk):
     try:
         downloadable = Downloadable.objects.get(pk=pk)
+        name = downloadable.name
         downloadable.status = 'archived'
         downloadable.save()
-        return HttpResponseRedirect(reverse('downloadable_dispatcher'))
+        from urllib.parse import quote
+        return redirect(f'/downloadables/?success=true&action=archived&name={quote(name)}')
     except Downloadable.DoesNotExist:
         raise Http404("Downloadable not found.")
 
@@ -340,9 +345,11 @@ def downloadable_archive(request, pk):
 def downloadable_unarchive(request, pk):
     try:
         downloadable = Downloadable.objects.get(pk=pk)
+        name = downloadable.name
         downloadable.status = 'published'
         downloadable.save()
-        return HttpResponseRedirect(reverse('downloadable_dispatcher'))
+        from urllib.parse import quote
+        return redirect(f'/downloadables/?success=true&action=unarchived&name={quote(name)}')
     except Downloadable.DoesNotExist:
         raise Http404("Downloadable not found.")
 
@@ -352,9 +359,11 @@ def downloadable_unarchive(request, pk):
 def downloadable_make_public(request, pk):
     try:
         downloadable = Downloadable.objects.get(pk=pk)
+        name = downloadable.name
         downloadable.available_for_non_users = True
         downloadable.save()
-        return HttpResponseRedirect(reverse('downloadable_dispatcher'))
+        from urllib.parse import quote
+        return redirect(f'/downloadables/?success=true&action=made_public&name={quote(name)}')
     except Downloadable.DoesNotExist:
         raise Http404("Downloadable not found.")
 
@@ -364,8 +373,10 @@ def downloadable_make_public(request, pk):
 def downloadable_make_private(request, pk):
     try:
         downloadable = Downloadable.objects.get(pk=pk)
+        name = downloadable.name
         downloadable.available_for_non_users = False
         downloadable.save()
-        return HttpResponseRedirect(reverse('downloadable_dispatcher'))
+        from urllib.parse import quote
+        return redirect(f'/downloadables/?success=true&action=made_private&name={quote(name)}')
     except Downloadable.DoesNotExist:
         raise Http404("Downloadable not found.")

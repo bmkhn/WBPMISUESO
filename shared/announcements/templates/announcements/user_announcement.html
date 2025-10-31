@@ -507,11 +507,7 @@
 			<div class="announce-card" style="cursor:pointer;" onclick="cardClick(event, '{{ announcement.id }}')">
 				<!-- No options for non-admin users -->
 				<div class="announce-thumb">
-					{% if announcement.cover_photo %}
-						<img src="{{ announcement.cover_photo.url }}" alt="Cover Photo" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" />
-					{% else %}
-						<img src="{% static 'announce.png' %}" alt="Default Announcement" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" />
-					{% endif %}
+					<img src="{{ announcement.get_cover_photo_url }}" alt="Cover Photo" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" />
 				</div>
 				<div class="announce-text-container">
 					<div class="announce-meta">

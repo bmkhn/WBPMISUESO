@@ -629,6 +629,11 @@ def add_user(request):
                     created_by=request.user,
                 )
                 user.set_password(data.get('password', ''))
+                
+                # Handle profile picture upload
+                if request.FILES.get('profile_picture'):
+                    user.profile_picture = request.FILES['profile_picture']
+                
                 user.save()
                 
                 # Log the user creation
@@ -763,6 +768,17 @@ def edit_user(request, id):
                     password_changed = True
                     changes.append('password')
 
+                # Handle profile picture upload
+                if request.FILES.get('profile_picture'):
+                    # Delete old profile picture if exists
+                    if user.profile_picture:
+                        try:
+                            user.profile_picture.delete(save=False)
+                        except:
+                            pass
+                    user.profile_picture = request.FILES['profile_picture']
+                    changes.append('profile picture')
+
                 user.save()
                 
                 # Log the user edit
@@ -778,14 +794,32 @@ def edit_user(request, id):
                     is_notification=True
                 )
                 
-                success = True
+                # Redirect back to referrer with success toast
+                from urllib.parse import quote
+                referrer = request.META.get('HTTP_REFERER', '')
+                user_full_name = quote(user.get_full_name())
+                
+                # Determine redirect URL based on referrer
+                if '/details/' in referrer:
+                    redirect_url = f'/users/details/{user.id}/?success=true&action=edited&title={user_full_name}'
+                elif '/profile/' in referrer:
+                    redirect_url = f'/profile/{user.id}/?success=true&action=edited&title={user_full_name}'
+                else:
+                    # Default to profile for self-edit, user_details for others
+                    if request.user.id == user.id:
+                        redirect_url = f'/profile/{user.id}/?success=true&action=edited&title={user_full_name}'
+                    else:
+                        redirect_url = f'/users/details/{user.id}/?success=true&action=edited&title={user_full_name}'
+                
+                return redirect(redirect_url)
+                
             except Exception as e:
                 error = str(e)
     
     return render(request, 'users/edit_user.html', {
         'user': user,
         'error': error,
-        'success': success,
+        'success': False,
         'email_changed': email_changed,
         'colleges': colleges,
         'campus_choices': campus_choices,
