@@ -1,4 +1,4 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_protect
@@ -16,10 +16,6 @@ def goal_view(request):
 
     
 
-
-# -----------------------------
-# JSON API for dynamic frontend
-# -----------------------------
 
 def _serialize_goal(goal: Goal) -> dict:
     """Return a JSON-serializable dict for the Goal expected by the frontend.
@@ -198,8 +194,8 @@ def api_goal_qualifiers(request, goal_id: int):
 @require_http_methods(["GET"])
 def api_goal_filters(request):
     """Return distinct filter values present in the database for agendas, sdgs and project status."""
-    # Agendas that are actually used by at least one project
-    agendas_qs = Agenda.objects.filter(projects__isnull=False).distinct().values("id", "name")
+    # Include all agendas so newly added ones appear immediately (newest first)
+    agendas_qs = Agenda.objects.all().order_by('-created_at', '-id').values("id", "name")
 
     # SDGs that are linked to at least one project
     sdgs_qs = SustainableDevelopmentGoal.objects.filter(projects__isnull=False).distinct().values("id", "goal_number", "name")
@@ -221,4 +217,137 @@ def api_goal_filters(request):
         "agendas": list(agendas_qs),
         "sdgs": list(sdgs_qs),
         "statuses": statuses,
+    })
+
+
+# ===== Server-rendered Add/Edit pages (separate HTML like Agenda) =====
+@role_required(allowed_roles=["DIRECTOR", "VP", "UESO"])
+def add_goal_view(request):
+    agendas = Agenda.objects.all().order_by('-created_at', '-id')
+    sdgs = SustainableDevelopmentGoal.objects.all().order_by('goal_number')
+    status_display_map = dict(Project.STATUS_CHOICES)
+    statuses = [{"code": code, "label": status_display_map.get(code, code)} for code, _ in Project.STATUS_CHOICES]
+
+    if request.method == 'POST':
+        title = (request.POST.get('title') or '').strip()
+        goal_number = request.POST.get('goal_number') or '0'
+        deadline = request.POST.get('deadline') or ''
+        agenda_id = request.POST.get('agenda') or ''
+        sdg_id = request.POST.get('sdg') or ''
+        project_status = request.POST.get('project_status') or ''
+
+        errors = {}
+        if not title:
+            errors['title'] = 'Title is required.'
+        try:
+            goal_number_int = int(goal_number)
+            if goal_number_int <= 0:
+                errors['goal_number'] = 'Enter a positive number.'
+        except Exception:
+            errors['goal_number'] = 'Enter a valid number.'
+        if not deadline:
+            errors['deadline'] = 'Deadline is required.'
+
+        if not errors:
+            from django.utils.dateparse import parse_date
+            g = Goal(
+                title=title,
+                target_value=goal_number_int,
+                current_value=0,
+                unit='items',
+                status='ACTIVE',
+                created_by=request.user,
+                target_date=parse_date(deadline),
+            )
+            if agenda_id.isdigit():
+                g.agenda_id = int(agenda_id)
+            if sdg_id.isdigit():
+                g.sdg_id = int(sdg_id)
+            if project_status and project_status != 'all':
+                g.project_status = project_status
+            g.save()
+            return redirect('goal')
+
+        return render(request, 'goals/add_goal.html', {
+            'agendas': agendas,
+            'sdgs': sdgs,
+            'statuses': statuses,
+            'errors': errors,
+            'form': {
+                'title': title,
+                'goal_number': goal_number,
+                'deadline': deadline,
+                'agenda': agenda_id,
+                'sdg': sdg_id,
+                'project_status': project_status,
+            },
+        })
+
+    return render(request, 'goals/add_goal.html', {
+        'agendas': agendas,
+        'sdgs': sdgs,
+        'statuses': statuses,
+    })
+
+
+@role_required(allowed_roles=["DIRECTOR", "VP", "UESO"])
+def edit_goal_view(request, goal_id: int):
+    goal = get_object_or_404(Goal, id=goal_id)
+    agendas = Agenda.objects.all().order_by('-created_at', '-id')
+    sdgs = SustainableDevelopmentGoal.objects.all().order_by('goal_number')
+    status_display_map = dict(Project.STATUS_CHOICES)
+    statuses = [{"code": code, "label": status_display_map.get(code, code)} for code, _ in Project.STATUS_CHOICES]
+
+    if request.method == 'POST':
+        title = (request.POST.get('title') or '').strip()
+        goal_number = request.POST.get('goal_number') or '0'
+        deadline = request.POST.get('deadline') or ''
+        agenda_id = request.POST.get('agenda') or ''
+        sdg_id = request.POST.get('sdg') or ''
+        project_status = request.POST.get('project_status') or ''
+
+        errors = {}
+        if not title:
+            errors['title'] = 'Title is required.'
+        try:
+            goal_number_int = int(goal_number)
+            if goal_number_int <= 0:
+                errors['goal_number'] = 'Enter a positive number.'
+        except Exception:
+            errors['goal_number'] = 'Enter a valid number.'
+        if not deadline:
+            errors['deadline'] = 'Deadline is required.'
+
+        if not errors:
+            from django.utils.dateparse import parse_date
+            goal.title = title
+            goal.target_value = goal_number_int
+            goal.target_date = parse_date(deadline)
+            goal.agenda_id = int(agenda_id) if agenda_id.isdigit() else None
+            goal.sdg_id = int(sdg_id) if sdg_id.isdigit() else None
+            goal.project_status = None if not project_status or project_status == 'all' else project_status
+            goal.save()
+            return redirect('goal')
+
+        return render(request, 'goals/edit_goal.html', {
+            'goal': goal,
+            'agendas': agendas,
+            'sdgs': sdgs,
+            'statuses': statuses,
+            'errors': errors,
+            'form': {
+                'title': title,
+                'goal_number': goal_number,
+                'deadline': deadline,
+                'agenda': agenda_id,
+                'sdg': sdg_id,
+                'project_status': project_status,
+            },
+        })
+
+    return render(request, 'goals/edit_goal.html', {
+        'goal': goal,
+        'agendas': agendas,
+        'sdgs': sdgs,
+        'statuses': statuses,
     })
