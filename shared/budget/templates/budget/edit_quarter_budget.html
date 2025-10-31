@@ -1,0 +1,105 @@
+{% extends base_template %}
+
+{% block content %}
+<style>
+    .budget-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 24px; }
+    .budget-modal { width: 100%; max-width: 560px; background: #ffffff; border-radius: 16px; box-shadow: 0 12px 40px rgba(0,0,0,0.25); overflow: hidden; font-family: 'Inter', sans-serif; border: 1px solid #E5E7EB; }
+    .budget-modal-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 22px; background: #00681a; color: #fff; }
+    .budget-modal-title { margin: 0; font-size: 18px; font-weight: 700; }
+    .budget-modal-close { background: transparent; border: none; color: #fff; font-size: 20px; cursor: pointer; line-height: 1; }
+    .budget-modal-body { padding: 20px 22px 8px 22px; color: #444; }
+    .budget-modal-desc { margin: 0 0 14px 0; color: #666; font-size: 14px; }
+    .form-group { margin-bottom: 14px; }
+    .form-label { display: block; font-size: 13px; color: #333; margin-bottom: 6px; font-weight: 600; }
+    .form-control { width: 100%; padding: 10px 12px; border: 1px solid #D1D5DB; border-radius: 10px; font-size: 14px; background: #fff; }
+    .form-control[readonly] { background: #f7f7f7; color: #555; }
+    .budget-modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 16px 22px 22px 22px; }
+    .btn-primary { background: #00681a; color: #fff; border: none; padding: 10px 16px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: background 0.2s ease; }
+    .btn-primary:hover { background: #005516; }
+    .btn-secondary { background: #f8f8f8; color: #444; border: 1px solid #D1D5DB; padding: 10px 16px; border-radius: 10px; font-weight: 600; cursor: pointer; text-decoration: none; transition: all 0.2s ease; }
+    .btn-secondary:hover { background: #ff9900; color: #fff; border-color: #ff9900; }
+    .peso-prefix { display: flex; align-items: center; gap: 8px; }
+    .peso-prefix span { background: #efefef; border: 1px solid #D1D5DB; border-radius: 10px; padding: 10px 12px; color: #333; font-weight: 600; }
+    .peso-prefix .form-control { flex: 1; }
+    .helper-text { font-size: 12px; color: #777; margin-top: 6px; }
+    .text-right { text-align: right; }
+</style>
+
+<div class="budget-modal-backdrop" id="editQuarterBudgetModal">
+    <div class="budget-modal" role="dialog" aria-modal="true" aria-labelledby="editModalTitle">
+        <div class="budget-modal-header">
+            <h3 class="budget-modal-title" id="editModalTitle">Edit Current Quarter Budget</h3>
+            <button type="button" class="budget-modal-close" aria-label="Close" onclick="handleCancel()">×</button>
+        </div>
+        <div class="budget-modal-body">
+            <p class="budget-modal-desc">Update the remaining budget for the current quarter. The system will recalculate the quarter's total budget as Allocated + Remaining.</p>
+            <form method="post" id="editQuarterBudgetForm" action="{% url 'edit_quarter_budget' %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label class="form-label">Fiscal Year</label>
+                    {{ form.fiscal_year }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Quarter</label>
+                    {{ form.quarter }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">New Total Remaining (₱)</label>
+                    <div class="peso-prefix">
+                        <span>₱</span>
+                        {{ form.total_remaining }}
+                    </div>
+                    <div class="helper-text">Set the desired remaining amount for this quarter.</div>
+                </div>
+                <div class="budget-modal-footer">
+                    <button type="button" class="btn-secondary" onclick="handleCancel()">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script>
+        function handleCancel(){ window.location.href = "{% url 'budget_edit_dashboard' %}"; }
+        (function(){
+            const form = document.getElementById('editQuarterBudgetForm');
+            if(form){
+                const input = form.querySelector('input[name=total_remaining]');
+                if(input){
+                    input.classList.add('text-right');
+                    // Format existing value on load
+                    if(input.value){
+                        const rawOnLoad = (''+input.value).replace(/,/g, '');
+                        const numOnLoad = Number(rawOnLoad);
+                        if(!isNaN(numOnLoad)){
+                            input.value = numOnLoad.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                        }
+                    }
+                    input.addEventListener('input', () => {
+                        const cursor = typeof input.selectionStart === 'number' ? input.selectionStart : null;
+                        const raw = input.value.replace(/,/g, '').replace(/[^0-9.]/g, '');
+                        const parts = raw.split('.');
+                        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                        input.value = parts.join('.');
+                        if(cursor !== null){
+                            try { input.setSelectionRange(cursor, cursor); } catch(e){}
+                        }
+                    });
+                    input.addEventListener('blur', () => {
+                        const raw = input.value.replace(/,/g, '');
+                        const num = Number(raw);
+                        if(!isNaN(num)){
+                            input.value = num.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                        }
+                    });
+                }
+                form.addEventListener('submit', () => {
+                    const inp = form.querySelector('input[name=total_remaining]');
+                    if(inp){ inp.value = inp.value.replace(/,/g, ''); }
+                });
+            }
+        })();
+    </script>
+</div>
+{% endblock %}
+
+

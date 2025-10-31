@@ -3,6 +3,7 @@ from .models import BudgetAllocation, BudgetCategory, ExternalFunding
 from system.users.models import College
 from shared.projects.models import Project
 from django.utils import timezone
+from decimal import Decimal, InvalidOperation
 
 class BudgetAllocationEditForm(forms.ModelForm):
     """Form for editing budget allocations"""
@@ -162,3 +163,56 @@ class DynamicBudgetAllocationForm(forms.Form):
         
         self.fields['quarter'].initial = current_quarter
         self.fields['fiscal_year'].initial = current_year
+
+
+class AnnualBudgetForm(forms.Form):
+    fiscal_year = forms.CharField(
+        initial=lambda: str(timezone.now().year),
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'readonly': True
+        })
+    )
+    annual_total = forms.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        min_value=0.01,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter annual total budget'
+        })
+    )
+    def clean_annual_total(self):
+        value = self.cleaned_data.get('annual_total')
+        if isinstance(value, str):
+            value = value.replace(',', '')
+        try:
+            return Decimal(str(value))
+        except (InvalidOperation, ValueError, TypeError):
+            raise forms.ValidationError('Enter a valid amount')
+
+
+class EditQuarterBudgetForm(forms.Form):
+    fiscal_year = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'form-control', 'readonly': True})
+    )
+    quarter = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'form-control', 'readonly': True})
+    )
+    total_remaining = forms.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        min_value=0,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter new remaining for this quarter'
+        })
+    )
+    def clean_total_remaining(self):
+        value = self.cleaned_data.get('total_remaining')
+        if isinstance(value, str):
+            value = value.replace(',', '')
+        try:
+            return Decimal(str(value))
+        except (InvalidOperation, ValueError, TypeError):
+            raise forms.ValidationError('Enter a valid amount')

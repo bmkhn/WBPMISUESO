@@ -645,20 +645,6 @@
         <section>
             <div class="files-header">
                 <h3>Detailed View</h3>
-                <div style="display: flex; flex-shrink: 3;">
-                    <svg width="20" height="20" style="fill: currentColor; margin-top: 1.15rem;">
-                        <use href="#ascdesc"/>
-                    </svg>
-                    <div class="dropdown2">
-                        <button class="dropdown-btn2">Highest Total ▾</button>
-                        <div class="dropdown-menu2 hidden">
-                            <div class="dropdown-item2">Highest Total</div>
-                            <div class="dropdown-item2">Lowest Total</div>
-                            <div class="dropdown-item2">College Name</div>
-                            <div class="dropdown-item2">Campus</div>
-                        </div> 
-                    </div>
-                </div> 
             </div>
             <div class="table-container">
                 <table> 
@@ -710,30 +696,13 @@
                 </table>
             </div>
             
-            <!-- Pagination Controls for Detailed View -->
-            {% if detailed_page_obj and detailed_page_obj.paginator.num_pages > 1 %}
-            <div class="pagination-container" style="display: flex; justify-content: center; align-items: center; margin: 20px 0; gap: 8px;">
-                {% if detailed_page_obj.has_previous %}
-                    <a href="?detailed_page={{ detailed_page_obj.previous_page_number }}" class="pagination-btn">← Previous</a>
-                {% else %}
-                    <span class="pagination-btn disabled">← Previous</span>
-                {% endif %}
-
-                {% for num in detailed_page_obj.paginator.page_range %}
-                    {% if num == detailed_page_obj.number %}
-                        <span class="pagination-btn active">{{ num }}</span>
-                    {% else %}
-                        <a href="?detailed_page={{ num }}" class="pagination-btn">{{ num }}</a>
-                    {% endif %}
-                {% endfor %}
-
-                {% if detailed_page_obj.has_next %}
-                    <a href="?detailed_page={{ detailed_page_obj.next_page_number }}" class="pagination-btn">Next →</a>
-                {% else %}
-                    <span class="pagination-btn disabled">Next →</span>
-                {% endif %}
+            
+            <!-- See More Button for Detailed View -->
+            <div style="text-align: right; margin-top: 1rem; padding: 0 1.5rem 1.25rem;">
+                <a href="/budget/detailed/" style="color: #00681a; text-decoration: underline; font-weight: 600;">
+                    See More →
+                </a>
             </div>
-            {% endif %}
         </section> 
         <section>
             <div class="files-header">
@@ -808,7 +777,7 @@
             
             <!-- See More Button for External Fundings -->
             <div style="text-align: right; margin-top: 1rem;">
-                <a href="{% url 'budget_sponsors' %}" style="color: #063A1C; text-decoration: underline;">
+                <a href="{% url 'budget_sponsors' %}" style="color: #00681a; text-decoration: underline; font-weight: 600;">
                     See More →
                 </a>
             </div>
@@ -908,7 +877,7 @@
             
             <!-- See More Button for History -->
             <div style="text-align: right; margin-top: 1rem;">
-                <a href="{% url 'budget_history' %}" style="color: #063A1C; text-decoration: underline;">
+                <a href="{% url 'budget_history' %}" style="color: #00681a; text-decoration: underline; font-weight: 600;">
                     See More →
                 </a>
             </div>
@@ -1048,17 +1017,11 @@
                     // Populate legend
                     populateLegend(chartData);
 
-                    // Center text percentage (exclude unassigned)
+                    // Center text: remaining percentage
                     try {
-                        const total = chartData.data.reduce((a,b)=>a+b,0);
-                        let uIdx = -1;
-                        if (chartData.labels) {
-                            uIdx = chartData.labels.findIndex(l => String(l).toLowerCase().includes('unassigned'));
-                        }
-                        const unassigned = uIdx >= 0 ? (chartData.data[uIdx]||0) : 0;
-                        const percent = Math.round(((total - unassigned) / (total || 1)) * 100);
                         const center = document.getElementById('donutCenterVP');
-                        if (center) center.textContent = percent + '%';
+                        const remainingPct = Number('{{ remaining_percentage|default:"0" }}');
+                        if (center) center.textContent = remainingPct + '%';
                     } catch(e) { console.warn('Center text calc failed', e); }
                 } catch (error) {
                     console.error('Error creating donut chart:', error);
