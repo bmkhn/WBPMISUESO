@@ -362,7 +362,11 @@ def add_announcement_view(request):
                 announcement.scheduled_at = None
             announcement.published_by = request.user
             announcement.save()
-            return render(request, 'announcements/add_announcement.html', {'form': AnnouncementForm(), 'success': True})
+            
+            # Redirect with toast parameters
+            from urllib.parse import quote
+            title = quote(announcement.title)
+            return redirect(f"{reverse('announcement_dispatcher')}?success=true&action=added&title={title}")
     else:
         form = AnnouncementForm()
     return render(request, 'announcements/add_announcement.html', {"form": form})
@@ -398,7 +402,11 @@ def edit_announcement_view(request, id):
                 edited.scheduled_by = request.user
 
             edited.save()
-            return render(request, 'announcements/edit_announcement.html', {'form': form, 'success': True, 'posted': True})
+            
+            # Redirect with toast parameters
+            from urllib.parse import quote
+            title = quote(edited.title)
+            return redirect(f"{reverse('announcement_dispatcher')}?success=true&action=edited&title={title}")
     else:
         form = AnnouncementForm(instance=announcement)
     return render(request, 'announcements/edit_announcement.html', {"form": form, "announcement": announcement})
@@ -409,17 +417,27 @@ def edit_announcement_view(request, id):
 def delete_announcement_view(request, id):
     from .models import Announcement
     announcement = get_object_or_404(Announcement, id=id)
+    title = announcement.title
     announcement.delete()
-    return HttpResponseRedirect(reverse('announcement_dispatcher'))
+    
+    # Redirect with toast parameters
+    from urllib.parse import quote
+    title_encoded = quote(title)
+    return redirect(f"{reverse('announcement_dispatcher')}?success=true&action=deleted&title={title_encoded}")
 
 # Archive Announcement View
 @role_required(allowed_roles=["VP", "DIRECTOR", "UESO"])
 def archive_announcement_view(request, id):
     announcement = get_object_or_404(Announcement, id=id)
     if request.method == 'POST' or request.method == 'GET':
+        title = announcement.title
         announcement.archived = True
         announcement.save()
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+        
+        # Redirect with toast parameters
+        from urllib.parse import quote
+        title_encoded = quote(title)
+        return redirect(f"{reverse('announcement_dispatcher')}?success=true&action=archived&title={title_encoded}")
     return redirect('announcement_dispatcher')
 
 
@@ -428,7 +446,12 @@ def archive_announcement_view(request, id):
 def unarchive_announcement_view(request, id):
     announcement = get_object_or_404(Announcement, id=id)
     if request.method == 'POST' or request.method == 'GET':
+        title = announcement.title
         announcement.archived = False
         announcement.save()
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+        
+        # Redirect with toast parameters
+        from urllib.parse import quote
+        title_encoded = quote(title)
+        return redirect(f"{reverse('announcement_dispatcher')}?success=true&action=unarchived&title={title_encoded}")
     return redirect('announcement_dispatcher')

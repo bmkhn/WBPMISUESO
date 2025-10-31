@@ -36,13 +36,13 @@ class Submission(models.Model):
 
 	# Status/Review
 	SUBMISSION_STATUS_CHOICES = [
-		('PENDING', 'Pending'),                 		# Awaiting faculty submission
-		('SUBMITTED', 'Submitted'),             		# Faculty submitted, awaiting coordinator review
-		('REVISION_REQUESTED', 'Revision Requested'),   # Coordinator requested revision
-		('FORWARDED', 'Forwarded to UESO'),     		# Coordinator forwarded to UESO/Director/VP
-		('APPROVED', 'Approved'),               		# UESO/Director/VP approved
-		('REJECTED', 'Rejected'),               		# UESO/Director/VP rejected
-		('OVERDUE', 'Overdue'),                 		# Missed deadline
+		('PENDING', 'Pending'),                 				# Awaiting faculty submission
+		('SUBMITTED', 'Submitted to College Coordinator'),      # Faculty submitted, awaiting coordinator review
+		('REVISION_REQUESTED', 'Revision Requested'),   		# Coordinator requested revision
+		('FORWARDED', 'Forwarded to UESO'),     				# Coordinator forwarded to UESO/Director/VP
+		('APPROVED', 'Approved'),               				# UESO/Director/VP approved
+		('REJECTED', 'Rejected'),               				# UESO/Director/VP rejected
+		('OVERDUE', 'Overdue'),                 				# Missed deadline
 	]
 
 	status = models.CharField(max_length=32, choices=SUBMISSION_STATUS_CHOICES, default='PENDING')

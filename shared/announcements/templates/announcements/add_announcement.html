@@ -18,10 +18,6 @@
             <p>Input all fields correctly and give new announcement.</p>
         </div>
 
-		{% if success %}
-            <div class="success-message">Announcement added successfully!</div>
-        {% endif %}
-
 		<form class="announcement-form" method="post" enctype="multipart/form-data">
 			{% csrf_token %}
 
@@ -39,15 +35,6 @@
 					<label class="user-details-label" for="id_body">Body:</label>
 					<textarea class="user-details-value" name="body" id="id_body">{{ form.body.value|default:'' }}</textarea>
 				</div>
-
-
-
-
-
-
-
-
-
 
 			<div class="form-group">
 				<label class="user-details-label" for="id_cover_photo">Attach Cover Photo:</label>

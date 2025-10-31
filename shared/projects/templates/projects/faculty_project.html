@@ -16,10 +16,8 @@
 
 <main>
 	<div class="widgets">
-		<div class="widgets-header">
-			<h2>My Alerts</h2>
-		</div>
-		<div class="my-alerts-list">
+		<div class="alerts-title">My Alerts</div>
+		<div class="alerts-list">
 			{% if my_alerts %}
 				{% for alert in my_alerts %}
 				<div class="alert-item" onclick="window.location.href='{% if alert.submission_id %}{% url 'project_submissions_details' alert.project_id alert.submission_id %}{% else %}{% url 'project_profile' alert.project_id %}{% endif %}'">
@@ -83,17 +81,14 @@
 	</style>
 
 	<div class="list">
-		<div class="files-header">
-			<h2>Project Overview</h2>
-		</div>
 
 		<!-- Search Bar -->
 		<div class="search-container">
 			<form class="search-bar" method="get" action="">
-				<svg width="20" height="20"> <use href="#icon-search"></use> </svg>
+				<svg width="16" height="16"> <use href="#icon-search"></use> </svg>
 				<input type="text" name="search" placeholder="Search Project Title" value="{{ search|default:'' }}"/>
 				<button type="button" id="filterBtn" style="background:none;border:none;padding:0;margin-right:5px;cursor:pointer;">
-					<svg width="20" height="20"> <use href="#icon-filter"></use> </svg>
+					<svg width="16" height="16"> <use href="#icon-filter"></use> </svg>
 				</button>
 				
 				<div id="filterDropdown" class="filter-dropdown" style="top:350px;">
@@ -148,7 +143,13 @@
 				</div>
 			</div>
 		</form>
-	</div>        <table class="table">
+	</div>     
+	
+	<div class="files-header">
+		<h2>Project Overview</h2>
+	</div>
+	   
+	<table class="table">
             <thead>
                 <tr>
                     <th>Title</th>
@@ -203,7 +204,6 @@
 				<button class="pagination-button" disabled>Last</button>
 			{% endif %}
 
-			<span class="page-info">Page {{ page_obj.number }} of {{ paginator.num_pages }}</span>
 		</div>
 	</div>
 </main>

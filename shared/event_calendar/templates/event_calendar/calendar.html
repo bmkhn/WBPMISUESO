@@ -68,51 +68,53 @@
 
 <!-- Add Event Modal -->
 <div id="add-event-modal" class="event-modal" style="display:none;align-items:center;justify-content:center;">
-    <div class="event-modal-content">
+    <div class="event-modal-content" style="display:flex;flex-direction:column;max-height:90vh;">
         <span class="close" id="close-add-event-modal">&times;</span>
         <h2 id="add-event-modal-title">Add Meeting</h2>
-        <form id="add-event-form" method="post" enctype="multipart/form-data" action="/calendar/events/">
+        <form id="add-event-form" method="post" enctype="multipart/form-data" action="/calendar/events/" style="display:flex;flex-direction:column;height:100%;overflow:hidden;">
             {% csrf_token %}
-            <div class="form-group">
-                <label class="user-details-label">Title <span class="required">*</span></label>
-                <input class="user-details-value" type="text" name="title" id="add_event_title" required style="flex:1;">
-            </div>
-            <div class="form-group">
-                <label class="user-details-label">Description <span class="required">*</span></label>
-                <textarea class="user-details-value" name="description" id="add_event_description" rows="2" required></textarea>
-            </div>
-            <div class="one">
-                <div class="two">
-                    <label class="user-details-label">Date <span class="required">*</span></label>
-                    <input class="user-details-value" type="date" name="date" id="add_event_date" required style="flex:1; color: #888; pointer-events: none;" readonly tabindex="-1">
+            <div style="flex:1;overflow-y:auto;padding-right:8px;">
+                <div class="form-group">
+                    <label class="user-details-label">Title <span class="required">*</span></label>
+                    <input class="user-details-value" type="text" name="title" id="add_event_title" required style="flex:1;">
                 </div>
-                <div class="two">
-                    <label class="user-details-label">Time <span class="required">*</span></label>
-                <input class="user-details-value" type="time" name="time" id="add_event_time" required style="flex:1;">
+                <div class="form-group">
+                    <label class="user-details-label">Description <span class="required">*</span></label>
+                    <textarea class="user-details-value" name="description" id="add_event_description" rows="2" required></textarea>
                 </div>
-            </div>
-            <div class="form-group">
-                <label class="user-details-label">Location <span class="required">*</span></label>
-                <input class="user-details-value" type="text" name="location" id="add_event_location" required style="flex:1;">
-            </div>
-            <div class="form-group" style="flex-direction: column; gap:0.5rem;">
-                <label class="user-details-label">Add to Other's Calendar</label>
-                <div id="participants-tag-row" class="tag-row"></div>
-                <select id="participants-options-template" style="display:none;" multiple>
-                    <option value="">Select Participant</option>
-                    {% for user in users %}
-                        <option value="{{ user.id }}">{{ user.get_full_name|default:user.username }}</option>
-                    {% endfor %}
-                </select>
-            </div>
+                <div class="one">
+                    <div class="two">
+                        <label class="user-details-label">Date <span class="required">*</span></label>
+                        <input class="user-details-value" type="date" name="date" id="add_event_date" required style="flex:1; color: #888; pointer-events: none;" readonly tabindex="-1">
+                    </div>
+                    <div class="two">
+                        <label class="user-details-label">Time <span class="required">*</span></label>
+                    <input class="user-details-value" type="time" name="time" id="add_event_time" required style="flex:1;">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="user-details-label">Location <span class="required">*</span></label>
+                    <input class="user-details-value" type="text" name="location" id="add_event_location" required style="flex:1;">
+                </div>
+                <div class="form-group" style="flex-direction: column; gap:0.5rem;">
+                    <label class="user-details-label">Add to Other's Calendar</label>
+                    <div id="participants-tag-row" class="tag-row"></div>
+                    <select id="participants-options-template" style="display:none;" multiple>
+                        <option value="">Select Participant</option>
+                        {% for user in users %}
+                            <option value="{{ user.id }}">{{ user.get_full_name|default:user.username }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
 
-            <div class="form-group">
-                <label class="user-details-label">Notes (Optional)</label>
-                <textarea class="user-details-value" name="notes" id="add_event_notes" rows="2"></textarea>
+                <div class="form-group">
+                    <label class="user-details-label">Notes (Optional)</label>
+                    <textarea class="user-details-value" name="notes" id="add_event_notes" rows="2"></textarea>
+                </div>
             </div>
-            <div class="form-actions" style="justify-content:flex-end;">
+            <div class="form-actions" style="justify-content:flex-end;position:sticky;bottom:0;background:white;padding-top:16px;margin-top:16px;border-top:1px solid #e5e7eb;">
                 <button type="button" class="back" id="cancel-add-event-modal">Cancel</button>
-                <button type="submit" class="save">Add Event</button>
+                <button type="submit" class="save">Add Meeting</button>
             </div>
         </form>
     </div>
@@ -120,50 +122,52 @@
 
 <!-- Edit Event Modal -->
 <div id="edit-event-modal" class="event-modal" style="display:none;align-items:center;justify-content:center;">
-    <div class="event-modal-content">
+    <div class="event-modal-content" style="display:flex;flex-direction:column;max-height:90vh;">
         <span class="close" id="close-edit-event-modal">&times;</span>
         <h2 id="edit-event-modal-title">Edit Event</h2>
-        <form id="edit-event-form" method="post" enctype="multipart/form-data" action="/calendar/edit_event/">
+        <form id="edit-event-form" method="post" enctype="multipart/form-data" action="/calendar/edit_event/" style="display:flex;flex-direction:column;height:100%;overflow:hidden;">
             {% csrf_token %}
             <input type="hidden" name="event_id" id="edit_event_id">
-            <div class="form-group">
-                <label class="form-label user-details-label">Title <span class="required">*</span></label>
-                <input class="user-details-value" type="text" name="title" id="edit_event_title" required style="flex:1;">
-            </div>
-            <div class="form-group">
-                <label class="form-label user-details-label">Description <span class="required">*</span></label>
-                <textarea class="user-details-value" name="description" id="edit_event_description" rows="2" required></textarea>
-            </div>
-            <div class="one">
-                <div class="two">
-                    <label class="user-details-label">Date <span class="required">*</span></label>
-                    <input class="user-details-value" type="date" name="date" id="edit_event_date" required style="flex:1; color: #888;">
+            <div style="flex:1;overflow-y:auto;padding-right:8px;">
+                <div class="form-group">
+                    <label class="form-label user-details-label">Title <span class="required">*</span></label>
+                    <input class="user-details-value" type="text" name="title" id="edit_event_title" required style="flex:1;">
                 </div>
-                <div class="two">
-                    <label class="user-details-label">Time <span class="required">*</span></label>
-                <input class="user-details-value" type="time" name="time" id="edit_event_time" required style="flex:1;">
+                <div class="form-group">
+                    <label class="form-label user-details-label">Description <span class="required">*</span></label>
+                    <textarea class="user-details-value" name="description" id="edit_event_description" rows="2" required></textarea>
+                </div>
+                <div class="one">
+                    <div class="two">
+                        <label class="user-details-label">Date <span class="required">*</span></label>
+                        <input class="user-details-value" type="date" name="date" id="edit_event_date" required style="flex:1; color: #888;">
+                    </div>
+                    <div class="two">
+                        <label class="user-details-label">Time <span class="required">*</span></label>
+                    <input class="user-details-value" type="time" name="time" id="edit_event_time" required style="flex:1;">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label user-details-label">Location <span class="required">*</span></label>
+                    <input class="user-details-value" type="text" name="location" id="edit_event_location" required style="flex:1;">
+                </div>
+                <div class="form-group" style="flex-direction: column; gap:0.5rem;">
+                    <label class="form-label user-details-label">Participants</label>
+                    <div id="edit-participants-tag-row" class="tag-row"></div>
+                    <select id="edit-participants-options-template" style="display:none;" multiple>
+                        <option value="">Select Participant</option>
+                        {% for user in users %}
+                            <option value="{{ user.id }}">{{ user.get_full_name|default:user.username }}</option>
+                        {% endfor %}
+                    </select>
+                    <script id="participants-data" type="application/json"></script>
+                </div>
+                <div class="form-group">
+                    <label class="form-label user-details-label">Notes (Optional)</label>
+                    <textarea class="user-details-value" name="notes" id="edit_event_notes" rows="2"></textarea>
                 </div>
             </div>
-            <div class="form-group">
-                <label class="form-label user-details-label">Location <span class="required">*</span></label>
-                <input class="user-details-value" type="text" name="location" id="edit_event_location" required style="flex:1;">
-            </div>
-            <div class="form-group" style="flex-direction: column; gap:0.5rem;">
-                <label class="form-label user-details-label">Participants</label>
-                <div id="edit-participants-tag-row" class="tag-row"></div>
-                <select id="edit-participants-options-template" style="display:none;" multiple>
-                    <option value="">Select Participant</option>
-                    {% for user in users %}
-                        <option value="{{ user.id }}">{{ user.get_full_name|default:user.username }}</option>
-                    {% endfor %}
-                </select>
-                <script id="participants-data" type="application/json"></script>
-            </div>
-            <div class="form-group">
-                <label class="form-label user-details-label">Notes (Optional)</label>
-                <textarea class="user-details-value" name="notes" id="edit_event_notes" rows="2"></textarea>
-            </div>
-            <div class="form-actions" style="justify-content:flex-end;">
+            <div class="form-actions" style="justify-content:flex-end;position:sticky;bottom:0;background:white;padding-top:16px;margin-top:16px;border-top:1px solid #e5e7eb;">
                 <button type="button" class="back" id="cancel-edit-event-modal">Cancel</button>
                 <button type="submit" class="save">Save Changes</button>
             </div>
@@ -204,6 +208,32 @@
 
 <!-- Participants Tagging -->
 <script>
+    // Toast Notification Function
+    function showToast(message, title) {
+        const toast = document.createElement('div');
+        toast.id = 'successToast';
+        toast.style.cssText = 'display:block;position:fixed;top:20px;right:20px;background:#10b981;color:white;padding:1rem 1.5rem;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:10000;font-size:1rem;font-weight:500;min-width:300px;';
+        toast.innerHTML = `
+            <div style="display:flex;align-items:center;gap:0.75rem;">
+                <i class="fa-solid fa-check-circle" style="font-size:1.5rem;"></i>
+                <div>
+                    <div style="font-weight:600;margin-bottom:0.25rem;">${message}</div>
+                    ${title ? `<div style="font-size:0.875rem;opacity:0.9;">${title}</div>` : ''}
+                </div>
+            </div>
+        `;
+        document.body.appendChild(toast);
+
+        // Auto-hide after 4 seconds
+        setTimeout(function() {
+            toast.style.opacity = '0';
+            toast.style.transition = 'opacity 0.3s';
+            setTimeout(function() {
+                toast.remove();
+            }, 300);
+        }, 4000);
+    }
+
     // Edit modal logic (adapted from project_events.html)
     function openEditEventModal(eventObj) {
         document.getElementById('event-details-modal').style.display = 'none';
@@ -389,6 +419,10 @@
                 submitBtn.style.opacity = '1';
                 submitBtn.style.cursor = 'pointer';
                 formInputs.forEach(input => input.disabled = false);
+
+                // Show toast
+                const eventTitle = document.getElementById('edit_event_title').value;
+                showToast('Meeting Event Updated Successfully!', eventTitle);
 
                 // Refresh events list
                 fetch('/calendar/events/') // Fetch the updated list
@@ -701,9 +735,14 @@
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = originalBtnText;
                 submitBtn.style.opacity = '1';
+                submitBtn.style.opacity = '1';
                 submitBtn.style.cursor = 'pointer';
                 formInputs.forEach(input => input.disabled = false);
                 
+                // Show toast
+                const eventTitle = document.getElementById('add_event_title').value;
+                showToast('Meeting Event Created Successfully!', eventTitle);
+
                 // MODIFIED: Fetch from new events endpoint (This fixes the bug)
                 fetch('/calendar/events/')
                   .then(function(r) { return r.json(); })
@@ -884,7 +923,7 @@
             floatingBtn.id = 'floating-add-event-btn';
             floatingBtn.title = 'Add Meeting';
             floatingBtn.innerHTML = '<i class="fa-solid fa-plus" style="margin-right:8px;"></i>Add Meeting';
-            floatingBtn.style.cssText = 'position:fixed;bottom:40px;right:40px;background:#245F3E;color:#fff;border:none;border-radius:28px;padding:14px 24px;font-size:1rem;font-weight:600;box-shadow:0 4px 12px rgba(0,0,0,0.15);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.3s ease;z-index:10000;white-space:nowrap;';
+            floatingBtn.style.cssText = 'position:fixed;bottom:40px;background:#245F3E;color:#fff;border:none;border-radius:28px;padding:14px 24px;font-size:1rem;font-weight:600;box-shadow:0 4px 12px rgba(0,0,0,0.15);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.3s ease;z-index:10000;white-space:nowrap;';
             floatingBtn.onmouseover = function() {
                 this.style.transform = 'scale(1.05)';
                 this.style.boxShadow = '0 6px 16px rgba(0,0,0,0.2)';
@@ -964,6 +1003,10 @@
                 deleteBtn.style.cursor = 'pointer';
                 cancelBtn.disabled = false;
                 cancelBtn.style.opacity = '1';
+                
+                // Show toast
+                const eventTitle = document.getElementById('event-details-title').textContent;
+                showToast('Meeting Event Deleted Successfully!', eventTitle);
                 
                 // Hide modals
                 document.getElementById('delete-confirm-modal').style.display = 'none';

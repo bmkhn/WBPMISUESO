@@ -232,27 +232,47 @@ def project_events(request, pk):
     event_to_edit = None
     if request.method == 'POST':
         if request.POST.get('add_event'):
-            # Add Event button: create new ProjectEvent and increment estimated_events
+            # Add Event button: create new ProjectEvent with full details
+            # Check if we haven't exceeded the estimated_events limit
+            if project.events.count() >= project.estimated_events:
+                # Optionally, you can show an error message here
+                # For now, we'll just redirect back
+                return redirect(request.path)
+            
             from .models import ProjectEvent
             now = timezone.now()
+            
+            # Get event details from form
+            title = request.POST.get('add_event_title', '').strip()
+            description = request.POST.get('add_event_description', '').strip()
+            datetime_str = request.POST.get('add_event_datetime', '')
+            location = request.POST.get('add_event_location', '').strip()
+            
+            # Validate required fields
+            if not title or not datetime_str or not location:
+                # Missing required fields, redirect back
+                return redirect(request.path)
+            
+            # Parse datetime
+            from django.utils.dateparse import parse_datetime
+            event_datetime = parse_datetime(datetime_str)
+            
             new_event = ProjectEvent.objects.create(
                 project=project,
-                title=f"Event {project.events.count() + 1}",
-                description="Description Here",
-                datetime=None,
-                location="",
+                title=title,
+                description=description or "No description provided.",
+                datetime=event_datetime,
+                location=location,
                 created_at=now,
                 created_by=request.user,
                 updated_at=now,
                 updated_by=request.user,
                 image=None,
-                placeholder=True
+                placeholder=False  # Not a placeholder since it has full details
             )
-            project.estimated_events += 1
-            project.save(update_fields=["estimated_events"])
             return redirect(request.path)
         elif request.POST.get('delete_event_id'):
-            # Delete event: remove ProjectEvent and decrement estimated_events
+            # Delete event: remove ProjectEvent (estimated_events remains as limit)
             event_id = request.POST.get('delete_event_id')
             from .models import ProjectEvent
             from internal.submissions.models import Submission
@@ -281,11 +301,9 @@ def project_events(request, pk):
                 
                 # Delete the event itself
                 event_to_delete.delete()
-                if project.estimated_events > 0:
-                    project.estimated_events -= 1
-                    project.save(update_fields=["estimated_events", "event_progress", "total_trained_individuals"])
-                else:
-                    project.save(update_fields=["event_progress", "total_trained_individuals"])
+                
+                # Save project with updated counters (estimated_events stays as limit)
+                project.save(update_fields=["event_progress", "total_trained_individuals"])
                     
             except ProjectEvent.DoesNotExist:
                 pass
@@ -611,11 +629,6 @@ def project_submissions_details(request, pk, submission_id):
                     submission.event.image = request.FILES.get("image_event")
                     submission.event.description = request.POST.get("image_description", "")
                     submission.event.save()
-                    
-                    # Update the project's total trained individuals
-                    num_trained = int(request.POST.get("num_trained_individuals", 0))
-                    project.total_trained_individuals += num_trained
-                    project.save()
                 
                 # Keep the submission fields for backward compatibility 
                 submission.image_event = request.FILES.get("image_event")
@@ -723,6 +736,12 @@ def admin_submission_action(request, pk, submission_id):
                     submission.updated_by = request.user
                     submission.updated_at = timezone.now()
                     submission.save()
+                    
+                    # Update project's total trained individuals only when approved
+                    if submission.downloadable.submission_type == 'event' and submission.num_trained_individuals:
+                        project = submission.project
+                        project.total_trained_individuals += int(submission.num_trained_individuals)
+                        project.save()
                 elif action == 'request_revision':
                     submission.status = 'REVISION_REQUESTED'
                     submission.reviewed_by = request.user
@@ -745,6 +764,12 @@ def admin_submission_action(request, pk, submission_id):
                     submission.updated_by = request.user
                     submission.updated_at = timezone.now()
                     submission.save()
+                    
+                    # Update project's total trained individuals only when approved
+                    if submission.downloadable.submission_type == 'event' and submission.num_trained_individuals:
+                        project = submission.project
+                        project.total_trained_individuals += int(submission.num_trained_individuals)
+                        project.save()
                 elif action == 'reject':
                     submission.status = 'REJECTED'
                     submission.authorized_by = request.user
@@ -840,7 +865,8 @@ def project_evaluations(request, pk):
                 comment=comment,
                 rating=int(rating)
             )
-        return redirect(request.path)
+        from urllib.parse import quote
+        return redirect(f'/projects/{pk}/evaluations/?success=true&action=added&title={quote(project.title)}')
     evaluations = project.evaluations.select_related('evaluated_by').order_by('-created_at')
     return render(request, 'projects/project_evaluations.html', {
         'project': project, 
@@ -850,6 +876,44 @@ def project_evaluations(request, pk):
         "SUPERUSER_ROLES": SUPERUSER_ROLES,
         "FACULTY_ROLE": FACULTY_ROLE
     })
+
+
+@role_required(allowed_roles=["UESO", "VP", "DIRECTOR", "PROGRAM_HEAD", "DEAN", "COORDINATOR", "FACULTY", "IMPLEMENTER"], require_confirmed=True)
+def edit_project_evaluation(request, pk, eval_id):
+    from urllib.parse import quote
+    project = get_object_or_404(Project, pk=pk)
+    evaluation = get_object_or_404(ProjectEvaluation, pk=eval_id, project=project)
+    
+    # Only the evaluator can edit their own evaluation
+    if evaluation.evaluated_by != request.user:
+        return redirect('project_evaluations', pk=pk)
+    
+    if request.method == 'POST':
+        rating = request.POST.get('rating')
+        comment = request.POST.get('comment', '')
+        if rating:
+            evaluation.rating = int(rating)
+            evaluation.comment = comment
+            evaluation.edited_at = timezone.now()
+            evaluation.save()
+        return redirect(f'/projects/{pk}/evaluations/?success=true&action=edited&title={quote(project.title)}')
+    
+    return redirect('project_evaluations', pk=pk)
+
+
+@role_required(allowed_roles=["UESO", "VP", "DIRECTOR", "PROGRAM_HEAD", "DEAN", "COORDINATOR", "FACULTY", "IMPLEMENTER"], require_confirmed=True)
+def delete_project_evaluation(request, pk, eval_id):
+    from urllib.parse import quote
+    project = get_object_or_404(Project, pk=pk)
+    evaluation = get_object_or_404(ProjectEvaluation, pk=eval_id, project=project)
+    
+    # Only the evaluator can delete their own evaluation
+    if evaluation.evaluated_by != request.user:
+        return redirect('project_evaluations', pk=pk)
+    
+    project_title = project.title
+    evaluation.delete()
+    return redirect(f'/projects/{pk}/evaluations/?success=true&action=deleted&title={quote(project_title)}')
 
 
 ########################################################################################################################
@@ -1067,6 +1131,11 @@ def admin_project(request):
     search = request.GET.get('search', '')
 
     projects = Project.objects.all()
+    
+    # Filter projects by college for COORDINATOR, DEAN, and PROGRAM_HEAD
+    user_role = getattr(request.user, 'role', None)
+    if user_role in ["COORDINATOR", "DEAN", "PROGRAM_HEAD"] and request.user.college:
+        projects = projects.filter(project_leader__college=request.user.college)
 
     # Apply filters
     if college:
@@ -1246,6 +1315,7 @@ def add_project_view(request):
                     project.additional_documents.add(add_doc)
                 project.save()
 
+                # Set estimated_events as limit only (no auto-creation of events)
                 project.estimated_events = form.cleaned_data.get('estimated_events', 0)
                 now = timezone.now()
                 project.save()

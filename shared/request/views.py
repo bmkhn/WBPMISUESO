@@ -194,7 +194,8 @@ def submit_request(request):
         )
         new_request.save()
 
-        return redirect('request_dispatcher')
+        from urllib.parse import quote
+        return redirect(f'/requests/?success=true&action=submitted&title={quote(title)}')
     else:
         return redirect('request_dispatcher')
 
@@ -336,6 +337,12 @@ def admin_request_action(request, pk):
                     'updated_at': req.updated_at,
                 }
             )
+        
+        # Redirect with toast notification
+        from urllib.parse import quote
+        action_text = action.lower() if action else 'updated'
+        return redirect(f'/requests/?success=true&action={action_text}&title={quote(req.title)}')
+    
     return redirect('request_details_dispatcher', pk=pk)
 
 

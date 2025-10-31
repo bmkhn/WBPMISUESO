@@ -1,6 +1,7 @@
-{% extends "base_internal.html" %}
+{% extends base_template %}
 {% block content %}
 {% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,6 +11,53 @@
 <link href="https://fonts.googleapis.com/css?family=Inter:400,500,700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
 <link href="{% static 'shared/projects/styles.css' %}" rel="stylesheet">
+<style>
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .modal-content {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        max-width: 400px;
+        width: 90%;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+    
+    input[readonly] {
+        background-color: #f8f9fa !important;
+        cursor: not-allowed !important;
+    }
+
+    .profile-picture-upload {
+        margin-top: 1rem;
+    }
+
+    .profile-picture-preview {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .profile-picture-preview img {
+        width: 120px;
+        height: 120px;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 3px solid #e9ecef;
+    }
+</style>
 </head>
 <body>
 <form method="post" enctype="multipart/form-data">
@@ -18,7 +66,7 @@
         <div class="user-details-title" style="display:flex;flex-direction:column;gap:8px;">
             <div style="display:flex;justify-content:space-between;align-items:center;">
                 <h2>
-                    Edit User Details
+                    Edit Users
                 </h2> 
             </div>
         </div>
@@ -27,6 +75,7 @@
         <div id="add-success-msg" style="color:#16a34a;font-size:1.1rem;font-weight:500;">User edited successfully.</div>
         {% endif %} 
 
+        {% if can_edit_role_and_verify and not is_editing_self %}
         <div style="position: absolute; top: 140px; right: 60px;">
         {% if user.is_confirmed %} 
             <span class="info-icon">    
@@ -34,10 +83,10 @@
                     <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
                     <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
                 </svg>
-            <span class="info-tooltip">To remove verification for this user, click here.</span> 
+            <span class="info-tooltip">To deactivate this user's account, click here.</span> 
             </span>
             <a href="{% url 'unverify_user' user.id %}" class="verification-badge"> 
-                Verified        
+                Activated        
             </a>
         {% else %} 
             <span class="info-icon">    
@@ -45,13 +94,14 @@
                     <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
                     <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
                 </svg>
-            <span class="info-tooltip">If user is not yet verified, click here to verify them.</span> 
+            <span class="info-tooltip">To activate this user's account, click here.</span> 
             </span>
             <a href="{% url 'verify_user' user.id %}" class="verification-badge unverified">  
-                Unverified 
+                Deactivated 
             </a>
         {% endif %}
         </div>
+        {% endif %}
 
         <div class="user-details-section">
             <div class="user-details-category">  
@@ -87,12 +137,36 @@
                 <div>
                     <div class="user-details-label">Email <span class="required">*</span></div>
                     <input type="email" name="email" class="user-details-value" value="{{ user.email }}" id="email-input">
+                    <small style="color: #6c757d; font-size: 0.85rem; margin-top: 0.25rem; display: block;">Changing email will require verification</small>
                 </div>
                 <div>
                     <div class="user-details-label">Contact Number <span class="required">*</span></div>
                     <input type="text" name="contact_no" class="user-details-value" value="{{ user.contact_no }}">
                 </div>
             </div>
+            <!-- Profile Picture Upload -->
+            <div class="profile-picture-upload">
+                <div class="user-details-label">Profile Picture</div>
+                <input type="file" name="profile_picture" id="profile_picture_input" accept="image/*" class="user-details-value" data-optional style="padding: 0.5rem;">
+                {% if user.profile_picture %}
+                <div class="profile-picture-preview" id="profile-picture-preview">
+                    <img src="{{ user.profile_picture.url }}" alt="Profile Picture" id="profile-picture-img">
+                    <div>
+                        <div style="font-weight: 500; margin-bottom: 0.25rem;">Current Profile Picture</div>
+                        <small style="color: #6c757d;">Choose a new file to replace</small>
+                    </div>
+                </div>
+                {% else %}
+                <div class="profile-picture-preview" id="profile-picture-preview" style="display: none;">
+                    <img src="" alt="Profile Picture" id="profile-picture-img">
+                    <div>
+                        <div style="font-weight: 500; margin-bottom: 0.25rem;">New Profile Picture</div>
+                        <small style="color: #6c757d;">This will be uploaded</small>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
             {% if user.valid_id %}
             <div>
 
@@ -125,12 +199,17 @@
             <div class="user-details-row cols-2">
                 <div>
                     <div class="user-details-label">Role <span class="required">*</span></div>
+                    {% if can_edit_role_and_verify %}
                     <select name="role" class="user-details-value">
                         <option value="" disabled>Select Role</option>
                         {% for r in roles %}
                         <option value="{{ r.0 }}" {% if user.role == r.0 %}selected{% endif %}>{{ r.1 }}</option>
                         {% endfor %}
                     </select>
+                    {% else %}
+                    <input type="text" class="user-details-value" value="{{ user.get_role_display }}" readonly style="background-color: #f8f9fa; cursor: not-allowed;">
+                    <input type="hidden" name="role" value="{{ user.role }}">
+                    {% endif %}
                 </div>
                 <div>
                     <div class="user-details-label">Password</div>
@@ -139,63 +218,117 @@
             </div>
         </div>
 
-        <!-- New Logic -->
+        <!-- Role Specific Information -->
+        {% if user.role in 'FACULTY,COORDINATOR,DEAN,PROGRAM_HEAD,IMPLEMENTER,CLIENT' %}
         <div class="user-details-section" id="role-specific-section">
             <div class="user-details-category">Role Specific Information</div>
 
-            <!-- If FACULTY, COORDINATOR, DEAN, PROGRAM_HEAD -->
+            <!-- If FACULTY, COORDINATOR, DEAN, PROGRAM_HEAD - Show College/Campus -->
+            {% if user.role in 'FACULTY,COORDINATOR,DEAN,PROGRAM_HEAD' %}
             <div class="user-details-row cols-2">
                 <div>
                     <div class="user-details-label">College <span class="required">*</span></div>
-                    <select name="college" class="user-details-value" data-role-required>
+                    {% if user.role == 'FACULTY' or can_edit_role_and_verify %}
+                    <select name="college" class="user-details-value">
                         <option value="">Select College</option>
                         {% for college in colleges %}
                             <option value="{{ college.id }}" {% if user.college and user.college.id == college.id %}selected{% endif %}>{{ college.name }}</option>
                         {% endfor %}
                     </select>
+                    {% else %}
+                    <input type="text" class="user-details-value" value="{{ user.college.name|default:'N/A' }}" readonly style="background-color: #f8f9fa; cursor: not-allowed;">
+                    <input type="hidden" name="college" value="{{ user.college.id }}">
+                    {% endif %}
                 </div>
                 <div>
                     <div class="user-details-label">Campus <span class="required">*</span></div>
-                    <select name="campus" class="user-details-value" data-role-required>
+                    {% if user.role == 'FACULTY' or can_edit_role_and_verify %}
+                    <select name="campus" class="user-details-value">
                         <option value="">Select Campus</option>
                         {% for value, label in campus_choices %}
                             <option value="{{ value }}" {% if user.campus == value %}selected{% endif %}>{{ label }}</option>
                         {% endfor %}
                     </select>
+                    {% else %}
+                    <input type="text" class="user-details-value" value="{{ user.get_campus_display|default:'N/A' }}" readonly style="background-color: #f8f9fa; cursor: not-allowed;">
+                    <input type="hidden" name="campus" value="{{ user.campus }}">
+                    {% endif %}
                 </div>
             </div>
+            {% endif %}
 
-            <!-- If IMPLEMENTER, FACULTY -->
+            <!-- If IMPLEMENTER or FACULTY - Show Degree/Expertise -->
+            {% if user.role in 'IMPLEMENTER,FACULTY' %}
             <div class="user-details-row cols-2">
                 <div>
                     <div class="user-details-label">Degree <span class="required">*</span></div>
-                    <input type="text" name="degree" class="user-details-value" value="{{ user.degree|default_if_none:'' }}" data-role-required>
+                    <input type="text" name="degree" class="user-details-value" value="{{ user.degree|default_if_none:'' }}">
                 </div>
                 <div>
                     <div class="user-details-label">Expertise <span class="required">*</span></div>
-                    <input type="text" name="expertise" class="user-details-value" value="{{ user.expertise|default_if_none:'' }}" data-role-required>
+                    <input type="text" name="expertise" class="user-details-value" value="{{ user.expertise|default_if_none:'' }}">
                 </div>
             </div>
+            {% endif %}
 
-            <!-- If CLIENT -->
+            <!-- If CLIENT - Show Company/Industry -->
+            {% if user.role == 'CLIENT' %}
             <div class="user-details-row cols-2">
                 <div>
                     <div class="user-details-label">Company <span class="required">*</span></div>
-                    <input type="text" name="company" class="user-details-value" value="{{ user.company|default_if_none:'' }}" data-role-required>
+                    <input type="text" name="company" class="user-details-value" value="{{ user.company|default_if_none:'' }}">
                 </div>
                 <div>
                     <div class="user-details-label">Industry <span class="required">*</span></div>
-                    <input type="text" name="industry" class="user-details-value" value="{{ user.industry|default_if_none:'' }}" data-role-required>
+                    <input type="text" name="industry" class="user-details-value" value="{{ user.industry|default_if_none:'' }}">
                 </div>
-            </div> 
+            </div>
+            {% endif %}
         </div>
+        {% endif %}
 
         <div class="form-actions">
-            <a href="{% url 'user_details' user.id %}" class="back btn">Back</a>
-            <button type="submit" class="save btn">Save Changes</button>
+            <a href="{% if is_editing_self %}{% url 'profile' %}{% else %}{% url 'user_details' user.id %}{% endif %}" class="back btn">Back</a>
+            <button type="submit" class="save btn" id="save-btn">Save Changes</button>
         </div>
     </div>
 </form>
+
+<!-- Code Display Modal (Testing - Top Left) -->
+<div id="email-code-modal" style="display:none; position:fixed; top:20px; left:20px; background:white; padding:1.5rem; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); z-index:10001; min-width:280px; border-left:4px solid #0099FF;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <h4 style="margin:0; font-size:0.875rem; font-weight:600; color:#2D3748;">Verification Code (Testing)</h4>
+        <button onclick="closeEmailCodeModal()" style="background:none; border:none; cursor:pointer; color:#A0AEC0; font-size:1.25rem; padding:0; line-height:1;">&times;</button>
+    </div>
+    <div style="background:#F7FAFC; padding:1rem; border-radius:6px; margin-bottom:1rem; text-align:center;">
+        <div style="font-size:0.75rem; color:#718096; margin-bottom:0.25rem;">Your Code:</div>
+        <div id="email-code-value" style="font-size:2rem; font-weight:700; color:#0099FF; letter-spacing:0.5rem; font-family:monospace;"></div>
+    </div>
+    <button onclick="copyEmailCode()" id="copy-email-code-btn" style="width:100%; background:#0099FF; color:white; padding:0.75rem; border:none; border-radius:6px; cursor:pointer; font-size:0.875rem; font-weight:600; transition:all 0.2s;">
+        <i class="fa-solid fa-copy" style="margin-right:0.5rem;"></i>
+        <span id="copy-email-btn-text">Copy Code</span>
+    </button>
+</div>
+
+<!-- Email Verification Modal -->
+<div id="email-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content" style="background: white; padding: 2rem; border-radius: 8px; max-width: 400px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+        <h3 style="margin-bottom: 1rem; font-size: 1.5rem; font-weight: 600; color: #2D3748;">Email Verification Required</h3>
+        <p style="color: #718096; margin-bottom: 1.5rem; line-height: 1.6;">A verification code has been sent to your <strong>current</strong> email address: <strong style="color: #0099FF;">{{ user.email }}</strong></p>
+        <div style="margin-bottom: 1.5rem;">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #2D3748;">Verification Code</label>
+            <input type="text" id="email-verify-code" placeholder="000000" maxlength="6" style="width: 100%; padding: 0.75rem; border: 1px solid #dee2e6; border-radius: 6px; font-size: 1.5rem; text-align: center; letter-spacing: 0.5rem; font-weight: 600; font-family: monospace;">
+            <p style="font-size: 0.875rem; color: #718096; margin-top: 0.5rem; text-align: center;">
+                Didn't receive the code? <a href="#" id="resend-email-code" style="font-family: inherit;color: #0099FF; text-decoration: underline; cursor: pointer;">Resend Code</a>
+            </p>
+            <small id="email-verify-error" style="color: #E53E3E; display: none; margin-top: 0.5rem; display: block; text-align: center;"></small>
+        </div>
+        <div style="display: flex; gap: 1rem; justify-content: center;">
+            <button type="button" onclick="closeEmailModal()" style="font-family: inherit;padding: 0.75rem 1.5rem; background: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all 0.2s;">Cancel</button>
+            <button type="button" onclick="verifyEmailCode()" id="verify-email-btn" style="font-family: inherit; padding: 0.75rem 1.5rem; background: #0099FF; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all 0.2s;">Verify & Save</button>
+        </div>
+    </div>
+</div>
 
 <!-- SVG Sprite Section -->
 <svg style="display:none;">
@@ -209,91 +342,196 @@
 </svg>
 
 <script>
-    // Role-specific field logic
-    document.addEventListener('DOMContentLoaded', function() {
-        const roleSelect = document.querySelector('select[name="role"]');
-        const allRoleFields = Array.from(document.querySelectorAll('[data-role-required]')).map(f => f.closest('.user-details-row'));
-        const roleSection = document.getElementById('role-specific-section');
-        // Map of role to required field selectors (adjust as needed)
-        const roleFieldMap = {
-            'FACULTY': ['college', 'campus', 'degree', 'expertise'],
-            'COORDINATOR': ['college', 'campus'],
-            'DEAN': ['college', 'campus'],
-            'PROGRAM_HEAD': ['college', 'campus'],
-            'IMPLEMENTER': ['degree', 'expertise'],
-            'CLIENT': ['company', 'industry'],
-        };
-        function showRoleFields(role) {
-            // Hide all role fields
-            allRoleFields.forEach(row => row.style.display = 'none');
-            // Hide section if no role
-            if (!role || !roleFieldMap[role]) {
-                roleSection.style.display = 'none';
-                return;
-            }
-            // Show section
-            roleSection.style.display = '';
-            // Show only relevant fields for the selected role
-            const fields = roleFieldMap[role];
-            if (!fields) return;
-            fields.forEach(fieldName => {
-                const field = document.querySelector(`[name="${fieldName}"]`);
-                if (field) {
-                    const row = field.closest('.user-details-row');
-                    if (row) row.style.display = '';
-                }
-            });
-        }
-        // Initial hide
-        allRoleFields.forEach(row => row.style.display = 'none');
-        if (roleSection) roleSection.style.display = 'none';
-        // On role change
-        if (roleSelect) {
-            roleSelect.addEventListener('change', function() {
-                showRoleFields(this.value);
-            });
-            // Show fields if value is pre-selected (trigger on page load)
+    // Email verification state
+    let originalEmail = "{{ user.email }}";
+    let emailChanged = false;
+    let emailVerified = false;
+
+    // Email Code Modal Functions
+    function showEmailCodeModal(code) {
+        document.getElementById('email-code-value').textContent = code;
+        document.getElementById('email-code-modal').style.display = 'block';
+    }
+
+    function closeEmailCodeModal() {
+        document.getElementById('email-code-modal').style.display = 'none';
+    }
+
+    function copyEmailCode() {
+        const code = document.getElementById('email-code-value').textContent;
+        navigator.clipboard.writeText(code).then(() => {
+            const btn = document.getElementById('copy-email-code-btn');
+            const btnText = document.getElementById('copy-email-btn-text');
+            btnText.textContent = 'Copied!';
+            btn.style.background = '#48BB78';
             setTimeout(() => {
-                if (roleSelect.value) showRoleFields(roleSelect.value);
-            }, 100);
+                btnText.textContent = 'Copy Code';
+                btn.style.background = '#0099FF';
+            }, 2000);
+        });
+    }
+
+    function showEmailModal() {
+        // Automatically send code when modal opens
+        sendVerificationCode();
+        document.getElementById('email-modal').style.display = 'flex';
+    }
+
+    function closeEmailModal() {
+        document.getElementById('email-modal').style.display = 'none';
+        closeEmailCodeModal();
+        
+        // Clear input and error
+        document.getElementById('email-verify-code').value = '';
+        document.getElementById('email-verify-error').style.display = 'none';
+    }
+
+    function sendVerificationCode() {
+        const currentEmail = originalEmail; // Send to CURRENT email, not new email
+        const errorEl = document.getElementById('email-verify-error');
+        
+        // Send verification code to CURRENT email via your backend
+        fetch('/send-password-reset-code/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: `email=${encodeURIComponent(currentEmail)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Show code modal for testing
+                if (data.code) {
+                    showEmailCodeModal(data.code);
+                }
+            } else {
+                errorEl.textContent = data.error || 'Failed to send verification code.';
+                errorEl.style.display = 'block';
+            }
+        })
+        .catch(error => {
+            errorEl.textContent = 'An error occurred. Please try again.';
+            errorEl.style.display = 'block';
+        });
+    }
+
+    function verifyEmailCode() {
+        const code = document.getElementById('email-verify-code').value.trim();
+        const errorEl = document.getElementById('email-verify-error');
+        
+        if (!code || code.length !== 6) {
+            errorEl.textContent = 'Please enter a valid 6-digit code.';
+            errorEl.style.display = 'block';
+            return;
+        }
+        
+        fetch('/verify-reset-code/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: `code=${encodeURIComponent(code)}&verify_only=true`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                emailVerified = true;
+                closeEmailCodeModal();
+                closeEmailModal();
+                // Now submit the form
+                document.querySelector('form').submit();
+            } else {
+                errorEl.textContent = data.error || 'Invalid verification code.';
+                errorEl.style.display = 'block';
+            }
+        })
+        .catch(error => {
+            errorEl.textContent = 'An error occurred. Please try again.';
+            errorEl.style.display = 'block';
+        });
+    }
+
+    // Resend code functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const resendLink = document.getElementById('resend-email-code');
+        if (resendLink) {
+            resendLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                sendVerificationCode();
+            });
         }
     });
 
+    // Role-specific fields are now conditionally rendered by Django template
+    // No JavaScript needed for showing/hiding role-specific fields
+
     // DOMContentLoaded for event listeners
     document.addEventListener('DOMContentLoaded', function() {
-        // AJAX email uniqueness check (unchanged)
-        var emailInput = document.getElementById('email-input');
-        var emailError = document.getElementById('email-error');
+        // Get email input element
+        const emailInput = document.getElementById('email-input');
+        const emailError = document.getElementById('email-error');
+        
+        // AJAX email uniqueness check
         function checkEmailAjax() {
-            var email = emailInput.value.trim();
-            if (!email) {
-                emailError.textContent = '';
-                emailError.style.display = 'none';
+            const email = emailInput.value.trim();
+            
+            // Skip check if email hasn't changed
+            if (email === originalEmail) {
+                if (emailError) {
+                    emailError.textContent = '';
+                    emailError.style.display = 'none';
+                }
                 return;
             }
+            
+            if (!email) {
+                if (emailError) {
+                    emailError.textContent = '';
+                    emailError.style.display = 'none';
+                }
+                return;
+            }
+            
             fetch('/check-email/?email=' + encodeURIComponent(email))
                 .then(response => response.json())
                 .then(data => {
-                    if (data.exists) {
+                    if (data.exists && emailError) {
                         emailError.textContent = 'This email is already registered.';
                         emailError.style.display = 'block';
-                    } else {
+                    } else if (emailError) {
                         emailError.textContent = '';
                         emailError.style.display = 'none';
                     }
                 })
                 .catch(() => {
-                    emailError.textContent = 'Error checking email.';
-                    emailError.style.display = 'block';
+                    if (emailError) {
+                        emailError.textContent = 'Error checking email.';
+                        emailError.style.display = 'block';
+                    }
                 });
         }
+        
+        // Check for email changes on input
         if (emailInput) {
             emailInput.addEventListener('blur', checkEmailAjax);
             emailInput.addEventListener('input', checkEmailAjax);
+            emailInput.addEventListener('change', function() {
+                emailChanged = (this.value.trim() !== originalEmail);
+            });
         }
 
         // Robust form validation for all required fields
         document.querySelector('form').addEventListener('submit', function(e) {
+            // Check if email changed and not yet verified
+            if (emailChanged && !emailVerified) {
+                e.preventDefault();
+                showEmailModal();
+                return false;
+            }
+            
             let valid = true;
             // Remove previous error states/messages for inputs, selects, textareas
             const fields = Array.from(document.querySelector('form').querySelectorAll('input, select, textarea'));
@@ -302,11 +540,6 @@
                 let err = field.parentNode.querySelector('.field-error');
                 if (err) err.remove();
             });
-            // Remove file error
-            let fileInput = document.getElementById('id_valid_id');
-            let fileError = document.getElementById('file-error');
-            if (fileError) fileError.style.display = 'none';
-            fileInput.classList.remove('error-input');
 
             // Validate all visible required fields
             fields.forEach(field => {
@@ -339,19 +572,8 @@
                 }
             });
 
-            // Validate file upload
-            if (!fileInput.files || fileInput.files.length === 0) {
-                valid = false;
-                fileInput.classList.add('error-input');
-                if (!fileError) {
-                    fileError = document.createElement('div');
-                    fileError.id = 'file-error';
-                    fileError.className = 'error-message';
-                    fileInput.parentNode.appendChild(fileError);
-                }
-                fileError.textContent = 'Valid ID is required.';
-                fileError.style.display = 'block';
-            }
+            // File upload is optional for editing
+            // (Valid ID was required during registration)
 
             // Email uniqueness error
             var email = emailInput.value.trim();
@@ -367,32 +589,53 @@
         });
     });
 
-    // Image Preview
-    // Set valid_id_url from template, fallback to empty string
-    var valid_id_url = "{% if user.valid_id and user.valid_id.name %}{{ user.valid_id.url }}{% else %}{% endif %}";
-    document.getElementById('id_valid_id').addEventListener('change', function(e) {
-        var file = e.target.files[0];
-        var previewImg = document.getElementById('preview-img');
-        var previewLink = document.getElementById('preview-link');
-        var fileNameSpan = document.getElementById('file-name');
-        if (file) {
-            var reader = new FileReader();
-            reader.onload = function(evt) {
-                previewImg.src = evt.target.result;
-                previewLink.href = evt.target.result;
-                previewLink.style.opacity = '0.5';
-                previewLink.style.pointerEvents = 'none';
-                previewLink.style.cursor = 'not-allowed';
-            };
-            reader.readAsDataURL(file);
-            fileNameSpan.textContent = file.name;
-        } else {
-            // Reset to original
-            previewImg.src = valid_id_url;
-            previewLink.href = valid_id_url ? valid_id_url : "#";
-            fileNameSpan.textContent = '';
-        }
-    });
+    // Profile Picture Preview
+    const profilePictureInput = document.getElementById('profile_picture_input');
+    if (profilePictureInput) {
+        profilePictureInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const preview = document.getElementById('profile-picture-preview');
+            const previewImg = document.getElementById('profile-picture-img');
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    previewImg.src = evt.target.result;
+                    preview.style.display = 'flex';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    // Image Preview (if elements exist)
+    var fileInput = document.getElementById('id_valid_id');
+    if (fileInput) {
+        var valid_id_url = "{% if user.valid_id and user.valid_id.name %}{{ user.valid_id.url }}{% else %}{% endif %}";
+        fileInput.addEventListener('change', function(e) {
+            var file = e.target.files[0];
+            var previewImg = document.getElementById('preview-img');
+            var previewLink = document.getElementById('preview-link');
+            var fileNameSpan = document.getElementById('file-name');
+            if (file && previewImg && previewLink) {
+                var reader = new FileReader();
+                reader.onload = function(evt) {
+                    previewImg.src = evt.target.result;
+                    previewLink.href = evt.target.result;
+                    previewLink.style.opacity = '0.5';
+                    previewLink.style.pointerEvents = 'none';
+                    previewLink.style.cursor = 'not-allowed';
+                };
+                reader.readAsDataURL(file);
+                if (fileNameSpan) fileNameSpan.textContent = file.name;
+            } else if (previewImg && previewLink) {
+                // Reset to original
+                previewImg.src = valid_id_url;
+                previewLink.href = valid_id_url ? valid_id_url : "#";
+                if (fileNameSpan) fileNameSpan.textContent = '';
+            }
+        });
+    }
 </script>
 
 </body>

@@ -1,4 +1,4 @@
-{% extends "base_internal.html" %}
+{% extends base_template %}
 {% block content %}
 {% load static %}
 <!DOCTYPE html>
@@ -28,6 +28,21 @@
         text-decoration: underline;
         cursor: pointer;
     }
+
+    .profile-picture-display {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .profile-picture-display img {
+        width: 120px;
+        height: 120px;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 3px solid #e9ecef;
+    }
 </style>
 </head>
 <body>
@@ -40,9 +55,9 @@
             <h2>User Details</h2>
             <div>
                 {% if user.is_confirmed %}
-                    <span class="verification-badge">Verified</span>
+                    <span class="verification-badge">Activated</span>
                 {% else %}
-                    <span class="verification-badge unverified">Unverified</span>
+                    <span class="verification-badge unverified">Deactivated</span>
                 {% endif %}
             </div>
         </div>
@@ -80,6 +95,26 @@
                     <div class="user-details-value">{{ user.contact_no }}</div>
                 </div>
             </div>
+
+            <!-- Profile Picture Display -->
+            {% if user.profile_picture %}
+            <div>
+                <div class="user-details-label">Profile Picture</div>
+                <div class="profile-picture-display">
+                    <img src="{{ user.profile_picture.url }}" alt="Profile Picture">
+                    <div>
+                        <div style="font-weight: 500; margin-bottom: 0.25rem;">{{ user.get_full_name }}</div>
+                        <small style="color: #6c757d;">{{ user.get_role_display }}</small>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div>
+                <div class="user-details-label">Profile Picture</div>
+                <div class="user-details-value">No profile picture uploaded.</div>
+            </div>
+            {% endif %}
+
             {% if user.valid_id %}
             <div>
                 <div class="user-details-label">Valid ID ({{ user.get_preferred_id_display }})</div>
@@ -112,6 +147,7 @@
             </div>
         </div>
 
+        {% if user.role == 'FACULTY' or user.role == 'COORDINATOR' or user.role == 'PROGRAM_HEAD' or user.role == 'DEAN' or user.role == 'CLIENT' %}
         <div class="user-details-section">
             <div class="user-details-category">Role Specific Information</div>
 
@@ -154,6 +190,7 @@
             </div>
             {% endif %}
         </div>
+        {% endif %}
 
 
         <div class="form-actions">
@@ -162,7 +199,42 @@
         </div>
     </div>
     
+<script>
+    // Success Toast
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const success = urlParams.get('success');
+        const action = urlParams.get('action');
+        const title = urlParams.get('title');
 
+        if (success === 'true' && action === 'edited') {
+            const toast = document.createElement('div');
+            toast.id = 'successToast';
+            toast.style.cssText = 'display:block;position:fixed;top:20px;right:20px;background:#10b981;color:white;padding:1rem 1.5rem;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:10000;font-size:1rem;font-weight:500;min-width:300px;';
+            toast.innerHTML = `
+                <div style="display:flex;align-items:center;gap:0.75rem;">
+                    <i class="fa-solid fa-check-circle" style="font-size:1.5rem;"></i>
+                    <div>
+                        <div style="font-weight:600;margin-bottom:0.25rem;">User Updated Successfully!</div>
+                        <div style="font-size:0.875rem;opacity:0.9;">${title ? decodeURIComponent(title) : 'User'}</div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(toast);
+
+            // Auto-hide after 4 seconds
+            setTimeout(function() {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.3s';
+                setTimeout(function() {
+                    toast.remove();
+                    // Clean URL
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }, 300);
+            }, 4000);
+        }
+    });
+</script>
 
 </body>
 </html>

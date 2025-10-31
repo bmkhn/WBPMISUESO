@@ -17,11 +17,6 @@
             <h2>Add Submission</h2> 
             <p>Input all fields correctly and assign new submission.</p>
         </div>
-        {% if messages %}
-            {% for message in messages %}
-                <div class="success-message">{{ message }}</div>
-            {% endfor %}
-        {% endif %}
         <form class="submission-form" method="post" enctype="multipart/form-data">
             {% csrf_token %}
 

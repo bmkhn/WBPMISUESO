@@ -99,7 +99,7 @@
                 {% if request.user.role in SUPERUSER_ROLES or request.user.role in ADMIN_ROLES %}
                 <button type="button" data-tab="providers" class="{% if '/providers/' in request.path %}active{% endif %}">Providers</button>
                 {% endif %}
-                <button type="button" data-tab="events" class="{% if '/events/' in request.path %}active{% endif %}">Events</button>
+                <button type="button" data-tab="events" class="{% if '/events/' in request.path %}active{% endif %}">Activities</button>
                 <button type="button" data-tab="files" class="{% if '/files/' in request.path %}active{% endif %}">Files</button> 
                 {% if request.user.role in SUPERUSER_ROLES or request.user.role in ADMIN_ROLES or request.user.role in FACULTY_ROLE %}
                 <button type="button" data-tab="submission" class="{% if '/submission/' in request.path %}active{% endif %}">Submissions</button>

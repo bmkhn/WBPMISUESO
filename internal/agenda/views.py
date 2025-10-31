@@ -3,8 +3,9 @@ from .forms import AgendaForm
 from .models import Agenda
 from system.users.decorators import role_required
 from django.http import HttpResponseRedirect
-from django.urls import reverse
+from django.shortcuts import render, redirect
 from shared.projects.models import Project
+from urllib.parse import quote
 
 
 # Agenda View
@@ -25,8 +26,8 @@ def add_agenda_view(request):
     if request.method == 'POST':
         form = AgendaForm(request.POST)
         if form.is_valid():
-            form.save()
-            return render(request, 'agenda/add_agenda.html', {'form': AgendaForm(), 'success': True})
+            agenda = form.save()
+            return redirect(f'/agenda/?success=true&action=created&name={quote(agenda.name)}')
     else:
         form = AgendaForm()
     return render(request, 'agenda/add_agenda.html', {'form': form})
@@ -46,11 +47,7 @@ def edit_agenda_view(request, agenda_id):
         if form.is_valid():
             form.save()
             selected_college_ids = [str(c.id) for c in form.cleaned_data['concerned_colleges']]
-            return render(request, 'agenda/edit_agenda.html', {
-                'form': form,
-                'success': True,
-                'selected_college_ids': selected_college_ids if selected_college_ids else [],
-            })
+            return redirect(f'/agenda/?success=true&action=updated&name={quote(agenda.name)}')
         else:
             selected_college_ids = request.POST.getlist('concerned_colleges')
     else:
@@ -67,5 +64,6 @@ def edit_agenda_view(request, agenda_id):
 @role_required(allowed_roles=["VP", "DIRECTOR"], require_confirmed=True)
 def delete_agenda_view(request, agenda_id):
     agenda = Agenda.objects.get(id=agenda_id)
+    agenda_name = agenda.name
     agenda.delete()
-    return HttpResponseRedirect(reverse('agenda'))
+    return redirect(f'/agenda/?success=true&action=deleted&name={quote(agenda.name)}')

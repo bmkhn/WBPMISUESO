@@ -23,6 +23,12 @@
                 </span>
                 <span class="evaluator">{{ evaluation.evaluated_by.get_full_name|default:evaluation.evaluated_by.username }}</span>
                 <span class="eval-date">{{ evaluation.created_at|date:'M d, Y' }}</span>
+                {% if evaluation.evaluated_by == request.user %}
+                <div style="display:flex;gap:0.5rem;margin-left:auto;">
+                    <button class="admin-button edit" onclick="openEditEvalModal({{ evaluation.id }}, {{ evaluation.rating }}, '{{ evaluation.comment|escapejs }}')" style="padding:0.5rem 1rem;font-size:0.875rem;">Edit</button>
+                    <button class="admin-button not" onclick="deleteEvaluation({{ evaluation.id }})" style="padding:0.5rem 1rem;font-size:0.875rem;">Delete</button>
+                </div>
+                {% endif %}
             </div>
             <div class="evaluation-comment">
                 {% if evaluation.comment %}
@@ -44,9 +50,10 @@
 <div id="eval-modal" class="modal" style="display:none;">
     <div class="modal-content eval">
         <span class="close" id="close-eval-modal">&times;</span>
-        <h2>Add Evaluation</h2>
+        <h2 id="eval-modal-title">Add Evaluation</h2>
         <form id="eval-form" method="post" enctype="multipart/form-data" action="">
             {% csrf_token %}
+            <input type="hidden" id="eval-id" name="eval_id" value="">
             <div class="form-group" style="align-items:center;">
                 <label class="form-label">Rating <span class="required">*</span></label>
                 <div id="star-rating" style="display:flex;gap:0.3rem;">
@@ -71,10 +78,67 @@
 
 
 <script>
+    // Toast Notification Function
+    function showToast(message, subtitle) {
+        const toast = document.createElement('div');
+        toast.id = 'successToast';
+        toast.style.cssText = 'display:block;position:fixed;top:20px;right:20px;background:#10b981;color:white;padding:1rem 1.5rem;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:10000;font-size:1rem;font-weight:500;min-width:300px;';
+        toast.innerHTML = `
+            <div style="display:flex;align-items:center;gap:0.75rem;">
+                <i class="fa-solid fa-check-circle" style="font-size:1.5rem;"></i>
+                <div>
+                    <div style="font-weight:600;margin-bottom:0.25rem;">${message}</div>
+                    ${subtitle ? `<div style="font-size:0.875rem;opacity:0.9;">${subtitle}</div>` : ''}
+                </div>
+            </div>
+        `;
+        document.body.appendChild(toast);
+
+        // Auto-hide after 4 seconds
+        setTimeout(function() {
+            toast.style.opacity = '0';
+            toast.style.transition = 'opacity 0.3s';
+            setTimeout(function() {
+                toast.remove();
+                // Clean URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }, 300);
+        }, 4000);
+    }
+
+    // Check for toast notifications on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const success = urlParams.get('success');
+        const action = urlParams.get('action');
+        const title = urlParams.get('title');
+
+        if (success === 'true' && action) {
+            const actionMessages = {
+                'added': 'Project Evaluation Added Successfully!',
+                'edited': 'Project Evaluation Updated Successfully!',
+                'deleted': 'Project Evaluation Deleted Successfully!'
+            };
+
+            const message = actionMessages[action] || 'Action Completed Successfully!';
+            showToast(message, title ? decodeURIComponent(title) : '');
+        }
+    });
+
+
     // Modal open/close logic
     document.getElementById('open-eval-modal-header').addEventListener('click', function() {
+        // Reset form for add
+        document.getElementById('eval-modal-title').textContent = 'Add Evaluation';
+        document.getElementById('eval-form').action = '';
+        document.getElementById('eval-id').value = '';
+        document.getElementById('id_comment').value = '';
+        document.getElementById('rating-value').value = '';
+        const stars = document.querySelectorAll('#star-rating .star');
+        stars.forEach(s => s.style.color = '#ccc');
         document.getElementById('eval-modal').style.display = 'flex';
     });
+    
     document.getElementById('close-eval-modal').addEventListener('click', function() {
         document.getElementById('eval-modal').style.display = 'none';
     });
@@ -86,6 +150,30 @@
             this.style.display = 'none';
         }
     });
+
+    // Open edit modal
+    function openEditEvalModal(evalId, rating, comment) {
+        document.getElementById('eval-modal-title').textContent = 'Edit Evaluation';
+        document.getElementById('eval-form').action = `/projects/{{ project.id }}/evaluations/${evalId}/edit/`;
+        document.getElementById('eval-id').value = evalId;
+        document.getElementById('id_comment').value = comment;
+        document.getElementById('rating-value').value = rating;
+        
+        // Set stars
+        const stars = document.querySelectorAll('#star-rating .star');
+        stars.forEach((s, i) => {
+            s.style.color = i < rating ? '#FFD700' : '#ccc';
+        });
+        
+        document.getElementById('eval-modal').style.display = 'flex';
+    }
+
+    // Delete evaluation
+    function deleteEvaluation(evalId) {
+        if (confirm('Are you sure you want to delete this evaluation?')) {
+            window.location.href = `/projects/{{ project.id }}/evaluations/${evalId}/delete/`;
+        }
+    }
 
     // Interactive star rating
     const starContainer = document.getElementById('star-rating');

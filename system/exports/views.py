@@ -99,6 +99,7 @@ def approve_export_request(request, request_id):
     export_request.status = 'APPROVED'
     export_request.reviewed_by = request.user
     export_request.reviewed_at = timezone.now()
+    export_type_display = export_request.get_type_display()
     export_request.save()
 
     user = export_request.submitted_by
@@ -197,7 +198,7 @@ def approve_export_request(request, request_id):
         email.attach_alternative(html_body, "text/html")
         email.send(fail_silently=True)
 
-    return JsonResponse({'message': 'Export request approved and file sent to submitter.'})
+    return JsonResponse({'message': 'Export request approved and file sent to submitter.', 'type': export_type_display})
 
 
 @require_POST
@@ -213,8 +214,9 @@ def reject_export_request(request, request_id):
     export_request.status = 'REJECTED'
     export_request.reviewed_by = request.user
     export_request.reviewed_at = timezone.now()
+    export_type_display = export_request.get_type_display()
     export_request.save()
-    return JsonResponse({'message': 'Export request rejected.'})
+    return JsonResponse({'message': 'Export request rejected.', 'type': export_type_display})
 
 
 # Robust download endpoint for filtered export files

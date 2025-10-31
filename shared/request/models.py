@@ -1,3 +1,4 @@
+import os
 from django.conf import settings
 from django.db import models
 from django.db.models.signals import post_save
@@ -40,6 +41,15 @@ class ClientRequest(models.Model):
         ('ENDORSED', 'Endorsed'),
         ('DENIED', 'Denied'),
     ])
+
+    @property
+    def name(self):
+        """Return the file name (without extension) of the uploaded letter_of_intent."""
+        if self.letter_of_intent and self.letter_of_intent.name:
+            filename = os.path.basename(self.letter_of_intent.name)  # e.g. 'client_requests/letters_of_intent/sample.pdf' → 'sample.pdf'
+            name_without_ext, _ = os.path.splitext(filename)          # 'sample'
+            return name_without_ext
+        return ""
 
     
     def __str__(self):

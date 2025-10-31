@@ -1,216 +1,1174 @@
-{% extends "base_internal.html" %}
+{% extends base_template %}
 {% block content %}
 {% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
 <title>Expert Profile</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
-<link href="{% static 'internal/experts/prof.css' %}" rel="stylesheet">
-</head> 
-<body>
-    <main> 
-        <section>
-            <div class="propic">
-                {% if expert.profile_picture %}
-                <img src="{{ expert.profile_picture.url }}" alt="{{ expert.get_full_name }}">
-                {% else %}
-                <div class="propic-placeholder">
-                    {{ expert.given_name.0 }}
-                </div>
-                {% endif %}
-            </div>
-            
-            <div class="profile-info-grid">
-                <div class="personal-info">
-                    <h2>{{ expert.get_full_name }}</h2>
-                    <h4><i class="fas fa-map-marker-alt" style="color:red; margin-right:0.5rem;"></i> {{ campus_display }}</h4>
-                    {% if college_logo %}
-                    <img src="{{ college_logo }}" alt="{{ college_name }}">
-                    {% else %}
-                    <div class="college-logo-placeholder">
-                        {{ college_name.0|default:"?" }}
-                    </div>
-                    {% endif %}
-                </div>
-            
-                <div class="expertise">
-                    <h5>Field of Expertise:</h5>
-                    <p>{{ expert.expertise|default:"Not specified" }}</p>
-                    <h5>{{ expert.degree|default:"Degree Not Listed" }}</h5>
-                    <p>{{ college_name }}</p>
-                </div>
-                <div class="contact">
-                    <h5>Contact:</h5>
-                    <p>{{ expert.email }}</p>
-                </div>
 
-            </div>
-        </section>
-        <section class="lower">
-            <div class="bio">
-                <div class="lower-header">
-                    <h1>Bio</h1>
-                </div>
-                <p style="margin-top: 1rem;">
-                    {{ expert.bio|linebreaksbr|default:"This expert has not provided a bio." }}
-                </p>
-            </div>
-            <div class="project">
-                <div class="lower-header"> 
-                    <div>
-                        <h1>Projects</h1>   
-                    </div>
-                    <div style="display: flex; flex-shrink: 3; align-items: center; gap: 0.5rem;">
-                        <span style="font-size: 1.1rem; font-weight: 500; color: #444; width: 6rem;">Sort by:</span>
-                        <select id="sortProjects" class="dropdown-btn" style="margin: 0.75rem 0;">
-                            <option value="date-desc">Newest First</option>
-                            <option value="date-asc">Oldest First</option>
-                            <option value="title-asc">Title (A-Z)</option>
-                            <option value="title-desc">Title (Z-A)</option>
-                            <option value="status">Status</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="project-card" id="projectsList"> 
-                    </div>
-            </div>
-        </section>
-    </main>
+<style>
+	body {
+		font-family: 'Inter', Arial, sans-serif;
+		margin: 0;
+		padding: 0;
+		background-color: #e9e9e9;
+	}
+
+	main {
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		align-items: stretch;
+		gap: 1rem;
+		margin: 0;
+		background-color: #e9e9e9;
+	}
+
+	main > section {
+		display: flex;
+		flex-direction: row;
+		justify-content: flex-start;
+		align-items: center;
+		flex-wrap: wrap;
+		background-color: #fff;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+		padding: 3rem 4rem;
+		gap: 2rem;
+	}
+
+	/* Profile Picture */
+	.propic {
+		position: relative;
+		flex-shrink: 0;
+		{% if can_edit %}cursor: pointer;{% endif %}
+	}
+
+	.propic img {
+		width: 10rem;
+		height: 10rem;
+		object-fit: cover;
+		border-radius: 50%;
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+		border: 3px solid #f8f9fa;
+	}
+
+	.edit-overlay {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background: rgba(0,0,0,0.6);
+		border-radius: 50%;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		opacity: 0;
+		transition: opacity 0.3s;
+		color: white;
+		font-size: 14px;
+	}
+
+	.propic:hover .edit-overlay {
+		opacity: 1;
+	}
+
+	/* Profile Info Grid */
+	.profile-info-grid {
+		display: flex;
+		flex-wrap: wrap;
+		flex-grow: 1;
+		align-items: center;
+		gap: 1rem;
+		margin: 0;
+		padding: 0;
+	}
+
+	.profile-section {
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+		min-width: 0;
+	}
+
+	.profile-section.name-section {
+		flex: 0 1 auto;
+		min-width: 200px;
+	}
+
+	.profile-section.field-section,
+	.profile-section.degree-section,
+	.profile-section.company-section,
+	.profile-section.industry-section {
+		flex: 1 1 160px;
+	}
+
+	.profile-section.contact-section {
+		flex: 1 1 200px;
+	}
+
+	.profile-name {
+		font-size: 1.5rem;
+		font-weight: 400;
+		margin: 0 0 0.5rem 0;
+		line-height: 1.2;
+		color: #2c3e50;
+	}
+
+	.profile-campus {
+		font-size: 0.95rem;
+		font-weight: 400;
+		color: #6c757d;
+		margin: 0.25rem 0 0.75rem 0;
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.profile-campus i {
+		color: #dc3545;
+	}
+
+	.college-logo-container {
+		margin-top: 0.5rem;
+	}
+
+	.college-logo-container img, .college-logo-placeholder {
+		border-radius: 50%;
+		height: 4.5rem;
+		width: 4.5rem;
+		object-fit: cover;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	}
+
+	.college-logo-placeholder {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: #f8f9fa;
+		color: #6c757d;
+		font-size: 1.8rem;
+		font-weight: 600;
+	}
+
+	.info-label {
+		font-size: 0.875rem;
+		font-weight: 600;
+		color: #6c757d;
+		margin: 0 0 0.25rem 0;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+	}
+
+	.info-value {
+		font-size: 1rem;
+		font-weight: 400;
+		margin: 0;
+		line-height: 1.4;
+		color: #2c3e50;
+		word-wrap: break-word;
+	}
+
+	/* Lower Section */
+	.lower {
+		background-color: transparent;
+		box-shadow: none;
+		padding: 0 2rem 2rem 2rem;
+		align-items: flex-start
+	}
+
+	.bio {
+		background-color: #fff;
+		flex-basis: 10rem;
+		flex-grow: 1;
+		padding: 2rem;
+		margin: 1rem 0.75rem;
+		border-radius: 8px;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	}
+
+	.project {
+		background-color: #fff;
+		flex-basis: 40rem;
+		flex-grow: 2;
+		padding: 2rem;
+		margin: 1rem 0.75rem;
+		border-radius: 8px;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	}
+
+	.lower-header {
+		border-bottom: 2px solid #e9ecef;
+		padding-bottom: 1rem;
+		margin-bottom: 1.5rem;
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+		align-items: center;
+	}
+
+	.lower-header h1 {
+		font-size: 1.5rem;
+		font-weight: 500;
+		color: #2c3e50;
+		margin: 0;
+	}
+
+	/* Bio Editor */
+	.bio-content {
+		margin-top: 0;
+	}
+
+	.bio-display {
+		color: #495057;
+		line-height: 1.6;
+		font-size: 0.95rem;
+	}
+
+	.bio-text {
+		margin-bottom: 1.5rem;
+		min-height: 60px;
+	}
+
+	.edit-bio-btn {
+		background: transparent;
+		color: #6c757d;
+		border: none;
+		padding: 0;
+		cursor: pointer;
+		font-size: 1.25rem;
+		transition: all 0.2s ease;
+		margin-left: 0.75rem;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.edit-bio-btn:hover {
+		color: #007bff;
+		transform: scale(1.1);
+	}
+
+	.edit-profile-btn {
+		position: absolute;
+		top: 2rem;
+		right: 2rem;
+		background: transparent;
+		color: #6c757d;
+		border: 1px solid #dee2e6;
+		padding: 0.6rem 1.2rem;
+		border-radius: 2rem;
+		cursor: pointer;
+		font-size: 0.9rem;
+		font-weight: 500;
+		transition: all 0.2s ease;
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		text-decoration: none;
+	}
+
+	.edit-profile-btn:hover {
+		background-color: #007bff;
+		color: #fff;
+		border-color: #007bff;
+		transform: translateY(-1px);
+		text-decoration: none;
+	}
+
+	.bio-editor {
+		display: none;
+	}
+
+	.bio-editor.active {
+		display: block;
+	}
+
+	.bio-editor textarea {
+		width: 100%;
+		min-height: 150px;
+		max-height: 400px;
+		padding: 12px;
+		border: 1px solid #ddd;
+		border-radius: 6px;
+		font-family: 'Inter', sans-serif;
+		font-size: 14px;
+		line-height: 1.6;
+		resize: vertical;
+		margin-bottom: 10px;
+		box-sizing: border-box;
+	}
+
+	.bio-editor textarea:focus {
+		outline: none;
+		border-color: #0A6C44;
+		box-shadow: 0 0 0 3px rgba(10, 108, 68, 0.2);
+	}
+
+	.bio-editor-actions {
+		display: flex;
+		gap: 10px;
+	}
+
+	.save-bio-btn {
+		background: #00681a;
+		color: white;
+		border: none;
+		padding: 0.6rem 1.4rem;
+		border-radius: 2rem;
+		cursor: pointer;
+		font-size: 1rem;
+		font-weight: 500;
+		transition: all 0.2s ease;
+	}
+
+	.save-bio-btn:hover {
+		background-color: #444;
+		transform: translateY(-1px);
+	}
+
+	.cancel-bio-btn {
+		background: #a9a9a9;
+		color: white;
+		border: none;
+		padding: 0.6rem 1.4rem;
+		border-radius: 2rem;
+		cursor: pointer;
+		font-size: 1rem;
+		font-weight: 500;
+		transition: all 0.2s ease;
+	}
+
+	.cancel-bio-btn:hover {
+		background-color: #444;
+		transform: translateY(-1px);
+	}
+
+	/* Sort Controls */
+	.sort-controls {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.sort-controls span {
+		font-size: 1.1rem;
+		font-weight: 500;
+		color: #444;
+		width: 6rem;
+	}
+
+	.dropdown-btn {
+		padding: 0.75rem 1rem;
+		border: 1px solid #8a8a8a;
+		border-radius: 8px;
+		font-size: 1rem;
+		font-family: 'Inter', sans-serif;
+		background: #f8f8f8;
+		transition: all 0.2s ease;
+		width: 80%;
+		margin-bottom: 0;
+		box-sizing: border-box;
+		appearance: none;
+		padding-right: 2rem;
+		background-image: url("data:image/svg+xml;utf8,<svg width='16' height='11' viewBox='0 0 16 11' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M7.99976 7.19417L13.9025 1.29147C14.0125 1.17758 14.144 1.08674 14.2895 1.02424C14.435 0.961746 14.5915 0.92885 14.7498 0.927474C14.9082 0.926098 15.0652 0.95627 15.2117 1.01623C15.3583 1.07619 15.4914 1.16473 15.6034 1.27669C15.7153 1.38866 15.8039 1.5218 15.8638 1.66835C15.9238 1.8149 15.954 1.97192 15.9526 2.13026C15.9512 2.28859 15.9183 2.44506 15.8558 2.59055C15.7933 2.73604 15.7025 2.86762 15.5886 2.97762L8.84283 9.72339C8.61921 9.94694 8.31596 10.0725 7.99976 10.0725C7.68356 10.0725 7.38031 9.94694 7.15669 9.72339L0.41092 2.97762C0.297028 2.86762 0.206183 2.73604 0.143687 2.59055C0.0811915 2.44506 0.0482959 2.28859 0.04692 2.13026C0.0455441 1.97192 0.0757155 1.8149 0.135674 1.66835C0.195632 1.5218 0.284176 1.38866 0.39614 1.27669C0.508103 1.16473 0.641244 1.07619 0.787794 1.01623C0.934343 0.95627 1.09137 0.926098 1.2497 0.927474C1.40804 0.92885 1.56451 0.961746 1.71 1.02424C1.85548 1.08674 1.98706 1.17758 2.09706 1.29147L7.99976 7.19417Z' fill='%23374151'/></svg>");
+		background-repeat: no-repeat;
+		background-position: right 0.75rem center;
+		background-size: 13px 8px;
+	}
+
+	.dropdown-btn:focus {
+		outline: none;
+		border-color: #0A6C44;
+		box-shadow: 0 0 0 3px rgba(10, 108, 68, 0.2);
+		background-color: #FFFFFF;
+	}
+
+	/* Project Card */
+	.project-card {
+		display: flex;
+		flex-direction: column;
+		gap: 0;
+	}
+
+	.project-card > div {
+		border-bottom: 1px solid #e9ecef;
+		padding: 1.5rem 0;
+		margin-bottom: 0;
+		transition: background-color 0.2s;
+	}
+
+	.project-card > div:hover {
+		background-color: #f8f9fa;
+		margin: 0 -1rem;
+		padding: 1.5rem 1rem;
+		border-radius: 4px;
+	}
+
+	.project-card > div:last-child {
+		border-bottom: none;
+	}
+
+	.project-card h5 {
+		font-size: 0.875rem;
+		color: #6c757d;
+		margin: 0 0 0.5rem 0;
+		font-weight: 400;
+	}
+
+	.title {
+		font-size: 1.25rem;
+		font-weight: 500;
+		margin: 0 0 0.75rem 0;
+		color: #2c3e50;
+		text-decoration: none;
+		display: block;
+		transition: color 0.2s;
+	}
+
+	.title:hover {
+		color: #007bff;
+		text-decoration: none;
+	}
+
+	.project-tags {
+		margin: 1rem 0;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+	}
+
+	.campus, .agenda, .status {
+		font-size: 0.75rem;
+		border-radius: 1rem;
+		padding: 0.4rem 0.85rem;
+		cursor: pointer;
+		font-weight: 400;
+		border: 1px solid;
+		transition: all 0.2s;
+	}
+
+	.campus {
+		background-color: #ff9f10;
+		color: rgb(55, 39, 0);
+		border-color: #ff9f10;
+		font-size: 0.8rem;
+		font-weight: 600;
+		border-radius: 0;
+	}
+
+	.campus:hover {
+		background-color: #ff9f10;
+		color: #fff;
+		border-color: #ff9f10;
+		transform: translateY(-1px);
+	}
+
+	.agenda {
+		background: linear-gradient(90deg, white, #00ff6e3d);
+		color: #313131;
+		border-color: #313131;
+		border-radius: 0;
+	}
+
+	.agenda:hover {
+		background-color: #28a745;
+		color: #fff;
+		border-color: #28a745;
+		transform: translateY(-1px);
+	}
+
+	.status {
+		background-color: whitesmoke;
+		color: #1CB889;
+		border-color: #1CB889;
+		border-radius: 0;
+	}
+
+	.status:hover {
+		background-color: #17a2b8;
+		color: #fff;
+		border-color: #17a2b8;
+		transform: translateY(-1px);
+	}
+
+	.project-authors {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 1rem;
+		margin: 1rem 0;
+	}
+
+	.project-authors content {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		gap: 0.75rem;
+	}
+
+	.project-authors img, .project-authors .avatar-placeholder {
+		width: 2.5rem;
+		height: 2.5rem;
+		font-weight: 500;
+		color: white;
+		border-radius: 50%;
+		object-fit: cover;
+		border: 2px solid #dee2e6;
+		transition: all 0.2s;
+	}
+
+	.project-authors img:hover, .project-authors .avatar-placeholder:hover {
+		border-color: #007bff;
+		transform: scale(1.1);
+	}
+
+	.avatar-placeholder {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: #e9ecef;
+		font-size: 0.9rem;
+		font-weight: 600;
+		color: #495057;
+	}
+
+	.project-authors a {
+		font-size: 0.9rem;
+		color: #2c3e50;
+		text-decoration: none;
+		transition: color 0.2s;
+	}
+
+	.project-authors a:hover {
+		color: #007bff;
+	}
+
+	.view {
+		display: inline-block;
+		margin-top: 0.75rem;
+		font-size: 0.9rem;
+		color: #007bff;
+		text-decoration: none;
+		font-weight: 500;
+		transition: all 0.2s;
+	}
+
+	.view:hover {
+		color: #0056b3;
+		text-decoration: underline;
+	}
+
+	/* Modal */
+	.modal-overlay {
+		display: none;
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background: rgba(0, 0, 0, 0.4);
+		backdrop-filter: blur(2px);
+		z-index: 1000;
+		animation: fadeIn 0.2s ease;
+	}
+
+	@keyframes fadeIn {
+		from { opacity: 0; }
+		to { opacity: 1; }
+	}
+
+	.modal-overlay.active {
+		display: block;
+	}
+
+	.modal {
+		display: none;
+		position: fixed;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		background: white;
+		padding: 2rem;
+		border-radius: 8px;
+		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+		z-index: 1001;
+		max-width: 400px;
+		width: 90%;
+	}
+
+	.modal.active {
+		display: block;
+	}
+
+	.modal h3 {
+		margin-top: 0;
+		margin-bottom: 20px;
+	}
+
+	.modal input[type="file"] {
+		margin-bottom: 20px;
+		width: 100%;
+	}
+
+	.modal-actions {
+		display: flex;
+		gap: 30px;
+		justify-content: flex-end;
+		margin-right: 20px;
+	}
+
+	.modal-actions button {
+		padding: 0.6rem 1.4rem;
+		border: none;
+		border-radius: 2rem;
+		cursor: pointer;
+		font-size: 1rem;
+		font-weight: 500;
+		transition: all 0.2s ease;
+	}
+
+	.modal-actions .upload-btn {
+		background: #00681a;
+		color: white;
+	}
+
+	.modal-actions .upload-btn:hover {
+		background-color: #444;
+		transform: translateY(-1px);
+	}
+
+	.modal-actions .cancel-btn {
+		background: #a9a9a9;
+		color: white;
+	}
+
+	.modal-actions .cancel-btn:hover {
+		background-color: #444;
+		transform: translateY(-1px);
+	}
+
+	/* Empty state */
+	.empty-state {
+		padding: 3rem 2rem;
+		color: #6c757d;
+		text-align: center;
+		font-size: 1rem;
+		background-color: #f8f9fa;
+		border-radius: 8px;
+		margin: 1rem 0;
+	}
+
+	/* Responsive */
+	@media (max-width: 1200px) {
+		.profile-info-grid {
+			gap: 2rem;
+		}
+		
+		.profile-section {
+			flex: 1 1 calc(50% - 1rem);
+			min-width: 160px;
+			border-right: none;
+			border-bottom: 1px solid #e9ecef;
+			padding-bottom: 1.5rem;
+			margin-bottom: 1.5rem;
+		}
+		
+		.profile-section:nth-last-child(-n+2) {
+			border-bottom: none;
+		}
+		
+		.profile-section.name-section {
+			flex: 1 1 100%;
+		}
+	}
+
+	@media (max-width: 768px) {
+		main > section {
+			flex-direction: column;
+			align-items: center;
+			padding: 2rem;
+		}
+
+		.edit-profile-btn {
+			top: 1rem;
+			right: 1rem;
+			font-size: 0.85rem;
+			padding: 0.5rem 1rem;
+		}
+
+		.edit-profile-btn span {
+			display: none;
+		}
+
+		.propic {
+			margin: 0 0 2rem 0;
+		}
+
+		.profile-info-grid {
+			width: 100%;
+		}
+
+		.profile-section {
+			flex: 1 1 100%;
+			border-right: none;
+			border-bottom: 1px solid #e9ecef;
+			padding: 0 0 1.5rem 0;
+			margin-bottom: 1.5rem;
+		}
+
+		.profile-section:last-child {
+			border-bottom: none;
+			margin-bottom: 0;
+		}
+
+		.profile-section.name-section {
+			text-align: center;
+		}
+
+		.college-logo-container {
+			display: flex;
+			justify-content: center;
+		}
+
+		.lower {
+			padding: 0 2rem 2rem 2rem;
+		}
+
+		.bio, .project {
+			flex-basis: 100%;
+		}
+	}
+
+	@media (max-width: 600px) {
+		main {
+			margin: 0.5rem;
+		}
+
+		main > section {
+			padding: 1.5rem;
+			gap: 2rem;
+		}
+
+		.edit-profile-btn {
+			top: 0.75rem;
+			right: 0.75rem;
+		}
+
+		.propic img {
+			width: 5rem;
+			height: 5rem;
+		}
+
+		.profile-name {
+			font-size: 1rem;
+		}
+
+		.lower {
+			padding: 0 1.5rem 1.5rem 1.5rem;
+		}
+
+		.bio, .project {
+			padding: 1.5rem;
+		}
+
+		.bio, .project {
+			padding: 0.5rem 1.5rem;
+			margin: 0.5rem;
+		}
+
+		.lower-header {
+			flex-direction: column;
+			display:flex;
+			align-items: flex-start;
+			gap: 1rem;
+		}
+
+		.sort-controls {
+			width: 100%;
+		}
+
+		.dropdown-btn {
+			width: 100%;
+		}
+	}
+</style>
+
+</head>
+<body>
+	<!-- Main Content -->
+	<main>
+		<!-- Profile Header Section -->
+		<section style="position: relative;">
+			{% if can_edit %}
+			<a href="{% url 'edit_user' profile_user.id %}" class="edit-profile-btn">
+				<i class="fa-solid fa-pen"></i>
+				<span>Edit Profile</span>
+			</a>
+			{% endif %}
+			<div class="profile-info-grid">
+				<!-- Profile Picture -->
+				<div class="propic" {% if can_edit %}onclick="openImageModal()"{% endif %}>
+					<img src="{{ profile_user.profile_picture_or_initial }}" alt="{{ profile_user.get_full_name }}">
+					{% if can_edit %}
+					<div class="edit-overlay">
+						<i class="fa-solid fa-camera"></i>
+						<span>Change Photo</span>
+					</div>
+					{% endif %}
+				</div>
+
+				<!-- Name / Campus / College -->
+				<div class="profile-section name-section">
+					<h2 class="profile-name">{{ profile_user.get_full_name }}</h2>
+					{% if profile_user.role in HAS_COLLEGE_CAMPUS %}
+					<div class="profile-campus">
+						<i class="fas fa-map-marker-alt"></i>
+						<span>{{ campus_display }}</span>
+					</div>
+					{% endif %}
+					{% if profile_user.role in HAS_COLLEGE_CAMPUS %}
+					<div class="college-logo-container">
+						{% if college_logo %}
+						<img src="{{ college_logo }}" alt="{{ college_name }}" title="{{ college_name }}">
+						{% else %}
+						<div class="college-logo-placeholder" title="{{ college_name }}">
+							{{ college_name.0|default:"?" }}
+						</div>
+						{% endif %}
+					</div>
+					{% elif profile_user.role == "UESO" or profile_user.role == "DIRECTOR" %}
+					<div class="college-logo-container">
+						<img src="{% static 'ueso.png' %}" alt="UESO" title="University Extension Services Office">
+					</div>
+					{% endif %}
+				</div>
+
+				<!-- Field of Expertise / Degree (for FACULTY/IMPLEMENTER) -->
+				{% if profile_user.role in HAS_DEGREE_EXPERTISE %}
+				<div class="profile-section field-section">
+					<p class="info-label">Field of Expertise</p>
+					<p class="info-value">{{ profile_user.expertise|default:"Not specified" }}</p>
+				</div>
+				{% if college_name and college_name != "N/A" %}
+				<div class="profile-section degree-section">
+					<p class="info-label">{{ profile_user.degree|default:"Degree" }}</p>
+					<p class="info-value">{{ college_name }}</p>
+				</div>
+				{% endif %}
+				{% endif %}
+
+				<!-- Company / Industry (for CLIENT) -->
+				{% if profile_user.role in HAS_COMPANY_INDUSTRY %}
+				<div class="profile-section company-section">
+					<p class="info-label">Company</p>
+					<p class="info-value">{{ profile_user.company|default:"Not specified" }}</p>
+				</div>
+				<div class="profile-section industry-section">
+					<p class="info-label">Industry</p>
+					<p class="info-value">{{ profile_user.industry|default:"Not specified" }}</p>
+				</div>
+				{% endif %}
+
+				<!-- Role / College (for other roles) -->
+				{% if profile_user.role not in HAS_DEGREE_EXPERTISE and profile_user.role not in HAS_COMPANY_INDUSTRY %}
+				<div class="profile-section field-section">
+					<p class="info-label">Role</p>
+					<p class="info-value">{{ profile_user.get_role_display }}</p>
+				</div>
+				{% if college_name and college_name != "N/A" %}
+				<div class="profile-section degree-section">
+					<p class="info-label">College</p>
+					<p class="info-value">{{ college_name }}</p>
+				</div>
+				{% endif %}
+				{% endif %}
+
+				<!-- Email / Contact Number -->
+				<div class="profile-section contact-section">
+					<p class="info-label">Contact</p>
+					<p class="info-value">{{ profile_user.email }}</p>
+					<p class="info-value">{{ profile_user.contact_no }}</p>
+				</div>
+			</div>
+		</section>
+
+		<!-- Lower Section: Bio and Projects -->
+		<section class="lower">
+			<div class="bio">
+				<div class="lower-header">
+					<h1>
+						Bio
+						{% if can_edit %}
+						<button class="edit-bio-btn" onclick="toggleBioEditor(true)" title="Edit Bio">
+							<i class="fa-solid fa-pen"></i>
+						</button>
+						{% endif %}
+					</h1>
+				</div>
+				<div class="bio-content">
+					<div class="bio-display">
+						<div class="bio-text">
+							{{ profile_user.bio|linebreaksbr|default:"This user has not provided a bio." }}
+						</div>
+					</div>
+					{% if can_edit %}
+					<div class="bio-editor">
+						<form id="bioForm" method="POST" action="{% url 'update_bio' %}">
+							{% csrf_token %}
+							<textarea name="bio" id="bioTextarea">{{ profile_user.bio|default:"" }}</textarea>
+							<div class="bio-editor-actions">
+								<button type="submit" class="save-bio-btn">Save</button>
+								<button type="button" class="cancel-bio-btn" onclick="toggleBioEditor(false)">Cancel</button>
+							</div>
+						</form>
+					</div>
+					{% endif %}
+				</div>
+			</div>
+
+			<div class="project">
+				<div class="lower-header">
+					<div>
+						<h1>
+							{% if profile_user.role in "FACULTY,IMPLEMENTER" %}
+							{% if can_edit %}My Projects{% else %}Projects{% endif %} ({{ content_items_count }})
+							{% elif profile_user.role in "PROGRAM_HEAD,DEAN,COORDINATOR" %}
+							College Projects ({{ content_items_count }})
+							{% elif profile_user.role == "CLIENT" %}
+							{% if can_edit %}My Requests{% else %}Requests{% endif %} ({{ content_items_count }})
+							{% else %}
+							Projects ({{ content_items_count }})
+							{% endif %}
+						</h1>
+					</div>
+					<div class="sort-controls">
+						<span>Sort by:</span>
+						<select id="sortContent" class="dropdown-btn" style="margin: 0.75rem 0;">
+							<option value="date-desc">Newest First</option>
+							<option value="date-asc">Oldest First</option>
+							<option value="title-asc">Title (A-Z)</option>
+							<option value="title-desc">Title (Z-A)</option>
+							{% if profile_user.role != "CLIENT" %}
+							<option value="status">Status</option>
+							{% endif %}
+						</select>
+					</div>
+				</div>
+				<div class="project-card" id="contentList">
+					<!-- Will be populated by JavaScript -->
+				</div>
+			</div>
+		</section>
+	</main>
+
+	<!-- Image Upload Modal -->
+	<div class="modal-overlay" id="imageModalOverlay" onclick="closeImageModal()"></div>
+	<div class="modal" id="imageModal">
+		<h3>Change Profile Picture</h3>
+		<form id="imageForm" method="POST" action="{% url 'update_profile_picture' %}" enctype="multipart/form-data">
+			{% csrf_token %}
+			<input type="file" name="profile_picture" accept="image/jpeg,image/png,image/jpg,image/gif,image/webp" required>
+			<div class="modal-actions">
+				<button type="submit" class="upload-btn">Upload</button>
+				<button type="button" class="cancel-btn" onclick="closeImageModal()">Cancel</button>
+			</div>
+		</form>
+	</div>
 
 <script>
-const projectsData = [
-    {% for project in projects %}
-    {
-        id: {{ project.id }},
-        title: "{{ project.title|escapejs }}",
-        date: "{{ project.start_date|date:'Y-m-d' }}",
-        // CHANGE 2: Changed date format from 'F Y' to 'F j, Y' (e.g., "October 28, 2025")
-        dateDisplay: "{{ project.start_date|date:'F j, Y' }}",
-        status: "{{ project.status }}",
-        statusDisplay: "{% if project.status == 'COMPLETED' %}Completed{% elif project.status == 'IN_PROGRESS' %}Ongoing{% elif project.status == 'NOT_STARTED' %}Not Started{% elif project.status == 'ON_HOLD' %}On Hold{% elif project.status == 'CANCELLED' %}Cancelled{% endif %}",
-        leaderCampus: "{{ project.project_leader.get_campus_display|default:'N/A'|escapejs }}",
-        agenda: "{{ project.agenda.name|default:''|escapejs }}",
-        leader: {
-            id: {{ project.project_leader.id|default:0 }},
-            name: "{{ project.project_leader.get_full_name|escapejs }}",
-            // FIX 3: Corrected initials
-            initials: "{{ project.project_leader.given_name.0 }}"
-        },
-        providers: [
-            {% for provider in project.providers.all %}
-            {
-                id: {{ provider.id }},
-                name: "{{ provider.get_full_name|escapejs }}",
-                // FIX 3: Corrected initials
-                initials: "{{ provider.given_name.0 }}"
-            }{% if not forloop.last %},{% endif %}
-            {% endfor %}
-        ],
-        providersCount: {{ project.providers.count }}
-    }{% if not forloop.last %},{% endif %}
-    {% endfor %}
-];
-
-
-function renderProjects(projects) {
-    const container = document.getElementById('projectsList');
-    if (projects.length === 0) {
-        container.innerHTML = '<div style="padding: 1rem 3rem; color: #666; margin-top: 1rem;">No projects found for this expert.</div>';
-        return;
-    }
-    
-    container.innerHTML = projects.map(project => {
-        // --- Status Tag Logic ---
-        let statusTag = '';
-        if (project.status === 'COMPLETED') {
-            statusTag = '<button class="status" style="color: #1CB889; border-color: #1CB889;">Completed</button>';
-        } else if (project.status === 'IN_PROGRESS') {
-            statusTag = '<button class="status" style="color: #007bff; border-color: #007bff;">Ongoing</button>';
-        } else if (project.status === 'NOT_STARTED') {
-            statusTag = '<button class="status" style="color: #6c757d; border-color: #6c757d;">Not Started</button>';
-        } else if (project.status === 'ON_HOLD') {
-            statusTag = '<button class="status" style="color: #ffc107; border-color: #ffc107;">On Hold</button>';
-        } else if (project.status === 'CANCELLED') {
-            statusTag = '<button class="status" style="color: #dc3545; border-color: #dc3545;">Cancelled</button>';
-        } else {
-            statusTag = `<button class="status" style="color: #6c757d; border-color: #6c757d;">${project.status}</button>`;
-        }
-
-        // --- Authors/Providers Logic (Show leader + 2 providers) ---
-        let authorsHTML = '';
-        if (project.leader) {
-            authorsHTML += `
-            <content>
-                <div class="avatar-placeholder">${project.leader.initials}</div>
-                <a href="/experts/profile/${project.leader.id}/">${project.leader.name}</a> 
-            </content>
-            `;
-        }
-        
-        const providersList = project.providers.slice(0, 2).map(p => 
-            `<content>
-                <div class="avatar-placeholder">${p.initials}</div>
-                <a href="/experts/profile/${p.id}/">${p.name}</a> 
-            </content>`
-        ).join('');
-        authorsHTML += providersList;
-        
-        const moreProviders = project.providersCount > 2 ? 
-            `<content style="align-items: center;"><a href="/projects/${project.id}/">+${project.providersCount - 2} more</a></content>` : '';
-        authorsHTML += moreProviders;
-
-        // --- Final HTML for the card ---
-        return `
-            <div>
-                <h5>${project.dateDisplay}</h5>
-                <a href="/projects/${project.id}/" class="title">${project.title}</a>
-                <section class="project-tags">
-                    <button class="campus">${project.leaderCampus}</button>
-                    ${project.agenda ? `<button class="agenda">${project.agenda}</button>` : ''}
-                    ${statusTag}
-                </section>
-                <section class="project-authors"> 
-                    ${authorsHTML}
-                </section>
-                <a href="/projects/${project.id}/" class="view">View</a> 
-            </div>
-        `;
-    }).join('');
+// Image modal
+function openImageModal() {
+	document.getElementById('imageModalOverlay').classList.add('active');
+	document.getElementById('imageModal').classList.add('active');
 }
 
-// Original sort event listener
-document.getElementById('sortProjects').addEventListener('change', function(e) {
-    const sortBy = e.target.value;
-    let sorted = [...projectsData];
-    
-    switch(sortBy) {
-        case 'date-desc':
-            sorted.sort((a, b) => new Date(b.date) - new Date(a.date));
-            break;
-        case 'date-asc':
-            sorted.sort((a, b) => new Date(a.date) - new Date(b.date));
-            break;
-        case 'title-asc':
-            sorted.sort((a, b) => a.title.localeCompare(b.title));
-            break;
-        case 'title-desc':
-            sorted.sort((a, b) => b.title.localeCompare(a.title));
-            break;
-        case 'status':
-            const statusOrder = {'COMPLETED': 1, 'IN_PROGRESS': 2, 'NOT_STARTED': 3, 'ON_HOLD': 4, 'CANCELLED': 5};
-            sorted.sort((a, b) => (statusOrder[a.status] || 99) - (statusOrder[b.status] || 99));
-            break;
-    }
-    
-    renderProjects(sorted);
+function closeImageModal() {
+	document.getElementById('imageModalOverlay').classList.remove('active');
+	document.getElementById('imageModal').classList.remove('active');
+}
+
+// Bio editor
+function toggleBioEditor(show) {
+	const display = document.querySelector('.bio-display');
+	const editor = document.querySelector('.bio-editor');
+	
+	if (show) {
+		display.style.display = 'none';
+		editor.classList.add('active');
+	} else {
+		display.style.display = 'block';
+		editor.classList.remove('active');
+	}
+}
+
+// Content data and rendering
+const contentData = [
+	{% if profile_user.role == "CLIENT" %}
+		{% for request in content_items %}
+		{
+			id: {{ request.id }},
+			title: "{{ request.title|escapejs }}",
+			date: "{{ request.created_at|date:'Y-m-d' }}",
+			dateDisplay: "{{ request.created_at|date:'F j, Y' }}",
+			status: "{{ request.status }}",
+			type: "request"
+		}{% if not forloop.last %},{% endif %}
+		{% endfor %}
+	{% else %}
+		{% for project in content_items %}
+		{
+			id: {{ project.id }},
+			title: "{{ project.title|escapejs }}",
+			date: "{{ project.start_date|date:'Y-m-d' }}",
+			dateDisplay: "{{ project.start_date|date:'F j, Y' }}",
+			status: "{{ project.status }}",
+			statusDisplay: "{% if project.status == 'COMPLETED' %}Completed{% elif project.status == 'IN_PROGRESS' %}Ongoing{% elif project.status == 'NOT_STARTED' %}Not Started{% elif project.status == 'ON_HOLD' %}On Hold{% elif project.status == 'CANCELLED' %}Cancelled{% endif %}",
+			leaderCampus: "{{ project.project_leader.get_campus_display|default:'N/A'|escapejs }}",
+			agenda: "{{ project.agenda.name|default:''|escapejs }}",
+			leader: {
+				id: {{ project.project_leader.id|default:0 }},
+				name: "{{ project.project_leader.get_full_name|escapejs }}",
+				initials: "{{ project.project_leader.given_name.0 }}",
+				profilePicture: "{{ project.project_leader.profile_picture_or_initial|escapejs }}"
+			},
+			providers: [
+				{% for provider in project.providers.all %}
+				{
+					id: {{ provider.id }},
+					name: "{{ provider.get_full_name|escapejs }}",
+					initials: "{{ provider.given_name.0 }}",
+					profilePicture: "{{ provider.profile_picture_or_initial|escapejs }}"
+				}{% if not forloop.last %},{% endif %}
+				{% endfor %}
+			],
+			providersCount: {{ project.providers.count }},
+			type: "project"
+		}{% if not forloop.last %},{% endif %}
+		{% endfor %}
+	{% endif %}
+];
+
+function renderContent(items) {
+	const container = document.getElementById('contentList');
+	
+	// Handle empty state
+	if (items.length === 0) {
+		{% if profile_user.role == "CLIENT" %}
+		container.innerHTML = '<div class="empty-state">{% if can_edit %}You have{% else %}This user has{% endif %} no requests yet.</div>';
+		{% else %}
+		container.innerHTML = '<div class="empty-state">No projects found for this user.</div>';
+		{% endif %}
+		return;
+	}
+	
+	// Render items
+	container.innerHTML = items.map(item => {
+		if (item.type === 'request') {
+			return `
+				<div>
+					<h5>${item.dateDisplay}</h5>
+					<a href="/requests/details/${item.id}/" class="title">${item.title}</a>
+					<section class="project-tags">
+						<button class="status" style="color: #007bff; border-color: #007bff;">${item.status}</button>
+					</section>
+					<a href="/requests/details/${item.id}/" class="view">View</a>
+				</div>
+			`;
+		} else {
+			// Status Tag Logic
+			let statusTag = '';
+			if (item.status === 'COMPLETED') {
+				statusTag = '<button class="status" style="color: #1CB889; border-color: #1CB889;">Completed</button>';
+			} else if (item.status === 'IN_PROGRESS') {
+				statusTag = '<button class="status" style="color: #007bff; border-color: #007bff;">Ongoing</button>';
+			} else if (item.status === 'NOT_STARTED') {
+				statusTag = '<button class="status" style="color: #6c757d; border-color: #6c757d;">Not Started</button>';
+			} else if (item.status === 'ON_HOLD') {
+				statusTag = '<button class="status" style="color: #ffc107; border-color: #ffc107;">On Hold</button>';
+			} else if (item.status === 'CANCELLED') {
+				statusTag = '<button class="status" style="color: #dc3545; border-color: #dc3545;">Cancelled</button>';
+			} else {
+				statusTag = `<button class="status" style="color: #6c757d; border-color: #6c757d;">${item.status}</button>`;
+			}
+
+			// Authors/Providers Logic (Show leader + 2 providers)
+			let authorsHTML = '';
+			if (item.leader) {
+				authorsHTML += `
+				<content>
+					<img src="${item.leader.profilePicture}" alt="${item.leader.name}">
+					<a href="/profile/${item.leader.id}/">${item.leader.name}</a>
+				</content>
+				`;
+			}
+			
+			const providersList = item.providers.slice(0, 2).map(p => 
+				`<content>
+					<img src="${p.profilePicture}" alt="${p.name}">
+					<a href="/profile/${p.id}/">${p.name}</a>
+				</content>`
+			).join('');
+			authorsHTML += providersList;
+			
+			const moreProviders = item.providersCount > 2 ? 
+				`<content style="align-items: center;"><a href="/projects/${item.id}/">+${item.providersCount - 2} more</a></content>` : '';
+			authorsHTML += moreProviders;
+
+			return `
+				<div>
+					<h5>${item.dateDisplay}</h5>
+					<a href="/projects/${item.id}/" class="title">${item.title}</a>
+					<section class="project-tags">
+						<button class="campus">${item.leaderCampus}</button>
+						${item.agenda ? `<button class="agenda">${item.agenda}</button>` : ''}
+						${statusTag}
+					</section>
+					<section class="project-authors">
+						${authorsHTML}
+					</section>
+					<a href="/projects/${item.id}/" class="view">View</a>
+				</div>
+			`;
+		}
+	}).join('');
+}
+
+document.getElementById('sortContent').addEventListener('change', function(e) {
+	const sortBy = e.target.value;
+	let sorted = [...contentData];
+	
+	switch(sortBy) {
+		case 'date-desc':
+			sorted.sort((a, b) => new Date(b.date) - new Date(a.date));
+			break;
+		case 'date-asc':
+			sorted.sort((a, b) => new Date(a.date) - new Date(b.date));
+			break;
+		case 'title-asc':
+			sorted.sort((a, b) => a.title.localeCompare(b.title));
+			break;
+		case 'title-desc':
+			sorted.sort((a, b) => b.title.localeCompare(a.title));
+			break;
+		case 'status':
+			const statusOrder = {'COMPLETED': 1, 'IN_PROGRESS': 2, 'NOT_STARTED': 3, 'ON_HOLD': 4, 'CANCELLED': 5};
+			sorted.sort((a, b) => (statusOrder[a.status] || 99) - (statusOrder[b.status] || 99));
+			break;
+	}
+	
+	renderContent(sorted);
 });
 
 // Initial render
-renderProjects(projectsData);
+renderContent(contentData);
 </script>
 
 </body>

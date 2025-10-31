@@ -13,6 +13,10 @@ def submission_admin_view(request):
     from django.db.models import Case, When, Value, IntegerField
     user_role = getattr(request.user, 'role', None)
     submissions = Submission.objects.all()
+    
+    # Filter submissions by college for COORDINATOR
+    if user_role == "COORDINATOR" and request.user.college:
+        submissions = submissions.filter(project__project_leader__college=request.user.college)
 
     # Filters
     sort_by = request.GET.get('sort_by', 'deadline')
@@ -191,9 +195,10 @@ def add_submission_requirement(request):
             
 
         
-        # Add success message and redirect to refresh the event availability data
-        messages.success(request, 'Submission requirements added successfully!')
-        return redirect('add_submission')
+        # Redirect with toast parameters
+        from urllib.parse import quote
+        count = len(downloadable_ids)
+        return redirect(f'/submissions/?success=true&action=created&count={count}&title={quote(project.title)}')
     else:
         return render(request, 'submissions/add_submissions.html', {
             'projects': projects,

@@ -2,7 +2,7 @@ from django.urls import path
 from .views import (
     add_project_view, admin_submission_action, projects_dispatcher, project_profile,
     project_overview, project_providers, project_events, project_files, project_submissions, project_expenses, project_evaluations,
-    project_submissions_details,
+    project_submissions_details, edit_project_evaluation, delete_project_evaluation,
     cancel_project, undo_cancel_project,
 )
 
@@ -18,6 +18,8 @@ urlpatterns = [
     path('<int:pk>/submission/', project_submissions, name='project_submissions'),
     path('<int:pk>/expenses/', project_expenses, name='project_expenses'),
     path('<int:pk>/evaluations/', project_evaluations, name='project_evaluations'),
+    path('<int:pk>/evaluations/<int:eval_id>/edit/', edit_project_evaluation, name='edit_project_evaluation'),
+    path('<int:pk>/evaluations/<int:eval_id>/delete/', delete_project_evaluation, name='delete_project_evaluation'),
 
     path('<int:pk>/submission/<int:submission_id>/', project_submissions_details, name='project_submissions_details'),
     path('<int:pk>/submission/<int:submission_id>/admin_action/', admin_submission_action, name='admin_submission_action'),

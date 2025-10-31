@@ -18,10 +18,6 @@
             <h2>Edit Announcement</h2> 
         </div>
 
-		{% if success %}
-            <div class="success-message">Announcement edited successfully!</div>
-        {% endif %}
-
 		<form class="announcement-form" method="post" enctype="multipart/form-data">
 			{% csrf_token %}
 			<div class="user-details-section"> 
