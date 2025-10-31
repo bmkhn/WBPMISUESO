@@ -114,38 +114,27 @@
 
                 <!-- Calendar/Upcoming Events -->
                 <div class="calendar-container">
+                    <div class="mini-calendar-header">
+                        <button class="prev-month" title="Previous Month">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+                        
+                        <span class="current-month-year">Loading...</span>
+                        
+                        <button class="next-month" title="Next Month">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
+
                     <div class="mini-calendar-body">
                         <div class="weekdays">
                             <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
                         </div>
-                        <div class="days-grid"></div>
+                        
+                        <div class="days-grid">
+                            </div>
                     </div>
                 </div>
-            </div>
-            {% endif %}
-
-            <!-- Project Container -->
-            {% if user.role in FACULTY_ROLES %}
-            <div class="project-container">
-                <div class="project-text">Latest Extension Projects</div>
-                {% if faculty_projects_image %}
-                <div class="project-box">
-                    {% for project in faculty_projects_image %}
-                    <div class="project-item">
-                        <div class="project-pic">
-                            <img src="{{ project.image_url }}" alt="Project Event Image" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" />
-                        </div>
-                        <div class="project-details">
-                            <div class="project-title">{{ project.title }}</div>
-                            <div class="project-desc">{{ project.agenda }}</div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-                <a href="{% url 'project_dispatcher' %}" class="project-more" style="text-decoration:none;">View More Projects →</a>
-                {% else %}
-                <div class="no-data" style="background:#fff;border:1px solid #E0E0E0;border-radius:12px;padding:40px;">No completed projects found</div>
-                {% endif %}
             </div>
             {% endif %}
 
@@ -177,9 +166,33 @@
         </div>
     </div>
     
+    <!-- Project Container -->
+    {% if user.role in FACULTY_ROLES %}
+    <div class="project-container">
+        <div class="project-text">Latest Extension Projects</div>
+        {% if faculty_projects_image %}
+        <div class="project-box">
+            {% for project in faculty_projects_image %}
+            <div class="project-item">
+                <div class="project-pic">
+                    <img src="{{ project.image_url }}" alt="Project Event Image" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" />
+                </div>
+                <div class="project-details">
+                    <div class="project-title">{{ project.title }}</div>
+                    <div class="project-desc">{{ project.agenda }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <a href="{% url 'project_dispatcher' %}" class="project-more" style="text-decoration:none;">View More Projects →</a>
+        {% else %}
+        <div class="no-data" style="background:#fff;border:1px solid #E0E0E0;border-radius:12px;padding:40px;">No completed projects found</div>
+        {% endif %}
+    </div>
+    {% endif %}
+    
 <script>
-    // DEFINE GLOBAL EVENT DATA (e.g., from Django context variable events_json)
-    const EVENTS_DATA = {{ events_json|safe }}; 
+    const EVENTS_DATA = {{ events_json|safe }};
     
     // The rest of the calendar script goes here:
     

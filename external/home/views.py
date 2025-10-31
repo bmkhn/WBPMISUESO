@@ -4,7 +4,7 @@ from shared.announcements.models import Announcement
 from shared.projects.models import Project 
 import json
  
-from shared.event_calendar import services 
+from shared.event_calendar import services as calendar_services
 from django.http import JsonResponse
 from django.db.models import Count
 from collections import OrderedDict
@@ -71,7 +71,7 @@ def home_view(request):
             viewed=False
         ).select_related('project', 'submission').order_by('-updated_at')[:5]
          
-        events_by_date = services.get_events_by_date(request.user, for_main_calendar_view=False)
+        events_by_date = calendar_services.get_events_by_date(request.user, for_main_calendar_view=True)
         events_json = json.dumps(events_by_date)
 
     latest_announcements = Announcement.objects.filter(published_at__isnull=False, archived=False).order_by('-published_at')[:2]
@@ -79,7 +79,7 @@ def home_view(request):
         context = {'is_user': True, 'user_role': getattr(request.user, 'role', None)}
     else:
         context = {'is_user': False}
-    return render(request, 'home/home.html', {
+    render_context = {
         'context': context,
         'latest_announcements': latest_announcements,
         'PUBLIC_ROLES': PUBLIC_ROLES,
@@ -92,5 +92,9 @@ def home_view(request):
         'ongoing_projects_count': ongoing_projects_count,
         'upcoming_meetings_count': upcoming_meetings_count,
         'my_alerts': my_alerts,
-        'events_json': events_json,
-    })
+    }
+
+    if request.user.is_authenticated:
+        render_context['events_json'] = events_json
+
+    return render(request, 'home/home.html', render_context)
