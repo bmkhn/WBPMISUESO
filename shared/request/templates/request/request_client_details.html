@@ -1,6 +1,6 @@
 {% extends "base_public.html" %}
 {% block content %}
-
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,377 +9,21 @@
 <title>Budget</title>
 
 <link href="https://fonts.googleapis.com/css?family=Inter:400,500,600,700,800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-
-<!-- General -->
-<style>
-    body {
-        background: #F9F9F9;
-        font-family: 'Inter', sans-serif;
-    }
-
-	main {
-		display: flex;
-		flex-direction: row;
-		gap: 70px;
-		margin: 70px;
-		justify-content: space-between;
-	}
-
-	h2 {
-		font-size: 1.75rem;
-		font-weight: 500;
-	}
-
-	.hidden {
-		display: none;
-	}
-</style>
-
-<!-- Left -->
-<style>
-	.widgets {
-		background-color: white;
-		border-radius: 1rem;
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
-		padding: 20px;
-		height: 650px;
-		display: flex;
-		flex-direction: column;
-		gap: 30px; 
-		min-width: 270px;
-	}
-
-	.widgets-header {
-		padding: 20px 20px 0 20px;
-		display: flex;
-		align-items: center;
-		height: 4rem; 
-	}  
-
-	.widgets button {
-		border: 0.11rem solid #262626;
-		border-radius: 5rem;
-		padding: 0.5rem 1rem;
-		font-size: 1rem;
-		font-weight: 400; 
-		height: 3rem;
-		cursor: pointer;
-		transition: all 0.2s ease;
-		background-color: white;
-		color: #262626;
-	}
-
-	.widgets button:hover {
-		background-color: #5b5b5b;
-		color: white; 
-	}
-
-	.widgets button.active {
-		background-color: #262626;
-		color: white; 
-	} 
-</style>
-
-<!-- Right -->
-<style>
-	.right-container {
-		display: flex;
-		flex-direction: column;
-		width: 100%;
-		gap: 30px;
-	}
-
-	.progress-container {
-		display: flex;
-		flex-direction: row;
-		align-items: center;
-		gap: 20px;
-		justify-content: center;
-		margin: 0 30px;
-	}
-
-	.progress-group {
-		display: flex;
-		flex-direction: column;
-		gap: 10px;
-		align-items: center;
-	}
-
-	.progress-svg {
-		text-align: center;
-		width: 70px;
-		height: 70px;
-	}
-
-	.progress-text {
-		text-align: center;
-		font-family: 'Inter', sans-serif;
-		font-weight: 500;
-		font-size: 18px;
-	}
-
-	.progress-line {
-		width: 100%;
-		height: 4px;
-		background-color: #ADADAD;
-		border-radius: 2px;
-	}
-
-	.done {
-		background-color: #245F3E !important;
-	}
-
-	.list {
-		background-color: white;
-		border-radius: 1rem;
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
-		padding: 50px;
-		height: auto;
-		display: flex;
-		flex-direction: column;
-		gap: 30px; 
-	}
-
-	.step-text {
-		font-family: 'Inter', sans-serif;
-		font-weight: 600;
-		font-size: 28px;
-		color: #000000;
-	}
-
-	.location-text {
-		font-family: 'Inter', sans-serif;
-		font-weight: 400;
-		font-size: 18px;
-		color: #000000;
-		margin-top: -10px;
-	}
-
-	.content-text {
-		font-family: 'Inter', sans-serif;
-		font-weight: 400;
-		font-size: 18px;
-		color: #000000;
-	}
-
-	.detail-trio {
-		display: flex;
-		align-items: flex-start;
-		margin-bottom: 15px;
-	}
-
-	.detail-trio > :nth-child(1) {
-		margin-right: 10px;
-	}
-
-	.detail-trio > :nth-child(2) {
-		margin-right: 50px;
-	}
-
-	.detail-icon {
-		width: 24px;
-		height: 24px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-
-	.detail-item {
-		font-family: 'Inter', sans-serif;
-		font-weight: 600;
-		font-size: 18px;
-		width: 180px;
-	}
-
-	.detail-value {
-		font-family: 'Inter', sans-serif;
-		font-weight: 400;
-		font-size: 18px;
-		flex: 1;
-	}
-
-	.detail-link {
-		color: #0A6C44;
-		text-decoration: none;
-	}
-
-	.detail-link:hover {
-		text-decoration: underline;
-	}
-
-	.from-text {
-		font-family: 'Inter', sans-serif;
-		font-weight: 400;
-		font-size: 18px;
-		color: #000000;
-		text-align: end;
-	}
-
-	.text-button-container {
-		display: flex;
-		justify-content: space-between;
-		flex-direction: row;
-	}
-
-	.view-change-text {
-		font-family: 'Inter', sans-serif;
-		font-weight: 400;
-		font-size: 20px;
-		color: #6B6B6B;
-		text-align: end;
-		cursor: pointer;
-		margin-top: 30px;
-	}
-</style>
-
-
-<style>
-    .name-link {
-        color: #0A6C44 !important;
-        text-decoration: none;
-    }
-
-    .name-link:hover {
-        color: #095c2d;
-        text-decoration: underline;
-    }
-
-    .upper {
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-    }
-
-    .upper-left {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        gap: 5px;
-    }
-
-    .upper-right {
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
-        align-items: flex-end;
-    }
-
-    .file-text {
-        font-size: 2.3em;
-        font-weight: 600;
-    }
-
-    .green-text {
-        color: #0A6C44;
-    }
-
-    .grey-text {
-        font-size: 0.9em;
-        font-weight: 400;
-        color: #6c757d;
-    }
-    
-    .deadline-text {
-        font-size: 1.1em;
-        font-weight: 600;
-        color: #181818;
-    }
-
-    hr {
-        border: none;
-        border-top: 1px solid #7b7b7b;
-        margin: 0.5rem 1rem;
-    }
-
-    .notes-text {
-        font-size: 1.1em;
-        font-weight: 400;
-        color: #181818;
-        word-break: break-word;
-    }
-
-    .trained-individuals-text {
-        font-size: 1.5em;
-        font-weight: 600;
-        color: #181818;
-    }
-
-    input[type="checkbox"] {
-        width: 20px;
-        height: 20px;
-        margin-top: 4px;
-        accent-color: black;
-    }
-
-    .content-leftright {
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-        gap: 150px;
-    }
-
-    .content-left {
-        display: flex;
-        flex-direction: column;
-        gap: 30px;
-    }
-
-    .content-right {
-        display: flex;
-        flex-direction: column;
-        gap: 30px;
-        min-width: 40%;
-        max-width: 40%;
-    }
-
-    .red {
-        color: #D5110A;
-    }
-
-    .redirect-text {
-        color: #007bff;
-        text-decoration: none;
-    }
-
-    .redirect-container {
-        display: flex;
-        gap: 20px;
-    }
-    
-    .redirect-text:hover {
-        text-decoration: underline;
-        cursor: pointer;
-    }
-
-    .action-container {
-        margin-top: 0.5rem;
-    }
-
-    .action-form {
-        display: flex;
-        gap: 15px;
-        justify-content: center;
-    }
-</style>
-
-</head>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
+<link href="{% static 'shared/requests/process.css' %}" rel="stylesheet">
+</head>	
 
 <body>
-
-
 <main>
 	<div class="widgets">
-		<div class="widgets-header">
-			<h2>My Updates</h2>
-		</div>
-		<div class="my-updates-list">
+		<div class="alerts-title">My Updates</div>
+		<div class="alert-list">
 			{% if my_updates %}
 				{% for update in my_updates %}
-				<div class="update-item" onclick="window.location.href='{% url 'request_details_dispatcher' update.request_id %}'">
-					<div class="update-title">{{ update.request.title }}</div>
-					<div class="update-status">{{ update.message }}</div>
-					<div class="update-date">
+				<div class="alert-item" onclick="window.location.href='{% url 'request_details_dispatcher' update.request_id %}'">
+					<div class="alert-title">{{ update.request.title }}</div>
+					<div class="alert-status">{{ update.message }}</div>
+					<div class="alert-date">
 						{{ update.updated_at|date:"M d, Y - h:i A" }}
 						{% if not update.viewed %}
 							<span style="background:#E37910;color:white;border-radius:8px;padding:2px 8px;font-size:11px;margin-left:8px;">New</span>
@@ -392,90 +36,88 @@
 			{% endif %}
 		</div>
 	</div>
-	
-	<style>
-	.update-item {
-		padding: 15px;
-		border-bottom: 1px solid #f0f0f0;
-		display: flex;
-		flex-direction: column;
-		gap: 5px;
-		transition: background 0.2s;
-		cursor: pointer;
-	}
-
-	.update-item:last-child {
-		border-bottom: none;
-	}
-
-	.update-item:hover {
-		background: #f9f9f9;
-	}
-
-	.update-title {
-		font-weight: 600;
-		color: #063A1C;
-		font-size: 14px;
-	}
-
-	.update-status {
-		font-size: 13px;
-		color: #666;
-	}
-
-	.update-date {
-		font-size: 12px;
-		color: #999;
-	}
-	
-	.no-data {
-		text-align: center;
-		color: #999;
-		padding: 30px;
-		font-size: 14px;
-	}
-	</style>
 
 		<div class="right-container">
 		<div class="progress-container">
 			<div class="progress-group">
-				<div class="progress-svg"><svg><use href="#icon-received"></use></svg></div>
-				<div class="progress-text">Received<br>Request</div>
+				<div class="progress-svg">
+					<svg xmlns="http://www.w3.org/2000/svg" width="70" height="70" fill="currentColor" class="bi bi-check2-circle green" viewBox="0 0 16 16">
+						<path d="M2.5 8a5.5 5.5 0 0 1 8.25-4.764.5.5 0 0 0 .5-.866A6.5 6.5 0 1 0 14.5 8a.5.5 0 0 0-1 0 5.5 5.5 0 1 1-11 0"/>
+						<path d="M15.354 3.354a.5.5 0 0 0-.708-.708L8 9.293 5.354 6.646a.5.5 0 1 0-.708.708l3 3a.5.5 0 0 0 .708 0z"/>
+					</svg>
+				</div>
+				<div class="progress-text">Received Request</div>
 			</div>
 			<div class="progress-line{% if req.status == 'UNDER_REVIEW' or req.status == 'APPROVED' or req.status == 'REJECTED' or req.status == 'ENDORSED' or req.status == 'DENIED' %} done{% endif %}"></div>
 			<div class="progress-group">
 				{% if req.status == 'UNDER_REVIEW' or req.status == 'APPROVED' or req.status == 'REJECTED' or req.status == 'ENDORSED' or req.status == 'DENIED' %}
-				<div class="progress-svg"><svg><use href="#icon-reviewing-done"></use></svg></div>
-				<div class="progress-text">Reviewing<br>Request</div>    
+				<div class="progress-svg">
+					<svg xmlns="http://www.w3.org/2000/svg" width="70" height="70" fill="currentColor" class="bi bi-layout-text-sidebar-reverse green" viewBox="0 0 16 16">
+						<path d="M12.5 3a.5.5 0 0 1 0 1h-5a.5.5 0 0 1 0-1zm0 3a.5.5 0 0 1 0 1h-5a.5.5 0 0 1 0-1zm.5 3.5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h5a.5.5 0 0 0 .5-.5m-.5 2.5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1 0-1z"/>
+						<path d="M16 2a2 2 0 0 0-2-2H2a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2zM4 1v14H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zm1 0h9a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5z"/>
+					</svg>
+				</div>
+				<div class="progress-text">Reviewing Request</div>    
 				{% else %}
-				<div class="progress-svg"><svg><use href="#icon-reviewing"></use></svg></div>
-				<div class="progress-text">Reviewing<br>Request</div>
+				<div class="progress-svg">
+					<svg xmlns="http://www.w3.org/2000/svg" width="70" height="70" fill="currentColor" class="bi bi-layout-text-sidebar-reverse gray" viewBox="0 0 16 16">
+						<path d="M12.5 3a.5.5 0 0 1 0 1h-5a.5.5 0 0 1 0-1zm0 3a.5.5 0 0 1 0 1h-5a.5.5 0 0 1 0-1zm.5 3.5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h5a.5.5 0 0 0 .5-.5m-.5 2.5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1 0-1z"/>
+						<path d="M16 2a2 2 0 0 0-2-2H2a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2zM4 1v14H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zm1 0h9a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5z"/>
+					</svg>
+				</div>
+				<div class="progress-text">Reviewing Request</div>
 				{% endif %}
 			</div>
 			<div class="progress-line{% if req.status == 'APPROVED' or req.status == 'REJECTED' or req.status == 'ENDORSED' or req.status == 'DENIED' %} done{% endif %}"></div>
 			<div class="progress-group">
 				{% if req.status == 'APPROVED' or req.status == 'ENDORSED' or req.status == 'DENIED' %}
-				<div class="progress-svg"><svg><use href="#icon-waiting-approval-approved"></use></svg></div>
-				<div class="progress-text">Request<br>Approved</div>
+				<div class="progress-svg">
+					<svg xmlns="http://www.w3.org/2000/svg" width="70" height="70" fill="currentColor" class="bi bi-hand-thumbs-up green" viewBox="0 0 16 16">
+						<path d="M8.864.046C7.908-.193 7.02.53 6.956 1.466c-.072 1.051-.23 2.016-.428 2.59-.125.36-.479 1.013-1.04 1.639-.557.623-1.282 1.178-2.131 1.41C2.685 7.288 2 7.87 2 8.72v4.001c0 .845.682 1.464 1.448 1.545 1.07.114 1.564.415 2.068.723l.048.03c.272.165.578.348.97.484.397.136.861.217 1.466.217h3.5c.937 0 1.599-.477 1.934-1.064a1.86 1.86 0 0 0 .254-.912c0-.152-.023-.312-.077-.464.201-.263.38-.578.488-.901.11-.33.172-.762.004-1.149.069-.13.12-.269.159-.403.077-.27.113-.568.113-.857 0-.288-.036-.585-.113-.856a2 2 0 0 0-.138-.362 1.9 1.9 0 0 0 .234-1.734c-.206-.592-.682-1.1-1.2-1.272-.847-.282-1.803-.276-2.516-.211a10 10 0 0 0-.443.05 9.4 9.4 0 0 0-.062-4.509A1.38 1.38 0 0 0 9.125.111zM11.5 14.721H8c-.51 0-.863-.069-1.14-.164-.281-.097-.506-.228-.776-.393l-.04-.024c-.555-.339-1.198-.731-2.49-.868-.333-.036-.554-.29-.554-.55V8.72c0-.254.226-.543.62-.65 1.095-.3 1.977-.996 2.614-1.708.635-.71 1.064-1.475 1.238-1.978.243-.7.407-1.768.482-2.85.025-.362.36-.594.667-.518l.262.066c.16.04.258.143.288.255a8.34 8.34 0 0 1-.145 4.725.5.5 0 0 0 .595.644l.003-.001.014-.003.058-.014a9 9 0 0 1 1.036-.157c.663-.06 1.457-.054 2.11.164.175.058.45.3.57.65.107.308.087.67-.266 1.022l-.353.353.353.354c.043.043.105.141.154.315.048.167.075.37.075.581 0 .212-.027.414-.075.582-.05.174-.111.272-.154.315l-.353.353.353.354c.047.047.109.177.005.488a2.2 2.2 0 0 1-.505.805l-.353.353.353.354c.006.005.041.05.041.17a.9.9 0 0 1-.121.416c-.165.288-.503.56-1.066.56z"/>
+					</svg>
+				</div>
+				<div class="progress-text">Request Approved</div>
 				{% elif req.status == 'REJECTED' %}
-				<div class="progress-svg"><svg><use href="#icon-waiting-approval-rejected"></use></svg></div>
-				<div class="progress-text">Request<br>Rejected</div>
+				<div class="progress-svg">
+					<svg xmlns="http://www.w3.org/2000/svg" width="70" height="70" fill="currentColor" class="bi bi-hand-thumbs-down red" viewBox="0 0 16 16">
+						<path d="M8.864 15.674c-.956.24-1.843-.484-1.908-1.42-.072-1.05-.23-2.015-.428-2.59-.125-.36-.479-1.012-1.04-1.638-.557-.624-1.282-1.179-2.131-1.41C2.685 8.432 2 7.85 2 7V3c0-.845.682-1.464 1.448-1.546 1.07-.113 1.564-.415 2.068-.723l.048-.029c.272-.166.578-.349.97-.484C6.931.08 7.395 0 8 0h3.5c.937 0 1.599.478 1.934 1.064.164.287.254.607.254.913 0 .152-.023.312-.077.464.201.262.38.577.488.9.11.33.172.762.004 1.15.069.13.12.268.159.403.077.27.113.567.113.856s-.036.586-.113.856c-.035.12-.08.244-.138.363.394.571.418 1.2.234 1.733-.206.592-.682 1.1-1.2 1.272-.847.283-1.803.276-2.516.211a10 10 0 0 1-.443-.05 9.36 9.36 0 0 1-.062 4.51c-.138.508-.55.848-1.012.964zM11.5 1H8c-.51 0-.863.068-1.14.163-.281.097-.506.229-.776.393l-.04.025c-.555.338-1.198.73-2.49.868-.333.035-.554.29-.554.55V7c0 .255.226.543.62.65 1.095.3 1.977.997 2.614 1.709.635.71 1.064 1.475 1.238 1.977.243.7.407 1.768.482 2.85.025.362.36.595.667.518l.262-.065c.16-.04.258-.144.288-.255a8.34 8.34 0 0 0-.145-4.726.5.5 0 0 1 .595-.643h.003l.014.004.058.013a9 9 0 0 0 1.036.157c.663.06 1.457.054 2.11-.163.175-.059.45-.301.57-.651.107-.308.087-.67-.266-1.021L12.793 7l.353-.354c.043-.042.105-.14.154-.315.048-.167.075-.37.075-.581s-.027-.414-.075-.581c-.05-.174-.111-.273-.154-.315l-.353-.354.353-.354c.047-.047.109-.176.005-.488a2.2 2.2 0 0 0-.505-.804l-.353-.354.353-.354c.006-.005.041-.05.041-.17a.9.9 0 0 0-.121-.415C12.4 1.272 12.063 1 11.5 1"/>
+					</svg>
+				</div>
+				<div class="progress-text">Request Rejected</div>
 				{% else %}
-				<div class="progress-svg"><svg><use href="#icon-waiting-approval"></use></svg></div>
-				<div class="progress-text">Waiting<br>Approval</div>
+				<div class="progress-svg">
+					<svg xmlns="http://www.w3.org/2000/svg" width="70" height="70" fill="currentColor" class="bi bi-hourglass-split gray" viewBox="0 0 16 16">
+						<path d="M2.5 15a.5.5 0 1 1 0-1h1v-1a4.5 4.5 0 0 1 2.557-4.06c.29-.139.443-.377.443-.59v-.7c0-.213-.154-.451-.443-.59A4.5 4.5 0 0 1 3.5 3V2h-1a.5.5 0 0 1 0-1h11a.5.5 0 0 1 0 1h-1v1a4.5 4.5 0 0 1-2.557 4.06c-.29.139-.443.377-.443.59v.7c0 .213.154.451.443.59A4.5 4.5 0 0 1 12.5 13v1h1a.5.5 0 0 1 0 1zm2-13v1c0 .537.12 1.045.337 1.5h6.326c.216-.455.337-.963.337-1.5V2zm3 6.35c0 .701-.478 1.236-1.011 1.492A3.5 3.5 0 0 0 4.5 13s.866-1.299 3-1.48zm1 0v3.17c2.134.181 3 1.48 3 1.48a3.5 3.5 0 0 0-1.989-3.158C8.978 9.586 8.5 9.052 8.5 8.351z"/>
+					</svg>
+				</div>
+				<div class="progress-text">Waiting Approval</div>
 				{% endif %}
 			</div>
 			<div class="progress-line{% if req.status == 'ENDORSED' or req.status == 'DENIED' %} done{% endif %}"></div>
 			<div class="progress-group">
 				{% if req.status == 'ENDORSED' %}
-				<div class="progress-svg"><svg><use href="#icon-request-endorsed-done"></use></svg></div>
-				<div class="progress-text">Request<br>Endorsed</div>
+				<div class="progress-svg">
+					<svg xmlns="http://www.w3.org/2000/svg" width="70" height="70" fill="currentColor" class="bi bi-award green" viewBox="0 0 16 16">
+						<path d="M9.669.864 8 0 6.331.864l-1.858.282-.842 1.68-1.337 1.32L2.6 6l-.306 1.854 1.337 1.32.842 1.68 1.858.282L8 12l1.669-.864 1.858-.282.842-1.68 1.337-1.32L13.4 6l.306-1.854-1.337-1.32-.842-1.68zm1.196 1.193.684 1.365 1.086 1.072L12.387 6l.248 1.506-1.086 1.072-.684 1.365-1.51.229L8 10.874l-1.355-.702-1.51-.229-.684-1.365-1.086-1.072L3.614 6l-.25-1.506 1.087-1.072.684-1.365 1.51-.229L8 1.126l1.356.702z"/>
+						<path d="M4 11.794V16l4-1 4 1v-4.206l-2.018.306L8 13.126 6.018 12.1z"/>
+					</svg>
+				</div>
+				<div class="progress-text">Request Endorsed</div>
 				{% elif req.status == 'DENIED' %}
-				<div class="progress-svg"><svg><use href="#icon-waiting-approval-rejected"></use></svg></div>
-				<div class="progress-text">Request<br>Denied</div>
+				<div class="progress-svg">
+					<svg xmlns="http://www.w3.org/2000/svg" width="70" height="70" fill="currentColor" class="bi bi-hourglass-split gray" viewBox="0 0 16 16">
+						<path d="M2.5 15a.5.5 0 1 1 0-1h1v-1a4.5 4.5 0 0 1 2.557-4.06c.29-.139.443-.377.443-.59v-.7c0-.213-.154-.451-.443-.59A4.5 4.5 0 0 1 3.5 3V2h-1a.5.5 0 0 1 0-1h11a.5.5 0 0 1 0 1h-1v1a4.5 4.5 0 0 1-2.557 4.06c-.29.139-.443.377-.443.59v.7c0 .213.154.451.443.59A4.5 4.5 0 0 1 12.5 13v1h1a.5.5 0 0 1 0 1zm2-13v1c0 .537.12 1.045.337 1.5h6.326c.216-.455.337-.963.337-1.5V2zm3 6.35c0 .701-.478 1.236-1.011 1.492A3.5 3.5 0 0 0 4.5 13s.866-1.299 3-1.48zm1 0v3.17c2.134.181 3 1.48 3 1.48a3.5 3.5 0 0 0-1.989-3.158C8.978 9.586 8.5 9.052 8.5 8.351z"/>
+					</svg>
+				</div>
+				<div class="progress-text">Request Denied</div>
 				{% else %}
-				<div class="progress-svg"><svg><use href="#icon-request-endorsed"></use></svg></div>
-				<div class="progress-text">Request<br>Endorsed</div>
+				<div class="progress-svg">
+					<svg xmlns="http://www.w3.org/2000/svg" width="70" height="70" fill="currentColor" class="bi bi-award gray" viewBox="0 0 16 16">
+						<path d="M9.669.864 8 0 6.331.864l-1.858.282-.842 1.68-1.337 1.32L2.6 6l-.306 1.854 1.337 1.32.842 1.68 1.858.282L8 12l1.669-.864 1.858-.282.842-1.68 1.337-1.32L13.4 6l.306-1.854-1.337-1.32-.842-1.68zm1.196 1.193.684 1.365 1.086 1.072L12.387 6l.248 1.506-1.086 1.072-.684 1.365-1.51.229L8 10.874l-1.355-.702-1.51-.229-.684-1.365-1.086-1.072L3.614 6l-.25-1.506 1.087-1.072.684-1.365 1.51-.229L8 1.126l1.356.702z"/>
+						<path d="M4 11.794V16l4-1 4 1v-4.206l-2.018.306L8 13.126 6.018 12.1z"/>
+					</svg>
+				</div>
+				<div class="progress-text">Request Endorsed</div>
 				{% endif %}
 			</div>
 		</div>
@@ -526,13 +168,13 @@
 
 			{% if req.status != 'RECEIVED' %}
 			<div class="text-button-container">
-				<a href="{% url 'request_dispatcher' %}" class="view-change-text" style="text-decoration:none;"><i class="fa-solid fa-arrow-left"></i>  Back to Requests</a>
-				<div class="view-change-text" id="view-details-btn" style="text-align:right;">View Request Details</div>
+				<a href="{% url 'request_dispatcher' %}" class="view-change-text name-link" style="text-decoration:none;"><i class="fa-solid fa-arrow-left"></i>  Back to Requests</a>
+				<div class="view-change-text name-link" id="view-details-btn" style="text-align:right;">View Request Details</div>
 			</div>
 			
 			{% else %}
 			<div class="text-button-container">
-				<a href="{% url 'request_dispatcher' %}" class="view-change-text" style="text-decoration:none; text-align:left;"><i class="fa-solid fa-arrow-left"></i>  Back to Requests</a>
+				<a href="{% url 'request_dispatcher' %}" class="view-change-text name-link" style="text-decoration:none; text-align:left;"><i class="fa-solid fa-arrow-left"></i>  Back to Requests</a>
 			</div>
 			{% endif %}
 		</div>
@@ -579,8 +221,8 @@
 			</div>
 			
 			<div class="text-button-container">
-				<a href="{% url 'request_dispatcher' %}" class="view-change-text" style="text-decoration:none;"><i class="fa-solid fa-arrow-left"></i>  Back to Requests</a>
-				<div class="view-change-text" id="view-progress-btn" style="text-align:right;">View Request Progress</div>
+				<a href="{% url 'request_dispatcher' %}" class="view-change-text name-link" style="text-decoration:none;"><i class="fa-solid fa-arrow-left"></i>  Back to Requests</a>
+				<div class="view-change-text name-link" id="view-progress-btn" style="text-align:right;">View Request Progress</div>
 			</div>
 			
 		</div>
@@ -621,28 +263,12 @@
 
 
 
-
 <!-- SVG Icons  -->
 <svg style="display:none;">
 
     <!-- Detail Icon -->
     <symbol id="detail-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M11.8008 17.5508C12.1266 17.5508 12.3999 17.4404 12.6207 17.2196C12.8415 16.9988 12.9515 16.7258 12.9508 16.4008V11.8008C12.9508 11.4749 12.8404 11.202 12.6196 10.982C12.3988 10.7619 12.1258 10.6515 11.8008 10.6508C11.4757 10.65 11.2028 10.7604 10.982 10.982C10.7612 11.2035 10.6508 11.4765 10.6508 11.8008V16.4008C10.6508 16.7266 10.7612 16.9999 10.982 17.2207C11.2028 17.4415 11.4757 17.5515 11.8008 17.5508ZM11.8008 8.35078C12.1266 8.35078 12.3999 8.24038 12.6207 8.01958C12.8415 7.79878 12.9515 7.52585 12.9508 7.20078C12.95 6.87571 12.8396 6.60278 12.6196 6.38198C12.3995 6.16118 12.1266 6.05078 11.8008 6.05078C11.4749 6.05078 11.202 6.16118 10.982 6.38198C10.7619 6.60278 10.6515 6.87571 10.6508 7.20078C10.65 7.52585 10.7604 7.79916 10.982 8.02073C11.2035 8.2423 11.4765 8.35231 11.8008 8.35078ZM11.8008 23.3008C10.2099 23.3008 8.71495 22.9987 7.31578 22.3946C5.91662 21.7904 4.69953 20.9713 3.66453 19.937C2.62953 18.9028 1.81035 17.6857 1.20698 16.2858C0.603616 14.8858 0.301549 13.3908 0.300783 11.8008C0.300016 10.2107 0.602083 8.71571 1.20698 7.31578C1.81188 5.91585 2.63107 4.69876 3.66453 3.66453C4.698 2.6303 5.91508 1.81111 7.31578 1.20698C8.71648 0.602848 10.2115 0.300781 11.8008 0.300781C13.3901 0.300781 14.8851 0.602848 16.2858 1.20698C17.6865 1.81111 18.9036 2.6303 19.937 3.66453C20.9705 4.69876 21.7901 5.91585 22.3957 7.31578C23.0014 8.71571 23.3031 10.2107 23.3008 11.8008C23.2985 13.3908 22.9964 14.8858 22.3946 16.2858C21.7927 17.6857 20.9736 18.9028 19.937 19.937C18.9005 20.9713 17.6834 21.7908 16.2858 22.3957C14.8881 23.0006 13.3931 23.3023 11.8008 23.3008ZM11.8008 21.0008C14.3691 21.0008 16.5445 20.1095 18.327 18.327C20.1095 16.5445 21.0008 14.3691 21.0008 11.8008C21.0008 9.23245 20.1095 7.05703 18.327 5.27453C16.5445 3.49203 14.3691 2.60078 11.8008 2.60078C9.23245 2.60078 7.05703 3.49203 5.27453 5.27453C3.49203 7.05703 2.60078 9.23245 2.60078 11.8008C2.60078 14.3691 3.49203 16.5445 5.27453 18.327C7.05703 20.1095 9.23245 21.0008 11.8008 21.0008Z" fill="black"/>
-    </symbol>
-
-    <!-- Received Request [Done] -->
-    <symbol id="icon-received" width="69" height="69" viewBox="0 0 69 69" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M34.4803 0C15.599 0 0.280273 15.3187 0.280273 34.2C0.280273 53.0955 15.599 68.4 34.4803 68.4C53.3758 68.4 68.6803 53.0955 68.6803 34.2C68.6803 15.3045 53.3758 0 34.4803 0ZM34.4803 8.55C48.6448 8.55 60.1303 20.0355 60.1303 34.2C60.1303 48.3645 48.6448 59.85 34.4803 59.85C20.3158 59.85 8.83027 48.3645 8.83027 34.2C8.83027 20.0355 20.3158 8.55 34.4803 8.55ZM47.4905 17.6985C46.5643 17.6985 45.7093 18.0405 45.0965 18.867C37.6865 28.8562 35.264 32.6183 29.9915 43.0635C28.7945 41.4818 20.6435 32.7465 16.6108 29.6543C14.5873 28.101 10.7255 33.5303 12.1078 34.941C18.3208 41.3393 29.3645 55.575 31.16 55.4325C34.2095 55.1903 41.8618 35.9385 52.364 22.1303C53.504 20.6483 50.2265 17.67 47.4905 17.6985Z" fill="#245F3E"/>
-    </symbol>
-
-    <!-- Reviewing Request -->
-    <symbol id="icon-reviewing" width="64" height="74" viewBox="0 0 64 74" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M61.0424 36.9987C61.0424 40.0189 59.8426 42.9154 57.707 45.0511C55.5714 47.1867 52.6749 48.3865 49.6547 48.3865C47.3792 48.3865 44.6971 47.9901 42.4865 48.5812C41.521 48.8409 40.6406 49.3497 39.9337 50.0566C39.2267 50.7636 38.7179 51.6439 38.4582 52.6095C37.8672 54.82 38.2635 57.5021 38.2635 59.7776C38.2635 61.2731 37.9689 62.7539 37.3967 64.1355C36.8244 65.5171 35.9855 66.7725 34.9281 67.83C33.8706 68.8874 32.6153 69.7262 31.2336 70.2985C29.852 70.8708 28.3712 71.1654 26.8757 71.1654M18.3341 19.9154H42.2507M18.3341 33.582H28.5841M2.95898 30.1654C2.95898 17.2811 2.95898 10.8373 7.21273 6.83636C11.4665 2.83545 18.3101 2.83203 32.0007 2.83203H34.6417C45.7801 2.83203 51.3561 2.83203 55.2237 5.55853C56.3307 6.33753 57.3147 7.26686 58.145 8.30895C61.0423 11.9511 61.0423 17.1923 61.0423 27.6814V36.3769C61.0423 46.5004 61.0423 51.5639 59.4399 55.6059C56.8637 62.1078 51.4176 67.2328 44.5091 69.6586C40.2143 71.1654 34.8399 71.1654 24.0774 71.1654C17.9342 71.1654 14.8592 71.1654 12.4061 70.3044C8.45982 68.9172 5.34723 65.9891 3.87465 62.2752C2.95898 59.9655 2.95898 57.0716 2.95898 51.2872V30.1654Z" stroke="#ADADAD" stroke-width="5.4" stroke-linecap="round" stroke-linejoin="round"/>
-    </symbol>
-
-    <!-- Reviewing Request [Done] -->
-    <symbol id="icon-reviewing-done" width="64" height="74" viewBox="0 0 64 74" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M61.0424 36.9987C61.0424 40.0189 59.8426 42.9154 57.707 45.0511C55.5714 47.1867 52.6749 48.3865 49.6547 48.3865C47.3792 48.3865 44.6971 47.9901 42.4865 48.5812C41.521 48.8409 40.6406 49.3497 39.9337 50.0566C39.2267 50.7636 38.7179 51.6439 38.4582 52.6095C37.8672 54.82 38.2635 57.5021 38.2635 59.7776C38.2635 61.2731 37.9689 62.7539 37.3967 64.1355C36.8244 65.5171 35.9855 66.7725 34.9281 67.83C33.8706 68.8874 32.6153 69.7262 31.2336 70.2985C29.852 70.8708 28.3712 71.1654 26.8757 71.1654M18.3341 19.9154H42.2507M18.3341 33.582H28.5841M2.95898 30.1654C2.95898 17.2811 2.95898 10.8373 7.21273 6.83636C11.4665 2.83545 18.3101 2.83203 32.0007 2.83203H34.6417C45.7801 2.83203 51.3561 2.83203 55.2237 5.55853C56.3307 6.33753 57.3147 7.26686 58.145 8.30895C61.0423 11.9511 61.0423 17.1923 61.0423 27.6814V36.3769C61.0423 46.5004 61.0423 51.5639 59.4399 55.6059C56.8637 62.1078 51.4176 67.2328 44.5091 69.6586C40.2143 71.1654 34.8399 71.1654 24.0774 71.1654C17.9342 71.1654 14.8592 71.1654 12.4061 70.3044C8.45982 68.9172 5.34723 65.9891 3.87465 62.2752C2.95898 59.9655 2.95898 57.0716 2.95898 51.2872V30.1654Z" stroke="#245F3E" stroke-width="5.4" stroke-linecap="round" stroke-linejoin="round"/>
     </symbol>
 
     <!-- Waiting Approval -->
@@ -681,6 +307,7 @@
     </symbol>
 
 </svg>
-
+</body>
+</html>
 
 {% endblock %}
