@@ -67,6 +67,7 @@ INSTALLED_APPS = [
     'system.users',             # Custom User
     'system.notifications',     # Notifications
     'system.settings',          # Settings
+    'system.scheduler',         # Centralized Scheduler
     'rest_framework',           # Django REST Framework
 ]
 
@@ -198,24 +199,6 @@ DEFAULT_FROM_EMAIL = 'bab.bmkhn@gmail.com'
 
 # Site URL for email links (update for production)
 SITE_URL = 'http://localhost:8000'
-
-
-# Celery configuration
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = 'Asia/Manila'
-
-# Celery Beat schedule
-from celery.schedules import crontab
-CELERY_BEAT_SCHEDULE = {
-    'publish-scheduled-announcements-every-minute': {
-        'task': 'shared.announcements.tasks.publish_scheduled_announcements',
-        'schedule': crontab(),  # every minute
-    },
-}
 
 
 # ============================================================

@@ -497,11 +497,17 @@
                 li.style.cursor = 'pointer';
                 li.style.color = '#245F3E'; // Green text color
                 
-                // Determine tag color and label based on event type
+                // Determine tag color and label based on event type and status
                 let tagColor = (ev.type === 'meeting') ? '#fd7e14' : '#007bff'; // Orange for meeting, Blue for activity
                 let tagLabel = (ev.type === 'meeting') ? 'Meeting' : 'Activity';
                 
-                li.innerHTML = `<div style='display:flex;align-items:center;gap:6px;'><span style='font-weight:600;font-size:1.1em;color:#245F3E;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'>${ev.title}</span><span style='background:${tagColor};color:#fff;padding:2px 8px;border-radius:12px;font-size:0.75em;font-weight:600;white-space:nowrap;flex-shrink:0;'>${tagLabel}</span></div><span style='font-size:0.95em;color:#bbb;'>${ev.dateStr}</span>`;
+                // Add ONGOING badge if status is ONGOING
+                let statusBadge = '';
+                if (ev.status === 'ONGOING') {
+                    statusBadge = '<span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:12px;font-size:0.75em;font-weight:600;white-space:nowrap;flex-shrink:0;margin-left:4px;">Ongoing</span>';
+                }
+                
+                li.innerHTML = `<div style='display:flex;align-items:center;gap:6px;'><span style='font-weight:600;font-size:1.1em;color:#245F3E;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'>${ev.title}</span><span style='background:${tagColor};color:#fff;padding:2px 8px;border-radius:12px;font-size:0.75em;font-weight:600;white-space:nowrap;flex-shrink:0;'>${tagLabel}</span>${statusBadge}</div><span style='font-size:0.95em;color:#bbb;'>${ev.dateStr}</span>`;
                 li.onclick = function(e) {
                     e.stopPropagation();
                     showEventDetails([ev], ev.dateStr);
@@ -549,7 +555,13 @@
                 let tagColor = (ev.type === 'meeting') ? '#fd7e14' : '#007bff'; // Orange for meeting, Blue for activity
                 let tagLabel = (ev.type === 'meeting') ? 'Meeting' : 'Activity';
                 
-                li.innerHTML = `<div style='display:flex;align-items:center;gap:6px;'><span style='font-weight:600;font-size:1.1em;color:#245F3E;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'>${ev.title}</span><span style='background:${tagColor};color:#fff;padding:2px 8px;border-radius:12px;font-size:0.75em;font-weight:600;white-space:nowrap;flex-shrink:0;'>${tagLabel}</span></div><span style='font-size:0.95em;color:#bbb;'>${ev.dateStr}</span>`;
+                // Add ONGOING badge if status is ONGOING (shouldn't appear in Done, but just in case)
+                let statusBadge = '';
+                if (ev.status === 'ONGOING') {
+                    statusBadge = '<span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:12px;font-size:0.75em;font-weight:600;white-space:nowrap;flex-shrink:0;margin-left:4px;">Ongoing</span>';
+                }
+                
+                li.innerHTML = `<div style='display:flex;align-items:center;gap:6px;'><span style='font-weight:600;font-size:1.1em;color:#245F3E;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'>${ev.title}</span><span style='background:${tagColor};color:#fff;padding:2px 8px;border-radius:12px;font-size:0.75em;font-weight:600;white-space:nowrap;flex-shrink:0;'>${tagLabel}</span>${statusBadge}</div><span style='font-size:0.95em;color:#bbb;'>${ev.dateStr}</span>`;
                 li.onclick = function(e) {
                     e.stopPropagation();
                     showEventDetails([ev], ev.dateStr);
@@ -882,9 +894,27 @@
                 if (currentUserId !== "" && (ev.created_by == currentUserId || ["DIRECTOR","UESO","VP"].includes(currentUserRole))) {
                     canEdit = true;
                 }
+                
+                // Status badge
+                let statusBadge = '';
+                let statusColor = '#6c757d'; // default gray
+                if (ev.status === 'ONGOING') {
+                    statusColor = '#28a745'; // green
+                    statusBadge = `<span style="background:${statusColor};color:#fff;padding:4px 12px;border-radius:12px;font-size:0.85rem;font-weight:600;margin-left:8px;">Ongoing</span>`;
+                } else if (ev.status === 'COMPLETED') {
+                    statusColor = '#6c757d'; // gray
+                    statusBadge = `<span style="background:${statusColor};color:#fff;padding:4px 12px;border-radius:12px;font-size:0.85rem;font-weight:600;margin-left:8px;">Completed</span>`;
+                } else if (ev.status === 'CANCELLED') {
+                    statusColor = '#dc3545'; // red
+                    statusBadge = `<span style="background:${statusColor};color:#fff;padding:4px 12px;border-radius:12px;font-size:0.85rem;font-weight:600;margin-left:8px;">Cancelled</span>`;
+                } else if (ev.status === 'SCHEDULED') {
+                    statusColor = '#007bff'; // blue
+                    statusBadge = `<span style="background:${statusColor};color:#fff;padding:4px 12px;border-radius:12px;font-size:0.85rem;font-weight:600;margin-left:8px;">Scheduled</span>`;
+                }
+                
                 html += `<div style="background:#f8f9fa;border-left:4px solid #fd7e14;padding:16px;margin-bottom:12px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.08);">
                     <div class="event-details-row" style="display:flex;align-items:center;margin-bottom:8px;">
-                        <div style="font-size:1.5rem;font-weight:600;color:#fd7e14;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;flex:1;">${ev.title}</div>
+                        <div style="font-size:1.5rem;font-weight:600;color:#fd7e14;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;flex:1;">${ev.title}${statusBadge}</div>
                         ${canEdit ? `<i class='fa-solid fa-pen-to-square' style='font-size:1.3rem;color:#fd7e14;cursor:pointer;margin-left:10px;' title='Edit' onclick='window.openEditEventModal(${JSON.stringify(ev)})'></i>` : ''}
                         ${canEdit ? `<i class='fa-solid fa-trash' style='font-size:1.3rem;color:#E53E3E;cursor:pointer;margin-left:10px;' title='Delete' onclick='window.confirmDeleteEvent(${ev.id}, ${JSON.stringify(ev.title)})'></i>` : ''}
                     </div>
@@ -895,9 +925,26 @@
                     ${ev.notes && ev.notes.trim() ? `<div style="font-size:0.95rem;color:#888;margin-top:8px;font-style:italic;"><i class="fa-regular fa-note-sticky" style="margin-right:6px;"></i>${ev.notes}</div>` : ''}
                 </div>`;
             } else if (ev.type === 'project') {
+                // Status badge for project events
+                let statusBadge = '';
+                let statusColor = '#6c757d'; // default gray
+                if (ev.status === 'ONGOING') {
+                    statusColor = '#28a745'; // green
+                    statusBadge = `<span style="background:${statusColor};color:#fff;padding:4px 12px;border-radius:12px;font-size:0.85rem;font-weight:600;margin-left:8px;">Ongoing</span>`;
+                } else if (ev.status === 'COMPLETED') {
+                    statusColor = '#6c757d'; // gray
+                    statusBadge = `<span style="background:${statusColor};color:#fff;padding:4px 12px;border-radius:12px;font-size:0.85rem;font-weight:600;margin-left:8px;">Completed</span>`;
+                } else if (ev.status === 'CANCELLED') {
+                    statusColor = '#dc3545'; // red
+                    statusBadge = `<span style="background:${statusColor};color:#fff;padding:4px 12px;border-radius:12px;font-size:0.85rem;font-weight:600;margin-left:8px;">Cancelled</span>`;
+                } else if (ev.status === 'SCHEDULED') {
+                    statusColor = '#007bff'; // blue
+                    statusBadge = `<span style="background:${statusColor};color:#fff;padding:4px 12px;border-radius:12px;font-size:0.85rem;font-weight:600;margin-left:8px;">Scheduled</span>`;
+                }
+                
                 html += `<div style="background:#f8f9fa;border-left:4px solid #007bff;padding:16px;margin-bottom:12px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.08);">
                     <div class="event-details-row" style="display:flex;align-items:center;margin-bottom:8px;">
-                        <div style="font-size:1.5rem;font-weight:600;color:#007bff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;flex:1;">${ev.title}</div>
+                        <div style="font-size:1.5rem;font-weight:600;color:#007bff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;flex:1;">${ev.title}${statusBadge}</div>
                         <span style='font-size:1rem;color:#007bff;cursor:pointer;margin-left:10px;white-space:nowrap;' title='Go to activity' onclick='window.location.href="/projects/${ev.project_id}/"'>Go To Activity <i class="fa-solid fa-arrow-right"></i></span>
                     </div>
                     ${ev.project_name ? `<div style='font-size:1.05em;color:#007bff;margin-bottom:6px;'><i class="fa-solid fa-diagram-project" style="margin-right:6px;"></i><b>Activity:</b> ${ev.project_name}</div>` : ''}

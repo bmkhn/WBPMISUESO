@@ -17,6 +17,7 @@ class MeetingEvent(models.Model):
 	participants = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='meeting_participants')
 	STATUS_CHOICES = [
 		("SCHEDULED", "Scheduled"),
+		("ONGOING", "Ongoing"),
 		("COMPLETED", "Completed"),
 		("CANCELLED", "Cancelled"),
 	]

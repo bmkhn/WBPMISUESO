@@ -338,6 +338,7 @@ class ProjectEvent(models.Model):
 
 	STATUS_CHOICES = [
 		("SCHEDULED", "Scheduled"),
+		("ONGOING", "Ongoing"),
 		("COMPLETED", "Completed"),
 		("CANCELLED", "Cancelled"),
 	]
