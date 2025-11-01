@@ -58,6 +58,30 @@ class Submission(models.Model):
 	updated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='updated_submissions')
 	updated_at = models.DateTimeField(auto_now=True)
 
+	class Meta:
+		indexes = [
+			# Most critical: Status filtering (heavily used in views)
+			models.Index(fields=['status', '-deadline'], name='sub_status_deadline_idx'),
+			# Deadline sorting and filtering (primary sort field)
+			models.Index(fields=['-deadline'], name='sub_deadline_idx'),
+			# Project lookup (foreign key relationship)
+			models.Index(fields=['project', 'status'], name='sub_project_status_idx'),
+			# Downloadable/form type filtering
+			models.Index(fields=['downloadable', 'status'], name='sub_form_status_idx'),
+			# Coordinator college filtering (joins through project leader)
+			models.Index(fields=['project', '-created_at'], name='sub_project_created_idx'),
+			# Submission workflow tracking
+			models.Index(fields=['submitted_at', 'status'], name='sub_submitted_idx'),
+			# Approval workflow for event submissions
+			models.Index(fields=['status', 'event'], name='sub_status_event_idx'),
+			# Late submission tracking
+			models.Index(fields=['is_late_submission', 'status'], name='sub_late_status_idx'),
+			# Admin review queue (FORWARDED status priority)
+			models.Index(fields=['status', 'reviewed_at'], name='sub_review_queue_idx'),
+		]
+		verbose_name = 'Submission'
+		verbose_name_plural = 'Submissions'
+
 	def __str__(self):
 		return self.project.title + " - " + self.downloadable.name
 

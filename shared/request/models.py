@@ -42,6 +42,25 @@ class ClientRequest(models.Model):
         ('DENIED', 'Denied'),
     ])
 
+    class Meta:
+        indexes = [
+            # Primary workflow: Status filtering (RECEIVED, UNDER_REVIEW, APPROVED, etc.)
+            models.Index(fields=['status', '-submitted_at'], name='req_status_submit_idx'),
+            # Submitter lookup (client viewing their requests)
+            models.Index(fields=['submitted_by', '-submitted_at'], name='req_submitter_idx'),
+            # Admin review queue (RECEIVED/UNDER_REVIEW priority)
+            models.Index(fields=['status', 'reviewed_by'], name='req_review_queue_idx'),
+            # Endorsement workflow
+            models.Index(fields=['status', 'endorsed_at'], name='req_endorsed_idx'),
+            # Date range filtering (submitted and updated)
+            models.Index(fields=['submitted_at'], name='req_submitted_date_idx'),
+            models.Index(fields=['updated_at', 'status'], name='req_updated_status_idx'),
+            # Organization search
+            models.Index(fields=['organization'], name='req_org_idx'),
+        ]
+        verbose_name = 'Client Request'
+        verbose_name_plural = 'Client Requests'
+
     @property
     def name(self):
         """Return the file name (without extension) of the uploaded letter_of_intent."""
@@ -114,3 +133,9 @@ class RequestUpdate(models.Model):
 
     class Meta:
         unique_together = ('user', 'request', 'status')
+        indexes = [
+            # User update feed (sorted by date, limited to 10)
+            models.Index(fields=['user', '-updated_at'], name='req_upd_user_date_idx'),
+            # Unread updates check
+            models.Index(fields=['user', 'request', 'viewed'], name='req_upd_unread_idx'),
+        ]

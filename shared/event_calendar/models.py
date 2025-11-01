@@ -23,6 +23,24 @@ class MeetingEvent(models.Model):
 	]
 	status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="SCHEDULED")
 
+	class Meta:
+		indexes = [
+			# CRITICAL: Scheduler query (runs daily at midnight)
+			# Query: MeetingEvent.objects.filter(status='SCHEDULED', datetime__date=today)
+			models.Index(fields=['status', 'datetime'], name='meeting_sched_date_idx'),
+			# Calendar view: Participant filtering
+			models.Index(fields=['datetime'], name='meeting_datetime_idx'),
+			# Creation tracking
+			models.Index(fields=['-created_at'], name='meeting_created_idx'),
+			# Creator lookup
+			models.Index(fields=['created_by', '-created_at'], name='meeting_creator_idx'),
+			# Status-based filtering (SCHEDULED, ONGOING, COMPLETED)
+			models.Index(fields=['status', '-datetime'], name='meeting_status_idx'),
+		]
+		verbose_name = 'Meeting Event'
+		verbose_name_plural = 'Meeting Events'
+		ordering = ['datetime']
+
 	def save(self, *args, **kwargs):
 		if self.pk:
 			from django.utils import timezone

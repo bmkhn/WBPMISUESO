@@ -170,6 +170,23 @@ class Project(models.Model):
 	status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="NOT_STARTED")
 	has_final_submission = models.BooleanField(default=False, help_text="True when a final submission type has been approved")
 
+	class Meta:
+		indexes = [
+			# CRITICAL: Scheduler queries run daily at midnight
+			models.Index(fields=['status', 'start_date'], name='proj_status_start_idx'),
+			models.Index(fields=['status', 'estimated_end_date', 'has_final_submission'], name='proj_completion_idx'),
+			
+			# Project listing and filtering
+			models.Index(fields=['status', '-created_at'], name='proj_status_created_idx'),
+			models.Index(fields=['-created_at'], name='proj_created_idx'),
+			
+			# Leader and provider lookups
+			models.Index(fields=['project_leader', 'status'], name='proj_leader_status_idx'),
+			
+			# Agenda-based filtering
+			models.Index(fields=['agenda', 'status'], name='proj_agenda_status_idx'),
+		]
+
 	def get_status_display(self):
 		return dict(self.STATUS_CHOICES).get(self.status, self.status)
 
@@ -345,6 +362,22 @@ class ProjectEvent(models.Model):
 
 	status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="SCHEDULED")
 
+	class Meta:
+		indexes = [
+			# CRITICAL: Scheduler query runs daily at midnight
+			models.Index(fields=['status', 'datetime'], name='proj_evt_sched_date_idx'),
+			
+			# Project event timeline (latest_event property on Project model)
+			models.Index(fields=['project', '-datetime', '-created_at'], name='proj_evt_timeline_idx'),
+			
+			# Event management and listing
+			models.Index(fields=['project', 'status', '-datetime'], name='proj_evt_proj_status_idx'),
+			models.Index(fields=['-datetime'], name='proj_evt_datetime_idx'),
+			
+			# Placeholder filtering (used in latest_event query)
+			models.Index(fields=['placeholder', '-datetime'], name='proj_evt_placeholder_idx'),
+		]
+
 	def get_status_display(self):
 		return dict(self.STATUS_CHOICES).get(self.status, self.status)
 
@@ -368,6 +401,13 @@ class ProjectUpdate(models.Model):
 
     class Meta:
         unique_together = ('user', 'project', 'submission', 'status')
+        indexes = [
+            # Update feed (unread notifications)
+            models.Index(fields=['user', 'viewed', '-updated_at'], name='proj_upd_user_view_idx'),
+            
+            # Project-specific updates
+            models.Index(fields=['project', '-updated_at'], name='proj_upd_proj_date_idx'),
+        ]
 
 
 # Signal handlers

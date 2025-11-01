@@ -33,6 +33,25 @@ class Downloadable(models.Model):
     ]
     submission_type = models.CharField(max_length=10, choices=SUBMISSION_TYPE_CHOICES, default='file')
 
+    class Meta:
+        indexes = [
+            # Primary listing: Published files (authenticated users)
+            models.Index(fields=['status', '-uploaded_at'], name='dl_status_date_idx'),
+            # Public access filtering (non-authenticated users)
+            models.Index(fields=['status', 'available_for_non_users'], name='dl_public_idx'),
+            # File type filtering
+            models.Index(fields=['file_type', 'status'], name='dl_type_status_idx'),
+            # Submission template filtering (heavily used in submission views)
+            models.Index(fields=['is_submission_template', 'submission_type'], name='dl_template_type_idx'),
+            # Uploader tracking
+            models.Index(fields=['uploaded_by', '-uploaded_at'], name='dl_uploader_idx'),
+            # File search (name-based)
+            models.Index(fields=['status', 'file_type'], name='dl_browse_idx'),
+        ]
+        verbose_name = 'Downloadable'
+        verbose_name_plural = 'Downloadables'
+        ordering = ['-uploaded_at']
+
     @property
     def name(self):
         if self.file:

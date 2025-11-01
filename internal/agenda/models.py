@@ -14,6 +14,19 @@ class Agenda(models.Model):
 	updated_at = models.DateTimeField(null=True, blank=True)
 	updated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='updated_agendas')
 
+	class Meta:
+		indexes = [
+			# Primary lookup by ID (auto-indexed by Django as primary key)
+			# Listing by creation date (most recent first)
+			models.Index(fields=['-created_at'], name='agenda_created_idx'),
+			# Filtering by creator for audit trails
+			models.Index(fields=['created_by', '-created_at'], name='agenda_creator_idx'),
+			# Name search optimization (for future search features)
+			models.Index(fields=['name'], name='agenda_name_idx'),
+		]
+		verbose_name = 'Agenda'
+		verbose_name_plural = 'Agendas'
+
 	def save(self, *args, **kwargs):
 		# Only set updated_at if this is an update (object already exists)
 		if self.pk:

@@ -23,6 +23,28 @@ class Announcement(models.Model):
 	edited_at = models.DateTimeField(null=True, blank=True)
 	archived = models.BooleanField(default=False)
 
+	class Meta:
+		indexes = [
+			# CRITICAL: Scheduler query optimization (runs every minute)
+			# Query: Announcement.objects.filter(is_scheduled=True, scheduled_at__lte=now, published_at__isnull=True)
+			models.Index(fields=['is_scheduled', 'scheduled_at', 'published_at'], name='ann_scheduler_idx'),
+			# Most common: Published, non-archived announcements sorted by date
+			# Query: Announcement.objects.filter(published_at__isnull=False, archived=False).order_by('-published_at')
+			models.Index(fields=['published_at', 'archived'], name='ann_published_idx'),
+			models.Index(fields=['archived', '-published_at'], name='ann_active_list_idx'),
+			# Search optimization (title and body searches)
+			models.Index(fields=['title'], name='ann_title_search_idx'),
+			# Date range filtering
+			models.Index(fields=['published_at'], name='ann_pub_date_idx'),
+			# Publisher tracking
+			models.Index(fields=['published_by', '-published_at'], name='ann_publisher_idx'),
+			# Draft management (unpublished announcements)
+			models.Index(fields=['published_at', '-scheduled_at'], name='ann_draft_idx'),
+		]
+		verbose_name = 'Announcement'
+		verbose_name_plural = 'Announcements'
+		ordering = ['-published_at']
+
 	def __str__(self):
 		return self.title
 	

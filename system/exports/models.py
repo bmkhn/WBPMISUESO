@@ -32,6 +32,25 @@ class ExportRequest(models.Model):
     )
     reviewed_at = models.DateTimeField(null=True, blank=True)
 
+    class Meta:
+        indexes = [
+            # Admin approval queue (PENDING status priority)
+            models.Index(fields=['status', '-date_submitted'], name='exp_status_date_idx'),
+            # Submitter lookup (user viewing their export requests)
+            models.Index(fields=['submitted_by', '-date_submitted'], name='exp_submitter_idx'),
+            # Export type filtering
+            models.Index(fields=['type', 'status'], name='exp_type_status_idx'),
+            # Review workflow
+            models.Index(fields=['status', 'reviewed_by'], name='exp_review_queue_idx'),
+            # Date range filtering
+            models.Index(fields=['date_submitted'], name='exp_date_idx'),
+            # Approved exports ready for download
+            models.Index(fields=['status', 'submitted_by'], name='exp_download_ready_idx'),
+        ]
+        verbose_name = 'Export Request'
+        verbose_name_plural = 'Export Requests'
+        ordering = ['-date_submitted']
+
     def __str__(self):
         return f"{self.get_type_display()} Export"
 
