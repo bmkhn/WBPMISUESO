@@ -1,29 +1,82 @@
 {% extends base_template %}
-
-{% block content %}
-
 {% load static %}
 
-<!DOCTYPE html>
+{% block title %}System Settings{% endblock %}
 
-<html lang="en">
+{% block content %}
+<div class="container-fluid">
 
-<meta charset="UTF-8">
-<title>Settings</title>
+    <h1 class="h3 mb-4 text-gray-800">Settings</h1>
 
-<link href="https://fonts.googleapis.com/css?family=Inter:400,500,700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
-<link href="{% static 'shared/projects/a_module_styles.css' %}" rel="stylesheet">
-</head>
-<body>
-	<div class="main-container">
-        <h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 1.5rem; color: #111827;">System Settings</h1>
-        
-        <div style="background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-            <p style="color: #6b7280; font-size: 1rem;">Settings page is under development. More features coming soon!</p>
+    {% if messages %}
+        {% for message in messages %}
+            <div classclass="alert {% if message.tags == 'error' %}alert-danger{% elif message.tags == 'warning' %}alert-warning{% else %}alert-success{% endif %} alert-dismissible fade show" role="alert">
+                {{ message|safe }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row">
+
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Administrative Settings</h6>
+                </div>
+                <div class="card-body">
+                    <p>Manage core components and configurations for the entire system. (Admin access required).</p>
+                    <div class="list-group">
+                        <a href="{% url 'system_settings:manage_colleges' %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-school fa-fw mr-2"></i>Manage Colleges</span>
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                        
+                        <a href="{% url 'system_settings:manage_campus' %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-building fa-fw mr-2"></i>Manage Campuses</span>
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                        <a href="{% url 'system_settings:manage_sdgs' %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-leaf fa-fw mr-2"></i>Manage SDGs</span>
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                        <a href="{% url 'system_settings:manage_system_settings' %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-cog fa-fw mr-2"></i>General System Settings</span>
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                        <a href="{% url 'system_settings:manage_api_keys' %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-key fa-fw mr-2"></i>Manage API Keys</span>
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
-</body>
-</html>
 
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Account Settings</h6>
+                </div>
+                <div class="card-body">
+                    <p>Manage your personal account details and security.</p>
+                    <a href="{% url 'profile' %}" class="btn btn-secondary btn-block mb-2">Edit Profile</a>
+                </div>
+            </div>
+
+            <div class="card shadow mb-4 border-left-danger">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-danger">Danger Zone</h6>
+                </div>
+                <div class="card-body">
+                    <p>Be careful. These actions are permanent and cannot be undone.</p>
+                    <a href="{% url 'system_settings:delete_account' %}" class="btn btn-danger btn-block">Delete My Account</a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
 {% endblock %}

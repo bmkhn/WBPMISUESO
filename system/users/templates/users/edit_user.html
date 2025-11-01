@@ -245,8 +245,8 @@
                     {% if user.role == 'FACULTY' or can_edit_role_and_verify %}
                     <select name="campus" class="user-details-value">
                         <option value="">Select Campus</option>
-                        {% for value, label in campus_choices %}
-                            <option value="{{ value }}" {% if user.campus == value %}selected{% endif %}>{{ label }}</option>
+                        {% for campus in campus_choices %}
+                            <option value="{{ campus.id }}" {% if user.campus.id == campus.id %}selected{% endif %}>{{ campus.name }}</option>
                         {% endfor %}
                     </select>
                     {% else %}

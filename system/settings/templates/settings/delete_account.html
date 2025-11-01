@@ -1,0 +1,63 @@
+{% extends base_template %}
+{% load static %}
+
+{% block title %}Delete My Account{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <h1 class="h3 mb-4 text-gray-800">Delete My Account</h1>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4 border-left-danger">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-danger">Warning: This action is permanent</h6>
+                </div>
+                <div class="card-body">
+                    <p>You are about to permanently delete your account: <strong>{{ user.get_full_name }} ({{ user.email }})</strong>.</p>
+                    <p>When you delete your account, all of your personal information, profile data, and associated content will be permanently removed. This action <strong>cannot be undone</strong>.</p>
+                    <p>If you are sure you want to proceed, please enter your current password below to confirm.</p>
+                    
+                    <form method="POST">
+                        {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {% for error in form.non_field_errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        <div class="form-group">
+                            <label for="{{ form.password.id_for_label }}" class="font-weight-bold">{{ form.password.label }}</label>
+                            
+                            {{ form.password }}
+                            
+                            {% if form.password.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.password.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <hr>
+                        
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{% url 'system_settings:settings' %}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash mr-1"></i>
+                                Yes, Permanently Delete My Account
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

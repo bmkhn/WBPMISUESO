@@ -21,4 +21,6 @@ urlpatterns = [
     path('data/trends/projects/', api_views.project_trends_api, name='project_trends_data'),
     
     path('export/', views.export_analytics_to_excel, name='export_analytics_data'),
+
+    path('api/public-projects/', api_views.get_public_projects, name='api_get_public_projects'), # Add this
 ]

@@ -116,3 +116,41 @@ def project_trends_api(request):
     if error_response: return error_response
     data = services.get_project_trends(start_date, end_date)
     return JsonResponse(data)
+
+# internal/analytics/api_views.py
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
+from rest_framework import status
+# This is the permission class from the package
+from rest_framework_api_key.permissions import HasAPIKey
+
+from shared.projects.models import Project # Import a model to get data from
+
+@api_view(['GET'])
+@permission_classes([HasAPIKey]) # This line is the magic!
+def get_public_projects(request):
+    """
+    An example API endpoint that is protected by an API Key.
+    It returns a list of all completed projects.
+    """
+    try:
+        # You can get the APIKey object that was used, if needed
+        # api_key = request.auth
+        
+        projects = Project.objects.filter(status='COMPLETED')
+        
+        # We serialize the data into a simple dictionary
+        data = [
+            {
+                'title': project.title,
+                'status': project.status,
+                'start_date': project.start_date,
+                'end_date': project.end_date,
+            }
+            for project in projects
+        ]
+        
+        return Response(data, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -17,8 +17,5 @@ py manage.py migrate
 REM Create test assets
 py manage.py create_test_assets
 
-REM More test assets
-py manage.py more_assets
-
 echo Database reset and test assets created.
 pause

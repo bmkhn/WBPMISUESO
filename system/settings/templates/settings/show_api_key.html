@@ -1,0 +1,67 @@
+{% extends base_template %}
+{% load static %}
+
+{% block title %}API Key Generated{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4 border-left-warning">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">API Key Generated Successfully</h6>
+                </div>
+                <div class="card-body">
+                    <h4 class="text-danger">Please copy your new API key now.</h4>
+                    <p class="mb-4">
+                        For your security, this is the <strong>only time</strong> you will be able to see the full key.
+                        The system cannot retrieve it again.
+                    </p>
+
+                    <div class="form-group">
+                        <label class="font-weight-bold">Key for: {{ api_key_name }}</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control bg-light border-0 small" value="{{ api_key_string }}" id="api-key-text" readonly>
+                            <div class="input-group-append">
+                                <button class="btn btn-primary" type="button" id="copy-btn">
+                                    <i class="fas fa-copy fa-sm"></i> Copy
+                                </button>
+                            </div>
+                        </div>
+                        <small id="copy-success" class="text-success" style="display: none;">Copied to clipboard!</small>
+                    </div>
+
+                    <hr>
+                    <a href="{% url 'system_settings:manage_api_keys' %}" class="btn btn-secondary">
+                        <i class="fas fa-check mr-1"></i> I have copied the key
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('copy-btn').addEventListener('click', function() {
+    var keyText = document.getElementById('api-key-text');
+    keyText.select(); // Select the text
+    
+    try {
+        // Use modern clipboard API
+        navigator.clipboard.writeText(keyText.value).then(function() {
+            // Success
+            var successMsg = document.getElementById('copy-success');
+            successMsg.style.display = 'inline';
+            document.getElementById('copy-btn').innerHTML = '<i class="fas fa-check fa-sm"></i> Copied!';
+            setTimeout(function() {
+                successMsg.style.display = 'none';
+                document.getElementById('copy-btn').innerHTML = '<i class="fas fa-copy fa-sm"></i> Copy';
+            }, 2000);
+        });
+    } catch (err) {
+        // Fallback for older browsers (less reliable)
+        document.execCommand('copy');
+    }
+});
+</script>
+{% endblock %}

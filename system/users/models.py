@@ -4,14 +4,24 @@ from django.db import models
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 
+class Campus(models.Model):
+    """
+    New model to store Campuses in the database for CRUD.
+    """
+    name = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name_plural = "Campuses"
+        ordering = ['name']
+
+
 class College(models.Model):
-    CAMPUS_CHOICES = [
-        ('TINIGUIBAN', 'Tiniguiban Campus'),
-        ('EXTERNAL', 'External Campus'),
-    ]
-    
     name = models.CharField(max_length=255)
-    campus = models.CharField(max_length=20, choices=CAMPUS_CHOICES, default='TINIGUIBAN')
+    # We CHANGE the 'campus' field from CharField to a ForeignKey
+    campus = models.ForeignKey(Campus, on_delete=models.SET_NULL, null=True, blank=True)
     logo = models.ImageField(upload_to='colleges/logos/', blank=True, null=True)
 
     def delete(self, *args, **kwargs):
@@ -46,25 +56,6 @@ class User(AbstractUser):
         MALE = 'MALE', 'Male'
         FEMALE = 'FEMALE', 'Female'
 
-    class Campus(models.TextChoices):
-        TINUIGIBAN = 'TINUIGIBAN', 'Tinuigiban'
-        RIZAL = 'RIZAL', 'Rizal'
-        NARRA = 'NARRA', 'Narra'
-        QUEZON = 'QUEZON', 'Quezon'
-        ARACELI = 'ARACELI', 'Araceli'
-        BROOKES_POINT = 'BROOKES_POINT', "Brooke's Point"
-        SAN_VICENTE = 'SAN_VICENTE', 'San Vicente'
-        CUYO = 'CUYO', 'Cuyo'
-        CORON = 'CORON', 'Coron'
-        BALABAC = 'BALABAC', 'Balabac'
-        ROXAS = 'ROXAS', 'Roxas'
-        TAYTAY = 'TAYTAY', 'Taytay'
-        EL_NIDO = 'EL_NIDO', 'El Nido'
-        LINAPACAN = 'LINAPACAN', 'Linapacan'
-        SAN_RAFAEL = 'SAN_RAFAEL', 'San Rafael'
-        SOFRONIO_ESPANOLA = 'SOFRONIO_ESPANOLA', 'Sofronio Española'
-        DUMARAN = 'DUMARAN', 'Dumaran'
-        BATARAZA = 'BATARAZA', 'Bataraza'
 
     class PreferenceID(models.TextChoices):
         PASSPORT = 'PASSPORT', 'Passport'
@@ -83,7 +74,7 @@ class User(AbstractUser):
     sex = models.CharField(max_length=6, choices=Sex.choices)
     email = models.EmailField(unique=True)
     contact_no = models.CharField(max_length=20)
-    campus = models.CharField(max_length=30, choices=Campus.choices, blank=True, null=True)
+    campus = models.ForeignKey(Campus, on_delete=models.SET_NULL, blank=True, null=True)
     college = models.ForeignKey(College, on_delete=models.SET_NULL, blank=True, null=True)
     role = models.CharField(max_length=50, choices=Role.choices)
     degree = models.CharField(max_length=255, blank=True, null=True)

@@ -20,4 +20,5 @@ torch
 tzdata==2025.2
 wcwidth==0.2.14
 faker==18.11.1
-djangorestframework==3.16.1
+djangorestframework==3.16.1 
+djangorestframework-api-key

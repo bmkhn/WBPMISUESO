@@ -1,0 +1,46 @@
+{% extends base_template %}
+{% load static %}
+
+{% block title %}Confirm Action{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <h1 class="h3 mb-4 text-gray-800">Confirm Action</h1>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4 border-left-danger">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-danger">Warning</h6>
+                </div>
+                <div class="card-body">
+                    <p><strong>{{ confirm_message|default:"Are you sure you want to do this?" }}</strong></p>
+                    
+                    {% if object_to_delete %}
+                    <p class="mb-4">You are about to modify the following object:</p>
+                    <div class="alert alert-secondary">
+                        <strong>{{ object_to_delete }}</strong>
+                    </div>
+                    {% endif %}
+
+                    <p class="text-danger">This action cannot be undone.</p>
+                    
+                    <form method="POST">
+                        {% csrf_token %}
+                        <hr>
+                        <div class="d-flex justify-content-end">
+                            <a href="javascript:history.back()" class="btn btn-secondary mr-2">Cancel</a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-exclamation-triangle mr-1"></i>
+                                {{ confirm_button_text|default:"Yes, Confirm Delete" }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

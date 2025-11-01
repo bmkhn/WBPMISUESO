@@ -266,7 +266,7 @@ h5 {
 .filter-dropdown {
     display: none;
     position: absolute;
-    top: 220px;
+    top: 0px;
     right: 60px;
     z-index: 1000;
     background: #f8f8f8;

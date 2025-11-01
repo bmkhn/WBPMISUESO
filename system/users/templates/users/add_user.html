@@ -147,8 +147,8 @@
                     <div class="user-details-label">Campus <span class="required">*</span></div>
                     <select name="campus" class="user-details-value" data-role-required>
                         <option value="">Select Campus</option>
-                        {% for value, label in campus_choices %}
-                            <option value="{{ value }}">{{ label }}</option>
+                        {% for campus in campus_choices %}
+                            <option value="{{ campus.id }}">{{ campus.name }}</option>
                         {% endfor %}
                     </select>
                 </div>

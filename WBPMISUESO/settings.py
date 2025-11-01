@@ -69,6 +69,7 @@ INSTALLED_APPS = [
     'system.settings',          # Settings
     'system.scheduler',         # Centralized Scheduler
     'rest_framework',           # Django REST Framework
+    'rest_framework_api_key',
 ]
 
 MIDDLEWARE = [
