@@ -555,7 +555,7 @@ def manage_user(request):
     # Roles for dropdown
     roles = list(User.Role.choices)
     colleges = College.objects.all()
-    campuses = list(User.Campus.choices)
+    campuses = Campus.objects.all()
 
     # Build querystring for pagination/filter links
     from urllib.parse import urlencode
@@ -597,7 +597,7 @@ def add_user(request):
     error = None
     roles = list(User.Role.choices)
     colleges = College.objects.all()
-    campus_choices = User.Campus.choices
+    campus_choices = Campus.objects.all()
 
     success = False
     if request.method == 'POST':
@@ -619,7 +619,7 @@ def add_user(request):
                     username=data.get('email'),
 
                     college=College.objects.get(id=data.get('college')) if data.get('college') else None,
-                    campus=data.get('campus') if data.get('campus') else None,
+                    campus=Campus.objects.get(id=data.get('campus')) if data.get('campus') else None,
                     degree=data.get('degree'),
                     expertise=data.get('expertise'),
                     company=data.get('company'),
@@ -673,7 +673,7 @@ def edit_user(request, id):
     error = None
     roles = list(User.Role.choices)
     colleges = College.objects.all()
-    campus_choices = User.Campus.choices
+    campus_choices = Campus.objects.all()
 
     success = False
     email_changed = False
@@ -724,7 +724,8 @@ def edit_user(request, id):
                     # FACULTY can edit campus, college, degree, and expertise
                     college_id = data.get('college')
                     user.college = College.objects.get(id=college_id) if college_id else None
-                    user.campus = data.get('campus') or None
+                    campus_id = data.get('campus')
+                    user.campus = Campus.objects.get(id=campus_id) if campus_id else None
                     user.degree = data.get('degree') or None
                     user.expertise = data.get('expertise') or None
                     user.company = None
@@ -735,7 +736,8 @@ def edit_user(request, id):
                     if can_edit_role_and_verify:
                         college_id = data.get('college')
                         user.college = College.objects.get(id=college_id) if college_id else None
-                        user.campus = data.get('campus') or None
+                        campus_id = data.get('campus')  
+                        user.campus = Campus.objects.get(id=campus_id) if campus_id else None
                     user.degree = None
                     user.expertise = None
                     user.company = None
@@ -928,7 +930,7 @@ def profile_view(request, id=None):
     base_template = get_templates(request)
 
     # Get campus display name
-    campus_display = dict(User.Campus.choices).get(user.campus, user.campus) if user.campus else "N/A"
+    campus_display = user.campus.name if user.campus else "N/A"
 
     # Get college name and logo
     college_name = user.college.name if user.college else "N/A"

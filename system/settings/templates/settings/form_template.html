@@ -27,13 +27,7 @@
                         <div class="form-group mb-3">
                             <label for="{{ field.id_for_label }}" class="font-weight-bold">{{ field.label }}</label>
                             
-                            {% if field.field.widget.input_type == 'file' %}
-                                {{ field }}
-                            {% elif field.field.widget.input_type == 'select' %}
-                                {{ field.as_widget.attrs.class|add:"form-select" }}
-                            {% else %}
-                                {{ field.as_widget.attrs.class|add:"form-control" }}
-                            {% endif %}
+                            {{ field }}
 
                             {% if field.help_text %}
                                 <small class="form-text text-muted">{{ field.help_text|safe }}</small>

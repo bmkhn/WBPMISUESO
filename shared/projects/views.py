@@ -3,7 +3,7 @@ from shared import request
 from system.users.decorators import role_required, project_visibility_required
 from .models import SustainableDevelopmentGoal, Project, ProjectEvaluation, ProjectEvent, ProjectUpdate
 from internal.submissions.models import Submission
-from system.users.models import College, User
+from system.users.models import College, User, Campus
 from internal.agenda.models import Agenda
 from .forms import ProjectForm, ProjectEventForm
 from django.core.paginator import Paginator
@@ -1231,7 +1231,7 @@ def admin_project(request):
 
     # Filter options
     colleges = College.objects.all()
-    campuses = User.Campus.choices
+    campuses = Campus.objects.all()
     status_choices = Project.STATUS_CHOICES
     agendas = Agenda.objects.all()
     # Get available years from projects that exist

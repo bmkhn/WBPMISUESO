@@ -3,13 +3,22 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
 from django.contrib import messages
 from system.users.decorators import role_required
-from system.users.models import College, User
+
+# Cleaned up imports
+from system.users.models import College, User, Campus
 from shared.projects.models import SustainableDevelopmentGoal
+from rest_framework_api_key.models import APIKey
 from .models import SystemSetting
-from .forms import CollegeForm, SDGForm, SystemSettingForm, DeleteAccountForm
+from .forms import (
+    CollegeForm, 
+    SDGForm, 
+    SystemSettingForm, 
+    DeleteAccountForm, 
+    APIKeyForm, 
+    CampusForm
+)
 
 # Define the roles that are considered "Admin" for settings management
-# The @role_required decorator will handle these.
 ADMIN_ROLES = ["UESO", "VP", "DIRECTOR"]
 
 @role_required(allowed_roles=ADMIN_ROLES, require_confirmed=True)
@@ -24,9 +33,6 @@ def settings_view(request):
         'base_template': base_template,
     }
     
-    # This is your existing view. You should add links in its template
-    # 'settings/settings.html' to the new URLs like 'system_settings:manage_colleges'
-    # and 'system_settings:delete_account'.
     return render(request, 'settings/settings.html', context)
 
 # --- College CRUD Views ---
@@ -92,11 +98,86 @@ def delete_college(request, pk):
     }
     return render(request, 'settings/confirm_delete.html', context)
 
+# --- Campus CRUD Views ---
+
+@role_required(allowed_roles=ADMIN_ROLES, require_confirmed=True)
+def manage_campus(request):
+    """
+    Lists all Campuses in the database.
+    """
+    campuses = Campus.objects.all()
+    context = {
+        'base_template': 'base_internal.html',
+        'campuses': campuses,
+    }
+    return render(request, 'settings/manage_campus.html', context)
+
+@role_required(allowed_roles=ADMIN_ROLES, require_confirmed=True)
+def add_campus(request):
+    """
+    Handles creating a new Campus.
+    """
+    if request.method == 'POST':
+        form = CampusForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Campus added successfully.')
+            return redirect('system_settings:manage_campus')
+    else:
+        form = CampusForm()
+
+    context = {
+        'base_template': 'base_internal.html',
+        'form': form,
+        'form_title': 'Add New Campus'
+    }
+    return render(request, 'settings/form_template.html', context)
+
+@role_required(allowed_roles=ADMIN_ROLES, require_confirmed=True)
+def edit_campus(request, pk):
+    """
+    Handles editing an existing Campus.
+    """
+    campus = get_object_or_404(Campus, pk=pk)
+    if request.method == 'POST':
+        form = CampusForm(request.POST, instance=campus)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Campus updated successfully.')
+            return redirect('system_settings:manage_campus')
+    else:
+        form = CampusForm(instance=campus)
+
+    context = {
+        'base_template': 'base_internal.html',
+        'form': form,
+        'form_title': f'Edit Campus: {campus.name}'
+    }
+    return render(request, 'settings/form_template.html', context)
+
+@role_required(allowed_roles=ADMIN_ROLES, require_confirmed=True)
+def delete_campus(request, pk):
+    """
+    Handles deleting a Campus.
+    """
+    campus = get_object_or_404(Campus, pk=pk)
+    if request.method == 'POST':
+        campus.delete()
+        messages.success(request, f'Campus "{campus.name}" deleted successfully.')
+        return redirect('system_settings:manage_campus')
+
+    context = {
+        'base_template': 'base_internal.html',
+        'object_to_delete': campus,
+        'confirm_message': f'Are you sure you want to delete the campus "{campus.name}"? Colleges associated with it will lose this association.'
+    }
+    return render(request, 'settings/confirm_delete.html', context)
+
 # --- SDG CRUD Views ---
 
 @role_required(allowed_roles=ADMIN_ROLES, require_confirmed=True)
 def manage_sdgs(request):
-    sdgs = SustainableDevelopmentGoal.objects.all().order_by('name')
+    sdgs = SustainableDevelopmentGoal.objects.all().order_by('goal_number') # Changed order_by to goal_number
     context = {
         'base_template': 'base_internal.html',
         'sdgs': sdgs,
@@ -106,7 +187,8 @@ def manage_sdgs(request):
 @role_required(allowed_roles=ADMIN_ROLES, require_confirmed=True)
 def add_sdg(request):
     if request.method == 'POST':
-        form = SDGForm(request.POST, request.FILES) # Add request.FILES if icon is an ImageField
+        # Removed request.FILES since the model has no ImageField
+        form = SDGForm(request.POST) 
         if form.is_valid():
             form.save()
             messages.success(request, 'SDG added successfully.')
@@ -125,7 +207,8 @@ def add_sdg(request):
 def edit_sdg(request, pk):
     sdg = get_object_or_404(SustainableDevelopmentGoal, pk=pk)
     if request.method == 'POST':
-        form = SDGForm(request.POST, request.FILES, instance=sdg) # Add request.FILES if icon is an ImageField
+        # Removed request.FILES
+        form = SDGForm(request.POST, instance=sdg) 
         if form.is_valid():
             form.save()
             messages.success(request, 'SDG updated successfully.')
@@ -203,6 +286,7 @@ def delete_account(request):
                 user.delete() # This will permanently delete the user
                 logout(request)
                 messages.success(request, f'Your account ({user_email}) has been permanently deleted.')
+              
                 return redirect('home') 
             else:
                 messages.error(request, 'Incorrect password. Account deletion failed.')
@@ -214,24 +298,6 @@ def delete_account(request):
         'form': form,
     }
     return render(request, 'settings/delete_account.html', context)
-
-# system/settings/views.py
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth import logout
-from django.contrib import messages
-from system.users.decorators import role_required
-from system.users.models import College, User
-from shared.projects.models import SustainableDevelopmentGoal
-# Import the APIKey model and form
-from rest_framework_api_key.models import APIKey
-from .forms import CollegeForm, SDGForm, SystemSettingForm, DeleteAccountForm, APIKeyForm
-from .models import SystemSetting
-
-ADMIN_ROLES = ["UESO", "VP", "DIRECTOR"]
-
-# ... (all your other settings views: settings_view, manage_colleges, add_sdg, etc.) ...
-
 
 # --- API Key Management Views ---
 
@@ -297,4 +363,4 @@ def revoke_api_key(request, pk):
         'confirm_message': f'Are you sure you want to revoke this API key? It will immediately stop working.',
         'confirm_button_text': 'Yes, Revoke Key'
     }
-    return render(request, 'settings/confirm_delete.html', context) # Re-use the delete template
+    return render(request, 'settings/confirm_delete.html', context) 

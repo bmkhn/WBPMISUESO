@@ -3,6 +3,15 @@ from system.users.models import College
 from shared.projects.models import SustainableDevelopmentGoal
 from .models import SystemSetting
 from rest_framework_api_key.models import APIKey
+from system.users.models import College, Campus 
+
+class CampusForm(forms.ModelForm):
+    class Meta:
+        model = Campus
+        fields = ['name']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., Tiniguiban Campus'}),
+        }
 
 class CollegeForm(forms.ModelForm):
     class Meta:
@@ -10,7 +19,7 @@ class CollegeForm(forms.ModelForm):
         fields = ['name', 'campus', 'logo']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
-            'campus': forms.Select(attrs={'class': 'form-select'}),
+            'campus': forms.Select(attrs={'class': 'form-select'}), # This will now be a dropdown of Campus objects
             'logo': forms.ClearableFileInput(attrs={'class': 'form-control'}),
         }
 

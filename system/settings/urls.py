@@ -13,6 +13,11 @@ urlpatterns = [
     path('colleges/add/', views.add_college, name='add_college'),
     path('colleges/edit/<int:pk>/', views.edit_college, name='edit_college'),
     path('colleges/delete/<int:pk>/', views.delete_college, name='delete_college'),
+
+    path('campus/', views.manage_campus, name='manage_campus'),
+    path('campus/add/', views.add_campus, name='add_campus'),
+    path('campus/edit/<int:pk>/', views.edit_campus, name='edit_campus'),
+    path('campus/delete/<int:pk>/', views.delete_campus, name='delete_campus'),
     
     # SDG CRUD
     path('sdgs/', views.manage_sdgs, name='manage_sdgs'),
