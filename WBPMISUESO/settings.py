@@ -67,7 +67,8 @@ INSTALLED_APPS = [
     'system.users',             # Custom User
     'system.notifications',     # Notifications
     'system.settings',          # Settings
-    'rest_framework',           # Django REST Framework
+    'rest_framework',           # Django REST Framework 
+    'rest_framework_api_key',
 ]
 
 MIDDLEWARE = [
