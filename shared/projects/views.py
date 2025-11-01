@@ -1295,7 +1295,7 @@ def add_project_view(request):
     agendas = Agenda.objects.all()
     sdgs = SustainableDevelopmentGoal.objects.all()
     colleges = College.objects.all()
-    campus_choices = User.Campus.choices
+    campus_choices = Campus.objects.all()
 
     logistics_type = 'BOTH'
     if request.method == 'POST':

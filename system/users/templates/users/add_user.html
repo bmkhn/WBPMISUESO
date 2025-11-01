@@ -148,7 +148,7 @@
                     <select name="campus" class="user-details-value" data-role-required>
                         <option value="">Select Campus</option>
                         {% for campus in campus_choices %}
-                            <option value="{{ campus.id }}">{{ label }}</option>
+                            <option value="{{ campus.id }}">{{ campus.name }}</option>
                         {% endfor %}
                     </select>
                 </div>

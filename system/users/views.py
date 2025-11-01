@@ -6,7 +6,7 @@ from django.core.mail import send_mail
 from django.db.models import Q
 from django.views.decorators.csrf import csrf_exempt
 
-from system.users.models import College
+from system.users.models import College, Campus
 from system.users.decorators import role_required
 from .forms import LoginForm, ClientRegistrationForm, FacultyRegistrationForm, ImplementerRegistrationForm
 
