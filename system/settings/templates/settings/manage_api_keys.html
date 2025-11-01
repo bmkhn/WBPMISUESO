@@ -34,23 +34,31 @@
                     </thead>
                     <tbody>
                         {% for key in keys %}
-                        <tr>
+                        <tr {% if key.revoked %}class="table-danger"{% endif %}>
                             <td>{{ key.name }}</td>
-                            <td><code>{{ key.prefix }}...</code></td>
+                            <td>
+                                <code id="prefix-{{ key.pk }}">{{ key.prefix }}...</code>
+                                <button class="btn btn-sm btn-outline-secondary py-0 px-1 ml-2" 
+                                        type="button" 
+                                        onclick="navigator.clipboard.writeText('{{ key.prefix }}'); this.innerText='Copied!';"
+                                        onmouseout="this.innerText='Copy Prefix';">
+                                    Copy Prefix
+                                </button>
+                            </td>
                             <td>{{ key.created|naturaltime }}</td>
                             <td>
                                 {% if key.revoked %}
-                                    <span class="badge badge-danger">Yes</span>
+                                    <span class="badge badge-danger">REVOKED</span>
                                 {% else %}
-                                    <span class="badge badge-success">No</span>
+                                    <span class="badge badge-success">ACTIVE</span>
                                 {% endif %}
                             </td>
                             <td>
                                 {% if not key.revoked %}
                                 <a href="{% url 'system_settings:revoke_api_key' key.pk %}" class="btn btn-danger btn-sm"
                                    data-toggle="tooltip" data-placement="top" title="Revoke and disable this key">
-                                    <i class="fas fa-trash"></i> Revoke
-                                a>
+                                    <i class="fas fa-ban"></i> Revoke
+                                </a>
                                 {% else %}
                                 <span class="text-muted">No actions available</span>
                                 {% endif %}

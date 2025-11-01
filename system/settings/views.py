@@ -323,18 +323,14 @@ def add_api_key(request):
         if form.is_valid():
             name = form.cleaned_data['name']
             # create_key returns the model instance AND the plain-text key
-            api_key, key = APIKey.objects.create_key(name=name)
+            api_key, key_string = APIKey.objects.create_key(name=name)
             
-            # CRITICAL: Show the key to the admin ONCE. It cannot be retrieved again.
-            messages.warning(request, 
-                f"<strong>API Key Generated!</strong><br>"
-                f"The key for <strong>{api_key.name}</strong> has been created. "
-                f"Please copy it now and store it securely.<br><br>"
-                f"<strong>Key:</strong> <pre>{key}</pre><br>"
-                f"You will <strong>NOT</strong> be able to see this key again.",
-                extra_tags='safe' # Allows HTML in the message
-            )
-            return redirect('system_settings:manage_api_keys')
+            context = {
+                'base_template': 'base_internal.html',
+                'api_key_name': api_key.name,
+                'api_key_string': key_string, # The full, plain-text key
+            }
+            return render(request, 'settings/show_api_key.html', context)
     else:
         form = APIKeyForm()
     
@@ -343,7 +339,7 @@ def add_api_key(request):
         'form': form,
         'form_title': 'Generate New API Key'
     }
-    return render(request, 'settings/form_template.html', context) # Re-use the form template
+    return render(request, 'settings/form_template.html', context)
 
 @role_required(allowed_roles=ADMIN_ROLES, require_confirmed=True)
 def revoke_api_key(request, pk):
