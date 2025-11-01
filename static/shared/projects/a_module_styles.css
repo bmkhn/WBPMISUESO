@@ -249,7 +249,7 @@ body {
 .filter-dropdown {
     display: none;
     position: absolute;
-    top: 170px;
+    top: 145px;
     right: 60px;
     z-index: 1000;
     background: #f8f8f8;

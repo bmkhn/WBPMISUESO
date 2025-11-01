@@ -86,8 +86,8 @@ a {
     font-size: 1rem;
     font-weight: 500;
     cursor: pointer;
-    display: inline-flex;
-    align-items: center;
+    display: flex;
+    text-align: center;
     gap: 0.5rem;
     transition: background-color 0.2s;
 }
@@ -97,15 +97,21 @@ a {
     height: 20px;
     display: inline-block;
     vertical-align: middle;
+    margin-right: 6px;
+    margin-top: -3px;
 }
 .export-btn:hover {
     background-color: #000000;
-    color: white;
+    color: #ffffff;
 }
 
-.export-btn i {
-    color: white;
-    font-size: 1.2rem;
+.export-btn a:hover {
+    color: #ffffff;
+}
+
+.export-btn a {
+    color: rgb(0, 0, 0);
+    font-size: 0.95rem;
     margin: 0;
 }
 .export {

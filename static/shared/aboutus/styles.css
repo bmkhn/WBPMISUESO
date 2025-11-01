@@ -340,3 +340,27 @@ footer {
     font-size: 0.95rem;
     flex: 1;
 }
+
+.edit-btn {
+    background: #063A1C;
+    color: white;
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(10, 108, 68, 0.2);
+    text-decoration: none;
+}
+
+.edit-btn:hover {
+    background: #04521c;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(10, 108, 68, 0.3);
+    text-decoration: none;
+    color: white;
+}
