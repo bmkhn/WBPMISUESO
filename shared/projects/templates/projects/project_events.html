@@ -81,15 +81,15 @@
                         {% csrf_token %}
                         <input type="hidden" name="event_id" value="{{ event.id }}">
                         <div class="form-group">
-                            <label class="form-label">Title <span class="required">*</span></label>
+                            <label class="form-label">Title<span class="required">*</span></label>
                             <input class="user-details-value" type="text" name="title" value="{{ event.title }}" required>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Date Time <span class="required">*</span></label>
+                            <label class="form-label">Date Time<span class="required">*</span></label>
                             <input class="user-details-value" type="datetime-local" name="datetime" value="{{ event.datetime|date:'Y-m-d\\TH:i' }}" required>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Location <span class="required">*</span></label>
+                            <label class="form-label">Location<span class="required">*</span></label>
                             <input class="user-details-value" type="text" name="location" value="{{ event.location }}" required>
                         </div>
                         <div class="form-actions" style="justify-content:flex-end;">
@@ -126,15 +126,15 @@
             {% csrf_token %}
             <input type="hidden" name="add_event" value="1">
             <div class="form-group">
-                <label class="form-label">Activity Name <span class="required">*</span></label>
+                <label class="form-label">Activity Name<span class="required">*</span></label>
                 <input class="user-details-value" type="text" name="add_event_title" required>
             </div>
             <div class="form-group">
-                <label class="form-label">Date Time <span class="required">*</span></label>
+                <label class="form-label">Date Time<span class="required">*</span></label>
                 <input class="user-details-value" type="datetime-local" name="add_event_datetime" required>
             </div>
             <div class="form-group">
-                <label class="form-label">Location <span class="required">*</span></label>
+                <label class="form-label">Location<span class="required">*</span></label>
                 <input class="user-details-value" type="text" name="add_event_location" required>
             </div>
             <div class="form-actions" style="justify-content:center;">
