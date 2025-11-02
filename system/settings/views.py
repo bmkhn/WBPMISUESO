@@ -1,4 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
+# FIX: Import 'reverse' to fix the NameError
+from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
 from django.contrib import messages
@@ -21,30 +23,104 @@ from .forms import (
 # Define the roles that are considered "Admin" for settings management
 ADMIN_ROLES = ["UESO", "VP", "DIRECTOR"]
 
+# -------------------------------------------------------------------
+# MODIFIED UNIFIED VIEW
+# -------------------------------------------------------------------
 @role_required(allowed_roles=ADMIN_ROLES, require_confirmed=True)
 def settings_view(request):
     """
-    Main view for system settings.
-    This page will link to the different settings management sections.
+    Main UNIFIED view for system settings.
+    This page will now display all settings components.
     """
     base_template = 'base_internal.html'
     
+    # Check for API password submission
+    api_unlocked = request.session.get('api_unlocked', False)
+    
+    # --- FIX: Load General Settings data ---
+    # Ensure default settings exist
+    defaults = {
+        'site_name': ('WBPMIS UESO', 'The public name of the website.'),
+        'maintenance_mode': ('False', 'Set to "True" to show a maintenance page to non-admins.'),
+    }
+    for key, (value, desc) in defaults.items():
+        SystemSetting.objects.get_or_create(key=key, defaults={'value': value, 'description': desc})
+    
+    settings_objects = SystemSetting.objects.all()
+    # --- End of General Settings data load ---
+
+    # --- FIX: Updated POST handling ---
+    if request.method == 'POST':
+        # Check if the API unlock form was submitted
+        if 'unlock_api' in request.POST:
+            password = request.POST.get('api_password')
+            if request.user.check_password(password):
+                request.session['api_unlocked'] = True
+                api_unlocked = True
+                messages.success(request, 'API Management section unlocked.')
+            else:
+                request.session['api_unlocked'] = False # Ensure it's false on failure
+                messages.error(request, 'Incorrect password. API Management remains locked.')
+            
+            # Redirect to the same page to clear the POST data and show the message
+            return redirect('system_settings:settings')
+
+        # Check if the General Settings form was submitted
+        elif 'save_general_settings' in request.POST:
+            # Create a form for each setting, using the key as a prefix
+            forms = [SystemSettingForm(request.POST, instance=s, prefix=s.key) for s in settings_objects]
+            if all(f.is_valid() for f in forms):
+                for f in forms:
+                    f.save()
+                messages.success(request, 'System settings updated.')
+            else:
+                messages.error(request, 'Failed to update settings. Please check the form for errors.')
+            
+            # Redirect to the same page to show messages
+            return redirect('system_settings:settings')
+    
+    # --- END of POST handling ---
+
+    # Create forms for GET request (to display the form)
+    forms = [SystemSettingForm(instance=s, prefix=s.key) for s in settings_objects]
+    # Zip settings with their forms for the template
+    settings_with_forms = zip(settings_objects, forms)
+
+
+    # Fetch all data for the unified page
+    colleges = College.objects.all().order_by('name')
+    campuses = Campus.objects.all().order_by('name')
+    sdgs = SustainableDevelopmentGoal.objects.all().order_by('goal_number')
+    
+    # Only fetch keys if the section is unlocked
+    keys = []
+    if api_unlocked:
+        keys = APIKey.objects.all().order_by('-created')
+
     context = {
         'base_template': base_template,
+        'colleges': colleges,
+        'campuses': campuses,
+        'sdgs': sdgs,
+        'keys': keys,
+        'api_unlocked': api_unlocked,
+        # FIX: Pass the settings forms to the template
+        'settings_with_forms': settings_with_forms,
     }
     
     return render(request, 'settings/settings.html', context)
+
+# -------------------------------------------------------------------
+# ALL OTHER ORIGINAL VIEWS (Required for CRUD operations)
+# -------------------------------------------------------------------
 
 # --- College CRUD Views ---
 
 @role_required(allowed_roles=ADMIN_ROLES, require_confirmed=True)
 def manage_colleges(request):
-    colleges = College.objects.all().order_by('name')
-    context = {
-        'base_template': 'base_internal.html',
-        'colleges': colleges,
-    }
-    return render(request, 'settings/manage_colleges.html', context)
+    # return render(request, 'settings/manage_colleges.html', context)
+    return redirect('system_settings:settings') # Redirect to the new main page
+
 
 @role_required(allowed_roles=ADMIN_ROLES, require_confirmed=True)
 def add_college(request):
@@ -53,7 +129,7 @@ def add_college(request):
         if form.is_valid():
             form.save()
             messages.success(request, 'College added successfully.')
-            return redirect('system_settings:manage_colleges')
+            return redirect('system_settings:settings') # Redirect to main settings
     else:
         form = CollegeForm()
     
@@ -72,7 +148,7 @@ def edit_college(request, pk):
         if form.is_valid():
             form.save()
             messages.success(request, 'College updated successfully.')
-            return redirect('system_settings:manage_colleges')
+            return redirect('system_settings:settings') # Redirect to main settings
     else:
         form = CollegeForm(instance=college)
     
@@ -87,14 +163,16 @@ def edit_college(request, pk):
 def delete_college(request, pk):
     college = get_object_or_404(College, pk=pk)
     if request.method == 'POST':
+        college_name = college.name
         college.delete()
-        messages.success(request, f'College "{college.name}" deleted successfully.')
-        return redirect('system_settings:manage_colleges')
+        messages.success(request, f'College "{college_name}" deleted successfully.')
+        return redirect('system_settings:settings') # Redirect to main settings
     
     context = {
         'base_template': 'base_internal.html',
         'object_to_delete': college,
-        'confirm_message': f'Are you sure you want to delete the college "{college.name}"?'
+        'confirm_message': f'Are you sure you want to delete the college "{college.name}"?',
+        'cancel_url': reverse('system_settings:settings') # Add cancel URL
     }
     return render(request, 'settings/confirm_delete.html', context)
 
@@ -105,12 +183,8 @@ def manage_campus(request):
     """
     Lists all Campuses in the database.
     """
-    campuses = Campus.objects.all()
-    context = {
-        'base_template': 'base_internal.html',
-        'campuses': campuses,
-    }
-    return render(request, 'settings/manage_campus.html', context)
+    # This view is no longer directly browsed to.
+    return redirect('system_settings:settings') 
 
 @role_required(allowed_roles=ADMIN_ROLES, require_confirmed=True)
 def add_campus(request):
@@ -122,7 +196,7 @@ def add_campus(request):
         if form.is_valid():
             form.save()
             messages.success(request, 'Campus added successfully.')
-            return redirect('system_settings:manage_campus')
+            return redirect('system_settings:settings') # Redirect to main settings
     else:
         form = CampusForm()
 
@@ -144,7 +218,7 @@ def edit_campus(request, pk):
         if form.is_valid():
             form.save()
             messages.success(request, 'Campus updated successfully.')
-            return redirect('system_settings:manage_campus')
+            return redirect('system_settings:settings') # Redirect to main settings
     else:
         form = CampusForm(instance=campus)
 
@@ -162,14 +236,16 @@ def delete_campus(request, pk):
     """
     campus = get_object_or_404(Campus, pk=pk)
     if request.method == 'POST':
+        campus_name = campus.name
         campus.delete()
-        messages.success(request, f'Campus "{campus.name}" deleted successfully.')
-        return redirect('system_settings:manage_campus')
+        messages.success(request, f'Campus "{campus_name}" deleted successfully.')
+        return redirect('system_settings:settings') # Redirect to main settings
 
     context = {
         'base_template': 'base_internal.html',
         'object_to_delete': campus,
-        'confirm_message': f'Are you sure you want to delete the campus "{campus.name}"? Colleges associated with it will lose this association.'
+        'confirm_message': f'Are you sure you want to delete the campus "{campus.name}"? Colleges associated with it will lose this association.',
+        'cancel_url': reverse('system_settings:settings') # Add cancel URL
     }
     return render(request, 'settings/confirm_delete.html', context)
 
@@ -177,12 +253,8 @@ def delete_campus(request, pk):
 
 @role_required(allowed_roles=ADMIN_ROLES, require_confirmed=True)
 def manage_sdgs(request):
-    sdgs = SustainableDevelopmentGoal.objects.all().order_by('goal_number') # Changed order_by to goal_number
-    context = {
-        'base_template': 'base_internal.html',
-        'sdgs': sdgs,
-    }
-    return render(request, 'settings/manage_sdgs.html', context)
+    # This view is no longer directly browsed to.
+    return redirect('system_settings:settings') 
 
 @role_required(allowed_roles=ADMIN_ROLES, require_confirmed=True)
 def add_sdg(request):
@@ -192,7 +264,7 @@ def add_sdg(request):
         if form.is_valid():
             form.save()
             messages.success(request, 'SDG added successfully.')
-            return redirect('system_settings:manage_sdgs')
+            return redirect('system_settings:settings') # Redirect to main settings
     else:
         form = SDGForm()
     
@@ -212,7 +284,7 @@ def edit_sdg(request, pk):
         if form.is_valid():
             form.save()
             messages.success(request, 'SDG updated successfully.')
-            return redirect('system_settings:manage_sdgs')
+            return redirect('system_settings:settings') # Redirect to main settings
     else:
         form = SDGForm(instance=sdg)
     
@@ -227,14 +299,16 @@ def edit_sdg(request, pk):
 def delete_sdg(request, pk):
     sdg = get_object_or_404(SustainableDevelopmentGoal, pk=pk)
     if request.method == 'POST':
+        sdg_name = sdg.name
         sdg.delete()
-        messages.success(request, f'SDG "{sdg.name}" deleted successfully.')
-        return redirect('system_settings:manage_sdgs')
+        messages.success(request, f'SDG "{sdg_name}" deleted successfully.')
+        return redirect('system_settings:settings') # Redirect to main settings
     
     context = {
         'base_template': 'base_internal.html',
         'object_to_delete': sdg,
-        'confirm_message': f'Are you sure you want to delete the SDG "{sdg.name}"?'
+        'confirm_message': f'Are you sure you want to delete the SDG "{sdg.name}"?',
+        'cancel_url': reverse('system_settings:settings') # Add cancel URL
     }
     return render(request, 'settings/confirm_delete.html', context)
 
@@ -242,35 +316,8 @@ def delete_sdg(request, pk):
 
 @role_required(allowed_roles=ADMIN_ROLES, require_confirmed=True)
 def manage_system_settings(request):
-    # Ensure default settings exist
-    defaults = {
-        'site_name': ('WBPMIS UESO', 'The public name of the website.'),
-        'maintenance_mode': ('False', 'Set to "True" to show a maintenance page to non-admins.'),
-    }
-    for key, (value, desc) in defaults.items():
-        SystemSetting.objects.get_or_create(key=key, defaults={'value': value, 'description': desc})
-    
-    settings_objects = SystemSetting.objects.all()
-    
-    if request.method == 'POST':
-        # Create a form for each setting, using the key as a prefix
-        forms = [SystemSettingForm(request.POST, instance=s, prefix=s.key) for s in settings_objects]
-        if all(f.is_valid() for f in forms):
-            for f in forms:
-                f.save()
-            messages.success(request, 'System settings updated.')
-            return redirect('system_settings:manage_system_settings')
-    else:
-        forms = [SystemSettingForm(instance=s, prefix=s.key) for s in settings_objects]
-    
-    # Zip settings with their forms for the template
-    settings_with_forms = zip(settings_objects, forms)
-    
-    context = {
-        'base_template': 'base_internal.html',
-        'settings_with_forms': settings_with_forms,
-    }
-    return render(request, 'settings/manage_system_settings.html', context)
+    # --- FIX: This view is no longer used, redirect to main settings ---
+    return redirect('system_settings:settings')
 
 # --- Delete Account View ---
 
@@ -306,12 +353,8 @@ def manage_api_keys(request):
     """
     Lists all API Keys and provides a button to add new ones.
     """
-    keys = APIKey.objects.all().order_by('-created')
-    context = {
-        'base_template': 'base_internal.html',
-        'keys': keys,
-    }
-    return render(request, 'settings/manage_api_keys.html', context)
+    # This view is no longer directly browsed to.
+    return redirect('system_settings:settings') 
 
 @role_required(allowed_roles=ADMIN_ROLES, require_confirmed=True)
 def add_api_key(request):
@@ -348,15 +391,18 @@ def revoke_api_key(request, pk):
     """
     api_key = get_object_or_404(APIKey, pk=pk)
     if request.method == 'POST':
+        api_key_name = api_key.name
         api_key.revoked = True
         api_key.save()
-        messages.success(request, f'The API key "{api_key.name}" has been revoked and can no longer be used.')
-        return redirect('system_settings:manage_api_keys')
+        messages.success(request, f'The API key "{api_key_name}" has been revoked and can no longer be used.')
+        return redirect('system_settings:settings') # Redirect to main settings
 
     context = {
         'base_template': 'base_internal.html',
         'object_to_delete': api_key, # Re-use the delete template's context
         'confirm_message': f'Are you sure you want to revoke this API key? It will immediately stop working.',
-        'confirm_button_text': 'Yes, Revoke Key'
+        'confirm_button_text': 'Yes, Revoke Key',
+        'cancel_url': reverse('system_settings:settings') # Add cancel URL
     }
-    return render(request, 'settings/confirm_delete.html', context) 
+    return render(request, 'settings/confirm_delete.html', context)
+
