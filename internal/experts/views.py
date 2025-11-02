@@ -3,7 +3,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from system.users.decorators import role_required
 from system.users.decorators import role_required
-from system.users.models import College, User
+from system.users.models import Campus, College, User
 from .ai_team_generator import get_team_generator
 import json
 
@@ -22,7 +22,7 @@ def experts_view(request):
     from django.core.paginator import Paginator
 
     # Get filter options for the modal
-    campuses = User.Campus.choices
+    campuses = Campus.objects.all()
     colleges = College.objects.all()
     
     from shared.projects.models import Project
@@ -40,10 +40,14 @@ def experts_view(request):
             Q(middle_name__icontains=search_query)
         )
     
-    # Apply campus filter
+    # Apply campus filter (filter by college's campus since user.campus is derived from college)
     campus_filter = request.GET.get('campus', '').strip()
     if campus_filter:
-        experts = experts.filter(campus=campus_filter)
+        try:
+            campus_id = int(campus_filter)
+            experts = experts.filter(college__campus_id=campus_id)
+        except ValueError:
+            pass
     
     # Apply college filter
     college_filter = request.GET.get('college', '').strip()
@@ -75,7 +79,7 @@ def experts_view(request):
     elif sort_by == 'projects':
         experts.sort(key=lambda x: x.led_completed + x.member_completed, reverse=(order == 'desc'))
     elif sort_by == 'campus':
-        experts.sort(key=lambda x: (x.campus or '', x.last_name, x.given_name), reverse=(order == 'desc'))
+        experts.sort(key=lambda x: (x.campus.name if x.campus else '', x.last_name, x.given_name), reverse=(order == 'desc'))
     elif sort_by == 'college':
         experts.sort(key=lambda x: (x.college.name if x.college else '', x.last_name, x.given_name), reverse=(order == 'desc'))
     else:
@@ -154,7 +158,7 @@ def expert_profile_view(request, user_id):
     expert = get_object_or_404(User, id=user_id, is_expert=True, is_confirmed=True)
     
     # Get campus display name
-    campus_display = dict(User.Campus.choices).get(expert.campus, expert.campus) if expert.campus else "N/A"
+    campus_display = expert.get_campus_display()
     
     # Get college name and logo
     college_name = expert.college.name if expert.college else "N/A"

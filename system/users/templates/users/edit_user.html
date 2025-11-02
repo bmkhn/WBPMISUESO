@@ -241,18 +241,9 @@
                     {% endif %}
                 </div>
                 <div>
-                    <div class="user-details-label">Campus <span class="required">*</span></div>
-                    {% if user.role == 'FACULTY' or can_edit_role_and_verify %}
-                    <select name="campus" class="user-details-value">
-                        <option value="">Select Campus</option>
-                        {% for campus in campus_choices %}
-                            <option value="{{ campus.id }}" {% if user.campus.id == campus.id %}selected{% endif %}>{{ campus.name }}</option>
-                        {% endfor %}
-                    </select>
-                    {% else %}
+                    <div class="user-details-label">Campus (from College)</div>
+                    <!-- Campus is now derived from college, displayed as read-only -->
                     <input type="text" class="user-details-value" value="{{ user.get_campus_display|default:'N/A' }}" readonly style="background-color: #f8f9fa; cursor: not-allowed;">
-                    <input type="hidden" name="campus" value="{{ user.campus }}">
-                    {% endif %}
                 </div>
             </div>
             {% endif %}

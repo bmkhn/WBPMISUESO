@@ -311,6 +311,19 @@ select.form-input {
     text-decoration: none;
 } 
 
+.back-btn:hover, .back-btn-text:hover, .proceed-btn:hover, .proceed-btn-text:hover {
+    color: #ff9900;
+}
+
+a {
+    text-decoration: none;
+    color: #0099FF;
+}
+
+a:hover {
+    color: #ff9900;
+}
+
 .back-btn-text, .proceed-btn {
     font-family: 'Inter', sans-serif;
     font-weight: 500;

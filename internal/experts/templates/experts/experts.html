@@ -46,8 +46,8 @@
                         <label>Campus
                             <select name="campus">
                                 <option value="">All Campuses</option>
-                                {% for campus_value, campus_name in campuses %}
-                                <option value="{{ campus_value }}" {% if campus_filter == campus_value %}selected{% endif %}>{{ campus_name }}</option>
+                                {% for campus in campuses %}
+                                <option value="{{ campus.id }}" {% if campus_filter == campus.id|stringformat:"s" %}selected{% endif %}>{{ campus.name }}</option>
                                 {% endfor %}
                             </select>
                         </label>
@@ -212,8 +212,8 @@
 						<label for="campus">Campus (Optional)</label>
 						<select id="campus" name="campus">
 							<option value="">All Campuses</option>
-							{% for campus_code, campus_name in campuses %}
-								<option value="{{ campus_code }}">{{ campus_name }}</option>
+							{% for campus in campuses %}
+								<option value="{{ campus.id }}">{{ campus.name }}</option>
 							{% endfor %}
 						</select>
 					</div>
@@ -327,12 +327,15 @@
     const filterBtn = document.getElementById('filterBtn');
     const filterDropdown = document.getElementById('filterDropdown');
     const closeFilter = document.getElementById('closeFilter');
+    const searchForm = document.querySelector('.search-bar');
+    
     if (filterBtn && filterDropdown) {
         filterBtn.addEventListener('click', function(e) {
             e.preventDefault();
             filterDropdown.style.display = 'block';
         });
     }
+    
     if (closeFilter && filterDropdown) {
         closeFilter.addEventListener('click', function(e) {
             e.preventDefault();
@@ -340,6 +343,24 @@
             window.location.href = window.location.pathname;
         });
     }
+    
+    // Prevent form submission when dropdowns change (only submit via Apply button)
+    if (filterDropdown && searchForm) {
+        const filterSelects = filterDropdown.querySelectorAll('select');
+        filterSelects.forEach(function(select) {
+            select.addEventListener('change', function(e) {
+                e.stopPropagation(); // Prevent any parent handlers
+            });
+        });
+        
+        // Prevent Enter key from submitting form in dropdowns
+        filterDropdown.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && e.target.tagName === 'SELECT') {
+                e.preventDefault();
+            }
+        });
+    }
+    
     // Hide dropdown when clicking outside
     document.addEventListener('mousedown', function(e) {
         if (filterDropdown && !filterDropdown.contains(e.target) && e.target !== filterBtn) {

@@ -112,9 +112,13 @@ class AITeamGenerator:
             role__in=eligible_roles
         )
         
-        # Apply filters
+        # Apply filters (filter by college's campus since user.campus is derived)
         if campus_filter:
-            users = users.filter(campus=campus_filter)
+            try:
+                campus_id = int(campus_filter)
+                users = users.filter(college__campus_id=campus_id)
+            except (ValueError, TypeError):
+                pass  # Invalid campus filter, ignore it
         if college_filter:
             users = users.filter(college_id=college_filter)
         

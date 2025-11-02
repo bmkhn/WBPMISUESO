@@ -29,6 +29,10 @@ class College(models.Model):
             self.logo.storage.delete(self.logo.name)
         super().delete(*args, **kwargs)
 
+    def get_campus_display(self):
+        """Return campus name or N/A if no campus assigned"""
+        return self.campus.name if self.campus else "N/A"
+
     def __str__(self):
         return self.name
 
@@ -74,7 +78,7 @@ class User(AbstractUser):
     sex = models.CharField(max_length=6, choices=Sex.choices)
     email = models.EmailField(unique=True)
     contact_no = models.CharField(max_length=20)
-    campus = models.ForeignKey(Campus, on_delete=models.SET_NULL, blank=True, null=True)
+    # NOTE: campus field removed - derived from college.campus
     college = models.ForeignKey(College, on_delete=models.SET_NULL, blank=True, null=True)
     role = models.CharField(max_length=50, choices=Role.choices)
     degree = models.CharField(max_length=255, blank=True, null=True)
@@ -118,6 +122,19 @@ class User(AbstractUser):
         mi = f"{self.middle_initial}. " if self.middle_initial else ""
         suffix = f" {self.suffix}" if self.suffix else ""
         return f"{self.given_name} {mi}{self.last_name}{suffix}"
+
+    @property
+    def campus(self):
+        """
+        Return the campus from the user's college.
+        Provides backward compatibility for code accessing user.campus
+        """
+        return self.college.campus if self.college else None
+
+    def get_campus_display(self):
+        """Return campus name or N/A if no campus assigned"""
+        campus = self.campus  # Uses property
+        return campus.name if campus else "N/A"
 
     def save(self, *args, **kwargs):
         # Only set updated_at if this is an update (object already exists)

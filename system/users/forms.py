@@ -28,23 +28,25 @@ class UnifiedRegistrationForm(forms.ModelForm):
         model = User
         fields = [
             'given_name', 'middle_initial', 'last_name', 'suffix', 'sex', 'email', 'contact_no',
-            'campus', 'college', 'degree', 'expertise', 'company', 'industry',
+            'college', 'degree', 'expertise', 'company', 'industry',
             'password', 'confirm_password', 'preferred_id', 'valid_id'
         ]
+        # Note: 'campus' removed - derived from college.campus
     
     def __init__(self, *args, role=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.role = role
         
         # Make all optional fields not required initially
-        for field_name in ['middle_initial', 'suffix', 'campus', 'college', 'degree', 
+        # NOTE: campus removed - derived from college
+        for field_name in ['middle_initial', 'suffix', 'college', 'degree', 
                           'expertise', 'company', 'industry', 'preferred_id', 'valid_id']:
             if field_name in self.fields:
                 self.fields[field_name].required = False
         
         # Set required fields based on role
         if role == 'FACULTY':
-            self.fields['campus'].required = True
+            # NOTE: campus requirement removed - derived from college
             self.fields['college'].required = True
             self.fields['degree'].required = True
             self.fields['expertise'].required = True

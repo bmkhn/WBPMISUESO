@@ -520,7 +520,7 @@ def manage_user(request):
         users = users.filter(college_id=college)
         query_params['college'] = college
     if campus:
-        users = users.filter(campus=campus)
+        users = users.filter(college__campus_id=campus)
         query_params['campus'] = campus
 
     # Sorting
@@ -619,7 +619,7 @@ def add_user(request):
                     username=data.get('email'),
 
                     college=College.objects.get(id=data.get('college')) if data.get('college') else None,
-                    campus=Campus.objects.get(id=data.get('campus')) if data.get('campus') else None,
+                    # campus removed - derived from college.campus
                     degree=data.get('degree'),
                     expertise=data.get('expertise'),
                     company=data.get('company'),
@@ -713,7 +713,7 @@ def edit_user(request, id):
                 # Role-specific field updates
                 if user.role == "CLIENT":
                     user.college = None
-                    user.campus = None
+                    # campus removed - derived from college (will be None when college is None)
                     user.degree = None
                     user.expertise = None
                     # CLIENT can edit company and industry
@@ -721,11 +721,10 @@ def edit_user(request, id):
                     user.industry = data.get('industry') or None
 
                 elif user.role == "FACULTY":
-                    # FACULTY can edit campus, college, degree, and expertise
+                    # FACULTY can edit college (campus derived from college), degree, and expertise
                     college_id = data.get('college')
                     user.college = College.objects.get(id=college_id) if college_id else None
-                    campus_id = data.get('campus')
-                    user.campus = Campus.objects.get(id=campus_id) if campus_id else None
+                    # campus removed - automatically derived from college.campus
                     user.degree = data.get('degree') or None
                     user.expertise = data.get('expertise') or None
                     user.company = None
@@ -736,8 +735,7 @@ def edit_user(request, id):
                     if can_edit_role_and_verify:
                         college_id = data.get('college')
                         user.college = College.objects.get(id=college_id) if college_id else None
-                        campus_id = data.get('campus')  
-                        user.campus = Campus.objects.get(id=campus_id) if campus_id else None
+                        # campus removed - automatically derived from college.campus
                     user.degree = None
                     user.expertise = None
                     user.company = None
@@ -746,7 +744,7 @@ def edit_user(request, id):
                 elif user.role == "IMPLEMENTER":
                     # IMPLEMENTER can edit degree and expertise
                     user.college = None
-                    user.campus = None
+                    # campus removed - will be None when college is None
                     user.degree = data.get('degree') or None
                     user.expertise = data.get('expertise') or None
                     user.company = None
@@ -756,7 +754,7 @@ def edit_user(request, id):
                     # UESO, DIRECTOR, VP - only editable by VP/DIRECTOR
                     if can_edit_role_and_verify:
                         user.college = None
-                        user.campus = None
+                        # campus removed - will be None when college is None
                         user.degree = None
                         user.expertise = None
                         user.company = None

@@ -53,7 +53,7 @@
                             </select>
                         </label>
                         <label>Campus (Leader)
-                            <select name="campus" onchange="this.form.submit()">
+                            <select name="campus">
                                 <option value="">Campus</option>
                                 {% for campus_obj in campuses %}
                                 <option value="{{ campus_obj.id }}" {% if campus_obj.id|stringformat:"s" == campus %}selected{% endif %}>{{ campus_obj.name }}</option>

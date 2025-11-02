@@ -6,7 +6,7 @@ from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from faker import Faker
-from system.users.models import College
+from system.users.models import College  # Campus removed - not needed anymore
 from shared.announcements.models import Announcement
 from shared.downloadables.models import Downloadable
 from shared.projects.models import Project, ProjectDocument, SustainableDevelopmentGoal
@@ -21,7 +21,7 @@ class Command(BaseCommand):
 		User = get_user_model()
 		fake = Faker()
 		colleges = list(College.objects.all())
-		campuses = [c[0] for c in User.Campus.choices]
+		# campuses removed - derived from college.campus for each user
 		password = "test1234"
 		director_user = User.objects.filter(role=User.Role.DIRECTOR).first()
 
@@ -157,7 +157,8 @@ class Command(BaseCommand):
 				email = fake.unique.email()
 				base_username = email.split('@')[0]
 				username = base_username
-				campus = random.choice(campuses)
+				# Pick a random college directly (campus will be derived from college.campus)
+				# This ensures consistency - user's campus always matches their college's campus
 				college = random.choice(colleges) if colleges else None
 
 				# Pick a realistic degree-expertise pair
@@ -178,7 +179,7 @@ class Command(BaseCommand):
 					last_name=last_name,
 					sex=User.Sex.MALE if random.random() < 0.5 else User.Sex.FEMALE,
 					contact_no=fake.phone_number(),
-					campus=campus,
+					# campus removed - derived from college.campus
 					college=college,
 					role=role,
 					is_confirmed=True,

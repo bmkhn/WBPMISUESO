@@ -1193,7 +1193,7 @@ def admin_project(request):
     if college:
         projects = projects.filter(project_leader__college__id=college)
     if campus:
-        projects = projects.filter(project_leader__campus=campus)
+        projects = projects.filter(project_leader__college__campus_id=campus)
     if agenda:
         projects = projects.filter(agenda__id=agenda)
     if sdg:

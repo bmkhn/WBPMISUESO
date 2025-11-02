@@ -65,16 +65,12 @@
             </div>
             <div class="actions">
                 <a class="back-btn" href="/register/">
-                    <svg width="18" height="19" viewBox="0 0 18 19" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <use xlink:href="#icon-arrow-left" />
-                    </svg>
+                    <i class="fa-solid fa-arrow-left"></i>
                     <span class="back-btn-text">Back to Selection</span>
                 </a>
                 <button class="proceed-btn" type="button" onclick="nextStep(1)">
                     <span class="back-btn-text">Proceed</span>
-                    <svg width="18" height="19" viewBox="0 0 18 19" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <use xlink:href="#icon-arrow-right" />
-                    </svg>
+                    <i class="fa-solid fa-arrow-right"></i>
                 </button>
             </div>
         </div>
@@ -90,10 +86,6 @@
             <div class="form-grid">
                 {% if role == 'FACULTY' %}
                     <div class="form-group">
-                        <div class="form-label">Degree:<span class="required"> *</span></div>
-                        <input class="form-input" type="text" name="degree" id="id_degree" value="{{ form.degree.value|default:'' }}">
-                    </div>
-                    <div class="form-group">
                         <div class="form-label">College:<span class="required"> *</span></div>
                         <select class="form-input" name="college" id="id_college">
                             <option value="">Select College</option>
@@ -102,20 +94,14 @@
                             {% endfor %}
                         </select>
                     </div>
+                    <div></div>
+                    <div class="form-group">
+                        <div class="form-label">Degree:<span class="required"> *</span></div>
+                        <input class="form-input" type="text" name="degree" id="id_degree" value="{{ form.degree.value|default:'' }}">
+                    </div>
                     <div class="form-group">
                         <div class="form-label">Expertise:<span class="required"> *</span></div>
                         <input class="form-input" type="text" name="expertise" id="id_expertise" value="{{ form.expertise.value|default:'' }}">
-                    </div>
-                    <div class="form-group">
-                        <div class="form-label">Campus:<span class="required"> *</span></div>
-                        <select class="form-input" name="campus" id="id_campus">
-                            <option value="">Select Campus</option>
-                            {% for value, label in form.fields.campus.choices %}
-                                {% if value %}
-                                    <option value="{{ value }}" {% if form.campus.value == value %}selected{% endif %}>{{ label }}</option>
-                                {% endif %}
-                            {% endfor %}
-                        </select>
                     </div>
                 {% elif role == 'IMPLEMENTER' %}
                     <div class="form-group">
@@ -152,7 +138,7 @@
                 <div class="form-group full-width">
                     <label style="display:flex; align-items:flex-start; font-size:0.875rem; cursor:pointer;">
                         <input type="checkbox" id="terms_checkbox" style="margin-right:0.5rem; margin-top:0.25rem;width:auto;">
-                        <span>I agree to the <a href="#" style="color:#0099FF; text-decoration:underline;">Terms and Conditions</a> and <a href="#" style="color:#0099FF; text-decoration:underline;">Privacy Policy</a></span>
+                        <span>I agree to the <a href="#" style="text-decoration:underline;">Terms and Conditions</a> and <a href="#" style="text-decoration:underline;">Privacy Policy</a></span>
                     </label>
                     <div id="terms-error-container"></div>
                 </div>
@@ -160,16 +146,12 @@
             </div>
             <div class="actions">
                 <a class="back-btn" onclick="prevStep(2)">
-                    <svg width="18" height="19" viewBox="0 0 18 19" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <use xlink:href="#icon-arrow-left" />
-                    </svg>
+                    <i class="fa-solid fa-arrow-left"></i>
                     <span class="back-btn-text">Back</span>
                 </a>
                 <button class="proceed-btn" type="button" onclick="nextStep(2)">
                     <span class="back-btn-text">Proceed</span>
-                    <svg width="18" height="19" viewBox="0 0 18 19" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <use xlink:href="#icon-arrow-right" />
-                    </svg>
+                    <i class="fa-solid fa-arrow-right"></i>
                 </button>
             </div>
         </div>
@@ -203,26 +185,22 @@
                         Choose File
                     </label>
                     <input type="file" id="id_valid_id" name="valid_id" accept="image/*" style="display:none;">
-                    <div id="file-preview" style="display:none; margin-top:0.75rem; padding:0.75rem; background:#EDF2F7; border-radius:6px; font-size:0.875rem; color:#2D3748; display:flex; align-items:center; gap:0.5rem;">
+                    <div id="file-preview" style="display:none !important; margin-top:0.75rem; padding:0.75rem; background:#EDF2F7; border-radius:6px; font-size:0.875rem; color:#2D3748; display:flex; align-items:center; gap:0.5rem;">
                         <i class="fa-solid fa-file-image" style="color:#0099FF; font-size:1.25rem;"></i> 
                         <span id="file-name" style="font-weight:500;"></span>
                     </div>
-                    <div id="file-error" class="email-error"></div>
                 </div>
 
             </div>
             <div class="actions">
                 <a class="back-btn" onclick="prevStep(3)">
-                    <svg width="18" height="19" viewBox="0 0 18 19" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <use xlink:href="#icon-arrow-left" />
-                    </svg>
+                    <i class="fa-solid fa-arrow-left"></i>
                     <span class="back-btn-text">Back</span>
                 </a>
-                <button class="proceed-btn" type="button" onclick="nextStep(3)">
-                    <span class="back-btn-text">Proceed</span>
-                    <svg width="18" height="19" viewBox="0 0 18 19" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <use xlink:href="#icon-arrow-right" />
-                    </svg>
+                <button class="proceed-btn" id="proceed-step3-btn" type="button" onclick="nextStep(3)">
+                    <span class="back-btn-text" id="proceed-step3-text">Proceed</span>
+                    <i class="fa-solid fa-arrow-right" id="proceed-step3-arrow"></i>
+                    <i class="fa-solid fa-spinner fa-spin" id="proceed-step3-spinner" style="display:none; margin-left:0.5rem;"></i>
                 </button>
             </div>
         </div>
@@ -241,28 +219,29 @@
                     <input class="form-input" type="text" name="verification_code" id="id_verification_code" maxlength="6" placeholder="000000" style="text-align:center; font-size:1.5rem; letter-spacing:0.5rem; font-weight:600;">
                     <div id="code-error" class="email-error"></div>
                     <p style="font-size:0.875rem; color:#718096; margin-top:0.5rem;">
-                        Didn't receive the code? <a href="#" id="resend-code-link" style="color:#0099FF; text-decoration:underline;">Resend Code</a>
+                        Didn't receive the code? 
+                        <a href="#" id="resend-code-link">
+                            <span id="resend-code-text">Resend Code</span>
+                            <i class="fa-solid fa-spinner fa-spin" id="resend-code-spinner" style="display:none; margin-left:0.25rem;"></i>
+                        </a>
                     </p>
                 </div>
             </div>
             <div class="actions">
                 <a class="back-btn" onclick="prevStep(4)">
-                    <svg width="18" height="19" viewBox="0 0 18 19" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <use xlink:href="#icon-arrow-left" />
-                    </svg>
+                    <i class="fa-solid fa-arrow-left"></i>
                     <span class="back-btn-text">Back</span>
                 </a>
-                <button class="proceed-btn" type="submit">
-                    <span class="back-btn-text">Verify & Submit</span>
-                    <svg width="18" height="19" viewBox="0 0 18 19" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <use xlink:href="#icon-arrow-right" />
-                    </svg>
+                <button class="proceed-btn" id="verify-submit-btn" type="submit" onclick="nextStep(4)">
+                    <span class="back-btn-text" id="verify-submit-text">Verify & Submit</span>
+                    <i class="fa-solid fa-arrow-right" id="verify-submit-arrow"></i>
+                    <i class="fa-solid fa-spinner fa-spin" id="verify-submit-spinner" style="display:none; margin-left:0.5rem;"></i>
                 </button>
             </div>
         </div>
 
         <!-- Step 5 - Thank You (Success Message) -->
-        <div class="card step-content" id="step5" style="display: block; text-align: center; padding: 3rem 2rem;">
+        <div class="card step-content" id="step5" style="display: none; text-align: center; padding: 3rem 2rem;">
             <h2 style="font-size: 2.75rem;font-weight:600;color:#2D3748;margin-bottom: 2rem;text-align:center;">THANK YOU FOR REGISTERING</h2>
             <div style="display:inline-flex; align-items:center; justify-content:center; width:80px; height:80px; background:#E6F7FF; border-radius:50%; margin:0 auto 1.5rem;">
                 <i class="fa-solid fa-check" style="font-size:2.5rem; color:#0099FF;"></i>
@@ -273,10 +252,7 @@
                 We will review your details and send you an email once your account is approved.
             </p>
             <a href="/login/" class="proceed-btn" style="display:inline-flex; align-items:center; text-decoration:none; padding:0.75rem 2rem;">
-                <svg width="18" height="19" viewBox="0 0 18 19" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right:0.5rem;">
-                    <use xlink:href="#icon-arrow-left"></use>
-                </svg>
-                <span>Back to Login</span>
+                <i class="fa-solid fa-arrow-left"></i><span>Back to Login</span>
             </a>
         </div>
     </form>
@@ -349,7 +325,7 @@
             }
         });
 
-        // File Input Change Handler with hover effect
+        // File Input Change Handler with hover effect and image preview
         const fileLabel = document.querySelector('.file-upload-label');
         document.getElementById('id_valid_id').addEventListener('change', function(e) {
             const file = e.target.files[0];
@@ -478,7 +454,8 @@
             else if (current === 2) {
                 const requiredFields = [];
                 if (ROLE === 'FACULTY') {
-                    requiredFields.push('id_degree', 'id_expertise', 'id_college', 'id_campus');
+                    // campus removed - derived from college
+                    requiredFields.push('id_degree', 'id_expertise', 'id_college');
                 } else if (ROLE === 'IMPLEMENTER') {
                     requiredFields.push('id_degree', 'id_expertise');
                 } else if (ROLE === 'CLIENT') {
@@ -548,7 +525,18 @@
                     return;
                 }
 
-                // Send verification code via AJAX
+                // Send verification code via AJAX with loading indicator
+                const proceedBtn = document.getElementById('proceed-step3-btn');
+                const proceedText = document.getElementById('proceed-step3-text');
+                const proceedArrow = document.getElementById('proceed-step3-arrow');
+                const proceedSpinner = document.getElementById('proceed-step3-spinner');
+                
+                // Show loading state
+                if (proceedBtn) proceedBtn.disabled = true;
+                if (proceedText) proceedText.textContent = 'Sending Code...';
+                if (proceedArrow) proceedArrow.style.display = 'none';
+                if (proceedSpinner) proceedSpinner.style.display = 'inline-block';
+                
                 sendVerificationCode();
             }
         }
@@ -574,6 +562,8 @@
             formData.append('email', email);
             formData.append('role', ROLE);
 
+            console.log('Sending verification code to:', email, 'for role:', ROLE);
+
             fetch('/send-verification-code/', {
                 method: 'POST',
                 headers: {
@@ -581,8 +571,27 @@
                 },
                 body: formData
             })
-            .then(response => response.json())
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    throw new Error('Network response was not ok: ' + response.status);
+                }
+                return response.json();
+            })
             .then(data => {
+                console.log('Response data:', data);
+                
+                // Reset button state
+                const proceedBtn = document.getElementById('proceed-step3-btn');
+                const proceedText = document.getElementById('proceed-step3-text');
+                const proceedArrow = document.getElementById('proceed-step3-arrow');
+                const proceedSpinner = document.getElementById('proceed-step3-spinner');
+                
+                proceedBtn.disabled = false;
+                proceedText.textContent = 'Proceed';
+                proceedArrow.style.display = 'inline-block';
+                proceedSpinner.style.display = 'none';
+                
                 if (data.success) {
                     // Move to Step 4
                     document.getElementById('step3').style.display = 'none';
@@ -597,6 +606,17 @@
                 }
             })
             .catch(error => {
+                // Reset button state on error
+                const proceedBtn = document.getElementById('proceed-step3-btn');
+                const proceedText = document.getElementById('proceed-step3-text');
+                const proceedArrow = document.getElementById('proceed-step3-arrow');
+                const proceedSpinner = document.getElementById('proceed-step3-spinner');
+                
+                proceedBtn.disabled = false;
+                proceedText.textContent = 'Proceed';
+                proceedArrow.style.display = 'inline-block';
+                proceedSpinner.style.display = 'none';
+                
                 showPopup('An error occurred. Please try again.');
                 console.error('Error:', error);
             });
@@ -605,7 +625,59 @@
         // Resend code link handler
         document.getElementById('resend-code-link').addEventListener('click', function(e) {
             e.preventDefault();
-            sendVerificationCode();
+            
+            const resendText = document.getElementById('resend-code-text');
+            const resendSpinner = document.getElementById('resend-code-spinner');
+            const resendLink = document.getElementById('resend-code-link');
+            
+            // Show loading state
+            resendLink.style.pointerEvents = 'none';
+            resendText.textContent = 'Sending...';
+            resendSpinner.style.display = 'inline-block';
+            
+            const email = document.getElementById('id_email').value;
+            const formData = new FormData();
+            formData.append('email', email);
+            formData.append('role', ROLE);
+
+            fetch('/send-verification-code/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                },
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Reset link state
+                resendLink.style.pointerEvents = 'auto';
+                resendText.textContent = 'Resend Code';
+                resendSpinner.style.display = 'none';
+                
+                if (data.success) {
+                    showPopup('Verification code resent to ' + email);
+                    // Show code modal for testing
+                    if (data.code) {
+                        showCodeModal(data.code);
+                    }
+                } else {
+                    showPopup(data.error || 'Failed to resend verification code.');
+                }
+            })
+            .catch(error => {
+                // Reset link state on error
+                resendLink.style.pointerEvents = 'auto';
+                resendText.textContent = 'Resend Code';
+                resendSpinner.style.display = 'none';
+                
+                showPopup('An error occurred. Please try again.');
+                console.error('Error:', error);
+            });
         });
 
         // Form submission handler
@@ -618,6 +690,17 @@
                 showFieldError('id_verification_code', 'Please enter a valid 6-digit code.');
                 return;
             }
+
+            // Show loading state on submit button
+            const submitBtn = document.getElementById('verify-submit-btn');
+            const submitText = document.getElementById('verify-submit-text');
+            const submitArrow = document.getElementById('verify-submit-arrow');
+            const submitSpinner = document.getElementById('verify-submit-spinner');
+            
+            submitBtn.disabled = true;
+            submitText.textContent = 'Verifying...';
+            submitArrow.style.display = 'none';
+            submitSpinner.style.display = 'inline-block';
 
             // Submit the entire form - FormData automatically includes all input fields
             const formData = new FormData(this);
@@ -637,10 +720,22 @@
                     document.getElementById('step4').style.display = 'none';
                     document.getElementById('step5').style.display = 'block';
                 } else if (data.error) {
+                    // Reset button state on error
+                    submitBtn.disabled = false;
+                    submitText.textContent = 'Verify & Submit';
+                    submitArrow.style.display = 'inline-block';
+                    submitSpinner.style.display = 'none';
+                    
                     showFieldError('id_verification_code', data.error);
                 }
             })
             .catch(error => {
+                // Reset button state on error
+                submitBtn.disabled = false;
+                submitText.textContent = 'Verify & Submit';
+                submitArrow.style.display = 'inline-block';
+                submitSpinner.style.display = 'none';
+                
                 showPopup('An error occurred. Please try again.');
                 console.error('Error:', error);
             });
