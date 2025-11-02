@@ -53,29 +53,61 @@ def parse_dates_from_request(request, default_days=300): # Added default_days
 # ==============================================================================
 
 def projects_metric_api(request):
-    # Use default_days=90 consistent with original analytics script
+    # Use default_days=300 consistent with parse_dates_from_request default
     start_date, end_date, error_response = parse_dates_from_request(request, default_days=300) 
     if error_response: return error_response
-    data = services.get_total_projects_count(start_date, end_date)
-    return JsonResponse(data)
+    # --- MODIFIED: Added try/except block ---
+    try:
+        data = services.get_total_projects_count(start_date, end_date)
+        return JsonResponse(data)
+    except Exception as e:
+        return JsonResponse({
+            'error': 'Internal Server Error while calculating projects metric.', 
+            'detail': str(e)
+        }, status=500)
+    # --- END MODIFIED ---
 
 def events_metric_api(request):
     start_date, end_date, error_response = parse_dates_from_request(request, default_days=300)
     if error_response: return error_response
-    data = services.get_total_events_count(start_date, end_date)
-    return JsonResponse(data)
+    # --- MODIFIED: Added try/except block ---
+    try:
+        data = services.get_total_events_count(start_date, end_date)
+        return JsonResponse(data)
+    except Exception as e:
+        return JsonResponse({
+            'error': 'Internal Server Error while calculating events metric.', 
+            'detail': str(e)
+        }, status=500)
+    # --- END MODIFIED ---
 
 def providers_metric_api(request):
     start_date, end_date, error_response = parse_dates_from_request(request, default_days=300)
     if error_response: return error_response
-    data = services.get_total_providers_count(start_date, end_date)
-    return JsonResponse(data)
+    # --- MODIFIED: Added try/except block ---
+    try:
+        data = services.get_total_providers_count(start_date, end_date)
+        return JsonResponse(data)
+    except Exception as e:
+        return JsonResponse({
+            'error': 'Internal Server Error while calculating providers metric.', 
+            'detail': str(e)
+        }, status=500)
+    # --- END MODIFIED ---
 
 def individuals_metric_api(request):
     start_date, end_date, error_response = parse_dates_from_request(request, default_days=300)
     if error_response: return error_response
-    data = services.get_total_individuals_trained(start_date, end_date)
-    return JsonResponse(data)
+    # --- MODIFIED: Added try/except block ---
+    try:
+        data = services.get_total_individuals_trained(start_date, end_date)
+        return JsonResponse(data)
+    except Exception as e:
+        return JsonResponse({
+            'error': 'Internal Server Error while calculating trained individuals metric.', 
+            'detail': str(e)
+        }, status=500)
+    # --- END MODIFIED ---
 
 # ==============================================================================
 # CHART DATA VIEWS (Now use aware datetimes)
@@ -84,38 +116,87 @@ def individuals_metric_api(request):
 def active_projects_chart_api(request):
     start_date, end_date, error_response = parse_dates_from_request(request, default_days=300)
     if error_response: return error_response
-    data = services.get_active_projects_over_time(start_date, end_date) 
-    return JsonResponse(data)
+    # --- MODIFIED: Added try/except block ---
+    try:
+        data = services.get_active_projects_over_time(start_date, end_date) 
+        return JsonResponse(data)
+    except Exception as e:
+        return JsonResponse({
+            'error': 'Internal Server Error while calculating active projects chart data.', 
+            'detail': str(e)
+        }, status=500)
+    # --- END MODIFIED ---
 
 def budget_allocation_chart_api(request):
     start_date, end_date, error_response = parse_dates_from_request(request, default_days=300)
     if error_response: return error_response
-    data = services.get_budget_allocation_data(start_date, end_date)
-    return JsonResponse(data)
+    # --- MODIFIED: Added try/except block ---
+    try:
+        # This now calls the multi-series function in services.py
+        data = services.get_budget_allocation_data(start_date, end_date)
+        return JsonResponse(data)
+    except Exception as e:
+        return JsonResponse({
+            'error': 'Internal Server Error while calculating budget allocation chart data.', 
+            'detail': str(e)
+        }, status=500)
+    # --- END MODIFIED ---
 
 def agenda_distribution_chart_api(request):
     start_date, end_date, error_response = parse_dates_from_request(request, default_days=300)
     if error_response: return error_response
-    data = services.get_agenda_distribution_data(start_date, end_date)
-    return JsonResponse(data)
+    # --- MODIFIED: Added try/except block ---
+    try:
+        data = services.get_agenda_distribution_data(start_date, end_date)
+        return JsonResponse(data)
+    except Exception as e:
+        return JsonResponse({
+            'error': 'Internal Server Error while calculating agenda distribution chart data.', 
+            'detail': str(e)
+        }, status=500)
+    # --- END MODIFIED ---
  
 def trained_individuals_chart_api(request):
     start_date, end_date, error_response = parse_dates_from_request(request, default_days=300)
     if error_response: return error_response
-    data = services.get_trained_individuals_data(start_date, end_date)
-    return JsonResponse(data)
+    # --- MODIFIED: Added try/except block ---
+    try:
+        data = services.get_trained_individuals_data(start_date, end_date)
+        return JsonResponse(data)
+    except Exception as e:
+        return JsonResponse({
+            'error': 'Internal Server Error while calculating trained individuals chart data.', 
+            'detail': str(e)
+        }, status=500)
+    # --- END MODIFIED ---
 
 def request_status_chart_api(request):
     start_date, end_date, error_response = parse_dates_from_request(request, default_days=300)
     if error_response: return error_response
-    data = services.get_request_status_distribution(start_date, end_date)
-    return JsonResponse(data)
+    # --- MODIFIED: Added try/except block ---
+    try:
+        data = services.get_request_status_distribution(start_date, end_date)
+        return JsonResponse(data)
+    except Exception as e:
+        return JsonResponse({
+            'error': 'Internal Server Error while calculating request status chart data.', 
+            'detail': str(e)
+        }, status=500)
+    # --- END MODIFIED ---
     
 def project_trends_api(request):
     start_date, end_date, error_response = parse_dates_from_request(request, default_days=300) # Use default 90 days
     if error_response: return error_response
-    data = services.get_project_trends(start_date, end_date)
-    return JsonResponse(data)
+    # --- MODIFIED: Added try/except block ---
+    try:
+        data = services.get_project_trends(start_date, end_date)
+        return JsonResponse(data)
+    except Exception as e:
+        return JsonResponse({
+            'error': 'Internal Server Error while calculating project trends data.', 
+            'detail': str(e)
+        }, status=500)
+    # --- END MODIFIED ---
 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response

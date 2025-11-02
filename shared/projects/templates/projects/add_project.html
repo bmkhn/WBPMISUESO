@@ -729,21 +729,29 @@
         function updateLogisticsBlocks() {
             if (!logisticsSelects) return;
             var selected = logisticsSelects.value;
+            
             Object.keys(logisticsBlock).forEach(function(logistics_type) {
                 var block = logisticsBlock[logistics_type];
                 if (!block) return;
+
                 if (logistics_type === selected) {
+                    // --- THIS BLOCK IS VISIBLE ---
                     if (block) block.style.display = 'block';
-                    // Add required to all inputs/selects in this block with data-logistics-required
+                    
+                    // Enable all inputs/selects in this block and set 'required'
                     Array.from(block.querySelectorAll('input,select,textarea')).forEach(function(el) {
+                        el.disabled = false;
                         if (el.hasAttribute('data-logistics-required')) {
                             el.required = true;
                         }
                     });
                 } else {
+                    // --- THIS BLOCK IS HIDDEN ---
                     if (block) block.style.display = 'none';
-                    // Remove required from all inputs/selects in this block with data-logistics-required
+                    
+                    // Disable all inputs/selects in this block and remove 'required'
                     Array.from(block.querySelectorAll('input,select,textarea')).forEach(function(el) {
+                        el.disabled = true;
                         if (el.hasAttribute('data-logistics-required')) {
                             el.required = false;
                         }

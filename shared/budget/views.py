@@ -4,9 +4,13 @@ from django.db import transaction
 from django.contrib import messages
 from django.core.paginator import Paginator
 from decimal import Decimal
-import json # <-- Import json for the JS solution
-from django.utils import timezone # <-- Import timezone
-from django.db.models import Q # <-- Import Q
+import json 
+from django.utils import timezone 
+
+# --- IMPORTANT: MAKE SURE THESE IMPORTS ARE AT THE TOP ---
+from django.db.models import Q, Sum, Value, DecimalField
+from django.db.models.functions import Coalesce 
+# ---
 
 # Import your standard role decorator
 from system.users.decorators import role_required
@@ -29,37 +33,67 @@ def _get_admin_dashboard_data(fiscal_year):
     """Retrieves system-wide budget data for the Admin Dashboard."""
     
     all_colleges = College.objects.all().order_by('name')
-    budget_map = {
+    
+    college_budget_map = {
         cb.college_id: cb for cb in CollegeBudget.objects.filter(
             status='ACTIVE',
             fiscal_year=fiscal_year
         )
     }
     
+    # Get aggregated budgets DIRECTLY from Projects, grouped by college
+    project_budgets_by_college = Project.objects.filter(
+            project_leader__college__isnull=False,
+            start_date__year=fiscal_year 
+        ) \
+        .values('project_leader__college') \
+        .annotate(
+            total_internal=Coalesce(Sum('internal_budget'), Value(Decimal('0.0')), output_field=DecimalField()),
+            total_external=Coalesce(Sum('external_budget'), Value(Decimal('0.0')), output_field=DecimalField()) # <-- THIS IS THE FIX
+        ) \
+        .values('project_leader__college', 'total_internal', 'total_external')
+
+    # Create a lookup map for these aggregated values
+    project_budget_map = {
+        item['project_leader__college']: {
+            'internal': item['total_internal'],
+            'external': item['total_external'] # <-- THIS IS THE FIX
+        }
+        for item in project_budgets_by_college
+    }
+
+    # Build the dashboard data
     dashboard_data = [] 
     total_committed_agg = Decimal('0')
+    total_external_agg = Decimal('0') # <-- THIS IS THE FIX
     total_assigned_to_colleges = Decimal('0')
     
     for college in all_colleges:
-        college_budget = budget_map.get(college.id)
+        college_budget = college_budget_map.get(college.id)
+        project_budgets = project_budget_map.get(college.id, {'internal': Decimal('0'), 'external': Decimal('0')})
         
+        committed = project_budgets['internal']
+        external = project_budgets['external'] # <-- THIS IS THE FIX
+
         if college_budget:
-            committed = college_budget.total_committed_to_projects
             original_cut = college_budget.total_assigned
-            uncommitted_remaining = college_budget.uncommitted_remaining
-            
-            total_committed_agg += committed
-            total_assigned_to_colleges += original_cut
+            uncommitted_remaining = original_cut - committed
         else:
-            committed, original_cut, uncommitted_remaining = (Decimal('0'), Decimal('0'), Decimal('0'))
+            original_cut = Decimal('0')
+            uncommitted_remaining = Decimal('0') - committed
+
+        total_committed_agg += committed
+        total_external_agg += external # <-- THIS IS THE FIX
+        total_assigned_to_colleges += original_cut
 
         dashboard_data.append({
             'id': college_budget.id if college_budget else None,
             'college_id': college.id, 
             'college_name': college.name,
-            'original_cut': original_cut, # Initial Budget
-            'committed_funding': committed, # Internal Budget
-            'uncommitted_remaining': uncommitted_remaining, # Remaining
+            'original_cut': original_cut,
+            'committed_funding': committed,
+            'uncommitted_remaining': uncommitted_remaining,
+            'external_funding': external # <-- THIS IS THE FIX
         })
         
     current_pool = BudgetPool.objects.filter(fiscal_year=fiscal_year).first()
@@ -72,6 +106,7 @@ def _get_admin_dashboard_data(fiscal_year):
         "pool_unallocated_remaining": pool_unallocated_remaining,
         "total_assigned_to_colleges": total_assigned_to_colleges,
         "total_committed_to_projects_agg": total_committed_agg,
+        "total_external_to_projects_agg": total_external_agg, # <-- THIS IS THE FIX
         "dashboard_data": dashboard_data,
     }
 
@@ -96,10 +131,17 @@ def _get_college_dashboard_data(user, fiscal_year):
     ).select_related('project_leader').order_by('title')
     
     project_list = []
+    
+    # We need to sum both internal and external totals
+    total_committed_internal = Decimal('0.0')
+    total_committed_external = Decimal('0.0') # <-- THIS IS THE FIX
+    
     for project in projects:
-        # --- SIMPLIFIED as requested ---
         assigned = project.internal_budget or Decimal('0')
         external = project.external_budget or Decimal('0')
+        
+        total_committed_internal += assigned
+        total_committed_external += external # <-- THIS IS THE FIX
         
         project_list.append({
             'id': project.id,
@@ -109,13 +151,17 @@ def _get_college_dashboard_data(user, fiscal_year):
             'external_funding_committed': external,
         })
         
+    total_assigned = college_budget.total_assigned
+    uncommitted_remaining = total_assigned - total_committed_internal
+        
     return {
         'is_setup': True,
         'college_budget': college_budget,
         'college_name': user_college.name,
-        'total_assigned_original_cut': college_budget.total_assigned, # Initial Budget
-        'total_committed_to_projects': college_budget.total_committed_to_projects, # Internal Budget
-        'uncommitted_remaining': college_budget.uncommitted_remaining, # Remaining
+        'total_assigned_original_cut': total_assigned,
+        'total_committed_to_projects': total_committed_internal, # This is just internal
+        'total_external_to_projects': total_committed_external, # <-- THIS IS THE FIX
+        'uncommitted_remaining': uncommitted_remaining,
         'dashboard_data': project_list
     }
 
@@ -130,26 +176,25 @@ def _get_faculty_dashboard_data(user):
     total_external = Decimal('0')
     
     for project in user_projects:
-        # --- SIMPLIFIED as requested ---
         assigned = project.internal_budget or Decimal('0')
-        external = project.external_budget or Decimal('0')
+        external = project.external_budget or Decimal('0') # <-- THIS IS THE FIX
         
         total_internal += assigned
-        total_external += external
+        total_external += external # <-- THIS IS THE FIX
         
         project_data.append({
             'id': project.id,
             'title': project.title,
             'status': project.get_status_display(),
             'internal_funding': assigned,
-            'external_funding': external,
+            'external_funding': external, # <-- THIS IS THE FIX
         })
         
     return {
         "is_setup": True, 
         "dashboard_data": project_data,
         "total_internal": total_internal,
-        "total_external": total_external,
+        "total_external": total_external, # <-- THIS IS THE FIX
         "total_assigned": total_internal + total_external,
     }
 
@@ -163,7 +208,7 @@ def _get_edit_page_data(user, fiscal_year):
         context['colleges_data'] = admin_data['dashboard_data']
         # This map is used by the JavaScript solution
         context['allocation_map'] = json.dumps({
-            item['college_id']: item['original_cut'] for item in admin_data['dashboard_data']
+            item['college_id']: str(item['original_cut']) for item in admin_data['dashboard_data'] # Cast Decimal to str
         })
 
     if user_role in ["PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
@@ -218,20 +263,44 @@ def _update_project_internal_budget(user, project_id, new_internal_budget):
     old_budget = project.internal_budget or Decimal('0')
     commitment_delta = new_internal_budget - old_budget
     
-    if college_budget.uncommitted_remaining - commitment_delta < Decimal('0'):
-         raise ValueError(f"Assignment exceeds remaining college budget by ₱{abs(college_budget.uncommitted_remaining - commitment_delta):,.2f}.")
+    # No need to log if the value didn't change
+    if commitment_delta == 0:
+        return project
+
+    # Check against the *actual* remaining budget
+    current_committed_total = Project.objects.filter(
+            project_leader__college=college_budget.college,
+            start_date__year=fiscal_year
+        ) \
+        .exclude(id=project.id) \
+        .aggregate(
+            total=Coalesce(Sum('internal_budget'), Value(Decimal('0.0')))
+        )['total']
+    
+    new_total_commitment = current_committed_total + new_internal_budget
+    
+    if new_total_commitment > college_budget.total_assigned:
+         raise ValueError(f"Assignment exceeds remaining college budget. College has ₱{college_budget.total_assigned - current_committed_total:,.2f} remaining.")
 
     project.internal_budget = new_internal_budget
     project.save(update_fields=['internal_budget'])
     
-    college_budget.total_committed_to_projects = (college_budget.total_committed_to_projects or Decimal('0.00')) + commitment_delta
+    college_budget.total_committed_to_projects = new_total_commitment
     college_budget.save(update_fields=['total_committed_to_projects'])
     
+    # More detailed logging
+    if old_budget == Decimal('0.00'):
+        action_type = 'ALLOCATED'
+        description_str = f'Project "{project.title}" internal budget allocated: ₱{new_internal_budget:,.2f}.'
+    else:
+        action_type = 'ADJUSTED'
+        description_str = f'Project "{project.title}" internal budget adjusted: ₱{old_budget:,.2f} → ₱{new_internal_budget:,.2f}.'
+        
     BudgetHistory.objects.create(
         college_budget=college_budget,
-        action='ADJUSTED' if new_internal_budget < old_budget else 'ALLOCATED',
+        action=action_type,
         amount=commitment_delta,
-        description=f'Project "{project.title}" internal budget set to ₱{new_internal_budget:,.2f}. Funded by {college_budget.college.name}.',
+        description=description_str + f' (Funded by {college_budget.college.name})',
         user=user
     )
     return project
@@ -245,14 +314,14 @@ def _update_project_internal_budget(user, project_id, new_internal_budget):
 def get_templates(request):
     """Determines the base template based on user role."""
     user_role = getattr(request.user, 'role', None)
-    # All budget users use the internal template
     if user_role in ["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR", "FACULTY", "IMPLEMENTER"]:
         base_template = "base_internal.html"
     else:
         base_template = "base_public.html" 
     return base_template
 
-# ------------------------------ 1. BUDGET DASHBOARD ------------------------------
+# in shared/budget/views.py
+
 @role_required(["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR", "FACULTY", "IMPLEMENTER"], require_confirmed=True)
 def budget_view(request):
     """
@@ -273,7 +342,16 @@ def budget_view(request):
     
     # Add common context
     context["latest_history"] = BudgetHistory.objects.all().order_by('-timestamp')[:5]
-    context["latest_funding"] = ExternalFunding.objects.filter(status__in=['APPROVED', 'PENDING']).order_by('-proposal_date')[:5]
+    
+    # --- THIS IS THE FIX ---
+    # We now query Projects to match the dashboard, not ExternalFunding
+    # The old variable was 'latest_funding'
+    context["latest_external_projects"] = Project.objects.filter(
+        external_budget__gt=0,
+        start_date__year=current_year
+    ).order_by('-external_budget')[:5]
+    # --- END FIX ---
+
     context["base_template"] = get_templates(request)
     context["title"] = f"Budget Dashboard ({current_year})"
     context["user_role"] = user_role
@@ -284,6 +362,12 @@ def budget_view(request):
         if context.get('user_role') in ["VP", "DIRECTOR", "UESO"]:
             messages.info(request, "Annual Budget Pool not initialized. Please set it up.")
             return redirect('budget_setup')
+        
+        college_context = context.get('college_name')
+        if college_context:
+             messages.info(request, f"Budget for {college_context} not yet allocated for {current_year}.")
+             return render(request, 'budget/no_budget_setup.html', context)
+        
         return render(request, 'budget/no_budget_setup.html', context)
 
     return render(request, 'budget/budget.html', context)
@@ -302,6 +386,7 @@ def edit_budget_view(request):
     
     user_role = getattr(request.user, 'role', None)
     context["user_role"] = user_role 
+    context["is_college_admin"] = user_role in ["PROGRAM_HEAD", "DEAN", "COORDINATOR"] # Add this for template
     
     # --- Form Handling for College Admins (Project Assignment) ---
     if user_role in ["PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
@@ -320,7 +405,7 @@ def edit_budget_view(request):
                 new_budget = project_form.cleaned_data['internal_budget']
                 try:
                     _update_project_internal_budget(request.user, project.id, new_budget) # Use local function
-                    messages.success(request, f'Internal budget for {project.title} updated to ₱{new_budget:,.2f}.')
+                    messages.success(request, f'Internal budget for {project.title} updated.')
                     return redirect('budget_edit')
                 except (ValueError, PermissionError) as e:
                     messages.error(request, f'Allocation Failed: {e}')
@@ -351,6 +436,7 @@ def edit_budget_view(request):
                             amount = Decimal(str(value).replace(',', '').strip())
                             
                             if amount < Decimal('0.00'):
+                                # This is now handled by JavaScript, but good to keep as a server-side check
                                 raise ValueError(f"Negative value (₱{amount:,.2f}) not allowed.")
                             
                             total_proposed_allocation += amount
@@ -379,24 +465,42 @@ def edit_budget_view(request):
                             defaults={'total_assigned': amount, 'assigned_by': request.user, 'status': 'ACTIVE'}
                         )
                         
-                        committed_amount = allocation.total_committed_to_projects or Decimal('0.00')
+                        # Check against actual project sum
+                        committed_amount = Project.objects.filter(
+                            project_leader__college=college, 
+                            start_date__year=current_year
+                        ).aggregate(
+                            total=Coalesce(Sum('internal_budget'), Value(Decimal('0.0')))
+                        )['total']
+                        
                         if amount < committed_amount:
                             raise Exception(f"Cannot set {college.name} budget to ₱{amount:,.2f}. It already has ₱{committed_amount:,.2f} committed to projects.") 
 
-                        if not created and (allocation.total_assigned != amount or allocation.status != 'ACTIVE'):
+                        # Detailed logging for both create and update
+                        if not created and allocation.total_assigned != amount:
                             previous_assigned = allocation.total_assigned
                             allocation.total_assigned = amount
                             allocation.assigned_by = request.user
                             allocation.status = 'ACTIVE' 
-                            allocation.save()
+                            allocation.save(update_fields=['total_assigned', 'assigned_by', 'status'])
                             
                             BudgetHistory.objects.create(
                                 college_budget=allocation,
                                 action='ADJUSTED',
-                                amount=amount,
-                                description=f'College cut adjusted for {college.name}: ₱{previous_assigned:,.2f} → ₱{amount:,.2f}',
+                                amount=amount - previous_assigned, # Log the delta
+                                description=f'College cut for {college.name} adjusted: ₱{previous_assigned:,.2f} → ₱{amount:,.2f}',
                                 user=request.user
                             )
+                        elif created:
+                            # This was the missing log!
+                            BudgetHistory.objects.create(
+                                college_budget=allocation,
+                                action='ALLOCATED',
+                                amount=amount,
+                                description=f'Initial college cut allocated for {college.name}: ₱{amount:,.2f}',
+                                user=request.user
+                            )
+                        
                         colleges_updated += 1
                         
                     messages.success(request, f'Successfully updated allocations for {colleges_updated} colleges.')
@@ -404,7 +508,7 @@ def edit_budget_view(request):
             
             except Exception as e:
                 messages.error(request, f'An error occurred: {e}')
-                return redirect('budget_edit') # This redirect fixes the "stale data" bug
+                return redirect('budget_edit')
 
     return render(request, 'budget/edit_budget.html', context)
 
@@ -431,23 +535,34 @@ def budget_history_view(request):
     }
     return render(request, 'budget/history.html', context)
 
-# ------------------------------ 4. EXTERNAL SPONSORS PAGE ------------------------------
+# in shared/budget/views.py
+
 @role_required(["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR", "FACULTY", "IMPLEMENTER"], require_confirmed=True)
 def external_sponsors_view(request):
-    """Renders the 'external_sponsors.html' template with pagination."""
-    sponsor_queryset = ExternalFunding.objects.select_related('project').filter(
-            status__in=['APPROVED', 'COMPLETED', 'PENDING']
-        ).order_by('-proposal_date')
+    """
+    Renders the 'external_sponsors.html' template with pagination.
     
-    paginator = Paginator(sponsor_queryset, 20)
+    FIX: This view now queries Projects with external_budget > 0
+    to match the dashboard, instead of querying ExternalFunding.
+    """
+    current_year = get_current_fiscal_year()
+    
+    # Query the Project model directly, filtering for projects that have an external budget
+    # and are in the current fiscal year (to match the dashboard).
+    project_queryset = Project.objects.filter(
+        external_budget__gt=0,
+        start_date__year=current_year
+    ).order_by('-start_date')
+    
+    paginator = Paginator(project_queryset, 20)
     page_obj = paginator.get_page(request.GET.get('page'))
     
     context = {
-        "page_obj": page_obj,
-        "title": "External Sponsors and Funding",
+        "page_obj": page_obj, # page_obj now contains Project objects
+        "title": "Projects with External Funding", # Updated title
         "base_template": get_templates(request)
     }
-    return render(request, 'budget/external_sponsors.html', context)
+    return render(request, 'budget/external_sponsors.html', context) 
 
 # ------------------------------ 5. SETUP (Admin Only) ------------------------------
 @role_required(["VP", "DIRECTOR", "UESO"], require_confirmed=True)
@@ -455,10 +570,6 @@ def setup_annual_budget(request):
     """View for Admins to create the annual BudgetPool."""
     current_year = get_current_fiscal_year()
     current_pool = BudgetPool.objects.filter(fiscal_year=current_year).first()
-
-    if current_pool:
-        messages.info(request, 'Budget already initialized for this year.')
-        return redirect('budget_dashboard')
 
     if request.method == 'POST':
         form = AnnualBudgetForm(request.POST)
@@ -474,6 +585,16 @@ def setup_annual_budget(request):
             except Exception as e:
                 messages.error(request, f'Error initializing budget: {e}')
     else:
-        form = AnnualBudgetForm(initial={'fiscal_year': current_year})
+        initial_data = {'fiscal_year': current_year}
+        if current_pool:
+            initial_data['annual_total'] = current_pool.total_available
+            messages.info(request, f"Budget for {current_year} is already set to ₱{current_pool.total_available:,.2f}. You can adjust it here.")
+            
+        form = AnnualBudgetForm(initial=initial_data)
 
-    return render(request, 'budget/setup_annual_budget.html', {"base_template": get_templates(request), "form": form, "title": "Set Up Annual Budget"})
+    return render(request, 'budget/setup_annual_budget.html', {
+        "base_template": get_templates(request), 
+        "form": form, 
+        "title": "Set Up Annual Budget",
+        "current_pool": current_pool
+    })

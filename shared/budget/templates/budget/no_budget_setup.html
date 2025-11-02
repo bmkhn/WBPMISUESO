@@ -1,22 +1,96 @@
 {% extends base_template %}
 {% load static %}
 
-{% block extra_head %}
-    <link href="{% static 'shared/budget/styles.css' %}" rel="stylesheet" />
-{% endblock %}
-
 {% block title %}Budget Not Available{% endblock %}
 
 {% block content %}
-<div class="container-fluid px-4">
-    <div class="setup-container text-center">
-        <h2 class="mt-4">Budget Not Yet Available</h2>
-        <p class="lead text-muted mt-3">The budget for the fiscal year <strong>{{ current_year }}</strong> has not been set up by an administrator.</p>
-        <p>Please check back later.</p>
-        
-        {% if error %}
-            <div class="alert alert-warning mt-4">{{ error }}</div>
-        {% endif %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Budget Not Available</title>
+    
+    <style>
+        /* Base styles from dashboard.css */
+        p, h1, h2, h3, h4, h5, h6, div {
+            cursor: default;
+        } 
+        body {
+            background: #F9F9F9;
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+        }
+        .main-container {
+            margin: 60px 6rem;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+        @media (max-width: 768px) {
+            .main-container {
+                margin: 20px 1rem;
+                gap: 20px;
+            }
+        }
+
+        /* Message Box Style (using .table-container) */
+        .setup-box {
+            width: 100%;
+            max-width: 600px;
+            margin: 40px auto; /* Centered box */
+            background: #FFFFFF; 
+            border-radius: 10px; 
+            overflow: hidden;
+            box-shadow: 0 0 0 1px #E0E0E0, 0 8px 18px -8px rgba(0, 0, 0, 0.15); 
+            border: none;
+            padding: 32px 40px;
+            text-align: center;
+            box-sizing: border-box;
+        }
+        .setup-box h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #111827;
+            margin: 0;
+        }
+        .setup-box p {
+            font-size: 16px;
+            color: #4b5563;
+            line-height: 1.6;
+            margin: 16px 0 0 0;
+        }
+        .error-message {
+            margin-top: 24px;
+            padding: 12px;
+            background-color: #fef2f2;
+            color: #b91c1c;
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="setup-box">
+            <h2>Budget Not Yet Available</h2>
+            
+            {% if college_name %}
+                <p>The budget for <strong>{{ college_name }}</strong> has not been allocated for the <strong>{{ current_year }}</strong> fiscal year.</p>
+                <p>Please contact your administrator.</p>
+            {% else %}
+                <p>The system-wide budget for the <strong>{{ current_year }}</strong> fiscal year has not been set up by an administrator.</p>
+                <p>Please check back later.</p>
+            {% endif %}
+
+            {% if error %}
+                <div class="error-message">
+                    {{ error }}
+                </div>
+            {% endif %}
+        </div>
     </div>
-</div>
+</body>
+</html>
 {% endblock %}

@@ -8,6 +8,7 @@ import io
 import openpyxl
 from openpyxl.styles import Font
 from django.http import HttpResponse
+from openpyxl.utils import get_column_letter # <-- ADDED IMPORT
 
 # ==============================================================================
 # HELPER FUNCTION (MOVED TO TOP LEVEL)
@@ -91,7 +92,7 @@ def analytics_view(request):
 def export_analytics_to_excel(request):
     """
     Gathers all analytics data for the given date range and exports it
-    as a multi-sheet Excel file.
+    as a multi-sheet Excel file, compatible with the new multi-series budget chart.
     """
     # This call will now work
     start_date, end_date, _ = _get_validated_dates(request)
@@ -159,22 +160,48 @@ def export_analytics_to_excel(request):
     ws_trained.column_dimensions['A'].width = 25
     ws_trained.column_dimensions['B'].width = 20
 
-    # --- 4. Budget Allocation Sheet ---
+    # --- 4. Budget Allocation Sheet (UPDATED FOR MULTI-SERIES) ---
     ws_budget = wb.create_sheet(title="Budget Allocation")
     ws_budget['A1'] = "Budget Allocation by College"
-    ws_budget['A1'].font = header_font
-    ws_budget['A3'] = "College"
-    ws_budget['B3'] = "Allocation (₱)"
-    ws_budget['A3'].font = header_font
-    ws_budget['B3'].font = header_font
+    ws_budget['A1'].font = title_font
+    ws_budget['A2'] = f"Data Based on Fiscal Year: {end_date.year}"
     
     budget_data = services.get_budget_allocation_data(start_date, end_date)
-    for i, label in enumerate(budget_data.get('labels', []), start=4):
+    labels = budget_data.get('labels', [])
+    datasets = budget_data.get('datasets', [])
+    
+    # Define Column Headers
+    ws_budget['A4'] = "College"
+    ws_budget['A4'].font = header_font
+    
+    current_col = 2
+    # Write headers from datasets
+    for dataset in datasets:
+        header_title = dataset['label']
+        # Use row 4 for headers
+        cell = ws_budget.cell(row=4, column=current_col, value=f"{header_title} (₱)")
+        cell.font = header_font
+        current_col += 1
+        
+    # Populate data rows
+    for i, label in enumerate(labels, start=5): # Data starts at row 5
         ws_budget[f'A{i}'] = label
-        ws_budget[f'B{i}'] = budget_data['allocations'][i-4]
-        ws_budget[f'B{i}'].number_format = '₱#,##0.00'
+        
+        current_col = 2
+        for dataset in datasets:
+            data_list = dataset['data']
+            # Index is (current row - start data row) -> (i - 5)
+            value = data_list[i-5] 
+            cell = ws_budget.cell(row=i, column=current_col, value=value)
+            cell.number_format = '₱#,##0.00'
+            current_col += 1
+
+    # Adjust Column Widths
     ws_budget.column_dimensions['A'].width = 40
-    ws_budget.column_dimensions['B'].width = 20
+    # Adjust widths for all created columns (up to current_col - 1)
+    for col_idx in range(2, current_col):
+        ws_budget.column_dimensions[get_column_letter(col_idx)].width = 25
+    # --- END UPDATED SECTION ---
 
     # --- 5. Agenda Distribution Sheet ---
     ws_agenda = wb.create_sheet(title="Agenda Distribution")

@@ -212,7 +212,7 @@
                             <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
                             <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
                         </svg>
-                        <span class="info-tooltip">Shows flow of given budget in constituents.</span>
+                        <span class="info-tooltip">Shows flow of given budget in constituents (Allotted, Committed, Unallocated).</span>
                     </span> 
                 </div>
                 <canvas id="budgetMultiLineChart"></canvas>
@@ -265,7 +265,15 @@
                 const url = buildUrl(baseUrl, startStr, endStr);
                 fetch(url)
                     .then(response => {
-                        if (!response.ok) throw new Error(`HTTP error! status: ${response.status} for ${url}`);
+                        // FIX: Check for 500/error status and throw to catch block
+                        if (!response.ok) {
+                            if (response.status === 500) {
+                                return response.json().then(errorData => {
+                                    throw new Error(`HTTP error! status: ${response.status}. Detail: ${errorData.detail || errorData.error}`);
+                                });
+                            }
+                            throw new Error(`HTTP error! status: ${response.status} for ${url}`);
+                        }
                         return response.json();
                     })
                     .then(data => {
@@ -283,6 +291,10 @@
                         console.error(`Error fetching metric for ${elementId}:`, error);
                         const element = document.getElementById(elementId);
                         if (element) element.textContent = 'Error';
+                        if(error.message.includes("Detail: ")) {
+                             // Display detailed error in console for debugging
+                             console.error("Backend Error Detail:", error.message.split("Detail: ")[1]);
+                        }
                     });
             });
 
@@ -293,7 +305,15 @@
             if (statContainer) {
                  fetch(trendsUrl)
                     .then(response => {
-                        if (!response.ok) throw new Error(`HTTP error! status: ${response.status} for trends`);
+                        // FIX: Check for 500/error status
+                        if (!response.ok) {
+                            if (response.status === 500) {
+                                return response.json().then(errorData => {
+                                    throw new Error(`HTTP error! status: ${response.status}. Detail: ${errorData.detail || errorData.error}`);
+                                });
+                            }
+                            throw new Error(`HTTP error! status: ${response.status} for trends`);
+                        }
                         return response.json();
                     })
                     .then(data => {
@@ -327,6 +347,10 @@
                     .catch(error => {
                         console.error('Error fetching or rendering trend data:', error);
                         if(statContainer) statContainer.innerHTML = '<div class="stat"><div class="stat-label" style="color: red;">Error loading trends.</div></div>';
+                        if(error.message.includes("Detail: ")) {
+                             // Display detailed error in console for debugging
+                             console.error("Backend Error Detail:", error.message.split("Detail: ")[1]);
+                        }
                     });
             } else {
                  console.warn(".stat-container not found in HTML.");
@@ -409,6 +433,11 @@
                 } else {
                     console.warn("refreshAnalyticsCharts function not found. Ensure chart script is loaded after this script.");
                 }
+                
+                // --- Update Export Link ---
+                if (typeof window.updateExportLink === 'function') {
+                    window.updateExportLink();
+                }
 
                 showPopup(false); // Close popup
             });
@@ -478,7 +507,11 @@
             const url = `${endpoint}?start_date=${start}&end_date=${end}`;
             try {
                 const response = await fetch(url);
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                // FIX: Check for 500/error status and throw error detail
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`HTTP error! status: ${response.status}. Detail: ${errorData.detail || errorData.error}`);
+                }
                 const json = await response.json();
                 return json;
             } catch (error) {
@@ -487,32 +520,7 @@
             }
         }
 
-        function getChartTimeUnit(startStr, endStr) {
-            if (!startStr || !endStr) return 'month'; // Default
-
-            try {
-                const startDate = new Date(startStr);
-                const endDate = new Date(endStr);
-                
-                if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-                    return 'month';
-                }
-
-                const diffTime = Math.abs(endDate - startDate);
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-                if (diffDays <= 1) return 'hour';       // 1 day or less
-                if (diffDays <= 31) return 'day';      // 1 month or less
-                if (diffDays <= 180) return 'week';     // 6 months or less
-                if (diffDays <= 1095) return 'month';   // 3 years or less
-                if (diffDays <= 7300) return 'year';    // 20 years or less
-                return 'decade';                        // More than 20 years
-
-            } catch (e) {
-                console.error("Error parsing dates:", e);
-                return 'month'; // Fallback
-            }
-        }
+        // REMOVED REDUNDANT CLIENT-SIDE DATE LOGIC
 
         async function refreshCharts(start, end) {
             console.log(`Refreshing charts for: ${start || 'default'} to ${end || 'default'}`);
@@ -538,16 +546,24 @@
                     chartInstances[canvasId] = new Chart(ctx, chartConfigFn(data, start, end));
                 } catch (error) {
                     console.error(`Error fetching/rendering chart ${canvasId}:`, error);
+                    // Display error on canvas
                     if (ctx) {
                         ctx.clearRect(0, 0, canvas.width, canvas.height);
-                        ctx.fillStyle = 'grey'; ctx.textAlign = 'center';
-                        ctx.fillText('Could not load chart data.', canvas.width / 2, canvas.height / 2);
+                        ctx.fillStyle = 'red'; 
+                        ctx.textAlign = 'center';
+                        ctx.font = '14px Inter';
+                        const errorMessage = error.message.includes("Detail: ") ? 
+                                             error.message.split("Detail: ")[1] : 
+                                             "Could not load chart data.";
+                        ctx.fillText(errorMessage, canvas.width / 2, canvas.height / 2);
+                        ctx.fillText("Check console for more details.", canvas.width / 2, canvas.height / 2 + 20);
                     }
                 }
             };
 
             const activeProjectsConfig = (data, start, end) => {
-                const timeUnit = getChartTimeUnit(start, end);
+                // FIX APPLIED: Read the unit directly from the backend data
+                const timeUnit = data.timeUnit || 'month'; 
                 const hasData = data.data && data.data.length > 0;
 
                 return {
@@ -569,7 +585,7 @@
                             x: {
                                 type: 'time',
                                 time: {
-                                    unit: timeUnit,
+                                    unit: timeUnit, // <-- CORRECT UNIT APPLIED
                                     tooltipFormat: 'PP'
                                 },
                                 ticks: {
@@ -580,79 +596,16 @@
                         },
                         plugins: {
                             legend: { display: false },
-                            // --- MODIFICATION HERE ---
-                            tooltip: { 
-                                enabled: hasData,
-                                mode: 'index',      // Show tooltip for nearest X-axis value
-                                intersect: false    // Do not require direct mouse intersection
-                            },
-                            // --- END MODIFICATION ---
+                            tooltip: { enabled: hasData, mode: 'index', intersect: false },
                             datalabels: { display: false }
                         }
                     }
                 };
             };
 
-            const budgetConfig = (data) => ({
-                type: 'bar', 
-                data: { 
-                    labels: data.labels || [], 
-                    datasets: [{ 
-                        label: 'Budget Allocation (₱)', 
-                        data: data.allocations || [], 
-                        backgroundColor: ['#FF638466', '#36A2EB66', '#FFCE5666', '#4BC0C066', '#9966FF66', '#FF9F4066'], 
-                        borderColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'],
-                        borderWidth: 2 
-                    }] 
-                },
-                options: { 
-                    aspectRatio: 1.5, 
-                    indexAxis: 'y', 
-                    scales: { x: { beginAtZero: true, ticks: { callback: value => `₱${value.toLocaleString()}` } } }, 
-                    plugins: { 
-                        legend: { display: false }, 
-                        tooltip: { callbacks: { label: (c) => `₱${c.raw.toLocaleString()}` } },
-                        datalabels: { display: false } 
-                    } 
-                }
-            });
-
-            const agendaConfig = (data) => ({
-                type: 'pie',
-                data: {
-                    labels: data.labels || [],
-                    datasets: [{
-                        label: 'Projects per Agenda',
-                        data: data.counts || [],
-                        backgroundColor: ["#FF638466","#36A2EB66","#FFCE5666","#4BC0C066","#9966FF66", "#FF9F4066","#8BC34A66","#E91E6366","#00BCD466"],
-                        borderColor: ["#FF6384","#36A2EB","#FFCE56","#4BC0C0","#9966FF", "#FF9F40","#8BC34A","#E91E63","#00BCD4"],
-                        borderWidth: 2,
-                        hoverBackgroundColor: ["#FF6384","#36A2EB","#FFCE56","#4BC0C0","#9966FF", "#FF9F40","#8BC34A","#E91E63","#00BCD4"],
-                        hoverOffset: 10,
-                        hoverBorderColor: '#fff',
-                        hoverBorderWidth: 2
-                    }]
-                },
-                options: {
-                    plugins: {
-                        legend: false,
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    let total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                                    let value = context.raw;
-                                    let percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
-                                    return `${context.label}: ${value} (${percentage}%)`;
-                                }
-                            }
-                        },
-                        datalabels: { display: false }
-                    }
-                }
-            });
-
             const trainedIndividualsConfig = (data, start, end) => {
-                const timeUnit = getChartTimeUnit(start, end);
+                // FIX APPLIED: Read the unit directly from the backend data
+                const timeUnit = data.timeUnit || 'month'; 
                 const hasData = data.data && data.data.length > 0;
 
                 return {
@@ -674,7 +627,7 @@
                             x: {
                                 type: 'time',
                                 time: {
-                                    unit: timeUnit,
+                                    unit: timeUnit, // <-- CORRECT UNIT APPLIED
                                     tooltipFormat: 'PP'
                                 },
                                 ticks: {
@@ -685,26 +638,61 @@
                         },
                         plugins: {
                             legend: { display: false },
-                            // --- MODIFICATION HERE ---
-                            tooltip: { 
-                                enabled: hasData,
-                                mode: 'index',      // Show tooltip for nearest X-axis value
-                                intersect: false    // Do not require direct mouse intersection
-                            },
-                            // --- END MODIFICATION ---
+                            tooltip: { enabled: hasData, mode: 'index', intersect: false },
                             datalabels: { display: false }
                         }
                     }
                 };
             };
             
+            const budgetConfig = (data) => {
+                const getBackgroundColor = (dataset) => dataset.backgroundColor || 'rgba(100, 100, 100, 0.66)';
+                const getBorderColor = (dataset) => dataset.borderColor || 'rgb(100, 100, 100)';
+                
+                const datasets = (data.datasets || []).map(dataset => ({
+                    label: dataset.label,
+                    data: dataset.data || [],
+                    backgroundColor: getBackgroundColor(dataset), 
+                    borderColor: getBorderColor(dataset), 
+                    borderWidth: 1,
+                }));
+
+                return {
+                    type: 'bar',
+                    data: { 
+                        labels: data.labels || [], 
+                        datasets: datasets 
+                    },
+                    options: { 
+                        aspectRatio: 1.5, 
+                        indexAxis: 'y',
+                        responsive: true,
+                        scales: { 
+                            x: { beginAtZero: true, title: { display: true, text: 'Budget Amount (₱)' }, ticks: { callback: value => `₱${value.toLocaleString()}` } },
+                            y: { beginAtZero: true, title: { display: false } }
+                        }, 
+                        plugins: { 
+                            legend: { display: false },
+                            tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ₱${c.raw.toLocaleString()}` } },
+                            datalabels: { display: false } 
+                        } 
+                    }
+                }
+            }; 
+
+
+            const agendaConfig = (data) => ({
+                type: 'pie', data: { labels: data.labels || [], datasets: [{ label: 'Projects per Agenda', data: data.counts || [], backgroundColor: ["#FF638466","#36A2EB66","#FFCE5666","#4BC0C066","#9966FF66", "#FF9F4066","#8BC34A66","#E91E6366","#00BCD466"], borderColor: ["#FF6384","#36A2EB","#FFCE56","#4BC0C0","#9966FF", "#FF9F40","#8BC34A","#E91E63","#00BCD4"], borderWidth: 2, hoverBackgroundColor: ["#FF6384","#36A2EB","#FFCE56","#4BC0C0","#9966FF", "#FF9F40","#8BC34A","#E91E63","#00BCD4"], hoverOffset: 10, hoverBorderColor: '#fff', hoverBorderWidth: 2 }] },
+                options: { plugins: { legend: false, tooltip: { callbacks: { label: function(context) { let total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0); let value = context.raw; let percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0; return `${context.label}: ${value} (${percentage}%)`; } } }, datalabels: { display: false } } }
+            });
+
             const requestStatusConfig = (data) => ({
                 type: 'bar', data: { labels: ['Request Status'], datasets: [
                     { label: 'Approved', data: [data.approved_pct || 0], backgroundColor: '#33ff99', borderColor: '#00cc66', borderWidth: '2', barThickness: 40 },
                     { label: 'Ongoing', data: [data.ongoing_pct || 0], backgroundColor: '#ffee66', borderColor: '#ffbb33', borderWidth: '2', barThickness: 40 },
                     { label: 'Rejected', data: [data.rejected_pct || 0], backgroundColor: '#ff9999', borderColor: '#ff3333', borderWidth: '2', barThickness: 40 }
                 ]},
-                options: { aspectRatio: 9, indexAxis: 'y', responsive: true, plugins: { legend: { position: 'bottom', labels: { boxWidth: 15, padding: 20 } }, tooltip: { callbacks: { label: function (context) {
+                options: { aspectRatio: 9, indexAxis: 'y', responsive: true, plugins: { legend: { display: true }, tooltip: { callbacks: { label: function (context) {
                     const totalRequests = data.total_count || 0;
                     const percentage = context.raw;
                     const count = totalRequests > 0 ? Math.round(totalRequests * (percentage / 100)) : 0;
@@ -734,22 +722,14 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // ... (all your existing chart code) ...
-
-        window.refreshAnalyticsCharts = refreshCharts;
-
-        // ... (your existing initialStart/initialEnd logic) ...
-        // refreshCharts(initialStart, initialEnd);
-
-        // ### ADD THIS NEW JAVASCRIPT ###
+        // --- Export Link Update Function ---
         const exportButton = document.getElementById('export-button');
-        const filterForm = document.getElementById('filterForm');
-        const startDateInput = document.getElementById('start_date');
-        const endDateInput = document.getElementById('end_date');
-
-        function updateExportLink() {
-            const startDate = startDateInput.value;
-            const endDate = endDateInput.value;
+        
+        // Expose the update function globally for the date picker script to call after date change
+        window.updateExportLink = function() {
+            // Use global variables set by the main script
+            const startDate = window.selectedStartDate; 
+            const endDate = window.selectedEndDate;
 
             let baseUrl = "{% url 'export_analytics_data' %}";
 
@@ -760,22 +740,14 @@
                 exportButton.href = baseUrl; // Let backend use default dates
             }
         }
-
-        // Update the link when the filter form is submitted
-        if (filterForm) {
-            filterForm.addEventListener('submit', updateExportLink);
-        }
-
-        // Update the link on initial page load
-        updateExportLink();
-        // #################################
-
-        // This should already be here, keep it last
-        console.log('=== ANALYTICS CHARTS SCRIPT END ===');
+        
+        // Call it once on load to initialize the link
+        window.updateExportLink();
+        
+        console.log('=== ANALYTICS EXPORT LINK SCRIPT END ===');
     });
 </script>
 
 </body>
 </html>
-
 {% endblock %}

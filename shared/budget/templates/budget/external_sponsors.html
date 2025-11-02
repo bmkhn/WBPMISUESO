@@ -1,47 +1,217 @@
 {% extends base_template %}
-{% load humanize %}
 {% load static %}
-
-{% block extra_head %}
-    <link href="{% static 'shared/budget/styles.css' %}" rel="stylesheet" />
-{% endblock %}
+{% load humanize %}
 
 {% block title %}{{ title }}{% endblock %}
 
 {% block content %}
-<div class="container-fluid px-4">
-    <h1 class="mt-4">{{ title }}</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
     
-    <div class="card mb-4">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <span><i class="fas fa-hand-holding-usd me-1"></i> External Funding Records</span>
+    <style>
+        /* Base styles from dashboard.css */
+        p, h1, h2, h3, h4, h5, h6, div {
+            cursor: default;
+        } 
+        body {
+            background: #F9F9F9;
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+        }
+        .main-container {
+            margin: 60px 6rem;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+        @media (max-width: 768px) {
+            .main-container {
+                margin: 20px 1rem;
+                gap: 20px;
+            }
+        }
+
+        /* Page Header from dashboard.css */
+        .container-1 {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+        .container-1A {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .welcome-text { /* Re-styled for budget title */
+            font-size: 36px;
+            font-weight: 700;
+            color: #000;
+            margin: 0;
+        }
+        .viewing-text {
+            font-size: 15px;
+            font-weight: 400;
+            color: #4b5563;
+            margin: 0;
+        }
+
+        /* Button styles (simplified) */
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            background-color: #e5e7eb; /* Light Gray */
+            color: #374151;
+        }
+        .btn:hover {
+            background-color: #d1d5db;
+        }
+
+        /* Table styles (using .user-table from dashboard.css) */
+        .table-container {
+            width: 100%;
+            background: #FFFFFF; 
+            border-radius: 10px; 
+            overflow: hidden; /* Important for border-radius */
+            box-shadow: 0 0 0 1px #E0E0E0, 0 8px 18px -8px rgba(0, 0, 0, 0.15); 
+            border: none;
+        }
+        .table-header {
+            padding: 16px 18px;
+            border-bottom: 1px solid #E0E0E0;
+        }
+        .table-header h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin: 0;
+            color: #111827;
+        }
+        .table-wrapper {
+            overflow-x: auto;
+        }
+        .user-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #FFFFFF; 
+        }
+        .user-table th {
+            font-size: 13px;
+            font-weight: 600; 
+            background: #f9fafb; /* Lighter header */
+            border-bottom: 1px solid #E0E0E0; 
+            padding: 16px 18px; 
+            text-align: left;
+            font-family: 'Inter', Arial, sans-serif;
+            color: #333333; 
+            text-transform: uppercase;
+        }
+        .user-table td {
+            font-size: 14px; 
+            font-weight: 400;
+            border: none;
+            border-bottom: 1px solid #EDEDED; 
+            padding: 14px 18px; 
+            text-align: left;
+            font-family: 'Inter', Arial, sans-serif;
+            color: #4A5568; 
+        } 
+        .user-table tr:last-child td {
+            border-bottom: none;
+        } 
+        .user-table tr:hover {
+            background-color: #f8f9fa; /* Slight hover */
+        }
+        
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            padding: 16px 18px;
+            border-top: 1px solid #E0E0E0;
+            list-style: none;
+            margin: 0;
+        }
+        .pagination .page-item {
+            margin: 0 4px;
+        }
+        .pagination .page-link {
+            display: block;
+            padding: 8px 12px;
+            text-decoration: none;
+            color: #2563eb;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            transition: background-color 0.2s ease;
+        }
+        .pagination .page-link:hover {
+            background-color: #f8f9fa;
+        }
+        .pagination .page-item.active .page-link {
+            background-color: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+        .pagination .page-item.disabled .page-link {
+            color: #6c757d;
+            background-color: #fff;
+            border-color: #ddd;
+            cursor: not-allowed;
+        }
+        .text-center { text-align: center; }
+        .font-bold { font-weight: 700; }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+
+        <div class="container-1">
+            <div class="container-1A">
+                <h1 class="welcome-text">{{ title }}</h1>
+                <p class="viewing-text">Projects with committed external funding for this fiscal year.</p>
             </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-bordered" id="datatablesSimple" width="100%" cellspacing="0">
+            <a href="{% url 'budget_dashboard' %}" class="btn">
+                &larr; Back to Dashboard
+            </a>
+        </div>
+        
+        <div class="table-container">
+            <div class="table-header">
+                <h2>External Funding Records</h2>
+            </div>
+            <div class="table-wrapper">
+                <table class="user-table">
                     <thead>
                         <tr>
-                            <th>Sponsor</th>
                             <th>Project</th>
-                            <th>Status</th>
-                            <th>Amount Offered</th>
-                            <th>Amount Received</th>
-                            <th>Proposal Date</th>
+                            <th>Project Status</th> <th>Sponsor Name</th>
+                            <th>External Budget (Committed)</th> <th>Start Date</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for item in page_obj %}
+                        {% for project in page_obj %}
                         <tr>
-                            <td>{{ item.sponsor_name }}</td>
-                            <td>{{ item.project.title }}</td>
-                            <td>{{ item.get_status_display }}</td>
-                            <td>₱{{ item.amount_offered|intcomma }}</td>
-                            <td>₱{{ item.amount_received|intcomma }}</td>
-                            <td>{{ item.proposal_date|date:"Y-m-d" }}</td>
+                            <td class="font-bold">{{ project.title }}</td>
+                            <td>{{ project.get_status_display }}</td> <td>{{ project.sponsor_name }}</td>
+                            <td class="font-bold">₱{{ project.external_budget|intcomma }}</td> <td>{{ project.start_date|date:"Y-m-d" }}</td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="6">No external funding records found.</td>
+                            <td colspan="5" class="text-center" style="color: #6b7280; padding: 20px;">
+                                No projects with external funding found for this fiscal year.
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -51,10 +221,34 @@
             {% if page_obj.has_other_pages %}
             <nav aria-label="Page navigation">
                 <ul class="pagination">
-                    </ul>
+                    {% if page_obj.has_previous %}
+                        <li class="page-item"><a class="page-link" href="?page=1">&laquo; First</a></li>
+                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
+                    {% else %}
+                        <li class="page-item disabled"><a class="page-link" href="#" tabindex="-1" aria-disabled="true">&laquo; First</a></li>
+                        <li class="page-item disabled"><a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a></li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
+                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last &raquo;</a></li>
+                    {% else %}
+                        <li class="page-item disabled"><a class="page-link" href="#" tabindex="-1" aria-disabled="true">Next</a></li>
+                        <li class="page-item disabled"><a class="page-link" href="#" tabindex="-1" aria-disabled="true">Last &raquo;</a></li>
+                    {% endif %}
+                </ul>
             </nav>
             {% endif %}
         </div>
     </div>
-</div>
+</body>
+</html>
 {% endblock %}

@@ -1,33 +1,195 @@
 {% extends base_template %}
 {% load static %}
-
-{% block extra_head %}
-    <link href="{% static 'shared/budget/styles.css' %}" rel="stylesheet" />
-{% endblock %}
+{% load humanize %}
 
 {% block title %}{{ title }}{% endblock %}
 
 {% block content %}
-<div class="container-fluid px-4">
-    <div class="setup-container">
-        <h2 class="text-center mb-4">{{ title }}</h2>
-        <p class="text-muted text-center">The budget for the fiscal year <strong>{{ form.fiscal_year.value }}</strong> has not been set. Please set the total available budget pool to activate the module.</p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+    
+    <style>
+        /* Base styles from dashboard.css */
+        p, h1, h2, h3, h4, h5, h6, div {
+            cursor: default;
+        } 
+        body {
+            background: #F9F9F9;
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+        }
+        .main-container {
+            margin: 60px 6rem;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+        @media (max-width: 768px) {
+            .main-container {
+                margin: 20px 1rem;
+                gap: 20px;
+            }
+        }
+
+        /* Page Header from dashboard.css */
+        .container-1 {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+        .container-1A {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .welcome-text {
+            font-size: 36px;
+            font-weight: 700;
+            color: #000;
+            margin: 0;
+        }
+
+        /* Button styles */
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+        .btn-primary {
+            background-color: #2563eb;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #1d4ed8;
+        }
+
+        /* Form Container Style (using .table-container) */
+        .form-container {
+            width: 100%;
+            max-width: 700px; /* Centered form */
+            margin: 0 auto;
+            background: #FFFFFF; 
+            border-radius: 10px; 
+            overflow: hidden;
+            box-shadow: 0 0 0 1px #E0E0E0, 0 8px 18px -8px rgba(0, 0, 0, 0.15); 
+            border: none;
+        }
         
-        <form method="POST" class="mt-4">
-            {% csrf_token %}
-            
-            <div class="mb-3">
-                <label for="{{ form.fiscal_year.id_for_label }}" class="form-label">Fiscal Year</label>
-                {{ form.fiscal_year }}
+        /* Form content styles (from add_project.html) */
+        .user-details-section {
+            padding: 24px 32px;
+        }
+        .form-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .form-header h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #111827;
+            margin: 0;
+        }
+        .form-header p {
+            font-size: 15px;
+            color: #4b5563;
+            margin-top: 8px;
+        }
+        .user-details-row {
+            margin-bottom: 16px;
+        }
+        .user-details-label {
+            display: block;
+            font-weight: 500;
+            font-size: 14px;
+            color: #374151;
+            margin-bottom: 6px;
+        }
+        /* Style Django form inputs */
+        .user-details-section input[type="text"],
+        .user-details-section input[type="number"] {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            box-sizing: border-box; /* Important */
+        }
+        .user-details-section input[readonly] {
+            background-color: #f3f4f6;
+            color: #6b7280;
+            cursor: not-allowed;
+        }
+        .form-text {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            padding-top: 24px;
+            margin-top: 24px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="main-container">
+
+        <div class="container-1">
+            <div class="container-1A">
+                <h1 class="welcome-text">{{ title }}</h1>
             </div>
-            <div class="mb-3">
-                <label for="{{ form.annual_total.id_for_label }}" class="form-label">Total Annual Pool (PHP)</label>
-                {{ form.annual_total }}
-                {% if form.annual_total.help_text %}<div class="form-text">{{ form.annual_total.help_text }}</div>{% endif %}
-            </div>
-            
-            <button type="submit" class="btn btn-primary w-100 mt-3">Initialize Budget</button>
-        </form>
+            <a href="{% url 'budget_dashboard' %}" class="btn">
+                &larr; Back to Dashboard
+            </a>
+        </div>
+        
+        <div class="form-container">
+            <form method="POST">
+                {% csrf_token %}
+                <div class="user-details-section">
+                    <div class="form-header">
+                        <h2>Initialize Annual Budget</h2>
+                        <p class="viewing-text">Set the total available budget pool for the fiscal year <strong>{{ form.fiscal_year.value }}</strong> to activate the module.</p>
+                    </div>
+
+                    <div class="user-details-row">
+                        <label for="{{ form.fiscal_year.id_for_label }}" class="user-details-label">Fiscal Year</label>
+                        {{ form.fiscal_year }}
+                    </div>
+                    
+                    <div class="user-details-row">
+                        <label for="{{ form.annual_total.id_for_label }}" class="user-details-label">Total Annual Pool (PHP)</label>
+                        {{ form.annual_total }}
+                        {% if form.annual_total.help_text %}<div class="form-text">{{ form.annual_total.help_text }}</div>{% endif %}
+                    </div>
+                    
+                    <div class="form-actions">
+                        {% if current_pool %}
+                            <button type="submit" class="btn btn-primary">Update Budget</button>
+                        {% else %}
+                            <button type="submit" class="btn btn-primary">Initialize Budget</button>
+                        {% endif %}
+                    </div>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
+</body>
+</html>
 {% endblock %}
