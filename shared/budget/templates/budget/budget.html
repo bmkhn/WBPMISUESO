@@ -7,7 +7,7 @@
 {% block title %}{{ title }}{% endblock %}
 
 {% block content %}
-<div class.="container-fluid px-4">
+<div class="container-fluid px-4">
     <h1 class="mt-4">{{ title }}</h1>
     
     {% if user_role in "VP,DIRECTOR,UESO" %}
@@ -63,7 +63,7 @@
         </div>
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-bordered" id="datatablesSimple" width="100%" cellspacing="0">
+                <table class="table table-hover" id="datatablesSimple" width="100%" cellspacing="0">
                     <thead>
                         <tr>
                             <th>College</th>
@@ -130,7 +130,7 @@
         </div>
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-bordered" width="100%" cellspacing="0">
+                <table class="table table-hover" width="100%" cellspacing="0">
                     <thead>
                         <tr>
                             <th>Project Title</th>
@@ -192,7 +192,7 @@
         <div class="card-header"><i class="fas fa-table me-1"></i> Your Projects</div>
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-bordered" width="100%" cellspacing="0">
+                <table class="table table-hover" width="100%" cellspacing="0">
                     <thead>
                         <tr>
                             <th>Project Title</th>
@@ -221,5 +221,54 @@
         </div>
     </div>
     {% endif %}
+
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-history me-1"></i> Recent Budget History</span>
+                    <a href="{% url 'budget_history' %}" class="btn btn-outline-primary btn-sm">View All</a>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm table-hover">
+                        {% for entry in latest_history %}
+                        <tr>
+                            <td>{{ entry.timestamp|date:"M d" }}</td>
+                            <td>{{ entry.user.get_full_name|default:"System" }}</td>
+                            <td>{{ entry.get_action_display }}</td>
+                            <td class="text-end">₱{{ entry.amount|intcomma }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td class="text-center text-muted">No history found.</td></tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-hand-holding-usd me-1"></i> Recent External Funding</span>
+                    <a href="{% url 'budget_sponsors' %}" class="btn btn-outline-primary btn-sm">View All</a>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm table-hover">
+                        {% for item in latest_funding %}
+                        <tr>
+                            <td>{{ item.sponsor_name }}</td>
+                            <td>{{ item.project.title }}</td>
+                            <td>{{ item.get_status_display }}</td>
+                            <td class="text-end">₱{{ item.amount_offered|intcomma }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td class="text-center text-muted">No funding records found.</td></tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 {% endblock %}

@@ -32,6 +32,10 @@ class BudgetService:
         else:
             data = {"is_setup": False, "error": "Invalid User Role"}
         
+        # --- Add snippet data for all roles ---
+        data["latest_history"] = BudgetHistory.objects.all().order_by('-timestamp')[:5]
+        data["latest_funding"] = ExternalFunding.objects.filter(status__in=['APPROVED', 'PENDING']).order_by('-proposal_date')[:5]
+
         # Inject common context
         data["user_role"] = user_role
         data["current_year"] = self.fiscal_year
@@ -43,32 +47,45 @@ class BudgetService:
     def _get_admin_dashboard_data(self):
         """Retrieves system-wide budget data for the Admin Dashboard."""
         
-        college_budgets_qs = CollegeBudget.objects.filter(
-            status='ACTIVE',
-            fiscal_year=self.fiscal_year
-        ).select_related('college').order_by('college__name')
+        # --- FIX: Query ALL colleges, then match budgets ---
+        all_colleges = College.objects.all().order_by('name')
+        budget_map = {
+            cb.college_id: cb for cb in CollegeBudget.objects.filter(
+                status='ACTIVE',
+                fiscal_year=self.fiscal_year
+            )
+        }
         
-        total_assigned_to_colleges = college_budgets_qs.aggregate(Sum('total_assigned'))['total_assigned__sum'] or Decimal('0')
-        
-        dashboard_data = [] # Data for the main table
+        dashboard_data = [] 
         total_spent_agg = Decimal('0')
         total_committed_agg = Decimal('0')
+        total_assigned_to_colleges = Decimal('0')
         
-        for cb in college_budgets_qs:
-            spent = cb.total_spent_by_projects 
-            committed = cb.total_committed_to_projects 
-
-            total_spent_agg += spent
-            total_committed_agg += committed
+        for college in all_colleges:
+            college_budget = budget_map.get(college.id)
             
+            if college_budget:
+                spent = college_budget.total_spent_by_projects 
+                committed = college_budget.total_committed_to_projects
+                original_cut = college_budget.total_assigned
+                final_remaining = college_budget.final_remaining
+                uncommitted_remaining = college_budget.uncommitted_remaining
+                
+                total_spent_agg += spent
+                total_committed_agg += committed
+                total_assigned_to_colleges += original_cut
+            else:
+                spent, committed, original_cut, final_remaining, uncommitted_remaining = (Decimal('0'), Decimal('0'), Decimal('0'), Decimal('0'), Decimal('0'))
+
             dashboard_data.append({
-                'id': cb.id,
-                'college_name': cb.college.name,
-                'original_cut': cb.total_assigned,
-                'committed_funding': committed, # Project Internal Funding
+                'id': college_budget.id if college_budget else None,
+                'college_id': college.id, # Pass the College ID for the form
+                'college_name': college.name,
+                'original_cut': original_cut,
+                'committed_funding': committed, 
                 'total_spent': spent,
-                'final_remaining': cb.final_remaining, # Cut minus Spent
-                'uncommitted_remaining': cb.uncommitted_remaining, # Available for new projects
+                'final_remaining': final_remaining,
+                'uncommitted_remaining': uncommitted_remaining,
             })
             
         pool_available = self.current_pool.total_available if self.current_pool else Decimal('0')
@@ -130,7 +147,7 @@ class BudgetService:
         }
     
     def _get_faculty_dashboard_data(self, user):
-        """RetrieVes project data for Faculty/Implementers."""
+        """Retrieves project data for Faculty/Implementers."""
         user_projects = Project.objects.filter(
             Q(project_leader=user) | Q(providers=user)
         ).distinct().select_related('project_leader__college').order_by('title')
@@ -170,13 +187,14 @@ class BudgetService:
         user_role = getattr(user, 'role', None)
         context = {}
         
-        # Admins get data to manage college cuts
         if user_role in ["VP", "DIRECTOR", "UESO"]:
             admin_data = self._get_admin_dashboard_data()
             context['colleges_data'] = admin_data['dashboard_data']
-            context['all_colleges'] = College.objects.all().order_by('name')
+            # This map is used to pre-fill the form, key is college ID
+            context['allocation_map'] = {
+                item['college_id']: item['original_cut'] for item in admin_data['dashboard_data']
+            }
 
-        # College Admins get data to manage project internal budgets
         if user_role in ["PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
             college_data = self._get_college_dashboard_data(user)
             context.update(college_data)
@@ -184,21 +202,21 @@ class BudgetService:
         return context
 
     def get_budget_history(self, user, filters):
-        """RetrieVes filtered and paginated budget history."""
+        """Retrieves filtered and paginated budget history."""
         history_qs = BudgetHistory.objects.select_related(
             'user', 'college_budget__college', 'external_funding__project'
         ).order_by('-timestamp')
         
-        # Apply role-based filtering
         if getattr(user, 'role', None) in ["PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
             if user_college := getattr(user, 'college', None):
                 history_qs = history_qs.filter(college_budget__college=user_college)
         
-        # Apply search filters...
+        # Add search filters here from `filters` (request.GET)
         return history_qs
 
     def get_external_funding_list(self, filters):
         """Retrieves filtered and paginated external funding list."""
+        # Add search filters here from `filters` (request.GET)
         return ExternalFunding.objects.select_related('project').filter(
             status__in=['APPROVED', 'COMPLETED', 'PENDING']
         ).order_by('-proposal_date')
@@ -243,7 +261,6 @@ class BudgetService:
         old_budget = project.internal_budget or Decimal('0')
         commitment_delta = new_internal_budget - old_budget
         
-        # Validation
         if college_budget.uncommitted_remaining - commitment_delta < Decimal('0'):
              raise ValueError(f"Assignment exceeds remaining college budget by ₱{abs(college_budget.uncommitted_remaining - commitment_delta):,.2f}.")
 

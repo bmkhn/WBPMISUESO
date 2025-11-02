@@ -18,7 +18,6 @@ class CollegeAllocationForm(forms.ModelForm):
     """Form for Admins to edit a single college's 'cut'."""
     class Meta:
         model = CollegeBudget
-        # 'category' field removed
         fields = ['college', 'total_assigned', 'status', 'fiscal_year'] 
 
 class ProjectInternalBudgetForm(forms.Form):

@@ -14,14 +14,15 @@ from .models import CollegeBudget, BudgetPool, ExternalFunding, BudgetHistory
 from .forms import AnnualBudgetForm, CollegeAllocationForm, ProjectInternalBudgetForm, ExternalFundingEditForm
 from .services import BudgetService, get_current_fiscal_year
 
-# --- HELPER TO GET BASE TEMPLATE (as in your original file) ---
+# --- HELPER TO GET BASE TEMPLATE ---
 def get_templates(request):
     """Determines the base template based on user role."""
     user_role = getattr(request.user, 'role', None)
+    # All budget users use the internal template
     if user_role in ["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR", "FACULTY", "IMPLEMENTER"]:
         base_template = "base_internal.html"
     else:
-        base_template = "base_public.html"
+        base_template = "base_public.html" 
     return base_template
 
 # ------------------------------ 1. BUDGET DASHBOARD ------------------------------
@@ -36,15 +37,12 @@ def budget_view(request):
     context["base_template"] = get_templates(request)
     context["title"] = f"Budget Dashboard ({context['current_year']})"
 
-    # Handle Setup Prompt: ONLY ADMINS can set up, others just see a message.
     if not context.get('is_setup', True):
         if context.get('user_role') in ["VP", "DIRECTOR", "UESO"]:
             messages.info(request, "Annual Budget Pool not initialized. Please set it up.")
             return redirect('budget_setup')
-        # Render a simple "coming soon" page for non-admins
         return render(request, 'budget/no_budget_setup.html', context)
 
-    # The service adds 'template_name' to the context, but we want 'budget.html'
     return render(request, 'budget/budget.html', context)
 
 # ------------------------------ 2. EDIT BUDGET PAGE ------------------------------
@@ -64,14 +62,14 @@ def edit_budget_view(request):
     
     # --- Form Handling for College Admins (Project Assignment) ---
     if user_role in ["PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
+        # Get projects for the form dropdown
+        user_college = getattr(request.user, 'college', None)
+        projects_for_form = Project.objects.filter(
+            project_leader__college=user_college,
+            start_date__year=service.fiscal_year
+        ).order_by('title')
+
         if request.method == "POST" and 'assign_project_budget' in request.POST:
-            # Re-filter projects for the form dropdown on POST
-            user_college = getattr(request.user, 'college', None)
-            projects_for_form = Project.objects.filter(
-                project_leader__college=user_college,
-                start_date__year=service.fiscal_year
-            ).order_by('title')
-            
             project_form = ProjectInternalBudgetForm(request.POST)
             project_form.fields['project'].queryset = projects_for_form
             
@@ -79,7 +77,6 @@ def edit_budget_view(request):
                 project = project_form.cleaned_data['project']
                 new_budget = project_form.cleaned_data['internal_budget']
                 try:
-                    # Delegate transaction and validation to the service layer
                     service.update_project_internal_budget(request.user, project.id, new_budget)
                     messages.success(request, f'Internal budget for {project.title} updated to ₱{new_budget:,.2f}.')
                     return redirect('budget_edit')
@@ -87,15 +84,11 @@ def edit_budget_view(request):
                     messages.error(request, f'Allocation Failed: {e}')
             else:
                 messages.error(request, 'Form validation failed.')
+        else:
+            # GET request
+            project_form = ProjectInternalBudgetForm()
+            project_form.fields['project'].queryset = projects_for_form
         
-        # GET request form setup for College Admins
-        user_college = getattr(request.user, 'college', None)
-        projects_for_form = Project.objects.filter(
-            project_leader__college=user_college,
-            start_date__year=service.fiscal_year
-        ).order_by('title')
-        project_form = ProjectInternalBudgetForm()
-        project_form.fields['project'].queryset = projects_for_form
         context['project_form'] = project_form
 
     # --- Form Handling for Admins (College Cut Allocation) ---
@@ -106,9 +99,11 @@ def edit_budget_view(request):
                     colleges_updated = 0
                     for key, value in request.POST.items():
                         if key.startswith('college_') and value:
-                            college_id = key.replace('college_', '')
+                            # The name is 'college_{college_id}'
+                            college_id = key.replace('college_', '') 
                             amount = Decimal(str(value).replace(',', '').strip())
-                            college = College.objects.get(id=college_id)
+                            
+                            college = College.objects.get(id=college_id) 
                             
                             allocation, created = CollegeBudget.objects.get_or_create(
                                 college=college,
@@ -171,7 +166,7 @@ def external_sponsors_view(request):
     }
     return render(request, 'budget/external_sponsors.html', context)
 
-# ------------------------------ 5. SETUP & DETAIL EDITS (Admins) ------------------------------
+# ------------------------------ 5. SETUP (Admin Only) ------------------------------
 @role_required(["VP", "DIRECTOR", "UESO"], require_confirmed=True)
 def setup_annual_budget(request):
     """View for Admins to create the annual BudgetPool."""
