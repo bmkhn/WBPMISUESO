@@ -669,7 +669,7 @@
                     <tr>
                         <td>
                             {% if allocation.college %}
-                                {{ allocation.college.name }} ({{ allocation.college.campus|default:"Main Campus" }})
+                                {{ allocation.college.name }} ({{ allocation.college.get_campus_display|default:"Main Campus" }})
                             {% elif allocation.project %}
                                 {{ allocation.project.title }} (Project)
                             {% else %}

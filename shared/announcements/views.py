@@ -351,6 +351,8 @@ def add_announcement_view(request):
             announcement = form.save(commit=False)
             scheduled_at = form.cleaned_data.get('scheduled_at')
             now = timezone.now()
+            is_immediate = False
+            
             if scheduled_at and scheduled_at > now:             # If scheduled_at is in the future
                 announcement.is_scheduled = True
                 announcement.published_at = None
@@ -360,6 +362,8 @@ def add_announcement_view(request):
                 announcement.is_scheduled = False
                 announcement.published_at = now
                 announcement.scheduled_at = None
+                is_immediate = True
+                
             announcement.published_by = request.user
             announcement.save()
             
@@ -377,6 +381,8 @@ def add_announcement_view(request):
 def edit_announcement_view(request, id):
 
     announcement = get_object_or_404(Announcement, id=id)
+    was_scheduled = announcement.is_scheduled
+    
     if request.method == 'POST':
         # Check if user wants to remove the cover photo
         if request.POST.get('remove_cover_photo') == 'true':
@@ -391,7 +397,12 @@ def edit_announcement_view(request, id):
             now = timezone.now()
             edited.edited_by = request.user
             edited.edited_at = now
+            send_email = False
+            
             if not scheduled_at:                                # If scheduled_at is empty, not scheduled
+                # If this was previously scheduled and now being published immediately
+                if was_scheduled and not edited.published_at:
+                    send_email = True
                 edited.published_at = now
                 edited.is_scheduled = False
                 edited.scheduled_at = None

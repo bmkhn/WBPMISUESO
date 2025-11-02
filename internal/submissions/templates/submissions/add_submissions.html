@@ -68,6 +68,7 @@
             <div class="form-group">
                 <label class="user-details-label" for="id_deadline">Deadline: <span class="required">*</span></label>
                 <input class="form-input user-details-value" type="datetime-local" name="deadline" id="id_deadline">
+                <small style="color:#666;font-size:0.875rem;margin-top:0.25rem;display:block;" id="deadline-hint">Must be after project start date</small>
             </div>
 
             <div class="form-group">
@@ -159,6 +160,23 @@
         const selectedProjectId = this.value;
         const eventSelectionGroup = document.getElementById('event-selection-group');
         const eventSelect = document.getElementById('id_selected_event');
+        const deadlineInput = document.getElementById('id_deadline');
+        const deadlineHint = document.getElementById('deadline-hint');
+        
+        // Update deadline minimum based on project
+        if (!selectedProjectId) {
+            deadlineInput.removeAttribute('min');
+            deadlineHint.textContent = 'Must be after project start date';
+        } else {
+            const availability = projectEventAvailability[selectedProjectId];
+            if (availability && availability.start_date) {
+                const projectStartDate = new Date(availability.start_date);
+                const minDeadline = projectStartDate.toISOString().slice(0, 16);
+                deadlineInput.setAttribute('min', minDeadline);
+                const formattedDate = new Date(availability.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                deadlineHint.textContent = `Must be after project start date (${formattedDate})`;
+            }
+        }
         
         // Update event-dependent downloadables
         document.querySelectorAll('.checkbox-item[data-project-dependent="true"]').forEach(function(checkboxItem) {
@@ -250,6 +268,37 @@
             eventSelectionGroup.style.display = 'none';
         }
     }
+
+    // Update deadline minimum when event is selected
+    document.getElementById('id_selected_event').addEventListener('change', function() {
+        const eventId = this.value;
+        const deadlineInput = document.getElementById('id_deadline');
+        const deadlineHint = document.getElementById('deadline-hint');
+        const selectedProjectId = document.getElementById('id_project').value;
+        
+        if (eventId && selectedProjectId) {
+            const availability = projectEventAvailability[selectedProjectId];
+            const selectedEvent = availability.available_events.find(e => e.id == eventId);
+            
+            if (selectedEvent && selectedEvent.datetime) {
+                const eventDateTime = new Date(selectedEvent.datetime);
+                const minDeadline = eventDateTime.toISOString().slice(0, 16);
+                deadlineInput.setAttribute('min', minDeadline);
+                const formattedDate = eventDateTime.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+                deadlineHint.textContent = `Must be after event date (${formattedDate})`;
+            }
+        } else if (selectedProjectId) {
+            // Reset to project start date if no event selected
+            const availability = projectEventAvailability[selectedProjectId];
+            if (availability && availability.start_date) {
+                const projectStartDate = new Date(availability.start_date);
+                const minDeadline = projectStartDate.toISOString().slice(0, 16);
+                deadlineInput.setAttribute('min', minDeadline);
+                const formattedDate = new Date(availability.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                deadlineHint.textContent = `Must be after project start date (${formattedDate})`;
+            }
+        }
+    });
 
     // Add event listeners to downloadable checkboxes
     document.addEventListener('DOMContentLoaded', function() {

@@ -60,7 +60,10 @@
                     </div>
                     <a href="/forgot-password/1/" class="forgot-text">Forgot password</a>
                 </div>
-                <button type="submit" class="sign-in-button">SIGN IN</button>
+                <button type="submit" class="sign-in-button" id="signin-btn">
+                    <span id="signin-text">SIGN IN</span>
+                    <i class="fa-solid fa-spinner fa-spin" id="signin-spinner" style="display:none; margin-left:0.5rem;"></i>
+                </button>
             </form>
         </div>
         <div class="bottom-container">
@@ -101,11 +104,18 @@
                         <input type="text" name="code" id="verification_code" maxlength="6" placeholder="000000" style="width:100%; border:none; outline:none; text-align:center; font-size:1.5rem; letter-spacing:0.5rem; font-weight:600; font-family:monospace;padding:0.75rem;">
                     </div>
                     <p style="font-size:0.875rem; color:#718096; margin-top:0.5rem; text-align:center;">
-                        Didn't receive the code? <a href="#" id="resend-login-code" style="color:#0099FF; text-decoration:underline;">Resend Code</a>
+                        Didn't receive the code? 
+                        <a href="#" id="resend-login-code" style="color:#0099FF; text-decoration:underline;">
+                            <span id="resend-login-text">Resend Code</span>
+                            <i class="fa-solid fa-spinner fa-spin" id="resend-login-spinner" style="display:none; margin-left:0.25rem;"></i>
+                        </a>
                     </p>
                 </div>
                 <div id="verify-error" style="color:#E53E3E; font-size:0.875rem; margin-top:0.5rem; display:none;"></div>
-                <button type="submit" class="sign-in-button">VERIFY & LOGIN</button>
+                <button type="submit" class="sign-in-button" id="verify-login-btn">
+                    <span id="verify-login-text">VERIFY & LOGIN</span>
+                    <i class="fa-solid fa-spinner fa-spin" id="verify-login-spinner" style="display:none; margin-left:0.5rem;"></i>
+                </button>
             </form>
         </div>
         <div class="bottom-container">
@@ -147,6 +157,16 @@
             e.preventDefault();
             currentLoginFormData = new FormData(this);
             const errorDiv = document.getElementById('login-error');
+            
+            // Show loading state
+            const signinBtn = document.getElementById('signin-btn');
+            const signinText = document.getElementById('signin-text');
+            const signinSpinner = document.getElementById('signin-spinner');
+            
+            signinBtn.disabled = true;
+            signinText.textContent = 'SIGNING IN...';
+            signinSpinner.style.display = 'inline-block';
+            errorDiv.style.display = 'none';
 
             fetch('/login/', {
                 method: 'POST',
@@ -165,12 +185,27 @@
                     if (data.code) {
                         showLoginCodeModal(data.code);
                     }
+                    
+                    // Reset button (it will be hidden anyway)
+                    signinBtn.disabled = false;
+                    signinText.textContent = 'SIGN IN';
+                    signinSpinner.style.display = 'none';
                 } else {
+                    // Reset button state on error
+                    signinBtn.disabled = false;
+                    signinText.textContent = 'SIGN IN';
+                    signinSpinner.style.display = 'none';
+                    
                     errorDiv.textContent = data.error || 'Invalid credentials.';
                     errorDiv.style.display = 'block';
                 }
             })
             .catch(error => {
+                // Reset button state on error
+                signinBtn.disabled = false;
+                signinText.textContent = 'SIGN IN';
+                signinSpinner.style.display = 'none';
+                
                 errorDiv.textContent = 'An error occurred. Please try again.';
                 errorDiv.style.display = 'block';
             });
@@ -180,6 +215,15 @@
         document.getElementById('resend-login-code').addEventListener('click', function(e) {
             e.preventDefault();
             if (currentLoginFormData) {
+                // Show loading state
+                const resendLink = document.getElementById('resend-login-code');
+                const resendText = document.getElementById('resend-login-text');
+                const resendSpinner = document.getElementById('resend-login-spinner');
+                
+                resendLink.style.pointerEvents = 'none';
+                resendText.textContent = 'Sending...';
+                resendSpinner.style.display = 'inline-block';
+                
                 fetch('/login/', {
                     method: 'POST',
                     headers: {
@@ -189,9 +233,21 @@
                 })
                 .then(response => response.json())
                 .then(data => {
+                    // Reset link state
+                    resendLink.style.pointerEvents = 'auto';
+                    resendText.textContent = 'Resend Code';
+                    resendSpinner.style.display = 'none';
+                    
                     if (data.success && data.code) {
                         showLoginCodeModal(data.code);
                     }
+                })
+                .catch(error => {
+                    // Reset link state on error
+                    resendLink.style.pointerEvents = 'auto';
+                    resendText.textContent = 'Resend Code';
+                    resendSpinner.style.display = 'none';
+                    console.error('Error:', error);
                 });
             }
         });
@@ -201,6 +257,16 @@
             e.preventDefault();
             const formData = new FormData(this);
             const errorDiv = document.getElementById('verify-error');
+            
+            // Show loading state
+            const verifyBtn = document.getElementById('verify-login-btn');
+            const verifyText = document.getElementById('verify-login-text');
+            const verifySpinner = document.getElementById('verify-login-spinner');
+            
+            verifyBtn.disabled = true;
+            verifyText.textContent = 'VERIFYING...';
+            verifySpinner.style.display = 'inline-block';
+            errorDiv.style.display = 'none';
             
             // Get CSRF token from the form itself
             const csrfToken = this.querySelector('[name=csrfmiddlewaretoken]').value;
@@ -221,12 +287,23 @@
                 if (data.success) {
                     window.location.href = '/redirector/';
                 } else {
+                    // Reset button state on error
+                    verifyBtn.disabled = false;
+                    verifyText.textContent = 'VERIFY & LOGIN';
+                    verifySpinner.style.display = 'none';
+                    
                     errorDiv.textContent = data.error || 'Invalid verification code.';
                     errorDiv.style.display = 'block';
                 }
             })
             .catch(error => {
                 console.error('Fetch error:', error);
+                
+                // Reset button state on error
+                verifyBtn.disabled = false;
+                verifyText.textContent = 'VERIFY & LOGIN';
+                verifySpinner.style.display = 'none';
+                
                 errorDiv.textContent = 'An error occurred. Please try again.';
                 errorDiv.style.display = 'block';
             });

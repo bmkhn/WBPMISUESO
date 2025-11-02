@@ -83,20 +83,21 @@ def mark_as_read(request, notification_id):
 @require_POST
 def mark_all_as_read(request):
     """Mark all notifications as read for the current user"""
-    Notification.objects.filter(recipient=request.user, is_read=False).update(
-        is_read=True
-    )
-    
     from django.utils import timezone
-    # Update read_at for all unread notifications
-    unread = Notification.objects.filter(recipient=request.user, is_read=True, read_at__isnull=True)
-    for notif in unread:
-        notif.read_at = timezone.now()
-        notif.save(update_fields=['read_at'])
+    now = timezone.now()
+    
+    # Update all unread notifications in a single query
+    updated_count = Notification.objects.filter(
+        recipient=request.user, 
+        is_read=False
+    ).update(
+        is_read=True,
+        read_at=now
+    )
     
     return JsonResponse({
         'success': True,
-        'message': 'All notifications marked as read'
+        'message': f'{updated_count} notifications marked as read'
     })
 
 

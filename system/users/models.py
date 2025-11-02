@@ -16,6 +16,10 @@ class Campus(models.Model):
     class Meta:
         verbose_name_plural = "Campuses"
         ordering = ['name']
+        indexes = [
+            # Name is already unique, so it's auto-indexed by Django
+            # No additional indexes needed for this simple model
+        ]
 
 
 class College(models.Model):
@@ -29,8 +33,20 @@ class College(models.Model):
             self.logo.storage.delete(self.logo.name)
         super().delete(*args, **kwargs)
 
+    def get_campus_display(self):
+        """Return campus name or N/A if no campus assigned"""
+        return self.campus.name if self.campus else "N/A"
+
     def __str__(self):
         return self.name
+
+    class Meta:
+        indexes = [
+            # Campus filtering (user filtering by college's campus)
+            models.Index(fields=['campus'], name='college_campus_idx'),
+            # Name search/display
+            models.Index(fields=['name'], name='college_name_idx'),
+        ]
 
 
 class User(AbstractUser):
@@ -74,7 +90,7 @@ class User(AbstractUser):
     sex = models.CharField(max_length=6, choices=Sex.choices)
     email = models.EmailField(unique=True)
     contact_no = models.CharField(max_length=20)
-    campus = models.ForeignKey(Campus, on_delete=models.SET_NULL, blank=True, null=True)
+    # NOTE: campus field removed - derived from college.campus
     college = models.ForeignKey(College, on_delete=models.SET_NULL, blank=True, null=True)
     role = models.CharField(max_length=50, choices=Role.choices)
     degree = models.CharField(max_length=255, blank=True, null=True)
@@ -119,12 +135,57 @@ class User(AbstractUser):
         suffix = f" {self.suffix}" if self.suffix else ""
         return f"{self.given_name} {mi}{self.last_name}{suffix}"
 
+    @property
+    def campus(self):
+        """
+        Return the campus from the user's college.
+        Provides backward compatibility for code accessing user.campus
+        """
+        return self.college.campus if self.college else None
+
+    def get_campus_display(self):
+        """Return campus name or N/A if no campus assigned"""
+        campus = self.campus  # Uses property
+        return campus.name if campus else "N/A"
+
     def save(self, *args, **kwargs):
         # Only set updated_at if this is an update (object already exists)
         if self.pk:
             from django.utils import timezone
             self.updated_at = timezone.now()
         super().save(*args, **kwargs)
+
+    class Meta:
+        indexes = [
+            # CRITICAL: Authentication (USERNAME_FIELD)
+            # email is unique, auto-indexed by Django
+            
+            # Role-based filtering (heavily used in views)
+            models.Index(fields=['role', '-created_at'], name='user_role_created_idx'),
+            models.Index(fields=['role', 'is_confirmed'], name='user_role_confirmed_idx'),
+            
+            # College filtering (for campus-based queries via college__campus_id)
+            models.Index(fields=['college', 'role'], name='user_college_role_idx'),
+            models.Index(fields=['college', '-created_at'], name='user_college_created_idx'),
+            
+            # Expert filtering (expert pool)
+            models.Index(fields=['is_expert', 'role'], name='user_expert_role_idx'),
+            models.Index(fields=['is_expert', 'college'], name='user_expert_college_idx'),
+            
+            # Account status and confirmation
+            models.Index(fields=['is_active', 'is_confirmed'], name='user_active_conf_idx'),
+            models.Index(fields=['is_confirmed', 'role'], name='user_conf_role_idx'),
+            
+            # User search and display
+            models.Index(fields=['last_name', 'given_name'], name='user_name_idx'),
+            
+            # Creation tracking (audit trail)
+            models.Index(fields=['created_by', '-created_at'], name='user_creator_idx'),
+            models.Index(fields=['-created_at'], name='user_created_idx'),
+            
+            # Combined filters (common query patterns)
+            models.Index(fields=['role', 'college', 'is_confirmed'], name='user_role_col_conf_idx'),
+        ]
 
 
 # User logging is now handled manually in views for specific actions only:

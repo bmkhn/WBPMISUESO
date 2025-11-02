@@ -57,9 +57,21 @@ class Notification(models.Model):
     class Meta:
         ordering = ['-created_at']
         indexes = [
-            models.Index(fields=['recipient', '-created_at']),
-            models.Index(fields=['recipient', 'is_read']),
+            # EXISTING: Recipient timeline (most common query)
+            models.Index(fields=['recipient', '-created_at'], name='notif_recip_date_idx'),
+            # EXISTING: Unread count (navbar/context processor - runs on EVERY page!)
+            models.Index(fields=['recipient', 'is_read'], name='notif_recip_read_idx'),
+            # NEW: Unread filtering with date sort (notification center)
+            models.Index(fields=['recipient', 'is_read', '-created_at'], name='notif_unread_list_idx'),
+            # NEW: Actor tracking (who triggered notifications)
+            models.Index(fields=['actor', '-created_at'], name='notif_actor_idx'),
+            # NEW: Model-based filtering
+            models.Index(fields=['recipient', 'model'], name='notif_model_idx'),
+            # NEW: Read status with timestamp (mark as read queries)
+            models.Index(fields=['is_read', 'read_at'], name='notif_read_time_idx'),
         ]
+        verbose_name = 'Notification'
+        verbose_name_plural = 'Notifications'
     
     def __str__(self):
         return f"{self.actor} {self.get_action_display()} {self.model}: {self.object_repr}"

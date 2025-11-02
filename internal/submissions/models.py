@@ -58,6 +58,30 @@ class Submission(models.Model):
 	updated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='updated_submissions')
 	updated_at = models.DateTimeField(auto_now=True)
 
+	class Meta:
+		indexes = [
+			# Most critical: Status filtering (heavily used in views)
+			models.Index(fields=['status', '-deadline'], name='sub_status_deadline_idx'),
+			# Deadline sorting and filtering (primary sort field)
+			models.Index(fields=['-deadline'], name='sub_deadline_idx'),
+			# Project lookup (foreign key relationship)
+			models.Index(fields=['project', 'status'], name='sub_project_status_idx'),
+			# Downloadable/form type filtering
+			models.Index(fields=['downloadable', 'status'], name='sub_form_status_idx'),
+			# Coordinator college filtering (joins through project leader)
+			models.Index(fields=['project', '-created_at'], name='sub_project_created_idx'),
+			# Submission workflow tracking
+			models.Index(fields=['submitted_at', 'status'], name='sub_submitted_idx'),
+			# Approval workflow for event submissions
+			models.Index(fields=['status', 'event'], name='sub_status_event_idx'),
+			# Late submission tracking
+			models.Index(fields=['is_late_submission', 'status'], name='sub_late_status_idx'),
+			# Admin review queue (FORWARDED status priority)
+			models.Index(fields=['status', 'reviewed_at'], name='sub_review_queue_idx'),
+		]
+		verbose_name = 'Submission'
+		verbose_name_plural = 'Submissions'
+
 	def __str__(self):
 		return self.project.title + " - " + self.downloadable.name
 
@@ -80,6 +104,20 @@ class Submission(models.Model):
 			return os.path.basename(self.file.name)
 		elif self.image_event:
 			return os.path.basename(self.image_event.name)
+		return ""
+
+	@property
+	def submitted_form_link(self):
+		if self.file:
+			return self.file.url
+		elif self.image_event:
+			return self.image_event.url
+		return ""
+	
+	@property
+	def downloadable_link(self):
+		if self.downloadable and self.downloadable.file:
+			return self.downloadable.file.url
 		return ""
 
 # Log creation and update actions for Submission
@@ -152,3 +190,9 @@ class SubmissionUpdate(models.Model):
 
     class Meta:
         unique_together = ('user', 'submission', 'status')
+        indexes = [
+            # User update feed (unread submissions)
+            models.Index(fields=['user', 'viewed', '-updated_at'], name='subupd_user_view_idx'),
+            # Submission-specific updates
+            models.Index(fields=['submission', '-updated_at'], name='subupd_sub_date_idx'),
+        ]

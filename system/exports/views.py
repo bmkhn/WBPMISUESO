@@ -132,7 +132,72 @@ def approve_export_request(request, request_id):
         if college:
             projects = projects.filter(project_leader__college__id=college)
         if campus:
-            projects = projects.filter(project_leader__campus=campus)
+            projects = projects.filter(project_leader__college__campus_id=campus)
+        if agenda:
+            projects = projects.filter(agenda__id=agenda)
+        if status:
+            projects = projects.filter(status=status)
+        if year:
+            projects = projects.filter(start_date__year=year)
+        if quarter:
+            qmap = {'1': (1,3), '2': (4,6), '3': (7,9), '4': (10,12)}
+            if quarter in qmap:
+                start, end = qmap[quarter]
+                projects = projects.filter(start_date__month__gte=start, start_date__month__lte=end)
+        if date:
+            projects = projects.filter(start_date=date)
+        if search:
+            projects = projects.filter(title__icontains=search)
+        sort_map = {
+            'title': 'title',
+            'last_updated': 'updated_at',
+            'start_date': 'start_date',
+            'progress': '',
+        }
+        sort_field = sort_map.get(sort_by, 'title')
+        if sort_field:
+            if order == 'desc':
+                sort_field = '-' + sort_field
+            projects = projects.order_by(sort_field)
+        elif sort_by == 'progress':
+            projects = sorted(projects, key=lambda p: (p.progress[0] / p.progress[1]) if p.progress[1] else 0, reverse=(order=='desc'))
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Projects"
+        headers = [
+            'Title', 'Leader', 'College/Unit', 'Last Updated', 'Start Date', 'Progress', 'Status'
+        ]
+        ws.append(headers)
+        for p in projects:
+            ws.append([
+                p.title,
+                p.project_leader.get_full_name() if p.project_leader else '',
+                p.project_leader.college.name if p.project_leader and p.project_leader.college else '',
+                p.updated_at.strftime('%Y-%m-%d') if p.updated_at else '',
+                p.start_date.strftime('%Y-%m-%d') if p.start_date else '',
+                getattr(p, 'progress_display', ''),
+                p.get_status_display() if hasattr(p, 'get_status_display') else p.status,
+            ])
+        wb.save(file_buffer)
+        filename = 'projects_export.xlsx'
+        subject = 'Your Project Export File'
+
+    elif export_request.type == 'PROJECT_CSV':
+        projects = Project.objects.all()
+        search = qs.get('search', [''])[0].strip()
+        sort_by = qs.get('sort_by', ['last_updated'])[0]
+        order = qs.get('order', ['desc'])[0]
+        college = qs.get('college', [''])[0]
+        campus = qs.get('campus', [''])[0]
+        agenda = qs.get('agenda', [''])[0]
+        status = qs.get('status', [''])[0]
+        year = qs.get('year', [''])[0]
+        quarter = qs.get('quarter', [''])[0]
+        date = qs.get('date', [''])[0]
+        if college:
+            projects = projects.filter(project_leader__college__id=college)
+        if campus:
+            projects = projects.filter(project_leader__college__campus_id=campus)
         if agenda:
             projects = projects.filter(agenda__id=agenda)
         if status:
@@ -263,7 +328,7 @@ def export_download(request, request_id):
         if college:
             users = users.filter(college_id=college)
         if campus:
-            users = users.filter(campus=campus)
+            users = users.filter(college__campus_id=campus)
         if sort_by == 'name':
             sort_field = ['last_name', 'given_name', 'middle_initial', 'suffix']
         else:
@@ -314,7 +379,7 @@ def export_download(request, request_id):
         if college:
             projects = projects.filter(project_leader__college__id=college)
         if campus:
-            projects = projects.filter(project_leader__campus=campus)
+            projects = projects.filter(project_leader__college__campus_id=campus)
         if agenda:
             projects = projects.filter(agenda__id=agenda)
         if status:
@@ -428,7 +493,7 @@ def export_manage_user(request):
         users = users.filter(college_id=college)
         query_params['college'] = college
     if campus:
-        users = users.filter(campus=campus)
+        users = users.filter(college__campus_id=campus)
         query_params['campus'] = campus
 
     # Sorting
@@ -503,7 +568,7 @@ def export_project(request):
     if college:
         projects = projects.filter(project_leader__college__id=college)
     if campus:
-        projects = projects.filter(project_leader__campus=campus)
+        projects = projects.filter(project_leader__college__campus_id=campus)
     if agenda:
         projects = projects.filter(agenda__id=agenda)
     if status:

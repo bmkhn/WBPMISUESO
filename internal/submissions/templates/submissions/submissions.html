@@ -104,26 +104,12 @@
             <tbody>
                 {% for submission in page_obj %}
                     <tr>
-                        <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                            <a class="name-link" href="{% url 'project_submissions_details' submission.project.id submission.id %}" title="{{ submission.project.title }}" style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                                {{ submission.project.title }}
-                            </a>
-                        </td>
+                        <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#0099FF;"><a class="name-link" href="{% url 'project_submissions_details' submission.project.id submission.id %}" title="{{ submission.project.title }}" style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ submission.project.title }}</a></td>
                         <td>{{ submission.deadline|date:"Y-m-d H:i" }}</td>
-                        {% if submission.downloadable.file.url %}
-                        <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><a href="{{ submission.downloadable.file.url }}" target="_blank" class="name-link" title="{{ submission.downloadable.name_with_ext }}">{{ submission.downloadable.name }}</a></td>
-                        {% endif %}
-                        <td>{{ submission.submitted_at|date:"Y-m-d H:i"|default:"N/A" }}</td>
-                        {% if submission.file.url or submission.image_event.url %}
-                            {% if submission.downloadable.submission_type == "event" %}
-                                <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><a href="{{ submission.image_event.url }}" target="_blank" class="name-link" title="{{ submission.submitted_form_name_with_ext }}">{{ submission.image_event.url }}</a></td>
-                            {% else %}
-                                <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;"><a href="{{ submission.file.url }}" target="_blank" class="name-link" title="{{ submission.submitted_form_name_with_ext }}">{{ submission.submitted_form_name }}</a></td>
-                            {% endif %}
-                        {% else %}
-                            <td><span style="color:#888;">N/A</span></td>
-                        {% endif %}
-                        <td style="white-space:nowrap;">{{ submission.get_status_display }}</td>
+                        <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#0099FF;"><a href="{{ submission.downloadable_link }}" target="_blank" class="name-link" title="{{ submission.downloadable.name_with_ext }}">{{ submission.downloadable.name_with_ext }}</a></td>
+                        <td>{{ submission.submitted_at|date:"Y-m-d H:i" }}</td>
+                        <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#0099FF;"><a href="{{ submission.submitted_form_link }}" target="_blank" class="name-link" title="{{ submission.submitted_form_name_with_ext }}">{{ submission.submitted_form_name_with_ext }}</a></td>
+                        <td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;">{{ submission.get_status_display }}</td>
                     </tr>
                 {% empty %}
                 <tr><td colspan="6" style="text-align:center;">No submissions found.</td></tr>

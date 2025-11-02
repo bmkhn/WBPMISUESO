@@ -260,7 +260,7 @@ def project_events(request, pk):
             new_event = ProjectEvent.objects.create(
                 project=project,
                 title=title,
-                description=description or "Pending Submission...",
+                description=description,
                 datetime=event_datetime,
                 location=location,
                 created_at=now,
@@ -1174,6 +1174,7 @@ def admin_project(request):
     college = request.GET.get('college', '')
     campus = request.GET.get('campus', '')
     agenda = request.GET.get('agenda', '')
+    sdg = request.GET.get('sdg', '')
     status = request.GET.get('status', '')
     year = request.GET.get('year', '')
     quarter = request.GET.get('quarter', '')
@@ -1192,9 +1193,11 @@ def admin_project(request):
     if college:
         projects = projects.filter(project_leader__college__id=college)
     if campus:
-        projects = projects.filter(project_leader__campus=campus)
+        projects = projects.filter(project_leader__college__campus_id=campus)
     if agenda:
         projects = projects.filter(agenda__id=agenda)
+    if sdg:
+        projects = projects.filter(sdgs__goal_number=sdg)
     if status:
         projects = projects.filter(status=status)
     if year:
@@ -1234,6 +1237,7 @@ def admin_project(request):
     campuses = Campus.objects.all()
     status_choices = Project.STATUS_CHOICES
     agendas = Agenda.objects.all()
+    sdgs = SustainableDevelopmentGoal.objects.all().order_by('goal_number')
     # Get available years from projects that exist
     years = list(set([d.year for d in Project.objects.dates('start_date', 'year')]))
     years.sort(reverse=True)
@@ -1255,12 +1259,14 @@ def admin_project(request):
         'campuses': campuses,
         'status_choices': status_choices,
         'agendas': agendas,
+        'sdgs': sdgs,
         'years': years,
         'sort_by': sort_by,
         'order': order,
         'college': college,
         'campus': campus,
         'agenda': agenda,
+        'sdg': sdg,
         'status': status,
         'year': year,
         'quarter': quarter,

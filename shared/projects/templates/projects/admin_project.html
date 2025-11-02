@@ -24,7 +24,7 @@
                 </button>
                 <div id="filterDropdown" class="filter-dropdown">
                     {% if request.user.role in SUPERUSER_ROLES %}
-                    <div class="filter-grid" style="grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(2, 1fr);">
+                    <div class="filter-grid" style="grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(2, 1fr);">
                     {% else %}
                     <div class="filter-grid" style="grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(2, 1fr);">
                     {% endif %}
@@ -53,7 +53,7 @@
                             </select>
                         </label>
                         <label>Campus (Leader)
-                            <select name="campus" onchange="this.form.submit()">
+                            <select name="campus">
                                 <option value="">Campus</option>
                                 {% for campus_obj in campuses %}
                                 <option value="{{ campus_obj.id }}" {% if campus_obj.id|stringformat:"s" == campus %}selected{% endif %}>{{ campus_obj.name }}</option>
@@ -78,7 +78,14 @@
                                 {% endfor %}
                             </select>
                         </label>
-
+                        <label>SDG
+                            <select name="sdg">
+                                <option value="">All SDGs</option>
+                                {% for s in sdgs %}
+                                <option value="{{ s.goal_number }}" {% if sdg == s.goal_number|stringformat:'s' %}selected{% endif %}>SDG {{ s.goal_number }}: {{ s.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
                         <label>Year
                             <select name="year">
                                 <option value="">All Years</option>

@@ -38,6 +38,13 @@ class AboutUs(models.Model):
 	edited_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, blank=True, null=True, related_name='aboutus_edits')
 	edited_at = models.DateTimeField(auto_now=True)
 
+	class Meta:
+		indexes = [
+			# Single-row table (typically only 1 record)
+			# No complex queries needed
+			models.Index(fields=['-edited_at'], name='aboutus_edit_idx'),
+		]
+
 
 # Log creation and update actions for AboutUs
 @receiver(post_save, sender=AboutUs)

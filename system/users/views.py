@@ -520,7 +520,7 @@ def manage_user(request):
         users = users.filter(college_id=college)
         query_params['college'] = college
     if campus:
-        users = users.filter(campus=campus)
+        users = users.filter(college__campus_id=campus)
         query_params['campus'] = campus
 
     # Sorting
@@ -619,7 +619,7 @@ def add_user(request):
                     username=data.get('email'),
 
                     college=College.objects.get(id=data.get('college')) if data.get('college') else None,
-                    campus=Campus.objects.get(id=data.get('campus')) if data.get('campus') else None,
+                    # campus removed - derived from college.campus
                     degree=data.get('degree'),
                     expertise=data.get('expertise'),
                     company=data.get('company'),
@@ -713,7 +713,7 @@ def edit_user(request, id):
                 # Role-specific field updates
                 if user.role == "CLIENT":
                     user.college = None
-                    user.campus = None
+                    # campus removed - derived from college (will be None when college is None)
                     user.degree = None
                     user.expertise = None
                     # CLIENT can edit company and industry
@@ -721,11 +721,10 @@ def edit_user(request, id):
                     user.industry = data.get('industry') or None
 
                 elif user.role == "FACULTY":
-                    # FACULTY can edit campus, college, degree, and expertise
+                    # FACULTY can edit college (campus derived from college), degree, and expertise
                     college_id = data.get('college')
                     user.college = College.objects.get(id=college_id) if college_id else None
-                    campus_id = data.get('campus')
-                    user.campus = Campus.objects.get(id=campus_id) if campus_id else None
+                    # campus removed - automatically derived from college.campus
                     user.degree = data.get('degree') or None
                     user.expertise = data.get('expertise') or None
                     user.company = None
@@ -736,8 +735,7 @@ def edit_user(request, id):
                     if can_edit_role_and_verify:
                         college_id = data.get('college')
                         user.college = College.objects.get(id=college_id) if college_id else None
-                        campus_id = data.get('campus')  
-                        user.campus = Campus.objects.get(id=campus_id) if campus_id else None
+                        # campus removed - automatically derived from college.campus
                     user.degree = None
                     user.expertise = None
                     user.company = None
@@ -746,7 +744,7 @@ def edit_user(request, id):
                 elif user.role == "IMPLEMENTER":
                     # IMPLEMENTER can edit degree and expertise
                     user.college = None
-                    user.campus = None
+                    # campus removed - will be None when college is None
                     user.degree = data.get('degree') or None
                     user.expertise = data.get('expertise') or None
                     user.company = None
@@ -756,7 +754,7 @@ def edit_user(request, id):
                     # UESO, DIRECTOR, VP - only editable by VP/DIRECTOR
                     if can_edit_role_and_verify:
                         user.college = None
-                        user.campus = None
+                        # campus removed - will be None when college is None
                         user.degree = None
                         user.expertise = None
                         user.company = None
@@ -846,6 +844,45 @@ def verify_user(request, id):
     
     user.is_confirmed = True
     user.save()
+    
+    # Send email notification to the user
+    try:
+        from django.conf import settings
+        site_url = getattr(settings, 'SITE_URL', 'http://localhost:8000')
+        
+        email_subject = 'Your Account Has Been Verified'
+        email_body = f"""
+Hello {user.get_full_name()},
+
+Good news! Your account has been verified by {request.user.get_full_name()} ({request.user.get_role_display()}).
+
+You can now access all features of the WBPMISUESO system.
+
+Account Details:
+- Email: {user.email}
+- Role: {user.get_role_display()}
+- Verified by: {request.user.get_full_name()}
+
+You can log in here: {site_url}/login/
+
+If you have any questions, please contact the administrator.
+
+---
+This is an automated notification from WBPMISUESO.
+"""
+        
+        send_mail(
+            subject=email_subject,
+            message=email_body,
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=[user.email],
+            fail_silently=True,
+        )
+        print(f"✓ Verification email sent to {user.email}")
+        
+    except Exception as e:
+        print(f"✗ Failed to send verification email to {user.email}: {str(e)}")
+    
     from urllib.parse import quote
     return redirect(f'/users/?success=true&action=confirmed&title={quote(user.get_full_name())}')
 
@@ -860,6 +897,45 @@ def unverify_user(request, id):
     
     user.is_confirmed = False
     user.save()
+    
+    # Send email notification to the user
+    try:
+        from django.conf import settings
+        site_url = getattr(settings, 'SITE_URL', 'http://localhost:8000')
+        
+        email_subject = 'Your Account Verification Has Been Revoked'
+        email_body = f"""
+Hello {user.get_full_name()},
+
+This is to inform you that your account verification has been revoked by {request.user.get_full_name()} ({request.user.get_role_display()}).
+
+Account Details:
+- Email: {user.email}
+- Role: {user.get_role_display()}
+- Action taken by: {request.user.get_full_name()}
+
+Your account is now unverified and you will have limited access to the WBPMISUESO system until your account is verified again.
+
+If you believe this is a mistake or have any questions, please contact the administrator immediately.
+
+Contact: {settings.EMAIL_HOST_USER}
+
+---
+This is an automated notification from WBPMISUESO.
+"""
+        
+        send_mail(
+            subject=email_subject,
+            message=email_body,
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=[user.email],
+            fail_silently=True,
+        )
+        print(f"✓ Unverification email sent to {user.email}")
+        
+    except Exception as e:
+        print(f"✗ Failed to send unverification email to {user.email}: {str(e)}")
+    
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
 
 

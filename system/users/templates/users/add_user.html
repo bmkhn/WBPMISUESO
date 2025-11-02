@@ -144,13 +144,9 @@
                     </select>
                 </div>
                 <div>
-                    <div class="user-details-label">Campus <span class="required">*</span></div>
-                    <select name="campus" class="user-details-value" data-role-required>
-                        <option value="">Select Campus</option>
-                        {% for campus in campus_choices %}
-                            <option value="{{ campus.id }}">{{ campus.name }}</option>
-                        {% endfor %}
-                    </select>
+                    <div class="user-details-label">Campus (from College)</div>
+                    <!-- Campus is now derived from college, no input needed -->
+                    <input type="text" class="user-details-value" value="Will be set from College" readonly style="background-color: #f8f9fa; cursor: not-allowed;">
                 </div>
             </div>
             
@@ -205,11 +201,12 @@
         const allRoleFields = Array.from(document.querySelectorAll('[data-role-required]')).map(f => f.closest('.user-details-row'));
         const roleSection = document.getElementById('role-specific-section');
         // Map of role to required field selectors (adjust as needed)
+        // NOTE: campus removed - derived from college
         const roleFieldMap = {
-            'FACULTY': ['college', 'campus', 'degree', 'expertise'],
-            'COORDINATOR': ['college', 'campus'],
-            'DEAN': ['college', 'campus'],
-            'PROGRAM_HEAD': ['college', 'campus'],
+            'FACULTY': ['college', 'degree', 'expertise'],
+            'COORDINATOR': ['college'],
+            'DEAN': ['college'],
+            'PROGRAM_HEAD': ['college'],
             'IMPLEMENTER': ['degree', 'expertise'],
             'CLIENT': ['company', 'industry'],
         };

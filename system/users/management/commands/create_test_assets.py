@@ -159,10 +159,8 @@ class Command(BaseCommand):
             email = f"{role.lower()}@example.com"
             if not User.objects.filter(email=email).exists():
                 if role in [User.Role.COORDINATOR, User.Role.DEAN, User.Role.PROGRAM_HEAD, User.Role.FACULTY]:
-                    campus = tinuigiban_campus
                     college = college_of_sciences
                 else:
-                    campus = tinuigiban_campus
                     college = None
                 
                 user = User.objects.create_user(
@@ -174,7 +172,7 @@ class Command(BaseCommand):
                     last_name="User",
                     sex=User.Sex.MALE,
                     contact_no="0999999999",
-                    campus=campus, # This is now a Campus object
+                    # campus removed - derived from college.campus
                     college=college,
                     role=role,
                     is_confirmed=True,

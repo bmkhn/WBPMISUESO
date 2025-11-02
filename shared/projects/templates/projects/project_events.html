@@ -86,7 +86,8 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label">Date Time<span class="required">*</span></label>
-                            <input class="user-details-value" type="datetime-local" name="datetime" value="{{ event.datetime|date:'Y-m-d\\TH:i' }}" required>
+                            <input class="user-details-value event-datetime-input" type="datetime-local" name="datetime" value="{{ event.datetime|date:'Y-m-d\\TH:i' }}" required data-event-id="{{ event.id }}">
+                            <small style="color:#666;font-size:0.875rem;margin-top:0.25rem;display:block;">Must be within project dates ({{ project.start_date|date:'M d, Y' }} - {{ project.estimated_end_date|date:'M d, Y' }})</small>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Location<span class="required">*</span></label>
@@ -131,7 +132,8 @@
             </div>
             <div class="form-group">
                 <label class="form-label">Date Time<span class="required">*</span></label>
-                <input class="user-details-value" type="datetime-local" name="add_event_datetime" required>
+                <input class="user-details-value" type="datetime-local" name="add_event_datetime" id="add_event_datetime" required>
+                <small style="color:#666;font-size:0.875rem;margin-top:0.25rem;display:block;">Must be within project dates ({{ project.start_date|date:'M d, Y' }} - {{ project.estimated_end_date|date:'M d, Y' }})</small>
             </div>
             <div class="form-group">
                 <label class="form-label">Location<span class="required">*</span></label>
@@ -146,6 +148,15 @@
 </div>
 
 <script>
+    // Project date constraints for event validation
+    const projectStartDate = new Date('{{ project.start_date|date:"Y-m-d" }}');
+    const projectEndDate = new Date('{{ project.estimated_end_date|date:"Y-m-d" }}');
+    projectEndDate.setHours(23, 59, 59, 999); // Set to end of day
+    
+    // Format dates for datetime-local input (YYYY-MM-DDTHH:MM)
+    const minDateTime = projectStartDate.toISOString().slice(0, 16);
+    const maxDateTime = projectEndDate.toISOString().slice(0, 16);
+    
     // Add Activity Modal logic
     document.getElementById('openAddEventModal').onclick = function() {
         document.getElementById('add-event-modal').style.display = 'flex';
@@ -161,6 +172,36 @@
             this.style.display = 'none';
         }
     };
+    
+    // Set min/max for add event datetime
+    const addEventDateTimeInput = document.getElementById('add_event_datetime');
+    if (addEventDateTimeInput) {
+        addEventDateTimeInput.setAttribute('min', minDateTime);
+        addEventDateTimeInput.setAttribute('max', maxDateTime);
+    }
+    
+    // Set min/max for edit event datetime inputs
+    document.querySelectorAll('.event-datetime-input').forEach(function(input) {
+        input.setAttribute('min', minDateTime);
+        input.setAttribute('max', maxDateTime);
+    });
+    
+    // Validate on form submit
+    document.querySelectorAll('form').forEach(function(form) {
+        form.addEventListener('submit', function(e) {
+            const datetimeInputs = form.querySelectorAll('input[type="datetime-local"]');
+            datetimeInputs.forEach(function(input) {
+                if (input.value) {
+                    const selectedDate = new Date(input.value);
+                    if (selectedDate < projectStartDate || selectedDate > projectEndDate) {
+                        e.preventDefault();
+                        alert('Activity date must be within project dates ({{ project.start_date|date:"M d, Y" }} - {{ project.estimated_end_date|date:"M d, Y" }})');
+                        input.focus();
+                    }
+                }
+            });
+        });
+    });
 </script>
 
 <!-- Delete Activity Confirmation Modal -->

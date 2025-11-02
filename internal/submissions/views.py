@@ -132,7 +132,8 @@ def add_submission_requirement(request, project_id=None):
             'available_events': events_list,
             'all_events_completed': all_events_completed,
             'event_progress': project.event_progress,
-            'estimated_events': project.estimated_events
+            'estimated_events': project.estimated_events,
+            'start_date': project.start_date.strftime('%Y-%m-%d') if project.start_date else None
         }
     
     # Convert to JSON for template

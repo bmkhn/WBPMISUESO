@@ -20,6 +20,27 @@ class LogEntry(models.Model):
 	is_notification = models.BooleanField(default=False)
 	notification_date = models.DateTimeField(null=True, blank=True)
 
+	class Meta:
+		indexes = [
+			# Primary listing: Timestamp ordering
+			models.Index(fields=['-timestamp'], name='log_timestamp_idx'),
+			# User activity tracking
+			models.Index(fields=['user', '-timestamp'], name='log_user_time_idx'),
+			# Action filtering (CREATE, UPDATE, DELETE)
+			models.Index(fields=['action', '-timestamp'], name='log_action_time_idx'),
+			# Model filtering (Project, Submission, etc.)
+			models.Index(fields=['model', '-timestamp'], name='log_model_time_idx'),
+			# Combined filtering (common in admin views)
+			models.Index(fields=['model', 'action', '-timestamp'], name='log_filter_idx'),
+			# Notification creation (signal trigger)
+			models.Index(fields=['is_notification', 'timestamp'], name='log_notif_idx'),
+			# Object-specific logs
+			models.Index(fields=['model', 'object_id'], name='log_object_idx'),
+		]
+		verbose_name = 'Log Entry'
+		verbose_name_plural = 'Log Entries'
+		ordering = ['-timestamp']
+
 	def __str__(self):
 		return f"{self.get_action_display()} {self.model} ({self.object_repr}) by {self.user}"
 

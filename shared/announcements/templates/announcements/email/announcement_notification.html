@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Announcement</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            background-color: #00538E;
+            color: white;
+            padding: 20px;
+            border-radius: 8px 8px 0 0;
+            margin: -30px -30px 20px -30px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .announcement-title {
+            color: #00538E;
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .announcement-body {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-left: 4px solid #00538E;
+            margin: 20px 0;
+            white-space: pre-wrap;
+        }
+        .metadata {
+            color: #666;
+            font-size: 14px;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #e0e0e0;
+        }
+        .button {
+            display: inline-block;
+            background-color: #00538E;
+            color: white !important;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        .button:hover {
+            background-color: #004070;
+        }
+        .footer {
+            text-align: center;
+            color: #999;
+            font-size: 12px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📢 New Announcement</h1>
+        </div>
+        
+        <div class="announcement-title">
+            {{ announcement.title }}
+        </div>
+        
+        {% if announcement.cover_photo %}
+        <div style="text-align: center;">
+            <img src="{{ site_url }}{{ announcement.get_cover_photo_url }}" alt="Announcement Cover Photo">
+        </div>
+        {% endif %}
+        
+        <div class="announcement-body">
+            {{ announcement.body }}
+        </div>
+        
+        <div class="metadata">
+            <p>
+                <strong>Published by:</strong> {{ announcement.published_by.get_full_name|default:announcement.published_by.username }}<br>
+                <strong>Published on:</strong> {{ announcement.published_at|date:"F d, Y - g:i A" }}
+            </p>
+        </div>
+        
+        <div style="text-align: center;">
+            <a href="{{ site_url }}/announcements/{{ announcement.id }}/" class="button">
+                View Full Announcement
+            </a>
+        </div>
+        
+        <div class="footer">
+            <p>
+                This is an automated notification from WBPMISUESO.<br>
+                You are receiving this email because you have an active account.
+            </p>
+            <p>
+                <a href="{{ site_url }}/announcements/" style="color: #00538E;">View All Announcements</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

@@ -9,6 +9,11 @@ class SustainableDevelopmentGoal(models.Model):
 	goal_number = models.PositiveSmallIntegerField(unique=True)
 	name = models.CharField(max_length=255)
 
+	class Meta:
+		indexes = [
+			models.Index(fields=['goal_number'], name='sdg_goal_number_idx'),
+		]
+
 	def __str__(self):
 		return f"SDG {self.goal_number}: {self.name}"
 
@@ -77,6 +82,13 @@ class ProjectDocument(models.Model):
 	document_type = models.CharField(max_length=12, choices=DOCUMENT_TYPE_CHOICES)
 	uploaded_at = models.DateTimeField(auto_now_add=True)
 	description = models.CharField(max_length=255, blank=True)
+
+	class Meta:
+		indexes = [
+			models.Index(fields=['project', 'document_type', 'uploaded_at'], name='project_docs_type_date_idx'),
+			models.Index(fields=['project', 'uploaded_at'], name='project_docs_date_idx'),
+			models.Index(fields=['document_type', 'uploaded_at'], name='docs_type_date_idx'),
+		]
 
 	@property
 	def name(self):
@@ -169,6 +181,23 @@ class Project(models.Model):
 
 	status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="NOT_STARTED")
 	has_final_submission = models.BooleanField(default=False, help_text="True when a final submission type has been approved")
+
+	class Meta:
+		indexes = [
+			# CRITICAL: Scheduler queries run daily at midnight
+			models.Index(fields=['status', 'start_date'], name='proj_status_start_idx'),
+			models.Index(fields=['status', 'estimated_end_date', 'has_final_submission'], name='proj_completion_idx'),
+			
+			# Project listing and filtering
+			models.Index(fields=['status', '-created_at'], name='proj_status_created_idx'),
+			models.Index(fields=['-created_at'], name='proj_created_idx'),
+			
+			# Leader and provider lookups
+			models.Index(fields=['project_leader', 'status'], name='proj_leader_status_idx'),
+			
+			# Agenda-based filtering
+			models.Index(fields=['agenda', 'status'], name='proj_agenda_status_idx'),
+		]
 
 	def get_status_display(self):
 		return dict(self.STATUS_CHOICES).get(self.status, self.status)
@@ -306,6 +335,16 @@ class ProjectEvaluation(models.Model):
 	comment = models.TextField()
 	rating = models.PositiveSmallIntegerField() 
 
+	class Meta:
+		indexes = [
+			# Project evaluations (most common query)
+			models.Index(fields=['project', '-created_at'], name='proj_eval_proj_date_idx'),
+			# User's evaluation history
+			models.Index(fields=['evaluated_by', '-created_at'], name='proj_eval_user_idx'),
+			# Rating-based filtering
+			models.Index(fields=['project', 'rating'], name='proj_eval_rating_idx'),
+		]
+
 	def __str__(self):
 		return f"Evaluation of {self.project.title} by {self.evaluated_by.username if self.evaluated_by else 'Unknown'} on {self.created_at}"
 	
@@ -338,11 +377,28 @@ class ProjectEvent(models.Model):
 
 	STATUS_CHOICES = [
 		("SCHEDULED", "Scheduled"),
+		("ONGOING", "Ongoing"),
 		("COMPLETED", "Completed"),
 		("CANCELLED", "Cancelled"),
 	]
 
 	status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="SCHEDULED")
+
+	class Meta:
+		indexes = [
+			# CRITICAL: Scheduler query runs daily at midnight
+			models.Index(fields=['status', 'datetime'], name='proj_evt_sched_date_idx'),
+			
+			# Project event timeline (latest_event property on Project model)
+			models.Index(fields=['project', '-datetime', '-created_at'], name='proj_evt_timeline_idx'),
+			
+			# Event management and listing
+			models.Index(fields=['project', 'status', '-datetime'], name='proj_evt_proj_status_idx'),
+			models.Index(fields=['-datetime'], name='proj_evt_datetime_idx'),
+			
+			# Placeholder filtering (used in latest_event query)
+			models.Index(fields=['placeholder', '-datetime'], name='proj_evt_placeholder_idx'),
+		]
 
 	def get_status_display(self):
 		return dict(self.STATUS_CHOICES).get(self.status, self.status)
@@ -367,6 +423,13 @@ class ProjectUpdate(models.Model):
 
     class Meta:
         unique_together = ('user', 'project', 'submission', 'status')
+        indexes = [
+            # Update feed (unread notifications)
+            models.Index(fields=['user', 'viewed', '-updated_at'], name='proj_upd_user_view_idx'),
+            
+            # Project-specific updates
+            models.Index(fields=['project', '-updated_at'], name='proj_upd_proj_date_idx'),
+        ]
 
 
 # Signal handlers

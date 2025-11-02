@@ -17,9 +17,7 @@
 
     <div class="upper">
         <div class="upper-left">
-            {% if submission.downloadable.file.url %}
-            <a href="{{ submission.downloadable.file.url }}" target="_blank" class="name-link file-text">{{ submission.downloadable.name }}</a>
-            {% endif %}
+            <a href="{{ submission.downloadable_link }}" target="_blank" class="name-link file-text">{{ submission.downloadable.name }}</a>
             
             <span class="green-text">
                 <a class="name-link" href="{% url 'project_submissions' submission.project.id %}">{{ submission.project.title }}</a>
@@ -59,7 +57,7 @@
             {% if submission.notes %} <span class="notes-text">{{ submission.notes }}</span> {% endif %}
             {% if submission.reason_for_revision %} <span class="notes-text"><strong class="red">Reason/s for Requesting Revision</strong><br>{{ submission.reason_for_revision }}</span>{% endif %}
             {% if submission.reason_for_rejection %} <span class="notes-text"><strong class="red">Reason/s for Rejection</strong><br>{{ submission.reason_for_rejection }}</span>{% endif %}
-            {% if submission.file %} <span class="notes-text"><a href="{{ submission.file.url }}" target="_blank" class="name-link">File Here</a></span>{% endif %}
+            <span class="notes-text"><a href="{{ submission.submitted_form_link }}" target="_blank" class="name-link">{{ submission.submitted_form_name_with_ext }}</a></span>
         </div>
 
         <div class="content-right">

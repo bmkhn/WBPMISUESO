@@ -157,7 +157,8 @@ class Command(BaseCommand):
 				email = fake.unique.email()
 				base_username = email.split('@')[0]
 				username = base_username
-				campus = random.choice(campuses)
+				# Pick a random college directly (campus will be derived from college.campus)
+				# This ensures consistency - user's campus always matches their college's campus
 				college = random.choice(colleges) if colleges else None
 
 				# Pick a realistic degree-expertise pair
@@ -179,7 +180,7 @@ class Command(BaseCommand):
 					last_name=last_name,
 					sex=User.Sex.MALE if random.random() < 0.5 else User.Sex.FEMALE,
 					contact_no=fake.phone_number(),
-					campus=campus,
+					# campus removed - derived from college.campus
 					college=college,
 					role=role,
 					is_confirmed=True,

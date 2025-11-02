@@ -30,9 +30,15 @@
                 <p>Assigned on: <strong>{{ sub.created_at|date:'M d, Y' }}</strong></p>
                 {% if sub.notes %}<p title="{{ sub.notes }}"><strong>Notes:</strong> {{ sub.notes|truncatechars:50 }}</p>{% endif %}
                 <div style="position:absolute; top:1.5rem; right:1.5rem; text-align:right;">
-                    <span title="{{ sub.deadline|date:'Y-m-d H:i' }}">
-                        {{ sub.deadline|timeuntil }} left
-                    </span>
+                    {% if sub.deadline %}
+                        <span title="{{ sub.deadline|date:'Y-m-d H:i' }}">
+                            {% if sub.deadline > now %}
+                                {{ sub.deadline|timeuntil }} left
+                            {% else %}
+                                <span style="color:#D5110A;font-weight:600;">Deadline Passed</span>
+                            {% endif %}
+                        </span>
+                    {% endif %}
                     <br>
                     <span>{{ sub.get_status_display }}{% if sub.is_late_submission %} <span style="color:#D5110A;font-weight:600;">(Late)</span>{% endif %}</span>
                 </div>
