@@ -19,6 +19,11 @@ class BudgetPool(models.Model):
     class Meta:
         verbose_name_plural = "Budget Pools"
         unique_together = ['quarter', 'fiscal_year']
+        indexes = [
+            # Fiscal year and quarter lookups
+            models.Index(fields=['fiscal_year', 'quarter'], name='budpool_year_qtr_idx'),
+            models.Index(fields=['-created_at'], name='budpool_created_idx'),
+        ]
 
 class BudgetCategory(models.Model):
     """Categories for budget allocation (e.g., Internal, External, Emergency)"""
@@ -31,6 +36,9 @@ class BudgetCategory(models.Model):
     
     class Meta:
         verbose_name_plural = "Budget Categories"
+        indexes = [
+            # Name is unique, auto-indexed by Django
+        ]
 
 class BudgetAllocation(models.Model):
     """Budget allocations for colleges/projects"""
@@ -78,6 +86,28 @@ class BudgetAllocation(models.Model):
             return round((self.total_remaining / self.total_assigned) * 100, 2)
         return 0
 
+    class Meta:
+        indexes = [
+            # College-based budget filtering
+            models.Index(fields=['college', 'status', 'fiscal_year'], name='budalloc_col_stat_yr_idx'),
+            models.Index(fields=['college', 'quarter'], name='budalloc_col_qtr_idx'),
+            
+            # Project-based budget tracking
+            models.Index(fields=['project', 'status'], name='budalloc_proj_stat_idx'),
+            
+            # Category filtering
+            models.Index(fields=['category', 'fiscal_year'], name='budalloc_cat_yr_idx'),
+            
+            # Status and period filtering
+            models.Index(fields=['status', 'fiscal_year', 'quarter'], name='budalloc_stat_period_idx'),
+            
+            # Budget allocation listing
+            models.Index(fields=['-created_at'], name='budalloc_created_idx'),
+            
+            # Utilization tracking (for low/high spending alerts)
+            models.Index(fields=['status', 'total_remaining'], name='budalloc_remaining_idx'),
+        ]
+
 class ExternalFunding(models.Model):
     """External funding sources and sponsors"""
     STATUS_CHOICES = [
@@ -113,6 +143,22 @@ class ExternalFunding(models.Model):
             return round((self.amount_received / self.amount_offered) * 100, 2)
         return 0
 
+    class Meta:
+        indexes = [
+            # Project funding tracking
+            models.Index(fields=['project', 'status'], name='extfund_proj_stat_idx'),
+            
+            # Status filtering (pending, approved, etc.)
+            models.Index(fields=['status', '-proposal_date'], name='extfund_stat_date_idx'),
+            
+            # Sponsor tracking
+            models.Index(fields=['sponsor_name'], name='extfund_sponsor_idx'),
+            
+            # Timeline filtering
+            models.Index(fields=['proposal_date'], name='extfund_proposal_idx'),
+            models.Index(fields=['expected_completion', 'status'], name='extfund_complete_idx'),
+        ]
+
 class BudgetHistory(models.Model):
     """Track budget changes and transactions"""
     ACTION_CHOICES = [
@@ -139,6 +185,22 @@ class BudgetHistory(models.Model):
     class Meta:
         verbose_name_plural = "Budget History"
         ordering = ['-timestamp']
+        indexes = [
+            # Budget allocation history
+            models.Index(fields=['budget_allocation', '-timestamp'], name='budhist_alloc_time_idx'),
+            
+            # External funding history
+            models.Index(fields=['external_funding', '-timestamp'], name='budhist_fund_time_idx'),
+            
+            # Action filtering (audit trail)
+            models.Index(fields=['action', '-timestamp'], name='budhist_action_idx'),
+            
+            # User activity tracking
+            models.Index(fields=['user', '-timestamp'], name='budhist_user_idx'),
+            
+            # Timeline (already ordered, but explicit index helps)
+            models.Index(fields=['-timestamp'], name='budhist_time_idx'),
+        ]
 
 class BudgetTemplate(models.Model):
     """Dynamic template configurations for different roles"""
@@ -171,3 +233,10 @@ class BudgetTemplate(models.Model):
     
     def __str__(self):
         return f"{self.get_role_display()} - {self.template_name}"
+
+    class Meta:
+        indexes = [
+            # Role is unique, auto-indexed
+            # Active template filtering
+            models.Index(fields=['is_active', 'role'], name='budtmpl_active_role_idx'),
+        ]

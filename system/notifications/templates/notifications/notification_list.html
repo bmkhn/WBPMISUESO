@@ -165,6 +165,74 @@
             return cookieValue;
         }
 
+        // Store read notifications in sessionStorage for persistence across navigation
+        function markNotificationAsReadInStorage(notificationId) {
+            let readNotifications = JSON.parse(sessionStorage.getItem('readNotifications') || '[]');
+            if (!readNotifications.includes(notificationId)) {
+                readNotifications.push(notificationId);
+                sessionStorage.setItem('readNotifications', JSON.stringify(readNotifications));
+            }
+        }
+
+        function isNotificationMarkedAsRead(notificationId) {
+            let readNotifications = JSON.parse(sessionStorage.getItem('readNotifications') || '[]');
+            return readNotifications.includes(notificationId);
+        }
+
+        // Update badge count consistently across all locations
+        function updateBadgeCount(delta) {
+            // Update sidebar profile badge (ID-based)
+            const profileBadge = document.getElementById('profileNotificationBadge');
+            if (profileBadge) {
+                const currentCount = parseInt(profileBadge.textContent) || 0;
+                const newCount = Math.max(0, currentCount + delta);
+                if (newCount === 0) {
+                    profileBadge.remove();
+                } else {
+                    profileBadge.textContent = newCount;
+                }
+            }
+            
+            // Update modal notification badge (in profile dropdown)
+            const modalBadges = document.querySelectorAll('#profileModal a[href*="notifications"] span[style*="background:#FF3300"]');
+            modalBadges.forEach(badge => {
+                const currentCount = parseInt(badge.textContent) || 0;
+                const newCount = Math.max(0, currentCount + delta);
+                if (newCount === 0) {
+                    badge.remove();
+                } else {
+                    badge.textContent = newCount;
+                }
+            });
+            
+            // Update any other notification badge counts (with class)
+            const navBadges = document.querySelectorAll('.notification-badge-count');
+            navBadges.forEach(badge => {
+                const currentCount = parseInt(badge.textContent) || 0;
+                const newCount = Math.max(0, currentCount + delta);
+                if (newCount === 0) {
+                    badge.parentElement.remove();
+                } else {
+                    badge.textContent = newCount;
+                }
+            });
+            
+            // Update the unread count on the notification page itself
+            const unreadCountElement = document.querySelector('.unread-count');
+            if (unreadCountElement) {
+                const match = unreadCountElement.textContent.match(/(\d+)/);
+                if (match) {
+                    const currentCount = parseInt(match[1]) || 0;
+                    const newCount = Math.max(0, currentCount + delta);
+                    if (newCount === 0) {
+                        unreadCountElement.textContent = 'No unread notifications';
+                    } else {
+                        unreadCountElement.textContent = `${newCount} unread notification${newCount !== 1 ? 's' : ''}`;
+                    }
+                }
+            }
+        }
+
         function markAsRead(notificationId, event) {
             // Prevent default link behavior
             event.preventDefault();
@@ -178,28 +246,25 @@
             const details = detailsElement ? detailsElement.textContent.trim() : '';
             const isRejectedExport = details.toLowerCase().includes('export request has been rejected');
             
-            // IMMEDIATELY update UI to give instant feedback (the illusion)
-            item.classList.remove('unread');
-            const badge = item.querySelector('.notification-badge');
-            if (badge) {
-                badge.remove();
+            // Check if already marked as read
+            const wasUnread = item.classList.contains('unread');
+            
+            // IMMEDIATELY update UI to give instant feedback
+            if (wasUnread) {
+                item.classList.remove('unread');
+                const badge = item.querySelector('.notification-badge');
+                if (badge) {
+                    badge.remove();
+                }
+                
+                // Update badge count
+                updateBadgeCount(-1);
+                
+                // Mark in storage
+                markNotificationAsReadInStorage(notificationId);
             }
             
-            // Update badge count in navbar immediately
-            const navBadges = document.querySelectorAll('.notification-badge-count');
-            navBadges.forEach(badge => {
-                const currentCount = parseInt(badge.textContent);
-                if (currentCount > 0) {
-                    const newCount = currentCount - 1;
-                    if (newCount === 0) {
-                        badge.parentElement.remove();
-                    } else {
-                        badge.textContent = newCount;
-                    }
-                }
-            });
-            
-            // THEN make the API call in the background
+            // Make the API call and WAIT for it to complete before navigating
             fetch(`/notifications/mark-as-read/${notificationId}/`, {
                 method: 'POST',
                 headers: {
@@ -212,17 +277,22 @@
                   if (isRejectedExport) {
                       showRejectedExportModal();
                   } else {
-                      // Otherwise, redirect normally
-                      window.location.href = targetUrl;
+                      // Wait a tiny bit to ensure the request is processed
+                      setTimeout(() => {
+                          window.location.href = targetUrl;
+                      }, 100);
                   }
               })
               .catch(error => {
+                  console.error('Failed to mark as read:', error);
                   // If it's a rejected export, show modal even on error
                   if (isRejectedExport) {
                       showRejectedExportModal();
                   } else {
-                      // Otherwise, still redirect (it will sync on refresh)
-                      window.location.href = targetUrl;
+                      // Still redirect (it will sync on refresh)
+                      setTimeout(() => {
+                          window.location.href = targetUrl;
+                      }, 100);
                   }
               });
         }
@@ -233,41 +303,38 @@
             // Get the notification item element
             const item = event.currentTarget;
             
-            // IMMEDIATELY update UI to give instant feedback
-            item.classList.remove('unread');
-            const badge = item.querySelector('.notification-badge');
-            if (badge) {
-                badge.remove();
-            }
+            // Check if already marked as read
+            const wasUnread = item.classList.contains('unread');
             
-            // Update badge count in navbar immediately
-            const navBadges = document.querySelectorAll('.notification-badge-count');
-            navBadges.forEach(badge => {
-                const currentCount = parseInt(badge.textContent);
-                if (currentCount > 0) {
-                    const newCount = currentCount - 1;
-                    if (newCount === 0) {
-                        badge.parentElement.remove();
-                    } else {
-                        badge.textContent = newCount;
-                    }
+            if (wasUnread) {
+                // IMMEDIATELY update UI to give instant feedback
+                item.classList.remove('unread');
+                const badge = item.querySelector('.notification-badge');
+                if (badge) {
+                    badge.remove();
                 }
-            });
-            
-            // THEN make the API call in the background
-            fetch(`/notifications/mark-as-read/${notificationId}/`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': getCookie('csrftoken'),
-                    'Content-Type': 'application/json',
-                },
-            }).catch(error => {
-                // Silently fail - it will sync on refresh
-                console.log('Failed to mark as read, will sync on refresh');
-            });
+                
+                // Update badge count
+                updateBadgeCount(-1);
+                
+                // Mark in storage
+                markNotificationAsReadInStorage(notificationId);
+                
+                // Make the API call in the background
+                fetch(`/notifications/mark-as-read/${notificationId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        'Content-Type': 'application/json',
+                    },
+                }).catch(error => {
+                    console.error('Failed to mark as read:', error);
+                });
+            }
         }
 
         function markAllAsRead() {
+            // Mark all as read
             fetch('/notifications/mark-all-as-read/', {
                 method: 'POST',
                 headers: {
@@ -277,11 +344,102 @@
             }).then(response => response.json())
               .then(data => {
                   if (data.success) {
+                      // Store all notification IDs in sessionStorage
+                      const allNotifications = document.querySelectorAll('[data-notification-id]');
+                      allNotifications.forEach(notif => {
+                          const id = notif.getAttribute('data-notification-id');
+                          if (id) {
+                              markNotificationAsReadInStorage(parseInt(id));
+                          }
+                      });
+                      
                       // Reload the page to reflect changes
                       window.location.reload();
                   }
               });
         }
+
+        // On page load, sync UI with storage (for back button navigation)
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check all notifications against storage
+            const allNotificationItems = document.querySelectorAll('.notification-item[data-notification-id]');
+            let storageReadCount = 0;
+            
+            allNotificationItems.forEach(item => {
+                const notifId = parseInt(item.getAttribute('data-notification-id'));
+                if (isNotificationMarkedAsRead(notifId)) {
+                    // This was marked as read in this session, update UI
+                    if (item.classList.contains('unread')) {
+                        item.classList.remove('unread');
+                        const badge = item.querySelector('.notification-badge');
+                        if (badge) {
+                            badge.remove();
+                        }
+                        storageReadCount++;
+                    }
+                }
+            });
+            
+            // Update badge count if we found any from storage
+            if (storageReadCount > 0) {
+                updateBadgeCount(-storageReadCount);
+            }
+        });
+
+        // Also refresh when page becomes visible (e.g., coming back from another tab/window)
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                // Sync UI with storage when page becomes visible
+                const allNotificationItems = document.querySelectorAll('.notification-item[data-notification-id]');
+                let storageReadCount = 0;
+                
+                allNotificationItems.forEach(item => {
+                    const notifId = parseInt(item.getAttribute('data-notification-id'));
+                    if (isNotificationMarkedAsRead(notifId)) {
+                        if (item.classList.contains('unread')) {
+                            item.classList.remove('unread');
+                            const badge = item.querySelector('.notification-badge');
+                            if (badge) {
+                                badge.remove();
+                            }
+                            storageReadCount++;
+                        }
+                    }
+                });
+                
+                if (storageReadCount > 0) {
+                    updateBadgeCount(-storageReadCount);
+                }
+            }
+        });
+
+        // Handle browser back/forward buttons
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted) {
+                // Page was loaded from cache (bfcache)
+                // Sync UI with storage
+                const allNotificationItems = document.querySelectorAll('.notification-item[data-notification-id]');
+                let storageReadCount = 0;
+                
+                allNotificationItems.forEach(item => {
+                    const notifId = parseInt(item.getAttribute('data-notification-id'));
+                    if (isNotificationMarkedAsRead(notifId)) {
+                        if (item.classList.contains('unread')) {
+                            item.classList.remove('unread');
+                            const badge = item.querySelector('.notification-badge');
+                            if (badge) {
+                                badge.remove();
+                            }
+                            storageReadCount++;
+                        }
+                    }
+                });
+                
+                if (storageReadCount > 0) {
+                    updateBadgeCount(-storageReadCount);
+                }
+            }
+        });
         
         // Modal control functions for rejected export notifications
         function showRejectedExportModal() {

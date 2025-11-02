@@ -9,6 +9,11 @@ class SustainableDevelopmentGoal(models.Model):
 	goal_number = models.PositiveSmallIntegerField(unique=True)
 	name = models.CharField(max_length=255)
 
+	class Meta:
+		indexes = [
+			models.Index(fields=['goal_number'], name='sdg_goal_number_idx'),
+		]
+
 	def __str__(self):
 		return f"SDG {self.goal_number}: {self.name}"
 
@@ -77,6 +82,13 @@ class ProjectDocument(models.Model):
 	document_type = models.CharField(max_length=12, choices=DOCUMENT_TYPE_CHOICES)
 	uploaded_at = models.DateTimeField(auto_now_add=True)
 	description = models.CharField(max_length=255, blank=True)
+
+	class Meta:
+		indexes = [
+			models.Index(fields=['project', 'document_type', 'uploaded_at'], name='project_docs_type_date_idx'),
+			models.Index(fields=['project', 'uploaded_at'], name='project_docs_date_idx'),
+			models.Index(fields=['document_type', 'uploaded_at'], name='docs_type_date_idx'),
+		]
 
 	@property
 	def name(self):
@@ -322,6 +334,16 @@ class ProjectEvaluation(models.Model):
 	edited_at = models.DateTimeField(null=True, blank=True)
 	comment = models.TextField()
 	rating = models.PositiveSmallIntegerField() 
+
+	class Meta:
+		indexes = [
+			# Project evaluations (most common query)
+			models.Index(fields=['project', '-created_at'], name='proj_eval_proj_date_idx'),
+			# User's evaluation history
+			models.Index(fields=['evaluated_by', '-created_at'], name='proj_eval_user_idx'),
+			# Rating-based filtering
+			models.Index(fields=['project', 'rating'], name='proj_eval_rating_idx'),
+		]
 
 	def __str__(self):
 		return f"Evaluation of {self.project.title} by {self.evaluated_by.username if self.evaluated_by else 'Unknown'} on {self.created_at}"

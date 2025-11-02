@@ -190,3 +190,9 @@ class SubmissionUpdate(models.Model):
 
     class Meta:
         unique_together = ('user', 'submission', 'status')
+        indexes = [
+            # User update feed (unread submissions)
+            models.Index(fields=['user', 'viewed', '-updated_at'], name='subupd_user_view_idx'),
+            # Submission-specific updates
+            models.Index(fields=['submission', '-updated_at'], name='subupd_sub_date_idx'),
+        ]

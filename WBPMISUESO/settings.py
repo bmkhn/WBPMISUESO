@@ -225,9 +225,9 @@ SESSION_COOKIE_NAME = 'wbpmisueso_sessionid'    # Custom name (security through 
 
 # CSRF Protection
 CSRF_COOKIE_SECURE = False                      # DEVELOPMENT: False | PRODUCTION: True (requires HTTPS)
-CSRF_COOKIE_HTTPONLY = True                     # Prevent JavaScript access
+CSRF_COOKIE_HTTPONLY = False                    # Allow JavaScript access for AJAX requests
 CSRF_COOKIE_SAMESITE = 'Lax'
-CSRF_COOKIE_NAME = 'wbpmisueso_csrftoken'
+CSRF_COOKIE_NAME = 'csrftoken'                  # Standard name for easier access
 
 # Security Headers
 SECURE_BROWSER_XSS_FILTER = True                # Enable XSS protection
