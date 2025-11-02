@@ -19,7 +19,8 @@ from io import BytesIO
 
 @role_required(allowed_roles=["UESO", "VP", "DIRECTOR"], require_confirmed=True)
 def exports_view(request):
-    requests = ExportRequest.objects.all()
+    # Optimize with select_related
+    requests = ExportRequest.objects.select_related('submitted_by', 'reviewed_by').all()
 
     # Filters
     sort_by = request.GET.get('sort_by', 'date_submitted')
@@ -90,7 +91,8 @@ def exports_view(request):
 @role_required(allowed_roles=["UESO", "VP", "DIRECTOR"], require_confirmed=True)
 def approve_export_request(request, request_id):
     try:
-        export_request = ExportRequest.objects.get(id=request_id, status='PENDING')
+        # Optimize with select_related
+        export_request = ExportRequest.objects.select_related('submitted_by', 'reviewed_by').get(id=request_id, status='PENDING')
     except ExportRequest.DoesNotExist:
         return JsonResponse({'error': 'Export request not found or already processed.'}, status=404)
     
@@ -445,7 +447,8 @@ def export_download(request, request_id):
 def export_manage_user(request):
     user = request.user
     UserModel = User
-    users = UserModel.objects.all()
+    # Optimize with select_related for export
+    users = UserModel.objects.select_related('college', 'college__campus').all()
     query_params = {}
 
     # --- Filters (match manage_user view) ---
@@ -550,7 +553,13 @@ def export_manage_user(request):
 def export_project(request):
     user = request.user
     from django.db.models import Q
-    projects = Project.objects.all()
+    # Optimize with select_related and prefetch_related for export
+    projects = Project.objects.select_related(
+        'project_leader',
+        'project_leader__college',
+        'project_leader__college__campus',
+        'agenda'
+    ).prefetch_related('providers', 'sdgs', 'events').all()
     # Filters (match admin_project view)
     search = request.GET.get('search', '').strip()
     sort_by = request.GET.get('sort_by', 'last_updated')

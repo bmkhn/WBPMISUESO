@@ -472,7 +472,8 @@ from django.shortcuts import get_object_or_404
 def manage_user(request):
     query_params = {}
     User = get_user_model()
-    users = User.objects.all()
+    # Optimize with select_related
+    users = User.objects.select_related('college', 'college__campus').all()
 
     search = request.GET.get('search', '').strip()
     if search:
@@ -552,10 +553,10 @@ def manage_user(request):
     else:
         page_range = range(current - 2, current + 3)
 
-    # Roles for dropdown
+    # Roles for dropdown - optimize filter options
     roles = list(User.Role.choices)
-    colleges = College.objects.all()
-    campuses = Campus.objects.all()
+    colleges = College.objects.select_related('campus').all()
+    campuses = Campus.objects.only('id', 'name').all()
 
     # Build querystring for pagination/filter links
     from urllib.parse import urlencode

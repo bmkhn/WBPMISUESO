@@ -302,16 +302,19 @@
 
     // Add event listeners to downloadable checkboxes
     document.addEventListener('DOMContentLoaded', function() {
-        // Initialize event status display (especially important when project is preselected)
-        const projectSelect = document.getElementById('id_project');
-        if (projectSelect.value || projectSelect.hasAttribute('data-preselected')) {
-            projectSelect.dispatchEvent(new Event('change'));
-        }
-        
         // Add change listeners to all downloadable checkboxes
         document.querySelectorAll('input[name="downloadables"]').forEach(function(checkbox) {
             checkbox.addEventListener('change', updateEventSelectionVisibility);
         });
+        
+        // Initialize event status display (especially important when project is preselected)
+        // Use setTimeout to ensure DOM is fully ready
+        const projectSelect = document.getElementById('id_project');
+        setTimeout(function() {
+            if (projectSelect.value) {
+                projectSelect.dispatchEvent(new Event('change'));
+            }
+        }, 100);
     });
 </script>
 

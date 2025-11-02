@@ -12,7 +12,15 @@ from django.contrib import messages
 def submission_admin_view(request):
     from django.db.models import Case, When, Value, IntegerField
     user_role = getattr(request.user, 'role', None)
-    submissions = Submission.objects.all()
+    # Optimize query with select_related
+    submissions = Submission.objects.select_related(
+        'project',
+        'project__project_leader',
+        'project__project_leader__college',
+        'downloadable',
+        'event',
+        'reviewed_by'
+    )
     
     # Filter submissions by college for COORDINATOR
     if user_role == "COORDINATOR" and request.user.college:
@@ -64,9 +72,9 @@ def submission_admin_view(request):
     else:
         submissions = submissions.order_by('-created_at')
 
-    # Filter Options
+    # Filter Options - optimize with only()
     all_statuses = [status[1] for status in Submission.SUBMISSION_STATUS_CHOICES]
-    all_forms = Downloadable.objects.filter(is_submission_template=True)
+    all_forms = Downloadable.objects.filter(is_submission_template=True).only('id', 'file')
 
     # Pagination
     paginator = Paginator(submissions, 20)
@@ -96,8 +104,12 @@ def add_submission_requirement(request, project_id=None):
     from shared.projects.models import ProjectEvent
     import json
     
-    projects = Project.objects.exclude(status__in=['CANCELLED', 'COMPLETED'])
-    downloadables = Downloadable.objects.filter(is_submission_template=True)
+    # Optimize queries
+    projects = Project.objects.exclude(status__in=['CANCELLED', 'COMPLETED']).select_related(
+        'project_leader',
+        'project_leader__college'
+    ).only('id', 'title', 'start_date', 'estimated_events', 'project_leader')
+    downloadables = Downloadable.objects.filter(is_submission_template=True).only('id', 'file', 'submission_type')
     
     # Pre-selected project if coming from project page
     preselected_project = None

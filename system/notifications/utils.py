@@ -2,12 +2,14 @@
 Utility functions for creating notifications based on log entries
 """
 from django.utils import timezone
+from django.core.cache import cache
 from .models import Notification
 
 
 def create_notifications_from_log(log_entry):
     """
     Create notifications for relevant users based on a log entry
+    Uses bulk_create for better performance when creating multiple notifications
     """
     if not log_entry.is_notification:
         return
@@ -19,14 +21,9 @@ def create_notifications_from_log(log_entry):
     # Determine recipients based on model type and action
     recipients = get_notification_recipients(log_entry)
     
-    # Create notifications for each recipient
-    notifications = []
-    for recipient in recipients:
-        # Don't notify the actor about their own action
-        if recipient == log_entry.user:
-            continue
-            
-        notification = Notification.objects.create(
+    # Prepare notifications for bulk creation (skip actor)
+    notifications_to_create = [
+        Notification(
             recipient=recipient,
             actor=log_entry.user,
             action=log_entry.action,
@@ -36,9 +33,25 @@ def create_notifications_from_log(log_entry):
             details=log_entry.details,
             url=log_entry.url,
         )
-        notifications.append(notification)
+        for recipient in recipients
+        if recipient != log_entry.user  # Don't notify the actor about their own action
+    ]
     
-    return notifications
+    # Bulk create all notifications at once (much faster for multiple recipients)
+    if notifications_to_create:
+        created_notifications = Notification.objects.bulk_create(
+            notifications_to_create, 
+            batch_size=100
+        )
+        
+        # Invalidate cache for all recipients so they see updated counts
+        cache_keys = [f'unread_notif_count_{notif.recipient_id}' for notif in notifications_to_create]
+        for cache_key in cache_keys:
+            cache.delete(cache_key)
+        
+        return created_notifications
+    
+    return []
 
 
 def get_notification_recipients(log_entry):

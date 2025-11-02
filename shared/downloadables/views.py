@@ -28,11 +28,11 @@ def user_downloadable(request):
     query_params = {}
 
     if user.is_authenticated:
-        # Faculty/Client: see all published files except archived
-        qs = Downloadable.objects.filter(status='published')
+        # Faculty/Client: see all published files except archived - optimize with select_related
+        qs = Downloadable.objects.filter(status='published').select_related('uploaded_by')
     else:
         # Non-Users: only see files available for public
-        qs = Downloadable.objects.filter(status='published', available_for_non_users=True)
+        qs = Downloadable.objects.filter(status='published', available_for_non_users=True).select_related('uploaded_by')
         query_params['public'] = 'true'
 
     # Search by
@@ -72,7 +72,8 @@ def user_downloadable(request):
         query_params['public'] = 'false'
 
     querystring = urlencode(query_params)
-    file_types = Downloadable.objects.values_list('file_type', flat=True).distinct()
+    # Optimize file_types query - use only published files for filter dropdown
+    file_types = Downloadable.objects.filter(status='published').values_list('file_type', flat=True).distinct()
 
     paginator = Paginator(qs, 2)
     page_number = request.GET.get('page', 1)
@@ -114,7 +115,8 @@ def user_downloadable(request):
 @role_required(allowed_roles=["PROGRAM_HEAD", "DEAN", "COORDINATOR"], require_confirmed=True)
 def superuser_downloadable(request):
     query_params = {}
-    qs = Downloadable.objects.filter(status='published')
+    # Optimize with select_related
+    qs = Downloadable.objects.filter(status='published').select_related('uploaded_by')
 
     # Search
     search = request.GET.get('search', '').strip()
@@ -188,7 +190,8 @@ def superuser_downloadable(request):
 @role_required(allowed_roles=["UESO", "DIRECTOR", "VP"], require_confirmed=True)
 def admin_downloadable(request):
     query_params = {}
-    qs = Downloadable.objects.all().order_by('-id')
+    # Optimize with select_related
+    qs = Downloadable.objects.select_related('uploaded_by').all().order_by('-id')
 
     # Search
     search = request.GET.get('search', '').strip()
@@ -235,9 +238,10 @@ def admin_downloadable(request):
         
     querystring = urlencode(query_params)
 
-    file_types = Downloadable.objects.values_list('file_type', flat=True).distinct()
+    # Optimize file_types query - get all file types for admin filter dropdown
+    file_types = Downloadable.objects.values_list('file_type', flat=True).distinct().order_by('file_type')
 
-    paginator = Paginator(qs, 5)
+    paginator = Paginator(qs, 4)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
 

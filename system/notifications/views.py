@@ -46,8 +46,14 @@ def notification_list(request):
     paginator = Paginator(notifications, 20)  # 20 notifications per page
     page_obj = paginator.get_page(page_number)
     
-    # Count unread notifications
-    unread_count = Notification.objects.filter(recipient=request.user, is_read=False).count()
+    # Count unread notifications (use cache)
+    from django.core.cache import cache
+    cache_key = f'unread_notif_count_{request.user.id}'
+    unread_count = cache.get(cache_key)
+    
+    if unread_count is None:
+        unread_count = Notification.objects.filter(recipient=request.user, is_read=False).count()
+        cache.set(cache_key, unread_count, 300)
 
     context = {
         'base_template': base_template,
@@ -84,6 +90,7 @@ def mark_as_read(request, notification_id):
 def mark_all_as_read(request):
     """Mark all notifications as read for the current user"""
     from django.utils import timezone
+    from django.core.cache import cache
     now = timezone.now()
     
     # Update all unread notifications in a single query
@@ -95,6 +102,10 @@ def mark_all_as_read(request):
         read_at=now
     )
     
+    # Invalidate cache so user sees updated count immediately
+    cache_key = f'unread_notif_count_{request.user.id}'
+    cache.delete(cache_key)
+    
     return JsonResponse({
         'success': True,
         'message': f'{updated_count} notifications marked as read'
@@ -104,7 +115,16 @@ def mark_all_as_read(request):
 @login_required
 def get_unread_count(request):
     """Get count of unread notifications (for AJAX requests)"""
-    count = Notification.objects.filter(recipient=request.user, is_read=False).count()
+    from django.core.cache import cache
+    
+    # Try cache first
+    cache_key = f'unread_notif_count_{request.user.id}'
+    count = cache.get(cache_key)
+    
+    if count is None:
+        # Cache miss - query database
+        count = Notification.objects.filter(recipient=request.user, is_read=False).count()
+        cache.set(cache_key, count, 300)  # Cache for 5 minutes
     
     return JsonResponse({
         'count': count
@@ -114,6 +134,8 @@ def get_unread_count(request):
 @login_required
 def get_recent_notifications(request):
     """Get recent notifications (for dropdown/badge)"""
+    from django.core.cache import cache
+    
     limit = int(request.GET.get('limit', 5))
     
     notifications = Notification.objects.filter(
@@ -131,7 +153,13 @@ def get_recent_notifications(request):
             'actor': notif.actor.get_full_name() if notif.actor else 'System',
         })
     
-    unread_count = Notification.objects.filter(recipient=request.user, is_read=False).count()
+    # Use cached count
+    cache_key = f'unread_notif_count_{request.user.id}'
+    unread_count = cache.get(cache_key)
+    
+    if unread_count is None:
+        unread_count = Notification.objects.filter(recipient=request.user, is_read=False).count()
+        cache.set(cache_key, unread_count, 300)
     
     return JsonResponse({
         'notifications': data,

@@ -23,7 +23,8 @@ def get_templates(request):
 @role_required(allowed_roles=["DIRECTOR", "VP", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD", "FACULTY", "IMPLEMENTER"], require_confirmed=True)
 def calendar_view(request):
     base_template = get_templates(request)
-    users = User.objects.exclude(role='CLIENT')
+    # Optimize users query - only need id, name, college for dropdown
+    users = User.objects.exclude(role='CLIENT').select_related('college').only('id', 'given_name', 'last_name', 'college')
     initial_date = request.GET.get('date', None)
     events_by_date = services.get_events_by_date(request.user, for_main_calendar_view=True)
     events_json = json.dumps(events_by_date)

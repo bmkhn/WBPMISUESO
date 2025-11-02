@@ -77,10 +77,17 @@ class Notification(models.Model):
         return f"{self.actor} {self.get_action_display()} {self.model}: {self.object_repr}"
     
     def mark_as_read(self):
+        """Mark notification as read and invalidate cache"""
         if not self.is_read:
+            from django.core.cache import cache
+            
             self.is_read = True
             self.read_at = timezone.now()
             self.save(update_fields=['is_read', 'read_at'])
+            
+            # Invalidate cache so user sees updated count immediately
+            cache_key = f'unread_notif_count_{self.recipient_id}'
+            cache.delete(cache_key)
     
     def get_message(self):
         """Generate a human-readable notification message"""
