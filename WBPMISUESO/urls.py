@@ -47,6 +47,8 @@ urlpatterns = [
     path('notifications/', include('system.notifications.urls')),   # Notifications
     path('settings/', include('system.settings.urls')),             # Settings
     path('', include('system.users.urls')),                         # Users
+
+    path('api/calendar/', include('shared.event_calendar.api_urls')),
 ] 
 
 if settings.DEBUG:

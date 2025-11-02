@@ -22,5 +22,5 @@ urlpatterns = [
     
     path('export/', views.export_analytics_to_excel, name='export_analytics_data'),
 
-    path('api/public-projects/', api_views.get_public_projects, name='api_get_public_projects'), # Add this
+    path('api/all-project-data/', api_views.get_all_project_data, name='api_get_all_project_data'),
 ]

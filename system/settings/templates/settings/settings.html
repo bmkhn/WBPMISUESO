@@ -1,18 +1,427 @@
 {% extends base_template %}
 {% load static %}
+{% load humanize %}
 
 {% block title %}System Settings{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
+<!-- 
+  This link is REQUIRED for all the icons (fas fa-school, etc.)
+  in the file to appear.
+-->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
-    <h1 class="h3 mb-4 text-gray-800">Settings</h1>
+<!-- 
+  EMBEDDED STYLES:
+  Includes the harmonious accordion style, now powered by custom JS.
+-->
+<style>
+/* --- 1. Global & Page Layout --- */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+body {
+    background: #f8f8f8 !important; 
+    font-family: 'Inter', sans-serif !important;
+}
+
+.main-container {
+    margin: 2rem 4rem 4rem 4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem; 
+}
+
+.project-text {
+    color: #000;
+    font-family: 'Inter', Arial, sans-serif;
+    margin: 0 0 1rem 0;
+    font-size: 1.85rem;
+    font-weight: 700;
+}
+
+/* Base paragraph style */
+p {
+    color: #555;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+/* Paragraphs inside accordion content */
+.accordion-content > p {
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+
+/* --- 2. Modern Card Styling (with Soft Shadows) --- */
+.card {
+    background: #FFFFFF;
+    border: 1px solid #EAEAEA; /* Subtle border */
+    border-radius: 8px; /* Rounded corners */
+    /* Soft, professional shadow */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    margin-bottom: 1.5rem; 
+    transition: box-shadow 0.2s ease-in-out;
+}
+
+.card:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.07);
+}
+
+.card-header {
+    background-color: #FFFFFF;
+    border-bottom: 1px solid #EAEAEA;
+    padding: 1rem 1.5rem;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+.card-header h6 {
+    color: #0A6C44 !important; /* Primary Green */
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+/* --- 3. Brand Button Overrides --- */
+.btn {
+    border-radius: 6px;
+    padding: 0.6rem 1.25rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.2s ease-in-out;
+    text-transform: none; 
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+/* This is the new, simpler "Add" button style */
+.btn-primary { 
+    background-color: #0A6C44; border-color: #0A6C44; color: #fff !important; 
+    display: inline-flex;
+    align-items: center;
+}
+.btn-primary:hover { background-color: #085837; border-color: #085837; }
+.btn-primary .fa-plus {
+    margin-right: 0.5rem;
+}
+.btn-primary .fa-save {
+    margin-right: 0.5rem;
+}
+
+/* Warning (Orange/Amber) */
+.btn-warning { background-color: #B65900; border-color: #B65900; color: #fff !important; }
+.btn-warning:hover { background-color: #934800; border-color: #934800; }
+
+/* Danger (Red) */
+.btn-danger { background-color: #DC2626; border-color: #DC2626; color: #fff !important; }
+.btn-danger:hover { background-color: #b01e1e; border-color: #b01e1e; }
+
+/* Secondary (Gray) */
+.btn-secondary { background-color: #f8f9fc; border-color: #e3e6f0; color: #5a5c69 !important; }
+.btn-secondary:hover { background-color: #e3e6f0; border-color: #e3e6f0; color: #3a3b45 !important; }
+
+
+i {
+    margin-right: 6px;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+    text-align: left;
+    color: #333;
+    background-color: #fff;
+    border: none;
+    transition: background-color 0.2s ease-in-out, border-radius 0s ease 0.2s;
+    border-radius: 8px; /* Rounded corners by default */
+}
+/* Wrapper for the text content in the header */
+.section-header-content {
+    pointer-events: none;
+}
+
+/* This is the clickable header button */
+.accordion-toggle {
+    cursor: pointer;
+}
+.accordion-toggle:hover {
+    background-color: #fcfcfc; /* Very light hover */
+    text-decoration: none;
+}
+.accordion-toggle:focus { 
+    text-decoration: none; 
+    box-shadow: none;
+    background-color: #f8f9fa;
+}
+
+/* This is the non-clickable header for API section */
+.section-header.non-collapsible {
+    border-radius: 8px 8px 0 0; /* Match active toggle */
+    background-color: #f8f9fa; /* Match active bg */
+}
+.section-header.non-collapsible .accordion-title {
+    color: #0A6C44; /* Match active title */
+}
+
+/* Title inside the button */
+.accordion-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #222;
+    margin: 0;
+    pointer-events: none; /* Make text non-clickable */
+}
+/* Description text inside the button */
+.accordion-desc {
+    font-size: 0.85rem;
+    color: #666;
+    margin-top: 0.25rem;
+    font-weight: 400;
+    pointer-events: none; /* Make text non-clickable */
+    padding: 0;
+    line-height: 1.4;
+}
+/* FIX: Style for the new intro paragraph */
+.accordion-intro {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: #555;
+    margin-top: 0.75rem; /* Add some space */
+    margin-bottom: 0; /* Remove default p margin */
+    pointer-events: none;
+}
+
+
+/* Custom Chevron Icon */
+.accordion-chevron {
+    font-size: 1rem;
+    color: #0A6C44; /* Primary Green */
+    transition: transform 0.25s ease-in-out;
+    pointer-events: none; /* Make text non-clickable */
+    margin-left: 1rem; /* Add space between text and icon */
+}
+
+/* STYLING FOR THE "ACTIVE" (OPEN) STATE */
+.accordion-toggle.active {
+    background-color: #f8f9fa;
+    /* Lose bottom corners when open */
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    /* transition delay to 0s */
+    transition-delay: 0s;
+}
+.accordion-toggle.active .accordion-chevron {
+    transform: rotate(-180deg);
+}
+.accordion-toggle.active .accordion-title {
+    color: #0A6C44;
+}
+
+
+/* Accordion Content Area (this is the part that hides/shows) */
+.accordion-content {
+    background-color: #fff;
+    border-top: 1px solid #EAEAEA;
+    padding: 1.5rem;
+    /* Need to add bottom rounded corners */
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+/* Wrapper for "Add" button to push to the right */
+.card-body .table-controls,
+.accordion-content .table-controls {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 1.5rem;
+}
+
+/* --- 6. Table Styles (FORMAL STYLE) --- */
+.table-responsive {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    overflow: hidden; /* This is crucial */
+}
+
+.table {
+    border-collapse: collapse;
+    margin-bottom: 0; /* Remove default margin */
+}
+
+.table thead th {
+    background: #f8f9fa; /* Light formal header */
+    border-bottom: 2px solid #dee2e6; /* Stronger header line */
+    border-top: none;
+    font-size: 0.85rem;
+    color: #333; /* Dark text */
+    font-weight: 700;
+    text-transform: uppercase; /* Formal */
+    letter-spacing: 0.5px;
+    padding: 0.85rem 1.5rem; /* Reduced padding */
+    vertical-align: bottom;
+}
+
+.table tbody tr {
+    border-bottom: 1px solid #e9ecef; /* Row separator */
+}
+.table tbody tr:last-child {
+    border-bottom: none;
+}
+.table tbody tr:hover {
+    background-color: transparent;
+    box-shadow: none;
+    transform: none;
+    cursor: default;
+}
+
+.table td,
+.table th {
+    vertical-align: middle !important;
+    padding: 0.85rem 1.5rem; /* Reduced padding */
+    color: #333;
+    font-size: 0.95rem;
+}
+.table td:hover {
+    padding: 0.85rem 1.5rem; /* Stop padding change on hover */
+}
+
+/* Class to right-align action cells */
+.table th.cell-actions,
+.table td.cell-actions {
+    text-align: right;
+    width: 1%; /* Shrink to fit content */
+    white-space: nowrap;
+}
+
+/* Constrain logo size in the table */
+.table .cell-logo { width: 80px; }
+.table .cell-logo img {
+    max-height: 40px; max-width: 60px; width: auto; height: auto;
+    border-radius: 4px; object-fit: contain; background: #f8f8f8;
+    border: 1px solid #eee; padding: 2px;
+}
+.table .cell-no-logo {
+    color: #999; font-style: italic; font-size: 0.85rem;
+}
+
+/* --- 7. Action Button Outline Styles --- */
+.table .btn {
+    background: transparent !important;
+    border: 1px solid;
+    box-shadow: none;
+    padding: 0.35rem 0.6rem;
+    font-size: 0.8rem;
+}
+.table .btn:hover {
+    background: #f8f8f8 !important;
+    transform: none;
+    box-shadow: none;
+}
+
+.table .btn-outline-warning {
+    color: #B65900 !important;
+    border-color: #B65900;
+}
+.table .btn-outline-warning:hover {
+    color: #934800 !important;
+    border-color: #934800;
+}
+
+.table .btn-outline-danger {
+    color: #DC2626 !important;
+    border-color: #DC2626;
+}
+.table .btn-outline-danger:hover {
+    color: #b01e1e !important;
+    border-color: #b01e1e;
+}
+
+
+/* --- 8. API & General Settings Forms --- */
+.form-group label,
+.form-group .form-label {
+    font-weight: 600; color: #333;
+    font-size: 0.9rem; margin-bottom: 0.5rem;
+    margin-right: 6px;
+}
+.form-control {
+    border-radius: 6px; padding: 0.6rem 1rem;
+    height: auto; font-size: 0.95rem;
+    border: 1px solid #ced4da;
+}
+.form-control:focus {
+    border-color: #0A6C44;
+    box-shadow: 0 0 0 0.2rem rgba(10, 108, 68, 0.25);
+}
+
+/* Horizontal form row for General Settings */
+.form-row-label {
+    font-weight: 600;
+    color: #333;
+    font-size: 0.95rem;
+}
+.form-row-desc {
+    font-size: 0.85rem;
+    color: #666;
+    font-weight: 400;
+}
+
+@media (min-width: 768px) {
+    .api-password-form { display: flex; align-items: center; }
+    .api-password-form .form-group {
+        flex-grow: 1; margin-bottom: 0; margin-right: 1rem;
+    }
+    .api-password-form .btn-primary {
+        width: auto; flex-shrink: 0;
+        padding-top: 0.6rem; padding-bottom: 0.6rem;
+    }
+}
+
+/* --- 9. Danger Zone (Right Column) --- */
+#danger-zone {
+    border: 1px solid #fde8e8;
+    border-left: 4px solid #DC2626;
+    box-shadow: none;
+}
+#danger-zone .card-header { background-color: #fef2f2; }
+#danger-zone .card-header h6 { color: #DC2626 !important; }
+
+/* --- 10. Alert Messages --- */
+.alert {
+    border-radius: 6px; font-weight: 500; border: none;
+    padding: 1rem 1.25rem;
+}
+.alert-success { background-color: #E6F4EA; color: #0A6C44; }
+.alert-danger { background-color: #fef2f2; color: #DC2626; }
+.alert-warning { background-color: #fffbeb; color: #B65900; }
+.alert .close {
+    font-size: 1.5rem; color: inherit; opacity: 0.7;
+    text-shadow: none; font-weight: 700;
+}
+.alert .close:hover { opacity: 1; }
+
+</style>
+<!-- END OF EMBEDDED STYLES -->
+
+
+<div class="main-container">
+
+    <h1 class="project-text">System Settings</h1>
 
     {% if messages %}
         {% for message in messages %}
-            <div classclass="alert {% if message.tags == 'error' %}alert-danger{% elif message.tags == 'warning' %}alert-warning{% else %}alert-success{% endif %} alert-dismissible fade show" role="alert">
+            <!-- Styled alert messages -->
+            <div class="alert {% if message.tags == 'error' %}alert-danger{% elif message.tags == 'warning' %}alert-warning{% else %}alert-success{% endif %}" role="alert">
                 {{ message|safe }}
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <button type="button" class="close" onclick="this.parentElement.style.display='none'" style="background:none; border:none; float:right; font-size: 1.5rem; line-height: 1; opacity: 0.7;">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
@@ -21,44 +430,13 @@
 
     <div class="row">
 
-        <div class="col-lg-8">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Administrative Settings</h6>
-                </div>
-                <div class="card-body">
-                    <p>Manage core components and configurations for the entire system. (Admin access required).</p>
-                    <div class="list-group">
-                        <a href="{% url 'system_settings:manage_colleges' %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                            <span><i class="fas fa-school fa-fw mr-2"></i>Manage Colleges</span>
-                            <i class="fas fa-chevron-right"></i>
-                        </a>
-                        
-                        <a href="{% url 'system_settings:manage_campus' %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                            <span><i class="fas fa-building fa-fw mr-2"></i>Manage Campuses</span>
-                            <i class="fas fa-chevron-right"></i>
-                        </a>
-                        <a href="{% url 'system_settings:manage_sdgs' %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                            <span><i class="fas fa-leaf fa-fw mr-2"></i>Manage SDGs</span>
-                            <i class="fas fa-chevron-right"></i>
-                        </a>
-                        <a href="{% url 'system_settings:manage_system_settings' %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                            <span><i class="fas fa-cog fa-fw mr-2"></i>General System Settings</span>
-                            <i class="fas fa-chevron-right"></i>
-                        </a>
-                        <a href="{% url 'system_settings:manage_api_keys' %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                            <span><i class="fas fa-key fa-fw mr-2"></i>Manage API Keys</span>
-                            <i class="fas fa-chevron-right"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
+        <!-- Right Column: Account & Danger Zone -->
         <div class="col-lg-4">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Account Settings</h6>
+
+            <!-- 1. Account Settings -->
+            <div class="card" id="account-settings">
+                <div class="card-header">
+                    <h6 class="m-0">Account Settings</h6>
                 </div>
                 <div class="card-body">
                     <p>Manage your personal account details and security.</p>
@@ -66,17 +444,372 @@
                 </div>
             </div>
 
-            <div class="card shadow mb-4 border-left-danger">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-danger">Danger Zone</h6>
+        </div>
+
+        <!-- Left Column: Main Settings -->
+        <div class="col-lg-8">
+
+            <!-- 2. API Key Management (Password Protected) -->
+            <div class="card" id="api-settings">
+                <!-- FIX: This is the non-collapsible header -->
+                <div class="section-header non-collapsible">
+                    <div class="section-header-content">
+                        <h5 class="accordion-title mb-0">
+                            <i class="fas fa-key fa-fw mr-2"></i>
+                            API Key Management
+                        </h5>
+                        <p class="accordion-desc">Manage API keys for external system integrations.</p>
+                        <!-- FIX: Intro text is here, visible by default -->
+                        {% if not api_unlocked %}
+                        <p class="accordion-intro">This section is restricted. Please enter your administrator password to manage API keys.</p>
+                        {% endif %}
+                    </div>
+                    <!-- No chevron, as it's not collapsible -->
+                </div>
+                <!-- FIX: Content is always visible -->
+                <div class="accordion-content" style="border-top: 1px solid #EAEAEA;">
+                    {% if api_unlocked %}
+                        <div class="table-controls" style="margin-bottom: 0.5rem; margin-top: 1rem;">
+                            <a href="{% url 'system_settings:add_api_key' %}" class="btn btn-primary">
+                                <i class="fas fa-plus"></i>Generate New API Key
+                            </a>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table" width="100%" cellspacing="0">
+                                <thead>
+                                    <tr>
+                                        <th>System Name</th>
+                                        <th>Key Prefix</th>
+                                        <th>Created</th>
+                                        <th>Status</th>
+                                        <th class="cell-actions">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for key in keys %}
+                                    <tr {% if key.revoked %}class="table-danger-row"{% endif %}>
+                                        <td>{{ key.name }}</td>
+                                        <td><code>{{ key.prefix }}...</code></td>
+                                        <td>{{ key.created|naturaltime }}</td>
+                                        <td>
+                                            {% if key.revoked %}
+                                                <span class="badge badge-danger">REVOKED</span>
+                                            {% else %}
+                                                <span class="badge badge-success">ACTIVE</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="cell-actions">
+                                            {% if not key.revoked %}
+                                            <a href="{% url 'system_settings:revoke_api_key' key.pk %}" class="btn btn-outline-danger btn-sm" title="Revoke">
+                                                <i class="fas fa-ban"></i>
+                                            </a>
+                                            {% else %}
+                                            <span class="text-muted">--</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="text-center">No API keys have been generated yet.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                    {% else %}
+                        <!-- Password Form -->
+                        <form method="POST" action="{% url 'system_settings:settings' %}" class="api-password-form">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label for="api_password" class="form-label">Your Password</label>
+                                <input type="password" name="api_password" class="form-control" id="api_password" required>
+                            </div>
+                            <button type="submit" name="unlock_api" class="btn btn-primary">Unlock API Section</button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- 3. Manage Colleges -->
+            <div class="card">
+                <!-- FIX: This is now a clickable DIV -->
+                <div class="section-header accordion-toggle">
+                    <div class="section-header-content">
+                        <h5 class="accordion-title mb-0">
+                            <i class="fas fa-school fa-fw mr-2"></i>
+                            Manage Colleges
+                        </h5>
+                        <p class="accordion-desc">Add, edit, or remove university colleges and their details.</p>
+                        <!-- FIX: Intro text moved here -->
+                        <p class="accordion-intro">This section lists all colleges and units recognized by the system. You can add, edit, or delete entries for institutions like the College of Sciences, College of Arts and Humanities, or satellite campuses.</p>
+                    </div>
+                    <i class="accordion-chevron fas fa-chevron-down"></i>
+                </div>
+                <!-- FIX: This content is hidden by default -->
+                <div class="accordion-content" style="display: none;">
+                    <div class="table-controls">
+                        <a href="{% url 'system_settings:add_college' %}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i>Add New College
+                        </a>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Logo</th>
+                                    <th>Name</th>
+                                    <th>Campus</th>
+                                    <th class="cell-actions">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for college in colleges %}
+                                <tr>
+                                    <td class="cell-logo">
+                                        {% if college.logo %}
+                                            <img src="{{ college.logo.url }}" alt="{{ college.name }} logo">
+                                        {% else %}
+                                            <span class="cell-no-logo">No Logo</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ college.name }}</td>
+                                    <td>{{ college.get_campus_display }}</td>
+                                    <td class="cell-actions">
+                                        <a href="{% url 'system_settings:edit_college' college.pk %}" class="btn btn-outline-warning btn-sm" title="Edit">
+                                            <i class="fas fa-pen"></i>
+                                        </a>
+                                        <a href="{% url 'system_settings:delete_college' college.pk %}" class="btn btn-outline-danger btn-sm" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center">No colleges found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Manage Campuses -->
+            <div class="card">
+                <!-- FIX: This is now a clickable DIV -->
+                <div class="section-header accordion-toggle">
+                    <div class="section-header-content">
+                        <h5 class="accordion-title mb-0">
+                            <i class="fas fa-building fa-fw mr-2"></i>
+                            Manage Campuses
+                        </h5>
+                        <p class="accordion-desc">Define the different university campuses.</p>
+                        <!-- FIX: Intro text moved here -->
+                        <p class="accordion-intro">Manage the different university campuses (e.g., Main, {ADD CAMPUS NAME}). Each college or unit created must be associated with one of these campuses.</p>
+                    </div>
+                    <i class="accordion-chevron fas fa-chevron-down"></i>
+                </div>
+                <!-- FIX: This content is hidden by default -->
+                <div class="accordion-content" style="display: none;">
+                    <div class="table-controls">
+                        <a href="{% url 'system_settings:add_campus' %}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i>Add New Campus
+                        </a>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th class="cell-actions">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for campus in campuses %}
+                                <tr>
+                                    <td>{{ campus.name }}</td>
+                                    <td class="cell-actions">
+                                        <a href="{% url 'system_settings:edit_campus' campus.pk %}" class="btn btn-outline-warning btn-sm" title="Edit">
+                                            <i class="fas fa-pen"></i>
+                                        </a>
+                                        <a href="{% url 'system_settings:delete_campus' campus.pk %}" class="btn btn-outline-danger btn-sm" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="2" class="text-center">No campuses found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Manage SDGs -->
+            <div class="card">
+                <!-- FIX: This is now a clickable DIV -->
+                <div class="section-header accordion-toggle">
+                    <div class="section-header-content">
+                        <h5 class="accordion-title mb-0">
+                            <i class="fas fa-leaf fa-fw mr-2"></i>
+                            Manage SDGs
+                        </h5>
+                        <p class="accordion-desc">Configure the Sustainable Development Goals for project tagging.</p>
+                        <!-- FIX: Intro text moved here -->
+                        <p class="accordion-intro">Configure the 17 Sustainable Development Goals (SDGs) used for tagging projects. The SDGs are a collection of interlinked global goals designed to be a "blueprint to achieve a better and more sustainable future for all".</p>
+                    </div>
+                    <i class="accordion-chevron fas fa-chevron-down"></i>
+                </div>
+                <!-- FIX: This content is hidden by default -->
+                <div class="accordion-content" style="display: none;">
+                    <div class="table-controls">
+                        <a href="{% url 'system_settings:add_sdg' %}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i>Add New SDG
+                        </a>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Goal Number</th>
+                                    <th>Name</th>
+                                    <th class="cell-actions">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sdg in sdgs %}
+                                <tr>
+                                    <td><strong>SDG {{ sdg.goal_number }}</strong></td>
+                                    <td>{{ sdg.name }}</td>
+                                    <td class="cell-actions">
+                                        <a href="{% url 'system_settings:edit_sdg' sdg.pk %}" class="btn btn-outline-warning btn-sm" title="Edit">
+                                            <i class="fas fa-pen"></i>
+                                        </a>
+                                        <a href="{% url 'system_settings:delete_sdg' sdg.pk %}" class="btn btn-outline-danger btn-sm" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center">No SDGs found.</td>
+                                </tr>
+                                {% endfor %}
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. General System Settings -->
+            <div class="card">
+                <!-- FIX: This is now a clickable DIV -->
+                <div class="section-header accordion-toggle">
+                    <div class="section-header-content">
+                        <h5 class="accordion-title mb-0">
+                            <i class="fas fa-cog fa-fw mr-2"></i>
+                            General System Settings
+                        </h5>
+                        <p class="accordion-desc">Manage site-wide settings like the website name and maintenance mode.</p>
+                        <!-- FIX: Intro text moved here -->
+                        <p class="accordion-intro">Manage site-wide variables, such as the public website name and system maintenance mode. These settings control key parts of the application.</p>
+                    </div>
+                    <i class="accordion-chevron fas fa-chevron-down"></i>
+                </div>
+                <!-- FIX: This content is hidden by default -->
+                <div class="accordion-content" style="display: none;">
+                    <form method="POST" action="{% url 'system_settings:settings' %}">
+                        {% csrf_token %}
+                        
+                        {% for setting, form in settings_with_forms %}
+                        <div class="form-group row mb-3">
+                            <div class="col-sm-4">
+                                <label for="{{ form.value.id_for_label }}" class="form-row-label">
+                                    {{ setting.description }}
+                                </label>
+                                <div class="form-row-desc">
+                                    (<code>{{ setting.key }}</code>)
+                                </div>
+                            </div>
+                            <div class="col-sm-8">
+                                <input type="text" class="form-control" name="{{ form.prefix }}-value" id="{{ form.value.id_for_label }}" value="{{ form.value.value|default_if_none:'' }}">
+                                
+                                {% if form.value.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.value.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <hr class="my-3">
+                        {% endfor %}
+
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" name="save_general_settings" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save All Settings
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- 5. Danger Zone (MOVED) -->
+            <div class="card" id="danger-zone">
+                <div class="card-header">
+                    <h6 class="m-0 text-danger">Danger Zone</h6>
                 </div>
                 <div class="card-body">
                     <p>Be careful. These actions are permanent and cannot be undone.</p>
                     <a href="{% url 'system_settings:delete_account' %}" class="btn btn-danger btn-block">Delete My Account</a>
                 </div>
             </div>
+
         </div>
 
     </div>
 </div>
+
+<!-- 
+  FIX 2 (Functionality): 
+  NEW VANILLA JAVASCRIPT for accordion.
+-->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Find all accordion toggle buttons
+    const toggles = document.querySelectorAll('.accordion-toggle');
+
+    toggles.forEach(function(toggle) {
+        // We are clicking the header div now, not a button inside it
+        toggle.addEventListener('click', function() {
+            // Get the content panel that is the *next* element
+            const content = this.nextElementSibling;
+            
+            // Ensure the next element is an accordion-content panel
+            if (content && content.classList.contains('accordion-content')) {
+                // Check if the content is currently shown
+                const isShown = content.style.display === 'block';
+
+                // Toggle the 'active' class on the button
+                this.classList.toggle('active', !isShown);
+
+                // Toggle the display of the content
+                if (isShown) {
+                    content.style.display = 'none';
+                } else {
+                    content.style.display = 'block';
+                }
+            }
+        });
+    });
+});
+</script>
+
 {% endblock %}
+

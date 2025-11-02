@@ -70,6 +70,7 @@ INSTALLED_APPS = [
     'system.scheduler',         # Centralized Scheduler
     'rest_framework',           # Django REST Framework
     'rest_framework_api_key',
+    'rest_framework.authtoken',
 ]
 
 MIDDLEWARE = [
@@ -80,10 +81,18 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    # Custom middleware for enhanced session security
     'system.users.middleware.SessionSecurityMiddleware',
     'system.users.middleware.RoleBasedSessionMiddleware',
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ]
+}
 
 ROOT_URLCONF = 'WBPMISUESO.urls'
 

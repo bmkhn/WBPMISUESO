@@ -117,13 +117,13 @@ def project_trends_api(request):
     data = services.get_project_trends(start_date, end_date)
     return JsonResponse(data)
 
-# internal/analytics/api_views.py
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_api_key.permissions import HasAPIKey
 
 from shared.projects.models import Project 
+from .serializers import ProjectReadOnlySerializer  # <-- ADD THIS IMPORT
 
 @api_view(['GET'])
 @permission_classes([HasAPIKey]) 
@@ -147,6 +147,37 @@ def get_public_projects(request):
         ]
         
         return Response(data, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+#
+# ----------------- ADD THE NEW VIEW BELOW -----------------
+#
+
+@api_view(['GET'])
+@permission_classes([HasAPIKey]) 
+def get_all_project_data(request):
+    """
+    A read-only API endpoint that returns ALL data for all projects,
+    including nested events, documents, and evaluations.
+    """
+    try:
+        # Get all projects, prefetching related data for efficiency
+        projects = Project.objects.prefetch_related(
+            'documents', 
+            'events', 
+            'evaluations', 
+            'project_leader', 
+            'providers', 
+            'agenda', 
+            'sdgs'
+        ).all()
+
+        # Use the new serializer to package all data
+        serializer = ProjectReadOnlySerializer(projects, many=True)
+        
+        return Response(serializer.data, status=status.HTTP_200_OK)
         
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
