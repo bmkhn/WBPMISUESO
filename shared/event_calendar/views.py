@@ -91,3 +91,59 @@ def meeting_event_detail(request, event_id):
             return JsonResponse({"status": "success"})
         except Exception as e:
             return JsonResponse({"status": "error", "errors": str(e)}, status=500)
+        
+# ... keep existing imports (if any)
+from rest_framework import viewsets, permissions
+from rest_framework.authentication import TokenAuthentication # Use Token auth for users
+from django.db.models import Q
+
+from .models import MeetingEvent
+from .serializers import MeetingEventSerializer
+from .permissions import IsEventOwner
+
+class MeetingEventViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows calendar events to be viewed or edited.
+    
+    - Provides full CRUD (POST, GET, PUT, PATCH, DELETE).
+    - Users can see all events they created OR are a participant in.
+    - Users can ONLY edit/delete events they created.
+    """
+    serializer_class = MeetingEventSerializer
+    
+    # Use TokenAuthentication to identify which user is making the request
+    authentication_classes = [TokenAuthentication] 
+    
+    # Users must be authenticated, and can only edit/delete their own events
+    permission_classes = [permissions.IsAuthenticated, IsEventOwner]
+
+    def get_queryset(self):
+        """
+        This view should return a list of all the events
+        for the currently authenticated user.
+        
+        It returns events where the user is EITHER the creator
+        OR one of the participants.
+        """
+        user = self.request.user
+        if user.is_staff:
+            # Admins can see all events
+            return MeetingEvent.objects.all()
+        
+        # Regular users see events they created or are participating in
+        return MeetingEvent.objects.filter(
+            Q(created_by=user) | Q(participants=user)
+        ).distinct()
+
+    def perform_create(self, serializer):
+        """
+        Automatically set the created_by and updated_by user
+        to the user making the request when a new event is created.
+        """
+        serializer.save(created_by=self.request.user, updated_by=self.request.user)
+
+    def perform_update(self, serializer):
+        """
+        Automatically set the updated_by user when an event is edited.
+        """
+        serializer.save(updated_by=self.request.user)
