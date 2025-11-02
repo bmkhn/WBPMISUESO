@@ -27,9 +27,11 @@ def request_details_dispatcher(request, pk):
         req.reviewed_by = request.user
         req.review_at = timezone.now()
         req.updated_by = request.user
+        req.updated_at = timezone.now()
         req.save()
 
-    updates_qs = RequestUpdate.objects.filter(user=request.user).order_by('-updated_at')[:10]
+    # Optimize with select_related
+    updates_qs = RequestUpdate.objects.filter(user=request.user).select_related('request').order_by('-updated_at')[:10]
     updates = []
     for update in updates_qs:
         status_text = {
@@ -71,8 +73,8 @@ def request_details_dispatcher(request, pk):
 
 @role_required(allowed_roles=["CLIENT"], require_confirmed=True)
 def request_client_view(request):
-    # Get recent status updates for this user's requests
-    updates_qs = RequestUpdate.objects.filter(user=request.user).order_by('-updated_at')[:10]
+    # Get recent status updates for this user's requests - optimize with select_related
+    updates_qs = RequestUpdate.objects.filter(user=request.user).select_related('request').order_by('-updated_at')[:10]
     updates = []
     for update in updates_qs:
         # Build message text
@@ -93,7 +95,12 @@ def request_client_view(request):
         })
 
     from urllib.parse import urlencode
-    requests = ClientRequest.objects.filter(submitted_by=request.user)
+    # Optimize with select_related
+    requests = ClientRequest.objects.filter(submitted_by=request.user).select_related(
+        'submitted_by',
+        'reviewed_by',
+        'endorsed_by'
+    )
     query_params = {}
 
     # Filters
@@ -207,7 +214,12 @@ def submit_request(request):
 @role_required(allowed_roles=["UESO", "VP", "DIRECTOR"], require_confirmed=True)
 def request_admin_view(request):
     from urllib.parse import urlencode
-    requests = ClientRequest.objects.all()
+    # Optimize with select_related
+    requests = ClientRequest.objects.select_related(
+        'submitted_by',
+        'reviewed_by',
+        'endorsed_by'
+    ).all()
     query_params = {}
 
     # Filters
@@ -289,7 +301,8 @@ def request_admin_view(request):
 
 @role_required(allowed_roles=["UESO", "VP", "DIRECTOR"], require_confirmed=True)
 def admin_request_action(request, pk):
-    req = get_object_or_404(ClientRequest, pk=pk)
+    # Optimize with select_related
+    req = get_object_or_404(ClientRequest.objects.select_related('submitted_by', 'reviewed_by', 'endorsed_by'), pk=pk)
     from django.utils import timezone
     if request.method == 'POST':
         action = request.POST.get('action')
@@ -349,11 +362,13 @@ def admin_request_action(request, pk):
 
 @role_required(allowed_roles=["UESO", "VP", "DIRECTOR"], require_confirmed=True)
 def admin_request_details_entry(request, pk):
-    req = get_object_or_404(ClientRequest, pk=pk)
+    # Optimize with select_related
+    req = get_object_or_404(ClientRequest.objects.select_related('submitted_by', 'reviewed_by'), pk=pk)
     if req.status == 'RECEIVED':
         req.status = 'UNDER_REVIEW'
         req.reviewed_by = request.user
         req.review_at = timezone.now()
         req.updated_by = request.user
+        req.updated_at = timezone.now()
         req.save()
     return redirect('request_details_dispatcher', pk=pk)

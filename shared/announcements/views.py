@@ -31,7 +31,8 @@ def announcement_dispatch_view(request):
 # Announcement Details Dispatch View
 def announcement_details_dispatch_view(request, id):
     user = request.user
-    announcement = get_object_or_404(Announcement, id=id)
+    # Optimize with select_related
+    announcement = get_object_or_404(Announcement.objects.select_related('published_by', 'edited_by'), id=id)
     if not user.is_authenticated:
         return render(request, 'announcements/user_announcement_details.html', {'announcement': announcement})
     admin_roles = {"VP", "DIRECTOR", "UESO"}
@@ -58,7 +59,11 @@ def user_announcement_view(request):
     if not sort_order:
         sort_order = 'desc'
 
-    announcements_qs = Announcement.objects.filter(published_at__isnull=False, archived=False)
+    # Optimize with select_related
+    announcements_qs = Announcement.objects.filter(
+        published_at__isnull=False, 
+        archived=False
+    ).select_related('published_by')
 
     if search_query:
         announcements_qs = announcements_qs.filter(
@@ -138,7 +143,11 @@ def announcement_superuser_view(request):
     if not sort_order:
         sort_order = 'desc'
 
-    announcements_qs = Announcement.objects.filter(published_at__isnull=False, archived=False)
+    # Optimize with select_related
+    announcements_qs = Announcement.objects.filter(
+        published_at__isnull=False, 
+        archived=False
+    ).select_related('published_by')
 
     if search_query:
         announcements_qs = announcements_qs.filter(
@@ -222,7 +231,8 @@ def announcement_admin_view(request):
     date_to = request.GET.get('date_to', '')
     filter_edited = request.GET.get('edited', '')
 
-    announcements_qs = Announcement.objects.all()
+    # Optimize with select_related
+    announcements_qs = Announcement.objects.select_related('published_by', 'edited_by').all()
 
     if search_query:
         announcements_qs = announcements_qs.filter(

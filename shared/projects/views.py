@@ -59,18 +59,29 @@ def project_overview(request, pk):
     user_role = getattr(request.user, 'role', None) if request.user.is_authenticated else None
     if user_role in ["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
         base_template = "base_internal.html"
-        # Authenticated users with roles can see all projects
-        project = get_object_or_404(Project, pk=pk)
+        # Authenticated users with roles can see all projects - optimize with select_related
+        project = get_object_or_404(
+            Project.objects.select_related('project_leader', 'project_leader__college', 'agenda').prefetch_related('providers', 'sdgs'),
+            pk=pk
+        )
     else:
         base_template = "base_public.html"
         # Non-authenticated users or users without admin roles can only see completed projects
         if not request.user.is_authenticated:
-            project = get_object_or_404(Project, pk=pk, status='COMPLETED')
+            project = get_object_or_404(
+                Project.objects.select_related('project_leader', 'project_leader__college', 'agenda').prefetch_related('providers', 'sdgs'),
+                pk=pk,
+                status='COMPLETED'
+            )
         else:
-            project = get_object_or_404(Project, pk=pk)
+            project = get_object_or_404(
+                Project.objects.select_related('project_leader', 'project_leader__college', 'agenda').prefetch_related('providers', 'sdgs'),
+                pk=pk
+            )
 
-    all_sdgs = SustainableDevelopmentGoal.objects.all()
-    agendas = Agenda.objects.all()
+    # Optimize filter options queries
+    all_sdgs = SustainableDevelopmentGoal.objects.only('goal_number', 'name').all()
+    agendas = Agenda.objects.only('id', 'name').all()
 
     if request.method == 'POST' and user_role in ADMIN_ROLES and not project.has_final_submission:
         # Update project fields from form (only if project doesn't have final submission approved)
@@ -116,17 +127,28 @@ def project_providers(request, pk):
     
     if user_role in ["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
         base_template = "base_internal.html"
-        # Authenticated users with roles can see all projects
-        project = get_object_or_404(Project, pk=pk)
+        # Authenticated users with roles can see all projects - optimize with select_related
+        project = get_object_or_404(
+            Project.objects.select_related('project_leader').prefetch_related('providers'),
+            pk=pk
+        )
     else:
         base_template = "base_public.html"
         # Non-authenticated users or users without admin roles can only see completed projects
         if not request.user.is_authenticated:
-            project = get_object_or_404(Project, pk=pk, status='COMPLETED')
+            project = get_object_or_404(
+                Project.objects.select_related('project_leader').prefetch_related('providers'),
+                pk=pk,
+                status='COMPLETED'
+            )
         else:
-            project = get_object_or_404(Project, pk=pk)
+            project = get_object_or_404(
+                Project.objects.select_related('project_leader').prefetch_related('providers'),
+                pk=pk
+            )
     
-    providers_qs = project.providers.all()
+    # Providers already prefetched
+    providers_qs = project.providers.select_related('college').all()
 
     # Handle add provider POST (only if project doesn't have final submission approved)
     if request.method == 'POST' and user_role in ADMIN_ROLES and not project.has_final_submission:
@@ -158,9 +180,10 @@ def project_providers(request, pk):
     exclude_ids = list(providers_qs.values_list('id', flat=True))
     if hasattr(project, 'leader') and project.leader:
         exclude_ids.append(project.leader.id)
+    # Optimize candidates query
     provider_candidates = User.objects.filter(
         is_confirmed=True
-    ).exclude(role=User.Role.CLIENT).exclude(id__in=exclude_ids)
+    ).exclude(role=User.Role.CLIENT).exclude(id__in=exclude_ids).select_related('college').only('id', 'given_name', 'last_name', 'college')
 
     # Pagination
     paginator = Paginator(providers_qs, 3)
@@ -202,27 +225,38 @@ def project_events(request, pk):
     
     if user_role in ["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
         base_template = "base_internal.html"
-        # Authenticated users with roles can see all projects
-        project = get_object_or_404(Project, pk=pk)
+        # Authenticated users with roles can see all projects - optimize with prefetch
+        project = get_object_or_404(
+            Project.objects.select_related('project_leader', 'agenda').prefetch_related('events'),
+            pk=pk
+        )
     else:
         base_template = "base_public.html"
         # Non-authenticated users or users without admin roles can only see completed projects
         if not request.user.is_authenticated:
-            project = get_object_or_404(Project, pk=pk, status='COMPLETED')
+            project = get_object_or_404(
+                Project.objects.select_related('project_leader', 'agenda').prefetch_related('events'),
+                pk=pk,
+                status='COMPLETED'
+            )
         else:
-            project = get_object_or_404(Project, pk=pk)
+            project = get_object_or_404(
+                Project.objects.select_related('project_leader', 'agenda').prefetch_related('events'),
+                pk=pk
+            )
 
     # Order events: those with datetime=None at the bottom
     from django.db.models import F, Value, BooleanField, ExpressionWrapper
     from internal.submissions.models import Submission
     
+    # Events already prefetched, just order them
     events = project.events.annotate(
         has_datetime=ExpressionWrapper(Q(datetime__isnull=False), output_field=BooleanField())
     ).order_by('-has_datetime', 'datetime')
     
-    # Add submission status information to events
+    # Add submission status information to events - optimize with select_related
     for event in events:
-        event.related_submissions = Submission.objects.filter(event=event).first()
+        event.related_submissions = Submission.objects.filter(event=event).select_related('downloadable').first()
     
     total = project.estimated_events
     completed = project.event_progress
@@ -352,16 +386,27 @@ def project_files(request, pk):
     
     if user_role in ["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
         base_template = "base_internal.html"
-        # Authenticated users with roles can see all projects
-        project = get_object_or_404(Project, pk=pk)
+        # Authenticated users with roles can see all projects - optimize with prefetch
+        project = get_object_or_404(
+            Project.objects.select_related('project_leader').prefetch_related('documents'),
+            pk=pk
+        )
     else:
         base_template = "base_public.html"
         # Non-authenticated users or users without admin roles can only see completed projects
         if not request.user.is_authenticated:
-            project = get_object_or_404(Project, pk=pk, status='COMPLETED')
+            project = get_object_or_404(
+                Project.objects.select_related('project_leader').prefetch_related('documents'),
+                pk=pk,
+                status='COMPLETED'
+            )
         else:
-            project = get_object_or_404(Project, pk=pk)
+            project = get_object_or_404(
+                Project.objects.select_related('project_leader').prefetch_related('documents'),
+                pk=pk
+            )
     
+    # Documents already prefetched
     documents = project.documents.all()
     
 
@@ -432,8 +477,12 @@ def project_submissions(request, pk):
     ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE, COORDINATOR_ROLE = get_role_constants()
     from internal.submissions.models import Submission
     from django.utils import timezone
-    # Get all submissions for this project
-    all_submissions = Submission.objects.filter(project__pk=pk)
+    # Get all submissions for this project - optimize with select_related
+    all_submissions = Submission.objects.filter(project__pk=pk).select_related(
+        'downloadable',
+        'event',
+        'reviewed_by'
+    )
     events = ProjectEvent.objects.filter(project__pk=pk).order_by('datetime')
 
     # Mark overdue submissions
@@ -584,7 +633,12 @@ def project_submissions_details(request, pk, submission_id):
     from django.utils import timezone
     ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE, COORDINATOR_ROLE = get_role_constants()
     
-    submission = get_object_or_404(Submission, pk=submission_id, project__pk=pk)
+    # Optimize submission query with select_related
+    submission = get_object_or_404(
+        Submission.objects.select_related('downloadable', 'event', 'project', 'reviewed_by', 'submitted_by'),
+        pk=submission_id,
+        project__pk=pk
+    )
 
     # Mark submission alerts as viewed for faculty users
     if request.user.role in ["FACULTY", "IMPLEMENTER"]:
@@ -609,8 +663,9 @@ def project_submissions_details(request, pk, submission_id):
     else:
         base_template = "base_public.html"
 
-    project = get_object_or_404(Project, pk=pk)
-    events = ProjectEvent.objects.filter(project__pk=pk).order_by('datetime')
+    # Optimize project and events queries
+    project = get_object_or_404(Project.objects.select_related('project_leader', 'agenda'), pk=pk)
+    events = ProjectEvent.objects.filter(project__pk=pk).only('id', 'title', 'datetime', 'status').order_by('datetime')
 
     # Mark submission as overdue if past deadline
     now = timezone.now()
@@ -691,7 +746,12 @@ def project_submissions_details(request, pk, submission_id):
 # ACTIONS
 @role_required(allowed_roles=["UESO", "VP", "DIRECTOR", "COORDINATOR", "FACULTY", "IMPLEMENTER", "DEAN", "PROGRAM_HEAD"], require_confirmed=True)
 def admin_submission_action(request, pk, submission_id):
-    submission = get_object_or_404(Submission, pk=submission_id, project__pk=pk)
+    # Optimize with select_related and prefetch_related
+    submission = get_object_or_404(
+        Submission.objects.select_related('project', 'project__project_leader', 'downloadable', 'reviewed_by').prefetch_related('project__providers'),
+        pk=submission_id,
+        project__pk=pk
+    )
     from django.utils import timezone
     if request.method == 'POST':
         action = request.POST.get('action')
@@ -1069,8 +1129,19 @@ def faculty_project(request):
     search = request.GET.get('search', '')
 
     
+    # Optimize query with select_related and prefetch_related to avoid N+1 queries
     projects = Project.objects.filter(
         models.Q(project_leader=user) | models.Q(providers=user)
+    ).select_related(
+        'project_leader',
+        'project_leader__college',
+        'project_leader__college__campus',
+        'agenda'
+    ).prefetch_related(
+        'providers',
+        'sdgs',
+        'events',
+        'submissions'
     ).distinct()
 
     # Apply filters
@@ -1116,8 +1187,11 @@ def faculty_project(request):
     else:
         page_range = range(current - 2, current + 3)
 
-    # Get recent status updates for this user's projects
-    updates_qs = ProjectUpdate.objects.filter(user=user).order_by('-updated_at')[:10]
+    # Get recent status updates for this user's projects - optimize with select_related
+    updates_qs = ProjectUpdate.objects.filter(user=user).select_related(
+        'project',
+        'submission'
+    ).order_by('-updated_at')[:10]
     alerts = []
     for update in updates_qs:
         # Build message text
@@ -1182,7 +1256,18 @@ def admin_project(request):
     date_to = request.GET.get('date_to', '')
     search = request.GET.get('search', '')
 
-    projects = Project.objects.all()
+    # Optimize query with select_related and prefetch_related to avoid N+1 queries
+    projects = Project.objects.select_related(
+        'project_leader',
+        'project_leader__college',
+        'project_leader__college__campus',
+        'agenda'
+    ).prefetch_related(
+        'providers',
+        'sdgs',
+        'events',
+        'submissions'
+    )
     
     # Filter projects by college for COORDINATOR, DEAN, and PROGRAM_HEAD
     user_role = getattr(request.user, 'role', None)
@@ -1232,12 +1317,12 @@ def admin_project(request):
             sort_field = '-' + sort_field
         projects = projects.order_by(sort_field)
 
-    # Filter options
-    colleges = College.objects.all()
-    campuses = Campus.objects.all()
+    # Filter options - optimize with select_related for colleges, only() for others
+    colleges = College.objects.select_related('campus').all()
+    campuses = Campus.objects.only('id', 'name')
     status_choices = Project.STATUS_CHOICES
-    agendas = Agenda.objects.all()
-    sdgs = SustainableDevelopmentGoal.objects.all().order_by('goal_number')
+    agendas = Agenda.objects.only('id', 'name')
+    sdgs = SustainableDevelopmentGoal.objects.only('goal_number', 'name').order_by('goal_number')
     # Get available years from projects that exist
     years = list(set([d.year for d in Project.objects.dates('start_date', 'year')]))
     years.sort(reverse=True)
