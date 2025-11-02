@@ -16,7 +16,7 @@ from .services import BudgetService, get_current_fiscal_year
 
 # --- HELPER TO GET BASE TEMPLATE ---
 def get_templates(request):
-    """Determines the base template based on user role."""
+    """DetermInes the base template based on user role."""
     user_role = getattr(request.user, 'role', None)
     # All budget users use the internal template
     if user_role in ["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR", "FACULTY", "IMPLEMENTER"]:
@@ -59,10 +59,10 @@ def edit_budget_view(request):
     context["title"] = "Edit Budget"
     
     user_role = getattr(request.user, 'role', None)
+    context["user_role"] = user_role
     
     # --- Form Handling for College Admins (Project Assignment) ---
     if user_role in ["PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
-        # Get projects for the form dropdown
         user_college = getattr(request.user, 'college', None)
         projects_for_form = Project.objects.filter(
             project_leader__college=user_college,
@@ -99,7 +99,6 @@ def edit_budget_view(request):
                     colleges_updated = 0
                     for key, value in request.POST.items():
                         if key.startswith('college_') and value:
-                            # The name is 'college_{college_id}'
                             college_id = key.replace('college_', '') 
                             amount = Decimal(str(value).replace(',', '').strip())
                             
@@ -115,6 +114,7 @@ def edit_budget_view(request):
                                 previous_assigned = allocation.total_assigned
                                 allocation.total_assigned = amount
                                 allocation.assigned_by = request.user
+                                allocation.status = 'ACTIVE'
                                 allocation.save()
                                 
                                 BudgetHistory.objects.create(

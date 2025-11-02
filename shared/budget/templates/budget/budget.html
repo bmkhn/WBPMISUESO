@@ -1,6 +1,8 @@
 {% extends base_template %}
 {% load static %}
-{% load humanize %} {% block extra_head %}
+{% load humanize %} 
+
+{% block extra_head %}
     <link href="{% static 'shared/budget/styles.css' %}" rel="stylesheet" />
 {% endblock %}
 
@@ -15,7 +17,7 @@
         <div class="col-xl-4 col-md-6">
             <div class="budget-card bg-primary">
                 <div class="card-body">
-                    <h4>₱{{ pool_available|intcomma }}</h4>
+                    <h4>₱{{ pool_available|floatformat:2|intcomma }}</h4>
                     <p>Total Annual Pool ({{ current_year }})</p>
                 </div>
             </div>
@@ -23,7 +25,7 @@
         <div class="col-xl-4 col-md-6">
             <div class="budget-card bg-success">
                 <div class="card-body">
-                    <h4>₱{{ total_assigned_to_colleges|intcomma }}</h4>
+                    <h4>₱{{ total_assigned_to_colleges|floatformat:2|intcomma }}</h4>
                     <p>Total Assigned to Colleges</p>
                 </div>
             </div>
@@ -31,7 +33,7 @@
         <div class="col-xl-4 col-md-6">
             <div class="budget-card bg-warning">
                 <div class="card-body">
-                    <h4>₱{{ pool_unallocated_remaining|intcomma }}</h4>
+                    <h4>₱{{ pool_unallocated_remaining|floatformat:2|intcomma }}</h4>
                     <p>Unallocated from Pool</p>
                 </div>
             </div>
@@ -39,7 +41,7 @@
         <div class="col-xl-6 col-md-6">
             <div class="budget-card bg-info">
                 <div class="card-body">
-                    <h4>₱{{ total_committed_to_projects_agg|intcomma }}</h4>
+                    <h4>₱{{ total_committed_to_projects_agg|floatformat:2|intcomma }}</h4>
                     <p>Total Committed to Projects (Internal Funding)</p>
                 </div>
             </div>
@@ -47,7 +49,7 @@
         <div class="col-xl-6 col-md-6">
             <div class="budget-card bg-danger">
                 <div class="card-body">
-                    <h4>₱{{ total_spent_by_projects_agg|intcomma }}</h4>
+                    <h4>₱{{ total_spent_by_projects_agg|floatformat:2|intcomma }}</h4>
                     <p>Total Spent by Projects (Used Budget)</p>
                 </div>
             </div>
@@ -70,19 +72,15 @@
                             <th>Original Cut</th>
                             <th>Project Internal Funding (Committed)</th>
                             <th>Uncommitted Remaining</th>
-                            <th>Total Spent (by Projects)</th>
-                            <th>Final Remaining (Cut - Spent)</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for item in dashboard_data %}
                         <tr>
                             <td>{{ item.college_name }}</td>
-                            <td>₱{{ item.original_cut|intcomma }}</td>
-                            <td>₱{{ item.committed_funding|intcomma }}</td>
-                            <td class="text-success">₱{{ item.uncommitted_remaining|intcomma }}</td>
-                            <td class="text-danger">₱{{ item.total_spent|intcomma }}</td>
-                            <td class="fw-bold">₱{{ item.final_remaining|intcomma }}</td>
+                            <td>₱{{ item.original_cut|floatformat:2|intcomma }}</td>
+                            <td>₱{{ item.committed_funding|floatformat:2|intcomma }}</td>
+                            <td class="text-success">₱{{ item.uncommitted_remaining|floatformat:2|intcomma }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -98,7 +96,7 @@
         <div class="col-xl-4 col-md-6">
             <div class="budget-card bg-primary">
                 <div class="card-body">
-                    <h4>₱{{ total_assigned_original_cut|intcomma }}</h4>
+                    <h4>₱{{ total_assigned_original_cut|floatformat:2|intcomma }}</h4>
                     <p>Your College's Original Cut</p>
                 </div>
             </div>
@@ -106,7 +104,7 @@
         <div class="col-xl-4 col-md-6">
             <div class="budget-card bg-info">
                 <div class="card-body">
-                    <h4>₱{{ total_committed_to_projects|intcomma }}</h4>
+                    <h4>₱{{ total_committed_to_projects|floatformat:2|intcomma }}</h4>
                     <p>Committed to Projects (Internal Funding)</p>
                 </div>
             </div>
@@ -114,7 +112,7 @@
         <div class="col-xl-4 col-md-6">
             <div class="budget-card bg-warning">
                 <div class="card-body">
-                    <h4>₱{{ uncommitted_remaining|intcomma }}</h4>
+                    <h4>₱{{ uncommitted_remaining|floatformat:2|intcomma }}</h4>
                     <p>Uncommitted Remaining (For new projects)</p>
                 </div>
             </div>
@@ -144,9 +142,9 @@
                         {% for project in dashboard_data %}
                         <tr>
                             <td><a href="#">{{ project.title }}</a></td> <td>{{ project.status }}</td>
-                            <td>₱{{ project.internal_funding_committed|intcomma }}</td>
-                            <td class="text-danger">₱{{ project.total_spent|intcomma }}</td>
-                            <td class="fw-bold">₱{{ project.total_remaining|intcomma }}</td>
+                            <td>₱{{ project.internal_funding_committed|floatformat:2|intcomma }}</td>
+                            <td class="text-danger">₱{{ project.total_spent|floatformat:2|intcomma }}</td>
+                            <td class="fw-bold">₱{{ project.total_remaining|floatformat:2|intcomma }}</td>
                         </tr>
                         {% empty %}
                         <tr>
@@ -165,7 +163,7 @@
         <div class="col-xl-4 col-md-6">
             <div class="budget-card bg-primary">
                 <div class="card-body">
-                    <h4>₱{{ total_assigned|intcomma }}</h4>
+                    <h4>₱{{ total_assigned|floatformat:2|intcomma }}</h4>
                     <p>Total Internal Funding (Your Projects)</p>
                 </div>
             </div>
@@ -173,7 +171,7 @@
         <div class="col-xl-4 col-md-6">
             <div class="budget-card bg-danger">
                 <div class="card-body">
-                    <h4>₱{{ total_spent|intcomma }}</h4>
+                    <h4>₱{{ total_spent|floatformat:2|intcomma }}</h4>
                     <p>Total Spent (Your Projects)</p>
                 </div>
             </div>
@@ -181,8 +179,9 @@
         <div class="col-xl-4 col-md-6">
             <div class="budget-card bg-success">
                 <div class="card-body">
-                    <h4>₱{{ total_remaining|intcomma }}</h4>
+                    <h4>₱{{ total_remaining|floatformat:2|intcomma }}</h4>
                     <p>Total Remaining (Your Projects)</p>
+
                 </div>
             </div>
         </div>
@@ -206,9 +205,9 @@
                         {% for project in dashboard_data %}
                         <tr>
                             <td><a href="#">{{ project.title }}</a></td> <td>{{ project.status }}</td>
-                            <td>₱{{ project.internal_funding|intcomma }}</td>
-                            <td class="text-danger">₱{{ project.total_spent|intcomma }}</td>
-                            <td class="fw-bold">₱{{ project.remaining|intcomma }}</td>
+                            <td>₱{{ project.internal_funding|floatformat:2|intcomma }}</td>
+                            <td class="text-danger">₱{{ project.total_spent|floatformat:2|intcomma }}</td>
+                            <td class="fw-bold">₱{{ project.remaining|floatformat:2|intcomma }}</td>
                         </tr>
                         {% empty %}
                         <tr>
@@ -236,7 +235,7 @@
                             <td>{{ entry.timestamp|date:"M d" }}</td>
                             <td>{{ entry.user.get_full_name|default:"System" }}</td>
                             <td>{{ entry.get_action_display }}</td>
-                            <td class="text-end">₱{{ entry.amount|intcomma }}</td>
+                            <td class="text-end">₱{{ entry.amount|floatformat:2|intcomma }}</td>
                         </tr>
                         {% empty %}
                         <tr><td class="text-center text-muted">No history found.</td></tr>
@@ -259,7 +258,7 @@
                             <td>{{ item.sponsor_name }}</td>
                             <td>{{ item.project.title }}</td>
                             <td>{{ item.get_status_display }}</td>
-                            <td class="text-end">₱{{ item.amount_offered|intcomma }}</td>
+                            <td class="text-end">₱{{ item.amount_offered|floatformat:2|intcomma }}</td>
                         </tr>
                         {% empty %}
                         <tr><td class="text-center text-muted">No funding records found.</td></tr>

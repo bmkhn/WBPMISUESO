@@ -14,8 +14,6 @@ urlpatterns = [
     # 4. External Sponsors Page (Renders 'external_sponsors.html')
     path('external_sponsors/', views.external_sponsors_view, name='budget_sponsors'),
     
-    # --- Supporting URLs ---
-    
     # 5. Setup (For first-time admin setup)
     path('setup/annual/', views.setup_annual_budget, name='budget_setup'),
 ]

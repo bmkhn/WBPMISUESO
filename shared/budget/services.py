@@ -267,6 +267,9 @@ class BudgetService:
         project.internal_budget = new_internal_budget
         project.save()
         
+        college_budget.total_committed_to_projects = (college_budget.total_committed_to_projects or Decimal('0.00')) + commitment_delta
+        college_budget.save()
+
         BudgetHistory.objects.create(
             college_budget=college_budget,
             action='ADJUSTED' if new_internal_budget < old_budget else 'ALLOCATED',
