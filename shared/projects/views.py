@@ -11,6 +11,14 @@ import os
 from django.db import models
 from django.db.models import Q, BooleanField, ExpressionWrapper
 
+from django.utils import timezone # <-- MAKE SURE THIS IS IMPORTED
+
+# --- START: ADD THESE IMPORTS ---
+from django.db import transaction
+from decimal import Decimal
+from shared.budget.models import CollegeBudget, BudgetHistory
+from shared.budget.services import get_current_fiscal_year
+
 
 def get_role_constants():
     ADMIN_ROLES = ["VP", "DIRECTOR", "UESO"]
@@ -1393,14 +1401,68 @@ def add_project_view(request):
         form = ProjectForm(request.POST, request.FILES)
         if form.is_valid():
             try:
-                # Save project (basic fields)
-                project = form.save(commit=False)
-                project.created_by = request.user
-                
-                project.status = 'NOT_STARTED'
-                project.logistics_type = form.cleaned_data['logistics_type']
-                logistics_type = form.cleaned_data['logistics_type']
-                project.save()
+                with transaction.atomic():
+                    project = form.save(commit=False)
+                    project.created_by = request.user
+                    
+                    project.status = 'NOT_STARTED'
+                    project.logistics_type = form.cleaned_data['logistics_type']
+                    logistics_type = form.cleaned_data['logistics_type']
+
+                    # Set logistics fields
+                    if project.logistics_type == 'BOTH':
+                        project.internal_budget = form.cleaned_data['internal_budget']
+                        project.external_budget = form.cleaned_data['external_budget']
+                        project.sponsor_name = form.cleaned_data['sponsor_name']
+                    elif project.logistics_type == 'INTERNAL':
+                        project.internal_budget = form.cleaned_data['internal_budget']
+                        project.external_budget = 0
+                        project.sponsor_name = ''
+                    elif project.logistics_type == 'EXTERNAL':
+                        project.internal_budget = 0
+                        project.external_budget = form.cleaned_data['external_budget']
+                        project.sponsor_name = form.cleaned_data['sponsor_name']
+
+                    # --- This is the new logic to subtract from the college fund ---
+                    internal_budget_amount = project.internal_budget or Decimal('0.00')
+                    college_budget_to_save = None # Store college budget to save later
+
+                    if internal_budget_amount > Decimal('0.00'):
+                        if not project.project_leader or not project.project_leader.college:
+                            raise ValueError("Project leader and their college are required for internal budget assignment.")
+                        
+                        fiscal_year = get_current_fiscal_year()
+                        try:
+                            # Get the college budget "no matter its status"
+                            college_budget = CollegeBudget.objects.select_for_update().get(
+                                college=project.project_leader.college, 
+                                fiscal_year=fiscal_year
+                            )
+                        except CollegeBudget.DoesNotExist:
+                            raise PermissionError(f"No budget (of any status) found for {project.project_leader.college.name} for {fiscal_year}. Please contact an administrator.")
+                        
+                        # Failsafe: Check if funds are available
+                        if college_budget.uncommitted_remaining - internal_budget_amount < Decimal('0'):
+                                raise ValueError(f"Assignment of ₱{internal_budget_amount:,.2f} exceeds remaining college budget of ₱{college_budget.uncommitted_remaining:,.2f}.")
+
+                        # All checks passed, update the budget
+                        college_budget.total_committed_to_projects = (college_budget.total_committed_to_projects or Decimal('0.00')) + internal_budget_amount
+                        college_budget_to_save = college_budget
+                    
+                    project.save() # <-- Save the project NOW
+                    
+                    # If we have a budget to update, save it
+                    if college_budget_to_save:
+                        college_budget_to_save.save(update_fields=['total_committed_to_projects'])
+                        
+                        # Create history log
+                        BudgetHistory.objects.create(
+                            college_budget=college_budget_to_save,
+                            action='ALLOCATED',
+                            amount=internal_budget_amount,
+                            description=f'Project "{project.title}" created with internal budget ₱{internal_budget_amount:,.2f}. Funded by {college_budget_to_save.college.name}.',
+                            user=request.user
+                        )
 
                 # Set many-to-many fields
                 provider_ids = request.POST.getlist('providers[]')

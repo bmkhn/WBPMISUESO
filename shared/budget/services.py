@@ -65,6 +65,7 @@ class BudgetService:
             college_budget = budget_map.get(college.id)
             
             if college_budget:
+                # Use properties from the model
                 spent = college_budget.total_spent_by_projects 
                 committed = college_budget.total_committed_to_projects
                 original_cut = college_budget.total_assigned
@@ -116,6 +117,8 @@ class BudgetService:
         if not college_budget: 
             return {"is_setup": False, "college_name": user_college.name}
 
+        # --- START: FIX for Internal/External Bugs ---
+        # Per your request: Only get the committed budget data.
         projects = Project.objects.filter(
             project_leader__college=user_college,
             start_date__year=self.fiscal_year 
@@ -124,15 +127,16 @@ class BudgetService:
         project_list = []
         for project in projects:
             assigned = project.internal_budget or Decimal('0')
-            spent = project.used_budget or Decimal('0')
+            external = project.external_budget or Decimal('0') # <-- This is the "get for external"
+            
             project_list.append({
                 'id': project.id,
                 'title': project.title,
                 'status': project.get_status_display(),
                 'internal_funding_committed': assigned,
-                'total_spent': spent,
-                'total_remaining': assigned - spent,
+                'external_funding_committed': external, # <-- ADDED
             })
+        # --- END: FIX ---
             
         return {
             'is_setup': True,
@@ -147,7 +151,7 @@ class BudgetService:
         }
     
     def _get_faculty_dashboard_data(self, user):
-        """Retrieves project data for Faculty/Implementers."""
+        """RetrieVes project data for Faculty/Implementers."""
         user_projects = Project.objects.filter(
             Q(project_leader=user) | Q(providers=user)
         ).distinct().select_related('project_leader__college').order_by('title')
@@ -157,26 +161,31 @@ class BudgetService:
         total_spent = Decimal('0')
         
         for project in user_projects:
+            # --- START: FIX for Internal/External Bugs ---
+            # Per your request: Only get the committed budget data.
             assigned = project.internal_budget or Decimal('0')
-            spent = project.used_budget or Decimal('0')
-            total_assigned += assigned
-            total_spent += spent
+            external = project.external_budget or Decimal('0') # <-- This is the "get for external"
+            total_funding = assigned + external
+
+            total_assigned += total_funding
+            # total_spent is removed as requested
             
             project_data.append({
                 'id': project.id,
                 'title': project.title,
                 'status': project.get_status_display(),
                 'internal_funding': assigned,
-                'total_spent': spent,
-                'remaining': assigned - spent,
+                'external_funding': external, # <-- ADDED
+                'total_funding': total_funding, # <-- ADDED
             })
+        # --- END: FIX ---
             
         return {
             "is_setup": True, 
             "dashboard_data": project_data,
             "total_assigned": total_assigned,
-            "total_spent": total_spent,
-            "total_remaining": total_assigned - total_spent,
+            "total_spent": total_spent, # This is an aggregate, but dashboard items are simplified
+            "total_remaining": total_assigned - total_spent, # This is an aggregate
             "utilization_percentage": round((total_spent / total_assigned * 100) if total_assigned > 0 else 0, 2),
         }
 
@@ -215,7 +224,13 @@ class BudgetService:
         return history_qs
 
     def get_external_funding_list(self, filters):
-        """Retrieves filtered and paginated external funding list."""
+        """
+        This is the "get for external" you asked about.
+        It is NOT for the dashboard. It is for the 'external_sponsors.html' page
+        (see views.py, line 218). It correctly gets ExternalFunding *objects*.
+        The dashboard fix above gets the Project.external_budget *field*.
+        They are two different features. This function is correct.
+        """
         # Add search filters here from `filters` (request.GET)
         return ExternalFunding.objects.select_related('project').filter(
             status__in=['APPROVED', 'COMPLETED', 'PENDING']
@@ -226,6 +241,11 @@ class BudgetService:
     @transaction.atomic
     def set_annual_budget_pool(self, user, fiscal_year, total_available):
         """Creates or updates the single annual BudgetPool."""
+        
+        # This is the failsafe for negative values you requested.
+        if total_available < Decimal('0.00'):
+            raise ValueError("Annual budget pool cannot be negative.")
+
         pool, created = BudgetPool.objects.update_or_create(
             fiscal_year=fiscal_year,
             defaults={'total_available': total_available}
@@ -240,7 +260,16 @@ class BudgetService:
     
     @transaction.atomic
     def update_project_internal_budget(self, user, project_id, new_internal_budget):
-        """Updates a Project's internal budget after validating against CollegeBudget."""
+        """
+        This is the "update func" you asked about.
+        It is NOT a "get" function. It is used by 'edit_budget_view' (views.py, line 92)
+        when a College Admin assigns a budget to a project. It is necessary for that page to work.
+        """
+        
+        # This is the failsafe for negative values you requested.
+        if new_internal_budget < Decimal('0.00'):
+            raise ValueError("Internal budget cannot be negative.")
+
         project = Project.objects.select_related('project_leader__college').get(id=project_id)
         
         if not project.project_leader or not project.project_leader.college:
@@ -251,9 +280,11 @@ class BudgetService:
 
         fiscal_year = get_current_fiscal_year()
         try:
+            # Per your request, removing 'status=ACTIVE' to get the budget
+            # "no matter its status"
             college_budget = CollegeBudget.objects.get(
                 college=project.project_leader.college, 
-                fiscal_year=fiscal_year
+                fiscal_year=fiscal_year,
             )
         except CollegeBudget.DoesNotExist:
             raise PermissionError(f"No active budget found for {project.project_leader.college.name} for {fiscal_year}. Please contact the administrator.")
@@ -261,15 +292,17 @@ class BudgetService:
         old_budget = project.internal_budget or Decimal('0')
         commitment_delta = new_internal_budget - old_budget
         
+        # This is the other essential failsafe
         if college_budget.uncommitted_remaining - commitment_delta < Decimal('0'):
              raise ValueError(f"Assignment exceeds remaining college budget by ₱{abs(college_budget.uncommitted_remaining - commitment_delta):,.2f}.")
 
         project.internal_budget = new_internal_budget
-        project.save()
+        project.save(update_fields=['internal_budget'])
         
         college_budget.total_committed_to_projects = (college_budget.total_committed_to_projects or Decimal('0.00')) + commitment_delta
-        college_budget.save()
-
+        college_budget.save(update_fields=['total_committed_to_projects'])
+        # --- END: BUG FIX 4 ---
+        
         BudgetHistory.objects.create(
             college_budget=college_budget,
             action='ADJUSTED' if new_internal_budget < old_budget else 'ALLOCATED',

@@ -16,7 +16,7 @@ from .services import BudgetService, get_current_fiscal_year
 
 # --- HELPER TO GET BASE TEMPLATE ---
 def get_templates(request):
-    """DetermInes the base template based on user role."""
+    """Determines the base template based on user role."""
     user_role = getattr(request.user, 'role', None)
     # All budget users use the internal template
     if user_role in ["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR", "FACULTY", "IMPLEMENTER"]:
@@ -59,10 +59,11 @@ def edit_budget_view(request):
     context["title"] = "Edit Budget"
     
     user_role = getattr(request.user, 'role', None)
-    context["user_role"] = user_role
+    context["user_role"] = user_role # Pass user_role to template
     
     # --- Form Handling for College Admins (Project Assignment) ---
     if user_role in ["PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
+        # Get projects for the form dropdown
         user_college = getattr(request.user, 'college', None)
         projects_for_form = Project.objects.filter(
             project_leader__college=user_college,
@@ -94,41 +95,88 @@ def edit_budget_view(request):
     # --- Form Handling for Admins (College Cut Allocation) ---
     if user_role in ["VP", "DIRECTOR", "UESO"]:
         if request.method == "POST" and 'assign_college_budget' in request.POST:
+            
+            # --- START: ALL BUG FIXES & VALIDATIONS ---
             try:
-                with transaction.atomic():
-                    colleges_updated = 0
-                    for key, value in request.POST.items():
-                        if key.startswith('college_') and value:
-                            college_id = key.replace('college_', '') 
+                total_proposed_allocation = Decimal('0.00')
+                allocations_to_process = []
+
+                # 1. Check if Annual Pool is set
+                annual_pool = service.current_pool
+                if not annual_pool:
+                    messages.error(request, "Annual Budget Pool is not set. Cannot make allocations.")
+                    return redirect('budget_edit')
+
+                # 2. First validation loop: Check for negatives and calculate total
+                for key, value in request.POST.items():
+                    if key.startswith('college_') and value:
+                        try:
                             amount = Decimal(str(value).replace(',', '').strip())
                             
-                            college = College.objects.get(id=college_id) 
+                            # BUG FIX 3: Check for negative values
+                            if amount < Decimal('0.00'):
+                                raise ValueError(f"Negative value (₱{amount:,.2f}) not allowed.")
                             
-                            allocation, created = CollegeBudget.objects.get_or_create(
-                                college=college,
-                                fiscal_year=service.fiscal_year,
-                                defaults={'total_assigned': amount, 'assigned_by': request.user}
+                            total_proposed_allocation += amount
+                            allocations_to_process.append({'key': key, 'amount': amount})
+
+                        except Exception as e:
+                            messages.error(request, f"Invalid value detected for {key}: {e}")
+                            return redirect('budget_edit')
+
+                # BUG FIX 1: Check against annual pool
+                if total_proposed_allocation > annual_pool.total_available:
+                    messages.error(request, f"Total proposed allocation (₱{total_proposed_allocation:,.2f}) exceeds the annual pool (₱{annual_pool.total_available:,.2f}).")
+                    return redirect('budget_edit')
+                
+                # 3. Second loop: Check committed funds and save
+                with transaction.atomic():
+                    colleges_updated = 0
+                    for item in allocations_to_process:
+                        key = item['key']
+                        amount = item['amount']
+                        
+                        college_id = key.replace('college_', '') 
+                        college = College.objects.get(id=college_id) 
+                        
+                        allocation, created = CollegeBudget.objects.get_or_create(
+                            college=college,
+                            fiscal_year=service.fiscal_year,
+                            defaults={'total_assigned': amount, 'assigned_by': request.user, 'status': 'ACTIVE'}
+                        )
+                        
+                        # BUG FIX 2: Check if new amount is less than already committed amount
+                        committed_amount = allocation.total_committed_to_projects or Decimal('0.00')
+                        if amount < committed_amount:
+                            # Roll back the entire transaction
+                            raise Exception(f"Cannot set {college.name} budget to ₱{amount:,.2f}. It already has ₱{committed_amount:,.2f} committed to projects.") 
+
+                        if not created and (allocation.total_assigned != amount or allocation.status != 'ACTIVE'):
+                            previous_assigned = allocation.total_assigned
+                            allocation.total_assigned = amount
+                            allocation.assigned_by = request.user
+                            allocation.status = 'ACTIVE' # Ensure status is active
+                            allocation.save()
+                            
+                            BudgetHistory.objects.create(
+                                college_budget=allocation,
+                                action='ADJUSTED',
+                                amount=amount,
+                                description=f'College cut adjusted for {college.name}: ₱{previous_assigned:,.2f} → ₱{amount:,.2f}',
+                                user=request.user
                             )
-                            
-                            if not created and allocation.total_assigned != amount:
-                                previous_assigned = allocation.total_assigned
-                                allocation.total_assigned = amount
-                                allocation.assigned_by = request.user
-                                allocation.status = 'ACTIVE'
-                                allocation.save()
-                                
-                                BudgetHistory.objects.create(
-                                    college_budget=allocation,
-                                    action='ADJUSTED',
-                                    amount=amount,
-                                    description=f'College cut adjusted for {college.name}: ₱{previous_assigned:,.2f} → ₱{amount:,.2f}',
-                                    user=request.user
-                                )
-                            colleges_updated += 1
+                        colleges_updated += 1
+                        
                     messages.success(request, f'Successfully updated allocations for {colleges_updated} colleges.')
                     return redirect('budget_edit')
+            
             except Exception as e:
+                # --- START: FIX for Bug 3 ---
+                # Catch the specific error from the transaction
                 messages.error(request, f'An error occurred: {e}')
+                return redirect('budget_edit') # <-- THIS IS THE CRITICAL FIX
+                # --- END: FIX for Bug 3 ---
+            # --- END: ALL BUG FIXES & VALIDATIONS ---
 
     return render(request, 'budget/edit_budget.html', context)
 
@@ -181,9 +229,14 @@ def setup_annual_budget(request):
         form = AnnualBudgetForm(request.POST)
         if form.is_valid():
             try:
-                service.set_annual_budget_pool(request.user, current_year, form.cleaned_data['annual_total'])
-                messages.success(request, f'Set annual budget for {current_year} to ₱{form.cleaned_data["annual_total"]:,.2f}.')
-                return redirect('budget_dashboard')
+                # BUG FIX 3: Check for negative values
+                annual_total = form.cleaned_data['annual_total']
+                if annual_total < Decimal('0.00'):
+                    messages.error(request, "Annual budget cannot be negative.")
+                else:
+                    service.set_annual_budget_pool(request.user, current_year, annual_total)
+                    messages.success(request, f'Set annual budget for {current_year} to ₱{annual_total:,.2f}.')
+                    return redirect('budget_dashboard')
             except Exception as e:
                 messages.error(request, f'Error initializing budget: {e}')
     else:
