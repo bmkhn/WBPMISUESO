@@ -1,0 +1,133 @@
+{% extends base_template %}
+{% load static %}
+{% load humanize %}
+
+{% block extra_head %}
+    <link href="{% static 'shared/budget/styles.css' %}" rel="stylesheet" />
+{% endblock %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class.="container-fluid px-4">
+    <h1 class="mt-4">{{ title }}</h1>
+    
+    {% if user_role in "VP,DIRECTOR,UESO" %}
+    <div class="card mb-4">
+        <div class="card-header"><i class="fas fa-edit me-1"></i> Manage College Allocations ({{ current_year }})</div>
+        <div class="card-body budget-edit-form">
+            <p>Use this form to set the total annual budget 'cut' for each college. This is the maximum amount they can assign to their projects.</p>
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="assign_college_budget" value="true">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>College</th>
+                                <th>Current "Cut"</th>
+                                <th>Committed to Projects</th>
+                                <th>New "Cut" Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for college in all_colleges %}
+                            <tr>
+                                <td class="align-middle">{{ college.name }}</td>
+                                {% with college_data=colleges_data|selectattr:"college_name",college.name|first %}
+                                    <td class="align-middle">₱{{ college_data.original_cut|intcomma|default:"0.00" }}</td>
+                                    <td class="align-middle">₱{{ college_data.committed_funding|intcomma|default:"0.00" }}</td>
+                                    <td>
+                                        <input type="number" step="0.01" name="college_{{ college.id }}" 
+                                               class="form-control" 
+                                               placeholder="e.g., 500000.00"
+                                               value="{{ college_data.original_cut|default_if_none:'' }}">
+                                    </td>
+                                {% endwith %}
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="4">No colleges found.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <button type="submit" class="btn btn-primary">Save All Allocations</button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if user_role in "PROGRAM_HEAD,DEAN,COORDINATOR" %}
+    <div class="card mb-4">
+        <div class="card-header"><i class="fas fa-edit me-1"></i> Assign Project Internal Budget</div>
+        <div class="card-body budget-edit-form">
+            {% if error %}
+                <div class="alert alert-danger">{{ error }}</div>
+            {% elif not is_setup %}
+                <div class="alert alert-warning">Your college ({{ college_name }}) does not have an active budget for {{ current_year }}. Please contact an administrator.</div>
+            {% else %}
+                <h5 class="mb-3">College Budget: {{ college_name }}</h5>
+                <div class="row mb-3">
+                    <div class="col-lg-4">
+                        <strong>Original Cut:</strong> ₱{{ college_budget.total_assigned|intcomma }}
+                    </div>
+                    <div class="col-lg-4">
+                        <strong>Committed to Projects:</strong> ₱{{ college_budget.total_committed_to_projects|intcomma }}
+                    </div>
+                    <div class="col-lg-4">
+                        <strong class="text-success">Uncommitted Remaining: ₱{{ college_budget.uncommitted_remaining|intcomma }}</strong>
+                    </div>
+                </div>
+                
+                <hr>
+                <p>Use this form to assign an internal budget to a project. The project must be led by a user from your college. The amount cannot exceed your college's uncommitted remaining funds.</p>
+
+                <form method="POST" action="{% url 'budget_edit' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="assign_project_budget" value="true">
+                    
+                    <div class="mb-3">
+                        <label for="{{ project_form.project.id_for_label }}" class="form-label">Project</label>
+                        {{ project_form.project }}
+                        {% if project_form.project.help_text %}<div class="form-text">{{ project_form.project.help_text }}</div>{% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ project_form.internal_budget.id_for_label }}" class="form-label">Internal Budget Amount</label>
+                        {{ project_form.internal_budget }}
+                        {% if project_form.internal_budget.help_text %}<div class="form-text">{{ project_form.internal_budget.help_text }}</div>{% endif %}
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Assign/Update Project Budget</button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="card mb-4">
+        <div class="card-header"><i class="fas fa-table me-1"></i> Current Project Allocations ({{ current_year }})</div>
+        <div class="card-body">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Project Title</th>
+                        <th>Internal Funding Committed</th>
+                        <th>Total Spent</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for project in dashboard_data %}
+                    <tr>
+                        <td>{{ project.title }}</td>
+                        <td>₱{{ project.internal_funding_committed|intcomma }}</td>
+                        <td class="text-danger">₱{{ project.total_spent|intcomma }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3">No projects found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

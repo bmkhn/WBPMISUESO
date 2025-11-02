@@ -1,0 +1,225 @@
+{% extends base_template %}
+{% load static %}
+{% load humanize %} {% block extra_head %}
+    <link href="{% static 'shared/budget/styles.css' %}" rel="stylesheet" />
+{% endblock %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class.="container-fluid px-4">
+    <h1 class="mt-4">{{ title }}</h1>
+    
+    {% if user_role in "VP,DIRECTOR,UESO" %}
+    <div class="row">
+        <div class="col-xl-4 col-md-6">
+            <div class="budget-card bg-primary">
+                <div class="card-body">
+                    <h4>₱{{ pool_available|intcomma }}</h4>
+                    <p>Total Annual Pool ({{ current_year }})</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4 col-md-6">
+            <div class="budget-card bg-success">
+                <div class="card-body">
+                    <h4>₱{{ total_assigned_to_colleges|intcomma }}</h4>
+                    <p>Total Assigned to Colleges</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4 col-md-6">
+            <div class="budget-card bg-warning">
+                <div class="card-body">
+                    <h4>₱{{ pool_unallocated_remaining|intcomma }}</h4>
+                    <p>Unallocated from Pool</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-6 col-md-6">
+            <div class="budget-card bg-info">
+                <div class="card-body">
+                    <h4>₱{{ total_committed_to_projects_agg|intcomma }}</h4>
+                    <p>Total Committed to Projects (Internal Funding)</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-6 col-md-6">
+            <div class="budget-card bg-danger">
+                <div class="card-body">
+                    <h4>₱{{ total_spent_by_projects_agg|intcomma }}</h4>
+                    <p>Total Spent by Projects (Used Budget)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="fas fa-table me-1"></i> College Budget Allocations ({{ current_year }})</span>
+            <a href="{% url 'budget_edit' %}" class="btn btn-primary btn-sm">
+                <i class="fas fa-edit me-1"></i> Manage Allocations
+            </a>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="datatablesSimple" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>College</th>
+                            <th>Original Cut</th>
+                            <th>Project Internal Funding (Committed)</th>
+                            <th>Uncommitted Remaining</th>
+                            <th>Total Spent (by Projects)</th>
+                            <th>Final Remaining (Cut - Spent)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in dashboard_data %}
+                        <tr>
+                            <td>{{ item.college_name }}</td>
+                            <td>₱{{ item.original_cut|intcomma }}</td>
+                            <td>₱{{ item.committed_funding|intcomma }}</td>
+                            <td class="text-success">₱{{ item.uncommitted_remaining|intcomma }}</td>
+                            <td class="text-danger">₱{{ item.total_spent|intcomma }}</td>
+                            <td class="fw-bold">₱{{ item.final_remaining|intcomma }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+
+    {% if user_role in "PROGRAM_HEAD,DEAN,COORDINATOR" %}
+    <div class="row">
+        <div class="col-xl-4 col-md-6">
+            <div class="budget-card bg-primary">
+                <div class="card-body">
+                    <h4>₱{{ total_assigned_original_cut|intcomma }}</h4>
+                    <p>Your College's Original Cut</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4 col-md-6">
+            <div class="budget-card bg-info">
+                <div class="card-body">
+                    <h4>₱{{ total_committed_to_projects|intcomma }}</h4>
+                    <p>Committed to Projects (Internal Funding)</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4 col-md-6">
+            <div class="budget-card bg-warning">
+                <div class="card-body">
+                    <h4>₱{{ uncommitted_remaining|intcomma }}</h4>
+                    <p>Uncommitted Remaining (For new projects)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="fas fa-table me-1"></i> Projects Funded by {{ college_name }} ({{ current_year }})</span>
+            <a href="{% url 'budget_edit' %}" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus me-1"></i> Assign Project Budgets
+            </a>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Project Title</th>
+                            <th>Status</th>
+                            <th>Internal Funding Committed</th>
+                            <th>Total Spent</th>
+                            <th>Remaining (Project)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for project in dashboard_data %}
+                        <tr>
+                            <td><a href="#">{{ project.title }}</a></td> <td>{{ project.status }}</td>
+                            <td>₱{{ project.internal_funding_committed|intcomma }}</td>
+                            <td class="text-danger">₱{{ project.total_spent|intcomma }}</td>
+                            <td class="fw-bold">₱{{ project.total_remaining|intcomma }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5">No projects found for your college in {{ current_year }}.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if user_role in "FACULTY,IMPLEMENTER" %}
+    <div class="row">
+        <div class="col-xl-4 col-md-6">
+            <div class="budget-card bg-primary">
+                <div class="card-body">
+                    <h4>₱{{ total_assigned|intcomma }}</h4>
+                    <p>Total Internal Funding (Your Projects)</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4 col-md-6">
+            <div class="budget-card bg-danger">
+                <div class="card-body">
+                    <h4>₱{{ total_spent|intcomma }}</h4>
+                    <p>Total Spent (Your Projects)</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4 col-md-6">
+            <div class="budget-card bg-success">
+                <div class="card-body">
+                    <h4>₱{{ total_remaining|intcomma }}</h4>
+                    <p>Total Remaining (Your Projects)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header"><i class="fas fa-table me-1"></i> Your Projects</div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Project Title</th>
+                            <th>Status</th>
+                            <th>Internal Funding</th>
+                            <th>Total Spent</th>
+                            <th>Remaining</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for project in dashboard_data %}
+                        <tr>
+                            <td><a href="#">{{ project.title }}</a></td> <td>{{ project.status }}</td>
+                            <td>₱{{ project.internal_funding|intcomma }}</td>
+                            <td class="text-danger">₱{{ project.total_spent|intcomma }}</td>
+                            <td class="fw-bold">₱{{ project.remaining|intcomma }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5">You are not yet assigned to any projects.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

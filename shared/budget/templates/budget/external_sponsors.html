@@ -1,0 +1,60 @@
+{% extends base_template %}
+{% load humanize %}
+{% load static %}
+
+{% block extra_head %}
+    <link href="{% static 'shared/budget/styles.css' %}" rel="stylesheet" />
+{% endblock %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">{{ title }}</h1>
+    
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="fas fa-hand-holding-usd me-1"></i> External Funding Records</span>
+            </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="datatablesSimple" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Sponsor</th>
+                            <th>Project</th>
+                            <th>Status</th>
+                            <th>Amount Offered</th>
+                            <th>Amount Received</th>
+                            <th>Proposal Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in page_obj %}
+                        <tr>
+                            <td>{{ item.sponsor_name }}</td>
+                            <td>{{ item.project.title }}</td>
+                            <td>{{ item.get_status_display }}</td>
+                            <td>₱{{ item.amount_offered|intcomma }}</td>
+                            <td>₱{{ item.amount_received|intcomma }}</td>
+                            <td>{{ item.proposal_date|date:"Y-m-d" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6">No external funding records found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            {% if page_obj.has_other_pages %}
+            <nav aria-label="Page navigation">
+                <ul class="pagination">
+                    </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

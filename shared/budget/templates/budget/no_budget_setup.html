@@ -1,0 +1,22 @@
+{% extends base_template %}
+{% load static %}
+
+{% block extra_head %}
+    <link href="{% static 'shared/budget/styles.css' %}" rel="stylesheet" />
+{% endblock %}
+
+{% block title %}Budget Not Available{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <div class="setup-container text-center">
+        <h2 class="mt-4">Budget Not Yet Available</h2>
+        <p class="lead text-muted mt-3">The budget for the fiscal year <strong>{{ current_year }}</strong> has not been set up by an administrator.</p>
+        <p>Please check back later.</p>
+        
+        {% if error %}
+            <div class="alert alert-warning mt-4">{{ error }}</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
