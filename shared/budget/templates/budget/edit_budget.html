@@ -1,106 +1,185 @@
 {% extends base_template %}
 {% load static %}
 {% load humanize %}
-
-{% block extra_head %}
-    <link href="{% static 'shared/budget/styles.css' %}" rel="stylesheet"/>
-{% endblock %}
-
 {% block title %}{{ title }}{% endblock %}
 
 {% block content %}
-<div class.="container-fluid px-4">
-    <h1 class="mt-4">{{ title }}</h1>
+<div class="container mx-auto px-4 py-8">
     
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-800">{{ title }}</h1>
+            <p class="text-lg text-gray-600">Manage budget allocations and assignments.</p>
+        </div>
+        <a href="{% url 'budget_dashboard' %}" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg shadow hover:bg-gray-300 transition duration-200">
+            &larr; Back to Dashboard
+        </a>
+    </div>
+
     {% if user_role in "VP,DIRECTOR,UESO" %}
-    <div class="card mb-4">
-        <div class="card-header"><i class="fas fa-edit me-1"></i> Manage College Allocations ({{ current_year }})</div>
-        <div class="card-body budget-edit-form">
-            <p>Use this form to set the total annual budget 'cut' for each college. This is the maximum amount they can assign to their projects.</p>
-            <form method="POST" action="{% url 'budget_edit' %}">
+    <form method="POST">
+        {% csrf_token %}
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200">
+            <div class="p-4 border-b flex justify-between items-center">
+                <h2 class="text-xl font-bold text-gray-800">College Allocation Manager</h2>
+                <button type="submit" name="assign_college_budget" class="bg-green-600 text-white px-4 py-2 rounded-lg shadow hover:bg-green-700 transition duration-200">
+                    Save Allocations
+                </button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-white">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="py-3 px-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">College</th>
+                            <th class="py-3 px-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">New Allocation (Initial)</th>
+                            <th class="py-3 px-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Internal Budget (Committed)</th>
+                            <th class="py-3 px-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Remaining (Uncommitted)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        {% for item in colleges_data %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-3 px-4 text-sm text-gray-700 font-medium">{{ item.college_name }}</td>
+                            <td class="py-3 px-4">
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">₱</span>
+                                    <input type="text" 
+                                           name="college_{{ item.college_id }}" 
+                                           id="college-input-{{ item.college_id }}"
+                                           class="pl-7 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                           oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\\..*)\\./g, '$1');"
+                                    >
+                                </div>
+                            </td>
+                            <td class="py-3 px-4 text-sm text-gray-700">₱{{ item.committed_funding|intcomma }}</td>
+                            <td class="py-3 px-4 text-sm font-medium {% if item.uncommitted_remaining < 0 %}text-red-600{% else %}text-yellow-700{% endif %}">
+                                ₱{{ item.uncommitted_remaining|intcomma }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </form>
+    {% endif %}
+
+    {% if is_college_admin %}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-1">
+            <form method="POST" class="bg-white p-6 rounded-lg shadow-lg border border-gray-200">
                 {% csrf_token %}
-                <input type="hidden" name="assign_college_budget" value="true">
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
+                <h2 class="text-xl font-bold text-gray-800 mb-4">Assign Project Budget</h2>
+                
+                <div class="mb-4">
+                    <label for="project" class="block text-sm font-medium text-gray-700 mb-1">Project</label>
+                    {{ project_form.project }}
+                    {% if project_form.project.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ project_form.project.errors|first }}</p>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-4">
+                    <label for="internal_budget" class="block text-sm font-medium text-gray-700 mb-1">New Internal Budget</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">₱</span>
+                        {{ project_form.internal_budget }}
+                    </div>
+                    {% if project_form.internal_budget.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ project_form.internal_budget.errors|first }}</p>
+                    {% endif %}
+                </div>
+                
+                <button type="submit" name="assign_project_budget" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition duration-200">
+                    Update Project Budget
+                </button>
+            </form>
+
+            <div class="bg-white p-6 rounded-lg shadow-lg border border-gray-200 mt-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">{{ college_name }}</h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm font-medium text-gray-600">Initial Budget:</span>
+                        <span class="text-sm font-bold text-blue-600">₱{{ total_assigned_original_cut|intcomma }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm font-medium text-gray-600">Internal Budget (Committed):</span>
+                        <span class="text-sm font-bold text-yellow-600">₱{{ total_committed_to_projects|intcomma }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm font-medium text-gray-600">Remaining (Uncommitted):</span>
+                        <span class="text-sm font-bold {% if uncommitted_remaining < 0 %}text-red-600{% else %}text-yellow-700{% endif %}">
+                            ₱{{ uncommitted_remaining|intcomma }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200">
+                <div class="p-4 border-b">
+                    <h2 class="text-xl font-bold text-gray-800">Current Project Budgets ({{ college_name }})</h2>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white">
+                        <thead class="bg-gray-50">
                             <tr>
-                                <th>College</th>
-                                <th>Current "Cut"</th>
-                                <th>Committed to Projects</th>
-                                <th>New "Cut" Amount</th>
+                                <th class="py-3 px-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Project Title</th>
+                                <th class="py-3 px-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
+                                <th class="py-3 px-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Internal Funding</th>
+                                <th class="py-3 px-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">External Funding</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            {% for item in colleges_data %}
-                            <tr>
-                                <td class="align-middle">{{ item.college_name }}</td>
-                                <td class="align-middle">₱{{ item.original_cut|floatformat:2|intcomma }}</td>
-                                <td class="align-middle">₱{{ item.committed_funding|floatformat:2|intcomma }}</td>
-                                <td>
-                                    <input type="number" step="0.01" name="college_{{ item.college_id }}" 
-                                           class="form-control" 
-                                           placeholder="e.g., 500000.00"
-                                           value="{{ item.original_cut|default_if_none:'' }}">
-                                </td>
+                        <tbody class="divide-y divide-gray-200">
+                            {% for item in dashboard_data %}
+                            <tr class="hover:bg-gray-50">
+                                <td class="py-3 px-4 text-sm text-gray-700">{{ item.title }}</td>
+                                <td class="py-3 px-4 text-sm text-gray-700">{{ item.status }}</td>
+                                <td class="py-3 px-4 text-sm text-gray-700 font-medium">₱{{ item.internal_funding_committed|intcomma }}</td>
+                                <td class="py-3 px-4 text-sm text-gray-700">₱{{ item.external_funding_committed|intcomma }}</td>
                             </tr>
                             {% empty %}
-                            <tr><td colspan="4">No colleges found.</td></tr>
+                            <tr>
+                                <td colspan="4" class="py-4 px-4 text-sm text-gray-500 text-center">No projects found for this fiscal year.</td>
+                            </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
-                <button type="submit" class="btn btn-primary">Save All Allocations</button>
-            </form>
+            </div>
         </div>
     </div>
     {% endif %}
 
-    {% if user_role in "PROGRAM_HEAD,DEAN,COORDINATOR" %}
-    <div class="card mb-4">
-        <div class="card-header"><i class="fas fa-edit me-1"></i> Assign Project Internal Budget</div>
-        <div class="card-body budget-edit-form">
-            {% if error %}
-                <div class="alert alert-danger">{{ error }}</div>
-            {% elif not is_setup %}
-                <div class="alert alert-warning">Your college ({{ college_name }}) does not have an active budget for {{ current_year }}. Please contact an administrator.</div>
-            {% else %}
-                <h5 class="mb-3">College Budget: {{ college_name }}</h5>
-                <div class="row mb-3">
-                    <div class="col-lg-4">
-                        <strong>Original Cut:</strong> ₱{{ college_budget.total_assigned|floatformat:2|intcomma }}
-                    </div>
-                    <div class="col-lg-4">
-                        <strong>Committed to Projects:</strong> ₱{{ college_budget.total_committed_to_projects|floatformat:2|intcomma }}
-                    </div>
-                    <div class="col-lg-4">
-                        <strong class="text-success">Uncommitted Remaining: ₱{{ college_budget.uncommitted_remaining|floatformat:2|intcomma }}</strong>
-                    </div>
-                </div>
-                
-                <hr>
-                <p>Use this form to assign an internal budget to a project. The project must be led by a user from your college. The amount cannot exceed your college's uncommitted remaining funds.</p>
-
-                <form method="POST" action="{% url 'budget_edit' %}">
-                    {% csrf_token %}
-                    <input type="hidden" name="assign_project_budget" value="true">
-                    
-                    <div class="mb-3">
-                        <label for="{{ project_form.project.id_for_label }}" class="form-label">Project</label>
-                        {{ project_form.project }}
-                        {% if project_form.project.help_text %}<div class="form-text">{{ project_form.project.help_text }}</div>{% endif %}
-                    </div>
-                    <div class="mb-3">
-                        <label for="{{ project_form.internal_budget.id_for_label }}" class="form-label">Internal Budget Amount</label>
-                        {{ project_form.internal_budget }}
-                        {% if project_form.internal_budget.help_text %}<div class="form-text">{{ project_form.internal_budget.help_text }}</div>{% endif %}
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary">Assign/Update Project Budget</button>
-                </form>
-            {% endif %}
-        </div>
-    </div>
-    
-    {% endif %}
 </div>
+
+{% if user_role in "VP,DIRECTOR,UESO" %}
+{{ allocation_map|json_script:"allocation-data" }}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // 1. Get the allocation map data from the script tag
+    const allocationMap = JSON.parse(document.getElementById('allocation-data').textContent);
+
+    // 2. Helper function to format numbers with commas
+    function numberWithCommas(x) {
+        // This regex adds commas to a number string
+        return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+
+    // 3. Loop through the map and set the input values
+    for (const collegeId in allocationMap) {
+        if (allocationMap.hasOwnProperty(collegeId)) {
+            const value = allocationMap[collegeId];
+            const inputElement = document.getElementById(`college-input-${collegeId}`);
+            if (inputElement) {
+                // Format the number (as an integer) with commas
+                inputElement.value = numberWithCommas(Math.floor(parseFloat(value)));
+            }
+        }
+    }
+});
+</script>
+{% endif %}
 {% endblock %}

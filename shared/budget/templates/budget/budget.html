@@ -1,261 +1,233 @@
 {% extends base_template %}
 {% load static %}
-{% load humanize %} 
-
-{% block extra_head %}
-    <link href="{% static 'shared/budget/styles.css' %}" rel="stylesheet" />
-{% endblock %}
+{% load humanize %}
 
 {% block title %}{{ title }}{% endblock %}
 
 {% block content %}
-<div class="container-fluid px-4">
-    <h1 class="mt-4">{{ title }}</h1>
+<div class="container mx-auto px-4 py-8">
     
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-800">{{ title }}</h1>
+            <p class="text-lg text-gray-600">Welcome to your budget overview.</p>
+        </div>
+        <div class="flex space-x-2 mt-4 sm:mt-0">
+            {% if is_admin %}
+            <a href="{% url 'budget_edit' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition duration-200">
+                Edit Allocations
+            </a>
+            <a href="{% url 'budget_history' %}" class="bg-gray-500 text-white px-4 py-2 rounded-lg shadow hover:bg-gray-600 transition duration-200">
+                View History
+            </a>
+            {% endif %}
+            {% if is_college_admin %}
+            <a href="{% url 'budget_edit' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition duration-200">
+                Assign Project Budgets
+            </a>
+            <a href="{% url 'budget_history' %}" class="bg-gray-500 text-white px-4 py-2 rounded-lg shadow hover:bg-gray-600 transition duration-200">
+                View History
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
     {% if user_role in "VP,DIRECTOR,UESO" %}
-    <div class="row">
-        <div class="col-xl-4 col-md-6">
-            <div class="budget-card bg-primary">
-                <div class="card-body">
-                    <h4>₱{{ pool_available|floatformat:2|intcomma }}</h4>
-                    <p>Total Annual Pool ({{ current_year }})</p>
-                </div>
-            </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <div class="bg-white p-6 rounded-lg shadow-lg border border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-700 mb-2">Annual Budget Pool</h3>
+            <p class="text-3xl font-bold text-blue-600">₱{{ pool_available|intcomma }}</p>
         </div>
-        <div class="col-xl-4 col-md-6">
-            <div class="budget-card bg-success">
-                <div class="card-body">
-                    <h4>₱{{ total_assigned_to_colleges|floatformat:2|intcomma }}</h4>
-                    <p>Total Assigned to Colleges</p>
-                </div>
-            </div>
+        <div class="bg-white p-6 rounded-lg shadow-lg border border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-700 mb-2">Assigned to Colleges</h3>
+            <p class="text-3xl font-bold text-green-600">₱{{ total_assigned_to_colleges|intcomma }}</p>
         </div>
-        <div class="col-xl-4 col-md-6">
-            <div class="budget-card bg-warning">
-                <div class="card-body">
-                    <h4>₱{{ pool_unallocated_remaining|floatformat:2|intcomma }}</h4>
-                    <p>Unallocated from Pool</p>
-                </div>
-            </div>
+        <div class="bg-white p-6 rounded-lg shadow-lg border border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-700 mb-2">Committed to Projects</h3>
+            <p class="text-3xl font-bold text-yellow-600">₱{{ total_committed_to_projects_agg|intcomma }}</p>
         </div>
-        <div class="col-xl-6 col-md-6">
-            <div class="budget-card bg-info">
-                <div class="card-body">
-                    <h4>₱{{ total_committed_to_projects_agg|floatformat:2|intcomma }}</h4>
-                    <p>Total Committed to Projects (Internal Funding)</p>
-                </div>
-            </div>
+        <div class="bg-white p-6 rounded-lg shadow-lg border border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-700 mb-2">Unallocated from Pool</h3>
+            <p class="text-3xl font-bold text-red-600">₱{{ pool_unallocated_remaining|intcomma }}</p>
         </div>
+    </div>
 
-    <div class="card mb-4">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <span><i class="fas fa-table me-1"></i> College Budget Allocations ({{ current_year }})</span>
-            <a href="{% url 'budget_edit' %}" class="btn btn-primary btn-sm">
-                <i class="fas fa-edit me-1"></i> Manage Allocations
-            </a>
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200">
+        <div class="p-4 border-b">
+            <h2 class="text-xl font-bold text-gray-800">College Budget Allocations</h2>
         </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover" id="datatablesSimple" width="100%" cellspacing="0">
-                    <thead>
-                        <tr>
-                            <th>College</th>
-                            <th>Original Cut</th>
-                            <th>Project Internal Funding (Committed)</th>
-                            <th>Uncommitted Remaining</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in dashboard_data %}
-                        <tr>
-                            <td>{{ item.college_name }}</td>
-                            <td>₱{{ item.original_cut|floatformat:2|intcomma }}</td>
-                            <td>₱{{ item.committed_funding|floatformat:2|intcomma }}</td>
-                            <td class="text-success">₱{{ item.uncommitted_remaining|floatformat:2|intcomma }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full bg-white">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="py-3 px-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">College</th>
+                        <th class="py-3 px-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Initial Budget (Original Cut)</th>
+                        <th class="py-3 px-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Internal Budget (Committed)</th>
+                        <th class="py-3 px-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Remaining (Uncommitted)</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    {% for item in dashboard_data %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="py-3 px-4 text-sm text-gray-700 font-medium">{{ item.college_name }}</td>
+                        <td class="py-3 px-4 text-sm text-gray-700">₱{{ item.original_cut|intcomma }}</td>
+                        <td class="py-3 px-4 text-sm text-gray-700">₱{{ item.committed_funding|intcomma }}</td>
+                        <td class="py-3 px-4 text-sm font-bold {% if item.uncommitted_remaining < 0 %}text-red-600{% else %}text-green-700{% endif %}">
+                            ₱{{ item.uncommitted_remaining|intcomma }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
     {% endif %}
 
 
-    {% if user_role in "PROGRAM_HEAD,DEAN,COORDINATOR" %}
-    <div class="row">
-        <div class="col-xl-4 col-md-6">
-            <div class="budget-card bg-primary">
-                <div class="card-body">
-                    <h4>₱{{ total_assigned_original_cut|floatformat:2|intcomma }}</h4>
-                    <p>Your College's Original Cut</p>
-                </div>
-            </div>
+    {% if is_college_admin %}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div class="bg-white p-6 rounded-lg shadow-lg border border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-700 mb-2">Initial Budget ({{ college_name }})</h3>
+            <p class="text-3xl font-bold text-blue-600">₱{{ total_assigned_original_cut|intcomma }}</p>
         </div>
-        <div class="col-xl-4 col-md-6">
-            <div class="budget-card bg-info">
-                <div class="card-body">
-                    <h4>₱{{ total_committed_to_projects|floatformat:2|intcomma }}</h4>
-                    <p>Committed to Projects (Internal Funding)</p>
-                </div>
-            </div>
+        <div class="bg-white p-6 rounded-lg shadow-lg border border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-700 mb-2">Internal Budget (Committed)</h3>
+            <p class="text-3xl font-bold text-yellow-600">₱{{ total_committed_to_projects|intcomma }}</p>
         </div>
-        <div class="col-xl-4 col-md-6">
-            <div class="budget-card bg-warning">
-                <div class="card-body">
-                    <h4>₱{{ uncommitted_remaining|floatformat:2|intcomma }}</h4>
-                    <p>Uncommitted Remaining (For new projects)</p>
-                </div>
-            </div>
+        <div class="bg-white p-6 rounded-lg shadow-lg border border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-700 mb-2">Remaining (Uncommitted)</h3>
+            <p class="text-3xl font-bold {% if uncommitted_remaining < 0 %}text-red-600{% else %}text-green-700{% endif %}">₱{{ uncommitted_remaining|intcomma }}</p>
         </div>
     </div>
-
-    <div class="card mb-4">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <span><i class="fas fa-table me-1"></i> Projects Funded by {{ college_name }} ({{ current_year }})</span>
-            <a href="{% url 'budget_edit' %}" class="btn btn-primary btn-sm">
-                <i class="fas fa-plus me-1"></i> Assign Project Budgets
-            </a>
+    
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200">
+        <div class="p-4 border-b">
+            <h2 class="text-xl font-bold text-gray-800">Project Budget Allocations ({{ college_name }})</h2>
         </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover" width="100%" cellspacing="0">
-                    <thead>
-                        <tr>
-                            <th>Project Title</th>
-                            <th>Status</th>
-                            <th>Internal Funding Committed</th>
-                            <th>Total Spent</th>
-                            <th>Remaining (Project)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for project in dashboard_data %}
-                        <tr>
-                            <td><a href="#">{{ project.title }}</a></td> <td>{{ project.status }}</td>
-                            <td>₱{{ project.internal_funding_committed|floatformat:2|intcomma }}</td>
-                            <td class="text-danger">₱{{ project.total_spent|floatformat:2|intcomma }}</td>
-                            <td class="fw-bold">₱{{ project.total_remaining|floatformat:2|intcomma }}</td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="5">No projects found for your college in {{ current_year }}.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full bg-white">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="py-3 px-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Project Title</th>
+                        <th class="py-3 px-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
+                        <th class="py-3 px-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Internal Funding</th>
+                        <th class="py-3 px-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">External Funding</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    {% for item in dashboard_data %}
+                    <tr class="border-b border-gray-200 hover:bg-gray-50">
+                        <td class="py-3 px-4 text-sm text-gray-700">{{ item.title }}</td>
+                        <td class="py-3 px-4 text-sm text-gray-700">{{ item.status }}</td>
+                        <td class="py-3 px-4 text-sm text-gray-700">₱{{ item.internal_funding_committed|intcomma }}</td>
+                        <td class="py-3 px-4 text-sm text-gray-700">₱{{ item.external_funding_committed|intcomma }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="py-4 px-4 text-sm text-gray-500 text-center">No projects found for this fiscal year.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
     {% endif %}
+
 
     {% if user_role in "FACULTY,IMPLEMENTER" %}
-    <div class="row">
-        <div class="col-xl-4 col-md-6">
-            <div class="budget-card bg-primary">
-                <div class="card-body">
-                    <h4>₱{{ total_assigned|floatformat:2|intcomma }}</h4>
-                    <p>Total Internal Funding (Your Projects)</p>
-                </div>
-            </div>
+     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div class="bg-white p-6 rounded-lg shadow-lg border border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-700 mb-2">Total Project Funding</h3>
+            <p class="text-3xl font-bold text-blue-600">₱{{ total_assigned|intcomma }}</p>
         </div>
-        <div class="col-xl-4 col-md-6">
-            <div class="budget-card bg-danger">
-                <div class="card-body">
-                    <h4>₱{{ total_spent|floatformat:2|intcomma }}</h4>
-                    <p>Total Spent (Your Projects)</p>
-                </div>
-            </div>
+        <div class="bg-white p-6 rounded-lg shadow-lg border border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-700 mb-2">Total Internal</h3>
+            <p class="text-3xl font-bold text-green-600">₱{{ total_internal|intcomma }}</p>
         </div>
-        <div class="col-xl-4 col-md-6">
-            <div class="budget-card bg-success">
-                <div class="card-body">
-                    <h4>₱{{ total_remaining|floatformat:2|intcomma }}</h4>
-                    <p>Total Remaining (Your Projects)</p>
-
-                </div>
-            </div>
+        <div class="bg-white p-6 rounded-lg shadow-lg border border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-700 mb-2">Total External</h3>
+            <p class="text-3xl font-bold text-yellow-600">₱{{ total_external|intcomma }}</p>
         </div>
     </div>
-
-    <div class="card mb-4">
-        <div class="card-header"><i class="fas fa-table me-1"></i> Your Projects</div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover" width="100%" cellspacing="0">
-                    <thead>
-                        <tr>
-                            <th>Project Title</th>
-                            <th>Status</th>
-                            <th>Internal Funding</th>
-                            <th>Total Spent</th>
-                            <th>Remaining</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for project in dashboard_data %}
-                        <tr>
-                            <td><a href="#">{{ project.title }}</a></td> <td>{{ project.status }}</td>
-                            <td>₱{{ project.internal_funding|floatformat:2|intcomma }}</td>
-                            <td class="text-danger">₱{{ project.total_spent|floatformat:2|intcomma }}</td>
-                            <td class="fw-bold">₱{{ project.remaining|floatformat:2|intcomma }}</td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="5">You are not yet assigned to any projects.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+    
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200">
+        <div class="p-4 border-b">
+            <h2 class="text-xl font-bold text-gray-800">My Project Budgets</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full bg-white">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="py-3 px-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Project Title</th>
+                        <th class="py-3 px-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
+                        <th class="py-3 px-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Internal Funding</th>
+                        <th class="py-3 px-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">External Funding</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    {% for item in dashboard_data %}
+                    <tr class="border-b border-gray-200 hover:bg-gray-50">
+                        <td class="py-3 px-4 text-sm text-gray-700">{{ item.title }}</td>
+                        <td class="py-3 px-4 text-sm text-gray-700">{{ item.status }}</td>
+                        <td class="py-3 px-4 text-sm text-gray-700">₱{{ item.internal_funding|intcomma }}</td>
+                        <td class="py-3 px-4 text-sm text-gray-700">₱{{ item.external_funding|intcomma }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="py-4 px-4 text-sm text-gray-500 text-center">You are not assigned to any projects.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
     {% endif %}
 
-    <div class="row">
-        <div class="col-lg-6">
-            <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <span><i class="fas fa-history me-1"></i> Recent Budget History</span>
-                    <a href="{% url 'budget_history' %}" class="btn btn-outline-primary btn-sm">View All</a>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+        <div class="bg-white rounded-lg shadow-lg border border-gray-200">
+            <div class="p-4 border-b flex justify-between items-center">
+                <h2 class="text-xl font-bold text-gray-800">Recent Budget History</h2>
+                <a href="{% url 'budget_history' %}" class="text-sm text-blue-600 hover:underline">View All</a>
+            </div>
+            <div class="divide-y divide-gray-200">
+                {% for item in latest_history %}
+                <div class="p-4 hover:bg-gray-50">
+                    <p class="text-sm text-gray-700">{{ item.description }}</p>
+                    <div class="flex justify-between items-center mt-1">
+                        <span class="text-xs text-gray-500">{{ item.user.get_full_name }}</span>
+                        <span class="text-xs text-gray-500">{{ item.timestamp|date:"M d, Y P" }}</span>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <table class="table table-sm table-hover">
-                        {% for entry in latest_history %}
-                        <tr>
-                            <td>{{ entry.timestamp|date:"M d" }}</td>
-                            <td>{{ entry.user.get_full_name|default:"System" }}</td>
-                            <td>{{ entry.get_action_display }}</td>
-                            <td class="text-end">₱{{ entry.amount|floatformat:2|intcomma }}</td>
-                        </tr>
-                        {% empty %}
-                        <tr><td class="text-center text-muted">No history found.</td></tr>
-                        {% endfor %}
-                    </table>
-                </div>
+                {% empty %}
+                <div class="p-4 text-sm text-gray-500 text-center">No budget history found.</div>
+                {% endfor %}
             </div>
         </div>
 
-        <div class="col-lg-6">
-            <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <span><i class="fas fa-hand-holding-usd me-1"></i> Recent External Funding</span>
-                    <a href="{% url 'budget_sponsors' %}" class="btn btn-outline-primary btn-sm">View All</a>
+        <div class="bg-white rounded-lg shadow-lg border border-gray-200">
+            <div class="p-4 border-b flex justify-between items-center">
+                <h2 class="text-xl font-bold text-gray-800">Pending/Approved External Funding</h2>
+                <a href="{% url 'budget_sponsors' %}" class="text-sm text-blue-600 hover:underline">View All</a>
+            </div>
+            <div class="divide-y divide-gray-200">
+                {% for item in latest_funding %}
+                <div class="p-4 hover:bg-gray-50">
+                    <div class="flex justify-between items-center">
+                        <p class="text-sm text-gray-700 font-medium">{{ item.project.title }}</p>
+                        <span class="text-sm font-bold text-green-600">₱{{ item.total_amount|intcomma }}</span>
+                    </div>
+                    <div class="flex justify-between items-center mt-1">
+                        <span class="text-xs text-gray-500">Sponsor: {{ item.sponsor_name }}</span>
+                        <span class="text-xs font-semibold
+                            {% if item.status == 'PENDING' %}text-yellow-600
+                            {% elif item.status == 'APPROVED' %}text-green-600
+                            {% endif %}">{{ item.get_status_display }}
+                        </span>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <table class="table table-sm table-hover">
-                        {% for item in latest_funding %}
-                        <tr>
-                            <td>{{ item.sponsor_name }}</td>
-                            <td>{{ item.project.title }}</td>
-                            <td>{{ item.get_status_display }}</td>
-                            <td class="text-end">₱{{ item.amount_offered|floatformat:2|intcomma }}</td>
-                        </tr>
-                        {% empty %}
-                        <tr><td class="text-center text-muted">No funding records found.</td></tr>
-                        {% endfor %}
-                    </table>
-                </div>
+                {% empty %}
+                <div class="p-4 text-sm text-gray-500 text-center">No external funding records found.</div>
+                {% endfor %}
             </div>
         </div>
     </div>
