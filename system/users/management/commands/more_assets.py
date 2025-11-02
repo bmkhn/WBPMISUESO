@@ -6,7 +6,7 @@ from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from faker import Faker
-from system.users.models import College
+from system.users.models import College, Campus
 from shared.announcements.models import Announcement
 from shared.downloadables.models import Downloadable
 from shared.projects.models import Project, ProjectDocument, SustainableDevelopmentGoal
@@ -21,7 +21,7 @@ class Command(BaseCommand):
 		User = get_user_model()
 		fake = Faker()
 		colleges = list(College.objects.all())
-		campuses = [c[0] for c in User.Campus.choices]
+		campuses = list(Campus.objects.all())
 		password = "test1234"
 		director_user = User.objects.filter(role=User.Role.DIRECTOR).first()
 
@@ -167,6 +167,7 @@ class Command(BaseCommand):
 				suffix = 1
 				while User.objects.filter(username=username).exists():
 					username = f"{base_username}{suffix}"
+
 					suffix += 1
 
 				user = User.objects.create_user(
