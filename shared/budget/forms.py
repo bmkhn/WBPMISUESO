@@ -7,11 +7,13 @@ from decimal import Decimal
 
 class AnnualBudgetForm(forms.Form):
     """Form for the Admin to set the annual BudgetPool."""
-    fiscal_year = forms.CharField(max_length=4, widget=forms.TextInput(attrs={'readonly': 'readonly'}))
+    fiscal_year = forms.CharField(max_length=10, widget=forms.TextInput(attrs={'readonly': 'readonly'})) 
     annual_total = forms.DecimalField(
         max_digits=15, 
         decimal_places=2,
-        help_text="Set the total available budget pool for the entire fiscal year."
+        # Set min_value to 0 to enforce non-negative constraint
+        min_value=Decimal('0.00'), 
+        help_text="Set the total available budget pool for the entire fiscal year. Must be non-negative."
     )
 
 class CollegeAllocationForm(forms.ModelForm):

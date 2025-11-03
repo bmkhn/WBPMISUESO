@@ -5,18 +5,9 @@
 {% block title %}System Settings{% endblock %}
 
 {% block content %}
-<!-- 
-  This link is REQUIRED for all the icons (fas fa-school, etc.)
-  in the file to appear.
--->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
-<!-- 
-  EMBEDDED STYLES:
-  Includes the harmonious accordion style, now powered by custom JS.
--->
 <style>
-/* --- 1. Global & Page Layout --- */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 body {
@@ -39,13 +30,11 @@ body {
     font-weight: 700;
 }
 
-/* Base paragraph style */
 p {
     color: #555;
     font-size: 0.95rem;
     line-height: 1.6;
 }
-/* Paragraphs inside accordion content */
 .accordion-content > p {
     margin-bottom: 1.5rem;
     font-size: 0.9rem;
@@ -53,12 +42,10 @@ p {
 }
 
 
-/* --- 2. Modern Card Styling (with Soft Shadows) --- */
 .card {
     background: #FFFFFF;
-    border: 1px solid #EAEAEA; /* Subtle border */
-    border-radius: 8px; /* Rounded corners */
-    /* Soft, professional shadow */
+    border: 1px solid #EAEAEA;
+    border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     margin-bottom: 1.5rem; 
     transition: box-shadow 0.2s ease-in-out;
@@ -77,7 +64,7 @@ p {
 }
 
 .card-header h6 {
-    color: #0A6C44 !important; /* Primary Green */
+    color: #0A6C44 !important;
     font-weight: 700;
     font-size: 1.1rem;
     margin: 0;
@@ -87,7 +74,6 @@ p {
     padding: 1.5rem;
 }
 
-/* --- 3. Brand Button Overrides --- */
 .btn {
     border-radius: 6px;
     padding: 0.6rem 1.25rem;
@@ -101,7 +87,6 @@ p {
     transform: translateY(-1px);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 }
-/* This is the new, simpler "Add" button style */
 .btn-primary { 
     background-color: #0A6C44; border-color: #0A6C44; color: #fff !important; 
     display: inline-flex;
@@ -115,15 +100,12 @@ p {
     margin-right: 0.5rem;
 }
 
-/* Warning (Orange/Amber) */
 .btn-warning { background-color: #B65900; border-color: #B65900; color: #fff !important; }
 .btn-warning:hover { background-color: #934800; border-color: #934800; }
 
-/* Danger (Red) */
 .btn-danger { background-color: #DC2626; border-color: #DC2626; color: #fff !important; }
 .btn-danger:hover { background-color: #b01e1e; border-color: #b01e1e; }
 
-/* Secondary (Gray) */
 .btn-secondary { background-color: #f8f9fc; border-color: #e3e6f0; color: #5a5c69 !important; }
 .btn-secondary:hover { background-color: #e3e6f0; border-color: #e3e6f0; color: #3a3b45 !important; }
 
@@ -137,19 +119,17 @@ p {
     background-color: #fff;
     border: none;
     transition: background-color 0.2s ease-in-out, border-radius 0s ease 0.2s;
-    border-radius: 8px; /* Rounded corners by default */
+    border-radius: 8px;
 }
-/* Wrapper for the text content in the header */
 .section-header-content {
     pointer-events: none;
 }
 
-/* This is the clickable header button */
 .accordion-toggle {
     cursor: pointer;
 }
 .accordion-toggle:hover {
-    background-color: #fcfcfc; /* Very light hover */
+    background-color: #fcfcfc;
     text-decoration: none;
 }
 .accordion-toggle:focus { 
@@ -158,60 +138,52 @@ p {
     background-color: #f8f9fa;
 }
 
-/* This is the non-clickable header for API section */
 .section-header.non-collapsible {
-    border-radius: 8px 8px 0 0; /* Match active toggle */
-    background-color: #f8f9fa; /* Match active bg */
+    border-radius: 8px 8px 0 0;
+    background-color: #f8f9fa;
 }
 .section-header.non-collapsible .accordion-title {
-    color: #0A6C44; /* Match active title */
+    color: #0A6C44;
 }
 
-/* Title inside the button */
 .accordion-title {
     font-size: 1.1rem;
     font-weight: 600;
     color: #222;
     margin: 0;
-    pointer-events: none; /* Make text non-clickable */
+    pointer-events: none;
 }
-/* Description text inside the button */
 .accordion-desc {
     font-size: 0.85rem;
     color: #666;
     margin-top: 0.25rem;
     font-weight: 400;
-    pointer-events: none; /* Make text non-clickable */
+    pointer-events: none;
     padding: 0;
     line-height: 1.4;
 }
-/* FIX: Style for the new intro paragraph */
 .accordion-intro {
     font-size: 0.9rem;
     line-height: 1.6;
     color: #555;
-    margin-top: 0.75rem; /* Add some space */
-    margin-bottom: 0; /* Remove default p margin */
+    margin-top: 0.75rem;
+    margin-bottom: 0;
     pointer-events: none;
 }
 
 
-/* Custom Chevron Icon */
 .accordion-chevron {
     font-size: 1rem;
-    color: #0A6C44; /* Primary Green */
+    color: #0A6C44;
     transition: transform 0.25s ease-in-out;
-    pointer-events: none; /* Make text non-clickable */
-    margin-left: 1rem; /* Add space between text and icon */
+    pointer-events: none;
+    margin-left: 1rem;
 }
 
-/* STYLING FOR THE "ACTIVE" (OPEN) STATE */
 .accordion-toggle.active {
     background-color: #f8f9fa;
-    /* Lose bottom corners when open */
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
-    /* transition delay to 0s */
     transition-delay: 0s;
 }
 .accordion-toggle.active .accordion-chevron {
@@ -222,16 +194,13 @@ p {
 }
 
 
-/* Accordion Content Area (this is the part that hides/shows) */
 .accordion-content {
     background-color: #fff;
     border-top: 1px solid #EAEAEA;
     padding: 1.5rem;
-    /* Need to add bottom rounded corners */
     border-bottom-left-radius: 8px;
     border-bottom-right-radius: 8px;
 }
-/* Wrapper for "Add" button to push to the right */
 .card-body .table-controls,
 .accordion-content .table-controls {
     display: flex;
@@ -239,33 +208,32 @@ p {
     margin-bottom: 1.5rem;
 }
 
-/* --- 6. Table Styles (FORMAL STYLE) --- */
 .table-responsive {
     border: 1px solid #dee2e6;
     border-radius: 8px;
-    overflow: hidden; /* This is crucial */
+    overflow: hidden;
 }
 
 .table {
     border-collapse: collapse;
-    margin-bottom: 0; /* Remove default margin */
+    margin-bottom: 0;
 }
 
 .table thead th {
-    background: #f8f9fa; /* Light formal header */
-    border-bottom: 2px solid #dee2e6; /* Stronger header line */
+    background: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
     border-top: none;
     font-size: 0.85rem;
-    color: #333; /* Dark text */
+    color: #333;
     font-weight: 700;
-    text-transform: uppercase; /* Formal */
+    text-transform: uppercase;
     letter-spacing: 0.5px;
-    padding: 0.85rem 1.5rem; /* Reduced padding */
+    padding: 0.85rem 1.5rem;
     vertical-align: bottom;
 }
 
 .table tbody tr {
-    border-bottom: 1px solid #e9ecef; /* Row separator */
+    border-bottom: 1px solid #e9ecef;
 }
 .table tbody tr:last-child {
     border-bottom: none;
@@ -280,23 +248,21 @@ p {
 .table td,
 .table th {
     vertical-align: middle !important;
-    padding: 0.85rem 1.5rem; /* Reduced padding */
+    padding: 0.85rem 1.5rem;
     color: #333;
     font-size: 0.95rem;
 }
 .table td:hover {
-    padding: 0.85rem 1.5rem; /* Stop padding change on hover */
+    padding: 0.85rem 1.5rem;
 }
 
-/* Class to right-align action cells */
 .table th.cell-actions,
 .table td.cell-actions {
     text-align: right;
-    width: 1%; /* Shrink to fit content */
+    width: 1%;
     white-space: nowrap;
 }
 
-/* Constrain logo size in the table */
 .table .cell-logo { width: 80px; }
 .table .cell-logo img {
     max-height: 40px; max-width: 60px; width: auto; height: auto;
@@ -307,7 +273,6 @@ p {
     color: #999; font-style: italic; font-size: 0.85rem;
 }
 
-/* --- 7. Action Button Outline Styles --- */
 .table .btn {
     background: transparent !important;
     border: 1px solid;
@@ -340,7 +305,6 @@ p {
 }
 
 
-/* --- 8. API & General Settings Forms --- */
 .form-group label,
 .form-group .form-label {
     font-weight: 600; color: #333;
@@ -357,7 +321,6 @@ p {
     box-shadow: 0 0 0 0.2rem rgba(10, 108, 68, 0.25);
 }
 
-/* Horizontal form row for General Settings */
 .form-row-label {
     font-weight: 600;
     color: #333;
@@ -380,7 +343,6 @@ p {
     }
 }
 
-/* --- 9. Danger Zone (Right Column) --- */
 #danger-zone {
     border: 1px solid #fde8e8;
     border-left: 4px solid #DC2626;
@@ -389,7 +351,6 @@ p {
 #danger-zone .card-header { background-color: #fef2f2; }
 #danger-zone .card-header h6 { color: #DC2626 !important; }
 
-/* --- 10. Alert Messages --- */
 .alert {
     border-radius: 6px; font-weight: 500; border: none;
     padding: 1rem 1.25rem;
@@ -404,8 +365,6 @@ p {
 .alert .close:hover { opacity: 1; }
 
 </style>
-<!-- END OF EMBEDDED STYLES -->
-
 
 <div class="main-container">
 
@@ -413,7 +372,6 @@ p {
 
     {% if messages %}
         {% for message in messages %}
-            <!-- Styled alert messages -->
             <div class="alert {% if message.tags == 'error' %}alert-danger{% elif message.tags == 'warning' %}alert-warning{% else %}alert-success{% endif %}" role="alert">
                 {{ message|safe }}
                 <button type="button" class="close" onclick="this.parentElement.style.display='none'" style="background:none; border:none; float:right; font-size: 1.5rem; line-height: 1; opacity: 0.7;">
@@ -425,10 +383,8 @@ p {
 
     <div class="row">
 
-        <!-- Right Column: Account & Danger Zone -->
         <div class="col-lg-4">
 
-            <!-- 1. Account Settings -->
             <div class="card" id="account-settings">
                 <div class="card-header">
                     <h6 class="m-0">Account Settings</h6>
@@ -441,12 +397,9 @@ p {
 
         </div>
 
-        <!-- Left Column: Main Settings -->
         <div class="col-lg-8">
 
-            <!-- 2. API Key Management (Password Protected) -->
             <div class="card" id="api-settings">
-                <!-- FIX: This is the non-collapsible header -->
                 <div class="section-header non-collapsible">
                     <div class="section-header-content">
                         <h5 class="accordion-title mb-0">
@@ -454,14 +407,11 @@ p {
                             API Key Management
                         </h5>
                         <p class="accordion-desc">Manage API keys for external system integrations.</p>
-                        <!-- FIX: Intro text is here, visible by default -->
                         {% if not api_unlocked %}
                         <p class="accordion-intro">This section is restricted. Please enter your administrator password to manage API keys.</p>
                         {% endif %}
                     </div>
-                    <!-- No chevron, as it's not collapsible -->
                 </div>
-                <!-- FIX: Content is always visible -->
                 <div class="accordion-content" style="border-top: 1px solid #EAEAEA;">
                     {% if api_unlocked %}
                         <div class="table-controls" style="margin-bottom: 0.5rem; margin-top: 1rem;">
@@ -514,7 +464,6 @@ p {
                         </div>
 
                     {% else %}
-                        <!-- Password Form -->
                         <form method="POST" action="{% url 'system_settings:settings' %}" class="api-password-form">
                             {% csrf_token %}
                             <div class="form-group">
@@ -527,9 +476,80 @@ p {
                 </div>
             </div>
 
-            <!-- 3. Manage Colleges -->
             <div class="card">
-                <!-- FIX: This is now a clickable DIV -->
+                <div class="section-header accordion-toggle">
+                    <div class="section-header-content">
+                        <h5 class="accordion-title mb-0">
+                            <i class="fas fa-hand-holding-usd fa-fw mr-2"></i>
+                            Annual Budget Pool
+                        </h5>
+                        <p class="accordion-desc">Set the total available budget for the current fiscal year.</p>
+                        <p class="accordion-intro">
+                            This setting defines the <strong>total available budget pool</strong> (₱{{ budget_pool.total_available|floatformat:2|intcomma }}) for the current <strong>Fiscal Year {{ budget_pool.fiscal_year }}</strong>. This value is used as the ceiling for all College Budget allocations.
+                        </p>
+                    </div>
+                    <i class="accordion-chevron fas fa-chevron-down"></i>
+                </div>
+                <div class="accordion-content" style="display: none;">
+                    <form method="POST" action="{% url 'system_settings:settings' %}">
+                        {% csrf_token %}
+                        
+                        <div class="form-group row mb-3">
+                            <div class="col-sm-4">
+                                <label for="{{ budget_form.fiscal_year.id_for_label }}" class="form-row-label">
+                                    Fiscal Year
+                                </label>
+                                <div class="form-row-desc">
+                                    The current year for which the budget is allocated.
+                                </div>
+                            </div>
+                            <div class="col-sm-8">
+                                <input type="text" class="form-control" name="{{ budget_form.fiscal_year.name }}" id="{{ budget_form.fiscal_year.id_for_label }}" value="{{ budget_form.fiscal_year.value|default_if_none:'' }}" readonly>
+                            </div>
+                        </div>
+                        <hr class="my-3">
+
+                        <div class="form-group row mb-3">
+                            <div class="col-sm-4">
+                                <label for="{{ budget_form.annual_total.id_for_label }}" class="form-row-label">
+                                    Total Annual Budget
+                                </label>
+                                <div class="form-row-desc">
+                                    The maximum total budget pool available (must be non-negative).
+                                </div>
+                            </div>
+                            <div class="col-sm-8">
+                                <input 
+                                    type="number" 
+                                    step="0.01" 
+                                    min="0" 
+                                    class="form-control" 
+                                    name="{{ budget_form.annual_total.name }}" 
+                                    id="{{ budget_form.annual_total.id_for_label }}" 
+                                    value="{{ budget_form.annual_total.value|default_if_none:'0.00' }}" 
+                                    required>
+                                
+                                {% if budget_form.annual_total.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in budget_form.annual_total.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <hr class="my-3">
+
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" name="save_annual_budget" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save Annual Budget
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card">
                 <div class="section-header accordion-toggle">
                     <div class="section-header-content">
                         <h5 class="accordion-title mb-0">
@@ -537,12 +557,10 @@ p {
                             Manage Colleges
                         </h5>
                         <p class="accordion-desc">Add, edit, or remove university colleges and their details.</p>
-                        <!-- FIX: Intro text moved here -->
                         <p class="accordion-intro">This section lists all colleges and units recognized by the system. You can add, edit, or delete entries for institutions like the College of Sciences, College of Arts and Humanities, or satellite campuses.</p>
                     </div>
                     <i class="accordion-chevron fas fa-chevron-down"></i>
                 </div>
-                <!-- FIX: This content is hidden by default -->
                 <div class="accordion-content" style="display: none;">
                     <div class="table-controls">
                         <a href="{% url 'system_settings:add_college' %}" class="btn btn-primary">
@@ -591,9 +609,7 @@ p {
                 </div>
             </div>
 
-            <!-- 3. Manage Campuses -->
             <div class="card">
-                <!-- FIX: This is now a clickable DIV -->
                 <div class="section-header accordion-toggle">
                     <div class="section-header-content">
                         <h5 class="accordion-title mb-0">
@@ -601,12 +617,10 @@ p {
                             Manage Campuses
                         </h5>
                         <p class="accordion-desc">Define the different university campuses.</p>
-                        <!-- FIX: Intro text moved here -->
                         <p class="accordion-intro">Manage the different university campuses (e.g., Main, {ADD CAMPUS NAME}). Each college or unit created must be associated with one of these campuses.</p>
                     </div>
                     <i class="accordion-chevron fas fa-chevron-down"></i>
                 </div>
-                <!-- FIX: This content is hidden by default -->
                 <div class="accordion-content" style="display: none;">
                     <div class="table-controls">
                         <a href="{% url 'system_settings:add_campus' %}" class="btn btn-primary">
@@ -645,9 +659,7 @@ p {
                 </div>
             </div>
 
-            <!-- 3. Manage SDGs -->
             <div class="card">
-                <!-- FIX: This is now a clickable DIV -->
                 <div class="section-header accordion-toggle">
                     <div class="section-header-content">
                         <h5 class="accordion-title mb-0">
@@ -655,12 +667,10 @@ p {
                             Manage SDGs
                         </h5>
                         <p class="accordion-desc">Configure the Sustainable Development Goals for project tagging.</p>
-                        <!-- FIX: Intro text moved here -->
                         <p class="accordion-intro">Configure the 17 Sustainable Development Goals (SDGs) used for tagging projects. The SDGs are a collection of interlinked global goals designed to be a "blueprint to achieve a better and more sustainable future for all".</p>
                     </div>
                     <i class="accordion-chevron fas fa-chevron-down"></i>
                 </div>
-                <!-- FIX: This content is hidden by default -->
                 <div class="accordion-content" style="display: none;">
                     <div class="table-controls">
                         <a href="{% url 'system_settings:add_sdg' %}" class="btn btn-primary">
@@ -701,9 +711,7 @@ p {
                 </div>
             </div>
 
-            <!-- 4. General System Settings -->
             <div class="card">
-                <!-- FIX: This is now a clickable DIV -->
                 <div class="section-header accordion-toggle">
                     <div class="section-header-content">
                         <h5 class="accordion-title mb-0">
@@ -711,12 +719,10 @@ p {
                             General System Settings
                         </h5>
                         <p class="accordion-desc">Manage site-wide settings like the website name and maintenance mode.</p>
-                        <!-- FIX: Intro text moved here -->
                         <p class="accordion-intro">Manage site-wide variables, such as the public website name and system maintenance mode. These settings control key parts of the application.</p>
                     </div>
                     <i class="accordion-chevron fas fa-chevron-down"></i>
                 </div>
-                <!-- FIX: This content is hidden by default -->
                 <div class="accordion-content" style="display: none;">
                     <form method="POST" action="{% url 'system_settings:settings' %}">
                         {% csrf_token %}
@@ -755,7 +761,6 @@ p {
                 </div>
             </div>
             
-            <!-- 5. Danger Zone (MOVED) -->
             <div class="card" id="danger-zone">
                 <div class="card-header">
                     <h6 class="m-0 text-danger">Danger Zone</h6>
@@ -771,30 +776,19 @@ p {
     </div>
 </div>
 
-<!-- 
-  FIX 2 (Functionality): 
-  NEW VANILLA JAVASCRIPT for accordion.
--->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Find all accordion toggle buttons
     const toggles = document.querySelectorAll('.accordion-toggle');
 
     toggles.forEach(function(toggle) {
-        // We are clicking the header div now, not a button inside it
         toggle.addEventListener('click', function() {
-            // Get the content panel that is the *next* element
             const content = this.nextElementSibling;
             
-            // Ensure the next element is an accordion-content panel
             if (content && content.classList.contains('accordion-content')) {
-                // Check if the content is currently shown
                 const isShown = content.style.display === 'block';
 
-                // Toggle the 'active' class on the button
                 this.classList.toggle('active', !isShown);
 
-                // Toggle the display of the content
                 if (isShown) {
                     content.style.display = 'none';
                 } else {
@@ -807,4 +801,3 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 {% endblock %}
-
