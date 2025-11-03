@@ -132,166 +132,273 @@
 </svg>
 
 <script>
-	const categoryDropdownBtn = document.getElementById('categoryDropdownBtn');
+    const categoryDropdownBtn = document.getElementById('categoryDropdownBtn');
     const categoryDropdownContainer = document.getElementById('categoryDropdownContainer');
-	const categoryDropdownContent = document.getElementById('categoryDropdownContent');
-	const currentCategoryDisplay = document.getElementById('currentCategoryDisplay');
-	const cardView = document.getElementById('card-view');
-	const tableView = document.getElementById('table-view');
-	const cardGrid = document.getElementById('cardGrid');
-	const projectsTableBody = document.querySelector('#projectsTable tbody');
-	const breadcrumbNav = document.getElementById('breadcrumbNav');
-	const loadingIndicator = document.getElementById('loadingIndicator');
-	const filterBtn = document.getElementById('filterBtn');
+    const categoryDropdownContent = document.getElementById('categoryDropdownContent');
+    const currentCategoryDisplay = document.getElementById('currentCategoryDisplay');
+    const cardView = document.getElementById('card-view');
+    const tableView = document.getElementById('table-view');
+    const cardGrid = document.getElementById('cardGrid');
+    const projectsTableBody = document.querySelector('#projectsTable tbody');
+    const breadcrumbNav = document.getElementById('breadcrumbNav');
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const filterBtn = document.getElementById('filterBtn');
 
-	let currentCategorySlug = '{{ default_category }}';
-	let currentFilterKey = null;
-	let currentFilterName = 'Year Started';
+    let currentCategorySlug = '{{ default_category }}';
+    let currentFilterKey = null;
+    let currentFilterName = 'Year Started';
 
-	// --- Utility Functions ---
+    function showLoading() {
+        cardGrid.innerHTML = '';
+        loadingIndicator.style.display = 'block';
+    }
 
-	function showLoading() {
-		cardGrid.innerHTML = '';
-		loadingIndicator.style.display = 'block';
-	}
+    function hideLoading() {
+        loadingIndicator.style.display = 'none';
+    }
 
-	function hideLoading() {
-		loadingIndicator.style.display = 'none';
-	}
+    function switchView(view) {
+        const localFilterBtn = document.getElementById('filterBtn');
+        const filterDropdown = document.getElementById('filterDropdown');
 
-	function switchView(view) {
-		if (view === 'cards') {
-			cardView.style.display = 'block';
-			tableView.style.display = 'none';
-			filterBtn.style.display = 'none';
-			document.getElementById('searchForm').style.display = 'flex';
-			document.getElementById('filterDropdown').style.display = 'none';
+        if (view === 'cards') {
+            cardView.style.display = 'block';
+            tableView.style.display = 'none';
+            if (localFilterBtn) localFilterBtn.style.display = 'none';
+            document.getElementById('searchForm').style.display = 'flex';
+            if (filterDropdown) filterDropdown.style.display = 'none';
             categoryDropdownContainer.style.display = 'block';
             breadcrumbNav.style.display = 'none';
-		} else if (view === 'table') {
-			cardView.style.display = 'none';
-			tableView.style.display = 'block';
-			filterBtn.style.display = 'inline-block';
+        } else if (view === 'table') {
+            cardView.style.display = 'none';
+            tableView.style.display = 'block';
+            if (localFilterBtn) localFilterBtn.style.display = 'inline-block';
             categoryDropdownContainer.style.display = 'none';
             breadcrumbNav.style.display = 'block';
-		}
-	}
-
-    // --- REVISED JS FUNCTION for Font Resizing (Min size increased again) ---
-    function adjustFontSize(titleElement) {
-        const container = titleElement;
-        const containerHeight = container.clientHeight;
-        const maxHeight = containerHeight * 0.80; // Target 80% height
-
-        // Reset to initial size for measurement
-        let currentFontSize = 28; // Start size in pixels
-        // MODIFIED: Increased minimum font size further
-        const minFontSize = 18;   // Set minimum to 18px
-        titleElement.style.fontSize = currentFontSize + 'px';
-
-        // Check overflow and reduce size step-by-step
-        while (titleElement.scrollHeight > maxHeight && currentFontSize > minFontSize) {
-            currentFontSize -= 1; // Decrease by 1px
-            titleElement.style.fontSize = currentFontSize + 'px';
-            // Safety break
-            if (currentFontSize <= minFontSize) break;
         }
     }
-    // --- END REVISED JS FUNCTION ---
 
-	function renderCards(data, categorySlug) {
-		hideLoading();
-		cardGrid.innerHTML = '';
-		if (data.length === 0) {
-			cardGrid.innerHTML = '<p style="grid-column: 1 / -1; text-align: center;">No projects found for this grouping.</p>';
-			return;
-		}
+    function adjustFontSize(titleElement) {
+        const container = titleElement.parentElement;
+        const maxAvailableHeight = container.clientHeight * 0.90; 
 
-		data.forEach(item => {
-			const card = document.createElement('a');
-			card.className = 'archive-card';
-			card.href = '#';
-			card.setAttribute('data-filter-key', item.label);
-			card.setAttribute('data-category', categorySlug);
-			// Use template literals for easier HTML structure
-			card.innerHTML = `
-                <div class="title">${item.label}</div>
-                <div class="projects-info">No. of Projects: <span class="count">${item.count}</span></div>
+        titleElement.style.whiteSpace = 'normal';
+        titleElement.style.wordBreak = 'break-word';
+
+        /* The preferred default size is 30px, based on CSS. */
+        let currentFontSize = 30; 
+        const minFontSize = 20;
+
+        /* Step 1: Clone the element and set it to the default size for accurate measurement */
+        const tempDiv = titleElement.cloneNode(true);
+        tempDiv.style.position = 'absolute';
+        tempDiv.style.visibility = 'hidden';
+        tempDiv.style.left = '-9999px';
+        tempDiv.style.top = '-9999px';
+        tempDiv.style.width = titleElement.clientWidth + 'px';
+        tempDiv.style.height = 'auto';
+        tempDiv.style.fontSize = currentFontSize + 'px';
+        tempDiv.style.lineHeight = 'normal';
+        
+        const titleComputedStyle = getComputedStyle(titleElement);
+        tempDiv.style.padding = titleComputedStyle.padding;
+        tempDiv.style.margin = titleComputedStyle.margin;
+        tempDiv.style.textShadow = titleComputedStyle.textShadow; 
+        
+        document.body.appendChild(tempDiv);
+        
+        /* Step 2: Shrink only if the default size causes overflow */
+        while (tempDiv.clientHeight > maxAvailableHeight && currentFontSize > minFontSize) {
+            currentFontSize -= 1;
+            tempDiv.style.fontSize = currentFontSize + 'px';
+            if (currentFontSize <= minFontSize) break;
+        }
+
+        /* Step 3: Apply the adjusted size (which will be 30px unless overflow occurred) */
+        document.body.removeChild(tempDiv);
+        titleElement.style.fontSize = currentFontSize + 'px';
+    }
+
+    const ANIMATION_STATE = new Map();
+
+    function drawMoiréPattern(canvasId, cardElement) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        const cardRect = cardElement.getBoundingClientRect();
+        
+        const grayColor = '#cccccc';
+        const waveDensity = 15;
+        const waveAmplitude = 10;
+        const speed = 0.005;
+        
+        canvas.width = cardRect.width;
+        canvas.height = cardRect.height;
+        
+        const lineCount = Math.floor(canvas.height / (waveDensity * 0.8)) + 5;
+
+        function drawPattern(shift, isHovered) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.save();
+            ctx.globalAlpha = 1.0;
+
+            for (let i = 0; i < lineCount; i++) {
+                ctx.beginPath();
+                
+                if (isHovered) {
+                    const hue = (i * 15 + shift * 50) % 360;
+                    ctx.strokeStyle = `hsl(${hue}, 80%, 65%)`;
+                } else {
+                    ctx.strokeStyle = grayColor;
+                }
+                ctx.lineWidth = 1;
+
+                for (let x = 0; x <= canvas.width; x++) {
+                    const y = i * waveDensity + waveAmplitude * Math.sin((x / 50 + shift * 0.5) + (i * 0.1));
+                    if (x === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+        
+        let currentShift = 0;
+
+        function animate(timestamp) {
+            const state = ANIMATION_STATE.get(canvasId);
+            if (!state) return;
+
+            currentShift += speed * state.speedMultiplier; 
+            
+            drawPattern(currentShift, state.hovered);
+            
+            if (state.hovered || state.speedMultiplier > 0) {
+                state.frame = requestAnimationFrame(animate);
+                ANIMATION_STATE.set(canvasId, state);
+            }
+        }
+        
+        drawPattern(0, false);
+
+        cardElement.addEventListener('mouseenter', () => {
+            const currentState = ANIMATION_STATE.get(canvasId) || { hovered: false, speedMultiplier: 0, frame: null };
+            ANIMATION_STATE.set(canvasId, { hovered: true, speedMultiplier: 5, frame: currentState.frame });
+            if (!currentState.frame) requestAnimationFrame(animate);
+        });
+
+        cardElement.addEventListener('mouseleave', () => {
+            const currentState = ANIMATION_STATE.get(canvasId);
+            if (currentState) {
+                ANIMATION_STATE.set(canvasId, { hovered: false, speedMultiplier: 1, frame: currentState.frame });
+                setTimeout(() => {
+                    const finalState = ANIMATION_STATE.get(canvasId);
+                    if (finalState && !finalState.hovered) {
+                         ANIMATION_STATE.set(canvasId, { hovered: false, speedMultiplier: 0, frame: null });
+                         cancelAnimationFrame(finalState.frame);
+                    }
+                }, 1000);
+            }
+        });
+    }
+
+
+    function renderCards(data, categorySlug) {
+        hideLoading();
+        cardGrid.innerHTML = '';
+        if (data.length === 0) {
+            cardGrid.innerHTML = '<p style="grid-column: 1 / -1; text-align: center;">No projects found for this grouping.</p>';
+            return;
+        }
+
+        data.forEach(item => {
+            const card = document.createElement('a');
+            card.className = 'archive-card-v2';
+            card.href = '#';
+            card.setAttribute('data-filter-key', item.label);
+            card.setAttribute('data-category', categorySlug);
+            
+            const labelString = String(item.label);
+            const canvasId = `moiré-pattern-${labelString.replace(/\s+/g, '-').toLowerCase()}`;
+
+            card.innerHTML = `
+                <div class="inner-content">
+                    <canvas id="${canvasId}" class="seigaiha-canvas"></canvas>
+                    <div class="title-v2">${item.label}</div>
+                    <div class="projects-info-v2">No. of Projects: <span class="count-v2">${item.count}</span></div>
+                </div>
             `;
 
-            // Get the title element within the newly created card
-            const titleDiv = card.querySelector('.title');
-
-            // --- CALL FONT RESIZE FUNCTION ---
-            // Use requestAnimationFrame to ensure the element is rendered and measurable
+            card.addEventListener('click', (e) => {
+                e.preventDefault();
+                const filterKey = e.currentTarget.getAttribute('data-filter-key');
+                const categoryName = e.currentTarget.querySelector('.title-v2').textContent; 
+                loadProjectTable(categorySlug, filterKey, categoryName);
+            });
+            cardGrid.appendChild(card);
+            
+            const titleDiv = card.querySelector('.title-v2');
             requestAnimationFrame(() => {
                 adjustFontSize(titleDiv);
+                drawMoiréPattern(canvasId, card);
             });
-            // --- END CALL ---
+        });
+    }
 
+    function renderProjectTable(data) {
+        projectsTableBody.innerHTML = '';
+        if (data.length === 0) {
+            projectsTableBody.innerHTML = `<tr><td colspan="7" style="text-align: center;">No projects found for this filter.</td></tr>`;
+            return;
+        }
 
-			card.addEventListener('click', (e) => {
-				e.preventDefault();
-				const filterKey = e.currentTarget.getAttribute('data-filter-key');
-				const category = e.currentTarget.getAttribute('data-category');
-				const categoryName = e.currentTarget.querySelector('.title').textContent; // Use textContent for safety
-				loadProjectTable(category, filterKey, categoryName);
-			});
-			cardGrid.appendChild(card);
-		});
-	}
+        data.forEach(project => {
+            const row = projectsTableBody.insertRow();
+            const leaderName = project.project_leader ? project.project_leader.full_name : 'N/A';
+            const collegeName = (project.project_leader && project.project_leader.college) ? ` (${project.project_leader.college.name})` : '';
+            const progressDisplay = project.progress_display || '0/0 (0%)';
+            const projectDetailUrl = `/projects/${project.id}/`;
 
-	function renderProjectTable(data) {
-		projectsTableBody.innerHTML = '';
-		if (data.length === 0) {
-			projectsTableBody.innerHTML = `<tr><td colspan="7" style="text-align: center;">No projects found for this filter.</td></tr>`;
-			return;
-		}
+            row.innerHTML = `
+                <td><a href="${projectDetailUrl}" class="link">${project.title}</a></td>
+                <td>${leaderName} ${collegeName}</td>
+                <td>${project.start_date || 'N/A'}</td>
+                <td>${project.estimated_end_date || 'N/A'}</td>
+                <td>${progressDisplay}</td>
+                <td class="center">${project.estimated_trainees || 0}</td>
+                <td>${project.status}</td>
+            `;
+        });
+    }
 
-		data.forEach(project => {
-			const row = projectsTableBody.insertRow();
-			const leaderName = project.project_leader ? project.project_leader.full_name : 'N/A';
-			const collegeName = (project.project_leader && project.project_leader.college) ? ` (${project.project_leader.college.name})` : '';
-			const progressDisplay = project.progress_display || '0/0 (0%)';
-			const projectDetailUrl = `/projects/${project.id}/`;
+    async function loadAggregationData(categorySlug) {
+        switchView('cards');
+        showLoading();
+        try {
+            const apiURL = `/archives/api/aggregate/${categorySlug}/`;
+            const response = await fetch(apiURL);
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error(`API Error Status: ${response.status}`, errorText);
+                throw new Error(`API returned status ${response.status}`);
+            }
+            const data = await response.json();
+            renderCards(data, categorySlug);
+            currentCategorySlug = categorySlug;
+        } catch (error) {
+            console.error("Error fetching aggregation data:", error);
+            cardGrid.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: red;">Failed to load data. Please check the API endpoint and server console for details.</p>';
+        }
+    }
 
-			row.innerHTML = `
-				<td><a href="${projectDetailUrl}" class="link">${project.title}</a></td>
-				<td>${leaderName} ${collegeName}</td>
-				<td>${project.start_date || 'N/A'}</td>
-				<td>${project.estimated_end_date || 'N/A'}</td>
-				<td>${progressDisplay}</td>
-				<td class="center">${project.estimated_trainees || 0}</td>
-				<td>${project.status}</td>
-			`;
-		});
-	}
-
-	// --- Data Fetching Functions (Unchanged from previous correct version) ---
-	async function loadAggregationData(categorySlug) {
-		switchView('cards');
-		showLoading();
-		try {
-			const apiURL = `/archives/api/aggregate/${categorySlug}/`;
-			const response = await fetch(apiURL);
-			if (!response.ok) {
-				const errorText = await response.text();
-				console.error(`API Error Status: ${response.status}`, errorText);
-				throw new Error(`API returned status ${response.status}`);
-			}
-			const data = await response.json();
-			renderCards(data, categorySlug); // This now calls the JS font resize
-			currentCategorySlug = categorySlug;
-		} catch (error) {
-			console.error("Error fetching aggregation data:", error);
-			cardGrid.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: red;">Failed to load data. Please check the API endpoint and server console for details.</p>';
-		}
-	}
-
-	async function loadProjectTable(category, filterValue, titleName) {
-		currentFilterKey = filterValue;
-		currentFilterName = titleName;
-		switchView('table');
+    async function loadProjectTable(category, filterValue, titleName) {
+        currentFilterKey = filterValue;
+        currentFilterName = titleName;
+        switchView('table');
 
         breadcrumbNav.innerHTML = `
             <span class="breadcrumb-item"><a href="#" id="breadcrumbAll">ALL</a></span>
@@ -303,97 +410,90 @@
             loadAggregationData(currentCategorySlug);
         });
 
-		projectsTableBody.innerHTML = `<tr><td colspan="7" style="text-align: center;">Loading projects...</td></tr>`;
-		const formData = new FormData(document.getElementById('searchForm'));
-		const searchParams = new URLSearchParams(formData).toString();
-		// Encode the filterValue in case it contains special characters like spaces
-		const apiURL = `/archives/api/projects/${category}/${encodeURIComponent(filterValue)}/?${searchParams}`;
+        projectsTableBody.innerHTML = `<tr><td colspan="7" style="text-align: center;">Loading projects...</td></tr>`;
+        const formData = new FormData(document.getElementById('searchForm'));
+        const searchParams = new URLSearchParams(formData).toString();
+        const apiURL = `/archives/api/projects/${category}/${encodeURIComponent(filterValue)}/?${searchParams}`;
 
-		try {
-			const response = await fetch(apiURL);
-			if (!response.ok) {
-				const errorText = await response.text();
-				console.error(`API Error Status: ${response.status}`, errorText);
-				throw new Error(`API returned status ${response.status}`);
-			}
-			const jsonResponse = await response.json();
-			renderProjectTable(jsonResponse.results || jsonResponse);
+        try {
+            const response = await fetch(apiURL);
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error(`API Error Status: ${response.status}`, errorText);
+                throw new Error(`API returned status ${response.status}`);
+            }
+            const jsonResponse = await response.json();
+            renderProjectTable(jsonResponse.results || jsonResponse);
 
-			const paginationContainer = document.getElementById('tablePagination');
-			paginationContainer.innerHTML = '';
-			if (jsonResponse.previous) {
-				// Ensure URL uses HTTPS if the site does
+            const paginationContainer = document.getElementById('tablePagination');
+            paginationContainer.innerHTML = '';
+            if (jsonResponse.previous) {
                 const prevUrl = new URL(jsonResponse.previous, window.location.origin);
-				paginationContainer.innerHTML += `<a class="pagination-button" href="#" onclick="event.preventDefault(); loadProjectTablePage('${prevUrl.search}');">Previous</a>`;
-			}
-			if (jsonResponse.next) {
-				// Ensure URL uses HTTPS if the site does
+                paginationContainer.innerHTML += `<a class="pagination-button" href="#" onclick="event.preventDefault(); loadProjectTablePage('${prevUrl.search}');">Previous</a>`;
+            }
+            if (jsonResponse.next) {
                 const nextUrl = new URL(jsonResponse.next, window.location.origin);
-				paginationContainer.innerHTML += `<a class="pagination-button" href="#" onclick="event.preventDefault(); loadProjectTablePage('${nextUrl.search}');">Next</a>`;
-			}
-		} catch (error) {
-			console.error("Error fetching project list:", error);
-			projectsTableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: red;">Failed to load project list.</td></tr>`;
-		}
-	}
+                paginationContainer.innerHTML += `<a class="pagination-button" href="#" onclick="event.preventDefault(); loadProjectTablePage('${nextUrl.search}');">Next</a>`;
+            }
+        } catch (error) {
+            console.error("Error fetching project list:", error);
+            projectsTableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: red;">Failed to load project list.</td></tr>`;
+        }
+    }
 
-	async function loadProjectTablePage(queryString) {
-        // Encode the filterValue here too for consistency
+    async function loadProjectTablePage(queryString) {
         const apiURL = `/archives/api/projects/${currentCategorySlug}/${encodeURIComponent(currentFilterKey)}/${queryString}`;
-		projectsTableBody.innerHTML = `<tr><td colspan="7" style="text-align: center;">Loading page...</td></tr>`;
-		try {
-			const response = await fetch(apiURL);
-			if (!response.ok) {
-				throw new Error(`API returned status ${response.status}`);
-			}
-			const jsonResponse = await response.json();
-			renderProjectTable(jsonResponse.results || jsonResponse);
+        projectsTableBody.innerHTML = `<tr><td colspan="7" style="text-align: center;">Loading page...</td></tr>`;
+        try {
+            const response = await fetch(apiURL);
+            if (!response.ok) {
+                throw new Error(`API returned status ${response.status}`);
+            }
+            const jsonResponse = await response.json();
+            renderProjectTable(jsonResponse.results || jsonResponse);
 
-			const paginationContainer = document.getElementById('tablePagination');
-			paginationContainer.innerHTML = '';
-			if (jsonResponse.previous) {
-				// Ensure URL uses HTTPS if the site does
+            const paginationContainer = document.getElementById('tablePagination');
+            paginationContainer.innerHTML = '';
+            if (jsonResponse.previous) {
                 const prevUrl = new URL(jsonResponse.previous, window.location.origin);
-				paginationContainer.innerHTML += `<a class="pagination-button" href="#" onclick="event.preventDefault(); loadProjectTablePage('${prevUrl.search}');">Previous</a>`;
-			}
-			if (jsonResponse.next) {
-                // Ensure URL uses HTTPS if the site does
-				const nextUrl = new URL(jsonResponse.next, window.location.origin);
-				paginationContainer.innerHTML += `<a class="pagination-button" href="#" onclick="event.preventDefault(); loadProjectTablePage('${nextUrl.search}');">Next</a>`;
-			}
-		} catch (error) {
-			console.error("Error fetching paginated list:", error);
-			projectsTableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: red;">Failed to load page.</td></tr>`;
-		}
-	}
+                paginationContainer.innerHTML += `<a class="pagination-button" href="#" onclick="event.preventDefault(); loadProjectTablePage('${prevUrl.search}');">Previous</a>`;
+            }
+            if (jsonResponse.next) {
+                const nextUrl = new URL(jsonResponse.next, window.location.origin);
+                paginationContainer.innerHTML += `<a class="pagination-button" href="#" onclick="event.preventDefault(); loadProjectTablePage('${nextUrl.search}');">Next</a>`;
+            }
+        } catch (error) {
+            console.error("Error fetching paginated list:", error);
+            projectsTableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: red;">Failed to load page.</td></tr>`;
+        }
+    }
 
 
-	// --- Event Listeners and Initial Load ---
-	categoryDropdownBtn.addEventListener('click', (e) => {
-		e.stopPropagation();
-		categoryDropdownContent.style.display = categoryDropdownContent.style.display === 'block' ? 'none' : 'block';
-	});
+    categoryDropdownBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        categoryDropdownContent.style.display = categoryDropdownContent.style.display === 'block' ? 'none' : 'block';
+    });
 
-	categoryDropdownContent.querySelectorAll('a').forEach(link => {
-		link.addEventListener('click', (e) => {
-			e.preventDefault();
-			const slug = e.currentTarget.getAttribute('data-category-slug');
-			const name = e.currentTarget.getAttribute('data-category-name');
-			currentCategoryDisplay.textContent = `Group By: ${name}`;
-			categoryDropdownContent.style.display = 'none';
-			loadAggregationData(slug);
-		});
-	});
+    categoryDropdownContent.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const slug = e.currentTarget.getAttribute('data-category-slug');
+            const name = e.currentTarget.getAttribute('data-category-name');
+            currentCategoryDisplay.textContent = `Group By: ${name}`;
+            categoryDropdownContent.style.display = 'none';
+            loadAggregationData(slug);
+        });
+    });
 
-	document.addEventListener('DOMContentLoaded', () => {
-		currentCategoryDisplay.textContent = `Group By: {{ categories.0.1 }}`;
-		loadAggregationData(currentCategorySlug);
-	});
+    document.addEventListener('DOMContentLoaded', () => {
+        currentCategoryDisplay.textContent = `Group By: {{ categories.0.1 }}`;
+        loadAggregationData(currentCategorySlug);
+    });
 
     document.addEventListener('click', function(e) {
-		if (e.target !== categoryDropdownBtn && !categoryDropdownBtn.contains(e.target)) {
-			categoryDropdownContent.style.display = 'none';
-		}
+        if (e.target !== categoryDropdownBtn && !categoryDropdownBtn.contains(e.target)) {
+            categoryDropdownContent.style.display = 'none';
+        }
     });
 
     if (filterBtn && document.getElementById('filterDropdown')) {
@@ -408,20 +508,23 @@
     if (document.getElementById('closeFilter') && document.getElementById('filterDropdown')) {
         document.getElementById('closeFilter').addEventListener('click', function(e) {
             e.preventDefault();
-            // Clear filters by redirecting to base URL without query parameters
             window.location.href = window.location.pathname;
         });
     }
 
-	document.getElementById('searchForm').addEventListener('submit', function(e) {
-		e.preventDefault();
-		if (tableView.style.display === 'block' && currentFilterKey !== null) {
-			loadProjectTable(currentCategorySlug, currentFilterKey, currentFilterName);
-		} else {
-			loadAggregationData(currentCategorySlug); // Or implement card search if desired
-		}
-		document.getElementById('filterDropdown').style.display = 'none';
-	});
+    if (document.getElementById('searchForm')) {
+        document.getElementById('searchForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const filterDropdown = document.getElementById('filterDropdown');
+            
+            if (tableView.style.display === 'block' && currentFilterKey !== null) {
+                loadProjectTable(currentCategorySlug, currentFilterKey, currentFilterName);
+            } else {
+                loadAggregationData(currentCategorySlug);
+            }
+            if (filterDropdown) filterDropdown.style.display = 'none';
+        });
+    }
 </script>
 
 </body>

@@ -1,6 +1,3 @@
-/* ========================================= */
-/* BASE STYLES & LAYOUT (from original file) */
-/* ========================================= */
 p, h1, h2, h3, h4, h5, h6, div {
     cursor: default;
 }
@@ -23,7 +20,6 @@ body {
     gap: 1rem;
 }
 
-/* Used for the header area */
 .container-a {
     display: flex;
     justify-content: space-between;
@@ -73,14 +69,10 @@ body {
     transform: translateY(-1px);
 }
 
-/* ========================================= */
-/* SEARCH & FILTER (Maintained/Refined) */
-/* ========================================= */
 .search-container {
     width: 100%;
     display: flex;
     gap: 1rem;
-    /* Removed box-shadow here to apply to the bar directly */
     margin-bottom: 1rem;
 }
 
@@ -91,11 +83,11 @@ body {
     display: flex;
     align-items: center;
     padding: 0 16px;
-    border-bottom: 1.09px solid #535353; /* Changed to border-style property */
+    border-bottom: 1.09px solid #535353;
     border-radius: 8px;
     box-sizing: border-box;
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.08); /* Re-applied shadow here */
-    position: relative; /* Needed for filter-dropdown positioning */
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.08);
+    position: relative;
 }
 
 .search-bar input {
@@ -113,11 +105,10 @@ body {
 .filter-dropdown {
     display: none;
     position: absolute;
-    /* Adjusted positioning to be relative to search-bar */
     top: 45px; 
     right: 0;
     z-index: 1000;
-    background: #ffffff; /* Changed to white for better contrast */
+    background: #ffffff;
     border: 1px solid #e5e7eb;
     border-radius: 12px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
@@ -127,7 +118,6 @@ body {
 
 .filter-grid {
     display: grid;
-    /* Adjusted grid to 2 columns for better layout and less empty space */
     grid-template-columns: repeat(2, 1fr); 
     grid-gap: 24px;
 }
@@ -141,7 +131,7 @@ body {
 
 .filter-dropdown select,
 .filter-dropdown input[type="date"] {
-    width: 100%; /* Make inputs fill their grid column */
+    width: 100%;
     margin-top: 6px;
     border: 1px solid #e5e7eb;
     border-radius: 6px;
@@ -157,7 +147,6 @@ body {
     -webkit-appearance: none;
     -moz-appearance: none;
     padding-right: 2rem;
-    /* Re-using your existing custom arrow graphic */
     background: url("data:image/svg+xml;utf8,<svg width='16' height='11' viewBox='0 0 16 11' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M7.99976 7.19417L13.9025 1.29147C14.0125 1.17758 14.144 1.08674 14.2895 1.02424C14.435 0.961746 14.5915 0.92885 14.7498 0.927474C14.9082 0.926098 15.0652 0.95627 15.2117 1.01623C15.3583 1.07619 15.4914 1.16473 15.6034 1.27669C15.7153 1.38866 15.8039 1.5218 15.8638 1.66835C15.9238 1.8149 15.9540 1.97192 15.9526 2.13026C15.9512 2.28859 15.9183 2.44506 15.8558 2.59055C15.7933 2.73604 15.7025 2.86762 15.5886 2.97762L8.84283 9.72339C8.61921 9.94694 8.31596 10.0725 7.99976 10.0725C7.68356 10.0725 7.38031 9.94694 7.15669 9.72339L0.41092 2.97762C0.297028 2.86762 0.206183 2.73604 0.143687 2.59055C0.0811915 2.44506 0.0482959 2.28859 0.04692 2.13026C0.0455441 1.97192 0.0757155 1.8149 0.135674 1.66835C0.195632 1.5218 0.284176 1.38866 0.39614 1.27669C0.508103 1.16473 0.641244 1.07619 0.787794 1.01623C0.934343 0.957121 1.09137 0.926098 1.24970 1.02424C1.40804 0.92885 1.56451 0.961746 1.71 1.02424C1.85548 1.08674 1.98706 1.17758 2.09706 1.29147L7.99976 7.19417Z' fill='%23374151'/></svg>") no-repeat right 0.75rem center;
     background-size: 13px 8px;
 }
@@ -216,12 +205,7 @@ body {
     transform: translateY(-1px);
 }
 
-/* ========================================= */
-/* ARCHIVE-SPECIFIC COMPONENTS (NEW) */
-/* ========================================= */
-
 .content-header {
-    /* Matches the layout required by archive.html */
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -263,7 +247,7 @@ body {
     box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.1);
     z-index: 10;
     border-radius: 8px;
-    top: 100%; /* Position below the button */
+    top: 100%;
     left: 0;
     margin-top: 5px;
     overflow: hidden;
@@ -282,57 +266,144 @@ body {
     color: #000;
 }
 
-/* Card View */
 .archive-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 1.5rem;
+    /* ADJUSTMENT: New minmax of 380px for a flexible grid */
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); 
+    /* ADJUSTMENT: Steady 2rem gap between cards */
+    gap: 2rem; 
     margin-bottom: 2rem;
 }
 
-.archive-card {
-    background: linear-gradient(135deg, #28a745, #ffc107);
-    color: white;
+:root {
+    --shade-a: #e3e3e3; 
+    --shade-b: #ebebeb; 
+    --shade-c: #f3f3f3; 
+    --shade-d: #ffffff; 
+    --accent-color: #007bff;
+}
+
+.archive-card-v2 {
     text-decoration: none;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-    transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+    border-radius: 16px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08); 
+    transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94); 
+    display: flex;
+    flex-direction: column;
+    min-height: 380px; 
+    overflow: hidden;
+    position: relative;
+    background: #ffffff;
+    padding: 3px; 
+    will-change: transform, box-shadow;
+    /* ADJUSTMENT: Set min-width but allow it to stretch up to its max content size */
+    min-width: 350px; 
+    max-width: 100%; /* Allow growth within the grid cell */
+    justify-self: stretch; /* Stretch to fill the grid cell, respecting min-width */
+}
+
+.archive-card-v2::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #95bae8, #28a745, #ff9900);
+    background-size: 400% 400%; 
+    background-position: 0% 0%; 
+    z-index: -1;
+    opacity: 0.9;
+    transition: all 1.0s ease-in-out; 
+}
+
+.archive-card-v2 .inner-content {
+    background: #ffffff;
+    border-radius: 13px; 
+    flex-grow: 1;
+    padding: 25px 18px; 
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    min-height: 150px; /* Ensure a base height */
+    position: relative;
     overflow: hidden;
 }
-.archive-card:hover {
-    background: linear-gradient(135deg, #218838, #e0a800);
-    box-shadow: 0 8px 16px rgba(0,0,0,0.25);
-    transform: translateY(-3px);
+
+.seigaiha-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    opacity: 0.6;
+    pointer-events: none;
+    
+    -webkit-mask-image: radial-gradient(circle at center, transparent 45%, black 85%);
+    mask-image: radial-gradient(circle at center, transparent 45%, black 85%);
 }
-.archive-card .title {
-    height: 70%; /* Title area takes 70% */
+
+.archive-card-v2 .title-v2 {
+    position: relative;
+    z-index: 1;
+    text-align: center; 
+    font-weight: 800;
+    color: #2c2c2c;
+    text-shadow: 
+        -1px -1px 0 #ffffff,  
+        1px -1px 0 #ffffff,
+        -1px 1px 0 #ffffff,
+        1px 1px 0 #ffffff,
+        0 0 2px rgba(0, 0, 0, 0.1);
+    font-size: 30px; 
+    line-height: 1.2;
     display: flex;
-    align-items: center;
+    align-items: center; 
     justify-content: center;
+    flex-grow: 1; 
+    padding: 0 10px;
+    transition: all 0.7s ease-out, transform 0.3s ease-out;
+}
+
+.archive-card-v2 .projects-info-v2 {
+    position: relative;
+    z-index: 1;
     text-align: center;
-    font-weight: 700;
-    line-height: 1.1; /* Keep line height tight */
-    overflow: hidden; /* Hide overflow during resize */
-    padding: 5px; /* Minimal padding */
-    word-break: break-word;
-    /* Start large, JS will reduce if needed */
-    font-size: 30px; /* Start fairly large (pixels are easier for JS loop) */
-}
-.archive-card .projects-info {
-    height: 30%; /* Info area takes 30% */
-    display: flex;
-    align-items: center;
-    justify-content: center;
     font-weight: 500;
-    font-size: 0.95rem;
-    background: rgba(0,0,0,0.15);
-    padding: 5px;
+    font-size: 1.0rem; 
+    color: #555;
+    background: #ffffff; 
+    padding: 8px 12px;
+    border-radius: 20px;
+    transition: all 0.7s ease-out;
+    width: 70%; 
+    /* Increased max-width slightly to accommodate wider card and centered appearance */
+    max-width: 350px; 
+    margin: 0 auto 5px auto;
 }
- 
+
+.archive-card-v2 .count-v2 {
+    color: #ff9900;
+    font-weight: 700;
+    font-size: 1.15rem;
+}
+
+.archive-card-v2:hover {
+    box-shadow: 0 10px 20px rgba(0,0,0,0.15); 
+    transform: translateY(-4px); 
+}
+
+.archive-card-v2:hover::before {
+    background-position: -100% -100%;
+}
+
+.archive-card-v2:hover .title-v2 {
+    color: #00681a;
+    letter-spacing: 0.5px;
+    transform: scale(1.05) translateY(-5px); 
+}
+
 button:hover {
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
@@ -415,9 +486,6 @@ button:hover {
     border-bottom: none; 
 }
 
-/* ========================================= */
-/* PAGINATION (from original file) */
-/* ========================================= */
 .pagination-container {
     display: flex;
     justify-content: center;
@@ -458,9 +526,6 @@ button:hover {
     cursor: not-allowed;
 }
 
-/* ========================================= */
-/* MEDIA QUERIES (from original file) */
-/* ========================================= */
 @media (max-width: 900px) {
     .announce-grid {
         grid-template-columns: 1fr;
@@ -541,7 +606,6 @@ button:hover {
     border-color: #000000;
 }
 
-/* Content Layout */
 .expert-container {
     display: flex;
     flex-wrap: wrap;
@@ -549,7 +613,6 @@ button:hover {
     margin-top: 20px;
 }
 
-/* Individual Expert Card - The requested style */
 .expert-card {
     width: 18rem;
     height: 22rem;
@@ -623,10 +686,8 @@ button:hover {
     color: #333;
 }
 
-/* Only use one class for hidden state management */
 .hidden { display: none !important; }
 
-/* AI MODAL STYLES */
 .modal {
     position: fixed; 
     z-index: 2000; 
@@ -671,7 +732,6 @@ button:hover {
     font-size: 1.15rem;
 }
 
-/* Custom AI Input Modal Style */
 #aiInputModal .modal-content {
     max-width: 450px;
 }
@@ -697,15 +757,52 @@ button:hover {
     padding: 10px 0;
 }
 .breadcrumb-nav .breadcrumb-item a {
-    color: #444; /* Link color */
+    color: #444;
     text-decoration: none;
     font-weight: 700;
 }
 .breadcrumb-nav .breadcrumb-item.active {
-    color: #555; /* Active/current page color */
+    color: #555;
     font-weight: 700;
 }
 .breadcrumb-nav .breadcrumb-separator {
     margin: 0 10px;
     color: #888;
+}
+
+.archive-card-v2 {
+    min-height: 380px; 
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+}
+
+.archive-card-v2 .inner-content {
+    position: relative;
+    z-index: 2;
+    padding: 25px 18px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    justify-content: space-between;
+}
+
+.seigaiha-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+.archive-card-v2 .title-v2 {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    overflow: hidden;
 }
