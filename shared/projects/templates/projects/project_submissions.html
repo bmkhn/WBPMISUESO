@@ -32,11 +32,13 @@
                 <div style="position:absolute; top:1.5rem; right:1.5rem; text-align:right;">
                     {% if sub.deadline %}
                         <span title="{{ sub.deadline|date:'Y-m-d H:i' }}">
-                            {% if sub.deadline > now %}
-                                {{ sub.deadline|timeuntil }} left
-                            {% else %}
-                                <span style="color:#D5110A;font-weight:600;">Deadline Passed</span>
-                            {% endif %}
+                        {% if sub.deadline > now %}
+                            <span style="color:#006400;font-weight:600;">{{ sub.deadline|timeuntil }} left</span>
+                        {% elif sub.is_late_submission %}
+                            <span style="color:#D5110A;font-weight:600;">Late Submission</span>
+                        {% else %}
+                            <span style="color:#555;font-weight:600;">Deadline Passed</span>
+                        {% endif %}
                         </span>
                     {% endif %}
                     <br>

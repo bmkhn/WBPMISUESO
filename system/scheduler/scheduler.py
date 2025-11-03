@@ -146,10 +146,9 @@ def update_event_statuses():
                 event.status = 'COMPLETED'
                 event.save()
                 count_completed += 1
-                print(f"✓ Project event completed: {event.title}")
             except Exception as e:
-                print(f"✗ Failed to complete project event '{event.title}': {str(e)}")
-        
+                pass
+
         if count_ongoing > 0 or count_completed > 0:
             print(f"✓ Updated event statuses at {timezone.now().strftime('%Y-%m-%d %H:%M:%S')}: {count_ongoing} ongoing, {count_completed} completed")
     
@@ -212,6 +211,48 @@ def update_project_statuses():
     
     except Exception as e:
         print(f"✗ Failed to update project statuses: {str(e)}")
+
+
+def update_user_expert_status():
+    """
+    Update is_expert flag for faculty users based on project involvement.
+    - Faculty with at least 1 project as leader or provider -> is_expert = True
+    - Faculty with no projects -> is_expert = False
+    
+    Runs daily at midnight and on startup.
+    """
+    from system.users.models import User
+    from shared.projects.models import Project
+    
+    count_experts = 0
+    count_removed = 0
+    
+    try:
+        # Get all faculty users
+        faculty_users = User.objects.filter(role=User.Role.FACULTY)
+        
+        for user in faculty_users:
+            # Check if faculty has at least 1 project (as leader or provider)
+            has_projects = Project.objects.filter(
+                Q(project_leader=user) | Q(providers=user)
+            ).exists()
+            
+            # Update is_expert status if needed
+            if has_projects and not user.is_expert:
+                user.is_expert = True
+                user.save(update_fields=['is_expert'])
+                count_experts += 1
+
+            elif not has_projects and user.is_expert:
+                user.is_expert = False
+                user.save(update_fields=['is_expert'])
+                count_removed += 1
+        
+        if count_experts > 0 or count_removed > 0:
+            print(f"✓ Updated expert statuses at {timezone.now().strftime('%Y-%m-%d %H:%M:%S')}: {count_experts} added, {count_removed} removed")
+    
+    except Exception as e:
+        print(f"✗ Failed to update expert statuses: {str(e)}")
 
 
 def notify_project_status_change(project, old_status, new_status):
@@ -335,18 +376,53 @@ def start_scheduler():
         replace_existing=True
     )
     
+    # Update user expert status daily at midnight
+    scheduler.add_job(
+        update_user_expert_status,
+        'cron',
+        hour=0,
+        minute=1,  # 1 minute after midnight
+        id='update_expert_status',
+        replace_existing=True
+    )
+    
     scheduler.start()
     print("✓ Centralized Scheduler started:")
     print("  - Announcements: checking every minute")
     print("  - Session cleanup: daily at 3:00 AM")
     print("  - Event status updates: daily at midnight")
     print("  - Project status updates: daily at midnight")
+    print("  - Expert status updates: daily at 12:01 AM")
     
-    # Schedule an immediate check 5 seconds after startup (after Django is fully ready)
+    # Schedule immediate checks after startup (after Django is fully ready)
     scheduler.add_job(
         publish_scheduled_announcements,
         'date',
         run_date=timezone.now() + timedelta(seconds=5),
         id='publish_announcements_startup',
+        replace_existing=True
+    )
+    
+    scheduler.add_job(
+        update_project_statuses,
+        'date',
+        run_date=timezone.now() + timedelta(seconds=10),
+        id='update_project_statuses_startup',
+        replace_existing=True
+    )
+    
+    scheduler.add_job(
+        update_event_statuses,
+        'date',
+        run_date=timezone.now() + timedelta(seconds=10),
+        id='update_event_statuses_startup',
+        replace_existing=True
+    )
+    
+    scheduler.add_job(
+        update_user_expert_status,
+        'date',
+        run_date=timezone.now() + timedelta(seconds=15),
+        id='update_expert_status_startup',
         replace_existing=True
     )
