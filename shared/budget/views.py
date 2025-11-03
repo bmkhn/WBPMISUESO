@@ -44,7 +44,7 @@ def _get_admin_dashboard_data(fiscal_year):
     # Get aggregated budgets DIRECTLY from Projects, grouped by college
     project_budgets_by_college = Project.objects.filter(
             project_leader__college__isnull=False,
-            start_date__year=fiscal_year 
+            start_date__year=int(fiscal_year)
         ) \
         .values('project_leader__college') \
         .annotate(
@@ -127,7 +127,7 @@ def _get_college_dashboard_data(user, fiscal_year):
 
     projects = Project.objects.filter(
         project_leader__college=user_college,
-        start_date__year=fiscal_year 
+        start_date__year=int(fiscal_year)
     ).select_related('project_leader').order_by('title')
     
     project_list = []
@@ -208,7 +208,9 @@ def _get_edit_page_data(user, fiscal_year):
         context['colleges_data'] = admin_data['dashboard_data']
         # This map is used by the JavaScript solution
         context['allocation_map'] = json.dumps({
-            item['college_id']: str(item['original_cut']) for item in admin_data['dashboard_data'] # Cast Decimal to str
+            # FIX: If original_cut is zero, pass an empty string to keep the input field blank.
+            item['college_id']: str(item['original_cut']) if item['original_cut'] > Decimal('0') else ''
+            for item in admin_data['dashboard_data'] # Cast Decimal to str
         })
 
     if user_role in ["PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
@@ -270,7 +272,7 @@ def _update_project_internal_budget(user, project_id, new_internal_budget):
     # Check against the *actual* remaining budget
     current_committed_total = Project.objects.filter(
             project_leader__college=college_budget.college,
-            start_date__year=fiscal_year
+            start_date__year=int(fiscal_year)
         ) \
         .exclude(id=project.id) \
         .aggregate(
@@ -348,7 +350,7 @@ def budget_view(request):
     # The old variable was 'latest_funding'
     context["latest_external_projects"] = Project.objects.filter(
         external_budget__gt=0,
-        start_date__year=current_year
+        start_date__year=int(current_year)
     ).order_by('-external_budget')[:5]
     # --- END FIX ---
 
@@ -393,7 +395,7 @@ def edit_budget_view(request):
         user_college = getattr(request.user, 'college', None)
         projects_for_form = Project.objects.filter(
             project_leader__college=user_college,
-            start_date__year=current_year
+            start_date__year=int(current_year)
         ).order_by('title')
 
         if request.method == "POST" and 'assign_project_budget' in request.POST:
@@ -468,7 +470,7 @@ def edit_budget_view(request):
                         # Check against actual project sum
                         committed_amount = Project.objects.filter(
                             project_leader__college=college, 
-                            start_date__year=current_year
+                            start_date__year=int(current_year)
                         ).aggregate(
                             total=Coalesce(Sum('internal_budget'), Value(Decimal('0.0')))
                         )['total']
@@ -551,7 +553,7 @@ def external_sponsors_view(request):
     # and are in the current fiscal year (to match the dashboard).
     project_queryset = Project.objects.filter(
         external_budget__gt=0,
-        start_date__year=current_year
+        start_date__year=int(current_year)
     ).order_by('-start_date')
     
     paginator = Paginator(project_queryset, 20)

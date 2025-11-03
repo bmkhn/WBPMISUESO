@@ -10,6 +10,7 @@ from django.core.paginator import Paginator
 import os
 from django.db import models
 from django.db.models import Q, BooleanField, ExpressionWrapper
+from django.utils import timezone
 
 
 def get_role_constants():
@@ -256,6 +257,7 @@ def project_events(request, pk):
     
     # Add submission status information to events - optimize with select_related
     for event in events:
+        # Ensure we prefetch the image_event field if it exists
         event.related_submissions = Submission.objects.filter(event=event).select_related('downloadable').first()
     
     total = project.estimated_events
@@ -466,7 +468,7 @@ def project_files(request, pk):
 
         'documents': page_obj,
         'paginator': paginator,
-        'page_number': page_number,
+        'page_number': page_obj.number,
         'page_obj': page_obj,
         'page_range': page_range,
     })
@@ -564,20 +566,20 @@ def project_submissions(request, pk):
         if action == "submit" and (submission.status == "PENDING" or submission.status == "REVISION_REQUESTED" or submission.status == "REJECTED" or submission.status == "OVERDUE"):
             sub_type = submission.downloadable.submission_type
 
+            # Single file logic restored
             if sub_type == "final":
-                submission.file = request.FILES.get("final_file")
+                submission.file = request.FILES.get("additional_documents")
                 submission.for_product_production = bool(request.POST.get("for_product_production"))
                 submission.for_research = bool(request.POST.get("for_research"))
                 submission.for_extension = bool(request.POST.get("for_extension"))
             
             elif sub_type == "event":
-                submission.image_event = request.FILES.get("image_event")
+                submission.image_event = request.FILES.get("additional_documents")
                 submission.image_description = request.POST.get("image_description", "")
                 submission.num_trained_individuals = request.POST.get("num_trained_individuals", 0)
-                submission.event = ProjectEvent.objects.filter(pk=request.POST.get("event")).first()
 
             else:  # "file"
-                submission.file = request.FILES.get("file_file")
+                submission.file = request.FILES.get("additional_documents")
 
             # Mark as late submission if it was overdue
             if submission.status == "OVERDUE":
@@ -621,7 +623,7 @@ def project_submissions(request, pk):
         "status_filter": status_filter,
 
         'paginator': paginator,
-        'page_number': page_number,
+        'page_number': page_obj.number,
         'page_obj': page_obj,
         'page_range': page_range,
     }
@@ -681,27 +683,21 @@ def project_submissions_details(request, pk, submission_id):
         if action == "submit" and (submission.status == "PENDING" or submission.status == "REVISION_REQUESTED" or submission.status == "REJECTED" or submission.status == "OVERDUE"):
             sub_type = submission.downloadable.submission_type
 
+            # Single file logic restored
             if sub_type == "final":
-                submission.file = request.FILES.get("final_file")
+                submission.file = request.FILES.get("additional_documents")
                 submission.for_product_production = bool(request.POST.get("for_product_production"))
                 submission.for_research = bool(request.POST.get("for_research"))
                 submission.for_extension = bool(request.POST.get("for_extension"))
             
             elif sub_type == "event":
                 # For event submissions, the event is already linked via submission.event
-                if submission.event:
-                    # Update the ProjectEvent with image and description
-                    submission.event.image = request.FILES.get("image_event")
-                    submission.event.description = request.POST.get("image_description", "")
-                    submission.event.save()
-                
-                # Keep the submission fields for backward compatibility 
-                submission.image_event = request.FILES.get("image_event")
+                submission.image_event = request.FILES.get("additional_documents")
                 submission.image_description = request.POST.get("image_description", "")
                 submission.num_trained_individuals = request.POST.get("num_trained_individuals", 0)
 
             else:  # "file"
-                submission.file = request.FILES.get("file_file")
+                submission.file = request.FILES.get("additional_documents")
 
             # Mark as late submission if it was overdue
             if submission.status == "OVERDUE":
@@ -768,6 +764,7 @@ def admin_submission_action(request, pk, submission_id):
                 submission.submitted_by = None
                 submission.submitted_at = None
                 submission.file = None
+                submission.image_event = None
                 submission.updated_by = request.user
                 submission.updated_at = timezone.now()
                 submission.save()
@@ -1188,6 +1185,7 @@ def faculty_project(request):
         page_range = range(current - 2, current + 3)
 
     # Get recent status updates for this user's projects - optimize with select_related
+    from .models import ProjectUpdate
     updates_qs = ProjectUpdate.objects.filter(user=user).select_related(
         'project',
         'submission'

@@ -62,7 +62,7 @@
 
         <div class="content-right">
             {% if submission.status != "PENDING" %}
-                <!-- Submission [Event] Details -->
+                
                 {% if submission.downloadable.submission_type == "event" %}
                     <span class="trained-individuals-text">{{ submission.num_trained_individuals }} Trained Individuals</span>
 
@@ -74,7 +74,7 @@
 
                     <span class="notes-text">{{ submission.image_description }}</span>
 
-                <!-- Submission [Final] Details -->
+                
                 {% elif submission.downloadable.submission_type == "final" %}
                     <span class="final-text">{% if submission.for_product_production %}<i class="fa-solid fa-check"></i>{% elif submission.for_product_production == False %}<i class="fa-solid fa-xmark"></i>{% else %}_{% endif %} <span class="final-adjust">For Product Production</span></span>
                     <span class="final-text">{% if submission.for_research %}<i class="fa-solid fa-check"></i>{% elif submission.for_research == False %}<i class="fa-solid fa-xmark"></i>{% else %}_{% endif %} <span class="final-adjust">For Research</span></span>
@@ -155,19 +155,21 @@
         {% endif %}
     </div>
 
-    <!-- Submission Modals -->
-    <!-- Submission [Final] -->
     <div id="modal-final" class="submission-modal" style="display:none;">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
             <h2 style="margin-bottom:1rem;">Final Submission</h2>
-            <form method="post" enctype="multipart/form-data">
+            <form method="post" enctype="multipart/form-data" class="submission-form">
                 {% csrf_token %}
                 <input type="hidden" name="submission_id" value="{{ submission.id }}" />
                 <input type="hidden" name="action" value="submit" />
                 <div class="form-group">
                     <label class="form-label">File:</label>
-                    <input type="file" name="final_file" required accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+                    <div class="upload-area" onclick="document.getElementById('id_additional_documents_final').click()">
+                        <svg class="upload-icon"><use href="#icon-upload"></use></svg>
+                        <span class="upload-text">Click to upload</span>
+                        <input class="file-input" type="file" name="additional_documents" id="id_additional_documents_final" style="display:none;" accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,image/jpeg,image/png,image/jpg,image/gif,image/webp" required>
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -184,12 +186,11 @@
         </div>
     </div>
 
-    <!-- Submission [Event] -->
     <div id="modal-event" class="submission-modal" style="display:none;">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
             <h2 style="margin-bottom:1rem;">Event Submission</h2>
-            <form method="post" enctype="multipart/form-data">
+            <form method="post" enctype="multipart/form-data" class="submission-form">
                 {% csrf_token %}
                 <input type="hidden" name="submission_id" value="{{ submission.id }}" />
                 <input type="hidden" name="action" value="submit" />
@@ -199,7 +200,11 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">Image File <span class="required">*</span></label><br>
-                    <input type="file" name="image_event" accept="image/jpeg,image/png,image/jpg,image/gif,image/webp,application/pdf" required>
+                    <div class="upload-area" onclick="document.getElementById('id_additional_documents_event').click()">
+                        <svg class="upload-icon"><use href="#icon-upload"></use></svg>
+                        <span class="upload-text">Click to upload</span>
+                        <input class="file-input" type="file" name="additional_documents" id="id_additional_documents_event" style="display:none;" accept="image/jpeg,image/png,image/jpg,image/gif,image/webp" required>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Description of Picture <span class="required">*</span></label><br>
@@ -214,18 +219,21 @@
         </div>
     </div>
 
-    <!-- Submission [File] -->
     <div id="modal-file" class="submission-modal" style="display:none;">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
             <h2 style="margin-bottom:1rem;">File Submission</h2>
-            <form method="post" enctype="multipart/form-data">
+            <form method="post" enctype="multipart/form-data" class="submission-form">
                 {% csrf_token %}
                 <input type="hidden" name="submission_id" value="{{ submission.id }}" />
                 <input type="hidden" name="action" value="submit" />
                 <div class="form-group">
                     <label class="form-label">File <span class="required">*</span></label>
-                    <input type="file" name="file_file" required accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+                    <div class="upload-area" onclick="document.getElementById('id_additional_documents_file').click()">
+                        <svg class="upload-icon"><use href="#icon-upload"></use></svg>
+                        <span class="upload-text">Click to upload</span>
+                        <input class="file-input" type="file" name="additional_documents" id="id_additional_documents_file" style="display:none;" accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,image/jpeg,image/png,image/jpg,image/gif,image/webp" required>
+                    </div>
                 </div>
 
                 <div class="form-actions" style="justify-content:flex-end;">
@@ -236,7 +244,6 @@
         </div>
     </div>
 
-    <!-- Modals -->
     <div id="modal-bg" class="modal-bg" style="display:none;">
         <div class="modal" id="modal-reject" style="display:none;">
             <div class="modal-title">Reject Submission</div>
@@ -293,15 +300,75 @@
     </div>
 </div>
 
-<!-- SVG Icons -->
 <svg style="display:none;">
     <symbol id="detail-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M11.8008 17.5508C12.1266 17.5508 12.3999 17.4404 12.6207 17.2196C12.8415 16.9988 12.9515 16.7258 12.9508 16.4008V11.8008C12.9508 11.4749 12.8404 11.202 12.6196 10.982C12.3988 10.7619 12.1258 10.6515 11.8008 10.6508C11.4757 10.65 11.2028 10.7604 10.982 10.982C10.7612 11.2035 10.6508 11.4765 10.6508 11.8008V16.4008C10.6508 16.7266 10.7612 16.9999 10.982 17.2207C11.2028 17.4415 11.4757 17.5515 11.8008 17.5508ZM11.8008 8.35078C12.1266 8.35078 12.3999 8.24038 12.6207 8.01958C12.8415 7.79878 12.9515 7.52585 12.9508 7.20078C12.95 6.87571 12.8396 6.60278 12.6196 6.38198C12.3995 6.16118 12.1266 6.05078 11.8008 6.05078C11.4749 6.05078 11.202 6.16118 10.982 6.38198C10.7619 6.60278 10.6515 6.87571 10.6508 7.20078C10.65 7.52585 10.7604 7.79916 10.982 8.02073C11.2035 8.2423 11.4765 8.35231 11.8008 8.35078ZM11.8008 23.3008C10.2099 23.3008 8.71495 22.9987 7.31578 22.3946C5.91662 21.7904 4.69953 20.9713 3.66453 19.937C2.62953 18.9028 1.81035 17.6857 1.20698 16.2858C0.603616 14.8858 0.301549 13.3908 0.300783 11.8008C0.300016 10.2107 0.602083 8.71571 1.20698 7.31578C1.81188 5.91585 2.63107 4.69876 3.66453 3.66453C4.698 2.6303 5.91508 1.81111 7.31578 1.20698C8.71648 0.602848 10.2115 0.300781 11.8008 0.300781C13.3901 0.300781 14.8851 0.602848 16.2858 1.20698C17.6865 1.81111 18.9036 2.6303 19.937 3.66453C20.9705 4.69876 21.7901 5.91585 22.3957 7.31578C23.0014 8.71571 23.3031 10.2107 23.3008 11.8008C23.2985 13.3908 22.9964 14.8858 22.3946 16.2858C21.7927 17.6857 20.9736 18.9028 19.937 19.937C18.9005 20.9713 17.6834 21.7908 16.2858 22.3957C14.8881 23.0006 13.3931 23.3023 11.8008 23.3008ZM11.8008 21.0008C14.3691 21.0008 16.5445 20.1095 18.327 18.327C20.1095 16.5445 21.0008 14.3691 21.0008 11.8008C21.0008 9.23245 20.1095 7.05703 18.327 5.27453C16.5445 3.49203 14.3691 2.60078 11.8008 2.60078C9.23245 2.60078 7.05703 3.49203 5.27453 5.27453C3.49203 7.05703 2.60078 9.23245 2.60078 11.8008C2.60078 14.3691 3.49203 16.5445 5.27453 18.327C7.05703 20.1095 9.23245 21.0008 11.8008 21.0008Z" fill="black"/>
     </symbol>
+
+    <symbol id="icon-add" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M6.80039 14.4004C6.80039 14.7187 6.92682 15.0239 7.15186 15.2489C7.37691 15.474 7.68213 15.6004 8.00039 15.6004C8.31865 15.6004 8.62388 15.474 8.84892 15.2489C9.07396 15.0239 9.20039 14.7187 9.20039 14.4004V9.20039H14.4004C14.7187 9.20039 15.0239 9.07396 15.2489 8.84892C15.474 8.62388 15.6004 8.31865 15.6004 8.00039C15.6004 7.68213 15.474 7.37691 15.2489 7.15186C15.0239 6.92682 14.7187 6.80039 14.4004 6.80039H9.20039V1.60039C9.20039 1.28213 9.07396 0.976906 8.84892 0.751863C8.62388 0.526819 8.31865 0.400391 8.00039 0.400391C7.68213 0.400391 7.37691 0.526819 7.15186 0.751863C6.92682 0.976906 6.80039 1.28213 6.80039 1.60039V6.80039H1.60039C1.28213 6.80039 0.976906 6.92682 0.751863 7.15186C0.526819 7.37691 0.400391 7.68213 0.400391 8.00039C0.400391 8.31865 0.526819 8.62388 0.751863 8.84892C0.976906 9.07396 1.28213 9.20039 1.60039 9.20039H6.80039V14.4004Z" fill="black"/>
+    </symbol>
+
+    <symbol id="icon-edit" viewBox="0 0 18 18" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+    <path d="M2 16H3.425L13.2 6.225L11.775 4.8L2 14.575V16ZM1 18C0.716667 18 0.479333 17.904 0.288 17.712C0.0966668 17.52 0.000666667 17.2827 0 17V14.575C0 14.3083 0.0500001 14.054 0.15 13.812C0.25 13.57 0.391667 13.3577 0.575 13.175L13.2 0.575C13.4 0.391667 13.621 0.25 13.863 0.15C14.105 0.0500001 14.359 0 14.625 0C14.891 0 15.1493 0.0500001 15.4 0.15C15.6507 0.25 15.8673 0.4 16.05 0.6L17.425 2C17.625 2.18333 17.7707 2.4 17.862 2.65C17.9533 2.9 17.9993 3.15 18 3.4C18 3.66667 17.954 3.921 17.862 4.163C17.77 4.405 17.6243 4.62567 17.425 4.825L4.825 17.425C4.64167 17.6083 4.429 17.75 4.187 17.85C3.945 17.95 3.691 18 3.425 18H1ZM12.475 5.525L11.775 4.8L13.2 6.225L12.475 5.525Z" fill="black"/>
+    </symbol>
+
+    <symbol id="icon-upload" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+        <path d="M12,11L8,15H16L12,11Z" />
+    </symbol>
+
 </svg>
 
 <script>
-    // Modal logic
+    const filesToUpload = {};
+
+    function renderFilePreview(modalId) {
+        const previewContainerId = `file-preview-${modalId.split('-')[1]}`;
+        const container = document.getElementById(previewContainerId);
+        
+        if (!container) return;
+        container.innerHTML = '';
+        
+        // Since we reverted to single file upload, this manual preview/delete logic is simplified/removed
+    }
+
+    function addFiles(modalId, fileList) {
+        // Only keep the first file for single file upload
+        if (fileList.length > 0) {
+            filesToUpload[modalId] = [fileList[0]];
+        } else {
+            filesToUpload[modalId] = [];
+        }
+        
+        // For single file upload, display the name directly in the upload area if possible
+        const uploadArea = document.querySelector(`#modal-${modalId.split('-')[1]} .upload-area .upload-text`);
+        if (uploadArea) {
+             uploadArea.textContent = filesToUpload[modalId].length > 0 ? filesToUpload[modalId][0].name : 'Click to upload';
+        }
+    }
+
+    function removeFile(modalId, index) {
+        // Since we are not doing multi-file, this function is mostly obsolete for the simple file inputs.
+        // It remains for completeness if any other part of the JS uses it.
+        if (filesToUpload[modalId] && index >= 0 && index < filesToUpload[modalId].length) {
+            filesToUpload[modalId].splice(index, 1);
+        }
+    }
+
+    function handleSubmission(event) {
+        event.preventDefault();
+        const form = event.target;
+        const submissionModal = form.closest('.submission-modal');
+        const modalId = submissionModal.id;
+        
+        // The core submission should now rely on the file input directly, as we removed the multi-file JS trick.
+        // The browser will handle the single file validation and upload.
+        
+        form.submit();
+    }
+
+
     function showModal(which) {
         document.getElementById('modal-bg').style.display = 'flex';
         document.getElementById('modal-reject').style.display = (which === 'reject') ? 'flex' : 'none';
@@ -317,7 +384,6 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-        // Submission modal logic
         function openSubmissionModal(submissionType, submissionId) {
             var modalId = '';
             if (submissionType === 'final') {
@@ -331,12 +397,31 @@
             var modal = document.getElementById(modalId);
             if (modal) {
                 modal.style.display = 'flex';
+                
+                // Clear state when opening modal
+                filesToUpload[modalId] = [];
+                const uploadArea = modal.querySelector('.upload-area .upload-text');
+                if (uploadArea) uploadArea.textContent = 'Click to upload';
+                
                 var input = modal.querySelector('input[name="submission_id"]');
                 if (input) input.value = submissionId;
             }
         }
 
-        // Submit button click handlers
+        // Use change listener to update the upload area text
+        document.querySelectorAll('.file-input').forEach(input => {
+            input.addEventListener('change', function(event) {
+                 const fileName = event.target.files[0] ? event.target.files[0].name : 'Click to upload';
+                 const uploadArea = event.target.closest('.upload-area').querySelector('.upload-text');
+                 if (uploadArea) uploadArea.textContent = fileName;
+            });
+        });
+
+        // Use native form submission since we removed the multi-file hack
+        document.querySelectorAll('.submission-form').forEach(form => {
+            form.addEventListener('submit', handleSubmission);
+        });
+        
         var submitBtn = document.getElementById('submit-btn');
         var submitRevisionBtn = document.getElementById('submit-revision-btn');
         
@@ -356,21 +441,18 @@
             });
         }
 
-        // Close submission modals
         document.querySelectorAll('.close-modal').forEach(function(btn) {
             btn.addEventListener('click', function() {
-                btn.closest('.submission-modal').style.display = 'none';
+                btn.closest('.submission-modal') ? btn.closest('.submission-modal').style.display = 'none' : hideModal();
             });
         });
         
-        // Close submission modals on Cancel button
         document.querySelectorAll('.submission-modal .back-btn').forEach(function(btn) {
             btn.addEventListener('click', function() {
                 btn.closest('.submission-modal').style.display = 'none';
             });
         });
         
-        // Close submission modals on clicking outside modal-content
         document.querySelectorAll('.submission-modal').forEach(function(modal) {
             modal.addEventListener('mousedown', function(e) {
                 if (e.target === modal) {
@@ -379,46 +461,44 @@
             });
         });
         
-        // Close submission modals on Escape key
         window.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 document.querySelectorAll('.submission-modal').forEach(function(modal) {
                     modal.style.display = 'none';
                 });
+                hideModal();
             }
         });
 
-        // Existing modal logic for rejection/revision modals
         var rejectBtn = document.getElementById('reject-btn');
         var requestRevisionBtn = document.getElementById('request-revision-btn');
         var deleteBtn = document.getElementById('delete-btn');
         if (rejectBtn) rejectBtn.onclick = function() { showModal('reject'); };
         if (requestRevisionBtn) requestRevisionBtn.onclick = function() { showModal('request-revision'); };
         if (deleteBtn) deleteBtn.onclick = function() { showModal('delete'); };
-        // Cancel buttons
         var cancelReject = document.getElementById('cancel-reject');
         var cancelRequestRevision = document.getElementById('cancel-request-revision');
         var cancelDelete = document.getElementById('cancel-delete');
         if (cancelReject) cancelReject.onclick = hideModal;
         if (cancelRequestRevision) cancelRequestRevision.onclick = hideModal;
         if (cancelDelete) cancelDelete.onclick = hideModal;
-        // Hide modal when clicking outside
         var modalBg = document.getElementById('modal-bg');
         if (modalBg) {
             modalBg.addEventListener('click', function(e) {
-                if (e.target === this) hideModal();
+                if (e.target === this && !e.target.querySelector('.modal[style*="flex"]')) {
+                    hideModal();
+                }
             });
         }
     });
 
-    // Success Toast
     document.addEventListener('DOMContentLoaded', function() {
         const urlParams = new URLSearchParams(window.location.search);
         const success = urlParams.get('success');
         const action = urlParams.get('action');
         const title = urlParams.get('title');
 
-        if (success === 'true' && action === 'submitted') {
+        if (success === 'true' && action === 'submit') {
             const toast = document.createElement('div');
             toast.id = 'successToast';
             toast.style.cssText = 'display:block;position:fixed;top:20px;right:20px;background:#10b981;color:white;padding:1rem 1.5rem;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:10000;font-size:1rem;font-weight:500;min-width:300px;';
@@ -433,13 +513,11 @@
             `;
             document.body.appendChild(toast);
 
-            // Auto-hide after 4 seconds
             setTimeout(function() {
                 toast.style.opacity = '0';
                 toast.style.transition = 'opacity 0.3s';
                 setTimeout(function() {
                     toast.remove();
-                    // Clean URL
                     window.history.replaceState({}, document.title, window.location.pathname);
                 }, 300);
             }, 4000);

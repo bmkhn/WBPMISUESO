@@ -262,114 +262,201 @@
 
 </div>
 
-{% if user_role in "VP,DIRECTOR,UESO" %}
-{{ allocation_map|json_script:"allocation-data" }}
+{% if is_admin %}
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-    // 1. Get the allocation map data
-    const allocationMap = JSON.parse(document.getElementById('allocation-data').textContent);
+    // --- Utility Functions ---
 
-    // 2. Helper function to format numbers with commas
+    // Safely parse a monetary string to a float, returning 0 if invalid or empty
+    function parseFloatOrZero(value) {
+        if (typeof value === 'number') return value;
+        if (!value) return 0;
+        // Clean the value of commas, currency symbols, and spaces
+        const cleanValue = String(value).replace(/[^0-9.-]/g, '');
+        return parseFloat(cleanValue) || 0;
+    }
+
+    // Add thousands commas and handle two decimal places
     function numberWithCommas(x) {
-        return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        // Ensure x is a number string with 2 decimal places before formatting
+        const parts = x.toString().split('.');
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        return parts.join('.');
     }
 
-    // 3. Helper to parse string to float, handling empty strings
-    function parseFloatOrZero(str) {
-        if (typeof str === 'string' && str.trim() === '') {
-            return 0;
-        }
-        // Remove commas before parsing
-        return parseFloat(str.toString().replace(/,/g, '')) || 0;
-    }
+    // --- Main Logic ---
+    document.addEventListener('DOMContentLoaded', function() {
+        const adminForm = document.getElementById('adminAllocationForm');
+        const collegeRows = document.querySelectorAll('.styled-table tbody tr');
+        const totalProposedDisplay = document.getElementById('totalProposed');
+        
+        if (adminForm) {
+            // Retrieve the allocation map sent by the Python view
+            const initialAllocationMap = JSON.parse('{{ allocation_map|safe }}');
+            let totalProposed = 0;
 
-    // 4. Get the form and all table rows
-    const adminForm = document.getElementById('adminBudgetForm');
-    if (adminForm) { // Only run this code if the admin form exists
-        const collegeRows = adminForm.querySelectorAll('tbody tr');
-
-        // 5. Function to update remaining total for a single row
-        function updateRemaining(row) {
-            const committedFunding = parseFloatOrZero(row.dataset.committedFunding);
-            const input = row.querySelector('input[type="text"]');
-            const newAllocation = parseFloatOrZero(input.value);
-            
-            const remaining = newAllocation - committedFunding;
-            
-            const remainingCell = row.querySelector(`#remaining-${input.id.split('-')[2]}`);
-            
-            // --- FIX: Round the final value to match |intcomma filter ---
-            const roundedRemaining = Math.round(remaining);
-            remainingCell.textContent = `₱${numberWithCommas(roundedRemaining)}`;
-            
-            // Update text color
-            if (roundedRemaining < 0) {
-                remainingCell.style.color = '#ef4444'; // Red
-            } else {
-                remainingCell.style.color = '#ca8a04'; // Yellow/Gold
-            }
-        }
-
-        // 6. Loop through the map and set the initial input values
-        for (const collegeId in allocationMap) {
-            if (allocationMap.hasOwnProperty(collegeId)) {
-                const value = allocationMap[collegeId];
-                const inputElement = document.getElementById(`college-input-${collegeId}`);
-                if (inputElement) {
-                    
-                    // --- FIX for Dashboard Mismatch ---
-                    // Use parseFloatOrZero to get the precise decimal value
-                    // Do NOT use Math.floor().
-                    inputElement.value = parseFloatOrZero(value);
-                    // --- End Fix ---
-
-                    // Add event listener to update 'Remaining' on keyup
-                    inputElement.addEventListener('keyup', function() {
-                        updateRemaining(inputElement.closest('tr'));
-                    });
-
-                    // Also update remaining on page load
-                    updateRemaining(inputElement.closest('tr'));
-                }
-            }
-        }
-
-        // 7. --- NEW VALIDATION ---
-        // Add submit event listener to the form
-        adminForm.addEventListener('submit', function(e) {
-            e.preventDefault(); // Stop the form from submitting
-            
-            let errorMessages = [];
-            
-            // Loop over each college row in the table
+            // 1. Initial population of the form fields and initial total calculation
             collegeRows.forEach(row => {
-                const collegeName = row.dataset.collegeName;
-                const committedFunding = parseFloatOrZero(row.dataset.committedFunding);
+                const collegeId = row.dataset.collegeId;
                 const input = row.querySelector('input[type="text"]');
-                const newAllocation = parseFloatOrZero(input.value);
-
-                // Check 1: Negative numbers
-                if (newAllocation < 0) {
-                    errorMessages.push(`- ${collegeName}: Allocation cannot be negative (₱${numberWithCommas(newAllocation)}).`);
-                }
                 
-                // Check 2: Allocation less than committed budget
-                if (newAllocation < committedFunding) {
-                    errorMessages.push(`- ${collegeName}: New allocation (₱${numberWithCommas(newAllocation)}) is less than already committed budget (₱${numberWithCommas(committedFunding.toFixed(0))}).`);
+                if (initialAllocationMap.hasOwnProperty(collegeId)) {
+                    const value = initialAllocationMap[collegeId];
+                    
+                    // FIX: Only set the input value if it's NOT an empty string (i.e., not a zero allocation)
+                    if (value !== '') {
+                        const numericValue = parseFloat(value);
+                        if (!isNaN(numericValue)) {
+                            // Set the input value from the context, formatted
+                            input.value = numberWithCommas(numericValue.toFixed(2));
+                            totalProposed += numericValue;
+                        }
+                    } else {
+                        // If value is '', leave the input field visually blank
+                        input.value = '';
+                    }
                 }
             });
+            
+            // Initial display of the proposed total
+            totalProposedDisplay.textContent = '₱' + numberWithCommas(totalProposed.toFixed(2));
+            updateTotalDisplay(totalProposed);
 
-            // 8. Show alert or submit form
-            if (errorMessages.length > 0) {
-                // If there are errors, show them in a popup
-                alert("Please fix the following validation errors:\n\n" + errorMessages.join('\n'));
-            } else {
-                // If everything is valid, submit the form
-                adminForm.submit();
+            // 2. Add real-time input formatting and total calculation listener
+            collegeRows.forEach(row => {
+                const input = row.querySelector('input[type="text"]');
+                
+                if (input) {
+                    input.addEventListener('input', function() {
+                        let cursorPosition = this.selectionStart;
+                        let initialLength = this.value.length;
+                        
+                        // 1. Clean the input to get a raw number string
+                        let cleanValue = this.value.replace(/[^0-9.]/g, '');
+                        
+                        // 2. Format the value
+                        if (cleanValue.length > 0 && !isNaN(parseFloat(cleanValue))) {
+                            let numericValue = parseFloat(cleanValue);
+                            // Format the numeric value to two decimal places and add commas
+                            this.value = numberWithCommas(numericValue.toFixed(2));
+                        } else if (cleanValue === '') {
+                            // Keep it blank if the user deletes all characters
+                            this.value = ''; 
+                        } else {
+                             // Re-add commas if they were removed (e.g., if user pastes a number)
+                            this.value = numberWithCommas(this.value.replace(/[^0-9.]/g, ''));
+                        }
+
+                        // Adjust cursor position
+                        let newLength = this.value.length;
+                        cursorPosition = cursorPosition + (newLength - initialLength);
+                        this.setSelectionRange(cursorPosition, cursorPosition);
+
+                        // 3. Recalculate and update the main total
+                        updateTotal();
+                    });
+                }
+            });
+            
+            // Helper to update the running total display and color status
+            function updateTotal() {
+                let runningTotal = 0;
+                collegeRows.forEach(row => {
+                    runningTotal += parseFloatOrZero(row.querySelector('input[type="text"]').value);
+                });
+                updateTotalDisplay(runningTotal);
             }
-        });
-    }
-});
+
+            function updateTotalDisplay(total) {
+                let exceedsPool = false;
+                const poolAvailable = parseFloatOrZero(document.getElementById('poolAvailable').dataset.value);
+
+                totalProposedDisplay.textContent = '₱' + numberWithCommas(total.toFixed(2));
+                
+                if (total > poolAvailable) {
+                    totalProposedDisplay.classList.add('text-red');
+                    totalProposedDisplay.classList.remove('text-green');
+                    exceedsPool = true;
+                } else {
+                    totalProposedDisplay.classList.add('text-green');
+                    totalProposedDisplay.classList.remove('text-red');
+                }
+                
+                // Show/hide alert banner based on excess
+                const alertBanner = document.getElementById('allocationAlert');
+                if (alertBanner) {
+                     if (exceedsPool) {
+                         alertBanner.style.display = 'block';
+                         const difference = total - poolAvailable;
+                         alertBanner.textContent = `Warning: Total proposed allocation exceeds annual pool by ₱${numberWithCommas(difference.toFixed(2))}.`;
+                     } else {
+                         alertBanner.style.display = 'none';
+                     }
+                }
+            }
+
+
+            // 3. Form Submission/Validation
+            adminForm.addEventListener('submit', function(e) {
+                e.preventDefault(); // Prevent default submission first
+
+                let errorMessages = [];
+                
+                // Loop over each college row in the table
+                collegeRows.forEach(row => {
+                    const collegeName = row.dataset.collegeName;
+                    // Ensure committedFunding is treated as a Decimal/Float for accurate comparison
+                    const committedFunding = parseFloatOrZero(row.dataset.committedFunding); 
+                    const input = row.querySelector('input[type="text"]');
+                    const newAllocation = parseFloatOrZero(input.value);
+
+                    // Check 1: Negative numbers
+                    if (newAllocation < 0) {
+                        errorMessages.push(`- ${collegeName}: Allocation cannot be negative (₱${numberWithCommas(newAllocation.toFixed(2))}).`);
+                    }
+                    
+                    // Check 2: Allocation less than committed budget
+                    // Use toFixed(2) for string comparison to avoid floating-point issues on committed funding
+                    if (newAllocation.toFixed(2) < committedFunding.toFixed(2)) {
+                        errorMessages.push(`- ${collegeName}: New allocation (₱${numberWithCommas(newAllocation.toFixed(2))}) is less than already committed budget (₱${numberWithCommas(committedFunding.toFixed(2))}).`);
+                    }
+                    
+                    // Before submission, clean up the value in the input fields so Django receives raw numbers
+                    // Send an empty string if the user left it blank (meaning 0)
+                    input.value = newAllocation > 0 ? newAllocation.toFixed(2) : ''; 
+                });
+
+                // 8. Show alert or submit form
+                if (errorMessages.length > 0) {
+                    // If there are errors, show them in a popup
+                    alert("Please fix the following validation errors:\n\n" + errorMessages.join('\n'));
+                    
+                    // If validation failed, re-format the input values for user visibility
+                    collegeRows.forEach(row => {
+                        const input = row.querySelector('input[type="text"]');
+                        const rawValue = parseFloat(input.value);
+                        if (!isNaN(rawValue) && rawValue > 0) {
+                            input.value = numberWithCommas(rawValue.toFixed(2));
+                        } else {
+                             input.value = ''; // Keep it blank if 0 or invalid
+                        }
+                    });
+
+                } else {
+                    // Final client-side check against the pool limit (server will validate again)
+                    const poolAvailable = parseFloatOrZero(document.getElementById('poolAvailable').dataset.value);
+                    const runningTotal = parseFloatOrZero(totalProposedDisplay.textContent);
+                    
+                    if (runningTotal > poolAvailable) {
+                         alert(`Warning: Total proposed allocation (₱${numberWithCommas(runningTotal.toFixed(2))}) exceeds the annual pool (₱${numberWithCommas(poolAvailable.toFixed(2))}). Please correct the values.`);
+                    } else {
+                        // If everything is valid, submit the form
+                        adminForm.submit();
+                    }
+                }
+            });
+        }
+    });
 </script>
+
 {% endif %}
 {% endblock %}

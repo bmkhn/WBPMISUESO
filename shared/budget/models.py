@@ -47,7 +47,7 @@ class CollegeBudget(models.Model):
         """Helper to filter projects based on leader's college and fiscal year."""
         return Project.objects.filter(
             project_leader__college=self.college,
-            start_date__year=self.fiscal_year 
+            start_date__year=int(self.fiscal_year) 
         )
     
     @property

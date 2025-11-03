@@ -257,7 +257,7 @@ def export_analytics_to_excel(request):
     ws_requests.column_dimensions['A'].width = 20
     ws_requests.column_dimensions['B'].width = 15
     ws_requests.column_dimensions['C'].width = 20
-
+        
     # --- Save to memory and return response ---
     output = io.BytesIO()
     wb.save(output)
