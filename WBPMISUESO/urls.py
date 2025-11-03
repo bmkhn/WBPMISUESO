@@ -50,6 +50,7 @@ urlpatterns = [
     path('', include('system.users.urls')),                         # Users
 
     path('api/calendar/', include('shared.event_calendar.api_urls')),
+    path('api/requests/', include('shared.request.api_urls')), 
     path('api/get-token/', authtoken_views.obtain_auth_token, name='api_get_token'),
 ] 
 
