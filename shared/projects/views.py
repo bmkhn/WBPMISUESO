@@ -2,6 +2,7 @@ from django.shortcuts import get_object_or_404, render, redirect
 from shared import request
 from system.users.decorators import role_required, project_visibility_required
 from .models import SustainableDevelopmentGoal, Project, ProjectEvaluation, ProjectEvent, ProjectUpdate
+from internal.goals.models import Goal
 from internal.submissions.models import Submission
 from system.users.models import College, User, Campus
 from internal.agenda.models import Agenda
@@ -59,32 +60,21 @@ def project_overview(request, pk):
     user_role = getattr(request.user, 'role', None) if request.user.is_authenticated else None
     if user_role in ["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
         base_template = "base_internal.html"
-        # Authenticated users with roles can see all projects - optimize with select_related
-        project = get_object_or_404(
-            Project.objects.select_related('project_leader', 'project_leader__college', 'agenda').prefetch_related('providers', 'sdgs'),
-            pk=pk
-        )
+        # Authenticated users with roles can see all projects
+        project = get_object_or_404(Project, pk=pk)
     else:
         base_template = "base_public.html"
         # Non-authenticated users or users without admin roles can only see completed projects
         if not request.user.is_authenticated:
-            project = get_object_or_404(
-                Project.objects.select_related('project_leader', 'project_leader__college', 'agenda').prefetch_related('providers', 'sdgs'),
-                pk=pk,
-                status='COMPLETED'
-            )
+            project = get_object_or_404(Project, pk=pk, status='COMPLETED')
         else:
-            project = get_object_or_404(
-                Project.objects.select_related('project_leader', 'project_leader__college', 'agenda').prefetch_related('providers', 'sdgs'),
-                pk=pk
-            )
+            project = get_object_or_404(Project, pk=pk)
 
-    # Optimize filter options queries
-    all_sdgs = SustainableDevelopmentGoal.objects.only('goal_number', 'name').all()
-    agendas = Agenda.objects.only('id', 'name').all()
+    all_sdgs = SustainableDevelopmentGoal.objects.all()
+    agendas = Agenda.objects.all()
 
-    if request.method == 'POST' and user_role in ADMIN_ROLES and not project.has_final_submission:
-        # Update project fields from form (only if project doesn't have final submission approved)
+    if request.method == 'POST' and user_role in ADMIN_ROLES:
+        # Update project fields from form
         project.title = request.POST.get('title', project.title)
         project.start_date = request.POST.get('start_date', project.start_date)
         project.estimated_end_date = request.POST.get('estimated_end_date', project.estimated_end_date)
@@ -127,31 +117,20 @@ def project_providers(request, pk):
     
     if user_role in ["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
         base_template = "base_internal.html"
-        # Authenticated users with roles can see all projects - optimize with select_related
-        project = get_object_or_404(
-            Project.objects.select_related('project_leader').prefetch_related('providers'),
-            pk=pk
-        )
+        # Authenticated users with roles can see all projects
+        project = get_object_or_404(Project, pk=pk)
     else:
         base_template = "base_public.html"
         # Non-authenticated users or users without admin roles can only see completed projects
         if not request.user.is_authenticated:
-            project = get_object_or_404(
-                Project.objects.select_related('project_leader').prefetch_related('providers'),
-                pk=pk,
-                status='COMPLETED'
-            )
+            project = get_object_or_404(Project, pk=pk, status='COMPLETED')
         else:
-            project = get_object_or_404(
-                Project.objects.select_related('project_leader').prefetch_related('providers'),
-                pk=pk
-            )
+            project = get_object_or_404(Project, pk=pk)
     
-    # Providers already prefetched
-    providers_qs = project.providers.select_related('college').all()
+    providers_qs = project.providers.all()
 
-    # Handle add provider POST (only if project doesn't have final submission approved)
-    if request.method == 'POST' and user_role in ADMIN_ROLES and not project.has_final_submission:
+    # Handle add provider POST
+    if request.method == 'POST' and user_role in ADMIN_ROLES:
         provider_id = request.POST.get('provider_id')
         if provider_id:
             from system.users.models import User
@@ -180,10 +159,9 @@ def project_providers(request, pk):
     exclude_ids = list(providers_qs.values_list('id', flat=True))
     if hasattr(project, 'leader') and project.leader:
         exclude_ids.append(project.leader.id)
-    # Optimize candidates query
     provider_candidates = User.objects.filter(
         is_confirmed=True
-    ).exclude(role=User.Role.CLIENT).exclude(id__in=exclude_ids).select_related('college').only('id', 'given_name', 'last_name', 'college')
+    ).exclude(role=User.Role.CLIENT).exclude(id__in=exclude_ids)
 
     # Pagination
     paginator = Paginator(providers_qs, 3)
@@ -225,38 +203,27 @@ def project_events(request, pk):
     
     if user_role in ["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
         base_template = "base_internal.html"
-        # Authenticated users with roles can see all projects - optimize with prefetch
-        project = get_object_or_404(
-            Project.objects.select_related('project_leader', 'agenda').prefetch_related('events'),
-            pk=pk
-        )
+        # Authenticated users with roles can see all projects
+        project = get_object_or_404(Project, pk=pk)
     else:
         base_template = "base_public.html"
         # Non-authenticated users or users without admin roles can only see completed projects
         if not request.user.is_authenticated:
-            project = get_object_or_404(
-                Project.objects.select_related('project_leader', 'agenda').prefetch_related('events'),
-                pk=pk,
-                status='COMPLETED'
-            )
+            project = get_object_or_404(Project, pk=pk, status='COMPLETED')
         else:
-            project = get_object_or_404(
-                Project.objects.select_related('project_leader', 'agenda').prefetch_related('events'),
-                pk=pk
-            )
+            project = get_object_or_404(Project, pk=pk)
 
     # Order events: those with datetime=None at the bottom
     from django.db.models import F, Value, BooleanField, ExpressionWrapper
     from internal.submissions.models import Submission
     
-    # Events already prefetched, just order them
     events = project.events.annotate(
         has_datetime=ExpressionWrapper(Q(datetime__isnull=False), output_field=BooleanField())
     ).order_by('-has_datetime', 'datetime')
     
-    # Add submission status information to events - optimize with select_related
+    # Add submission status information to events
     for event in events:
-        event.related_submissions = Submission.objects.filter(event=event).select_related('downloadable').first()
+        event.related_submissions = Submission.objects.filter(event=event).first()
     
     total = project.estimated_events
     completed = project.event_progress
@@ -264,49 +231,29 @@ def project_events(request, pk):
 
     event_form = None
     event_to_edit = None
-    if request.method == 'POST' and not project.has_final_submission:
+    if request.method == 'POST':
         if request.POST.get('add_event'):
-            # Add Event button: create new ProjectEvent with full details
-            # Check if we haven't exceeded the estimated_events limit
-            if project.events.count() >= project.estimated_events:
-                # Optionally, you can show an error message here
-                # For now, we'll just redirect back
-                return redirect(request.path)
-            
+            # Add Event button: create new ProjectEvent and increment estimated_events
             from .models import ProjectEvent
             now = timezone.now()
-            
-            # Get event details from form
-            title = request.POST.get('add_event_title', '').strip()
-            description = request.POST.get('add_event_description', '').strip()
-            datetime_str = request.POST.get('add_event_datetime', '')
-            location = request.POST.get('add_event_location', '').strip()
-            
-            # Validate required fields
-            if not title or not datetime_str or not location:
-                # Missing required fields, redirect back
-                return redirect(request.path)
-            
-            # Parse datetime
-            from django.utils.dateparse import parse_datetime
-            event_datetime = parse_datetime(datetime_str)
-            
             new_event = ProjectEvent.objects.create(
                 project=project,
-                title=title,
-                description=description,
-                datetime=event_datetime,
-                location=location,
+                title=f"Event {project.events.count() + 1}",
+                description="Description Here",
+                datetime=None,
+                location="",
                 created_at=now,
                 created_by=request.user,
                 updated_at=now,
                 updated_by=request.user,
                 image=None,
-                placeholder=False  # Not a placeholder since it has full details
+                placeholder=True
             )
+            project.estimated_events += 1
+            project.save(update_fields=["estimated_events"])
             return redirect(request.path)
         elif request.POST.get('delete_event_id'):
-            # Delete event: remove ProjectEvent (estimated_events remains as limit)
+            # Delete event: remove ProjectEvent and decrement estimated_events
             event_id = request.POST.get('delete_event_id')
             from .models import ProjectEvent
             from internal.submissions.models import Submission
@@ -335,9 +282,11 @@ def project_events(request, pk):
                 
                 # Delete the event itself
                 event_to_delete.delete()
-                
-                # Save project with updated counters (estimated_events stays as limit)
-                project.save(update_fields=["event_progress", "total_trained_individuals"])
+                if project.estimated_events > 0:
+                    project.estimated_events -= 1
+                    project.save(update_fields=["estimated_events", "event_progress", "total_trained_individuals"])
+                else:
+                    project.save(update_fields=["event_progress", "total_trained_individuals"])
                     
             except ProjectEvent.DoesNotExist:
                 pass
@@ -386,27 +335,16 @@ def project_files(request, pk):
     
     if user_role in ["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
         base_template = "base_internal.html"
-        # Authenticated users with roles can see all projects - optimize with prefetch
-        project = get_object_or_404(
-            Project.objects.select_related('project_leader').prefetch_related('documents'),
-            pk=pk
-        )
+        # Authenticated users with roles can see all projects
+        project = get_object_or_404(Project, pk=pk)
     else:
         base_template = "base_public.html"
         # Non-authenticated users or users without admin roles can only see completed projects
         if not request.user.is_authenticated:
-            project = get_object_or_404(
-                Project.objects.select_related('project_leader').prefetch_related('documents'),
-                pk=pk,
-                status='COMPLETED'
-            )
+            project = get_object_or_404(Project, pk=pk, status='COMPLETED')
         else:
-            project = get_object_or_404(
-                Project.objects.select_related('project_leader').prefetch_related('documents'),
-                pk=pk
-            )
+            project = get_object_or_404(Project, pk=pk)
     
-    # Documents already prefetched
     documents = project.documents.all()
     
 
@@ -477,18 +415,14 @@ def project_submissions(request, pk):
     ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE, COORDINATOR_ROLE = get_role_constants()
     from internal.submissions.models import Submission
     from django.utils import timezone
-    # Get all submissions for this project - optimize with select_related
-    all_submissions = Submission.objects.filter(project__pk=pk).select_related(
-        'downloadable',
-        'event',
-        'reviewed_by'
-    )
+    # Get all submissions for this project
+    all_submissions = Submission.objects.filter(project__pk=pk)
     events = ProjectEvent.objects.filter(project__pk=pk).order_by('datetime')
 
     # Mark overdue submissions
     now = timezone.now()
     for sub in all_submissions:
-        if sub.status in ["PENDING", "REVISION_REQUESTED", "REJECTED"] and sub.deadline and sub.deadline < now:
+        if sub.status == "PENDING" and sub.deadline and sub.deadline < now:
             sub.status = "OVERDUE"
             sub.save(update_fields=["status"])
 
@@ -561,7 +495,7 @@ def project_submissions(request, pk):
         print("DEBUG:", action, submission.status)
 
         # Handle Submission Upload
-        if action == "submit" and (submission.status == "PENDING" or submission.status == "REVISION_REQUESTED" or submission.status == "REJECTED" or submission.status == "OVERDUE"):
+        if action == "submit" and (submission.status == "PENDING" or submission.status == "REVISION_REQUESTED"):
             sub_type = submission.downloadable.submission_type
 
             if sub_type == "final":
@@ -578,10 +512,6 @@ def project_submissions(request, pk):
 
             else:  # "file"
                 submission.file = request.FILES.get("file_file")
-
-            # Mark as late submission if it was overdue
-            if submission.status == "OVERDUE":
-                submission.is_late_submission = True
 
             submission.status = "SUBMITTED"
             submission.submitted_at = timezone.now()
@@ -630,15 +560,9 @@ def project_submissions(request, pk):
 
 @project_visibility_required
 def project_submissions_details(request, pk, submission_id):
-    from django.utils import timezone
     ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE, COORDINATOR_ROLE = get_role_constants()
     
-    # Optimize submission query with select_related
-    submission = get_object_or_404(
-        Submission.objects.select_related('downloadable', 'event', 'project', 'reviewed_by', 'submitted_by'),
-        pk=submission_id,
-        project__pk=pk
-    )
+    submission = get_object_or_404(Submission, pk=submission_id, project__pk=pk)
 
     # Mark submission alerts as viewed for faculty users
     if request.user.role in ["FACULTY", "IMPLEMENTER"]:
@@ -663,22 +587,16 @@ def project_submissions_details(request, pk, submission_id):
     else:
         base_template = "base_public.html"
 
-    # Optimize project and events queries
-    project = get_object_or_404(Project.objects.select_related('project_leader', 'agenda'), pk=pk)
-    events = ProjectEvent.objects.filter(project__pk=pk).only('id', 'title', 'datetime', 'status').order_by('datetime')
-
-    # Mark submission as overdue if past deadline
-    now = timezone.now()
-    if submission.status in ["PENDING", "REVISION_REQUESTED", "REJECTED"] and submission.deadline and submission.deadline < now:
-        submission.status = "OVERDUE"
-        submission.save(update_fields=["status"])
+    project = get_object_or_404(Project, pk=pk)
+    events = ProjectEvent.objects.filter(project__pk=pk).order_by('datetime')
 
     # Handle submission POST requests
     if request.method == "POST":
+        from django.utils import timezone
         action = request.POST.get('action')
         
         # Handle Submission Upload
-        if action == "submit" and (submission.status == "PENDING" or submission.status == "REVISION_REQUESTED" or submission.status == "REJECTED" or submission.status == "OVERDUE"):
+        if action == "submit" and (submission.status == "PENDING" or submission.status == "REVISION_REQUESTED"):
             sub_type = submission.downloadable.submission_type
 
             if sub_type == "final":
@@ -694,6 +612,11 @@ def project_submissions_details(request, pk, submission_id):
                     submission.event.image = request.FILES.get("image_event")
                     submission.event.description = request.POST.get("image_description", "")
                     submission.event.save()
+                    
+                    # Update the project's total trained individuals
+                    num_trained = int(request.POST.get("num_trained_individuals", 0))
+                    project.total_trained_individuals += num_trained
+                    project.save()
                 
                 # Keep the submission fields for backward compatibility 
                 submission.image_event = request.FILES.get("image_event")
@@ -702,10 +625,6 @@ def project_submissions_details(request, pk, submission_id):
 
             else:  # "file"
                 submission.file = request.FILES.get("file_file")
-
-            # Mark as late submission if it was overdue
-            if submission.status == "OVERDUE":
-                submission.is_late_submission = True
 
             submission.status = "SUBMITTED"
             submission.submitted_at = timezone.now()
@@ -746,12 +665,7 @@ def project_submissions_details(request, pk, submission_id):
 # ACTIONS
 @role_required(allowed_roles=["UESO", "VP", "DIRECTOR", "COORDINATOR", "FACULTY", "IMPLEMENTER", "DEAN", "PROGRAM_HEAD"], require_confirmed=True)
 def admin_submission_action(request, pk, submission_id):
-    # Optimize with select_related and prefetch_related
-    submission = get_object_or_404(
-        Submission.objects.select_related('project', 'project__project_leader', 'downloadable', 'reviewed_by').prefetch_related('project__providers'),
-        pk=submission_id,
-        project__pk=pk
-    )
+    submission = get_object_or_404(Submission, pk=submission_id, project__pk=pk)
     from django.utils import timezone
     if request.method == 'POST':
         action = request.POST.get('action')
@@ -789,16 +703,6 @@ def admin_submission_action(request, pk, submission_id):
                 submission.reviewed_by = request.user
                 submission.reviewed_at = timezone.now()
                 submission.reason_for_revision = request.POST.get('reason', '')
-                submission.revision_count += 1
-                
-                # Update deadline if provided
-                new_deadline = request.POST.get('new_deadline')
-                if new_deadline:
-                    from django.utils.dateparse import parse_datetime
-                    parsed_deadline = parse_datetime(new_deadline)
-                    if parsed_deadline:
-                        submission.deadline = parsed_deadline
-                
                 submission.updated_by = request.user
                 submission.updated_at = timezone.now()
                 submission.save()
@@ -820,27 +724,11 @@ def admin_submission_action(request, pk, submission_id):
                     submission.updated_by = request.user
                     submission.updated_at = timezone.now()
                     submission.save()
-                    
-                    # Update project's total trained individuals only when approved
-                    if submission.downloadable.submission_type == 'event' and submission.num_trained_individuals:
-                        project = submission.project
-                        project.total_trained_individuals += int(submission.num_trained_individuals)
-                        project.save()
                 elif action == 'request_revision':
                     submission.status = 'REVISION_REQUESTED'
                     submission.reviewed_by = request.user
                     submission.reviewed_at = timezone.now()
                     submission.reason_for_revision = request.POST.get('reason', '')
-                    submission.revision_count += 1
-                    
-                    # Update deadline if provided
-                    new_deadline = request.POST.get('new_deadline')
-                    if new_deadline:
-                        from django.utils.dateparse import parse_datetime
-                        parsed_deadline = parse_datetime(new_deadline)
-                        if parsed_deadline:
-                            submission.deadline = parsed_deadline
-                    
                     submission.updated_by = request.user
                     submission.updated_at = timezone.now()
                     submission.save()
@@ -858,34 +746,11 @@ def admin_submission_action(request, pk, submission_id):
                     submission.updated_by = request.user
                     submission.updated_at = timezone.now()
                     submission.save()
-                    
-                    project = submission.project
-                    
-                    # Update project's total trained individuals only when approved
-                    if submission.downloadable.submission_type == 'event' and submission.num_trained_individuals:
-                        project.total_trained_individuals += int(submission.num_trained_individuals)
-                    
-                    # If final submission type is approved, mark project as completed
-                    if submission.downloadable.submission_type == 'final':
-                        project.has_final_submission = True
-                        project.status = 'COMPLETED'
-                    
-                    project.save()
                 elif action == 'reject':
                     submission.status = 'REJECTED'
                     submission.authorized_by = request.user
                     submission.authorized_at = timezone.now()
                     submission.reason_for_rejection = request.POST.get('reason', '')
-                    submission.rejection_count += 1
-                    
-                    # Update deadline if provided
-                    new_deadline = request.POST.get('new_deadline')
-                    if new_deadline:
-                        from django.utils.dateparse import parse_datetime
-                        parsed_deadline = parse_datetime(new_deadline)
-                        if parsed_deadline:
-                            submission.deadline = parsed_deadline
-                    
                     submission.updated_by = request.user
                     submission.updated_at = timezone.now()
                     submission.save()
@@ -976,8 +841,7 @@ def project_evaluations(request, pk):
                 comment=comment,
                 rating=int(rating)
             )
-        from urllib.parse import quote
-        return redirect(f'/projects/{pk}/evaluations/?success=true&action=added&title={quote(project.title)}')
+        return redirect(request.path)
     evaluations = project.evaluations.select_related('evaluated_by').order_by('-created_at')
     return render(request, 'projects/project_evaluations.html', {
         'project': project, 
@@ -991,40 +855,31 @@ def project_evaluations(request, pk):
 
 @role_required(allowed_roles=["UESO", "VP", "DIRECTOR", "PROGRAM_HEAD", "DEAN", "COORDINATOR", "FACULTY", "IMPLEMENTER"], require_confirmed=True)
 def edit_project_evaluation(request, pk, eval_id):
-    from urllib.parse import quote
     project = get_object_or_404(Project, pk=pk)
     evaluation = get_object_or_404(ProjectEvaluation, pk=eval_id, project=project)
-    
-    # Only the evaluator can edit their own evaluation
-    if evaluation.evaluated_by != request.user:
-        return redirect('project_evaluations', pk=pk)
-    
     if request.method == 'POST':
         rating = request.POST.get('rating')
         comment = request.POST.get('comment', '')
-        if rating:
-            evaluation.rating = int(rating)
-            evaluation.comment = comment
-            evaluation.edited_at = timezone.now()
-            evaluation.save()
-        return redirect(f'/projects/{pk}/evaluations/?success=true&action=edited&title={quote(project.title)}')
-    
-    return redirect('project_evaluations', pk=pk)
+        if rating is not None and rating != "":
+            try:
+                evaluation.rating = int(rating)
+            except Exception:
+                pass
+        evaluation.comment = comment
+        evaluation.save()
+    return redirect(f'/projects/{pk}/evaluations/')
 
 
-@role_required(allowed_roles=["UESO", "VP", "DIRECTOR", "PROGRAM_HEAD", "DEAN", "COORDINATOR", "FACULTY", "IMPLEMENTER"], require_confirmed=True)
+@role_required(allowed_roles=["UESO", "VP", "DIRECTOR", "PROGRAM_HEAD", "DEAN", "COORDINATOR"], require_confirmed=True)
 def delete_project_evaluation(request, pk, eval_id):
-    from urllib.parse import quote
     project = get_object_or_404(Project, pk=pk)
     evaluation = get_object_or_404(ProjectEvaluation, pk=eval_id, project=project)
-    
-    # Only the evaluator can delete their own evaluation
-    if evaluation.evaluated_by != request.user:
-        return redirect('project_evaluations', pk=pk)
-    
-    project_title = project.title
-    evaluation.delete()
-    return redirect(f'/projects/{pk}/evaluations/?success=true&action=deleted&title={quote(project_title)}')
+    if request.method in ['POST', 'GET']:
+        try:
+            evaluation.delete()
+        except Exception:
+            pass
+    return redirect(f'/projects/{pk}/evaluations/')
 
 
 ########################################################################################################################
@@ -1129,19 +984,8 @@ def faculty_project(request):
     search = request.GET.get('search', '')
 
     
-    # Optimize query with select_related and prefetch_related to avoid N+1 queries
     projects = Project.objects.filter(
         models.Q(project_leader=user) | models.Q(providers=user)
-    ).select_related(
-        'project_leader',
-        'project_leader__college',
-        'project_leader__college__campus',
-        'agenda'
-    ).prefetch_related(
-        'providers',
-        'sdgs',
-        'events',
-        'submissions'
     ).distinct()
 
     # Apply filters
@@ -1187,11 +1031,8 @@ def faculty_project(request):
     else:
         page_range = range(current - 2, current + 3)
 
-    # Get recent status updates for this user's projects - optimize with select_related
-    updates_qs = ProjectUpdate.objects.filter(user=user).select_related(
-        'project',
-        'submission'
-    ).order_by('-updated_at')[:10]
+    # Get recent status updates for this user's projects
+    updates_qs = ProjectUpdate.objects.filter(user=user).order_by('-updated_at')[:10]
     alerts = []
     for update in updates_qs:
         # Build message text
@@ -1248,7 +1089,7 @@ def admin_project(request):
     college = request.GET.get('college', '')
     campus = request.GET.get('campus', '')
     agenda = request.GET.get('agenda', '')
-    sdg = request.GET.get('sdg', '')
+    goal_id = request.GET.get('goal', '')
     status = request.GET.get('status', '')
     year = request.GET.get('year', '')
     quarter = request.GET.get('quarter', '')
@@ -1256,33 +1097,27 @@ def admin_project(request):
     date_to = request.GET.get('date_to', '')
     search = request.GET.get('search', '')
 
-    # Optimize query with select_related and prefetch_related to avoid N+1 queries
-    projects = Project.objects.select_related(
-        'project_leader',
-        'project_leader__college',
-        'project_leader__college__campus',
-        'agenda'
-    ).prefetch_related(
-        'providers',
-        'sdgs',
-        'events',
-        'submissions'
-    )
-    
-    # Filter projects by college for COORDINATOR, DEAN, and PROGRAM_HEAD
-    user_role = getattr(request.user, 'role', None)
-    if user_role in ["COORDINATOR", "DEAN", "PROGRAM_HEAD"] and request.user.college:
-        projects = projects.filter(project_leader__college=request.user.college)
+    projects = Project.objects.all()
 
     # Apply filters
     if college:
         projects = projects.filter(project_leader__college__id=college)
     if campus:
-        projects = projects.filter(project_leader__college__campus_id=campus)
+        projects = projects.filter(project_leader__campus=campus)
     if agenda:
         projects = projects.filter(agenda__id=agenda)
-    if sdg:
-        projects = projects.filter(sdgs__goal_number=sdg)
+    # Apply goal-based filters (maps a Goal's criteria to project list)
+    if goal_id:
+        try:
+            goal_obj = Goal.objects.get(pk=int(goal_id))
+            if goal_obj.agenda_id:
+                projects = projects.filter(agenda__id=goal_obj.agenda_id)
+            if goal_obj.project_status:
+                projects = projects.filter(status=goal_obj.project_status)
+            if goal_obj.sdg_id:
+                projects = projects.filter(sdgs__id=goal_obj.sdg_id)
+        except (Goal.DoesNotExist, ValueError):
+            pass
     if status:
         projects = projects.filter(status=status)
     if year:
@@ -1317,12 +1152,11 @@ def admin_project(request):
             sort_field = '-' + sort_field
         projects = projects.order_by(sort_field)
 
-    # Filter options - optimize with select_related for colleges, only() for others
-    colleges = College.objects.select_related('campus').all()
-    campuses = Campus.objects.only('id', 'name')
+    # Filter options
+    colleges = College.objects.all()
+    campuses = Campus.objects.all()
     status_choices = Project.STATUS_CHOICES
-    agendas = Agenda.objects.only('id', 'name')
-    sdgs = SustainableDevelopmentGoal.objects.only('goal_number', 'name').order_by('goal_number')
+    agendas = Agenda.objects.all()
     # Get available years from projects that exist
     years = list(set([d.year for d in Project.objects.dates('start_date', 'year')]))
     years.sort(reverse=True)
@@ -1344,14 +1178,13 @@ def admin_project(request):
         'campuses': campuses,
         'status_choices': status_choices,
         'agendas': agendas,
-        'sdgs': sdgs,
         'years': years,
         'sort_by': sort_by,
         'order': order,
         'college': college,
         'campus': campus,
         'agenda': agenda,
-        'sdg': sdg,
+        'goal': goal_id,
         'status': status,
         'year': year,
         'quarter': quarter,
@@ -1396,7 +1229,6 @@ def add_project_view(request):
                 # Save project (basic fields)
                 project = form.save(commit=False)
                 project.created_by = request.user
-                
                 project.status = 'NOT_STARTED'
                 project.logistics_type = form.cleaned_data['logistics_type']
                 logistics_type = form.cleaned_data['logistics_type']
@@ -1458,7 +1290,6 @@ def add_project_view(request):
                     project.additional_documents.add(add_doc)
                 project.save()
 
-                # Set estimated_events as limit only (no auto-creation of events)
                 project.estimated_events = form.cleaned_data.get('estimated_events', 0)
                 now = timezone.now()
                 project.save()
