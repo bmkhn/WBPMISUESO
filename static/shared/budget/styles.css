@@ -733,6 +733,48 @@ body {
     border-top: 1px solid #e0e0e0;
 }
 
+.dropdown-button {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-button select {
+    padding: 0.75rem 2.5rem 0.75rem 1rem;
+    border: 1px solid #8a8a8a;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-family: 'Inter', sans-serif;
+    background: #f8f8f8;
+    transition: all 0.2s ease;
+    width: 100%;
+    min-width: 0;
+    margin-bottom: 0;
+    box-sizing: border-box;
+    color: #444;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+.dropdown-button select:hover {
+    outline: none;
+    border-color: #0A6C44;
+    box-shadow: 0 0 0 3px rgba(10, 108, 68, 0.2);
+    background: #FFFFFF;
+}
+
+.dropdown-button::after {
+    content: "\f078";
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    position: absolute;
+    top: 50%;
+    right: 15px;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: #4b5563;
+    font-size: 0.8rem;
+}
 
 /* No Budget Setup Message Box */
 .setup-box {

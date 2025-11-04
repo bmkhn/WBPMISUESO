@@ -8,4 +8,5 @@ urlpatterns = [
     path('external_sponsors/', views.external_sponsors_view, name='budget_sponsors'),
     path('setup/annual/', views.setup_annual_budget, name='budget_setup'),
     path('export/', views.export_budget_data_view, name='budget_export'),
+    path('college/<int:college_id>/projects/', views.view_college_projects, name='college_projects'),
 ]

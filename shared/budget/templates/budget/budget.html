@@ -104,11 +104,10 @@
     </div>
 
     <div class="another-header" style="justify-content: space-between; align-items: center;">
-        <h2 style="margin: 0;">College Budget Allocations</h2>
         
         <div style="display: flex; align-items: center; gap: 15px;">
-            <div class="sort-dropdown-container">
-                <label for="adminSortSelect" style="color: #4b5563; font-weight: 500; font-size: 14px;">Sort By:</label>
+            <h2 style="margin: 0;">College Budget Allocations</h2>
+            <div class="dropdown-button">
                 <select id="adminSortSelect">
                     <option value="college_id">Default</option>
                     <option value="college_name_asc">College Name (A-Z)</option>
@@ -120,13 +119,14 @@
                 </select>
             </div>
 
+        </div>
+        
             {% if is_admin %}
             <a class="export-btn edit" href="{% url 'budget_edit' %}"> 
                 <i class="fa-solid fa-pen"></i>
                 Edit 
             </a>
             {% endif %}
-        </div>
     </div>
     <div class="table-container">
             <table class="user-table">
@@ -176,7 +176,7 @@
         <div class="goal-card color-dango-green">
             <div class="card-content-wrapper" style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
                 <div>
-                    <h3 style="color: white;">Internal Budget (Committed)</h3>
+                    <h3 style="color: white;">Committed (Internal)</h3>
                     <p class="amount text-yellow" style="color: white;">₱{{ total_committed_to_projects|floatformat:0|intcomma }}</p>
                 </div>
                 <div style="height: 80px; width: 130px; flex-shrink: 0; margin-top: -5px;">
@@ -203,9 +203,8 @@
 
     <div class="another-header" style="justify-content: space-between; align-items: center;">
         <h2 style="margin: 0;">College Project Budget Allocations</h2>
-        <div class="sort-dropdown-container">
-            <label for="collegeProjectSortSelect" style="color: #4b5563; font-weight: 500; font-size: 14px;">Sort By:</label>
-            <select id="collegeProjectSortSelect">
+        <div class="dropdown-button">
+                <select id="collegeProjectSortSelect">
                 <option value="title_asc">Project Title (A-Z)</option>
                 <option value="title_desc">Project Title (Z-A)</option>
                 <option value="internal_funding_committed_desc">Internal Funding (High to Low)</option>
@@ -226,7 +225,7 @@
                 </thead>
                 <tbody id="collegeTableBody">
                     {% for item in dashboard_data %}
-                    <tr>
+                    <tr class="project-clickable-row" data-project-id="{{ item.id }}">
                         <td>{{ item.title }}</td>
                         <td>{{ item.status }}</td>
                         <td>₱{{ item.internal_funding_committed|intcomma }}</td>
@@ -290,9 +289,8 @@
     
     <div class="another-header" style="justify-content: space-between; align-items: center;">
         <h2 style="margin: 0;">Project Budget Allocations</h2>
-        <div class="sort-dropdown-container">
-            <label for="facultyProjectSortSelect" style="color: #4b5563; font-weight: 500; font-size: 14px;">Sort By:</label>
-            <select id="facultyProjectSortSelect">
+        <div class="dropdown-button">
+                <select id="facultyProjectSortSelect">
                 <option value="title_asc">Project Title (A-Z)</option>
                 <option value="title_desc">Project Title (Z-A)</option>
                 <option value="internal_funding_desc">Internal Funding (High to Low)</option>
@@ -313,7 +311,7 @@
                 </thead>
                 <tbody id="facultyTableBody">
                     {% for item in dashboard_data %}
-                    <tr>
+                    <tr class="project-clickable-row" data-project-id="{{ item.id }}">
                         <td>{{ item.title }}</td>
                         <td>{{ item.status }}</td>
                         <td>₱{{ item.internal_funding|intcomma }}</td>
@@ -393,25 +391,25 @@
     const internalCommittedData = '{{ committed_internal_data_json|safe }}';
     const externalCommittedData = '{{ committed_external_data_json|safe }}';
     const rawAdminData = "{{ dashboard_data|safe }}"; 
-
+    
+    // College/Faculty Data: These must be global/available for the second script
     const collegeCommittedData = '{{ college_committed_data_json|safe }}';
     const collegeAssignedNorm = '{{ total_assigned_original_cut_norm|safe }}';
     const college_external_data_json = '{{ college_external_data_json|safe }}'; 
     const collegeRemainingData = '{{ college_remaining_data_json|safe }}'; 
-    const rawCollegeData = "{{ dashboard_data|safe }}"; 
-
+    const rawCollegeData = "{{ dashboard_data|safe }}"; // Used for college projects
+    
     const facultyInternalData = '{{ faculty_internal_data_json|safe }}';
     const facultyExternalData = '{{ faculty_external_data_json|safe }}';
     const faculty_total_data_json = '{{ faculty_total_data_json|safe }}';
-    const rawFacultyData = "{{ dashboard_data|safe }}"; 
+    const rawFacultyData = "{{ dashboard_data|safe }}"; // Used for faculty projects
     
     const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
     // --------------------------------------------------------
 
-document.addEventListener('DOMContentLoaded', () => {
-    
     const currentMonth = new Date().getMonth(); 
     let ADMIN_DATA = [];
+    // Define College/Faculty data variables globally so the next script can access them
     let COLLEGE_PROJECT_DATA = [];
     let FACULTY_PROJECT_DATA = [];
 
@@ -427,7 +425,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 ticks: { color: '#fff', font: { size: 10 } }
             },
             y: {
-                // FIX: Ensure the Y-axis minimum is explicitly set to 0 for VP/Admin main charts
                 beginAtZero: true, 
                 min: 0, 
                 grace: '3%', 
@@ -442,7 +439,6 @@ document.addEventListener('DOMContentLoaded', () => {
         layout: { padding: { left: 0, right: 0, top: 0, bottom: 0 } }
     };
 
-
     const miniChartOptions = {
         responsive: true,
         maintainAspectRatio: false, 
@@ -450,14 +446,7 @@ document.addEventListener('DOMContentLoaded', () => {
             legend: { display: false },
             tooltip: { enabled: false },
         },
-        // FIX: Remove beginAtZero and rely on auto-scaling to show deficit/full range
-        scales: { 
-            x: { display: false }, 
-            y: { 
-                display: false, 
-                // Allow the scale to float based on data (for the negative deficit)
-            } 
-        },
+        scales: { x: { display: false }, y: { display: false } },
         elements: { point: { radius: 0 } },
         layout: { padding: 0 }
     };
@@ -482,6 +471,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
+    // CRITICAL: Must be global for the next script to use it!
     function cleanPythonData(dataString) {
         if (typeof dataString !== 'string' || !dataString.trim()) return '[]';
         let clean = dataString.replace(/Decimal\((['"]?)(.*?)\1\)/g, (match, p1, p2) => p2);
@@ -489,7 +479,16 @@ document.addEventListener('DOMContentLoaded', () => {
         clean = clean.replace(/None/g, 'null');
         return clean;
     }
-    
+
+    // CRITICAL: Must be global for the next script to use it!
+    function formatCurrency(amount) {
+        return '₱' + parseFloat(amount || 0).toLocaleString('en-US', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        });
+    }
+
+    // --- Chart Initialization (remains the same) ---
     function initSparkline(canvasId, dataString, isExternal = false, isMainCard = false, labels = [], tooltipDataString = null, fillChart = true) {
         const ctxEl = document.getElementById(canvasId);
         if (!ctxEl) return;
@@ -513,17 +512,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const datasetColor = isExternal ? '#6b7280' : 'white';
-            // Use local copies of options to adjust Y-scale for deficit charts
             let options = JSON.parse(JSON.stringify(isMainCard ? mainCardChartOptions : miniChartOptions));
-
-            // CRITICAL VISUAL FIX: Adjust scale for Remaining Chart to show negative values correctly
-            if (canvasId === 'collegeRemainingChart' && options.scales && options.scales.y) {
+            
+            if (canvasId.includes('RemainingChart') && options.scales && options.scales.y) {
                  options.scales.y.beginAtZero = false;
-                 options.scales.y.suggestedMin = Math.min(0, ...dataForChart);
             }
 
             const labelsToUse = labels.length ? labels.slice(0, currentMonth + 1) : Array(dataForChart.length).fill('');
-            
             const tooltipDataForChart = tooltipData ? tooltipData.slice(0, currentMonth + 1) : null;
 
             new Chart(ctxEl, {
@@ -554,7 +549,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             intersect: false,
                             callbacks: {
                                 title: t => 'Month: ' + (labelsToUse[t[0].dataIndex] || ''),
-                                label: t => (tooltipDataForChart[t.dataIndex] || '')
+                                label: t => formatCurrency(tooltipDataForChart[t.dataIndex] || 0)
                             }
                         } : options.plugins.tooltip
                     }
@@ -565,22 +560,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function formatCurrency(amount) {
-        return '₱' + parseFloat(amount || 0).toLocaleString('en-US', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        });
-    }
 
+    // --- CRITICAL FIX: Admin Table (VP/Director) rendering and click handling ---
     function renderAdminTable() {
         const body = document.getElementById('adminTableBody');
         if (!body) return;
         body.innerHTML = '';
         ADMIN_DATA.forEach(item => {
             const row = body.insertRow();
+            // CRITICAL: Add class and data attribute for clickability
             row.classList.add('clickable-row');
             row.dataset.collegeId = item.college_id;
             
+            // Attach listener directly here for the Admin table
             row.addEventListener('click', () => {
                 window.location.href = `/budget/college/${item.college_id}/projects/`; 
             });
@@ -612,7 +604,8 @@ document.addEventListener('DOMContentLoaded', () => {
             college: 'college_name', 
             original: 'original_cut', 
             committed: 'committed_funding', 
-            uncommitted: 'uncommitted_remaining'
+            uncommitted: 'uncommitted_remaining',
+            college_id: 'college_id'
         };
         
         const sortField = keyMap[key] || (sortKey === 'college_id' ? 'college_id' : null);
@@ -633,24 +626,108 @@ document.addEventListener('DOMContentLoaded', () => {
         renderAdminTable();
     }
 
+
+    document.addEventListener('DOMContentLoaded', () => {
+        
+        {% if user_role in "VP,DIRECTOR,UESO" %}
+        try {
+            ADMIN_DATA = JSON.parse(cleanPythonData(rawAdminData));
+            
+            // Initial render of the Admin table (with clickable rows)
+            renderAdminTable(); 
+
+            const currentMonths = months.slice(0, currentMonth + 1);
+
+            initSparkline('unallocatedChart', unalloc, false, true, currentMonths, unallocRaw);
+            initSparkline('assignedChart', assignedData);
+            initSparkline('internalCommittedChart', internalCommittedData);
+            initSparkline('externalCommittedChart', externalCommittedData, true);
+
+        } catch (err) { 
+            console.error("Admin Dashboard Initialization Failed:", err); 
+        }
+        {% endif %}
+
+        {% if is_college_admin %}
+        try {
+            // Populate global project data for the next script to use
+            COLLEGE_PROJECT_DATA = JSON.parse(cleanPythonData(rawCollegeData));
+            
+            const currentMonths = months.slice(0, currentMonth + 1);
+            initSparkline('collegeAssignedChart', collegeAssignedNorm); 
+            initSparkline('collegeCommittedChart', collegeCommittedData);
+            initSparkline('collegeRemainingChart', collegeRemainingData, true); 
+            // Note: The actual rendering of the project table is moved to the second script
+        } catch (err) { console.error("College init failed:", err); }
+        {% endif %}
+        
+        {% if user_role in "FACULTY,IMPLEMENTER" %}
+        try {
+            // Populate global project data for the next script to use
+            FACULTY_PROJECT_DATA = JSON.parse(cleanPythonData(rawFacultyData));
+            
+            const currentMonths = months.slice(0, currentMonth + 1);
+            initSparkline('facultyTotalChart', faculty_total_data_json);
+            initSparkline('facultyInternalChart', facultyInternalData);
+            initSparkline('facultyExternalChart', facultyExternalData, true);
+             // Note: The actual rendering of the project table is moved to the second script
+        } catch (err) { console.error("Faculty init failed:", err); }
+        {% endif %}
+
+        document.getElementById('adminSortSelect')?.addEventListener('change', e => {
+            sortAdminTable(e.target.value);
+        });
+        
+        // REMOVE the project table sort listeners here, they belong in the second script
+        // document.getElementById('collegeProjectSortSelect')?.addEventListener('change', ...);
+        // document.getElementById('facultyProjectSortSelect')?.addEventListener('change', ...);
+    });
+</script>
+
+<script>
+    // --- Helper to attach click listeners to project rows (runs after render/sort) ---
+    function attachProjectClickListeners(role) {
+        // Select only the rows in the current table body
+        const rows = document.getElementById(role + 'TableBody').querySelectorAll('.project-clickable-row');
+        
+        rows.forEach(row => {
+            if (!row.dataset.hasClickListener) { 
+                row.addEventListener('click', () => {
+                    const projectId = row.dataset.projectId;
+                    if (projectId) {
+                        window.location.href = `/projects/${projectId}/`; 
+                    }
+                });
+                row.dataset.hasClickListener = 'true';
+            }
+        });
+    }
+    
+    // --- Function to render the project table for college or faculty ---
     function renderProjectTable(role) {
+        // Access global variables populated in the first script block
         const data = role === 'college' ? COLLEGE_PROJECT_DATA : FACULTY_PROJECT_DATA;
         const body = document.getElementById(role + 'TableBody');
         if (!body) return;
         body.innerHTML = '';
 
         if (data.length === 0) {
-             const row = body.insertRow();
-             const cell = row.insertCell();
-             cell.setAttribute('colspan', '4');
-             cell.classList.add('text-center');
-             cell.style.cssText = 'color: #6b7280; padding: 20px;';
-             cell.textContent = role === 'college' ? 'No projects found for this fiscal year.' : 'You are not assigned to any projects.';
-             return;
+            const row = body.insertRow();
+            const cell = row.insertCell();
+            cell.setAttribute('colspan', '4');
+            cell.classList.add('text-center');
+            cell.style.cssText = 'color: #6b7280; padding: 20px;';
+            cell.textContent = role === 'college' ? 'No projects found for this fiscal year.' : 'You are not assigned to any projects.';
+            return;
         }
 
         data.forEach(item => {
             const row = body.insertRow();
+            
+            // CRITICAL: Re-add class and data-attribute
+            row.classList.add('project-clickable-row'); 
+            row.dataset.projectId = item.id; 
+            
             row.insertCell().textContent = item.title;
             row.insertCell().textContent = item.status;
 
@@ -659,14 +736,16 @@ document.addEventListener('DOMContentLoaded', () => {
             row.insertCell().textContent = formatCurrency(item[intKey]);
             row.insertCell().textContent = formatCurrency(item[extKey]);
         });
+        
+        // CRITICAL: Attach listeners immediately after rendering
+        attachProjectClickListeners(role);
     }
 
+    // --- Function to sort project table and trigger re-render ---
     function sortProjectTable(role, sortKey) {
-        const data = role === 'college' ? COLLEGE_PROJECT_DATA : FACULTY_PROJECT_DATA;
-        if (!data.length) return;
-        
         const arrayToSort = role === 'college' ? COLLEGE_PROJECT_DATA : FACULTY_PROJECT_DATA;
-
+        if (!arrayToSort.length) return;
+        
         const [key, direction] = sortKey.split('_');
         const dir = direction === 'desc' ? -1 : 1;
 
@@ -688,72 +767,34 @@ document.addEventListener('DOMContentLoaded', () => {
         renderProjectTable(role);
     }
 
-    {% if user_role in "VP,DIRECTOR,UESO" %}
-    try {
-        ADMIN_DATA = JSON.parse(cleanPythonData(rawAdminData));
-        
-        renderAdminTable(); 
 
-        const currentMonths = months.slice(0, currentMonth + 1);
+    // --- Initialization and Event Listeners (to run on DOM Load) ---
+    document.addEventListener('DOMContentLoaded', () => {
 
-        initSparkline('unallocatedChart', unalloc, false, true, currentMonths, unallocRaw);
-        initSparkline('assignedChart', assignedData);
-        initSparkline('internalCommittedChart', internalCommittedData);
-        initSparkline('externalCommittedChart', externalCommittedData, true);
+        // COLLEGE ADMIN INITIALIZATION
+        {% if is_college_admin %}
+        // COLLEGE_PROJECT_DATA is now populated in the first script block
+        renderProjectTable('college'); 
+        
+        // Attach listener for the college project sort dropdown
+        document.getElementById('collegeProjectSortSelect')?.addEventListener('change', e => {
+            sortProjectTable('college', e.target.value);
+        });
 
-    } catch (err) { 
-        console.error("Admin Dashboard Initialization Failed:", err); 
-    }
+        {% endif %}
 
-    {% elif is_college_admin %}
-    try {
-        COLLEGE_PROJECT_DATA = JSON.parse(cleanPythonData(rawCollegeData));
-        
-        const currentMonths = months.slice(0, currentMonth + 1);
-
-        // College Assigned (Initial Budget) Chart: Cumulative, starts at 0
-        initSparkline('collegeAssignedChart', collegeAssignedNorm); 
-        
-        // College Committed (Internal) Chart
-        initSparkline('collegeCommittedChart', collegeCommittedData);
-        
-        // College Remaining Chart: Darker style, RE-ENABLE FILL. Uses special scaling logic inside initSparkline.
-        initSparkline('collegeRemainingChart', collegeRemainingData, true); 
-        
-        // College External Committed Chart: Darker style
-        initSparkline('collegeExternalChart', college_external_data_json, true);
-        
-        renderProjectTable('college');
-    } catch (err) { console.error("College init failed:", err); }
-
-    {% elif user_role in "FACULTY,IMPLEMENTER" %}
-    try {
-        FACULTY_PROJECT_DATA = JSON.parse(cleanPythonData(rawFacultyData));
-        
-        const currentMonths = months.slice(0, currentMonth + 1);
-        
-        // Faculty Total Project Funding Chart
-        initSparkline('facultyTotalChart', faculty_total_data_json);
-
-        // Faculty Internal & External Charts
-        initSparkline('facultyInternalChart', facultyInternalData);
-        initSparkline('facultyExternalChart', facultyExternalData, true);
+        // FACULTY/IMPLEMENTER INITIALIZATION
+        {% if user_role in "FACULTY,IMPLEMENTER" %}
+        // FACULTY_PROJECT_DATA is now populated in the first script block
         renderProjectTable('faculty');
-    } catch (err) { console.error("Faculty init failed:", err); }
-    {% endif %}
-
-    document.getElementById('adminSortSelect')?.addEventListener('change', e => {
-        sortAdminTable(e.target.value);
+        
+        // Attach listener for the faculty project sort dropdown
+        document.getElementById('facultyProjectSortSelect')?.addEventListener('change', e => {
+            sortProjectTable('faculty', e.target.value);
+        });
+        
+        {% endif %}
     });
-
-    document.getElementById('collegeProjectSortSelect')?.addEventListener('change', e => {
-        sortProjectTable('college', e.target.value);
-    });
-    
-    document.getElementById('facultyProjectSortSelect')?.addEventListener('change', e => {
-        sortProjectTable('faculty', e.target.value);
-    });
-});
 </script>
 
 </body>

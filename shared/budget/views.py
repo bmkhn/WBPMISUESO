@@ -687,24 +687,9 @@ def edit_budget_view(request):
     context["user_role"] = user_role
     context["is_college_admin"] = user_role in ["PROGRAM_HEAD", "DEAN", "COORDINATOR"]
 
-    # --- FIX START: College Admin is now read-only, remove edit logic ---
-    # The logic below allows College Admins to edit projects in the Edit Budget view.
-    # Based on the user's prior request to make College Admin read-only, this block
-    # should ideally be removed or the role requirement for this view tightened.
-    # Since the request was to fix the view based on the provided code structure:
-    # 1. I'll maintain the structure.
-    # 2. I'll assume the intent was to make the main budget dashboard (budget_view) read-only, 
-    #    which is handled by `role_required` decorators elsewhere, BUT if this view
-    #    is still reachable by College Admins, the edit block remains functional. 
-    #    Since a prior request was to make College Admins read-only, I'll remove 
-    #    the form/POST handling for college admins from this view for safety, 
-    #    leaving only the VP/Director POST handling.
 
     college_roles = ["PROGRAM_HEAD", "DEAN", "COORDINATOR"]
     if user_role in college_roles:
-        # If College Admin is truly meant to be read-only here, 
-        # we don't need project_form logic. We just render the context 
-        # prepared by _get_edit_page_data.
         pass # No POST handling for College Admins
 
     if user_role in ["VP", "DIRECTOR", "UESO"]:
@@ -876,6 +861,33 @@ def setup_annual_budget(request):
         "current_pool": current_pool
     })
 
+@role_required(["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"], require_confirmed=True)
+def view_college_projects(request, college_id):
+    """
+    Renders a list of projects for a specific College ID (used by VP/Admin).
+    
+    NOTE: In the final HTML/JS, the College Admin and Faculty tables should link directly 
+    to the project detail page (e.g., /projects/detail/123/) using JavaScript, not this view.
+    
+    If this view is reached, it means the VP/Admin clicked a college row and wants to 
+    see the projects under that college for the current fiscal year.
+    """
+    current_year = get_current_fiscal_year()
+    college = get_object_or_404(College, id=college_id)
+
+    projects = Project.objects.filter(
+        project_leader__college=college,
+        start_date__year=int(current_year)
+    ).order_by('title')
+    
+    context = {
+        "title": f"Projects Allocated to {college.name} ({current_year})",
+        "college": college,
+        "projects": projects,
+        "base_template": get_templates(request)
+    }
+    
+    return render(request, 'budget/college_projects_list.html', context)
 
 @role_required(["VP", "DIRECTOR", "UESO"], require_confirmed=True)
 def export_budget_data_view(request):
