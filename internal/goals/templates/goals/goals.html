@@ -126,48 +126,115 @@
         background: #006633;
     }
 
-    .goal {
+    /* Mirror Agenda add button */
+    .add-user-btn {
+        font-family: 'Inter', sans-serif;
+        background-color: #00681a;
+        color: #F5F5F5;
+        font-size: 0.85rem;
+        font-weight: 500;
+        padding: 0.6rem 1.6rem;
+        border-radius: 2rem;
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.2s ease, color 0.2s ease;
+        text-decoration: none;
+    }
+    .add-user-btn:hover { background-color: #444; color: #fff; transform: translateY(-1px); }
+    .add-user-btn i { cursor: pointer; margin-right: 0.3rem; }
+
+    /* ===== Goals Carousel (mirrors Agenda) ===== */
+    .goals-carousel-wrapper {
         display: flex;
-        flex-direction: row;
-        gap: 1.5rem;
-        padding: 1rem;
-        margin: 0 0 1rem 0;
+        align-items: center;
         justify-content: center;
-        flex-grow: 1;
-        height: auto;
-        overflow: hidden; /* default: no scroll when <= 4 */
+        width: 100%;
+        position: relative;
+        margin: 0.7rem;   
+        height: 30rem;
     }
 
-    /* Default: auto-stretch 1–4 tiles to fill the row */
-    .goal > div {
+    .goals-carousel {
+        overflow: hidden;
+        width: 960px;
+        position: relative;
+        margin: -0.5rem auto 0 auto;
+        display: flex;
+        align-items: flex-start;
+        justify-content: flex-start;
+        padding: 15px 0; 
+    }
+
+    .goals-carousel-track {
+        display: flex;
+        transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        gap: 24px;
+        will-change: transform;
+    }
+
+    .goal-card {
+        position: relative;
+        width: 100%; 
+        height: 25rem;
+        padding: 24px 24px 48px 24px; 
+        border-radius: 12px;
+        border-top: 1px solid rgba(0, 0, 0, 0.1); 
+        border-left: 1px solid rgba(0, 0, 0, 0.1);
         background-color: #ffffff;
-        border: 0.08rem solid rgb(114, 114, 114);
-        box-shadow: 0 0 0.1rem rgba(0, 0, 0, 0.1);
-        border-radius: 1rem;
-        flex: 1 1 0;
-        min-width: 0;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08), 
+                    0 2px 4px rgba(0, 0, 0, 0.04);
+        transform: rotate(-0.5deg); 
+        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); 
         display: flex;
         flex-direction: column;
-        justify-content: center;
+        gap: 10px;
         align-items: center;
-        height: 15rem;
-        position: relative;
+        box-sizing: border-box;
+        vertical-align: top; 
+        flex: 0 0 calc(((960px - 2 * 24px) / 3) - 7px);
+        width: calc(((960px - 2 * 24px) / 3) - 7px);
     }
 
-    /* When more than 4 tiles: enable horizontal scrolling and fixed tile width */
-    .goal.scrollable {
-        overflow-x: auto;
-        overflow-y: hidden;
-        justify-content: flex-start;
-        -webkit-overflow-scrolling: touch;
-        scroll-behavior: smooth;
+    .goal-card:hover {
+        transform: translateY(-16px) rotate(0deg); 
+        flex: 0 0 calc((((960px - 2 * 24px) / 3) - 7px) * 2 + 24px);
+        width: calc((((960px - 2 * 24px) / 3) - 7px) * 2 + 24px);
+        box-shadow: 0 16px 32px rgba(0, 0, 0, 0.25),
+                    0 4px 8px rgba(0, 0, 0, 0.15);
+        border: 1px solid rgba(187, 187, 187, 0.8);
     }
-    .goal.scrollable > div {
-        /* Keep the same visual size as the 4-tile layout */
-        flex: 0 0 calc((100% - 4.5rem) / 4); /* 3 gaps × 1.5rem = 4.5rem */
-        width: calc((100% - 4.5rem) / 4);
-        min-width: calc((100% - 4.5rem) / 4);
+
+    .goal-card.expand-left:hover {
+        transform: translateY(-16px) translateX(calc((((960px - 2 * 24px) / 3) - 7px) * -1 - 24px)) rotate(0deg); 
     }
+
+    .goal-card.shift-previous {
+        transform: translateX(calc((((960px - 2 * 24px) / 3) - 7px) * -1 - 24px)); 
+    }
+
+    .carousel-arrow {
+        background: #ffffff;
+        border: none;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+        z-index: 10;
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        border-radius: 999px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    }
+    .carousel-arrow:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.18); }
+    .left-arrow { left: 0; }
+    .right-arrow { right: 0; }
+    .carousel-arrow:active { background: #f3f4f6; transform: translateY(-50%) scale(0.95); }
+    .carousel-arrow:disabled { opacity: 0.4; cursor: default; box-shadow: none; }
+    .carousel-arrow svg { display: block; }
 
     /* Ellipsis dropdown menu */
     .goal-menu {
@@ -188,26 +255,30 @@
         display: block;
     }
 
-    .goal-menu button {
+    .goal-menu .options-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
         width: 100%;
-        padding: 10px 12px;
+        padding: 10px 14px;
         text-align: left;
         background: white;
         border: none;
         cursor: pointer;
         font-size: 14px;
+        color: #555555;
     }
+    .goal-menu .options-item:hover { background: #F3F4F6; }
+    .goal-menu .options-item svg { width: 16px; height: 16px; }
+    .goal-menu .edit-option { color: #1f7c57; }
+    .goal-menu .delete-option { color: #DC2626; }
 
-    .goal-menu button:hover {
-        background: #f3f3f3;
-    }
-
-    .goal canvas {
+    .goal-card canvas {
         width: 75% !important;
         height: 75% !important;
     }
 
-    .goal-title {
+    .goal-card .goal-title {
         margin-top: 0rem;
         text-align: center;
         font-size: 12px;
@@ -251,6 +322,80 @@
         border-collapse: collapse;
         border: 1px solid gray;
     }
+
+    /* Per-goal list styles, mirroring agenda */
+    .title-expand-container {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        margin-top: 30px;
+    }
+    .table-title-text {
+        font-family: 'Inter', Arial, sans-serif;
+        font-weight: 400;
+        font-size: 1.25rem;
+        color: #000000;
+    }
+    .goal-progress-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-left: 10px;
+        padding: 4px 10px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: #065f46;
+        background: #d1fae5;
+        border: 1px solid #86efac;
+        border-radius: 999px;
+    }
+    .view-more {
+        font-family: 'Inter', sans-serif;
+        font-weight: 400;
+        font-size: 0.75rem;
+        color: #2EA8FF;
+        text-decoration: none;
+        margin-top: 10px;
+        cursor: pointer;
+    }
+    .view-more:hover { text-decoration: underline; }
+    .user-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #FFFFFF; 
+        border-radius: 8px; 
+        overflow: auto;  
+        box-shadow: 0 0 0 1px #dfdfdf, 0 0 15px rgba(0, 0, 0, 0.08); 
+    }
+    .user-table th {
+        font-size: 0.95rem;
+        font-weight: 600; 
+        background: #eeeeee; 
+        border-bottom: 1px solid #E0E0E0; 
+        padding: 16px 18px; 
+        text-align: left;
+        font-family: 'Inter', Arial, sans-serif;
+        color: #333333; 
+        box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.05); 
+        transition: padding 0.2s ease-in-out; 
+    }
+    .user-table td {
+        font-size: 14px; 
+        font-weight: 400;
+        border: none;
+        border-bottom: 1px solid #E0E0E0; 
+        padding: 14px 18px; 
+        text-align: left;
+        font-family: 'Inter', Arial, sans-serif;
+        color: #555555; 
+        transition: padding 0.2s ease-in-out; 
+    }
+    .user-table tr:last-child td { border-bottom: none; }
+    .user-table tr:nth-child(even) { background-color: #f8f8f8; }
+    .name-link { color: #0099FF; text-decoration: none; }
+    .name-link:hover { text-decoration: underline; }
 
     /* Remove old sidebar helper classes to prevent collisions */
 
@@ -924,10 +1069,23 @@
         <div>
             <div class="goals-header">
                 <h1>Goals</h1>
-                <a href="{% url 'add_goal' %}" class="add-goal">Add Goal</a>
+                <a href="{% url 'add_goal' %}"><button class="add-user-btn">
+                    <i class="fa-solid fa-bars-progress"></i>
+                    Add Goal
+                </button></a>
             </div> 
-            <div class="goal" id="goalsContainer">
-                <!-- Goals will be dynamically loaded here -->
+            <div class="goals-carousel-wrapper">
+                <button class="carousel-arrow left-arrow" type="button" onclick="scrollGoals(-1)">
+                    <svg width="32" height="32" viewBox="0 0 32 32"><path d="M20 8l-8 8 8 8" stroke="#063A1C" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <div class="goals-carousel">
+                    <div class="goals-carousel-track" id="goalsTrack">
+                        <!-- Goals will be dynamically loaded here -->
+                    </div>
+                </div>
+                <button class="carousel-arrow right-arrow" type="button" onclick="scrollGoals(1)">
+                    <svg width="32" height="32" viewBox="0 0 32 32"><path d="M12 8l8 8-8 8" stroke="#063A1C" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
             </div>
         </div>
         <div>
@@ -936,17 +1094,7 @@
             </div>
             <div class="table-container">
                 <div id="goalsError" style="display:none; margin: 0 0 12px 0; padding: 12px 14px; border-radius: 8px; background: #fee2e2; color: #991b1b; border: 1px solid #fecaca;"></div>
-                <table>
-                    <thead>
-                    <tr class="table-header">
-                        <th>Goals</th>
-                        <th>List of Qualifiers</th>
-                        <th>Progress</th>
-                    </tr>
-                    </thead>
-                    <tbody id="goalsListTbody">
-                    </tbody>
-                </table>
+                <div id="goalsTablesContainer"></div>
             </div>
         </div>
     </main>
@@ -1032,7 +1180,7 @@
             document.body.removeChild(link);
         }
 
-        // Plugin to draw percentage text inside the chart
+        // Plugin to draw percentage text inside the chart (with subtle shadow)
         const centerTextPlugin = {
             id: 'centerText',
             beforeDraw(chart) {
@@ -1044,25 +1192,66 @@
                 // Ensure value is valid for display
                 const displayValue = (value !== null && value !== undefined && !isNaN(value)) ? value : 0;
 
-                ctx.font = 'bold 3.5rem Arial'; 
-                ctx.fillStyle = '#333'; 
+                // Drop shadow for text for better contrast
+                ctx.shadowColor = 'rgba(0,0,0,0.18)';
+                ctx.shadowBlur = 8;
+                ctx.shadowOffsetY = 2;
+
+                ctx.font = '700 3.2rem Arial'; 
+                ctx.fillStyle = '#1f2937'; 
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.fillText(displayValue + '%', width / 2, height / 1.75);
+                ctx.fillText(displayValue + '%', width / 2, height / 1.78);
                 ctx.restore();
+            }
+        };
+        // Subtle arc shadow plugin (applies to the progress arc only)
+        const arcShadowPlugin = {
+            id: 'arcShadow',
+            beforeDatasetDraw(chart, args) {
+                if (args.index !== 0) return;
+                const { ctx } = chart;
+                ctx.save();
+                ctx.shadowColor = 'rgba(0,0,0,0.20)';
+                ctx.shadowBlur = 14;
+                ctx.shadowOffsetY = 6;
+            },
+            afterDatasetDraw(chart, args) {
+                if (args.index !== 0) return;
+                chart.ctx.restore();
             }
         };
         function createHalfDoughnut(ctx, value, title) {
             // Ensure value is a valid number, default to 0 if undefined/null
             const progressValue = (value !== null && value !== undefined && !isNaN(value)) ? value : 0;
-            
+
+            // Choose color palette by progress bucket
+            let startColor, endColor;
+            if (progressValue < 34) {
+                startColor = '#ef4444'; // red
+                endColor   = '#f87171';
+            } else if (progressValue < 67) {
+                startColor = '#f59e0b'; // amber
+                endColor   = '#fbbf24';
+            } else {
+                startColor = '#10b981'; // green
+                endColor   = '#22c55e';
+            }
+
+            // Gradient for the progress arc
+            const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
+            gradient.addColorStop(0, startColor);
+            gradient.addColorStop(1, endColor);
+
             return new Chart(ctx, {
                 type: 'doughnut',
                 data: {
                     datasets: [{
                         data: [progressValue, 100 - progressValue],
-                        backgroundColor: ['#32CD32', '#D2042D'],
-                        borderWidth: 0
+                        backgroundColor: [gradient, 'rgba(229,231,235,0.9)'],
+                        borderWidth: 0,
+                        borderRadius: 14,
+                        hoverOffset: 4
                     }]
                 },
                 options: {
@@ -1070,16 +1259,106 @@
                 circumference: 180,
                 responsive: true,
                 maintainAspectRatio: false,
-                cutout: '85%',
+                cutout: '78%',
                 plugins: {
                     legend: { display: false },
                     tooltip: { enabled: false },
                     title: { display: false },
                     subtitle: { display: false},
                     padding: { top: 10 }
+                    },
+                animation: {
+                    animateRotate: true,
+                    duration: 1200,
+                    easing: 'easeOutCubic'
                     }
                 },
-                plugins: [centerTextPlugin] 
+                plugins: [arcShadowPlugin, centerTextPlugin] 
+            });
+        }
+
+        // === Carousel logic (mirrors Agenda) ===
+        const GOAL_CARD_BACKGROUNDS = [
+            'linear-gradient(to bottom, #FFC4A8 0%, #ffffff 100%)',
+            'linear-gradient(to bottom, #B6F3D7 0%, #ffffff 100%)',
+            'linear-gradient(to bottom, #B8D9FF 0%, #ffffff 100%)',
+            'linear-gradient(to bottom, #D0B8FF 0%, #ffffff 100%)',
+            'linear-gradient(to bottom, #FFF3B8 0%, #ffffff 100%)',
+            'linear-gradient(to bottom, #FFB8D9 0%, #ffffff 100%)',
+            'linear-gradient(to bottom, #A8FFF0 0%, #ffffff 100%)',
+            'linear-gradient(to bottom, #FFC0B8 0%, #ffffff 100%)',
+            'linear-gradient(to bottom, #D9D9F8 0%, #ffffff 100%)',
+        ];
+
+        let goalsIndex = 0;
+        const goalsCardsToShow = 3;
+
+        function getGoalCards() {
+            return document.querySelectorAll('.goals-carousel-track .goal-card');
+        }
+
+        function applyGoalColors() {
+            const cards = getGoalCards();
+            cards.forEach((card, index) => {
+                const colorIndex = index % GOAL_CARD_BACKGROUNDS.length;
+                card.style.backgroundImage = GOAL_CARD_BACKGROUNDS[colorIndex];
+            });
+        }
+
+        function updateGoalsCarousel() {
+            const track = document.querySelector('.goals-carousel-track');
+            const cards = getGoalCards();
+            const totalCards = cards.length;
+            if (!track || totalCards === 0) return;
+
+            if (goalsIndex < 0) goalsIndex = 0;
+            if (goalsIndex > totalCards - goalsCardsToShow) {
+                goalsIndex = Math.max(totalCards - goalsCardsToShow, 0);
+            }
+
+            const cardWidth = cards.length > 0 ? cards[0].offsetWidth : 0;
+            const gap = parseInt(window.getComputedStyle(track).gap) || 24;
+            const offset = goalsIndex * (cardWidth + gap);
+            track.style.transform = `translateX(-${offset}px)`;
+
+            const leftArrow = document.querySelector('.goals-carousel-wrapper .left-arrow');
+            const rightArrow = document.querySelector('.goals-carousel-wrapper .right-arrow');
+            if (leftArrow) leftArrow.disabled = goalsIndex === 0;
+            if (rightArrow) rightArrow.disabled = goalsIndex >= totalCards - goalsCardsToShow;
+
+            const lastVisibleIndex = goalsIndex + goalsCardsToShow - 1;
+            cards.forEach((card, index) => {
+                card.classList.remove('expand-left');
+                if (index === lastVisibleIndex && index < totalCards) {
+                    card.classList.add('expand-left');
+                }
+            });
+
+            setupGoalHoverShift();
+            applyGoalColors();
+        }
+
+        function scrollGoals(dir) {
+            goalsIndex += dir;
+            updateGoalsCarousel();
+        }
+
+        function setupGoalHoverShift() {
+            const cards = getGoalCards();
+            cards.forEach(card => card.classList.remove('shift-previous'));
+            cards.forEach((card, index) => {
+                if (card.classList.contains('expand-left')) {
+                    const previousCard = cards[index - 1];
+                    if (previousCard) {
+                        const over = () => { previousCard.classList.add('shift-previous'); };
+                        const out = () => { previousCard.classList.remove('shift-previous'); };
+                        card.onmouseover = over;
+                        card.onmouseout = out;
+                    }
+                } else {
+                    card.onmouseover = null;
+                    card.onmouseout = null;
+                }
             });
         }
 
@@ -1099,7 +1378,7 @@
         document.addEventListener('click', (e) => {
             const editBtn = e.target.closest('.menu-edit');
             if (editBtn) {
-                const card = editBtn.closest('.goal > div');
+                const card = editBtn.closest('.goal-card');
                 const title = card?.querySelector('.goal-title')?.textContent?.trim() || '';
                 alert('Edit: ' + title);
             }
@@ -1264,6 +1543,7 @@
             }
             
             loadGoals();
+            window.addEventListener('resize', updateGoalsCarousel);
         });
 
         // Database integration functions
@@ -1286,7 +1566,7 @@
                     showGoalsError(data.error || 'Failed to load goals');
                     goals = [];
                     renderEmptyState(true);
-                    updateListView();
+                    renderQualifiersTables();
                     return;
                 }
 
@@ -1305,13 +1585,13 @@
                     console.log('Goals array length:', goals.length);
                     
                     renderGoals();
-                    updateListView();
+                    renderQualifiersTables();
                 } else {
                     console.log('No goals found in API response');
                     // No goals in database - show demo tiles so UI remains visible
                     goals = [];
                     renderEmptyState(false);
-                    updateListView();
+                    renderQualifiersTables();
                 }
             } catch (error) {
                 console.error('Error loading goals from database:', error);
@@ -1319,7 +1599,7 @@
                 // API failed - show demo tiles instead of hiding the section
                 goals = [];
                 renderEmptyState(false);
-                updateListView();
+                renderQualifiersTables();
             }
         }
 
@@ -1343,40 +1623,45 @@
         // Render goals in the UI
         function renderGoals() {
             const goalContainer = document.getElementById('goalsContainer');
-            if (!goalContainer) return;
+            const track = document.getElementById('goalsTrack');
+            if (!track) return;
 
             // Clear existing goals
-            goalContainer.innerHTML = '';
+            track.innerHTML = '';
 
             // If no goals, show empty state
             if (goals.length === 0) {
-                renderEmptyState();
+                // If empty, center message inside carousel
+                const empty = document.createElement('div');
+                empty.style.cssText = 'width:960px;text-align:center;padding:40px;color:#888;font-size:18px;margin:0 auto;';
+                empty.textContent = 'No goals found.';
+                track.appendChild(empty);
                 return;
             }
 
-            // Toggle scroll mode if more than 4
-            if (goals.length > 4) {
-                goalContainer.classList.add('scrollable');
-            } else {
-                goalContainer.classList.remove('scrollable');
-            }
-
-            // Render all goals; CSS controls scrolling/fit
+            // Render all goals as carousel cards
             const goalsToShow = goals;
             
             goalsToShow.forEach((goal, index) => {
                 console.log(`Rendering goal ${index}: ID=${goal.id}, Title="${goal.title}"`);
-                const goalDiv = document.createElement('div');
-                goalDiv.innerHTML = `
-                    <button class="ellipsis-btn" onclick="toggleGoalMenu(${index})">...</button>
-                    <div class="goal-menu" id="goal-menu-${index}">
-                        <button class="menu-edit" onclick="editGoal(${goal.id})">Edit</button>
-                        <button class="menu-delete" style="color:#d2042d;" onclick="deleteGoal(${goal.id})">Delete</button>
+                const card = document.createElement('div');
+                card.className = 'goal-card';
+                card.innerHTML = `
+                    <button class=\"ellipsis-btn\" onclick=\"toggleGoalMenu(${index})\">...</button>
+                    <div class=\"goal-menu\" id=\"goal-menu-${index}\">\n\
+                        <button class=\"options-item edit-option\" onclick=\"editGoal(${goal.id})\">\n\
+                            <svg viewBox=\"0 0 24 24\" fill=\"currentColor\"><path d=\"M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7\"></path><path d=\"m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z\"></path></svg>
+                            Edit\n\
+                        </button>\n\
+                        <button class=\"options-item delete-option\" onclick=\"deleteGoal(${goal.id})\">\n\
+                            <svg viewBox=\"0 0 24 24\" fill=\"currentColor\"><polyline points=\"3,6 5,6 21,6\"></polyline><path d=\"m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2\"></path></svg>
+                            Delete\n\
+                        </button>\n\
                     </div>
-                    <canvas id="goal${index + 1}"></canvas>
-                    <div class="goal-title">${goal.title}</div>
+                    <canvas id=\"goal${index + 1}\"></canvas>
+                    <div class=\"goal-title\">${goal.title}</div>
                 `;
-                goalContainer.appendChild(goalDiv);
+                track.appendChild(card);
 
                 // Create chart for this goal
                 setTimeout(() => {
@@ -1387,6 +1672,9 @@
                     );
                 }, 100);
             });
+
+            // Initialize carousel after rendering
+            updateGoalsCarousel();
         }
 
         // Update list view with real data
@@ -1759,6 +2047,84 @@
             if (!box) return;
             box.textContent = message;
             box.style.display = 'block';
+        }
+
+        // Render per-goal qualifiers tables similar to agenda
+        async function renderQualifiersTables() {
+            const container = document.getElementById('goalsTablesContainer');
+            if (!container) return;
+            container.innerHTML = '';
+
+            if (!goals || goals.length === 0) {
+                const empty = document.createElement('div');
+                empty.style.cssText = 'text-align:center; padding: 2rem; color:#6b7280;';
+                empty.textContent = 'No goals available.';
+                container.appendChild(empty);
+                return;
+            }
+
+            for (const goal of goals) {
+                const section = document.createElement('div');
+                section.className = 'goal-qualifiers-section';
+                section.innerHTML = `
+                    <div class="title-expand-container">
+                        <span class="table-title-text">${goal.title}<span class="goal-progress-badge">${goal.progress}%</span></span>
+                        <a href="/projects/?goal=${goal.id}" class="view-more" data-goal-id="${goal.id}">View More</a>
+                    </div>
+                    <table class="user-table">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Team Leader</th>
+                                <th>Start Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="goal-tbody" data-goal-id="${goal.id}">
+                            <tr><td colspan="4" style="text-align:center; padding: 1rem;">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                `;
+                container.appendChild(section);
+
+                // Fetch qualifiers for this goal
+                try {
+                    const resp = await fetch(goalQualifiersUrl(goal.id));
+                    const data = await resp.json();
+                    const tbody = section.querySelector('.goal-tbody');
+                    tbody.innerHTML = '';
+
+                    if (data.success && Array.isArray(data.projects) && data.projects.length > 0) {
+                        const total = data.projects.length;
+                        const rows = data.projects.slice(0, 10);
+                        rows.forEach(project => {
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `
+                                <td>${project.title}</td>
+                                <td>${project.team_leader}</td>
+                                <td>${project.start_date || ''}</td>
+                                <td>${project.status || ''}</td>
+                            `;
+                            tbody.appendChild(tr);
+                        });
+                        const link = section.querySelector('.view-more');
+                        if (link) {
+                            link.style.display = '';
+                        }
+                    } else {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `<td colspan="4" style="text-align:center; padding: 1rem; color:#6b7280;">No qualifiers for this goal.</td>`;
+                        tbody.appendChild(tr);
+                        const link = section.querySelector('.view-more');
+                        if (link) link.style.display = '';
+                    }
+                } catch (e) {
+                    const tbody = section.querySelector('.goal-tbody');
+                    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 1rem; color:#dc2626;">Error loading qualifiers</td></tr>`;
+                    const link = section.querySelector('.view-more');
+                    if (link) link.style.display = '';
+                }
+            }
         }
 
         // Client-side pagination
