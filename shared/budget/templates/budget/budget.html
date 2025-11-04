@@ -186,8 +186,17 @@
             <span class="card-figure-subtext">Committed funding for projects</span>
         </div>
         <div class="goal-card color-milky-white">
-            <h3>Remaining (Uncommitted)</h3>
-            <p class="amount {% if uncommitted_remaining < 0 %}text-red{% else %}text-green{% endif %}">₱{{ uncommitted_remaining|floatformat:0|intcomma }}</p>
+            <div class="card-content-wrapper" style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
+                <div>
+                    <h3>Remaining (Uncommitted)</h3>
+                    <p class="amount {% if uncommitted_remaining < 0 %}text-red{% else %}text-green{% endif %}">
+                        ₱{{ uncommitted_remaining|floatformat:0|intcomma }}
+                    </p>
+                </div>
+                <div style="height: 80px; width: 130px; flex-shrink: 0; margin-top: -5px;">
+                    <canvas id="collegeRemainingChart"></canvas>
+                </div>
+            </div>
             <span class="card-figure-subtext">Funds available for new projects</span>
         </div>
     </div>
@@ -246,6 +255,9 @@
                 <div>
                     <h3 style="color: white;">Total Project Funding</h3>
                     <p class="amount text-blue" style="color: white;">₱{{ total_assigned|floatformat:0|intcomma }}</p>
+                </div>
+                <div style="height: 80px; width: 130px; flex-shrink: 0; margin-top: -5px;">
+                    <canvas id="facultyTotalChart"></canvas>
                 </div>
             </div>
             <span class="card-figure-subtext">Overall budget across all your projects</span>
@@ -384,10 +396,13 @@
 
     const collegeCommittedData = '{{ college_committed_data_json|safe }}';
     const collegeAssignedNorm = '{{ total_assigned_original_cut_norm|safe }}';
+    const college_external_data_json = '{{ college_external_data_json|safe }}'; 
+    const collegeRemainingData = '{{ college_remaining_data_json|safe }}'; 
     const rawCollegeData = "{{ dashboard_data|safe }}"; 
 
     const facultyInternalData = '{{ faculty_internal_data_json|safe }}';
     const facultyExternalData = '{{ faculty_external_data_json|safe }}';
+    const faculty_total_data_json = '{{ faculty_total_data_json|safe }}';
     const rawFacultyData = "{{ dashboard_data|safe }}"; 
     
     const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -412,8 +427,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 ticks: { color: '#fff', font: { size: 10 } }
             },
             y: {
-                beginAtZero: true,
-                suggestedMin: 0,
+                // FIX: Ensure the Y-axis minimum is explicitly set to 0 for VP/Admin main charts
+                beginAtZero: true, 
                 min: 0, 
                 grace: '3%', 
                 grid: { color: 'rgba(255, 255, 255, 0.2)' },
@@ -435,7 +450,14 @@ document.addEventListener('DOMContentLoaded', () => {
             legend: { display: false },
             tooltip: { enabled: false },
         },
-        scales: { x: { display: false }, y: { display: false, beginAtZero: true } },
+        // FIX: Remove beginAtZero and rely on auto-scaling to show deficit/full range
+        scales: { 
+            x: { display: false }, 
+            y: { 
+                display: false, 
+                // Allow the scale to float based on data (for the negative deficit)
+            } 
+        },
         elements: { point: { radius: 0 } },
         layout: { padding: 0 }
     };
@@ -468,7 +490,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return clean;
     }
     
-    function initSparkline(canvasId, dataString, isExternal = false, isMainCard = false, labels = [], tooltipDataString = null) {
+    function initSparkline(canvasId, dataString, isExternal = false, isMainCard = false, labels = [], tooltipDataString = null, fillChart = true) {
         const ctxEl = document.getElementById(canvasId);
         if (!ctxEl) return;
         
@@ -484,7 +506,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const dataForChart = data.slice(0, currentMonth + 1);
         
-        // Final check to see if we should render.
         if (!dataForChart || dataForChart.length === 0 || dataForChart.every(v => v === null || v === 0 || v === '0' )) {
              ctxEl.style.display = 'none'; 
              return;
@@ -492,7 +513,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const datasetColor = isExternal ? '#6b7280' : 'white';
-            const options = isMainCard ? mainCardChartOptions : miniChartOptions;
+            // Use local copies of options to adjust Y-scale for deficit charts
+            let options = JSON.parse(JSON.stringify(isMainCard ? mainCardChartOptions : miniChartOptions));
+
+            // CRITICAL VISUAL FIX: Adjust scale for Remaining Chart to show negative values correctly
+            if (canvasId === 'collegeRemainingChart' && options.scales && options.scales.y) {
+                 options.scales.y.beginAtZero = false;
+                 options.scales.y.suggestedMin = Math.min(0, ...dataForChart);
+            }
+
             const labelsToUse = labels.length ? labels.slice(0, currentMonth + 1) : Array(dataForChart.length).fill('');
             
             const tooltipDataForChart = tooltipData ? tooltipData.slice(0, currentMonth + 1) : null;
@@ -505,8 +534,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         data: dataForChart,
                         borderColor: datasetColor,
                         borderWidth: 2,
-                        fill: true,
-                        // FIX: Explicitly set tension for smoothing
+                        fill: fillChart,
                         tension: 0.4, 
                         spanGaps: true,
                         backgroundColor: (context) => {
@@ -683,9 +711,18 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const currentMonths = months.slice(0, currentMonth + 1);
 
-        initSparkline('collegeAssignedChart', collegeAssignedNorm);
+        // College Assigned (Initial Budget) Chart: Cumulative, starts at 0
+        initSparkline('collegeAssignedChart', collegeAssignedNorm); 
+        
+        // College Committed (Internal) Chart
         initSparkline('collegeCommittedChart', collegeCommittedData);
+        
+        // College Remaining Chart: Darker style, RE-ENABLE FILL. Uses special scaling logic inside initSparkline.
+        initSparkline('collegeRemainingChart', collegeRemainingData, true); 
+        
+        // College External Committed Chart: Darker style
         initSparkline('collegeExternalChart', college_external_data_json, true);
+        
         renderProjectTable('college');
     } catch (err) { console.error("College init failed:", err); }
 
@@ -694,7 +731,11 @@ document.addEventListener('DOMContentLoaded', () => {
         FACULTY_PROJECT_DATA = JSON.parse(cleanPythonData(rawFacultyData));
         
         const currentMonths = months.slice(0, currentMonth + 1);
+        
+        // Faculty Total Project Funding Chart
         initSparkline('facultyTotalChart', faculty_total_data_json);
+
+        // Faculty Internal & External Charts
         initSparkline('facultyInternalChart', facultyInternalData);
         initSparkline('facultyExternalChart', facultyExternalData, true);
         renderProjectTable('faculty');

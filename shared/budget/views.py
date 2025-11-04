@@ -229,6 +229,16 @@ def _get_admin_dashboard_data(fiscal_year):
     }
 
 def _get_college_dashboard_data(user, fiscal_year):
+    from django.db.models.functions import Coalesce, TruncMonth
+    from django.db.models import Q, Sum, Value, DecimalField
+    from decimal import Decimal
+    import json
+    
+    def get_current_fiscal_year():
+        from django.utils import timezone
+        return str(timezone.now().year)
+
+
     user_college = getattr(user, 'college', None)
     if not user_college:
         return {"is_setup": True, "error": "User is not assigned to a College."}
@@ -240,20 +250,25 @@ def _get_college_dashboard_data(user, fiscal_year):
     ).first()
 
     if not college_budget:
-        # NOTE: Returning a setup failure if no budget is allocated prevents chart errors
         return {"is_setup": False, "college_name": user_college.name}
 
-    # Fetch projects for display
-    projects = Project.objects.filter(
-        project_leader__college=user_college,
-        start_date__year=int(fiscal_year) # Limit projects to the current fiscal year
+    year_int = int(fiscal_year)
+    total_assigned = college_budget.total_assigned
+
+    projects_current_year = Project.objects.filter(
+        Q(internal_budget__gt=0) | Q(external_budget__gt=0), 
+        
+        # Followed by keyword arguments
+        project_leader__college=user_college, 
+        start_date__year=year_int,           
     ).select_related('project_leader').order_by('title')
 
     project_list = []
     total_committed_internal = Decimal('0.0')
     total_committed_external = Decimal('0.0')
 
-    for project in projects:
+    # Aggregate totals for the static cards
+    for project in projects_current_year:
         assigned = project.internal_budget or Decimal('0')
         external = project.external_budget or Decimal('0')
 
@@ -267,22 +282,17 @@ def _get_college_dashboard_data(user, fiscal_year):
             'internal_funding_committed': assigned,
             'external_funding_committed': external,
         })
-
-    total_assigned = college_budget.total_assigned
-    uncommitted_remaining = total_assigned - total_committed_internal
     
-    year_int = int(fiscal_year)
-    max_value_internal = total_committed_internal
-    max_value_external = total_committed_external
+    uncommitted_remaining = total_assigned - total_committed_internal
 
-    # --- College Internal Committed Chart Data ---
-    # Normalization denominator is the COLLEGE's total_assigned (the cap), NOT the total committed.
-    # However, to avoid showing 5% utilization when 100% is committed, we use the greater value.
+    # --- Denominators for normalization ---
     norm_denominator_internal = total_assigned if total_assigned > 0 else Decimal('1') 
+    norm_denominator_external = total_committed_external if total_committed_external > 0 else Decimal('1') 
 
-    project_internal_monthly = Project.objects.filter(
-        project_leader__college=user_college,
-        start_date__year=year_int,
+    # --- Setup for Monthly Aggregation ---
+    
+    # 1. Internal Committed Data (Monthly Aggregation)
+    project_internal_monthly = projects_current_year.filter(
         internal_budget__gt=0
     ).annotate(
         month=TruncMonth('start_date')
@@ -292,26 +302,49 @@ def _get_college_dashboard_data(user, fiscal_year):
 
     internal_monthly_commitments = {i: Decimal('0') for i in range(1, 13)}
     for item in project_internal_monthly:
-        month = item['month'].month
-        internal_monthly_commitments[month] += item['monthly_commitment']
+        internal_monthly_commitments[item['month'].month] += item['monthly_commitment']
 
-    internal_cumulative_data = []
-    running_total = Decimal('0')
-    
+    # --- 2. Assigned Budget History (For Initial & Remaining Charts) ---
+    assigned_history_qs = BudgetHistory.objects.filter(
+        college_budget__college=user_college,
+        timestamp__year=year_int,
+        action__in=['ALLOCATED', 'ADJUSTED']
+    )
+
+    monthly_assigned_changes = assigned_history_qs.annotate(
+        month=TruncMonth('timestamp')
+    ).values('month').annotate(
+        net_change=Sum('amount')
+    ).order_by('month')
+
+    monthly_assigned_cuts = {i: Decimal('0') for i in range(1, 13)}
+    for item in monthly_assigned_changes:
+        monthly_assigned_cuts[item['month'].month] = item['net_change']
+
+    # --- CHART DATA GENERATION ---
+
+    # A. Initial Budget Chart Data (Cumulative Allocation Process - starts at zero)
+    assigned_cumulatives_college = []
+    running_total_assigned = Decimal('0')
     for month in range(1, 13):
-        running_total += internal_monthly_commitments[month]
-        normalized_value = (running_total / norm_denominator_internal) * 100
+        running_total_assigned += monthly_assigned_cuts[month]
+        normalized_value = (running_total_assigned / norm_denominator_internal) * 100
+        normalized_value = min(100, max(0, int(normalized_value)))
+        assigned_cumulatives_college.append(int(normalized_value))
+    
+    # B. Internal Committed Chart Data (Normalized)
+    internal_cumulative_data = []
+    running_total_committed = Decimal('0')
+    for month in range(1, 13):
+        running_total_committed += internal_monthly_commitments.get(month, Decimal('0'))
+        normalized_value = (running_total_committed / norm_denominator_internal) * 100
         normalized_value = min(100, max(0, int(normalized_value)))
         internal_cumulative_data.append(int(normalized_value))
         
     college_committed_data_json = json.dumps(internal_cumulative_data)
 
-    # --- College External Committed Chart Data (NEW FIX) ---
-    norm_denominator_external = max_value_external if max_value_external > 0 else Decimal('1') 
-
-    project_external_monthly = Project.objects.filter(
-        project_leader__college=user_college,
-        start_date__year=year_int,
+    # C. External Committed Chart Data (Normalized)
+    project_external_monthly = projects_current_year.filter(
         external_budget__gt=0
     ).annotate(
         month=TruncMonth('start_date')
@@ -321,19 +354,36 @@ def _get_college_dashboard_data(user, fiscal_year):
     
     external_monthly_commitments = {i: Decimal('0') for i in range(1, 13)}
     for item in project_external_monthly:
-        month = item['month'].month
-        external_monthly_commitments[month] += item['monthly_commitment']
+        external_monthly_commitments[item['month'].month] += item['monthly_commitment']
 
     external_cumulative_data = []
     running_total_external = Decimal('0')
 
     for month in range(1, 13):
-        running_total_external += external_monthly_commitments[month]
+        running_total_external += external_monthly_commitments.get(month, Decimal('0'))
         normalized_value = (running_total_external / norm_denominator_external) * 100
         normalized_value = min(100, max(0, int(normalized_value)))
         external_cumulative_data.append(int(normalized_value))
 
     college_external_data_json = json.dumps(external_cumulative_data)
+
+    # D. Monthly Remaining Funds Data (Normalized: Assigned - Committed)
+    remaining_cumulative_data = []
+    running_total_assigned_temp = Decimal('0')
+    running_total_committed_temp = Decimal('0')
+
+    for month in range(1, 13):
+        running_total_assigned_temp += monthly_assigned_cuts.get(month, Decimal('0'))
+        running_total_committed_temp += internal_monthly_commitments.get(month, Decimal('0'))
+        
+        uncommitted_value = running_total_assigned_temp - running_total_committed_temp
+        
+        normalized_value = (uncommitted_value / norm_denominator_internal) * 100
+        normalized_value = int(normalized_value) # Allow negative values for deficit
+        remaining_cumulative_data.append(normalized_value)
+
+    college_remaining_data_json = json.dumps(remaining_cumulative_data)
+
 
     return {
         'is_setup': True,
@@ -344,14 +394,20 @@ def _get_college_dashboard_data(user, fiscal_year):
         'total_external_to_projects': total_committed_external,
         'uncommitted_remaining': uncommitted_remaining,
         'dashboard_data': project_list,
+        
+        # Chart Data
         'college_committed_data_json': college_committed_data_json, 
-        'college_external_data_json': college_external_data_json, # NEW
-        'total_assigned_original_cut_norm': json.dumps([100] * 12) 
+        'college_external_data_json': college_external_data_json,
+        'college_remaining_data_json': college_remaining_data_json,
+        'total_assigned_original_cut_norm': json.dumps(assigned_cumulatives_college)
     }
 
 def _get_faculty_dashboard_data(user):
+    # Retrieve ALL committed projects for the faculty member for the static card totals.
     user_projects = Project.objects.filter(
         Q(project_leader=user) | Q(providers=user)
+    ).filter(
+        Q(internal_budget__gt=0) | Q(external_budget__gt=0)
     ).distinct().select_related('project_leader__college').order_by('title')
 
     project_data = []
@@ -378,23 +434,25 @@ def _get_faculty_dashboard_data(user):
     year_int = int(current_year)
     total_assigned = total_internal + total_external
 
-    # --- Denominators for normalization ---
+    # --- Denominators for normalization (Use 1 to prevent division by zero) ---
     norm_denom_internal = total_internal if total_internal > 0 else Decimal('1') 
     norm_denom_external = total_external if total_external > 0 else Decimal('1') 
     norm_denom_total = total_assigned if total_assigned > 0 else Decimal('1')
 
-    # --- Internal Funding Chart ---
+    # --- Internal Funding Chart (Monthly Aggregation) ---
+    # QUERY: Filter only projects relevant to the current fiscal year for the monthly chart data.
     project_internal_monthly = Project.objects.filter(
         Q(project_leader=user) | Q(providers=user),
-        start_date__year=year_int,
-        internal_budget__gt=0
+        internal_budget__gt=0,
+        start_date__year=year_int  # ✅ Critical: Limit chart data points to the current fiscal year
     ).annotate(
         month=TruncMonth('start_date')
     ).values('month').annotate(monthly_commitment=Sum('internal_budget')).order_by('month')
 
     internal_monthly_commitments = {i: Decimal('0') for i in range(1, 13)}
     for item in project_internal_monthly:
-        internal_monthly_commitments[item['month'].month] += item['monthly_commitment']
+        month_num = item['month'].month
+        internal_monthly_commitments[month_num] += item['monthly_commitment']
 
     internal_cumulative_data = []
     running_total_internal = Decimal('0')
@@ -406,18 +464,19 @@ def _get_faculty_dashboard_data(user):
         
     faculty_internal_data_json = json.dumps(internal_cumulative_data)
     
-    # --- External Funding Chart ---
+    # --- External Funding Chart (Monthly Aggregation) ---
     project_external_monthly = Project.objects.filter(
         Q(project_leader=user) | Q(providers=user),
-        start_date__year=year_int,
-        external_budget__gt=0
+        external_budget__gt=0,
+        start_date__year=year_int  # ✅ Critical: Limit chart data points to the current fiscal year
     ).annotate(
         month=TruncMonth('start_date')
     ).values('month').annotate(monthly_commitment=Sum('external_budget')).order_by('month')
 
     external_monthly_commitments = {i: Decimal('0') for i in range(1, 13)}
     for item in project_external_monthly:
-        external_monthly_commitments[item['month'].month] += item['monthly_commitment']
+        month_num = item['month'].month
+        external_monthly_commitments[month_num] += item['monthly_commitment']
 
     external_cumulative_data = []
     running_total_external = Decimal('0')
@@ -433,13 +492,14 @@ def _get_faculty_dashboard_data(user):
     total_cumulative_data = []
     running_total_combined = Decimal('0')
     for month in range(1, 13):
+        # NOTE: Using internal_monthly_commitments and external_monthly_commitments ensures we only sum data points for the current fiscal year.
         combined_monthly = internal_monthly_commitments[month] + external_monthly_commitments[month]
         running_total_combined += combined_monthly
         normalized_value = (running_total_combined / norm_denom_total) * 100
         normalized_value = min(100, max(0, int(normalized_value)))
         total_cumulative_data.append(int(normalized_value))
 
-    faculty_total_data_json = json.dumps(total_cumulative_data) # NEW VARIABLE
+    faculty_total_data_json = json.dumps(total_cumulative_data)
 
     return {
         "is_setup": True,
@@ -447,9 +507,9 @@ def _get_faculty_dashboard_data(user):
         "total_internal": total_internal,
         "total_external": total_external,
         "total_assigned": total_assigned,
-        "faculty_internal_data_json": faculty_internal_data_json, 
-        "faculty_external_data_json": faculty_external_data_json, 
-        "faculty_total_data_json": faculty_total_data_json, # NEW
+        "faculty_internal_data_json": faculty_internal_data_json,
+        "faculty_external_data_json": faculty_external_data_json,
+        "faculty_total_data_json": faculty_total_data_json,
     }
 
 def _get_edit_page_data(user, fiscal_year):
