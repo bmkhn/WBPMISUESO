@@ -7,10 +7,12 @@ body {
     font-family: 'Inter', sans-serif;
 }
 .main-container {
-    margin: 60px 6rem;
     display: flex;
     flex-direction: column;
-    gap: 30px;
+    justify-content: flex-start;
+    align-items: stretch;
+    margin: 2rem 5rem 2rem 5rem;
+    gap: 0.5rem;
 }
 @media (max-width: 768px) {
     .main-container {
@@ -26,7 +28,7 @@ body {
 }
 @media (min-width: 768px) {
     .main-container {
-        gap: 50px;
+        gap: 30px;
     }
 }
 
@@ -44,9 +46,9 @@ body {
     gap: 10px;
 }
 .welcome-text {
-    font-size: 36px;
-    font-weight: 700;
-    color: #000;
+    font-size: 1.75rem;
+    font-weight: 500;
+    color: #444;
     margin: 0;
 }
 .viewing-text {
@@ -58,10 +60,35 @@ body {
 .container-1B {
     display: flex;
     flex-direction: row;
+    gap: 0.85rem;
     align-items: center;
-    gap: 12px;
-    margin-top: 10px;
 }
+.export-btn {
+    font-family: 'Inter', sans-serif;
+    background-color: #ff9900;
+    color: #F5F5F5;
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 0.6rem 1.2rem;
+    border-radius: 2rem;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    text-decoration: none;
+}
+.export-btn:hover {
+    color: white;
+    background-color: #444;
+}
+
+.export-btn i {
+    margin-right: 2.5px;
+}
+
+.view {
+    background-color: #00681a;
+}
+
 @media (min-width: 640px) {
     .container-1 {
         align-items: center;
@@ -127,39 +154,195 @@ body {
     background-color: #15803d;
 }
 
+/* Combined Annual Budget Card (White with Gradient Border) */
+.combined-budget-card-gradient {
+    background: #ffffff8a; 
+    color: #111827;
+    position: relative;
+    padding: 1.5rem; 
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+    border: none; 
+    border-radius: 1rem;
+    align-items: flex-start !important; 
+    text-align: left !important;
+    margin-bottom: 0.55rem;
+}
 
-/* Card styles */
+/* Main Card Figure: Increased size (was 2.5rem) */
+.combined-budget-card-gradient h2 { 
+    font-size: 2.5rem; 
+    font-weight: 900;
+    margin: 0.5rem 0; 
+    color: #444 !important; 
+    text-align: left !important;
+}
+
+/* Card Description/Sub-text positioning (Unallocated Funds Remaining title) */
+.card-description {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start !important;
+    min-height: 0.5rem;
+    width: 100%;
+}
+
+.card-description p { /* Card title - Unallocated Funds Remaining */
+    font-size: 0.9rem; 
+    font-weight: 500; 
+    margin: 0 ;
+    color: #444;
+}
+
+/* Sub-description (Annual Budget Pool text) at the bottom left */
+.combined-budget-card-gradient .sub-description {
+    margin-top: auto; 
+    padding-top: 10px;
+    width: 100%;
+    text-align: left !important; /* Align declaration to left */
+    font-weight: 500;
+    font-size: 0.85rem;
+    color: #4b5563;
+}
+.card-description .sub-description { /* Secondary text */
+    font-size: 0.85rem;
+    font-weight: 400;
+    color: #4b5563; 
+    margin-top: 0.2rem;
+}
+
+
+/* Gradient Border */
+.combined-budget-card-gradient::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 16px; 
+    padding: 3px; 
+    /* NEW COLORS: Pink, White, Green */
+    background: linear-gradient(
+        45deg, 
+        #F65287, /* Pink */
+        #cafffd, /* White */
+        #8AC926  /* Green */
+    );
+    -webkit-mask: 
+        linear-gradient(#fff 0 0) content-box, 
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude; 
+    z-index: 0; 
+    pointer-events: none; 
+    transition: background 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.combined-budget-card-gradient:hover::before {
+    background: linear-gradient(
+        225deg, 
+        #F65287, 
+        #cafffd, 
+        #8AC926
+    );
+}
+
+.combined-budget-card-gradient > * {
+    position: relative; 
+    z-index: 1;
+}
+
+/* --- INDIVIDUAL GOAL CARD STYLES --- */
+
 .goal-card-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 24px;
+    display: flex;
+    align-content: center; 
+    gap: 1.5rem; 
+    margin-bottom: 1rem;
+    margin-top: -1rem;
     width: 100%;
 }
 .goal-card {
+    flex: 1; 
+    min-width: 220px; 
     background: #fff;
     border-radius: 18px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
     padding: 24px;
-    border: 1px solid #e0e0e0;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
+    transition: all 0.2s ease-out; 
+}
+.goal-card:hover {
+    transform: translateY(-2px);
 }
 .goal-card h3 {
     font-family: 'Inter', Arial, sans-serif;
     font-weight: 500;
     font-size: 15px;
     color: #4b5563;
-    margin: 0 0 8px 0;
+    margin-top: -2px;
 }
 .goal-card .amount {
     font-family: 'Inter', Arial, sans-serif;
     font-weight: 700;
-    font-size: 28px;
+    font-size: 26px; /* Reduced figure size from 28px */
     color: #111827;
     text-align: left;
     margin-top: auto;
+    margin-bottom: 0px; /* Removed bottom margin */
 }
+
+/* Small text under figure: pushed closer to bottom edge */
+.card-figure-subtext { 
+    font-size: 0.75rem; 
+    font-weight: 400;
+    margin-top: 4px; /* Added separation from figure */
+    margin-bottom: 0;
+    color: inherit;
+    opacity: 0.8; 
+    line-height: 1;
+}
+
+
+/* 1. Assigned to Colleges (Pink: Pastel to Vibrant) */
+.goal-card.color-pink {
+    background: linear-gradient(135deg, #ff6092 0%, #FFC0CB 100%); 
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+    color: white;
+}
+.goal-card.color-pink h3, .goal-card.color-pink .amount, .goal-card.color-pink .card-figure-subtext {
+    color: white;
+}
+.goal-card.color-pink:hover {
+    background: linear-gradient(135deg, #FFC0CB 0%, #ff6092 100%); 
+}
+
+/* 2. Committed (Internal) (Dango Green: Pastel to Vibrant) */
+.goal-card.color-dango-green { 
+    background: linear-gradient(155deg, #8AC926 0%, #C2E299 100%); 
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+    color: white;
+}
+.goal-card.color-dango-green h3, .goal-card.color-dango-green .amount, .goal-card.color-dango-green .card-figure-subtext {
+    color: white;
+}
+.goal-card.color-dango-green:hover {
+    background: linear-gradient(155deg, #C2E299 0%, #8AC926 100%);
+}
+
+.goal-card.color-milky-white {
+    background: linear-gradient(155deg, #f8f8ec 0%, #ffffffb8 100%); 
+    color: #111827; 
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+}
+.goal-card.color-milky-white h3 {
+    color: #4b5563; 
+}
+.goal-card.color-milky-white .amount {
+    color: #111827;
+}
+.goal-card.color-milky-white:hover {
+    background: linear-gradient(155deg, #ffffffb8 0%, #f8f8ec 100%); 
+}
+
 
 /* Table styles (used for dashboard tables, history, sponsors) */
 .table-container {
@@ -167,13 +350,14 @@ body {
     background: #FFFFFF; 
     border-radius: 10px; 
     overflow: hidden;
-    box-shadow: 0 0 0 1px #E0E0E0, 0 8px 18px -8px rgba(0, 0, 0, 0.15); 
+    box-shadow: 0 0 0 1px #E0E0E0, 0 10px 30px rgba(0, 0, 0, 0.15); /* Increased shadow */
     border: none;
 }
 .table-header {
     padding: 16px 18px;
     border-bottom: 1px solid #E0E0E0;
     display: flex;
+    justify-content: space-between; 
     align-items: center;
     gap: 10px;
 }
@@ -185,6 +369,17 @@ body {
 }
 .table-header i {
     color: #4b5563;
+}
+.edit-icon-btn { 
+    color: #4b5563; 
+    font-size: 1.25rem;
+    transition: color 0.2s;
+    text-decoration: none;
+    cursor: pointer;
+    margin-left: 10px; 
+}
+.edit-icon-btn:hover {
+    color: #2563eb; 
 }
 .table-wrapper {
     overflow-x: auto;
@@ -554,3 +749,10 @@ body {
 .font-bold { font-weight: 700; }
 .font-semibold { font-weight: 600; }
 .text-center { text-align: center; }
+
+.export {
+    position: relative;
+    display: inline-block;
+    margin-left: 10px; 
+}
+
