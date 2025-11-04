@@ -1,36 +1,22 @@
-/*
- * Custom CSS for the Unified Settings Page
- * Version: Modern (Dashboard Theme)
- * Font: Inter
- * This file styles all components on settings.html to match the
- * modern aesthetic of the rest of the application.
- */
-
-/* --- 1. Global & Page Layout --- */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 body {
-    /* Use the light gray background from dashboard.css */
-    background: #F9F9F9 !important; 
+    background: #f8f8f8 !important; 
     font-family: 'Inter', sans-serif !important;
 }
 
-/* Page wrapper class (from settings.html) */
 .main-container {
-    /* Matched margin and gap from dashboard.css */
-    margin: 60px 6rem;
+    margin: 2rem 4rem 4rem 4rem;
     display: flex;
     flex-direction: column;
-    gap: 50px; 
+    gap: 1.5rem; 
 }
 
-/* Page Title (from settings.html) */
 .project-text {
     color: #000;
     font-family: 'Inter', Arial, sans-serif;
     margin: 0 0 1rem 0;
-    /* Matched styles from .ueso-text in dashboard.css */
-    font-size: 36px;
+    font-size: 1.85rem;
     font-weight: 700;
 }
 
@@ -39,435 +25,451 @@ p {
     font-size: 0.95rem;
     line-height: 1.6;
 }
-
-/* --- 2. Modern Card Styling --- */
-/* This replaces the default .shadow class behavior */
-.card {
-    background: #FEFCFC; /* Match dashboard cards */
-    border: 1.1px solid rgba(0,0,0,0.4); /* Match dashboard cards */
-    border-radius: 16px; /* Match dashboard cards */
-    box-shadow: none !important; /* Remove all shadows */
+.accordion-content > p {
     margin-bottom: 1.5rem;
-    box-sizing: border-box;
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+.card {
+    background: #FFFFFF;
+    border: 1px solid #EAEAEA;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    margin-bottom: 1.5rem; 
+    border-left: 4px solid transparent;
+    transition: box-shadow 0.2s ease-in-out;
+}
+
+.col-lg-8 > .card {
+    border-left-color: #0A6C44;
+}
+
+.card:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.07);
 }
 
 .card-header {
     background-color: #FFFFFF;
-    /* Use a border consistent with dashboard tables */
-    border-bottom: 1.5px solid #E0E0E0; 
+    border-bottom: 1px solid #EAEAEA;
     padding: 1rem 1.5rem;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
 }
 
-/* Style all card headers to use the brand color */
 .card-header h6 {
-    color: #0A6C44 !important; /* Primary Green */
+    color: #0A6C44 !important;
     font-weight: 700;
     font-size: 1.1rem;
     margin: 0;
 }
 
 .card-body {
-    padding: 24px; /* Match dashboard card padding */
+    padding: 1.5rem;
 }
 
-/* --- 3. Brand Button Overrides --- */
-/* (Keeping your existing button styles as they are well-defined) */
 .btn {
     border-radius: 6px;
     padding: 0.6rem 1.25rem;
     font-weight: 600;
     font-size: 0.9rem;
     transition: all 0.2s ease-in-out;
-    text-transform: none; /* Modern */
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); /* Subtle shadow */
+    text-transform: none; 
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
-
 .btn:hover {
     transform: translateY(-1px);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 }
-
-.btn-icon-split {
-    padding: 0;
+.btn-primary { 
+    background-color: #0A6C44; border-color: #0A6C44; color: #fff !important; 
+    display: inline-flex;
+    align-items: center;
 }
-.btn-icon-split .text {
-    padding: 0.6rem 1.25rem;
+.btn-primary:hover { background-color: #085837; border-color: #085837; }
+.btn-primary .fa-plus {
+    margin-right: 0.5rem;
 }
-.btn-icon-split .icon {
-    padding: 0.6rem 0.75rem;
-}
-
-/* Primary (Green) */
-.btn-primary {
-    background-color: #0A6C44;
-    border-color: #0A6C44;
-    color: #fff !important;
-}
-.btn-primary:hover {
-    background-color: #085837; /* Darker Green */
-    border-color: #085837;
+.btn-primary .fa-save {
+    margin-right: 0.5rem;
 }
 
-/* Warning (Orange/Amber) */
-.btn-warning {
-    background-color: #B65900;
-    border-color: #B65900;
-    color: #fff !important;
-}
-.btn-warning:hover {
-    background-color: #934800; /* Darker Orange/Amber */
-    border-color: #934800;
-}
+.btn-warning { background-color: #B65900; border-color: #B65900; color: #fff !important; }
+.btn-warning:hover { background-color: #934800; border-color: #934800; }
 
-/* Danger (Red) */
-.btn-danger {
-    background-color: #DC2626;
-    border-color: #DC2626;
-    color: #fff !important;
-}
-.btn-danger:hover {
-    background-color: #b01e1e;
-    border-color: #b01e1e;
-}
+.btn-danger { background-color: #DC2626; border-color: #DC2626; color: #fff !important; }
+.btn-danger:hover { background-color: #b01e1e; border-color: #b01e1e; }
 
-/* Secondary (Gray) */
-.btn-secondary {
-    background-color: #f8f9fc;
-    border-color: #e3e6f0;
-    color: #5a5c69 !important;
-}
-.btn-secondary:hover {
-    background-color: #e3e6f0;
-    border-color: #e3e6f0;
-    color: #3a3b45 !important;
-}
+.btn-secondary { background-color: #f8f9fc; border-color: #e3e6f0; color: #5a5c69 !important; }
+.btn-secondary:hover { background-color: #e3e6f0; border-color: #e3e6f0; color: #3a3b45 !important; }
 
-/* --- 4. "On This Page" Navigation (Right Column) --- */
-/* (Keeping your existing styles) */
-#on-this-page-nav .card-body {
-    padding: 0.5rem 0; 
-}
-
-#on-this-page-nav .list-group-flush .list-group-item-action {
-    border: none;
-    border-left: 3px solid transparent; /* Highlight bar */
-    padding: 0.75rem 1.5rem; /* More padding */
-    font-weight: 600;
-    color: #555;
-    border-radius: 0;
-    transition: all 0.15s ease-out;
-}
-
-#on-this-page-nav .list-group-flush .list-group-item-action:hover,
-#on-this-page-nav .list-group-flush .list-group-item-action:focus {
-    background-color: #E6F4EA; /* Light Green */
-    color: #0A6C44; /* Primary Green */
-    border-left-color: #0A6C44;
-    text-decoration: none;
-    outline: none;
-}
-
-#on-this-page-nav .list-group-flush .list-group-item-action.text-danger:hover,
-#on-this-page-nav .list-group-flush .list-group-item-action.text-danger:focus {
-    background-color: #fef2f2; /* Light Red */
-    color: #DC2626 !important;
-    border-left-color: #DC2626;
-}
-
-/* --- 5. Admin Settings Accordion (Left Column) --- */
-/* (Keeping your existing accordion styles) */
-#core-settings > .card-body {
-    padding: 0;
-}
-#core-settings > .card-body > p {
-    padding: 1.5rem 1.5rem 0 1.5rem;
-}
-
-#adminSettingsAccordion .card {
-    border: none;
-    border-bottom: 1px solid #EAEAEA;
-    border-radius: 0;
-    box-shadow: none !important;
-    transition: none;
-}
-#adminSettingsAccordion .card:hover { transform: none; box-shadow: none !important; }
-#adminSettingsAccordion .card:first-of-type { border-top: 1px solid #EAEAEA; }
-#adminSettingsAccordion .card:last-of-type { border-bottom: none; }
-
-
-#adminSettingsAccordion .card-header {
-    padding: 0;
-    background-color: #fff;
-    border-bottom: none;
-}
-
-#adminSettingsAccordion .btn-link {
-    display: block;
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     width: 100%;
     padding: 1.25rem 1.5rem;
     text-align: left;
     color: #333;
-    font-weight: 600;
-    font-size: 1rem;
-    text-decoration: none;
+    border: none;
     transition: background-color 0.2s ease-in-out;
+    border-radius: 8px 8px 0 0;
+    background-color: #f8f9fa;
 }
-#adminSettingsAccordion .btn-link:hover {
-    background-color: #f8f8f8; /* Light gray hover */
+.section-header-content {
+    pointer-events: none;
+}
+
+.accordion-toggle {
+    cursor: pointer;
+}
+.accordion-toggle:hover {
+    background-color: #f1f3f5;
     text-decoration: none;
 }
-#adminSettingsAccordion .btn-link:focus { text-decoration: none; box-shadow: none; }
-
-/* Accordion Icons (Font Awesome) - Chevron set to Orange */
-#adminSettingsAccordion .btn-link::after {
-    content: '\f077'; /* chevron-up */
-    font-family: 'Font Awesome 5 Free';
-    font-weight: 900;
-    float: right;
-    color: #B65900; /* Orange/Amber */
-    transition: transform 0.2s ease-in-out, color 0.2s ease;
-}
-#adminSettingsAccordion .btn-link:hover::after {
-    color: #0A6C44; /* Green on hover */
+.accordion-toggle:focus { 
+    text-decoration: none; 
+    box-shadow: none;
+    background-color: #f8f9fa;
 }
 
-#adminSettingsAccordion .btn-link.collapsed::after {
-    content: '\f078'; /* chevron-down */
-    transform: rotate(0deg);
+.section-header.non-collapsible {
+    border-radius: 8px 8px 0 0;
+    background-color: #f8f9fa;
 }
-#adminSettingsAccordion .btn-link:not(.collapsed)::after {
-    transform: rotate(-180deg);
-}
-
-/* Accordion Content Area */
-#adminSettingsAccordion .card-body {
-    background-color: #fff;
-    border-top: 1px solid #EAEAEA;
-    padding: 1.5rem; /* Add padding back to the inner card body */
-}
-
-/* General Settings Link (at bottom of accordion card) */
-.general-settings-link-wrapper {
-    padding: 1.5rem; 
-    background: #fff; 
-    border-top: 1px solid #EAEAEA;
-}
-.general-settings-link-wrapper .list-group-item-action {
-    border: 1px solid #EAEAEA;
-    border-radius: 6px;
-    font-weight: 600;
-    color: #333;
-    transition: all 0.2s ease;
-}
-.general-settings-link-wrapper .list-group-item-action:hover {
-    border-color: #0A6C44;
-    background-color: #f8f8f8;
+.section-header.non-collapsible .accordion-title {
     color: #0A6C44;
 }
 
-/* --- 6. Table Styles (NEW) --- */
-/* These styles are copied from .user-table in dashboard.css */
-/* and applied to the .table class for this page */
+.accordion-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #0A6C44;
+    margin: 0;
+    pointer-events: none;
+}
+.accordion-desc {
+    font-size: 0.85rem;
+    color: #666;
+    margin-top: 0.25rem;
+    font-weight: 400;
+    pointer-events: none;
+    padding: 0;
+    line-height: 1.4;
+}
+.accordion-intro {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: #555;
+    margin-top: 0.75rem;
+    margin-bottom: 0;
+    pointer-events: none;
+}
+
+.accordion-chevron {
+    font-size: 1rem;
+    color: #0A6C44;
+    transition: transform 0.25s ease-in-out;
+    pointer-events: none;
+    margin-left: 1rem;
+}
+
+.accordion-toggle.active {
+    background-color: #f8f9fa;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    transition-delay: 0s;
+}
+.accordion-toggle.active .accordion-chevron {
+    transform: rotate(-180deg);
+}
+.accordion-toggle.active .accordion-title {
+    color: #0A6C44;
+}
+
+.accordion-content {
+    background-color: #fff;
+    border-top: 1px solid #EAEAEA;
+    padding: 1.5rem;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+.card-body .table-controls,
+.accordion-content .table-controls {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 1.5rem;
+}
 
 .table-responsive {
-    /* The new table style handles its own responsive overflow */
-    border: none;
-    border-radius: 0;
-    overflow: visible; 
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    overflow: hidden;
 }
 
 .table {
-    width: 100%;
     border-collapse: collapse;
-    background: #FFFFFF; 
-    border-radius: 10px; /* Rounded corners for the table */
-    overflow: auto; /* Handles responsiveness */
-    /* Shadow from dashboard.css */
-    box-shadow: 0 0 0 1px #E0E0E0, 0 8px 18px -8px rgba(0, 0, 0, 0.15); 
-    border: none;
-    margin-bottom: 1rem; /* Add margin back */
+    margin-bottom: 0;
 }
 
-.table th {
-    font-size: 0.95rem;
-    font-weight: 600; 
-    background: #eeeeee; /* Light gray header */
-    border-bottom: 1px solid #E0E0E0; 
-    padding: 16px 18px; 
-    text-align: left;
-    font-family: 'Inter', Arial, sans-serif;
-    color: #333333; 
-    box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.05); 
-    transition: padding 0.2s ease-in-out; 
-    text-transform: none; /* Override Bootstrap default */
-    border-top: none; /* Override Bootstrap default */
+.table thead th {
+    background: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    border-top: none;
+    font-size: 0.85rem;
+    color: #333;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 0.85rem 1.5rem;
+    vertical-align: bottom;
 }
 
-.table td {
-    font-size: 14px; 
-    font-weight: 400;
-    border: none;
-    border-bottom: 1px solid #EDEDED; /* Light row separator */
-    padding: 14px 18px; 
-    text-align: left;
-    font-family: 'Inter', Arial, sans-serif;
-    color: #4A5568; 
-    transition: all 0.2s ease-out;
-    vertical-align: middle !important;
-} 
-
-.table tr:last-child td {
+.table tbody tr {
+    border-bottom: 1px solid #e9ecef;
+}
+.table tbody tr:last-child {
     border-bottom: none;
-} 
-
-.table tr:nth-child(even) {
-    background-color: #FAFAFB; /* Row striping */
+}
+.table tbody tr:hover {
+    background-color: transparent;
+    box-shadow: none;
+    transform: none;
+    cursor: default;
 }
 
-.table tr:hover {
-    background-color: #f2f2f2; /* Hover color */
-    box-shadow: inset 4px 0 0 0 #FF9900; /* Dashboard hover accent */
-    transform: translateY(-1px); 
-    cursor: pointer;
+.table td,
+.table th {
+    vertical-align: middle !important;
+    padding: 0.85rem 1.5rem;
+    color: #333;
+    font-size: 0.95rem;
+}
+.table td:hover {
+    padding: 0.85rem 1.5rem;
 }
 
-.table tr:hover td {
-    padding: 18px; 
+.table th.cell-actions,
+.table td.cell-actions {
+    text-align: right;
+    width: 1%;
+    white-space: nowrap;
 }
 
-.table tr:last-child:hover td {
-    border-bottom: none; 
-}
-
-/*
- * FIX: Constrain logo size in the table
- * (Keeping your existing logo styles)
- */
-.table .cell-logo {
-    width: 80px; /* Give the cell a fixed width */
-}
+.table .cell-logo { width: 80px; }
 .table .cell-logo img {
-    max-height: 40px; /* Max height */
-    max-width: 60px; /* Max width */
-    width: auto;
-    height: auto;
-    border-radius: 4px;
-    object-fit: contain;
-    background: #f8f8f8;
-    border: 1px solid #eee;
-    padding: 2px;
+    max-height: 40px; max-width: 60px; width: auto; height: auto;
+    border-radius: 4px; object-fit: contain; background: #f8f8f8;
+    border: 1px solid #eee; padding: 2px;
 }
 .table .cell-no-logo {
-    color: #999;
-    font-style: italic;
-    font-size: 0.85rem;
+    color: #999; font-style: italic; font-size: 0.85rem;
 }
 
-/* Smaller buttons for table actions */
-.table td .btn-sm {
-    margin: 0 2px;
+.table .btn {
+    background: transparent !important;
+    border: 1px solid;
+    box-shadow: none;
     padding: 0.35rem 0.6rem;
     font-size: 0.8rem;
 }
+.table .btn:hover {
+    background: #f8f8f8 !important;
+    transform: none;
+    box-shadow: none;
+}
 
-/* Modern Pill Badges */
-/* (Keeping your existing badge styles) */
-.badge {
-    border-radius: 99px;
-    font-size: 0.75rem;
-    font-weight: 700;
-    padding: 0.35em 0.75em;
-    text-transform: uppercase;
+.table .btn-outline-warning {
+    color: #B65900 !important;
+    border-color: #B65900;
 }
-.badge-success {
-    background-color: #E6F4EA;
-    color: #0A6C44;
+.table .btn-outline-warning:hover {
+    color: #934800 !important;
+    border-color: #934800;
 }
-.badge-danger {
-    background-color: #fef2f2;
+
+.table .btn-outline-danger {
+    color: #DC2626 !important;
+    border-color: #DC2626;
+}
+.table .btn-outline-danger:hover {
+    color: #b01e1e !important;
+    border-color: #b01e1e;
+}
+
+
+.form-group label,
+.form-group .form-label,
+.card-body form .form-group label {
+    font-weight: 600; 
+    color: #333;
+    font-size: 0.9rem; 
+    margin-bottom: 0.5rem;
+    display: block;
+}
+.form-group .form-label {
+    margin-right: 6px;
+}
+.form-control,
+.card-body form .form-group input[type="text"],
+.card-body form .form-group input[type="file"],
+.card-body form .form-group input[type="number"],
+.card-body form .form-group input[type="email"],
+.card-body form .form-group input[type="password"],
+.card-body form .form-group select,
+.card-body form .form-group textarea {
+    border-radius: 6px; 
+    padding: 0.6rem 1rem;
+    height: auto; 
+    font-size: 0.95rem;
+    border: 1px solid #ced4da;
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    background: #f8f8f8;
+    transition: all 0.2s ease;
+    font-family: 'Inter', sans-serif;
+    border: 1px solid #8a8a8a;
+    padding: 0.75rem 1rem;
+}
+.form-control:focus,
+.card-body form .form-group input[type="text"]:focus,
+.card-body form .form-group input[type="file"]:focus,
+.card-body form .form-group input[type="number"]:focus,
+.card-body form .form-group input[type="email"]:focus,
+.card-body form .form-group input[type="password"]:focus,
+.card-body form .form-group select:focus,
+.card-body form .form-group textarea:focus {
+    outline: none;
+    border-color: #0A6C44;
+    box-shadow: 0 0 0 0.2rem rgba(10, 108, 68, 0.25), 0 0 0 3px rgba(10, 108, 68, 0.2);
+    background: #FFFFFF;
+}
+
+.card-body form .form-group input[type="checkbox"] {
+    width: 1.1rem;
+    height: 1.1rem;
+    margin-right: 0.5rem;
+}
+
+.card-body form .form-group select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding-right: 2rem;
+    background-image: url("data:image/svg+xml;utf8,<svg width='16' height='11' viewBox='0 0 16 11' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M7.99976 7.19417L13.9025 1.29147C14.0125 1.17758 14.144 1.08674 14.2895 1.02424C14.435 0.961746 14.5915 0.92885 14.7498 0.927474C14.9082 0.926098 15.0652 0.95627 15.2117 1.01623C15.3583 1.07619 15.4914 1.16473 15.6034 1.27669C15.7153 1.38866 15.8039 1.5218 15.8638 1.66835C15.9238 1.8149 15.9540 1.97192 15.9526 2.13026C15.9512 2.28859 15.9183 2.44506 15.8558 2.59055C15.7933 2.73604 15.7025 2.86762 15.5886 2.97762L8.84283 9.72339C8.61921 9.94694 8.31596 10.0725 7.99976 10.0725C7.68356 10.0725 7.38031 9.94694 7.15669 9.72339L0.41092 2.97762C0.308901 2.6458 0.228639 2.52954 0.173424 2.40101C0.118209 2.27247 0.089146 2.13423 0.0879304 1.99434C0.0867148 1.85445 0.113371 1.71572 0.166344 1.58624C0.219317 1.45677 0.297546 1.33914 0.39614 1.27669C0.508103 1.16473 0.641244 1.07619 0.787794 1.01623C0.934343 0.95627 1.09137 0.926098 1.24970 0.927474C1.40804 0.92885 1.56451 0.961746 1.71 1.02424C1.85548 1.08674 1.98706 1.17758 2.09706 1.29147L7.99976 7.19417Z' fill='%23374151'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 13px 8px;
+}
+
+.card-body form .form-text {
+    font-size: 0.85rem;
+    color: #666;
+    margin-top: 0.35rem;
+    display: block;
+}
+
+.card-body form .invalid-feedback,
+.invalid-feedback {
     color: #DC2626;
+    font-size: 0.85rem;
+    margin-top: 0.35rem;
 }
 
-/* --- 7. API Password Form --- */
-/* (Keeping your existing form styles) */
-.api-password-form .form-group label {
+
+.form-row-label {
     font-weight: 600;
     color: #333;
-    font-size: 0.9rem;
-    margin-bottom: 0.5rem;
-}
-
-.api-password-form .form-control {
-    border-radius: 6px;
-    padding: 0.6rem 1rem;
-    height: auto;
     font-size: 0.95rem;
 }
-.api-password-form .form-control:focus {
-    border-color: #0A6C44;
-    box-shadow: 0 0 0 0.2rem rgba(10, 108, 68, 0.25);
+.form-row-desc {
+    font-size: 0.85rem;
+    color: #666;
+    font-weight: 400;
+    margin-top: 0.35rem;
 }
 
-/* Make password form horizontal on desktop */
 @media (min-width: 768px) {
-    .api-password-form {
-        display: flex;
-        align-items: center;
-    }
+    .api-password-form { display: flex; align-items: center; }
     .api-password-form .form-group {
-        flex-grow: 1;
-        margin-bottom: 0;
-        margin-right: 1rem;
+        flex-grow: 1; margin-bottom: 0; margin-right: 1rem;
     }
     .api-password-form .btn-primary {
-        width: auto;
-        flex-shrink: 0;
-        /* Align button with input */
-        padding-top: 0.6rem;
-        padding-bottom: 0.6rem;
+        width: auto; flex-shrink: 0;
+        padding-top: 0.6rem; padding-bottom: 0.6rem;
     }
 }
 
-/* --- 8. Danger Zone (Right Column) --- */
-/* (Keeping your existing danger zone styles) */
 #danger-zone {
     border: 1px solid #fde8e8;
-    border-left: 4px solid #DC2626; /* Red left border */
+    border-left: 4px solid #DC2626;
+    box-shadow: none;
 }
-#danger-zone .card-header {
-    background-color: #fef2f2;
+#danger-zone:hover {
+    border-left-color: #DC2626;
 }
-#danger-zone .card-header h6 {
-    color: #DC2626 !important;
+#danger-zone .card-header { background-color: #fef2f2; }
+#danger-zone .card-header h6 { color: #DC2626 !important; }
+
+#api-key-warning {
+    border: 1px solid #fdf8e8;
+    border-left: 4px solid #B65900;
+    box-shadow: none;
+}
+#api-key-warning:hover {
+    border-left-color: #B65900;
+}
+#api-key-warning .card-header { 
+    background-color: #fffbeb; 
+}
+#api-key-warning .card-header h6 { 
+    color: #B65900 !important; 
 }
 
-/* --- 9. Alert Messages --- */
-/* (Keeping your existing alert styles) */
 .alert {
-    border-radius: 6px;
-    font-weight: 500;
-    border: none;
+    border-radius: 6px; font-weight: 500; border: none;
     padding: 1rem 1.25rem;
 }
-.alert-success {
-    background-color: #E6F4EA;
-    color: #0A6C44;
-}
-.alert-danger {
-    background-color: #fef2f2;
-    color: #DC2626;
-}
-.alert-warning {
-    background-color: #fffbeb;
-    color: #B65900;
-}
+.alert-success { background-color: #E6F4EA; color: #0A6C44; }
+.alert-danger { background-color: #fef2f2; color: #DC2626; }
+.alert-warning { background-color: #fffbeb; color: #B65900; }
 .alert .close {
-    font-size: 1.5rem;
-    color: inherit;
-    opacity: 0.7;
-    text-shadow: none;
-    font-weight: 700;
+    font-size: 1.5rem; color: inherit; opacity: 0.7;
+    text-shadow: none; font-weight: 700;
 }
-.alert .close:hover {
-    opacity: 1;
+.alert .close:hover { opacity: 1; }
+
+.api-key-group {
+    display: flex;
+    margin-top: 0.5rem;
+}
+.api-key-group input[type="text"] {
+    flex-grow: 1;
+    border-radius: 6px 0 0 6px; 
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    border: 1px solid #8a8a8a;
+    background: #f8f8f8;
+    font-family: 'Inter', sans-serif;
+    border-right: none;
+}
+.api-key-group input[type="text"]:focus {
+    outline: none;
+    border-color: #0A6C44;
+    box-shadow: 0 0 0 3px rgba(10, 108, 68, 0.2);
+    background: #FFFFFF; 
+    z-index: 2;
+    position: relative;
+}
+.api-key-group .btn {
+    border-radius: 0 6px 6px 0;
+    z-index: 1;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+}
+#copy-success {
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+    display: block;
 }

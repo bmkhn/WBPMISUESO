@@ -2,7 +2,7 @@
 
 from rest_framework import serializers
 from shared.projects.models import Project
-from system.users.models import User, College # <-- Corrected User and added College
+from system.users.models import User, College
 from internal.agenda.models import Agenda 
 
 
@@ -16,7 +16,7 @@ class CollegeSerializer(serializers.ModelSerializer):
 class ProjectLeaderSerializer(serializers.ModelSerializer):
     """Serializer for the Project Leader to display full name/username."""
     full_name = serializers.SerializerMethodField()
-    college = CollegeSerializer(read_only=True) # <-- Nested College data
+    college = CollegeSerializer(read_only=True) 
 
     class Meta:
         model = User 
@@ -43,6 +43,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     
     progress_display = serializers.CharField(read_only=True) 
     duration = serializers.SerializerMethodField()
+    status = serializers.SerializerMethodField()
 
     class Meta:
         model = Project
@@ -51,6 +52,9 @@ class ProjectSerializer(serializers.ModelSerializer):
             'estimated_end_date', 'progress_display', 'duration',
             'estimated_trainees', 'status'
         ]
+
+    def get_status(self, obj):
+        return obj.get_status_display()
 
     def get_duration(self, obj):
         """Calculates duration in years/days."""
