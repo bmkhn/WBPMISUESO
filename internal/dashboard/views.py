@@ -18,7 +18,7 @@ def dashboard_view(request):
     user_role = getattr(request.user, 'role', None)
     vpde_content = user_role in ["VP", "DIRECTOR"]
 
-    pending_requests = ClientRequest.objects.filter(status='PENDING')
+    pending_requests = ClientRequest.objects.filter(status__in=['RECEIVED', 'UNDER_REVIEW'])
     inprogress_projects = Project.objects.filter(status='IN_PROGRESS')
     expert_users = User.objects.filter(is_expert=True)
 

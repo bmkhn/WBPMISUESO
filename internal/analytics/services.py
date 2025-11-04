@@ -94,18 +94,19 @@ def _get_trunc_object(start_date, end_date):
         return TruncMonth, 'month'
 
 
-# --- MODIFIED FUNCTION: Returns timeUnit for JS ---
+# In shared/archive/services.py
+
 def get_active_projects_over_time(start_date, end_date):
     """
-    Counts projects CREATED within the date range, grouped dynamically,
+    Counts projects STARTED within the date range, grouped dynamically,
     and returns the grouping unit for chart axis scaling.
     """
-    TruncFunc, time_unit = _get_trunc_object(start_date, end_date) # <-- GET UNIT HERE
+    TruncFunc, time_unit = _get_trunc_object(start_date, end_date)
 
     timescale_data = Project.objects.filter(
-        created_at__range=[start_date, end_date]
+        start_date__range=[start_date, end_date]
     ).annotate(
-        timescale_unit=TruncFunc('created_at')
+        timescale_unit=TruncFunc('start_date')
     ).values('timescale_unit').annotate(
         count=Count('id')
     ).order_by('timescale_unit')
@@ -118,9 +119,7 @@ def get_active_projects_over_time(start_date, end_date):
         for item in timescale_data
     ]
 
-    # --- ADDED: Return the calculated time unit string ---
     return {'data': data, 'timeUnit': time_unit}
-
 
 # --- MODIFIED FUNCTION: Returns timeUnit for JS ---
 def get_trained_individuals_data(start_date, end_date):
