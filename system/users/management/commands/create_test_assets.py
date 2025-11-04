@@ -1,5 +1,7 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
+import faker 
+from faker import Faker
 from system.users.models import College, Campus
 from shared.projects.models import SustainableDevelopmentGoal
 from django.conf import settings
@@ -262,7 +264,16 @@ class Command(BaseCommand):
             uploader = User.objects.filter(role=User.Role.UESO).first() or User.objects.filter(role=User.Role.DIRECTOR).first()
             data = [
                 {'name': 'PSU ESO 001 – Needs Assessment Form.docx', 'is_submission_template': True, 'submission_type': 'file'},
+                {'name': 'PSU ESO 002 – Client Satisfaction Form (English Version).docx', 'is_submission_template': True, 'submission_type': 'file'},
+                {'name': 'PSU ESO 002 – Client Sattisfaction Form (Filipino Version).docx', 'is_submission_template': True, 'submission_type': 'file'},
+                {'name': 'PSU ESO 003 – Project Monitoring Report Template.docx', 'is_submission_template': True, 'submission_type': 'file'},
+                {'name': 'PSU ESO 004 – Training Evaluation Form.docx', 'is_submission_template': True, 'submission_type': 'file'},
+                {'name': 'PSU ESO 005 – Feedback Form.docx', 'is_submission_template': True, 'submission_type': 'file'},
                 {'name': 'PSU ESO 006 – Accomplishment Report.docx', 'is_submission_template': True, 'submission_type': 'final'},
+                {'name': 'PSU ESO 007 – Attendance Form.docx', 'is_submission_template': True, 'submission_type': 'event'},
+                {'name': 'PSU ESO 008 – Certificate of Appearance.docx', 'is_submission_template': True, 'submission_type': 'file'},
+                {'name': 'PSU ESO 008 – Certificate of Participation.docx', 'is_submission_template': True, 'submission_type': 'file'},
+                {'name': 'PSU ESO 008 – Certificate of Recognition.docx', 'is_submission_template': True, 'submission_type': 'file'},
                 {'name': 'UESO Brochure.docx', 'is_submission_template': False, 'submission_type': 'file'},
             ]
             for d in data:
@@ -283,4 +294,57 @@ class Command(BaseCommand):
                 )
             self.stdout.write(self.style.SUCCESS("Downloadables created.\n"))
 
-        self.stdout.write(self.style.SUCCESS("✅ Data population completed safely (idempotent)."))
+
+        # --- ANNOUNCEMENTS ---
+        from shared.announcements.models import Announcement
+        if Announcement.objects.exists():
+            self.stdout.write(self.style.WARNING("Announcements already populated — skipping.\n"))
+        else:
+            self.stdout.write("Populating announcements...")
+            announcer = User.objects.filter(role=User.Role.UESO).first() or User.objects.filter(role=User.Role.DIRECTOR).first()
+
+        director_user = User.objects.filter(role=User.Role.DIRECTOR).first()
+        
+
+        fake = Faker()
+
+
+        from django.utils import timezone
+        number_of_announcements = 5
+        for i in range(number_of_announcements):
+            title = fake.sentence(nb_words=6)
+            body = fake.paragraph(nb_sentences=5)
+
+            # Generate a random aware datetime within this year
+            naive_dt = fake.date_time_this_year()
+            aware_dt = timezone.make_aware(naive_dt, timezone.get_current_timezone())
+            ann = Announcement.objects.create(
+                title=title,
+                body=body,
+                is_scheduled=False,
+                published_by=director_user,
+                published_at=aware_dt,
+            )
+        self.stdout.write(self.style.SUCCESS(f"{number_of_announcements} announcements created.\n"))
+
+        # --- ABOUT US ---
+        from shared.about_us.models import AboutUs
+        if AboutUs.objects.exists():
+            self.stdout.write(self.style.WARNING("About Us already populated — skipping.\n"))
+        else:
+            self.stdout.write("Populating About Us...")
+            AboutUs.objects.update_or_create(
+                id=1,
+                defaults={
+                    'hero_text': "Welcome to the About Us section of our platform. Here, we share our mission, vision, and the values that drive us to make a positive impact in our community.",
+                    'vision_text': "Vision Text",
+                    'mission_text': "Mission Text",
+                    'thrust_text': "Thrust Text",
+                    'leadership_description': "Leadership Description",
+                    'director_name': "Dr. Liezl F. Tangonan",
+                    'edited_by': director_user,
+                    'edited_at': timezone.now(),
+                }
+            )
+            self.stdout.write(self.style.SUCCESS("About Us created.\n"))
+        self.stdout.write(self.style.SUCCESS("✅ Data population completed safely (idempotent).\n"))

@@ -13,12 +13,12 @@ class AITeamGenerator:
     """
     
     # Weights for scoring - balanced approach with semantic priority
-    SEMANTIC_WEIGHT = 0.55  # Combined degree + expertise matching
-    RATING_WEIGHT = 0.30    # Past performance quality
+    SEMANTIC_WEIGHT = 0.70  # Combined degree + expertise matching
+    RATING_WEIGHT = 0.15    # Past performance quality
     AVAILABILITY_WEIGHT = 0.15  # Current workload
     
     # Minimum semantic similarity threshold (0-1 scale)
-    MIN_SEMANTIC_SCORE = 0.25  # Reject matches below 25% similarity
+    MIN_SEMANTIC_SCORE = 0.30  # Reject matches below 30% similarity
     
     # Model path
     MODEL_NAME = 'all-MiniLM-L6-v2'

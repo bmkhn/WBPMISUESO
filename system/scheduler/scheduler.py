@@ -392,7 +392,7 @@ def start_scheduler():
     print("  - Session cleanup: daily at 3:00 AM")
     print("  - Event status updates: daily at midnight")
     print("  - Project status updates: daily at midnight")
-    print("  - Expert status updates: daily at 12:01 AM")
+    print("  - Expert status updates: daily at midnight")
     
     # Schedule immediate checks after startup (after Django is fully ready)
     scheduler.add_job(
