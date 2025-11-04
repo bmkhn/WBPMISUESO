@@ -160,7 +160,7 @@ body {
 
 /* Combined Annual Budget Card (White with Gradient Border) */
 .combined-budget-card-gradient {
-    background: linear-gradient(90deg, #ffffffb8 0%, #f8f8f8 100%); 
+    background-color: white;
     color: #111827;
     position: relative;
     padding: 1.5rem; 
@@ -176,7 +176,7 @@ body {
 .combined-budget-card-gradient h2 { 
     font-size: 2.5rem; 
     font-weight: 900;
-    margin: 0.95rem 0 0.5rem 0; 
+    margin: 1.95rem 0 0.5rem 0; 
     color: #444 !important; 
     text-align: left !important;
 }
@@ -283,6 +283,7 @@ body {
     font-size: 15px;
     color: #4b5563;
     margin-top: -2px;
+    padding-bottom: 1rem;
 }
 .goal-card .amount {
     font-family: 'Inter', Arial, sans-serif;
@@ -307,7 +308,7 @@ body {
 
 /* 1. Assigned to Colleges (Pink: Pastel to Vibrant) */
 .goal-card.color-pink {
-    background: linear-gradient(135deg, #ff6092 0%, #FFC0CB 100%); 
+    background: linear-gradient(135deg, #ff6092 0%, #f69dac 100%); 
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
     color: white;
 }
@@ -320,7 +321,7 @@ body {
 
 /* 2. Committed (Internal) (Dango Green: Pastel to Vibrant) */
 .goal-card.color-dango-green { 
-    background: linear-gradient(155deg, #8AC926 0%, #C2E299 100%); 
+    background: linear-gradient(155deg, #8AC926 0%, #c0e98a 100%); 
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
     color: white;
 }
@@ -539,7 +540,7 @@ body {
     text-decoration: none;
 }
 .list-item {
-    padding: 16px 18px;
+    padding: 12.5px 18px;
     border-bottom: 1px solid #EDEDED;
     transition: background-color 0.2s ease;
 }

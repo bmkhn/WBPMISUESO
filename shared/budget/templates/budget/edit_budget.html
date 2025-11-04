@@ -44,7 +44,6 @@
                         <td style="font-weight: 500;">{{ item.college_name }}</td>
                         <td>
                             <div class="input-wrapper">
-                                <span class="input-symbol">₱</span>
                                 <input type="text" 
                                        name="college_{{ item.college_id }}" 
                                        id="college-input-{{ item.college_id }}"
@@ -68,103 +67,6 @@
             </div>
         </div>
     </form>
-    {% endif %}
-
-    {% if is_college_admin %}
-    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 24px; margin-top: 24px;">
-        
-        <div style="display: flex; flex-direction: column; gap: 24px;">
-            <form method="POST" class="user-details-section">
-                {% csrf_token %}
-                <div class="user-details-category" style="font-size: 18px; font-weight: 600; color: #111827; border-bottom: 1px solid #e0e0e0; padding-bottom: 12px; margin-bottom: 20px;">
-                    Assign Project Budget
-                </div>
-                
-                <div class="user-details-row cols-1">
-                    <div>
-                        <div class="user-details-label">Project</div>
-                        {{ project_form.project }}
-                        {% if project_form.project.errors %}
-                            <p style="color: #ef4444; font-size: 12px; margin-top: 4px;">{{ project_form.project.errors|first }}</p>
-                        {% endif %}
-                    </div>
-                </div>
-                
-                <div class="user-details-row cols-1" style="margin-top: 16px;">
-                    <div>
-                        <div class="user-details-label">New Internal Budget</div>
-                        <div style="position: relative;">
-                            <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #6b7280; font-size: 14px;">₱</span>
-                            {{ project_form.internal_budget }}
-                        </div>
-                        {% if project_form.internal_budget.errors %}
-                            <p style="color: #ef4444; font-size: 12px; margin-top: 4px;">{{ project_form.internal_budget.errors|first }}</p>
-                        {% endif %}
-                    </div>
-                </div>
-                
-                <div class="form-actions" style="border-top: none; margin-top: 16px; padding-top: 0;">
-                    <button type="submit" name="assign_project_budget" class="btn btn-primary" style="width: 100%;">
-                        Update Project Budget
-                    </button>
-                </div>
-            </form>
-
-            <div class="user-details-section">
-                <h3 class="user-details-category" style="font-size: 18px; font-weight: 600; color: #111827; border-bottom: 1px solid #e0e0e0; padding-bottom: 12px; margin-bottom: 20px;">
-                    {{ college_name }}
-                </h3>
-                <div style="display: flex; flex-direction: column; gap: 12px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 14px;">
-                        <span style="color: #4b5563;">Initial Budget:</span>
-                        <span style="font-weight: 700; color: #2563eb;">₱{{ total_assigned_original_cut|intcomma }}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 14px;">
-                        <span style="color: #4b5563;">Internal Budget (Committed):</span>
-                        <span style="font-weight: 700; color: #ca8a04;">₱{{ total_committed_to_projects|intcomma }}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 14px;">
-                        <span style="color: #4b5563;">Remaining (Uncommitted):</span>
-                        <span style="font-weight: 700; color: {% if uncommitted_remaining < 0 %}#ef4444{% else %}#ca8a04{% endif %};">
-                            ₱{{ uncommitted_remaining|intcomma }}
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="user-details-section">
-            <div class="user-details-category" style="font-size: 18px; font-weight: 600; color: #111827; border-bottom: 1px solid #e0e0e0; padding-bottom: 12px; margin-bottom: 20px;">
-                Current Project Budgets ({{ college_name }})
-            </div>
-            <table class="styled-table" style="margin-top: 0;">
-                <thead>
-                    <tr>
-                        <th>Project Title</th>
-                        <th>Status</th>
-                        <th>Internal Funding</th>
-                        <th>External Funding</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in dashboard_data %}
-                    <tr>
-                        <td>{{ item.title }}</td>
-                        <td>{{ item.status }}</td>
-                        <td style="font-weight: 500;">₱{{ item.internal_funding_committed|intcomma }}</td>
-                        <td>₱{{ item.external_funding_committed|intcomma }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="4" style="text-align: center; color: #6b7280; padding: 20px;">
-                            No projects found for this fiscal year.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
     {% endif %}
 
 </div>

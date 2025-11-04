@@ -15,6 +15,7 @@
 <link href="https://fonts.googleapis.com/css?family=Inter:400,500,700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
 <link href="{% static 'shared/budget/styles.css' %}" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script> 
 </head>
 <body>
 <div class="main-container">
@@ -25,70 +26,102 @@
             </div>
         <div class="container-1B">
             {% if is_admin %}
-            <button class="export-btn" id="exportProjectBtn" type="button">  
+            <a class="export-btn" id="exportProjectBtn" href="{% url 'budget_export' %}"> 
                 <i class="fa-solid fa-download"></i>
                 Export 
-            </button>
-            {% endif %}
-            {% if is_college_admin %}
-            <a href="{% url 'budget_edit' %}" class="btn btn-blue">
-                College Funds
-            </a>
-            <a href="{% url 'budget_history' %}" class="export-btn view">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M464 128H48c-26.5 0-48 21.5-48 48v224c0 26.5 21.5 48 48 48h416c26.5 0 48-21.5 48-48V176c0-26.5-21.5-48-48-48zm-16 64v32h-40v-32h40zm-120 0v32h-40v-32h40zm-120 0v32h-40v-32h40zm-120 0v32H96v-32H56zM48 400V288h416v112H48zM416 192h48v32h-48v-32z"/></svg>
-                <span style="color: inherit;">View History</span>
-            </a>
-            <a href="#" class="export-btn">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M288 32c0-17.7-14.3-32-32-32s-32 14.3-32 32V274.7l-73.4-73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l128 128c12.5 12.5 32.8 12.5 45.3 0l128-128c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L288 274.7V32zM64 352c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V416c0-35.3-28.7-64-64-64H346.5l-2.4 2.4c-4.4 4.4-7.1 10.3-8.2 16.5c-1.1 6.2-.7 12.7 1.2 18.8L352 426.7V464c0 8.8 7.2 16 16 16H448c8.8 0 16-7.2 16-16V416c0-8.8-7.2-16-16-16H368c-4.2 0-8.4 1-12.3 2.9l-2.4-2.4c-4.4-4.4-7.1-10.3-8.2-16.5c-1.1-6.2-.7 12.7 1.2-18.8L346.5 352zM64 416c0-8.8 7.2-16 16-16H160c8.8 0 16 7.2 16 16V464c0 8.8-7.2 16-16 16H80c-8.8 0-16-7.2-16-16V416z"/></svg>
-                <span style="color: inherit;">Export</span>
             </a>
             {% endif %}
         </div>
     </div>
 
+    {% if user_role in "VP,DIRECTOR,UESO" %}
     <div class="another-header">
         <h2>Overview</h2>
     </div>
-
-    {% if user_role in "VP,DIRECTOR,UESO" %}
     <div class="card-group">
-        <div class="new-budget-card combined-budget-card-gradient">
-            <div class="card-description">
-                <p>Unallocated Funds Remaining</p>
+        <div class="new-budget-card combined-budget-card-gradient" style="overflow: hidden; position: relative; padding: 0;">
+            <div style="display: flex; justify-content: space-between; align-items: stretch; width: 100%; height: 100%;">
+                
+                <div style="flex-grow: 0; flex-shrink: 0; width: 35%; position: relative; z-index: 2;">
+                    <div class="card-description" style="padding-top: 20px; padding-left: 20px; padding-bottom: 5px;">
+                        <p>Unallocated Funds Remaining</p>
+                    </div>
+                    <div class="card-metric-group" style="align-items: flex-start !important; padding-left: 20px; padding-bottom: 0;"> 
+                        <h2 class="{% if pool_unallocated_remaining < 0 %}text-red{% else %}text-green{% endif %}">
+                            ₱ {{ pool_unallocated_remaining|floatformat:0|intcomma }}
+                        </h2>
+                    </div>
+                    <span class="sub-description" style="padding-top: 5px; padding-left: 20px; padding-bottom: 20px; display: block;">Annual Budget Pool: ₱ {{ pool_available|floatformat:0|intcomma }}</span>
+                </div>
+                
+                <div style="flex-grow: 0; flex-shrink: 0; width: 65%; height: 100%; position: absolute; top: 0; right: 0; z-index: 0;">
+                    <canvas id="unallocatedChart" style="display: block; width: 100%; height: 100%;"></canvas>
+                </div>
             </div>
-            <div class="card-metric-group" style="align-items: flex-start !important;"> 
-                <h2 class="{% if pool_unallocated_remaining < 0 %}text-red{% else %}text-green{% endif %}">
-                    ₱ {{ pool_unallocated_remaining|floatformat:0|intcomma }}
-                </h2>
-            </div>
-            <span class="sub-description">Annual Budget Pool: ₱ {{ pool_available|floatformat:0|intcomma }}</span>
         </div>
     </div>
 
     <div class="goal-card-container">
         
         <div class="goal-card color-pink">
-            <h3 style="color: white;">Assigned to Colleges</h3>
-            <p class="amount" style="color: white;">₱ {{ total_assigned_to_colleges|floatformat:0|intcomma }}</p>
+            <div class="card-content-wrapper" style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
+                <div>
+                    <h3 style="color: white;">Assigned to Colleges</h3>
+                    <p class="amount" style="color: white;">₱ {{ total_assigned_to_colleges|floatformat:0|intcomma }}</p>
+                </div>
+                <div style="height: 80px; width: 130px; flex-shrink: 0; margin-top: -5px;">
+                    <canvas id="assignedChart"></canvas>
+                </div>
+            </div>
             <span class="card-figure-subtext">Percentage of total pool assigned</span>
         </div>
+        
         <div class="goal-card color-dango-green">
-            <h3 style="color: white;">Committed (Internal)</h3>
-            <p class="amount" style="color: white;">₱ {{ total_committed_to_projects_agg|floatformat:0|intcomma }}</p>
+            <div class="card-content-wrapper" style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
+                <div>
+                    <h3 style="color: white;">Committed (Internal)</h3>
+                    <p class="amount" style="color: white;">₱ {{ total_committed_to_projects_agg|floatformat:0|intcomma }}</p>
+                </div>
+                <div style="height: 80px; width: 130px; flex-shrink: 0; margin-top: -5px;">
+                    <canvas id="internalCommittedChart"></canvas>
+                </div>
+            </div>
             <span class="card-figure-subtext">Funding committed from internal pool</span>
         </div>
+        
         <div class="goal-card color-milky-white">
-            <h3 style="color: #4b5563;">Committed (External)</h3>
-            <p class="amount" style="color: #111827;">₱ {{ total_external_to_projects_agg|floatformat:0|intcomma }}</p>
+            <div class="card-content-wrapper" style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
+                <div>
+                    <h3 style="color: #4b5563;">Committed (External)</h3>
+                    <p class="amount" style="color: #111827;">₱ {{ total_external_to_projects_agg|floatformat:0|intcomma }}</p>
+                </div>
+                <div style="height: 80px; width: 130px; flex-shrink: 0; margin-top: -5px;">
+                    <canvas id="externalCommittedChart"></canvas>
+                </div>
+            </div>
             <span class="card-figure-subtext">Funding secured from external sponsors</span>
         </div>
     </div>
 
-    <div class="another-header">
-        <h2>College Budget Allocations</h2>
-        <div class="container-1A">
+    <div class="another-header" style="justify-content: space-between; align-items: center;">
+        <h2 style="margin: 0;">College Budget Allocations</h2>
+        
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <div class="sort-dropdown-container">
+                <label for="adminSortSelect" style="color: #4b5563; font-weight: 500; font-size: 14px;">Sort By:</label>
+                <select id="adminSortSelect">
+                    <option value="college_id">Default</option>
+                    <option value="college_name_asc">College Name (A-Z)</option>
+                    <option value="college_name_desc">College Name (Z-A)</option>
+                    <option value="original_cut_desc">Initial Budget (High to Low)</option>
+                    <option value="original_cut_asc">Initial Budget (Low to High)</option>
+                    <option value="committed_funding_desc">Committed Internal (High to Low)</option>
+                    <option value="uncommitted_remaining_desc">Remaining (High to Low)</option>
+                </select>
+            </div>
+
             {% if is_admin %}
-            <a class="export-btn edit" href="{% url 'budget_edit' %}">  
+            <a class="export-btn edit" href="{% url 'budget_edit' %}"> 
                 <i class="fa-solid fa-pen"></i>
                 Edit 
             </a>
@@ -106,9 +139,9 @@
                         <th>Remaining (Uncommitted)</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="adminTableBody">
                     {% for item in dashboard_data %}
-                    <tr>
+                    <tr class="clickable-row" data-college-id="{{ item.college_id }}">
                         <td class="font-bold">{{ item.college_name }}</td>
                         <td>₱{{ item.original_cut|intcomma }}</td>
                         <td>₱{{ item.committed_funding|intcomma }}</td>
@@ -124,39 +157,65 @@
     {% endif %}
 
     {% if is_college_admin %}
+    <div class="another-header">
+        <h2>Overview</h2>
+    </div>
     <div class="goal-card-container">
-        <div class="goal-card">
-            <h3>Initial Budget ({{ college_name }})</h3>
-            <p class="amount text-blue">₱{{ total_assigned_original_cut|intcomma }}</p>
+        <div class="goal-card color-pink">
+            <div class="card-content-wrapper" style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
+                <div>
+                    <h3 style="color: white;">Initial Budget</h3>
+                    <p class="amount text-blue" style="color: white;">₱{{ total_assigned_original_cut|floatformat:0|intcomma }}</p>
+                </div>
+                <div style="height: 80px; width: 130px; flex-shrink: 0; margin-top: -5px;">
+                    <canvas id="collegeAssignedChart"></canvas>
+                </div>
+            </div>
             <span class="card-figure-subtext">Total allocated to your college</span>
         </div>
-        <div class="goal-card">
-            <h3>Internal Budget (Committed)</h3>
-            <p class="amount text-yellow">₱{{ total_committed_to_projects|intcomma }}</p>
+        <div class="goal-card color-dango-green">
+            <div class="card-content-wrapper" style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
+                <div>
+                    <h3 style="color: white;">Internal Budget (Committed)</h3>
+                    <p class="amount text-yellow" style="color: white;">₱{{ total_committed_to_projects|floatformat:0|intcomma }}</p>
+                </div>
+                <div style="height: 80px; width: 130px; flex-shrink: 0; margin-top: -5px;">
+                    <canvas id="collegeCommittedChart"></canvas>
+                </div>
+            </div>
             <span class="card-figure-subtext">Committed funding for projects</span>
         </div>
-        <div class="goal-card">
+        <div class="goal-card color-milky-white">
             <h3>Remaining (Uncommitted)</h3>
-            <p class="amount {% if uncommitted_remaining < 0 %}text-red{% else %}text-green{% endif %}">₱{{ uncommitted_remaining|intcomma }}</p>
+            <p class="amount {% if uncommitted_remaining < 0 %}text-red{% else %}text-green{% endif %}">₱{{ uncommitted_remaining|floatformat:0|intcomma }}</p>
             <span class="card-figure-subtext">Funds available for new projects</span>
         </div>
     </div>
-    
-    <div class="table-container">
-        <div class="table-header">
-            <h2>Project Budget Allocations ({{ college_name }})</h2>
+
+    <div class="another-header" style="justify-content: space-between; align-items: center;">
+        <h2 style="margin: 0;">College Project Budget Allocations</h2>
+        <div class="sort-dropdown-container">
+            <label for="collegeProjectSortSelect" style="color: #4b5563; font-weight: 500; font-size: 14px;">Sort By:</label>
+            <select id="collegeProjectSortSelect">
+                <option value="title_asc">Project Title (A-Z)</option>
+                <option value="title_desc">Project Title (Z-A)</option>
+                <option value="internal_funding_committed_desc">Internal Funding (High to Low)</option>
+                <option value="external_funding_committed_desc">External Funding (High to Low)</option>
+            </select>
         </div>
+    </div>
+    <div class="table-container">
         <div class="table-wrapper">
             <table class="user-table">
                 <thead>
                     <tr>
-                        <th>Project Title</th>
+                        <th>Title</th>
                         <th>Status</th>
-                        <th>Internal Funding</th>
-                        <th>External Funding</th>
+                        <th>Internal Budget (Committed)</th>
+                        <th>External Budget (Committed)</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="collegeTableBody">
                     {% for item in dashboard_data %}
                     <tr>
                         <td>{{ item.title }}</td>
@@ -178,39 +237,69 @@
     {% endif %}
 
     {% if user_role in "FACULTY,IMPLEMENTER" %}
+    <div class="another-header">
+        <h2>Overview</h2>
+    </div>
      <div class="goal-card-container">
-        <div class="goal-card">
-            <h3>Total Project Funding</h3>
-            <p class="amount text-blue">₱{{ total_assigned|intcomma }}</p>
+        <div class="goal-card color-pink">
+            <div class="card-content-wrapper" style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
+                <div>
+                    <h3 style="color: white;">Total Project Funding</h3>
+                    <p class="amount text-blue" style="color: white;">₱{{ total_assigned|floatformat:0|intcomma }}</p>
+                </div>
+            </div>
             <span class="card-figure-subtext">Overall budget across all your projects</span>
         </div>
-        <div class="goal-card">
-            <h3>Total Internal</h3>
-            <p class="amount text-green">₱{{ total_internal|intcomma }}</p>
+        <div class="goal-card color-dango-green">
+            <div class="card-content-wrapper" style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
+                <div>
+                    <h3 style="color: white;">Total Internal</h3>
+                    <p class="amount text-green" style="color: white;">₱{{ total_internal|floatformat:0|intcomma }}</p>
+                </div>
+                <div style="height: 80px; width: 130px; flex-shrink: 0; margin-top: -5px;">
+                    <canvas id="facultyInternalChart"></canvas>
+                </div>
+            </div>
             <span class="card-figure-subtext">Funding from internal pool</span>
         </div>
-        <div class="goal-card">
-            <h3>Total External</h3>
-            <p class="amount text-yellow">₱{{ total_external|intcomma }}</p>
+        <div class="goal-card color-milky-white">
+            <div class="card-content-wrapper" style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
+                <div>
+                    <h3 style="color: #4b5563;">Total External</h3>
+                    <p class="amount text-yellow" style="color: #111827;">₱{{ total_external|floatformat:0|intcomma }}</p>
+                </div>
+                <div style="height: 80px; width: 130px; flex-shrink: 0; margin-top: -5px;">
+                    <canvas id="facultyExternalChart"></canvas>
+                </div>
+            </div>
             <span class="card-figure-subtext">Funding secured from sponsors</span>
         </div>
     </div>
     
-    <div class="table-container">
-        <div class="table-header">
-            <h2>My Project Budgets</h2>
+    <div class="another-header" style="justify-content: space-between; align-items: center;">
+        <h2 style="margin: 0;">Project Budget Allocations</h2>
+        <div class="sort-dropdown-container">
+            <label for="facultyProjectSortSelect" style="color: #4b5563; font-weight: 500; font-size: 14px;">Sort By:</label>
+            <select id="facultyProjectSortSelect">
+                <option value="title_asc">Project Title (A-Z)</option>
+                <option value="title_desc">Project Title (Z-A)</option>
+                <option value="internal_funding_desc">Internal Funding (High to Low)</option>
+                <option value="external_funding_desc">External Funding (High to Low)</option>
+            </select>
         </div>
+    </div>
+    <div class="table-container">
         <div class="table-wrapper">
             <table class="user-table">
                 <thead>
                     <tr>
-                        <th>Project Title</th>
+                        <th>Title</th>
                         <th>Status</th>
-                        <th>Internal Funding</th>
-                        <th>External Funding</th>
+                        <th>Internal Budget (Committed)</th>
+                        <th>External Budget (Committed)</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="facultyTableBody">
                     {% for item in dashboard_data %}
                     <tr>
                         <td>{{ item.title }}</td>
@@ -231,10 +320,11 @@
     </div>
     {% endif %}
 
-    <div class="another-header">
-        <h2>Additional Snippets</h2>
-    </div>
 
+    {% if is_admin %}   
+    <div class="another-header">
+        <h2>Snippets</h2>
+    </div>
     <div class="bottom-grid">
         <div class="table-container"> <div class="list-card-header">
                 <h2>Recent Budget History</h2>
@@ -255,6 +345,7 @@
                 {% endfor %}
             </div>
         </div>
+        {% endif%}
 
         <div class="table-container"> 
             <div class="list-card-header">
@@ -266,10 +357,10 @@
                 <div class="list-item">
                     <div class="meta" style="margin-top: 0; margin-bottom: 4px;">
                         <p class="font-bold">{{ project.title }}</p>
-                        <span class="font-bold text-purple">₱{{ project.external_budget|intcomma }}</span>
+                        <span class="font-bold text-purple">₱{{ project.external_budget|floatformat:0|intcomma }}</span>
                     </div>
                     <div class="meta">
-                        <span>By: {{ project.sponsor_name|default:"N/A" }}</span>
+                        <span>Sponsor: {{ project.sponsor_name|default:"N/A" }}</span>
                     </div>
                 </div>
                 {% empty %}
@@ -282,6 +373,347 @@
     </div>
 </div>
 
+<script>
+    // --- Data Variables Initialized from Django Context (as strings) ---
+    const unallocRaw = '{{ unallocated_data_raw_json|safe }}';
+    const unalloc = '{{ unallocated_data_json|safe }}';
+    const assignedData = '{{ assigned_data_json|safe }}';
+    const internalCommittedData = '{{ committed_internal_data_json|safe }}';
+    const externalCommittedData = '{{ committed_external_data_json|safe }}';
+    const rawAdminData = "{{ dashboard_data|safe }}"; 
+
+    const collegeCommittedData = '{{ college_committed_data_json|safe }}';
+    const collegeAssignedNorm = '{{ total_assigned_original_cut_norm|safe }}';
+    const rawCollegeData = "{{ dashboard_data|safe }}"; 
+
+    const facultyInternalData = '{{ faculty_internal_data_json|safe }}';
+    const facultyExternalData = '{{ faculty_external_data_json|safe }}';
+    const rawFacultyData = "{{ dashboard_data|safe }}"; 
+    
+    const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    // --------------------------------------------------------
+
+document.addEventListener('DOMContentLoaded', () => {
+    
+    const currentMonth = new Date().getMonth(); 
+    let ADMIN_DATA = [];
+    let COLLEGE_PROJECT_DATA = [];
+    let FACULTY_PROJECT_DATA = [];
+
+    const mainCardChartOptions = {
+        responsive: true,
+        maintainAspectRatio: true,
+        aspectRatio: 3.7,
+        plugins: { legend: { display: false } },
+        scales: {
+            x: {
+                offset: false,
+                grid: { color: 'rgba(255, 255, 255, 0.2)' },
+                ticks: { color: '#fff', font: { size: 10 } }
+            },
+            y: {
+                beginAtZero: true,
+                suggestedMin: 0,
+                min: 0, 
+                grace: '3%', 
+                grid: { color: 'rgba(255, 255, 255, 0.2)' },
+                ticks: { display: true, color: '#fff', font: { size: 10 } }
+            }
+        },
+        elements: {
+            point: { radius: 3, hoverRadius: 5 },
+            line: { borderJoinStyle: 'round', capBezierPoints: true }
+        },
+        layout: { padding: { left: 0, right: 0, top: 0, bottom: 0 } }
+    };
+
+
+    const miniChartOptions = {
+        responsive: true,
+        maintainAspectRatio: false, 
+        plugins: {
+            legend: { display: false },
+            tooltip: { enabled: false },
+        },
+        scales: { x: { display: false }, y: { display: false, beginAtZero: true } },
+        elements: { point: { radius: 0 } },
+        layout: { padding: 0 }
+    };
+
+    function createGradientBackground(ctx, chartArea, isMainCard, isExternal) {
+        if (!chartArea) return null;
+        if (isMainCard) {
+            const grad = ctx.createLinearGradient(chartArea.left, 0, chartArea.right, 0);
+            grad.addColorStop(0, 'rgba(255, 105, 180, 1)');
+            grad.addColorStop(1, 'rgba(255, 182, 193, 0.5)');
+            return grad;
+        } else {
+            const grad = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+            if (isExternal) {
+                grad.addColorStop(0, 'rgba(107, 114, 128, 0.5)');
+                grad.addColorStop(1, 'rgba(107, 114, 128, 0.0)');
+            } else {
+                grad.addColorStop(0, 'rgba(255, 255, 255, 0.7)');
+                grad.addColorStop(1, 'rgba(255, 255, 255, 0.0)');
+            }
+            return grad;
+        }
+    }
+    
+    function cleanPythonData(dataString) {
+        if (typeof dataString !== 'string' || !dataString.trim()) return '[]';
+        let clean = dataString.replace(/Decimal\((['"]?)(.*?)\1\)/g, (match, p1, p2) => p2);
+        clean = clean.replace(/'/g, '"');
+        clean = clean.replace(/None/g, 'null');
+        return clean;
+    }
+    
+    function initSparkline(canvasId, dataString, isExternal = false, isMainCard = false, labels = [], tooltipDataString = null) {
+        const ctxEl = document.getElementById(canvasId);
+        if (!ctxEl) return;
+        
+        let data;
+        let tooltipData = null;
+        try {
+            data = JSON.parse(dataString);
+            if (tooltipDataString) tooltipData = JSON.parse(tooltipDataString);
+        } catch (e) {
+            console.error(`Error parsing data for ${canvasId}:`, e, dataString);
+            return;
+        }
+        
+        const dataForChart = data.slice(0, currentMonth + 1);
+        
+        // Final check to see if we should render.
+        if (!dataForChart || dataForChart.length === 0 || dataForChart.every(v => v === null || v === 0 || v === '0' )) {
+             ctxEl.style.display = 'none'; 
+             return;
+        }
+
+        try {
+            const datasetColor = isExternal ? '#6b7280' : 'white';
+            const options = isMainCard ? mainCardChartOptions : miniChartOptions;
+            const labelsToUse = labels.length ? labels.slice(0, currentMonth + 1) : Array(dataForChart.length).fill('');
+            
+            const tooltipDataForChart = tooltipData ? tooltipData.slice(0, currentMonth + 1) : null;
+
+            new Chart(ctxEl, {
+                type: 'line',
+                data: {
+                    labels: labelsToUse,
+                    datasets: [{
+                        data: dataForChart,
+                        borderColor: datasetColor,
+                        borderWidth: 2,
+                        fill: true,
+                        // FIX: Explicitly set tension for smoothing
+                        tension: 0.4, 
+                        spanGaps: true,
+                        backgroundColor: (context) => {
+                            const chart = context.chart;
+                            const area = chart.chartArea;
+                            return createGradientBackground(chart.ctx, area, isMainCard, isExternal);
+                        }
+                    }]
+                },
+                options: {
+                    ...options,
+                    plugins: {
+                        ...options.plugins,
+                        tooltip: tooltipDataForChart ? {
+                            enabled: true,
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                title: t => 'Month: ' + (labelsToUse[t[0].dataIndex] || ''),
+                                label: t => (tooltipDataForChart[t.dataIndex] || '')
+                            }
+                        } : options.plugins.tooltip
+                    }
+                }
+            });
+        } catch (err) {
+            console.error(`Chart ${canvasId} failed:`, err);
+        }
+    }
+
+    function formatCurrency(amount) {
+        return '₱' + parseFloat(amount || 0).toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
+
+    function renderAdminTable() {
+        const body = document.getElementById('adminTableBody');
+        if (!body) return;
+        body.innerHTML = '';
+        ADMIN_DATA.forEach(item => {
+            const row = body.insertRow();
+            row.classList.add('clickable-row');
+            row.dataset.collegeId = item.college_id;
+            
+            row.addEventListener('click', () => {
+                window.location.href = `/budget/college/${item.college_id}/projects/`; 
+            });
+
+            const nameCell = row.insertCell();
+            nameCell.classList.add('font-bold');
+            nameCell.textContent = item.college_name;
+
+            row.insertCell().textContent = formatCurrency(item.original_cut);
+            row.insertCell().textContent = formatCurrency(item.committed_funding);
+            row.insertCell().textContent = formatCurrency(item.external_funding);
+
+            const remaining = row.insertCell();
+            const uncommitted = parseFloat(item.uncommitted_remaining) || 0;
+            remaining.classList.add('font-bold');
+            remaining.classList.add(uncommitted < 0 ? 'text-red' : 'text-green');
+            remaining.textContent = formatCurrency(uncommitted);
+        });
+    }
+
+    function sortAdminTable(sortKey) {
+        if (!ADMIN_DATA.length) return;
+        
+        const key = sortKey.split('_')[0]; 
+        const direction = sortKey.includes('desc') ? 'desc' : 'asc';
+        const dir = direction === 'desc' ? -1 : 1;
+
+        const keyMap = {
+            college: 'college_name', 
+            original: 'original_cut', 
+            committed: 'committed_funding', 
+            uncommitted: 'uncommitted_remaining'
+        };
+        
+        const sortField = keyMap[key] || (sortKey === 'college_id' ? 'college_id' : null);
+        if (!sortField) return;
+
+        const isNum = sortField !== 'college_name' && sortField !== 'college_id';
+
+        ADMIN_DATA.sort((a, b) => {
+            let A = a[sortField] ?? (isNum ? 0 : '');
+            let B = b[sortField] ?? (isNum ? 0 : '');
+            
+            if (sortField === 'college_id') return parseFloat(A) - parseFloat(B);
+
+            if (isNum) return (parseFloat(A) - parseFloat(B)) * dir;
+            return A.localeCompare(B) * dir;
+        });
+
+        renderAdminTable();
+    }
+
+    function renderProjectTable(role) {
+        const data = role === 'college' ? COLLEGE_PROJECT_DATA : FACULTY_PROJECT_DATA;
+        const body = document.getElementById(role + 'TableBody');
+        if (!body) return;
+        body.innerHTML = '';
+
+        if (data.length === 0) {
+             const row = body.insertRow();
+             const cell = row.insertCell();
+             cell.setAttribute('colspan', '4');
+             cell.classList.add('text-center');
+             cell.style.cssText = 'color: #6b7280; padding: 20px;';
+             cell.textContent = role === 'college' ? 'No projects found for this fiscal year.' : 'You are not assigned to any projects.';
+             return;
+        }
+
+        data.forEach(item => {
+            const row = body.insertRow();
+            row.insertCell().textContent = item.title;
+            row.insertCell().textContent = item.status;
+
+            const intKey = role === 'college' ? 'internal_funding_committed' : 'internal_funding';
+            const extKey = role === 'college' ? 'external_funding_committed' : 'external_funding';
+            row.insertCell().textContent = formatCurrency(item[intKey]);
+            row.insertCell().textContent = formatCurrency(item[extKey]);
+        });
+    }
+
+    function sortProjectTable(role, sortKey) {
+        const data = role === 'college' ? COLLEGE_PROJECT_DATA : FACULTY_PROJECT_DATA;
+        if (!data.length) return;
+        
+        const arrayToSort = role === 'college' ? COLLEGE_PROJECT_DATA : FACULTY_PROJECT_DATA;
+
+        const [key, direction] = sortKey.split('_');
+        const dir = direction === 'desc' ? -1 : 1;
+
+        const keyMap = {
+            title: 'title',
+            internal: role === 'college' ? 'internal_funding_committed' : 'internal_funding',
+            external: role === 'college' ? 'external_funding_committed' : 'external_funding'
+        };
+        const sortField = keyMap[key];
+        const isNum = sortField !== 'title';
+
+        arrayToSort.sort((a, b) => {
+            let A = a[sortField] ?? (isNum ? 0 : '');
+            let B = b[sortField] ?? (isNum ? 0 : '');
+            if (isNum) return (parseFloat(A) - parseFloat(B)) * dir;
+            return A.localeCompare(B) * dir;
+        });
+
+        renderProjectTable(role);
+    }
+
+    {% if user_role in "VP,DIRECTOR,UESO" %}
+    try {
+        ADMIN_DATA = JSON.parse(cleanPythonData(rawAdminData));
+        
+        renderAdminTable(); 
+
+        const currentMonths = months.slice(0, currentMonth + 1);
+
+        initSparkline('unallocatedChart', unalloc, false, true, currentMonths, unallocRaw);
+        initSparkline('assignedChart', assignedData);
+        initSparkline('internalCommittedChart', internalCommittedData);
+        initSparkline('externalCommittedChart', externalCommittedData, true);
+
+    } catch (err) { 
+        console.error("Admin Dashboard Initialization Failed:", err); 
+    }
+
+    {% elif is_college_admin %}
+    try {
+        COLLEGE_PROJECT_DATA = JSON.parse(cleanPythonData(rawCollegeData));
+        
+        const currentMonths = months.slice(0, currentMonth + 1);
+
+        initSparkline('collegeAssignedChart', collegeAssignedNorm);
+        initSparkline('collegeCommittedChart', collegeCommittedData);
+        initSparkline('collegeExternalChart', college_external_data_json, true);
+        renderProjectTable('college');
+    } catch (err) { console.error("College init failed:", err); }
+
+    {% elif user_role in "FACULTY,IMPLEMENTER" %}
+    try {
+        FACULTY_PROJECT_DATA = JSON.parse(cleanPythonData(rawFacultyData));
+        
+        const currentMonths = months.slice(0, currentMonth + 1);
+        initSparkline('facultyTotalChart', faculty_total_data_json);
+        initSparkline('facultyInternalChart', facultyInternalData);
+        initSparkline('facultyExternalChart', facultyExternalData, true);
+        renderProjectTable('faculty');
+    } catch (err) { console.error("Faculty init failed:", err); }
+    {% endif %}
+
+    document.getElementById('adminSortSelect')?.addEventListener('change', e => {
+        sortAdminTable(e.target.value);
+    });
+
+    document.getElementById('collegeProjectSortSelect')?.addEventListener('change', e => {
+        sortProjectTable('college', e.target.value);
+    });
+    
+    document.getElementById('facultyProjectSortSelect')?.addEventListener('change', e => {
+        sortProjectTable('faculty', e.target.value);
+    });
+});
+</script>
 
 </body>
 </html>

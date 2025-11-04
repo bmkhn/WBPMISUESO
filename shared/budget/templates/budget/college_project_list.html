@@ -1,0 +1,74 @@
+{% extends base_template %}
+{% load humanize %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="main-container">
+    <div class="container-1">
+        <div class="container-1A">
+            <h1 class="welcome-text">{{ title }}</h1>
+        </div>
+        <div class="container-1B">
+            <a class="export-btn" href="{% url 'budget_dashboard' %}">
+                <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="another-header">
+        <h2>Summary for {{ college_name }} ({{ fiscal_year }})</h2>
+    </div>
+    <div class="goal-card-container">
+        <div class="goal-card color-pink">
+            <h3>Initial Budget Cut</h3>
+            <p class="amount text-blue">₱{{ total_assigned_original_cut|intcomma }}</p>
+        </div>
+        <div class="goal-card color-dango-green">
+            <h3>Total Internal Committed</h3>
+            <p class="amount text-yellow">₱{{ total_committed_to_projects|intcomma }}</p>
+        </div>
+        <div class="goal-card color-milky-white">
+            <h3>Remaining Uncommitted</h3>
+            <p class="amount {% if uncommitted_remaining < 0 %}text-red{% else %}text-green{% endif %}">₱{{ uncommitted_remaining|intcomma }}</p>
+        </div>
+    </div>
+
+    <div class="another-header">
+        <h2>Projects</h2>
+    </div>
+    <div class="table-container">
+        <div class="table-wrapper">
+            <table class="user-table">
+                <thead>
+                    <tr>
+                        <th>Project Title</th>
+                        <th>Project Leader</th>
+                        <th>Status</th>
+                        <th>Internal Funding</th>
+                        <th>External Funding</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for project in projects %}
+                    <tr>
+                        <td>{{ project.title }}</td>
+                        <td>{{ project.project_leader }}</td>
+                        <td>{{ project.status }}</td>
+                        <td>₱{{ project.internal_funding_committed|intcomma }}</td>
+                        <td>₱{{ project.external_funding_committed|intcomma }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center" style="color: #6b7280; padding: 20px;">
+                            No funded projects found for {{ college_name }} in {{ fiscal_year }}.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
