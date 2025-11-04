@@ -29,14 +29,10 @@
                 <i class="fa-solid fa-download"></i>
                 Export 
             </button>
-            <a class="export-btn view" href="{% url 'budget_history' %}">  
-                <i class="fa-solid fa-diagram-project"></i>
-                View History 
-            </a>
             {% endif %}
             {% if is_college_admin %}
             <a href="{% url 'budget_edit' %}" class="btn btn-blue">
-                Assign Project Budgets
+                College Funds
             </a>
             <a href="{% url 'budget_history' %}" class="export-btn view">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M464 128H48c-26.5 0-48 21.5-48 48v224c0 26.5 21.5 48 48 48h416c26.5 0 48-21.5 48-48V176c0-26.5-21.5-48-48-48zm-16 64v32h-40v-32h40zm-120 0v32h-40v-32h40zm-120 0v32h-40v-32h40zm-120 0v32H96v-32H56zM48 400V288h416v112H48zM416 192h48v32h-48v-32z"/></svg>
@@ -50,6 +46,10 @@
         </div>
     </div>
 
+    <div class="another-header">
+        <h2>Overview</h2>
+    </div>
+
     {% if user_role in "VP,DIRECTOR,UESO" %}
     <div class="card-group">
         <div class="new-budget-card combined-budget-card-gradient">
@@ -58,10 +58,10 @@
             </div>
             <div class="card-metric-group" style="align-items: flex-start !important;"> 
                 <h2 class="{% if pool_unallocated_remaining < 0 %}text-red{% else %}text-green{% endif %}">
-                    ₱ {{ pool_unallocated_remaining|intcomma }}
+                    ₱ {{ pool_unallocated_remaining|floatformat:0|intcomma }}
                 </h2>
             </div>
-            <span class="sub-description">Annual Budget Pool: ₱ {{ pool_available|intcomma }}</span>
+            <span class="sub-description">Annual Budget Pool: ₱ {{ pool_available|floatformat:0|intcomma }}</span>
         </div>
     </div>
 
@@ -69,31 +69,33 @@
         
         <div class="goal-card color-pink">
             <h3 style="color: white;">Assigned to Colleges</h3>
-            <p class="amount" style="color: white;">₱ {{ total_assigned_to_colleges|intcomma }}</p>
+            <p class="amount" style="color: white;">₱ {{ total_assigned_to_colleges|floatformat:0|intcomma }}</p>
             <span class="card-figure-subtext">Percentage of total pool assigned</span>
         </div>
         <div class="goal-card color-dango-green">
             <h3 style="color: white;">Committed (Internal)</h3>
-            <p class="amount" style="color: white;">₱ {{ total_committed_to_projects_agg|intcomma }}</p>
+            <p class="amount" style="color: white;">₱ {{ total_committed_to_projects_agg|floatformat:0|intcomma }}</p>
             <span class="card-figure-subtext">Funding committed from internal pool</span>
         </div>
         <div class="goal-card color-milky-white">
             <h3 style="color: #4b5563;">Committed (External)</h3>
-            <p class="amount" style="color: #111827;">₱ {{ total_external_to_projects_agg|intcomma }}</p>
+            <p class="amount" style="color: #111827;">₱ {{ total_external_to_projects_agg|floatformat:0|intcomma }}</p>
             <span class="card-figure-subtext">Funding secured from external sponsors</span>
         </div>
     </div>
 
-    <div class="table-container">
-        <div class="table-header">
-            <h2>College Budget Allocations</h2>
+    <div class="another-header">
+        <h2>College Budget Allocations</h2>
+        <div class="container-1A">
             {% if is_admin %}
-            <a href="{% url 'budget_edit' %}" class="edit-icon-btn">
-                 <i class="fas fa-pencil-alt"></i>
+            <a class="export-btn edit" href="{% url 'budget_edit' %}">  
+                <i class="fa-solid fa-pen"></i>
+                Edit 
             </a>
             {% endif %}
         </div>
-        <div class="table-wrapper">
+    </div>
+    <div class="table-container">
             <table class="user-table">
                 <thead>
                     <tr>
@@ -118,7 +120,6 @@
                     {% endfor %}
                 </tbody>
             </table>
-        </div>
     </div>
     {% endif %}
 
@@ -230,6 +231,10 @@
     </div>
     {% endif %}
 
+    <div class="another-header">
+        <h2>Additional Snippets</h2>
+    </div>
+
     <div class="bottom-grid">
         <div class="table-container"> <div class="list-card-header">
                 <h2>Recent Budget History</h2>
@@ -240,7 +245,6 @@
                 <div class="list-item">
                     <p>{{ item.description }}</p>
                     <div class="meta">
-                        <span>{{ item.user.get_full_name }}</span>
                         <span>{{ item.timestamp|date:"M d, Y P" }}</span>
                     </div>
                 </div>
@@ -265,8 +269,7 @@
                         <span class="font-bold text-purple">₱{{ project.external_budget|intcomma }}</span>
                     </div>
                     <div class="meta">
-                        <span>Sponsor: {{ project.sponsor_name|default:"N/A" }}</span>
-                        <span class="font-semibold">{{ project.get_status_display }}</span>
+                        <span>By: {{ project.sponsor_name|default:"N/A" }}</span>
                     </div>
                 </div>
                 {% empty %}

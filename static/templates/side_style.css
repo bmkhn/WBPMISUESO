@@ -42,7 +42,7 @@ body {
     position: absolute;
     top: 0;
     right: 0;
-    width: 8px;
+    width: 40px;
     cursor: ew-resize;
     background: transparent;
     height: 100%;

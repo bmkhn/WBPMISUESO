@@ -73,13 +73,11 @@
             </div>
         </div>
 
-        <div class="export">
-            <button id="exportBtn" class="export-btn">
-                <a href="{% url 'export_analytics_data' %}" id="export-button" class="action-btn">
-                    <svg width="20" height="20" style="fill: currentColor;">
-                        <use href="#file-export"/>
-                    </svg>
-                    Export
+        <div>
+            <button class="export-btn" id="exportProjectBtn" type="button">  
+                <a href="{% url 'export_analytics_data' %}" id="exportBtn">
+                    <i class="fa-solid fa-download"></i>
+                    Export 
                 </a>
             </button>
         </div>
