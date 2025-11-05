@@ -19,7 +19,7 @@
 		background-color: #e9e9e9;
 	}
 
-	main {
+	.main {
 		display: flex;
 		flex-direction: column;
 		justify-content: center;
@@ -29,7 +29,7 @@
 		background-color: #e9e9e9;
 	}
 
-	main > section {
+	.main > section {
 		display: flex;
 		flex-direction: row;
 		justify-content: flex-start;
@@ -784,7 +784,7 @@
 </head>
 <body>
 	<!-- Main Content -->
-	<main>
+	<div class="main">
 		<!-- Profile Header Section -->
 		<section style="position: relative;">
 			{% if can_edit %}
@@ -947,7 +947,7 @@
 				</div>
 			</div>
 		</section>
-	</main>
+	</div>
 
 	<!-- Image Upload Modal -->
 	<div class="modal-overlay" id="imageModalOverlay" onclick="closeImageModal()"></div>

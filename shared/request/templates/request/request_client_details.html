@@ -14,7 +14,7 @@
 </head>	
 
 <body>
-<main>
+<div class="main">
 	<div class="widgets">
 		<div class="alerts-title">My Updates</div>
 		<div class="alert-list">
@@ -32,7 +32,7 @@
 				</div>
 				{% endfor %}
 			{% else %}
-				<div class="no-data">No updates at this time</div>
+				<div class="no-data" style="margin-left: 0.8rem; margin-top: 1rem;">No updates at this time</div>
 			{% endif %}
 		</div>
 	</div>
@@ -227,7 +227,7 @@
 			
 		</div>
 	</div>
-</main>
+</div>
 
 <script>
 	// Default: Progress Mode unless status is RECEIVED, then only show details

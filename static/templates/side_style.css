@@ -203,6 +203,7 @@ body {
     visibility: hidden;
     transition: opacity 0.4s ease, visibility 0.4s ease;
     z-index: 1000;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.08);
     background-color: #00681a; 
 }
 

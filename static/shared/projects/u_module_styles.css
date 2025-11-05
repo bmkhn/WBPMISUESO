@@ -7,7 +7,7 @@ body {
     font-family: 'Inter', sans-serif;
 }
 
-main {
+.main {
     display: flex;
     flex-direction: row;
     gap: 35px;
@@ -460,7 +460,7 @@ button:hover {
 
 .alerts-title {
     font-size: 20px;
-    font-weight: 100;
+    font-weight: 400;
     margin: 10px 10px 0 20px;
     color: #063A1C;
 }

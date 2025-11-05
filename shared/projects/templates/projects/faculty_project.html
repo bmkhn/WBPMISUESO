@@ -14,7 +14,7 @@
 
 <body>
 
-<main>
+<div class="main">
 	<div class="widgets">
 		<div class="alerts-title">My Alerts</div>
 		<div class="alerts-list">
@@ -36,49 +36,6 @@
 			{% endif %}
 		</div>
 	</div>
-	
-	<style>
-	.alert-item {
-		padding: 15px;
-		border-bottom: 1px solid #f0f0f0;
-		display: flex;
-		flex-direction: column;
-		gap: 5px;
-		transition: background 0.2s;
-		cursor: pointer;
-	}
-
-	.alert-item:last-child {
-		border-bottom: none;
-	}
-
-	.alert-item:hover {
-		background: #f9f9f9;
-	}
-
-	.alert-project {
-		font-weight: 600;
-		color: #063A1C;
-		font-size: 14px;
-	}
-
-	.alert-status {
-		font-size: 13px;
-		color: #666;
-	}
-
-	.alert-date {
-		font-size: 12px;
-		color: #999;
-	}
-	
-	.no-data {
-		text-align: center;
-		color: #999;
-		padding: 30px;
-		font-size: 14px;
-	}
-	</style>
 
 	<div class="list">
 
@@ -206,11 +163,11 @@
 
 		</div>
 	</div>
-</main>
+</div>
 
 
 <!-- SVG Icons -->
-<svg>
+<svg style="display: none;">
 
 	<!-- Search -->
 	<symbol id="icon-search" viewBox="0 0 21 21" fill="none">
