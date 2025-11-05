@@ -4,6 +4,7 @@ from django.dispatch import receiver
 from django.conf import settings
 from system.logs.models import LogEntry
 from django.urls import reverse
+from django.templatetags.static import static
 
 class AboutUs(models.Model):
 	hero_text = models.TextField(
@@ -32,11 +33,20 @@ class AboutUs(models.Model):
 		default="Our leadership team is committed to excellence in extension services, guided by principles of integrity, innovation, and inclusive development. We work collaboratively to ensure that university resources reach and benefit the wider community."
 	)
 	director_name = models.CharField(max_length=255, blank=True, null=True, default="Dr. Liezl F. Tangonan")
-	director_image = models.ImageField(upload_to='about_us/director/', blank=True, null=True, default='static/image.png')
-	org_chart_image = models.ImageField(upload_to='about_us/org_chart/', blank=True, null=True, default='static/UESO ORG CHART.png')
+	director_image = models.ImageField(upload_to='about_us/director/', blank=True, null=True, default='faker/image.png')
+	org_chart_image = models.ImageField(upload_to='about_us/org_chart/', blank=True, null=True, default='faker/UESO ORG CHART.png')
     
 	edited_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, blank=True, null=True, related_name='aboutus_edits')
 	edited_at = models.DateTimeField(auto_now=True)
+
+
+	def get_image_url(self):
+		'''Return the director image URL or org chart image URL or default image'''
+		if self.director_image and hasattr(self.director_image, 'url'):
+			return self.director_image.url
+		if self.org_chart_image and hasattr(self.org_chart_image, 'url'):
+			return self.org_chart_image.url
+		return 'faker/image.png'
 
 	class Meta:
 		indexes = [

@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
 from system.users.models import College, Campus
-from shared.projects.models import Project, ProjectDocument, ProjectEvent, SustainableDevelopmentGoal
+from shared.projects.models import Project, ProjectDocument, ProjectEvaluation, ProjectEvent, SustainableDevelopmentGoal
 from internal.submissions.models import Submission
 from shared.downloadables.models import Downloadable
 from internal.agenda.models import Agenda
@@ -21,7 +21,7 @@ class Command(BaseCommand):
     help = "Generate accurate test data with proper relationships and realistic statuses"
 
     def handle(self, *args, **kwargs):
-        self.stdout.write(self.style.WARNING('Starting accurate asset generation...'))
+        self.stdout.write(self.style.WARNING('Starting accurate asset generation...\n'))
 
         faculty_user_count = 50
         client_user_count = 10
@@ -133,7 +133,14 @@ class Command(BaseCommand):
             last_name = fake.last_name()
             email = fake.unique.email()
             base_username = email.split('@')[0]
+            
+            # Ensure unique username by appending number if needed
             username = base_username
+            counter = 1
+            while User.objects.filter(username=username).exists():
+                username = f"{base_username}{counter}"
+                counter += 1
+            
             degree, expertise = random.choice(degree_expertise_pairs)
             if not User.objects.filter(email=email).exists():
                 user = User.objects.create_user(
@@ -148,7 +155,7 @@ class Command(BaseCommand):
                     college=random.choice(colleges),
                     role=User.Role.FACULTY,
                     degree=degree,
-					expertise=expertise,
+                    expertise=expertise,
                     is_confirmed=True,
                     created_by=director,
                     created_at=timezone.now()
@@ -156,7 +163,7 @@ class Command(BaseCommand):
                 faculty_users.append(user)
             else:
                 faculty_users.append(User.objects.get(email=email))
-        self.stdout.write(self.style.SUCCESS(f"Created {len(faculty_users)} faculty users."))
+        self.stdout.write(self.style.SUCCESS(f"Created {len(faculty_users)} faculty users.\n"))
 
         
         # Create X Client users (using Faker)
@@ -167,7 +174,14 @@ class Command(BaseCommand):
             last_name = fake.last_name()
             email = fake.unique.email()
             base_username = email.split('@')[0]
+            
+            # Ensure unique username by appending number if needed
             username = base_username
+            counter = 1
+            while User.objects.filter(username=username).exists():
+                username = f"{base_username}{counter}"
+                counter += 1
+            
             if not User.objects.filter(email=email).exists():
                 user = User.objects.create_user(
                     username=username,
@@ -238,7 +252,11 @@ class Command(BaseCommand):
                 
                 request_count += 1
         
-        self.stdout.write(self.style.SUCCESS(f"Created {request_count} client requests."))
+        self.stdout.write(self.style.SUCCESS(f"Created {request_count} client requests.\n"))
+
+
+#################################################################################################################################################################################
+
 
         # Get submission type downloadables
         file_templates = list(Downloadable.objects.filter(submission_type='file', is_submission_template=True))
@@ -246,7 +264,7 @@ class Command(BaseCommand):
         final_templates = list(Downloadable.objects.filter(submission_type='final', is_submission_template=True))
         
         # Create projects with different statuses
-        self.stdout.write('\nCreating projects with realistic statuses...')
+        self.stdout.write('Creating projects with realistic statuses...')
         
         now = timezone.now()
         project_count = 0
@@ -259,6 +277,17 @@ class Command(BaseCommand):
             leader = random.choice([u for u in faculty_users if u.role not in [User.Role.IMPLEMENTER, User.Role.CLIENT]])
             providers = random.sample(faculty_users, k=random.randint(2, 5))
             
+            logistics_type = random.choice(['INTERNAL', 'EXTERNAL', 'BOTH'])
+            if logistics_type == 'EXTERNAL':
+                sponsor_name = fake.company()
+                external_budget = random.randint(50000, 150000)
+            elif logistics_type == 'INTERNAL':
+                internal_budget = random.randint(50000, 200000)
+            elif logistics_type == 'BOTH':
+                sponsor_name = fake.company()
+                internal_budget = random.randint(50000, 150000)
+                external_budget = random.randint(50000, 150000)
+
             project = Project.objects.create(
                 title=f"{fake.catch_phrase()} - {random.choice(['Training Program', 'Workshop Series', 'Community Seminar', 'Extension Service'])}",
                 project_leader=leader,
@@ -270,9 +299,10 @@ class Command(BaseCommand):
                 total_trained_individuals=0,
                 primary_beneficiary=random.choice(['Students', 'Farmers', 'Teachers', 'Community Members', 'LGU Officials']),
                 primary_location=random.choice(['Puerto Princesa', 'Roxas', 'Taytay', 'Coron', 'El Nido']),
-                logistics_type=random.choice(['INTERNAL', 'EXTERNAL', 'BOTH']),
-                internal_budget=random.randint(50000, 200000),
-                external_budget=random.randint(0, 150000) if random.random() > 0.5 else 0,
+                logistics_type=logistics_type,
+                internal_budget=internal_budget if logistics_type in ['INTERNAL', 'BOTH'] else 0,
+                external_budget=external_budget if logistics_type in ['EXTERNAL', 'BOTH'] else 0,
+                sponsor_name=sponsor_name if logistics_type in ['EXTERNAL', 'BOTH'] else '',
                 start_date=start_date,
                 estimated_end_date=end_date,
                 status='NOT_STARTED',
@@ -322,6 +352,17 @@ class Command(BaseCommand):
             
             estimated_events = random.randint(4, 8)
             completed_events = random.randint(1, estimated_events - 1)  # Some completed, some remaining
+
+            logistics_type = random.choice(['INTERNAL', 'EXTERNAL', 'BOTH'])
+            if logistics_type == 'EXTERNAL':
+                sponsor_name = fake.company()
+                external_budget = random.randint(50000, 150000)
+            elif logistics_type == 'INTERNAL':
+                internal_budget = random.randint(50000, 200000)
+            elif logistics_type == 'BOTH':
+                sponsor_name = fake.company()
+                internal_budget = random.randint(50000, 150000)
+                external_budget = random.randint(50000, 150000)
             
             project = Project.objects.create(
                 title=f"{fake.catch_phrase()} - {random.choice(['Skills Training', 'Community Workshop', 'Extension Program', 'Outreach Activity'])}",
@@ -334,9 +375,10 @@ class Command(BaseCommand):
                 total_trained_individuals=random.randint(20, 100),
                 primary_beneficiary=random.choice(['Students', 'Farmers', 'Teachers', 'Community Members', 'LGU Officials', 'Barangay Officials']),
                 primary_location=random.choice(['Puerto Princesa', 'Roxas', 'Taytay', 'Coron', 'El Nido', 'San Vicente', 'Brooke\'s Point']),
-                logistics_type=random.choice(['INTERNAL', 'EXTERNAL', 'BOTH']),
-                internal_budget=random.randint(50000, 300000),
-                external_budget=random.randint(0, 200000) if random.random() > 0.5 else 0,
+                logistics_type=logistics_type,
+                internal_budget=internal_budget if logistics_type in ['INTERNAL', 'BOTH'] else 0,
+                external_budget=external_budget if logistics_type in ['EXTERNAL', 'BOTH'] else 0,
+                sponsor_name=sponsor_name if logistics_type in ['EXTERNAL', 'BOTH'] else '',
                 start_date=start_date,
                 estimated_end_date=end_date,
                 status='IN_PROGRESS',
@@ -386,8 +428,8 @@ class Command(BaseCommand):
                 
                 event = ProjectEvent.objects.create(
                     project=project,
-                    title=f"Event {j+1}: {random.choice(['Training Session', 'Workshop', 'Seminar', 'Consultation', 'Field Visit'])}",
-                    description=f"Activity description for event {j+1}",
+                    title=f"{random.choice(['Training Session', 'Workshop', 'Seminar', 'Consultation', 'Field Visit'])}",
+                    description=f"A description of an activity for {project.title}",
                     datetime=event_date,
                     location=project.primary_location,
                     status=event_status,
@@ -503,6 +545,17 @@ class Command(BaseCommand):
             providers = random.sample(faculty_users, k=random.randint(2, 5))
             
             estimated_events = random.randint(3, 6)
+
+            logistics_type = random.choice(['INTERNAL', 'EXTERNAL', 'BOTH'])
+            if logistics_type == 'EXTERNAL':
+                sponsor_name = fake.company()
+                external_budget = random.randint(50000, 150000)
+            elif logistics_type == 'INTERNAL':
+                internal_budget = random.randint(50000, 200000)
+            elif logistics_type == 'BOTH':
+                sponsor_name = fake.company()
+                internal_budget = random.randint(50000, 150000)
+                external_budget = random.randint(50000, 150000)
             
             project = Project.objects.create(
                 title=f"{fake.catch_phrase()} - {random.choice(['Community Development', 'Skills Enhancement', 'Livelihood Program', 'Health Initiative'])}",
@@ -515,9 +568,10 @@ class Command(BaseCommand):
                 total_trained_individuals=random.randint(100, 300),
                 primary_beneficiary=random.choice(['Students', 'Farmers', 'Teachers', 'Community Members', 'LGU Officials', 'Indigenous Groups']),
                 primary_location=random.choice(['Puerto Princesa', 'Roxas', 'Taytay', 'Coron', 'El Nido', 'Narra', 'Quezon']),
-                logistics_type=random.choice(['INTERNAL', 'EXTERNAL', 'BOTH']),
-                internal_budget=random.randint(100000, 400000),
-                external_budget=random.randint(0, 300000) if random.random() > 0.5 else 0,
+                logistics_type=logistics_type,
+                internal_budget=internal_budget if logistics_type in ['INTERNAL', 'BOTH'] else 0,
+                external_budget=external_budget if logistics_type in ['EXTERNAL', 'BOTH'] else 0,
+                sponsor_name=sponsor_name if logistics_type in ['EXTERNAL', 'BOTH'] else '',
                 start_date=start_date,
                 estimated_end_date=end_date,
                 status='COMPLETED',
@@ -560,8 +614,8 @@ class Command(BaseCommand):
                 
                 event = ProjectEvent.objects.create(
                     project=project,
-                    title=f"Event {j+1}: {random.choice(['Training Session', 'Workshop', 'Seminar', 'Technical Assistance', 'Monitoring Visit'])}",
-                    description=f"Completed activity for {project.title}",
+                    title=f"{random.choice(['Training Session', 'Workshop', 'Seminar', 'Technical Assistance', 'Monitoring Visit'])}",
+                    description=f"A description of an activity for {project.title}",
                     datetime=event_date,
                     location=project.primary_location,
                     status='COMPLETED',
@@ -683,8 +737,20 @@ class Command(BaseCommand):
                     with open(faker_final_path, 'rb') as f:
                         submission.file.save('Faker Final.docx', File(f), save=True)
             
+            project_evaluation_count = random.randint(1, 5)
+            random_rating = random.randint(1, 5)
+
+            for i in range(1, project_evaluation_count + 1):
+                ProjectEvaluation.objects.create(
+                    project=project,
+                    rating=random_rating,
+                    comment="Computer-Generated Evaluation Comment with a rating of " + str(random_rating),
+                    evaluated_by=director,
+                    created_at=timezone.now() - timedelta(days=random.randint(1, 30)),
+                )
+
             project_count += 1
-            self.stdout.write(self.style.SUCCESS(f"  Created COMPLETED project: {project.title} (All {estimated_events} events completed)"))
+            self.stdout.write(self.style.SUCCESS(f"  Created COMPLETED project: {project.title} (All {estimated_events} events completed with evaluations)"))
 
   
 #################################################################################################################################################################################
@@ -700,6 +766,17 @@ class Command(BaseCommand):
             leader = User.objects.filter(role=User.Role.FACULTY).first()
             providers = random.sample(faculty_users, k=min(random.randint(2, 5), len(faculty_users)))
 
+            logistics_type = random.choice(['INTERNAL', 'EXTERNAL', 'BOTH'])
+            if logistics_type == 'EXTERNAL':
+                sponsor_name = fake.company()
+                external_budget = random.randint(50000, 150000)
+            elif logistics_type == 'INTERNAL':
+                internal_budget = random.randint(50000, 200000)
+            elif logistics_type == 'BOTH':
+                sponsor_name = fake.company()
+                internal_budget = random.randint(50000, 150000)
+                external_budget = random.randint(50000, 150000)
+
             project = Project.objects.create(
                 title=f"{fake.catch_phrase()} - {random.choice(['Training Program', 'Workshop Series', 'Community Seminar', 'Extension Service'])}",
                 project_leader=leader,
@@ -711,9 +788,10 @@ class Command(BaseCommand):
                 total_trained_individuals=0,
                 primary_beneficiary=random.choice(['Students', 'Farmers', 'Teachers', 'Community Members', 'LGU Officials']),
                 primary_location=random.choice(['Puerto Princesa', 'Roxas', 'Taytay', 'Coron', 'El Nido']),
-                logistics_type=random.choice(['INTERNAL', 'EXTERNAL', 'BOTH']),
-                internal_budget=random.randint(50000, 200000),
-                external_budget=random.randint(0, 150000) if random.random() > 0.5 else 0,
+                logistics_type=logistics_type,
+                internal_budget=internal_budget if logistics_type in ['INTERNAL', 'BOTH'] else 0,
+                external_budget=external_budget if logistics_type in ['EXTERNAL', 'BOTH'] else 0,
+                sponsor_name=sponsor_name if logistics_type in ['EXTERNAL', 'BOTH'] else '',
                 start_date=start_date,
                 estimated_end_date=end_date,
                 status='NOT_STARTED',
@@ -763,7 +841,18 @@ class Command(BaseCommand):
             
             estimated_events = random.randint(4, 8)
             completed_events = random.randint(1, estimated_events - 1)  # Some completed, some remaining
-            
+
+            logistics_type = random.choice(['INTERNAL', 'EXTERNAL', 'BOTH'])
+            if logistics_type == 'EXTERNAL':
+                sponsor_name = fake.company()
+                external_budget = random.randint(50000, 150000)
+            elif logistics_type == 'INTERNAL':
+                internal_budget = random.randint(50000, 200000)
+            elif logistics_type == 'BOTH':
+                sponsor_name = fake.company()
+                internal_budget = random.randint(50000, 150000)
+                external_budget = random.randint(50000, 150000)
+
             project = Project.objects.create(
                 title=f"{fake.catch_phrase()} - {random.choice(['Skills Training', 'Community Workshop', 'Extension Program', 'Outreach Activity'])}",
                 project_leader=leader,
@@ -775,9 +864,10 @@ class Command(BaseCommand):
                 total_trained_individuals=random.randint(20, 100),
                 primary_beneficiary=random.choice(['Students', 'Farmers', 'Teachers', 'Community Members', 'LGU Officials', 'Barangay Officials']),
                 primary_location=random.choice(['Puerto Princesa', 'Roxas', 'Taytay', 'Coron', 'El Nido', 'San Vicente', 'Brooke\'s Point']),
-                logistics_type=random.choice(['INTERNAL', 'EXTERNAL', 'BOTH']),
-                internal_budget=random.randint(50000, 300000),
-                external_budget=random.randint(0, 200000) if random.random() > 0.5 else 0,
+                logistics_type=logistics_type,
+                internal_budget=internal_budget if logistics_type in ['INTERNAL', 'BOTH'] else 0,
+                external_budget=external_budget if logistics_type in ['EXTERNAL', 'BOTH'] else 0,
+                sponsor_name=sponsor_name if logistics_type in ['EXTERNAL', 'BOTH'] else '',
                 start_date=start_date,
                 estimated_end_date=end_date,
                 status='IN_PROGRESS',
@@ -827,8 +917,8 @@ class Command(BaseCommand):
                 
                 event = ProjectEvent.objects.create(
                     project=project,
-                    title=f"Event {j+1}: {random.choice(['Training Session', 'Workshop', 'Seminar', 'Consultation', 'Field Visit'])}",
-                    description=f"Activity description for event {j+1}",
+                    title=f"{random.choice(['Training Session', 'Workshop', 'Seminar', 'Consultation', 'Field Visit'])}",
+                    description=f"A description of an activity for {project.title}",
                     datetime=event_date,
                     location=project.primary_location,
                     status=event_status,
@@ -944,7 +1034,18 @@ class Command(BaseCommand):
             providers = random.sample(faculty_users, k=min(random.randint(2, 5), len(faculty_users)))
             
             estimated_events = random.randint(3, 6)
-            
+
+            logistics_type = random.choice(['INTERNAL', 'EXTERNAL', 'BOTH'])
+            if logistics_type == 'EXTERNAL':
+                sponsor_name = fake.company()
+                external_budget = random.randint(50000, 150000)
+            elif logistics_type == 'INTERNAL':
+                internal_budget = random.randint(50000, 200000)
+            elif logistics_type == 'BOTH':
+                sponsor_name = fake.company()
+                internal_budget = random.randint(50000, 150000)
+                external_budget = random.randint(50000, 150000)
+
             project = Project.objects.create(
                 title=f"{fake.catch_phrase()} - {random.choice(['Community Development', 'Skills Enhancement', 'Livelihood Program', 'Health Initiative'])}",
                 project_leader=leader,
@@ -956,9 +1057,10 @@ class Command(BaseCommand):
                 total_trained_individuals=random.randint(100, 300),
                 primary_beneficiary=random.choice(['Students', 'Farmers', 'Teachers', 'Community Members', 'LGU Officials', 'Indigenous Groups']),
                 primary_location=random.choice(['Puerto Princesa', 'Roxas', 'Taytay', 'Coron', 'El Nido', 'Narra', 'Quezon']),
-                logistics_type=random.choice(['INTERNAL', 'EXTERNAL', 'BOTH']),
-                internal_budget=random.randint(100000, 400000),
-                external_budget=random.randint(0, 300000) if random.random() > 0.5 else 0,
+                logistics_type=logistics_type,
+                internal_budget=internal_budget if logistics_type in ['INTERNAL', 'BOTH'] else 0,
+                external_budget=external_budget if logistics_type in ['EXTERNAL', 'BOTH'] else 0,
+                sponsor_name=sponsor_name if logistics_type in ['EXTERNAL', 'BOTH'] else '',
                 start_date=start_date,
                 estimated_end_date=end_date,
                 status='COMPLETED',
@@ -1001,8 +1103,8 @@ class Command(BaseCommand):
                 
                 event = ProjectEvent.objects.create(
                     project=project,
-                    title=f"Event {j+1}: {random.choice(['Training Session', 'Workshop', 'Seminar', 'Technical Assistance', 'Monitoring Visit'])}",
-                    description=f"Completed activity for {project.title}",
+                    title=f"{random.choice(['Training Session', 'Workshop', 'Seminar', 'Technical Assistance', 'Monitoring Visit'])}",
+                    description=f"A description of an activity for {project.title}",
                     datetime=event_date,
                     location=project.primary_location,
                     status='COMPLETED',
@@ -1124,9 +1226,20 @@ class Command(BaseCommand):
                     with open(faker_final_path, 'rb') as f:
                         submission.file.save('Faker Final.docx', File(f), save=True)
             
+            project_evaluation_count = random.randint(1, 5)
+            random_rating = random.randint(1, 5)
+
+            for i in range(1, project_evaluation_count + 1):
+                ProjectEvaluation.objects.create(
+                    project=project,
+                    rating=random_rating,
+                    comment="Computer-Generated Evaluation Comment with a rating of " + str(random_rating),
+                    evaluated_by=director,
+                    created_at=timezone.now() - timedelta(days=random.randint(1, 30)),
+                )
+
             project_count += 1
-            self.stdout.write(self.style.SUCCESS(f"  Created COMPLETED project: {project.title} (All {estimated_events} events completed)"))
-        
+            self.stdout.write(self.style.SUCCESS(f"  Created COMPLETED project: {project.title} (All {estimated_events} events completed with evaluations)"))
 
 
         self.stdout.write(self.style.SUCCESS(f'\n✅ Successfully created {project_count} projects with realistic data!'))
