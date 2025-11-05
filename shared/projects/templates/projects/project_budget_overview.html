@@ -1,0 +1,13 @@
+{% extends base_template %}
+{% load static humanize %}
+
+{% block title %}Project Budget{% if project %} - {{ project.title }}{% endif %}{% endblock %}
+
+{% block content %}
+<div style="padding:1rem 1.25rem;">
+    <h1 style="margin:0 0 1rem 0; font-size:1.25rem;">Project Budget Overview</h1>
+    <p style="color:#6b7280;">This page will show overview and files for the project budget.</p>
+</div>
+{% endblock %}
+
+

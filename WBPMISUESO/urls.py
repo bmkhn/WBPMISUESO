@@ -40,6 +40,7 @@ urlpatterns = [
     path('calendar/', include('shared.event_calendar.urls')),       # Calendar
     path('downloadables/', include('shared.downloadables.urls')),   # Downloadables
     path('projects/', include('shared.projects.urls')),             # Projects
+    path('expenses/', include('shared.budget.expenses_urls')),      # Expenses (faculty budget)
     path('requests/', include('shared.request.urls')),              # Requests
 
     # SYSTEM APPS

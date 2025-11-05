@@ -2,6 +2,7 @@ import os
 from django.db import models
 from django.conf import settings
 from internal.agenda.models import Agenda
+from django.utils import timezone
 
 
 
@@ -327,6 +328,28 @@ def log_project_provider_added(sender, instance, action, pk_set, **kwargs):
 
 #############################################################################################################################################################################################################
 
+def project_expense_upload_to(instance, filename):
+    project_id = getattr(instance.project, 'id', None)
+    if project_id:
+        return f"projects/{project_id}/expenses/{filename}"
+    return f"projects/unknown/expenses/{filename}"
+
+class ProjectExpense(models.Model):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='expenses')
+    title = models.CharField(max_length=255)
+    reason = models.TextField(blank=True, null=True)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    date_incurred = models.DateField(default=timezone.now)
+    receipt = models.FileField(upload_to=project_expense_upload_to, blank=True, null=True)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='created_expenses')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.title} for {self.project.title} - ₱{self.amount}"
+
+#############################################################################################################################################################################################################
+
+
 class ProjectEvaluation(models.Model):
 	project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='evaluations')
 	evaluated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='project_evaluations')
@@ -467,7 +490,6 @@ from django.dispatch import receiver
 def create_project_alerts(sender, instance, created, **kwargs):
     """Create project alerts when project status changes"""
     if not created and hasattr(instance, '_old_status') and instance._old_status != instance.status:
-        from django.utils import timezone
         # Notify project leader and providers about status changes
         users_to_notify = [instance.project_leader]
         if instance.providers.exists():

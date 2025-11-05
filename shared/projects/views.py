@@ -1,7 +1,11 @@
 from django.shortcuts import get_object_or_404, render, redirect
 from shared import request
 from system.users.decorators import role_required, project_visibility_required
-from .models import SustainableDevelopmentGoal, Project, ProjectEvaluation, ProjectEvent, ProjectUpdate, ProjectExpenses
+<<<<<<< HEAD
+from .models import SustainableDevelopmentGoal, Project, ProjectEvaluation, ProjectEvent, ProjectUpdate, ProjectExpense
+=======
+from .models import SustainableDevelopmentGoal, Project, ProjectEvaluation, ProjectEvent, ProjectUpdate, ProjectExpense
+>>>>>>> 1dfb681 (feat(expenses): faculty budget pages, project expenses, dynamic charts)
 from internal.goals.models import Goal
 from internal.submissions.models import Submission
 from system.users.models import College, User, Campus
@@ -792,55 +796,61 @@ def project_expenses(request, pk):
         base_template = "base_public.html"
 
     project = get_object_or_404(Project, pk=pk)
-    
-    # Check if user has permission to view expenses
-    is_admin = user_role in ADMIN_ROLES
-    is_project_member = (
-        request.user.is_authenticated and 
-        (request.user.id == project.project_leader.id if project.project_leader else False or
-         project.providers.filter(id=request.user.id).exists())
-    )
-    
-    # Redirect if user doesn't have permission
-    if not (is_admin or is_project_member):
-        messages.error(request, "You don't have permission to view expenses for this project.")
-        return redirect('project_profile', pk=pk)
-    
-    # Handle POST request - Add new expense (project members can add)
-    if request.method == 'POST' and is_project_member and not project.has_final_submission:
-        reason = request.POST.get('reason', '').strip()
-        amount = request.POST.get('amount', '').strip()
-        expense_date = request.POST.get('expense_date', '').strip()
-        description = request.POST.get('description', '').strip()
-        receipt_img = request.FILES.get('receipt_img')
-        
-        if reason and amount and expense_date:
+
+    # Handle expense creation
+    if request.method == 'POST' and request.user.is_authenticated:
+        title = request.POST.get('reason') or request.POST.get('title')
+        notes = request.POST.get('notes')
+        amount_raw = request.POST.get('amount')
+        receipt = request.FILES.get('receipt')
+        try:
+            amount_val = float(amount_raw or 0)
+        except Exception:
+            amount_val = 0
+        if title and amount_val > 0:
+            ProjectExpense.objects.create(
+                project=project,
+                title=title,
+                reason=notes,
+                amount=amount_val,
+                receipt=receipt,
+                created_by=request.user,
+            )
+            # Recompute used_budget as sum of expenses
             try:
-                ProjectExpenses.objects.create(
-                    project=project,
-                    reason=reason,
-                    amount=amount,
-                    expense_date=expense_date,
-                    description=description,
-                    receipt_img=receipt_img,
-                    created_by=request.user
-                )
-                messages.success(request, "Expense added successfully.")
-            except Exception as e:
-                messages.error(request, f"Error adding expense: {str(e)}")
-        else:
-            messages.error(request, "Please fill in all required fields (Reason, Amount, Date).")
-        
-        return redirect('project_expenses', pk=pk)
-    
-    # Fetch actual expenses from database
-    expenses = project.expenses.select_related('created_by').order_by('-expense_date', '-created_at')
-    
+                from django.db.models import Sum
+                agg = ProjectExpense.objects.filter(project=project).aggregate(s=Sum('amount'))
+                project.used_budget = agg.get('s') or 0
+                project.save(update_fields=['used_budget'])
+            except Exception:
+                pass
+            return redirect(request.path)
+
+    # Dynamic budget figures based on Project fields
+    try:
+        total_budget = (project.internal_budget or 0) + (project.external_budget or 0)
+    except Exception:
+        total_budget = 0
+    try:
+        spent_total = project.used_budget or 0
+    except Exception:
+        spent_total = 0
+    remaining_total = max(0, total_budget - spent_total)
+    percent_remaining = 0
+    if total_budget:
+        try:
+            percent_remaining = int(round((remaining_total / total_budget) * 100))
+        except Exception:
+            percent_remaining = 0
+
+    # Expenses data
+    expenses = ProjectExpense.objects.filter(project=project).order_by('-date_incurred', '-created_at')
     return render(request, 'projects/project_expenses.html', {
         'project': project, 
         'base_template': base_template,
         'expenses': expenses,
-        'is_project_member': is_project_member,
+        'remaining_total': remaining_total,
+        'percent_remaining': percent_remaining,
         "ADMIN_ROLES": ADMIN_ROLES,
         "SUPERUSER_ROLES": SUPERUSER_ROLES,
         "FACULTY_ROLE": FACULTY_ROLE

@@ -11,7 +11,7 @@ from django.db.models.functions import Coalesce, TruncMonth
 
 from system.users.decorators import role_required
 from system.users.models import College
-from shared.projects.models import Project
+from shared.projects.models import Project, ProjectExpense
 
 from .models import CollegeBudget, BudgetPool, ExternalFunding, BudgetHistory
 
@@ -623,6 +623,69 @@ def _update_project_internal_budget(user, project_id, new_internal_budget):
     return project
 
 
+@role_required(["FACULTY", "IMPLEMENTER"], require_confirmed=True)
+def faculty_project_budget_view(request, pk):
+    base_template = get_templates(request)
+    project = get_object_or_404(Project, pk=pk)
+
+    # Handle add expense POST
+    if request.method == 'POST':
+        title = request.POST.get('reason') or request.POST.get('title')
+        notes = request.POST.get('notes')
+        amount_raw = request.POST.get('amount')
+        receipt = request.FILES.get('receipt')
+        try:
+            amount_val = Decimal(str(amount_raw))
+        except Exception:
+            amount_val = Decimal('0')
+        if title and amount_val > 0:
+            try:
+                ProjectExpense.objects.create(
+                    project=project,
+                    title=title,
+                    reason=notes,
+                    amount=amount_val,
+                    receipt=receipt,
+                    created_by=request.user,
+                )
+                # Log history
+                try:
+                    BudgetHistory.objects.create(
+                        action='SPENT',
+                        amount=amount_val,
+                        description=f'Expense recorded for {project.title}: ₱{amount_val:,.2f} - {title}',
+                        user=request.user
+                    )
+                except Exception:
+                    pass
+            except Exception:
+                pass
+            return redirect('faculty_project_budget', pk=project.id)
+
+    expenses_qs = ProjectExpense.objects.filter(project=project).order_by('-date_incurred', '-created_at')
+
+    total_budget = (project.internal_budget or Decimal('0')) + (project.external_budget or Decimal('0'))
+    spent_total = expenses_qs.aggregate(s=Sum('amount'))['s'] or Decimal('0')
+    remaining_total = max(Decimal('0'), total_budget - spent_total)
+    percent_remaining = int(round(((remaining_total / total_budget) * 100))) if total_budget else 0
+
+    chart_data = {
+        'labels': ['Remaining', 'Spent'],
+        'data': [float(remaining_total), float(spent_total)],
+        'colors': ['#16a34a', '#d1d5db']
+    }
+
+    return render(request, 'budget/faculty_project_budget.html', {
+        'base_template': base_template,
+        'project': project,
+        'expenses': expenses_qs,
+        'budget_total': total_budget,
+        'spent_total': spent_total,
+        'remaining_total': remaining_total,
+        'percent_remaining': percent_remaining,
+        'chart_data_json': json.dumps(chart_data),
+    })
+
 def get_templates(request):
     user_role = getattr(request.user, 'role', None)
     if user_role in ["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
@@ -644,6 +707,76 @@ def budget_view(request):
         context = _get_college_dashboard_data(request.user, current_year)
     elif user_role in ["FACULTY", "IMPLEMENTER"]:
         context = _get_faculty_dashboard_data(request.user)
+        # Build faculty dashboard extras expected by template
+        user = request.user
+        # Projects overview with percent remaining
+        user_projects = Project.objects.filter(
+            Q(project_leader=user) | Q(providers=user)
+        ).distinct().order_by('-updated_at')
+
+        projects_overview = []
+        for p in user_projects:
+            total_budget = (p.internal_budget or 0) + (p.external_budget or 0)
+            spent_total = p.used_budget or 0
+            remaining = float(total_budget) - float(spent_total)
+            percent_remaining = 0
+            if total_budget:
+                try:
+                    percent_remaining = int(round((remaining / float(total_budget)) * 100))
+                except Exception:
+                    percent_remaining = 0
+            projects_overview.append({
+                'id': p.id,
+                'title': p.title,
+                'last_updated': p.updated_at,
+                'percent_remaining': max(0, min(100, percent_remaining)),
+                'providers': [
+                    {
+                        'name': u.get_full_name() or u.username,
+                        'avatar': getattr(u, 'profile_picture_or_initial', '')
+                    } for u in list(p.providers.all())[:3]
+                ]
+            })
+        context['projects_overview'] = projects_overview
+
+        # Recent expenses logs across user's projects
+        recent_expenses = ProjectExpense.objects.filter(project__in=user_projects).select_related('project').order_by('-created_at')[:10]
+        context['recent_expenses'] = recent_expenses
+
+        # College budget donut data
+        current_budget_total = 0
+        percent_less_mean = 0
+        try:
+            user_college = getattr(user, 'college', None)
+            fiscal_year = get_current_fiscal_year()
+            if user_college:
+                cb = CollegeBudget.objects.filter(college=user_college, fiscal_year=fiscal_year, status='ACTIVE').first()
+                if cb:
+                    # Prefer the model's tracked commitment if present; otherwise compute
+                    committed_internal = getattr(cb, 'total_committed_to_projects', None)
+                    if committed_internal is None:
+                        committed_internal = Project.objects.filter(
+                            project_leader__college=user_college,
+                            start_date__year=int(fiscal_year)
+                        ).aggregate(s=Coalesce(Sum('internal_budget'), Value(Decimal('0.0'))))['s']
+                    committed_internal = committed_internal or Decimal('0')
+                    total_assigned = cb.total_assigned or Decimal('0')
+                    remaining = max(Decimal('0'), total_assigned - committed_internal)
+                    current_budget_total = remaining
+                    context['chart_data_json'] = json.dumps({
+                        'labels': ['Remaining', 'Committed'],
+                        'data': [float(remaining), float(committed_internal)],
+                        'colors': ['#16a34a', '#d1d5db']
+                    })
+                    # Minimal historical stub (optional)
+                    context['historical_data_json'] = json.dumps({ 'labels': [], 'data': [], 'color': '#0f3ea3' })
+                    context['has_college_budget'] = True
+                else:
+                    context['has_college_budget'] = False
+        except Exception:
+            context['has_college_budget'] = False
+        context['current_budget_total'] = current_budget_total
+        context['percent_less_mean'] = percent_less_mean
     else:
         context = {"is_setup": False, "error": "Invalid User Role"}
 
@@ -680,6 +813,9 @@ def budget_view(request):
 
         return render(request, 'budget/no_budget_setup.html', context)
 
+    # Render template based on role: use dedicated faculty dashboard for Faculty/Implementer
+    if user_role in ["FACULTY", "IMPLEMENTER"]:
+        return render(request, 'budget/faculty_budget.html', context)
     return render(request, 'budget/budget.html', context)
 
 

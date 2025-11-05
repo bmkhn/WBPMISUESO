@@ -1,115 +1,180 @@
 {% extends "projects/base_project_profile.html" %}
 {% block profile_content %}
-{% load static %} 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+{% load static humanize %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
 <link href="{% static 'shared/projects/view.css' %}" rel="stylesheet">
 
+<style>
+    .project-grid{display:grid;grid-template-columns:1fr 1.3fr;gap:1rem}
+    .chart-container{width:100%;height:260px}
+    .expense-card{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,0.04);width:100%;font-size:.9rem}
+    .expense-header,.expense-row{display:grid;grid-template-columns:minmax(240px,1fr) 150px 170px;column-gap:10px;align-items:center}
+    .expense-header{background:#f7f8fa;color:#111;font-weight:600;padding:.6rem .8rem;border-bottom:1px solid #e5e7eb}
+    .expense-row{padding:.6rem .8rem;border-bottom:1px solid #eef0f3}
+    .expense-row:last-child{border-bottom:none}
+    .expense-reason{word-break:break-word;white-space:normal}
+    .expense-amount,.expense-date{text-align:right;white-space:nowrap}
+    .expense-empty{padding:1rem;color:#6b7280}
+    .files-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1rem}
+    .file-card{background:#fff;border:1px solid #e5e7eb;border-radius:.75rem;padding:.75rem;box-shadow:0 1px 2px rgba(0,0,0,0.05);display:flex;flex-direction:column;gap:.5rem}
+    .file-thumb{height:120px;display:flex;align-items:center;justify-content:center;background:#f9fafb;border:1px dashed #e5e7eb;border-radius:.5rem;overflow:hidden}
+    .tabs-inline{display:flex;gap:.5rem;border-bottom:1px solid #ddd;margin:1rem 0}
+    .tab-btn{background:none;border:none;padding:.75rem 1rem;cursor:pointer;border-bottom:3px solid transparent;font-size:.95rem}
+    .tab-btn.active{border-bottom-color:#245F3E;color:#245F3E;font-weight:500}
+    .tab-content{display:none}
+    .tab-content.active{display:block}
+    .donut-wrap{display:flex;flex-direction:column;align-items:center;gap:.5rem}
+    .cash-available{font-size:1.05rem}
+</style>
 
-<div class="card-header">
-    <h3>Expenses</h3>
-    {% if is_project_member and not project.has_final_submission %}
-        <button class="admin-button edit" type="button" id="openAddExpenseModal">Add Expense</button>
-    {% endif %}
+<div class="tabs-inline">
+    <button type="button" class="tab-btn active" data-tab="overview">Overview</button>
+    <button type="button" class="tab-btn" data-tab="files">Files</button>
+  </div>
+
+<div id="overview" class="tab-content active">
+  <div class="project-grid">
+    <section>
+      <div class="donut-wrap">
+        <div class="chart-container" style="width:16rem;height:16rem">
+          <canvas id="expenseDonut" width="256" height="256" data-percentage="{{ percent_remaining|default:0 }}"></canvas>
+        </div>
+        {% if remaining_total is not None %}
+          <div class="cash-available">Current Budget: <strong>₱ {{ remaining_total|floatformat:2|intcomma }}</strong></div>
+        {% endif %}
+      </div>
+    </section>
+    <section>
+      <div class="expense-card">
+        <div class="expense-header">
+          <div>Reason</div>
+          <div class="expense-amount">Amount</div>
+          <div class="expense-date">Date</div>
+        </div>
+        <div class="expense-body" id="expensesBody">
+          {% for expense in expenses %}
+            <div class="expense-row">
+              <div class="expense-reason">{{ expense.title|default:expense.reason }}</div>
+              <div class="expense-amount">₱ {{ expense.amount|floatformat:2|intcomma }}</div>
+              <div class="expense-date">{{ expense.date_incurred|date:"m/d/Y" }}</div>
+            </div>
+          {% empty %}
+            <div class="expense-empty">No expenses recorded yet.</div>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+  </div>
 </div>
 
-<div class="card-body">
-    <div class="table-container">
-        <table class="user-table">
-            <thead>
-                <tr>
-                    <th>Reason</th>
-                    <th>Description</th>
-                    <th style="text-align: center;">Amount</th>
-                    <th style="text-align: center;">Date</th>
-                    <th style="text-align: center;">Receipt</th>
-                    <th style="text-align: center;">Added By</th>
-                </tr>
-            </thead>
-            <tbody>
+{# Real overlay with form posting to this URL #}
+<div class="overlay" id="overlay" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.5)">
+  <div class="overlay-content" style="background:#fff;border-radius:1rem;padding:1.25rem;width:45rem;max-width:95%;position:relative">
+    <button type="button" class="close-x" id="closeX" aria-label="Close" style="position:absolute;right:1rem;top:1rem;background:none;border:none;font-size:1.5rem;cursor:pointer">&times;</button>
+    <h2 style="margin:0 0 1rem 0;font-weight:500">Add Expense</h2>
+    <form class="expenseForm" id="expenseForm" method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+        <div style="display:flex;flex-direction:column">
+          <label style="font-weight:500;margin-bottom:.25rem">Reason <span style="color:#dc2626">*</span></label>
+          <input type="text" name="reason" placeholder="Meals" required aria-required="true" style="padding:.8rem;border:1px solid #868686;border-radius:.5rem;background:#e9e9e9">
+        </div>
+        <div style="display:flex;flex-direction:column">
+          <label style="font-weight:500;margin-bottom:.25rem">Total Expense (₱) <span style="color:#dc2626">*</span></label>
+          <input type="number" name="amount" step="0.01" placeholder="100.00" required aria-required="true" style="padding:.8rem;border:1px solid #868686;border-radius:.5rem;background:#e9e9e9">
+        </div>
+      </div>
+      <div style="margin-top:1rem;display:flex;flex-direction:column">
+        <label style="font-weight:500;margin-bottom:.25rem">Upload Receipt <span style="color:#dc2626">*</span></label>
+        <div id="uploadBox" class="upload-container" style="background:#f8f9fa;border:2px dashed #245F3E;padding:1.25rem;display:flex;align-items:center;border-radius:.75rem;cursor:pointer">
+          <input id="receipt" name="receipt" type="file" accept="image/*,.pdf" required aria-required="true" style="display:none" />
+          <span id="uploadText" style="font-weight:600;color:#245F3E">Click to upload</span>
+        </div>
+      </div>
+      <div style="margin-top:1rem;display:flex;flex-direction:column">
+        <label style="font-weight:500;margin-bottom:.25rem">Notes <span style="color:#dc2626">*</span></label>
+        <textarea name="notes" rows="3" placeholder="(e.g. Bento box)" required aria-required="true" style="padding:.8rem;border:1px solid #868686;border-radius:.5rem;background:#e9e9e9"></textarea>
+      </div>
+      <div style="margin-top:1rem;display:flex;gap:.75rem">
+        <button type="submit" class="btn" style="background:#245F3E;color:#fff;border:none;border-radius:.5rem;padding:.6rem 1rem;cursor:pointer">Save</button>
+        <button type="button" id="closeOverlay" style="background:#6b7280;color:#fff;border:none;border-radius:.5rem;padding:.6rem 1rem;cursor:pointer">Cancel</button>
+      </div>
+    </form>
+  </div>
+  
+</div>
+
+<div id="files" class="tab-content">
+  <div class="files-grid">
                 {% for expense in expenses %}
-                <tr>
-                    <td>{{ expense.reason }}</td>
-                    <td>{{ expense.description|default:"—" }}</td>
-                    <td style="text-align: center;">₱{{ expense.amount|floatformat:2 }}</td>
-                    <td style="text-align: center;">{{ expense.expense_date|date:'M d, Y' }}</td>
-                    <td style="text-align: center;">
-                        {% if expense.receipt_img %}
-                            <a href="{{ expense.receipt_img.url }}" target="_blank" class="name-link" style="text-decoration: none;">
-                                <i class="fa-solid fa-receipt" style="color:#0A6C44;"></i> View
-                            </a>
+      {% if expense.receipt and expense.receipt.url %}
+        <div class="file-card">
+          <div class="file-thumb">
+            {% if expense.receipt.name|lower|slice:"-4:" == ".pdf" %}
+              <span style="font-size:.9rem;color:#374151">PDF Receipt</span>
                         {% else %}
-                            <span style="color:#aaa;font-size:0.95rem;">No receipt</span>
+              <img src="{{ expense.receipt.url }}" alt="Receipt" style="max-width:100%;max-height:100%;object-fit:contain"/>
+            {% endif %}
+          </div>
+          <div style="display:flex;flex-direction:column;gap:.25rem">
+            <div style="font-weight:600;font-size:.95rem;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ expense.title|default:expense.reason }}</div>
+            <div style="font-size:.85rem;color:#6b7280;">{{ expense.date_incurred|date:"m/d/Y" }}</div>
+            <a href="{{ expense.receipt.url }}" target="_blank" style="margin-top:.25rem;text-decoration:none;color:#0f766e;font-weight:500">View receipt</a>
+          </div>
+        </div>
                         {% endif %}
-                    </td>
-                    <td style="text-align: center;">
-                        {% if expense.created_by %}
-                            <a href="{% url 'user_profile' expense.created_by.id %}" class="name-link">
-                                {{ expense.created_by.get_full_name|default:expense.created_by.username }}
-                            </a>
-                        {% else %}
-                            <span style="color:#aaa;">Unknown</span>
-                        {% endif %}
-                    </td>
-                </tr>
                 {% empty %}
-                <tr><td colspan="6" style="text-align:center;color:#888;font-size:1.1rem;padding:2rem;">No expenses found.</td></tr>
+      <div class="expense-empty">No receipts uploaded yet.</div>
                 {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
-
-<!-- Add Expense Modal -->
-{% if is_project_member and not project.has_final_submission %}
-<div id="add-expense-modal" class="event-modal modal" style="display:none;">
-    <div class="event-modal-content">
-        <span class="close" onclick="document.getElementById('add-expense-modal').style.display='none'">&times;</span>
-        <h2 style="margin-bottom:1.5rem;">Add Expense</h2>
-        <form method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            <div class="form-group">
-                <label class="form-label">Reason<span class="required">*</span></label>
-                <input class="user-details-value" type="text" name="reason" required placeholder="e.g., Venue Rental, Equipment Purchase">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Amount (₱)<span class="required">*</span></label>
-                <input class="user-details-value" type="number" name="amount" step="0.01" min="0" required placeholder="0.00">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Expense Date<span class="required">*</span></label>
-                <input class="user-details-value" type="date" name="expense_date" required>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Description</label>
-                <textarea class="user-details-value" name="description" rows="3" placeholder="Additional details about the expense (optional)"></textarea>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Receipt Image</label>
-                <input class="user-details-value" type="file" name="receipt_img" accept="image/*">
-                <small style="color:#666;font-size:0.85rem;display:flex;align-items:center;margin-left:1rem;">Upload a photo or scan of the receipt (optional)</small>
-            </div>
-            <div class="form-actions" style="justify-content:flex-end;margin-top:1.5rem;">
-                <button type="button" class="back admin-button" onclick="document.getElementById('add-expense-modal').style.display='none'">Cancel</button>
-                <button type="submit" class="save admin-button">Add Expense</button>
-            </div>
-        </form>
     </div>
 </div>
 
 <script>
-    // Open Add Expense Modal
-    document.getElementById('openAddExpenseModal').onclick = function() {
-        document.getElementById('add-expense-modal').style.display = 'flex';
-    };
+  // Tabs
+  (function(){
+    const buttons = document.querySelectorAll('.tab-btn');
+    const tabs = { overview: document.getElementById('overview'), files: document.getElementById('files') };
+    buttons.forEach(btn=>btn.addEventListener('click', ()=>{
+      const key = btn.getAttribute('data-tab');
+      buttons.forEach(b=>b.classList.remove('active'));
+      Object.values(tabs).forEach(el=>{ el.classList.remove('active'); el.style.display='none'; });
+      btn.classList.add('active');
+      tabs[key].classList.add('active');
+      tabs[key].style.display='block';
+    }));
+  })();
 
-    // Close modal when clicking outside
-    document.getElementById('add-expense-modal').onclick = function(e) {
-        if (e.target === this) {
-            this.style.display = 'none';
-        }
-    };
+  // Donut chart
+  (function(){
+    const canvas = document.getElementById('expenseDonut');
+    if (!canvas || !window.Chart) return;
+    let value = Number(canvas.getAttribute('data-percentage')) || 0;
+    value = Math.max(0, Math.min(100, Math.round(value)));
+    const centerText = { id: 'centerText', afterDraw(chart){ const {ctx, chartArea:{left,right,top,bottom}} = chart; const x=(left+right)/2, y=(top+bottom)/2; ctx.save(); ctx.font='bold 18px Arial'; ctx.fillStyle='#111'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(`${value}%`, x, y); ctx.restore(); } };
+    new Chart(canvas.getContext('2d'), { type:'doughnut', data:{ datasets:[{ data:[value, Math.max(0,100-value)], backgroundColor:['#10b981','#111111'], borderWidth:0 }] }, options:{ rotation:-90, circumference:360, responsive:true, maintainAspectRatio:false, cutout:'65%', plugins:{ legend:{display:false}, tooltip:{enabled:false} } }, plugins:[centerText] });
+  })();
+
+  // Overlay open/close (triggered by header button)
+  (function(){
+    const headerBtn = document.getElementById('openExpense');
+    const overlay = document.getElementById('overlay');
+    const closeBtn = document.getElementById('closeOverlay');
+    const closeX = document.getElementById('closeX');
+    if (headerBtn && overlay) headerBtn.addEventListener('click', ()=> overlay.style.display='flex');
+    if (closeBtn && overlay) closeBtn.addEventListener('click', ()=> overlay.style.display='none');
+    if (closeX && overlay) closeX.addEventListener('click', ()=> overlay.style.display='none');
+    const uploadBox = document.getElementById('uploadBox');
+    const receiptInput = document.getElementById('receipt');
+    const uploadText = document.getElementById('uploadText');
+    if (uploadBox && receiptInput){
+      uploadBox.addEventListener('click', ()=> receiptInput.click());
+      receiptInput.addEventListener('change', ()=>{
+        const f = receiptInput.files && receiptInput.files[0];
+        if (f && uploadText){ uploadText.textContent = f.name; uploadText.style.color = '#1a4a2e'; }
+      });
+    }
+  })();
 </script>
-{% endif %}
 
 {% endblock %}

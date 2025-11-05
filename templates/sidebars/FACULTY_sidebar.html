@@ -1,0 +1,44 @@
+{% load static %}
+<style>
+    .sidebar-tab{display:flex;align-items:center;gap:.6rem;padding:.6rem .9rem;margin:.15rem .5rem;border-radius:.5rem;text-decoration:none;color:#fff;background:transparent}
+    .sidebar-tab.active{background:#185235}
+    .sidebar-header{display:flex;align-items:center;gap:.6rem;padding:.75rem .9rem;color:#fff}
+    .sidebar-header img{width:2rem;height:2rem;border-radius:50%;object-fit:cover;border:.08rem solid #ccc}
+</style>
+
+<div class="sidebar-container" id="sidebar">
+    <div class="sidebar-header">
+        <img src="{% static 'ueso.png' %}" alt=""/>
+        <div>
+            <div style="font-weight:600;">{{ request.user.get_full_name|default:request.user.username }}</div>
+            <div style="font-size:.85rem;opacity:.85;">{{ request.user.role|title }}</div>
+        </div>
+    </div>
+
+    <a href="/projects/" class="sidebar-tab {% if '/projects/' in request.path %}active{% endif %}">
+        <span>Projects</span>
+    </a>
+
+    <a href="/budget/" class="sidebar-tab {% if '/budget/' in request.path %}active{% endif %}">
+        <span>Budget</span>
+    </a>
+
+    {% url 'notifications' as notifications_url %}
+    <a href="{{ notifications_url|default:'/notifications/' }}" class="sidebar-tab {% if '/notifications/' in request.path %}active{% endif %}">
+        <span>Notifications</span>
+        {% with unread_notifications_count|default:0 as unread %}
+            {% if unread %}
+                <span style="margin-left:auto;background:#ffc107;color:#111;border-radius:999px;padding:0 .5rem;font-size:.8rem;font-weight:700;">{{ unread }}</span>
+            {% endif %}
+        {% endwith %}
+    </a>
+
+    {% if request.user.college_id %}
+        {% url 'projects:college' request.user.college_id as college_url %}
+        <a href="{{ college_url|default:'/projects/college/' }}" class="sidebar-tab {% if '/projects/college/' in request.path %}active{% endif %}">
+            <span>My College</span>
+        </a>
+    {% endif %}
+</div>
+
+
