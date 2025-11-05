@@ -1,0 +1,525 @@
+body {
+    background: #F9F9F9;
+    margin: 0;
+    font-family: 'Inter', Arial, sans-serif;
+}
+
+.content {
+    padding: 0;
+}
+
+main {
+    margin: 1.75rem 5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.goals-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.goals-header h1 {
+    color: #000;
+    font-family: 'Inter', Arial, sans-serif;
+    margin: 0;
+    font-size: 1.65rem;
+    font-weight: 500;
+}
+
+.add-user-btn {
+    font-family: 'Inter', sans-serif;
+    background-color: #00681a;
+    color: #F5F5F5;
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 0.6rem 1.6rem;
+    border-radius: 2rem;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    text-decoration: none;
+}
+
+.add-user-btn:hover {
+    background-color: #444;
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+.add-user-btn i {
+    cursor: pointer;
+    margin-right: 0.3rem;
+}
+
+/* --- Carousel Wrapper/View (Big Square) --- */
+
+.goals-carousel-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    position: relative;
+    margin: 0.7rem;
+    height: 500px; /* Adjusted height for 2 vertical cards + spacing */
+}
+
+.goals-carousel {
+    overflow: hidden;
+    width: 468px; /* 2 * 222px card + 24px gap */
+    height: 468px; /* 2 * 222px card + 24px gap */
+    position: relative;
+    margin: -2rem auto 0 auto;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: 15px 0;
+}
+
+.goals-carousel-track {
+    display: flex;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    gap: 24px;
+    will-change: transform;
+}
+
+.carousel-arrow {
+    background: #ffffff;
+    border: none;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+    z-index: 10;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    border-radius: 999px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+.carousel-arrow:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.18); }
+.left-arrow { left: 0; }
+.right-arrow { right: 0; }
+.carousel-arrow:active { background: #f3f4f6; transform: translateY(-50%) scale(0.95); }
+.carousel-arrow:disabled { opacity: 0.4; cursor: default; box-shadow: none; }
+.carousel-arrow svg { display: block; }
+
+/* --- 2x2 Grid Container (The Big Square) --- */
+.goal-card-group {
+    display: flex;
+    flex-wrap: wrap;
+    width: 468px; /* 2 * 222px + 24px gap */
+    height: 468px; /* 2 * 222px + 24px gap */
+    flex-shrink: 0;
+    gap: 24px;
+    align-content: flex-start;
+    justify-content: flex-start;
+    padding: 0;
+}
+
+/* --- Card (The Small Square) --- */
+.goal-card {
+    position: relative;
+    width: 222px;
+    height: 222px;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    background-color: #ffffff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+    transform: none;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    align-items: flex-start;
+    justify-content: center; /* Center content vertically */
+    box-sizing: border-box;
+    cursor: pointer;
+    z-index: 1;
+    transform-origin: center center; /* Reset transform origin for consistent scaling */
+}
+
+/* Hover effect: Expand to fill the whole 468x468 group */
+.goal-card-group:hover .goal-card {
+    opacity: 0.1; /* Fade out siblings */
+    transform: scale(1);
+    box-shadow: none;
+    z-index: 1;
+}
+
+.goal-card-group .goal-card:hover {
+    opacity: 1;
+    transform-origin: top left;
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.25);
+    z-index: 10;
+}
+
+/* --- Positioning on Hover: Scale is 2.108 for 468/222 --- */
+
+/* 1st card (top-left) */
+.goal-card-group .goal-card:nth-child(1):hover {
+    transform: translate(0px, 0px) scale(2.108);
+}
+
+/* 2nd card (top-right) */
+.goal-card-group .goal-card:nth-child(2):hover {
+    transform: translate(calc(-100% - 24px), 0px) scale(2.108); /* Move left by its full width + gap */
+}
+
+/* 3rd card (bottom-left) */
+.goal-card-group .goal-card:nth-child(3):hover {
+    transform: translate(0px, calc(-100% - 24px)) scale(2.108); /* Move up by its full height + gap */
+}
+
+/* 4th card (bottom-right) */
+.goal-card-group .goal-card:nth-child(4):hover {
+    transform: translate(calc(-100% - 24px), calc(-100% - 24px)) scale(2.108); /* Move up and left */
+}
+
+
+/* --- Card Content Styling --- */
+
+.goal-card .goal-title {
+    font-family: 'Inter', Arial, sans-serif;
+    font-weight: 700;
+    font-size: 1.5rem;
+    color: #1A1A1A;
+    text-align: center;
+    width: 100%;
+    margin-top: 10px;
+    padding-bottom: 0;
+    transition: all 0.5s;
+    line-height: 1.2;
+}
+
+.goal-card .goal-number {
+    font-family: 'Inter', Arial, sans-serif;
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: #555555;
+    text-align: center;
+    width: 100%;
+    margin-top: 0;
+    transition: all 0.5s;
+}
+
+.goal-card .goal-title::after {
+    display: none; /* Remove line animation */
+}
+
+/* Applying .agenda-card-kebab styles to .ellipsis-btn */
+.ellipsis-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    z-index: 2;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    transition: background 0.2s, transform 0.3s;
+    background: none;
+    border: none;
+    font-size: 1.3rem;
+    color: #090909;
+}
+
+.ellipsis-btn:hover {
+    background: rgba(0, 0, 0, 0.1);
+    transform: scale(1.1);
+}
+
+/* Applying .options-dropdown styles to .goal-menu */
+.goal-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: white;
+    min-width: 160px;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.2s ease;
+    z-index: 200;
+    overflow: hidden;
+    display: none;
+}
+
+.goal-menu.open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    display: block;
+}
+
+.goal-menu .options-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    text-decoration: none;
+    font-size: 1rem;
+    color: #555555;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    width: 100%;
+    text-align: left;
+    background: white;
+    border: none;
+}
+
+.goal-menu .options-item:hover {
+    background-color: #F3F4F6;
+}
+
+.goal-menu .options-item:first-child {
+    border-radius: 8px 8px 0 0;
+}
+
+.goal-menu .options-item:last-child {
+    border-radius: 0 0 8px 8px;
+}
+
+.goal-menu .options-item svg {
+    width: 16px;
+    height: 16px;
+}
+
+.goal-menu .edit-option {
+    color: #1f7c57;
+}
+
+.goal-menu .delete-option {
+    color: #DC2626;
+}
+
+
+.goal-progress-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: 10px;
+    padding: 4px 10px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #065f46;
+    background: #d1fae5;
+    border: 1px solid #86efac;
+    border-radius: 999px;
+}
+
+
+/* --- List View Table Styles --- */
+
+.title-expand-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 30px;
+}
+
+.table-title-text {
+    font-family: 'Inter', Arial, sans-serif;
+    font-weight: 400;
+    font-size: 1.25rem;
+    color: #000000;
+}
+
+.view-more {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 0.75rem;
+    color: #2EA8FF;
+    text-decoration: none;
+    margin-top: 10px;
+    cursor: pointer;
+}
+
+.view-more:hover {
+    text-decoration: underline;
+}
+
+.user-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #FFFFFF; 
+    border-radius: 10px; 
+    overflow: auto; 
+    box-shadow: 0 0 0 1px #E0E0E0, 0 8px 18px -8px rgba(0, 0, 0, 0.15); 
+    border: none;
+    margin-top: 10px;
+}
+
+.user-table th {
+    font-size: 0.95rem;
+    font-weight: 600; 
+    background: #eeeeee; 
+    border-bottom: 1px solid #E0E0E0; 
+    padding: 16px 18px; 
+    text-align: left;
+    font-family: 'Inter', Arial, sans-serif;
+    color: #333333; 
+    box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.05); 
+    transition: padding 0.2s ease-in-out; 
+}
+.user-table td {
+    font-size: 14px; 
+    font-weight: 400;
+    border: none;
+    border-bottom: 1px solid #EDEDED; 
+    padding: 14px 18px; 
+    text-align: left;
+    font-family: 'Inter', Arial, sans-serif;
+    color: #4A5568; 
+    transition: all 0.2s ease-out;
+} 
+.user-table tr:last-child td {
+    border-bottom: none;
+} 
+.user-table tr:nth-child(even) {
+    background-color: #FAFAFB; 
+}
+
+.user-table tr:hover {
+    background-color: #fffaf0; 
+    box-shadow: inset 4px 0 0 0 #FF9900; 
+    transform: translateY(-1px); 
+    cursor: pointer;
+}
+
+.settings-icon {
+    width: 16px;
+    height: 16px;
+    align-items: center;
+    justify-content: center;
+    display: inline-block;
+    vertical-align: middle;
+    cursor:pointer;
+}
+
+.user-table th.settings-col,
+.user-table td.settings-col {
+    text-align: center !important;
+    position: relative;
+    overflow: visible;
+    z-index: 5;
+}
+ 
+.name-link {
+    color: #0099FF;
+    text-decoration: none;
+} 
+.name-link:hover{
+    text-decoration: underline;
+} 
+ 
+.user-table tr:hover td {
+    padding: 18px; 
+}
+
+.user-table tr:hover {
+    background-color: #f2f2f2; 
+    cursor: pointer;
+}
+
+.user-table tr:last-child:hover td {
+    border-bottom: none; 
+}
+
+/* Generic Modal Styles (Copied from agenda.css modal for potential use) */
+
+#deleteAgendaModal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 999999;
+    align-items: center;
+    justify-content: center;
+}
+
+#deleteAgendaModal.is-open {
+    display: flex !important;
+}
+
+#deleteAgendaModal.show {
+    display: flex;
+}
+
+.modal-content {
+    background: white;
+    padding: 2rem 2.5rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 32px rgba(0, 0, 0, 0.18);
+    max-width: 350px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 1000000;
+}
+
+.modal-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #E53E3E;
+    margin-bottom: 1rem;
+}
+
+.modal-message {
+    font-size: 1rem;
+    color: #444;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 1rem;
+}
+
+.modal-btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.modal-btn-cancel {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.modal-btn-cancel:hover {
+    background: #d1d5db;
+}
+
+.modal-btn-delete {
+    background: #E53E3E;
+    color: white;
+}
+
+.modal-btn-delete:hover {
+    background: #c53030;
+}

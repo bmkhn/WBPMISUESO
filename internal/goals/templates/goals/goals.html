@@ -1,1067 +1,696 @@
 {% extends "base_internal.html" %}
 {% block content %}
-
+{% load static%}
 <!DOCTYPE HTML>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="csrf-token" content="">
-    <title>Goals</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.css' rel='stylesheet'/>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
-    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.js'></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="csrf-token" content="">
+<title>Goals</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.css' rel='stylesheet'/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" xintegrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
+<!-- The external CSS link is removed as requested: <link href="{% static 'internal/goals/styles.css' %}" rel="stylesheet"> -->
 <style>
-    body {
-        font-family: Arial, sans-serif;
-        margin: 0rem;
-        padding: 0rem;
-        display: flex;
-        flex-direction: column;
-        min-height: 100vh;
-        font-family: Helvetica, Arial, sans-serif;
-        background-color: #f9f9f9;
-    }
-    /* Use base sidebar; avoid overriding its styles here */
+/* INLINE STYLES based on requested changes:
+    - Card size (320px x 240px), Gap (4px).
+    - Goal Number is white with a neat shadow.
+    - Hover: Shadow removed, Denominator shifts to bottom, Qualifiers list appears on the right.
+    - NEW: Denominator next to Nominator in normal state, List invisible until hover.
+*/
+body {
+    background: #F9F9F9;
+    margin: 0;
+    font-family: 'Inter', Arial, sans-serif;
+}
 
-    .content {
-        margin-left: 0;
-        padding: 0 20px 20px 20px;
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-    }
+.content {
+    padding: 0;
+}
 
-    header {
-        display: flex;
-        justify-content: flex-end;
-        align-items: center;
-        gap: 1.25rem; 
-        margin: 0;
-        padding: 0.75rem 1.25rem;
-        border-bottom: 1px solid #e0e0e0;
-        background-color: #f5f5f5;
-        position: sticky;
-        top: 0;
-        z-index: 100;
-        width: 100%;
-    } 
+main {
+    margin: 1.75rem 5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
 
-    header a {
-        color: #111;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-    }
+.goals-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
 
-    header i {
-        font-size: 1.75rem;
-        line-height: 1;
-        cursor: pointer;
-        transition: transform 0.2s ease;
-    }
+.goals-header h1 {
+    color: #000;
+    font-family: 'Inter', Arial, sans-serif;
+    margin: 0;
+    font-size: 1.65rem;
+    font-weight: 500;
+}
 
-    header i:hover {
-        transform: scale(1.1);
-    }
+.add-user-btn {
+    font-family: 'Inter', sans-serif;
+    background-color: #00681a;
+    color: #F5F5F5;
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 0.6rem 1.6rem;
+    border-radius: 2rem;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    text-decoration: none;
+}
+
+.add-user-btn:hover {
+    background-color: #444;
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+.add-user-btn i {
+    cursor: pointer;
+    margin-right: 0.3rem;
+}
+
+/* --- Carousel Wrapper/View (Big Square) --- */
+
+.goals-carousel-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    position: relative;
+    margin: 0.7rem;
+    height: 500px;
+}
+
+.goals-carousel {
+    /* New width: (2 * 320px card) + 4px gap = 644px */
+    width: 644px; 
+    /* New height: (2 * 240px card) + 4px gap = 484px */
+    height: 484px; 
+    overflow: hidden;
+    position: relative;
+    margin: -2rem auto 0 auto;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: 15px 0;
+    background: none; 
+    border-radius: 30px;
+}
+
+.goals-carousel-track {
+    display: flex;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    gap: 4px;
+    will-change: transform;
+    position: relative;
+}
+
+/* SHARED BACKGROUND ELEMENT REMOVED */
+#sharedBackground {
+    display: none; 
+}
+
+.carousel-arrow {
+    background: #ffffff;
+    border: none;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+    z-index: 10;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    border-radius: 999px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+
+/* CAROUSEL CONTROLS WIDER (Original position) */
+.left-arrow { left: 0; }
+.right-arrow { right: 0; }
+
+.carousel-arrow:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.18); }
+.carousel-arrow:active { background: #f3f4f6; transform: translateY(-50%) scale(0.95); }
+.carousel-arrow:disabled { opacity: 0.4; cursor: default; box-shadow: none; }
+.carousel-arrow svg { display: block; }
+
+/* --- 2x2 Grid Container (The Big Square) --- */
+.goal-card-group {
+    display: flex;
+    flex-wrap: wrap;
+    width: 644px; 
+    height: 484px; 
+    flex-shrink: 0;
+    gap: 4px;
+    align-content: flex-start;
+    justify-content: flex-start;
+    padding: 0;
+    pointer-events: none;
+}
+
+/* --- Card (The Small Square) --- */
+.goal-card {
+    pointer-events: auto; 
+    position: relative;
+    width: 320px;
+    height: 240px;
+    padding: 0; 
+    border-radius: 24px; 
+    border: 1px solid rgba(0, 0, 0, 0.1); 
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08); 
+    background-color: #ffffff; 
+    transform: none;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start; 
+    box-sizing: border-box;
+    cursor: pointer;
+    z-index: 2; 
+    transform-origin: top left;
+    overflow: hidden; 
+}
+
+/* New wrapper for content to allow inverse transform */
+.card-content-wrapper {
+    padding: 20px; 
+    width: 100%;
+    height: 100%;
+    display: grid; /* Use grid for complex layout */
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto 1fr auto;
+    grid-template-areas: 
+        "title title"
+        "number list"
+        "total list"; 
+    gap: 5px 10px; /* Vertical / Horizontal gap */
+    align-items: start;
+    justify-content: start;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: top left;
+}
+
+/* Hover effect: Fade out siblings, keeping them distinct but deemphasized */
+.goal-card-group:hover .goal-card {
+    opacity: 0.1; /* Cards are distinct but faint */
+    transform: scale(1);
+    box-shadow: none;
+    z-index: 1;
+}
+
+/* Focused card hover: Must rely on nth-child for transform */
+.goal-card-group .goal-card:hover {
+    opacity: 1;
+    transform-origin: top left;
+    box-shadow: none; /* Shadow removed on hover */
+    z-index: 10;
+    /* Do NOT change border-radius on hover */
+}
+
+/* Scale Factor Calculation: (644px / 320px) = 2.0125. Inverse: 1 / 2.0125 = 0.4969 */
+.scale-factor { --scale: 2.0125; --inv-scale: 0.4969; }
+
+/* Apply INVERSE scale to the content wrapper on focused hover */
+.goal-card-group .goal-card:hover .card-content-wrapper {
+    transform: scale(var(--inv-scale)); 
+}
+
+/* Apply INVERSE scale to the ELLIPSIS button on focused hover (maintaining size) */
+.goal-card-group .goal-card:hover .ellipsis-btn {
+    transform: scale(var(--inv-scale)); 
+    transform-origin: top right;
+    z-index: 30; /* Ensure it stays on top */
+}
+
+/* 1st card (top-left) */
+.goal-card-group .goal-card:nth-child(1):hover {
+    transform: translate(0px, 0px) scale(var(--scale));
+}
+
+/* 2nd card (top-right) */
+.goal-card-group .goal-card:nth-child(2):hover {
+    /* Move left by its full width + gap (320px + 4px) */
+    transform: translate(calc(-100% - 4px), 0px) scale(var(--scale)); 
+}
+
+/* 3rd card (bottom-left) */
+.goal-card-group .goal-card:nth-child(3):hover {
+    /* Move up by its full height + gap (240px + 4px) */
+    transform: translate(0px, calc(-100% - 4px)) scale(var(--scale)); 
+}
+
+/* 4th card (bottom-right) */
+.goal-card-group .goal-card:nth-child(4):hover {
+    /* Move up and left */
+    transform: translate(calc(-100% - 4px), calc(-100% - 4px)) scale(var(--scale)); 
+}
+
+
+/* --- Card Content Styling --- */
+
+.goal-card .goal-title {
+    grid-area: title;
+    font-family: 'Inter', Arial, sans-serif;
+    font-weight: 500; 
+    font-size: 1.25rem;
+    color: #1A1A1A;
+    text-align: left;
+    width: 100%;
+    margin-top: 0; 
+    padding-bottom: 0;
+    transition: all 0.5s;
+    line-height: 1.2;
+}
+
+.goal-card .goal-number {
+    grid-area: number;
+    font-family: 'Inter', Arial, sans-serif;
+    font-weight: 900; 
+    font-size: 10rem; 
+    color: #ffffff; /* Text color is white */
     
-    header img {
-        border-radius: 50%; 
-        border: 4px solid #e4c600;
-        margin-right: 0.75rem;
-        width: 3.25rem;
-        height: 3.25rem;
-        object-fit: cover;
-        cursor: pointer;
-        transition: transform 0.2s ease;
-    }  
-
-    header img:hover {
-        transform: scale(1.05);
-    }
-
-    .ellipsis-btn {
-        position: absolute;
-        top: 1rem;
-        right: 1rem;
-        background: none;
-        border: none;
-        cursor: pointer;
-        font-size: 1.3rem; 
-        color: #090909;
-        transition: color 0.2s;
-        z-index: 1; /* keep below global menus like profile dropdown */
-    }
-
-    .goals-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .goals-header h1 {
-        font-size: 1.75rem;
-        font-weight: 500;
-        margin: 10 0 1.25rem 0;
-    }
-
-    .ListView-header h1 {
-        font-size: 1.75rem;
-        font-weight: 500;
-        margin: 10 0 1.25rem 0;
-    }
-
-    .add-goal {
-      background: #004225;
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-
-    .add-goal:hover {
-        background: #006633;
-    }
-
-    /* Mirror Agenda add button */
-    .add-user-btn {
-        font-family: 'Inter', sans-serif;
-        background-color: #00681a;
-        color: #F5F5F5;
-        font-size: 0.85rem;
-        font-weight: 500;
-        padding: 0.6rem 1.6rem;
-        border-radius: 2rem;
-        border: none;
-        cursor: pointer;
-        transition: background-color 0.2s ease, color 0.2s ease;
-        text-decoration: none;
-    }
-    .add-user-btn:hover { background-color: #444; color: #fff; transform: translateY(-1px); }
-    .add-user-btn i { cursor: pointer; margin-right: 0.3rem; }
-
-    /* ===== Goals Carousel (mirrors Agenda) ===== */
-    .goals-carousel-wrapper {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 100%;
-        position: relative;
-        margin: 0.7rem;   
-        height: 30rem;
-    }
-
-    .goals-carousel {
-        overflow: hidden;
-        width: 960px;
-        position: relative;
-        margin: -0.5rem auto 0 auto;
-        display: flex;
-        align-items: flex-start;
-        justify-content: flex-start;
-        padding: 15px 0; 
-    }
-
-    .goals-carousel-track {
-        display: flex;
-        transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        gap: 24px;
-        will-change: transform;
-    }
-
-    .goal-card {
-        position: relative;
-        width: 100%; 
-        height: 25rem;
-        padding: 24px 24px 48px 24px; 
-        border-radius: 12px;
-        border-top: 1px solid rgba(0, 0, 0, 0.1); 
-        border-left: 1px solid rgba(0, 0, 0, 0.1);
-        background-color: #ffffff;
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08), 
-                    0 2px 4px rgba(0, 0, 0, 0.04);
-        transform: rotate(-0.5deg); 
-        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); 
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        align-items: center;
-        box-sizing: border-box;
-        vertical-align: top; 
-        flex: 0 0 calc(((960px - 2 * 24px) / 3) - 7px);
-        width: calc(((960px - 2 * 24px) / 3) - 7px);
-    }
-
-    .goal-card:hover {
-        transform: translateY(-16px) rotate(0deg); 
-        flex: 0 0 calc((((960px - 2 * 24px) / 3) - 7px) * 2 + 24px);
-        width: calc((((960px - 2 * 24px) / 3) - 7px) * 2 + 24px);
-        box-shadow: 0 16px 32px rgba(0, 0, 0, 0.25),
-                    0 4px 8px rgba(0, 0, 0, 0.15);
-        border: 1px solid rgba(187, 187, 187, 0.8);
-    }
-
-    .goal-card.expand-left:hover {
-        transform: translateY(-16px) translateX(calc((((960px - 2 * 24px) / 3) - 7px) * -1 - 24px)) rotate(0deg); 
-    }
-
-    .goal-card.shift-previous {
-        transform: translateX(calc((((960px - 2 * 24px) / 3) - 7px) * -1 - 24px)); 
-    }
-
-    .carousel-arrow {
-        background: #ffffff;
-        border: none;
-        width: 40px;
-        height: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
-        z-index: 10;
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-        border-radius: 999px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-    }
-    .carousel-arrow:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.18); }
-    .left-arrow { left: 0; }
-    .right-arrow { right: 0; }
-    .carousel-arrow:active { background: #f3f4f6; transform: translateY(-50%) scale(0.95); }
-    .carousel-arrow:disabled { opacity: 0.4; cursor: default; box-shadow: none; }
-    .carousel-arrow svg { display: block; }
-
-    /* Ellipsis dropdown menu */
-    .goal-menu {
-        position: absolute;
-        top: 2.25rem;
-        right: 1rem;
-        background: #ffffff;
-        border: 1px solid #ccc;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        border-radius: 8px;
-        min-width: 140px;
-        z-index: 200;
-        display: none;
-        overflow: hidden;
-    }
-
-    .goal-menu.open {
-        display: block;
-    }
-
-    .goal-menu .options-item {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        width: 100%;
-        padding: 10px 14px;
-        text-align: left;
-        background: white;
-        border: none;
-        cursor: pointer;
-        font-size: 14px;
-        color: #555555;
-    }
-    .goal-menu .options-item:hover { background: #F3F4F6; }
-    .goal-menu .options-item svg { width: 16px; height: 16px; }
-    .goal-menu .edit-option { color: #1f7c57; }
-    .goal-menu .delete-option { color: #DC2626; }
-
-    .goal-card canvas {
-        width: 75% !important;
-        height: 75% !important;
-    }
-
-    .goal-card .goal-title {
-        margin-top: 0rem;
-        text-align: center;
-        font-size: 12px;
-        font-weight: 300;
-        max-width: 80%;   
-        word-wrap: break-word;
-        font-family: Helvetica;
-    }
-
-    .ellipsis-btn:hover {
-        color: gray;
-    }
-
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        overflow: hidden;
-        border: 1px solid gray;
-    }
-
-    th, td {
-        text-align: left;
-        padding: 8px;
-        font-size: 0.95rem;
-    }
-
-    .ListView-btn {
-        border: none;
-        padding: 0;
-        background: none;
-        font-family: Arial, sans-serif;
-        color: #0077B6;
-        cursor: pointer;
-    }
-
-    .ListView-btn:hover {
-        color: blue;
-    }
-
-    .table-header {
-        border-collapse: collapse;
-        border: 1px solid gray;
-    }
-
-    /* Per-goal list styles, mirroring agenda */
-    .title-expand-container {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-        width: 100%;
-        margin-top: 30px;
-    }
-    .table-title-text {
-        font-family: 'Inter', Arial, sans-serif;
-        font-weight: 400;
-        font-size: 1.25rem;
-        color: #000000;
-    }
-    .goal-progress-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        margin-left: 10px;
-        padding: 4px 10px;
-        font-size: 0.8rem;
-        font-weight: 700;
-        color: #065f46;
-        background: #d1fae5;
-        border: 1px solid #86efac;
-        border-radius: 999px;
-    }
-    .view-more {
-        font-family: 'Inter', sans-serif;
-        font-weight: 400;
-        font-size: 0.75rem;
-        color: #2EA8FF;
-        text-decoration: none;
-        margin-top: 10px;
-        cursor: pointer;
-    }
-    .view-more:hover { text-decoration: underline; }
-    .user-table {
-        width: 100%;
-        border-collapse: collapse;
-        background: #FFFFFF; 
-        border-radius: 8px; 
-        overflow: auto;  
-        box-shadow: 0 0 0 1px #dfdfdf, 0 0 15px rgba(0, 0, 0, 0.08); 
-    }
-    .user-table th {
-        font-size: 0.95rem;
-        font-weight: 600; 
-        background: #eeeeee; 
-        border-bottom: 1px solid #E0E0E0; 
-        padding: 16px 18px; 
-        text-align: left;
-        font-family: 'Inter', Arial, sans-serif;
-        color: #333333; 
-        box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.05); 
-        transition: padding 0.2s ease-in-out; 
-    }
-    .user-table td {
-        font-size: 14px; 
-        font-weight: 400;
-        border: none;
-        border-bottom: 1px solid #E0E0E0; 
-        padding: 14px 18px; 
-        text-align: left;
-        font-family: 'Inter', Arial, sans-serif;
-        color: #555555; 
-        transition: padding 0.2s ease-in-out; 
-    }
-    .user-table tr:last-child td { border-bottom: none; }
-    .user-table tr:nth-child(even) { background-color: #f8f8f8; }
-    .name-link { color: #0099FF; text-decoration: none; }
-    .name-link:hover { text-decoration: underline; }
-
-    /* Remove old sidebar helper classes to prevent collisions */
-
-    /* Overlay modal styles */
-    .overlay {
-        position: fixed;
-        inset: 0;
-        background: rgba(0,0,0,0.6);
-        display: none;
-        align-items: center;
-        justify-content: center;
-        z-index: 1000;
-        padding: 20px;
-    }
-
-    .overlay.open {
-        display: flex;
-    }
-
-    .overlay-card {
-        background: #fff;
-        width: 100%;
-        max-width: 1000px;
-        max-height: 90vh;
-        border-radius: 14px;
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-        box-shadow: 0 20px 50px rgba(0,0,0,0.25);
-    }
-
-    .overlay-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 20px 24px;
-        border-bottom: 1px solid #e5e7eb;
-    }
-
-    .overlay-title {
-        font-size: 26px;
-        font-weight: 600;
-    }
-
-    .overlay-actions {
-        display: flex;
-        gap: 12px;
-        align-items: center;
-    }
-
-    .btn-export {
-        background: #0052cc;
-        color: #fff;
-        padding: 10px 18px;
-        border-radius: 10px;
-        border: none;
-        cursor: pointer;
-        font-weight: 600;
-    }
-
-    .btn-export:hover { background: #003f9e; }
-
-    .overlay-close {
-        background: transparent;
-        border: none;
-        font-size: 20px;
-        cursor: pointer;
-        padding: 8px;
-    }
-
-    .overlay-body {
-        overflow: auto;
-    }
-
-    .qualifiers-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    .qualifiers-table th,
-    .qualifiers-table td {
-        padding: 18px 20px;
-        border-bottom: 1px solid #e5e7eb;
-        vertical-align: middle;
-        font-size: 15px;
-    }
-
-    .qualifiers-table thead th {
-        background: #f9fafb;
-        text-align: left;
-        font-weight: 600;
-        color: #111827;
-    }
-
-    .table-settings { text-align: right; width: 70px; position: relative; }
-
-    .row-ellipsis {
-        background: none;
-        border: none;
-        cursor: pointer;
-        font-size: 18px;
-        line-height: 1;
-        padding: 6px 8px;
-        color: #111827;
-    }
-
-    .row-ellipsis:hover { color: #374151; }
-
-    .row-menu {
-        position: absolute;
-        top: 2.25rem;
-        right: 0.75rem;
-        background: #ffffff;
-        border: 1px solid #e5e7eb;
-        box-shadow: 0 6px 18px rgba(0,0,0,0.12);
-        border-radius: 8px;
-        min-width: 140px;
-        z-index: 10;
-        display: none;
-        overflow: hidden;
-    }
-
-    .row-menu.open { display: block; }
-
-    .row-menu button {
-        width: 100%;
-        padding: 10px 12px;
-        text-align: left;
-        background: white;
-        border: none;
-        cursor: pointer;
-        font-size: 14px;
-    }
-
-    .row-menu button:hover { background: #f3f4f6; }
-
-    .pagination {
-        display: flex;
-        gap: 10px;
-        align-items: center;
-        justify-content: center;
-        padding: 14px 20px;
-    }
-
-    .page-btn,
-    .page-num {
-        background: transparent;
-        border: none;
-        padding: 8px 12px;
-        border-radius: 8px;
-        cursor: pointer;
-        color: #374151;
-    }
-
-    .page-num.active { background: #111827; color: #fff; }
-
-    .page-btn.disabled,
-    .page-num.disabled {
-        opacity: 0.4;
-        pointer-events: none;
-    }
-
-    /* Add Goal modal */
-    .goal-overlay {
-        position: fixed;
-        inset: 0;
-        background: rgba(0,0,0,0.7);
-        backdrop-filter: blur(8px);
-        display: none;
-        align-items: center;
-        justify-content: center;
-        z-index: 1100;
-        padding: 20px;
-        opacity: 0;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .goal-overlay.open { 
-        display: flex; 
-        opacity: 1;
-        animation: overlayFadeIn 0.3s ease-out;
-    }
-
-    @keyframes overlayFadeIn {
-        from {
-            opacity: 0;
-            backdrop-filter: blur(0px);
-        }
-        to {
-            opacity: 1;
-            backdrop-filter: blur(8px);
-        }
-    }
-
-    .goal-card {
-        background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
-        width: 100%;
-        max-width: 900px;
-        max-height: 95vh;
-        border-radius: 24px;
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-        box-shadow: 
-            0 32px 80px rgba(0,0,0,0.15),
-            0 16px 40px rgba(0,0,0,0.1),
-            0 0 0 1px rgba(255,255,255,0.05);
-        border: 1px solid rgba(255,255,255,0.2);
-        backdrop-filter: blur(10px);
-        position: relative;
-        transform: scale(0.9) translateY(20px);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .goal-overlay.open .goal-card {
-        transform: scale(1) translateY(0);
-        animation: modalSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    @keyframes modalSlideIn {
-        from {
-            transform: scale(0.9) translateY(20px);
-            opacity: 0;
-        }
-        to {
-            transform: scale(1) translateY(0);
-            opacity: 1;
-        }
-    }
-
-    .goal-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: linear-gradient(90deg, #004225 0%, #32CD32 50%, #004225 100%);
-        border-radius: 24px 24px 0 0;
-    }
-
-    .goal-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 32px 32px 16px 32px;
-        background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
-        border-bottom: 1px solid rgba(0,66,37,0.1);
-        position: relative;
-    }
-
-    .goal-header::after {
-        content: '';
-        position: absolute;
-        bottom: 0;
-        left: 32px;
-        right: 32px;
-        height: 1px;
-        background: linear-gradient(90deg, transparent 0%, #004225 50%, transparent 100%);
-        opacity: 0.3;
-    }
-
-    .goal-modal-title {
-        font-size: 36px;
-        line-height: 1.2;
-        font-weight: 800;
-        letter-spacing: -0.5px;
-        color: #111827;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        background: linear-gradient(135deg, #004225 0%, #32CD32 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
-
-
-
-    .goal-close {
-        background: linear-gradient(145deg, #f3f4f6 0%, #e5e7eb 100%);
-        border: none;
-        font-size: 20px;
-        cursor: pointer;
-        padding: 12px;
-        color: #6b7280;
-        border-radius: 12px;
-        transition: all 0.2s ease;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        width: 44px;
-        height: 44px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .goal-close:hover {
-        background: linear-gradient(145deg, #ef4444 0%, #dc2626 100%);
-        color: white;
-        transform: scale(1.05);
-        box-shadow: 0 4px 12px rgba(239,68,68,0.3);
-    }
-
-    .goal-body {
-        padding: 32px;
-        background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-        overflow-y: auto;
-        max-height: calc(95vh - 120px);
-    }
-
-    .goal-body::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    .goal-body::-webkit-scrollbar-track {
-        background: #f1f5f9;
-        border-radius: 3px;
-    }
-
-    .goal-body::-webkit-scrollbar-thumb {
-        background: linear-gradient(180deg, #004225 0%, #32CD32 100%);
-        border-radius: 3px;
-    }
-
-    .goal-body::-webkit-scrollbar-thumb:hover {
-        background: linear-gradient(180deg, #003018 0%, #28a745 100%);
-    }
-
-    .field-label {
-        font-size: 18px;
-        font-weight: 700;
-        margin: 24px 0 12px 0;
-        color: #1f2937;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        position: relative;
-    }
-
-    .field-label::before {
-        content: '';
-        width: 4px;
-        height: 20px;
-        background: linear-gradient(180deg, #004225 0%, #32CD32 100%);
-        border-radius: 2px;
-        margin-right: 4px;
-    }
-
-    .field-label:first-child {
-        margin-top: 0;
-    }
-
-    .select-input, .text-input, .date-input {
-        width: 100%;
-        box-sizing: border-box;
-        display: block;
-        padding: 16px 20px;
-        border-radius: 16px;
-        border: 2px solid #e2e8f0;
-        background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
-        font-size: 16px;
-        line-height: 1.4;
-        height: 60px;
-        min-height: 60px;
-        outline: none;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 
-            0 1px 3px rgba(0,0,0,0.1),
-            inset 0 1px 0 rgba(255,255,255,0.6);
-        position: relative;
-    }
-
-    .select-input:focus, .text-input:focus, .date-input:focus {
-        border-color: #004225;
-        box-shadow: 
-            0 0 0 4px rgba(0,66,37,0.1),
-            0 4px 12px rgba(0,66,37,0.15),
-            inset 0 1px 0 rgba(255,255,255,0.6);
-        background: #ffffff;
-        transform: translateY(-1px);
-    }
-
-    .select-input:hover, .text-input:hover, .date-input:hover {
-        border-color: #cbd5e1;
-        box-shadow: 
-            0 2px 8px rgba(0,0,0,0.1),
-            inset 0 1px 0 rgba(255,255,255,0.6);
-        transform: translateY(-1px);
-    }
-
-    .text-input::placeholder {
-        color: #94a3b8;
-        font-style: italic;
-        transition: color 0.2s ease;
-    }
-
-    .text-input:focus::placeholder {
-        color: #cbd5e1;
-    }
-
-    .row-2 {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 20px;
-        margin-top: 6px;
-    }
-
-    .row-2 > div { min-width: 0; }
-
-    @media (max-width: 700px) {
-        .row-2 { grid-template-columns: 1fr; }
-    }
-
-    /* Normalize native controls */
-    .select-input {
-        -webkit-appearance: none;
-        -moz-appearance: none;
-        appearance: none;
-        background-image: none; /* keep plain look (screenshot shows simple caret) */
-    }
-
-    .date-input {
-        -webkit-appearance: none;
-        appearance: none;
-    }
-
-    .btn-submit {
-        display: block;
-        margin: 32px auto 8px auto;
-        background: linear-gradient(135deg, #004225 0%, #32CD32 100%);
-        color: #fff;
-        font-weight: 700;
-        font-size: 20px;
-        padding: 18px 48px;
-        border-radius: 50px;
-        border: none;
-        cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 
-            0 8px 25px rgba(0,66,37,0.3),
-            0 4px 12px rgba(0,66,37,0.2);
-        position: relative;
-        overflow: hidden;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        min-width: 200px;
-    }
-
-    .btn-submit::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-        transition: left 0.5s;
-    }
-
-    .btn-submit:hover {
-        background: linear-gradient(135deg, #003018 0%, #28a745 100%);
-        transform: translateY(-2px);
-        box-shadow: 
-            0 12px 35px rgba(0,66,37,0.4),
-            0 6px 16px rgba(0,66,37,0.3);
-    }
-
-    .btn-submit:hover::before {
-        left: 100%;
-    }
-
-    .btn-submit:active {
-        transform: translateY(-1px);
-        box-shadow: 
-            0 6px 20px rgba(0,66,37,0.3),
-            0 3px 8px rgba(0,66,37,0.2);
-    }
-
-    /* Filter Section Styles */
-    .filter-section {
-        margin: 24px 0;
-        padding: 28px;
-        background: linear-gradient(145deg, #f1f5f9 0%, #e2e8f0 100%);
-        border-radius: 20px;
-        border: 1px solid rgba(0,66,37,0.1);
-        box-shadow: 
-            0 4px 16px rgba(0,0,0,0.05),
-            inset 0 1px 0 rgba(255,255,255,0.6);
-        position: relative;
-        overflow: hidden;
-    }
-
-    .filter-section::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 3px;
-        background: linear-gradient(90deg, #004225 0%, #32CD32 50%, #004225 100%);
-    }
-
-    .filter-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
-        gap: 20px;
-        margin-top: 12px;
-    }
-
-    .filter-group {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-    }
-
-    .filter-label {
-        font-size: 14px;
-        font-weight: 700;
-        color: #374151;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin: 0;
-    }
-
-    .filter-select {
-        width: 100%;
-        padding: 14px 16px;
-        border-radius: 12px;
-        border: 2px solid #cbd5e1;
-        background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
-        font-size: 15px;
-        color: #374151;
-        outline: none;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        cursor: pointer;
-        box-shadow: 
-            0 1px 3px rgba(0,0,0,0.1),
-            inset 0 1px 0 rgba(255,255,255,0.6);
-    }
-
-    .filter-select:focus {
-        border-color: #004225;
-        box-shadow: 
-            0 0 0 4px rgba(0,66,37,0.1),
-            0 4px 12px rgba(0,66,37,0.15),
-            inset 0 1px 0 rgba(255,255,255,0.6);
-        background: #ffffff;
-        transform: translateY(-1px);
-    }
-
-    .filter-select:hover {
-        border-color: #94a3b8;
-        box-shadow: 
-            0 2px 8px rgba(0,0,0,0.1),
-            inset 0 1px 0 rgba(255,255,255,0.6);
-        transform: translateY(-1px);
-    }
-
-    /* Filter status indicators */
-    .filter-status {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-top: 8px;
-        padding: 8px 12px;
-        background: #f3f4f6;
-        border-radius: 6px;
-        font-size: 13px;
-        color: #6b7280;
-    }
-
-    .filter-status.active {
-        background: #dcfce7;
-        color: #166534;
-    }
-
-    .filter-status .status-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: #9ca3af;
-    }
-
-    .filter-status.active .status-dot {
-        background: #16a34a;
-    }
-
-    /* Responsive adjustments */
-    @media (max-width: 900px) {
-        .filter-grid {
-            grid-template-columns: 1fr;
-            gap: 16px;
-        }
-    }
-
-    @media (max-width: 700px) {
-        .filter-section {
-            padding: 16px;
-        }
-        
-        .filter-select {
-            font-size: 14px;
-            padding: 10px 12px;
-        }
-    }
-
-    /* Reset Filters Button */
-    .reset-filters-btn {
-        margin-top: 20px;
-        padding: 12px 24px;
-        background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
-        color: white;
-        border: none;
-        border-radius: 12px;
-        cursor: pointer;
-        font-size: 14px;
-        font-weight: 600;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        display: block;
-        margin-left: auto;
-        margin-right: auto;
-        box-shadow: 
-            0 4px 12px rgba(107,114,128,0.3),
-            0 2px 6px rgba(107,114,128,0.2);
-        position: relative;
-        overflow: hidden;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        min-width: 140px;
-    }
-
-    .reset-filters-btn::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-        transition: left 0.5s;
-    }
-
-    .reset-filters-btn:hover {
-        background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
-        transform: translateY(-2px);
-        box-shadow: 
-            0 6px 16px rgba(107,114,128,0.4),
-            0 3px 8px rgba(107,114,128,0.3);
-    }
-
-    .reset-filters-btn:hover::before {
-        left: 100%;
-    }
-
-    .reset-filters-btn:active {
-        transform: translateY(-1px);
-        box-shadow: 
-            0 4px 12px rgba(107,114,128,0.3),
-            0 2px 6px rgba(107,114,128,0.2);
-    }
+    /* CLEAN, NEAT SHADOW (Adjusted for white text) */
+    text-shadow: 
+        -1px -1px 0 #cccccc, /* Shadow top-left/inner */
+        1px 1px 0 #333333,   /* Shadow bottom-right/outer */
+        3px 3px 6px rgba(0, 0, 0, 0.4); /* Soft, concentrated drop shadow */
+
+    text-align: left; 
+    width: 100%;
+    margin-top: 10px; 
+    transition: all 0.5s;
+    line-height: 1;
+    display: flex; /* Use flex to align nominator and denominator */
+    align-items: flex-end;
+    margin-bottom: 0; 
+}
+
+/* Denominator in Normal State (next to Nominator) */
+.goal-card .goal-number .progress-denominator {
+    font-size: 0.4em; 
+    font-weight: 500; 
+    color: #555555; 
+    /* To display the number next to the nominator in the small card */
+    margin-left: 5px; 
+    margin-bottom: 25px; /* Adjust vertical alignment visually */
+    line-height: 1;
+    text-shadow: none; /* Ensure no 3D effect */
+    display: inline-block;
+}
+
+/* Denominator - Now placed at the bottom */
+.goal-card .denominator-container {
+    grid-area: total;
+    font-family: 'Inter', Arial, sans-serif;
+    font-weight: 500;
+    font-size: 1.5rem; 
+    color: #555555;
+    margin-top: -5px; 
+    align-self: end;
+    text-shadow: none;
+    display: none; /* Hide in normal state */
+}
+
+/* Show Denominator Container on hover and hide the inline one */
+.goal-card:hover .denominator-container {
+    display: block; /* Show denominator at the bottom on hover */
+}
+.goal-card:hover .goal-number .progress-denominator {
+    display: none; /* Hide inline denominator on hover */
+}
+
+/* New Qualifier List */
+.qualifier-list {
+    grid-area: list;
+    font-size: 0.85rem;
+    color: #374151;
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    align-self: stretch;
+    border-left: 1px solid #e5e7eb;
+    padding-left: 15px;
+    max-height: 100%; 
+    overflow-y: auto;
+    font-weight: 400;
+    
+    /* Qualifier List hidden until hover */
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+/* Show Qualifier List on hover */
+.goal-card:hover .qualifier-list {
+    opacity: 1;
+}
+
+.qualifier-list li {
+    margin-bottom: 4px;
+    padding-left: 10px;
+    position: relative;
+}
+.qualifier-list li::before {
+    content: "•";
+    color: #00681a;
+    font-weight: 900;
+    display: inline-block;
+    width: 1em;
+    margin-left: -1em;
+}
+
+/* Styling for the small fraction part (old denominator removed) */
+.goal-card .goal-number .goal-total {
+    display: none; 
+}
+
+.goal-card .goal-title::after {
+    display: none; /* Remove line animation */
+}
+
+/* Applying .agenda-card-kebab styles to .ellipsis-btn */
+.ellipsis-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    z-index: 20; 
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    transition: background 0.2s, transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); 
+    background: none;
+    border: none;
+    font-size: 1.3rem;
+    color: #090909;
+}
+
+.ellipsis-btn:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+/* Applying .options-dropdown styles to .goal-menu */
+.goal-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: white;
+    min-width: 160px;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.2s ease;
+    z-index: 500; /* Increased z-index for visibility over expanded card */
+    overflow: hidden;
+    display: none;
+}
+
+.goal-menu.open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    display: block;
+}
+
+.goal-menu .options-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    text-decoration: none;
+    font-size: 1rem;
+    color: #555555;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    width: 100%;
+    text-align: left;
+    background: white;
+    border: none;
+}
+
+.goal-menu .options-item:hover {
+    background-color: #F3F4F6;
+}
+
+.goal-menu .options-item:first-child {
+    border-radius: 8px 8px 0 0;
+}
+
+.goal-menu .options-item:last-child {
+    border-radius: 0 0 8px 8px;
+}
+
+.goal-menu .options-item svg {
+    width: 16px;
+    height: 16px;
+}
+
+.goal-menu .edit-option {
+    color: #1f7c57;
+}
+
+.goal-menu .delete-option {
+    color: #DC2626;
+}
+
+
+.goal-progress-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: 10px;
+    padding: 4px 10px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #065f46;
+    background: #d1fae5;
+    border: 1px solid #86efac;
+    border-radius: 999px;
+}
+
+
+/* --- List View Table Styles --- */
+
+.title-expand-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 30px;
+}
+
+.table-title-text {
+    font-family: 'Inter', Arial, sans-serif;
+    font-weight: 400;
+    font-size: 1.25rem;
+    color: #000000;
+}
+
+.view-more {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 0.75rem;
+    color: #2EA8FF;
+    text-decoration: none;
+    margin-top: 10px;
+    cursor: pointer;
+}
+
+.view-more:hover {
+    text-decoration: underline;
+}
+
+.user-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #FFFFFF; 
+    border-radius: 10px; 
+    overflow: auto; 
+    box-shadow: 0 0 0 1px #E0E0E0, 0 8px 18px -8px rgba(0, 0, 0, 0.15); 
+    border: none;
+    margin-top: 10px;
+}
+
+.user-table th {
+    font-size: 0.95rem;
+    font-weight: 600; 
+    background: #eeeeee; 
+    border-bottom: 1px solid #E0E0E0; 
+    padding: 16px 18px; 
+    text-align: left;
+    font-family: 'Inter', Arial, sans-serif;
+    color: #333333; 
+    box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.05); 
+    transition: padding 0.2s ease-in-out; 
+}
+.user-table td {
+    font-size: 14px; 
+    font-weight: 400;
+    border: none;
+    border-bottom: 1px solid #EDEDED; 
+    padding: 14px 18px; 
+    text-align: left;
+    font-family: 'Inter', Arial, sans-serif;
+    color: #4A5568; 
+    transition: all 0.2s ease-out;
+} 
+.user-table tr:last-child td {
+    border-bottom: none;
+} 
+.user-table tr:nth-child(even) {
+    background-color: #FAFAFB; 
+}
+
+.user-table tr:hover {
+    background-color: #fffaf0; 
+    box-shadow: inset 4px 0 0 0 #FF9900; 
+    transform: translateY(-1px); 
+    cursor: pointer;
+}
+
+.settings-icon {
+    width: 16px;
+    height: 16px;
+    align-items: center;
+    justify-content: center;
+    display: inline-block;
+    vertical-align: middle;
+    cursor:pointer;
+}
+
+.user-table th.settings-col,
+.user-table td.settings-col {
+    text-align: center !important;
+    position: relative;
+    overflow: visible;
+    z-index: 5;
+}
+ 
+.name-link {
+    color: #0099FF;
+    text-decoration: none;
+} 
+.name-link:hover{
+    text-decoration: underline;
+} 
+ 
+.user-table tr:hover td {
+    padding: 18px; 
+}
+
+.user-table tr:hover {
+    background-color: #f2f2f2; 
+    cursor: pointer;
+}
+
+.user-table tr:last-child:hover td {
+    border-bottom: none; 
+}
+
+/* Generic Modal Styles (Copied from agenda.css modal for potential use) */
+
+#deleteAgendaModal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 999999;
+    align-items: center;
+    justify-content: center;
+}
+
+#deleteAgendaModal.is-open {
+    display: flex !important;
+}
+
+#deleteAgendaModal.show {
+    display: flex;
+}
+
+.modal-content {
+    background: white;
+    padding: 2rem 2.5rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 32px rgba(0, 0, 0, 0.18);
+    max-width: 350px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 1000000;
+}
+
+.modal-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #E53E3E;
+    margin-bottom: 1rem;
+}
+
+.modal-message {
+    font-size: 1rem;
+    color: #444;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 1rem;
+}
+
+.modal-btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.modal-btn-cancel {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.modal-btn-cancel:hover {
+    background: #d1d5db;
+}
+
+.modal-btn-delete {
+    background: #E53E3E;
+    color: white;
+}
+
+.modal-btn-delete:hover {
+    background: #c53030;
+}
 </style>
 </head>
 <body>
     
-
-    <!-- Add Goal Modal removed; using server-rendered add/edit pages -->
 
     <div class="content">
 
@@ -1080,8 +709,7 @@
                 </button>
                 <div class="goals-carousel">
                     <div class="goals-carousel-track" id="goalsTrack">
-                        <!-- Goals will be dynamically loaded here -->
-                    </div>
+                        </div>
                 </div>
                 <button class="carousel-arrow right-arrow" type="button" onclick="scrollGoals(1)">
                     <svg width="32" height="32" viewBox="0 0 32 32"><path d="M12 8l8 8-8 8" stroke="#063A1C" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -1089,9 +717,6 @@
             </div>
         </div>
         <div>
-            <div class="ListView-header">
-                <h1>List View</h1>
-            </div>
             <div class="table-container">
                 <div id="goalsError" style="display:none; margin: 0 0 12px 0; padding: 12px 14px; border-radius: 8px; background: #fee2e2; color: #991b1b; border: 1px solid #fecaca;"></div>
                 <div id="goalsTablesContainer"></div>
@@ -1100,240 +725,80 @@
     </main>
     </div>
 
-    <!-- Overlay Modal -->
-    <div class="overlay" id="qualifiersOverlay" aria-hidden="true">
-        <div class="overlay-card" role="dialog" aria-modal="true" aria-labelledby="overlayTitle">
-            <div class="overlay-header">
-                <div class="overlay-title" id="overlayTitle">List of Qualifiers</div>
-                <div class="overlay-actions">
-                    <button class="btn-export">Export</button>
-                    <button class="overlay-close" id="overlayClose" title="Close">✕</button>
-                </div>
-            </div>
-            <div class="overlay-body">
-                <table class="qualifiers-table">
-                    <thead>
-                        <tr>
-                            <th>Title</th>
-                            <th>Team Leader</th>
-                            <th>Start Date</th>
-                            <th>Status</th>
-                            <th class="table-settings">Settings</th>
-                        </tr>
-                    </thead>
-                    <tbody id="qualifiersTbody">
-                        <!-- rows injected via JS -->
-                    </tbody>
-                </table>
-                <div class="pagination" id="pagination"></div>
-            </div>
-        </div>
-    </div>
-
     <script>
         // Endpoint helpers resolved by Django
         const API_GOALS_URL = "{% url 'api_goals' %}";
-        const API_GOAL_DETAIL_URL_TEMPLATE = "{% url 'api_goal_detail' 0 %}"; // replace 0 with id
-        const API_GOAL_QUALIFIERS_URL_TEMPLATE = "{% url 'api_goal_qualifiers' 0 %}"; // replace 0 with id
-        const EDIT_GOAL_URL_TEMPLATE = "{% url 'edit_goal' 0 %}"; // replace 0 with id
+        const API_GOAL_DETAIL_URL_TEMPLATE = "{% url 'api_goal_detail' 0 %}"; 
+        const API_GOAL_QUALIFIERS_URL_TEMPLATE = "{% url 'api_goal_qualifiers' 0 %}";
+        const EDIT_GOAL_URL_TEMPLATE = "{% url 'edit_goal' 0 %}";
         function goalDetailUrl(id) { return API_GOAL_DETAIL_URL_TEMPLATE.replace('/0/', `/${id}/`); }
         function goalQualifiersUrl(id) { return API_GOAL_QUALIFIERS_URL_TEMPLATE.replace('/0/', `/${id}/`); }
         function editGoalUrl(id) { return EDIT_GOAL_URL_TEMPLATE.replace('/0/', `/${id}/`); }
-        // Export function for qualifiers
-        document.addEventListener('click', (e) => {
-            if (e.target.closest('.btn-export')) {
-                exportQualifiersToCSV();
-            }
-        });
+        
+        // --- Sorting Logic: Closest to 100% first, completed goals go last ---
+        function sortGoals(goals) {
+            return goals.sort((a, b) => {
+                // Calculate actual progress based on Nominator/Denominator
+                const progressA = (a.current_qualifiers / a.target_qualifiers) * 100;
+                const progressB = (b.current_qualifiers / b.target_qualifiers) * 100;
 
-        function exportQualifiersToCSV() {
-            if (dataset.length === 0) {
-                alert('No data to export');
-                return;
-            }
+                const isCompleteA = progressA >= 100;
+                const isCompleteB = progressB >= 100;
 
-            // Create CSV content
-            const headers = ['Title', 'Team Leader', 'Start Date', 'Status'];
-            const csvRows = [headers.join(',')];
+                // Rule 1: Completed goals (>= 100%) go to the back
+                if (isCompleteA && !isCompleteB) return 1;
+                if (!isCompleteA && isCompleteB) return -1;
 
-            dataset.forEach(row => {
-                const values = [
-                    `"${row.title}"`,
-                    `"${row.lead}"`,
-                    `"${row.start}"`,
-                    `"${row.status}"`
-                ];
-                csvRows.push(values.join(','));
-            });
-
-            const csvContent = csvRows.join('\n');
-            
-            // Create and download file
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            const url = URL.createObjectURL(blob);
-            link.setAttribute('href', url);
-            link.setAttribute('download', 'goal_qualifiers.csv');
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-
-        // Plugin to draw percentage text inside the chart (with subtle shadow)
-        const centerTextPlugin = {
-            id: 'centerText',
-            beforeDraw(chart) {
-                const { width, height, ctx } = chart;
-                ctx.save();
-                const dataset = chart.data.datasets[0].data;
-                const value = dataset[0];
-
-                // Ensure value is valid for display
-                const displayValue = (value !== null && value !== undefined && !isNaN(value)) ? value : 0;
-
-                // Drop shadow for text for better contrast
-                ctx.shadowColor = 'rgba(0,0,0,0.18)';
-                ctx.shadowBlur = 8;
-                ctx.shadowOffsetY = 2;
-
-                ctx.font = '700 3.2rem Arial'; 
-                ctx.fillStyle = '#1f2937'; 
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(displayValue + '%', width / 2, height / 1.78);
-                ctx.restore();
-            }
-        };
-        // Subtle arc shadow plugin (applies to the progress arc only)
-        const arcShadowPlugin = {
-            id: 'arcShadow',
-            beforeDatasetDraw(chart, args) {
-                if (args.index !== 0) return;
-                const { ctx } = chart;
-                ctx.save();
-                ctx.shadowColor = 'rgba(0,0,0,0.20)';
-                ctx.shadowBlur = 14;
-                ctx.shadowOffsetY = 6;
-            },
-            afterDatasetDraw(chart, args) {
-                if (args.index !== 0) return;
-                chart.ctx.restore();
-            }
-        };
-        function createHalfDoughnut(ctx, value, title) {
-            // Ensure value is a valid number, default to 0 if undefined/null
-            const progressValue = (value !== null && value !== undefined && !isNaN(value)) ? value : 0;
-
-            // Choose color palette by progress bucket
-            let startColor, endColor;
-            if (progressValue < 34) {
-                startColor = '#ef4444'; // red
-                endColor   = '#f87171';
-            } else if (progressValue < 67) {
-                startColor = '#f59e0b'; // amber
-                endColor   = '#fbbf24';
-            } else {
-                startColor = '#10b981'; // green
-                endColor   = '#22c55e';
-            }
-
-            // Gradient for the progress arc
-            const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
-            gradient.addColorStop(0, startColor);
-            gradient.addColorStop(1, endColor);
-
-            return new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    datasets: [{
-                        data: [progressValue, 100 - progressValue],
-                        backgroundColor: [gradient, 'rgba(229,231,235,0.9)'],
-                        borderWidth: 0,
-                        borderRadius: 14,
-                        hoverOffset: 4
-                    }]
-                },
-                options: {
-                rotation: -90,
-                circumference: 180,
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '78%',
-                plugins: {
-                    legend: { display: false },
-                    tooltip: { enabled: false },
-                    title: { display: false },
-                    subtitle: { display: false},
-                    padding: { top: 10 }
-                    },
-                animation: {
-                    animateRotate: true,
-                    duration: 1200,
-                    easing: 'easeOutCubic'
-                    }
-                },
-                plugins: [arcShadowPlugin, centerTextPlugin] 
+                // Rule 2: Sort by progress percentage in descending order (highest first)
+                return progressB - progressA;
             });
         }
-
-        // === Carousel logic (mirrors Agenda) ===
-        const GOAL_CARD_BACKGROUNDS = [
-            'linear-gradient(to bottom, #FFC4A8 0%, #ffffff 100%)',
-            'linear-gradient(to bottom, #B6F3D7 0%, #ffffff 100%)',
-            'linear-gradient(to bottom, #B8D9FF 0%, #ffffff 100%)',
-            'linear-gradient(to bottom, #D0B8FF 0%, #ffffff 100%)',
-            'linear-gradient(to bottom, #FFF3B8 0%, #ffffff 100%)',
-            'linear-gradient(to bottom, #FFB8D9 0%, #ffffff 100%)',
-            'linear-gradient(to bottom, #A8FFF0 0%, #ffffff 100%)',
-            'linear-gradient(to bottom, #FFC0B8 0%, #ffffff 100%)',
-            'linear-gradient(to bottom, #D9D9F8 0%, #ffffff 100%)',
-        ];
+        
+        // --- Carousel logic (adapted for 2x2 groups) ---
 
         let goalsIndex = 0;
-        const goalsCardsToShow = 3;
+        const goalsGroupsToShow = 1; // Show 1 group of 4 cards at a time
 
         function getGoalCards() {
-            return document.querySelectorAll('.goals-carousel-track .goal-card');
+            return document.querySelectorAll('.goals-carousel-track .goal-card-group .goal-card');
+        }
+        
+        function getGoalGroups() {
+            return document.querySelectorAll('.goals-carousel-track .goal-card-group');
         }
 
         function applyGoalColors() {
-            const cards = getGoalCards();
-            cards.forEach((card, index) => {
-                const colorIndex = index % GOAL_CARD_BACKGROUNDS.length;
-                card.style.backgroundImage = GOAL_CARD_BACKGROUNDS[colorIndex];
-            });
+            // Function no longer applies colors but is kept to preserve logic flow.
         }
 
         function updateGoalsCarousel() {
-            const track = document.querySelector('.goals-carousel-track');
-            const cards = getGoalCards();
-            const totalCards = cards.length;
-            if (!track || totalCards === 0) return;
+            const track = document.getElementById('goalsTrack');
+            const groups = getGoalGroups();
+            const totalGroups = groups.length;
+            if (!track || totalGroups === 0) return;
 
+            // 1. Clamp index
             if (goalsIndex < 0) goalsIndex = 0;
-            if (goalsIndex > totalCards - goalsCardsToShow) {
-                goalsIndex = Math.max(totalCards - goalsCardsToShow, 0);
+            if (goalsIndex > totalGroups - goalsGroupsToShow) {
+                goalsIndex = Math.max(totalGroups - goalsGroupsToShow, 0);
             }
 
-            const cardWidth = cards.length > 0 ? cards[0].offsetWidth : 0;
-            const gap = parseInt(window.getComputedStyle(track).gap) || 24;
-            const offset = goalsIndex * (cardWidth + gap);
+            // 2. Calculate offset and scroll using group width
+            const groupsArray = Array.from(groups);
+            // Must calculate group width dynamically in case of screen resize
+            const groupWidth = groupsArray.length > 0 ? groupsArray[0].offsetWidth : 0; 
+            const trackStyle = window.getComputedStyle(track);
+            const gap = parseInt(trackStyle.gap) || 4; // Use new default gap
+            const offset = goalsIndex * (groupWidth + gap);
             track.style.transform = `translateX(-${offset}px)`;
 
+            // 3. Arrow enable/disable
             const leftArrow = document.querySelector('.goals-carousel-wrapper .left-arrow');
             const rightArrow = document.querySelector('.goals-carousel-wrapper .right-arrow');
             if (leftArrow) leftArrow.disabled = goalsIndex === 0;
-            if (rightArrow) rightArrow.disabled = goalsIndex >= totalCards - goalsCardsToShow;
+            if (rightArrow) rightArrow.disabled = goalsIndex >= totalGroups - goalsGroupsToShow;
 
-            const lastVisibleIndex = goalsIndex + goalsCardsToShow - 1;
-            cards.forEach((card, index) => {
-                card.classList.remove('expand-left');
-                if (index === lastVisibleIndex && index < totalCards) {
-                    card.classList.add('expand-left');
-                }
-            });
-
+            // 4. Cleanup old hover classes
             setupGoalHoverShift();
             applyGoalColors();
         }
@@ -1345,27 +810,14 @@
 
         function setupGoalHoverShift() {
             const cards = getGoalCards();
-            cards.forEach(card => card.classList.remove('shift-previous'));
-            cards.forEach((card, index) => {
-                if (card.classList.contains('expand-left')) {
-                    const previousCard = cards[index - 1];
-                    if (previousCard) {
-                        const over = () => { previousCard.classList.add('shift-previous'); };
-                        const out = () => { previousCard.classList.remove('shift-previous'); };
-                        card.onmouseover = over;
-                        card.onmouseout = out;
-                    }
-                } else {
-                    card.onmouseover = null;
-                    card.onmouseout = null;
-                }
+            cards.forEach(card => {
+                card.classList.remove('expand-left', 'shift-previous');
+                card.onmouseover = null;
+                card.onmouseout = null;
             });
         }
 
-        // Ellipsis dropdown behavior - REMOVED CONFLICTING EVENT DELEGATION
-        // Now using onclick handlers directly on buttons
-        
-        // Close menus when clicking outside
+        // Ellipsis dropdown behavior
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.goal-menu') && !e.target.closest('.ellipsis-btn')) {
                 document.querySelectorAll('.goal-menu').forEach(menu => {
@@ -1374,185 +826,47 @@
             }
         });
 
-        // Delegate menu actions (Edit/Delete) - REMOVED OLD DELETE LOGIC
-        document.addEventListener('click', (e) => {
-            const editBtn = e.target.closest('.menu-edit');
-            if (editBtn) {
-                const card = editBtn.closest('.goal-card');
-                const title = card?.querySelector('.goal-title')?.textContent?.trim() || '';
-                alert('Edit: ' + title);
-            }
-            // Delete button now uses onclick handlers, not event delegation
-        });
-
-        // Modal logic
-        const overlay = document.getElementById('qualifiersOverlay');
-        const overlayClose = document.getElementById('overlayClose');
-        function openOverlay() { overlay.classList.add('open'); }
-        function closeOverlay() { overlay.classList.remove('open'); }
-        overlayClose.addEventListener('click', closeOverlay);
-        overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) closeOverlay();
-        });
-
-        // Removed modal wiring; using server-rendered add/edit pages
-
-        // Removed modal submission code
-
-        // Notification functions
+        // Notification functions (kept for completeness)
         function showSuccessMessage(message) {
-            // Create a beautiful success notification
             const notification = document.createElement('div');
-            notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-                color: white;
-                padding: 16px 24px;
-                border-radius: 12px;
-                box-shadow: 0 8px 32px rgba(16, 185, 129, 0.3);
-                z-index: 10000;
-                font-weight: 600;
-                font-size: 16px;
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                animation: slideInRight 0.3s ease-out;
-                max-width: 400px;
-            `;
-            
-            notification.innerHTML = `
-                <div style="font-size: 24px;">✅</div>
-                <div>${message}</div>
-            `;
-            
+            notification.style.cssText = `position: fixed; top: 20px; right: 20px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 16px 24px; border-radius: 12px; box-shadow: 0 8px 32px rgba(16, 185, 129, 0.3); z-index: 10000; font-weight: 600; font-size: 16px; display: flex; align-items: center; gap: 12px; animation: slideInRight 0.3s ease-out; max-width: 400px;`;
+            notification.innerHTML = `<div style="font-size: 24px;">✅</div><div>${message}</div>`;
             document.body.appendChild(notification);
-            
-            // Auto remove after 4 seconds
-            setTimeout(() => {
-                notification.style.animation = 'slideOutRight 0.3s ease-in';
-                setTimeout(() => notification.remove(), 300);
-            }, 4000);
+            setTimeout(() => { notification.style.animation = 'slideOutRight 0.3s ease-in'; setTimeout(() => notification.remove(), 300); }, 4000);
         }
 
         function showErrorMessage(message) {
-            // Create a beautiful error notification
             const notification = document.createElement('div');
-            notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-                color: white;
-                padding: 16px 24px;
-                border-radius: 12px;
-                box-shadow: 0 8px 32px rgba(239, 68, 68, 0.3);
-                z-index: 10000;
-                font-weight: 600;
-                font-size: 16px;
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                animation: slideInRight 0.3s ease-out;
-                max-width: 400px;
-            `;
-            
-            notification.innerHTML = `
-                <div style="font-size: 24px;">❌</div>
-                <div>${message}</div>
-            `;
-            
+            notification.style.cssText = `position: fixed; top: 20px; right: 20px; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; padding: 16px 24px; border-radius: 12px; box-shadow: 0 8px 32px rgba(239, 68, 68, 0.3); z-index: 10000; font-weight: 600; font-size: 16px; display: flex; align-items: center; gap: 12px; animation: slideInRight 0.3s ease-out; max-width: 400px;`;
+            notification.innerHTML = `<div style="font-size: 24px;">❌</div><div>${message}</div>`;
             document.body.appendChild(notification);
-            
-            // Auto remove after 5 seconds
-            setTimeout(() => {
-                notification.style.animation = 'slideOutRight 0.3s ease-in';
-                setTimeout(() => notification.remove(), 300);
-            }, 5000);
+            setTimeout(() => { notification.style.animation = 'slideOutRight 0.3s ease-in'; setTimeout(() => notification.remove(), 300); }, 5000);
         }
 
-        // Add CSS animations for notifications
+        // Add CSS animations for notifications (kept for completeness)
         const style = document.createElement('style');
-        style.textContent = `
-            @keyframes slideInRight {
-                from {
-                    transform: translateX(100%);
-                    opacity: 0;
-                }
-                to {
-                    transform: translateX(0);
-                    opacity: 1;
-                }
-            }
-            
-            @keyframes slideOutRight {
-                from {
-                    transform: translateX(0);
-                    opacity: 1;
-                }
-                to {
-                    transform: translateX(100%);
-                    opacity: 0;
-                }
-            }
-        `;
+        style.textContent = `@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } } @keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } } @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } } @keyframes slideOutRight { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }`;
         document.head.appendChild(style);
-
-        // Removed modal filter helpers
-
-        // Add reset filters button functionality (optional)
-        function addResetFiltersButton() {
-            const filterSection = document.querySelector('.filter-section');
-            const resetButton = document.createElement('button');
-            resetButton.textContent = 'Reset Filters';
-            resetButton.className = 'reset-filters-btn';
-            resetButton.style.cssText = `
-                margin-top: 12px;
-                padding: 8px 16px;
-                background: #6b7280;
-                color: white;
-                border: none;
-                border-radius: 6px;
-                cursor: pointer;
-                font-size: 14px;
-                transition: background 0.2s;
-            `;
-            resetButton.addEventListener('click', resetFilters);
-            resetButton.addEventListener('mouseenter', () => {
-                resetButton.style.background = '#4b5563';
-            });
-            resetButton.addEventListener('mouseleave', () => {
-                resetButton.style.background = '#6b7280';
-            });
-            
-            filterSection.appendChild(resetButton);
-        }
-
-        // Removed calls to undefined filter helpers to avoid halting script
 
         // Load goals when page loads
         document.addEventListener('DOMContentLoaded', function() {
-            // Set CSRF token in meta tag
             const csrfToken = getCSRFToken();
             if (csrfToken) {
                 const csrfMeta = document.querySelector('meta[name="csrf-token"]');
-                if (csrfMeta) {
-                    csrfMeta.setAttribute('content', csrfToken);
+                    if (csrfMeta) {
+                        csrfMeta.setAttribute('content', csrfToken);
+                    }
                 }
-            }
             
             loadGoals();
             window.addEventListener('resize', updateGoalsCarousel);
         });
 
         // Database integration functions
-        let goals = []; // Store goals data
+        let goals = [];
 
-        // Load goals from database
         async function loadGoals() {
             try {
-                console.log('=== LOADING GOALS FROM API ===');
                 const response = await fetch(API_GOALS_URL, { credentials: 'same-origin' });
                 if (!response.ok) {
                     const text = await response.text();
@@ -1560,92 +874,119 @@
                 }
                 const data = await response.json();
                 
-                console.log('API Response:', data);
-                
                 if (data.success === false) {
                     showGoalsError(data.error || 'Failed to load goals');
                     goals = [];
-                    renderEmptyState(true);
+                    renderGoals();
                     renderQualifiersTables();
                     return;
                 }
 
                 if (data.goals && data.goals.length > 0) {
-                    console.log('Raw goals from API:', data.goals);
+                    // --- New Data Logic: Calculate Nominator/Denominator for Display & Sorting ---
+                    goals = data.goals.map(goal => {
+                        const target = goal.goal_number > 0 ? goal.goal_number : 10; // Denominator
+                        // Calculate current qualifiers (Nominator) based on progress % and target
+                        let current = Math.floor(target * (goal.progress / 100)); 
+                        current = Math.min(current, target); // Cap current at target if progress somehow exceeds 100
+
+                        return {
+                            ...goal,
+                            progress: (goal.progress !== null && goal.progress !== undefined && !isNaN(goal.progress)) ? goal.progress : 0,
+                            title: goal.title || 'Untitled Goal',
+                            current_qualifiers: current, // Nominator (Qualifiers Met)
+                            target_qualifiers: target,   // Denominator (Target Required)
+                            
+                            // Mock project titles for display in the expanded card (Replace with real fetch if needed)
+                            qualifier_titles: [
+                                `Project Alpha QA`, 
+                                `Launch Prep: Marketing`, 
+                                `Backend Refactor V2`, 
+                                `Client Onboarding Phase 1`,
+                                `Database Optimization`,
+                                `Mobile App Design Review`
+                            ].slice(0, current) // Use slice based on current qualifiers
+                        };
+                    });
                     
-                    // Validate and normalize goal data
-                    goals = data.goals.map(goal => ({
-                        ...goal,
-                        progress: (goal.progress !== null && goal.progress !== undefined && !isNaN(goal.progress)) ? goal.progress : 0,
-                        goal_number: goal.goal_number || 0,
-                        title: goal.title || 'Untitled Goal'
-                    }));
-                    
-                    console.log('Processed goals array:', goals);
-                    console.log('Goals array length:', goals.length);
-                    
+                    // Sort goals immediately after mapping
+                    goals = sortGoals(goals); 
+
                     renderGoals();
                     renderQualifiersTables();
                 } else {
-                    console.log('No goals found in API response');
-                    // No goals in database - show demo tiles so UI remains visible
                     goals = [];
-                    renderEmptyState(false);
+                    renderGoals();
                     renderQualifiersTables();
                 }
             } catch (error) {
-                console.error('Error loading goals from database:', error);
                 showGoalsError('Error loading goals: ' + (error?.message || error));
-                // API failed - show demo tiles instead of hiding the section
                 goals = [];
-                renderEmptyState(false);
+                renderGoals();
                 renderQualifiersTables();
             }
         }
 
-        // Fetch and populate dynamic filters from backend
-        // Removed loadFilters
-
-        // Render empty state when no goals exist
-        function renderEmptyState(hasError = false) {
-            const goalContainer = document.getElementById('goalsContainer');
-            if (!goalContainer) return;
-            goalContainer.innerHTML = `
-                <div style="grid-column: 1 / -1; text-align: center; padding: 3rem 2rem; color: #6b7280;">
-                    <div style="font-size: 4rem; margin-bottom: 1rem; opacity: 0.5;">${hasError ? '⚠️' : '📋'}</div>
-                    <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem; color: #374151;">${hasError ? 'Unable to Load Goals' : 'No Goals Yet'}</h3>
-                    <p style="font-size: 1rem; margin-bottom: 1.5rem; max-width: 400px; margin-left: auto; margin-right: auto;">${hasError ? 'There was an error loading goals from the database. Please check your connection and try again.' : 'Start by adding your first goal using the "Add Goal" button above. Your goals will appear here once created.'}</p>
-                    ${!hasError ? '<a href="/goals/add/" class="add-goal" style="margin-top: 1rem; display:inline-block;"><i class="fa-solid fa-plus" style="margin-right: 0.5rem;"></i>Add Your First Goal</a>' : ''}
-                </div>
-            `;
+        // Helper function to render the bulleted list of qualifiers
+        function renderQualifiersList(titles) {
+            if (!titles || titles.length === 0) {
+                return '<li style="list-style-type: none;">No projects qualified yet.</li>';
+            }
+            return titles.map(title => `<li>${title}</li>`).join('');
         }
 
-        // Render goals in the UI
-        function renderGoals() {
-            const goalContainer = document.getElementById('goalsContainer');
+
+        function renderEmptyState(hasError = false) {
+            const track = document.getElementById('goalsTrack');
+            if (!track) return;
+            
+            // Ensures the empty state spans the carousel width (644px, the new width)
+            const emptyStateContent = `<div style="width: 644px; text-align: center; padding: 3rem 2rem; color: #6b7280; flex-shrink: 0;">
+                <div style="font-size: 4rem; margin-bottom: 1rem; opacity: 0.5;">${hasError ? '⚠️' : '📋'}</div>
+                <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem; color: #374151;">${hasError ? 'Unable to Load Goals' : 'No Goals Yet'}</h3>
+                <p style="font-size: 1rem; margin-bottom: 1.5rem; max-width: 400px; margin-left: auto; margin-right: auto;">${hasError ? 'There was an error loading goals from the database. Please check your connection and try again.' : 'Start by adding your first goal using the "Add Goal" button above. Your goals will appear here once created.'}</p>
+                ${!hasError ? '<a href="{% url "add_goal" %}" class="add-goal" style="margin-top: 1rem; display:inline-block;"><i class="fa-solid fa-plus" style="margin-right: 0.5rem;"></i>Add Your First Goal</a>' : ''}
+            </div>`;
+
+            const emptyContainer = document.createElement('div');
+            emptyContainer.innerHTML = emptyStateContent;
+            track.appendChild(emptyContainer.firstChild);
+        }
+
+        // Render goals in the UI (modified for 2x2 grid and X/Y format)
+        async function renderGoals() {
             const track = document.getElementById('goalsTrack');
             if (!track) return;
 
-            // Clear existing goals
+            // Clear all groups and ensure no shared background exists
             track.innerHTML = '';
-
-            // If no goals, show empty state
+            
             if (goals.length === 0) {
-                // If empty, center message inside carousel
-                const empty = document.createElement('div');
-                empty.style.cssText = 'width:960px;text-align:center;padding:40px;color:#888;font-size:18px;margin:0 auto;';
-                empty.textContent = 'No goals found.';
-                track.appendChild(empty);
+                renderEmptyState(false);
                 return;
             }
 
-            // Render all goals as carousel cards
-            const goalsToShow = goals;
+            let group = null;
+            const totalGoals = goals.length;
             
-            goalsToShow.forEach((goal, index) => {
-                console.log(`Rendering goal ${index}: ID=${goal.id}, Title="${goal.title}"`);
+            goals.forEach((goal, index) => {
+                const cardIndex = index % 4; // Used for CSS geometric background pattern
+
+                // Create a new group for every 4 goals
+                if (cardIndex === 0) {
+                    group = document.createElement('div');
+                    group.className = 'goal-card-group';
+                    track.appendChild(group);
+                }
+
                 const card = document.createElement('div');
-                card.className = 'goal-card';
+                card.className = 'goal-card scale-factor'; /* Added scale-factor class here for CSS vars */
+                card.setAttribute('data-index', cardIndex); // Set data-index for CSS styling
+                
+                // --- Updated Goal Number Display ---
+                const nominatorDisplay = `${goal.current_qualifiers}`;
+                const denominatorDisplay = `${goal.target_qualifiers}`; // Denominator is now numbers-only
+
                 card.innerHTML = `
                     <button class=\"ellipsis-btn\" onclick=\"toggleGoalMenu(${index})\">...</button>
                     <div class=\"goal-menu\" id=\"goal-menu-${index}\">\n\
@@ -1658,145 +999,30 @@
                             Delete\n\
                         </button>\n\
                     </div>
-                    <canvas id=\"goal${index + 1}\"></canvas>
-                    <div class=\"goal-title\">${goal.title}</div>
+                    <!-- Content wrapper for inverse scaling -->
+                    <div class="card-content-wrapper">
+                        <div class=\"goal-title\">${goal.title}</div>
+                        <div class=\"goal-number\">
+                            ${nominatorDisplay}
+                            <span class="progress-denominator">${denominatorDisplay}</span>
+                        </div>
+                        <!-- Denominator container (bottom placement) -->
+                        <div class="denominator-container">Target: ${denominatorDisplay}</div>
+                        <!-- New Qualifier List -->
+                        <ul class="qualifier-list">
+                            ${renderQualifiersList(goal.qualifier_titles)}
+                        </ul>
+                    </div>
                 `;
-                track.appendChild(card);
-
-                // Create chart for this goal
-                setTimeout(() => {
-                    createHalfDoughnut(
-                        document.getElementById(`goal${index + 1}`).getContext('2d'), 
-                        goal.progress, 
-                        goal.title
-                    );
-                }, 100);
+                group.appendChild(card);
             });
 
-            // Initialize carousel after rendering
             updateGoalsCarousel();
         }
 
-        // Update list view with real data
-        function updateListView() {
-            const tbody = document.getElementById('goalsListTbody');
-            if (!tbody) return;
 
-            tbody.innerHTML = '';
-            
-            if (goals.length === 0) {
-                // Show empty state in table
-                const emptyRow = document.createElement('tr');
-                emptyRow.innerHTML = `
-                    <td colspan="3" style="text-align: center; padding: 2rem; color: #6b7280; font-style: italic;">
-                        No goals available. Add a goal to see it here.
-                    </td>
-                `;
-                tbody.appendChild(emptyRow);
-                return;
-            }
-
-            goals.forEach(goal => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${goal.title}</td>
-                    <td><button class="ListView-btn" onclick="viewQualifiers(${goal.id})">View List</button></td>
-                    <td class="progress">${goal.progress}%</td>
-                `;
-                tbody.appendChild(row);
-            });
-        }
-
-        // Add new goal to database
-        async function addGoalToDatabase(goalData) {
-            try {
-                console.log('Attempting to add goal:', goalData);
-                
-                const csrfToken = getCSRFToken();
-                console.log('CSRF Token:', csrfToken ? 'Found' : 'Not found');
-                
-                const response = await fetch(API_GOALS_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': csrfToken
-                    },
-                    body: JSON.stringify(goalData)
-                });
-
-                console.log('Add goal response status:', response.status);
-                console.log('Add goal response headers:', response.headers);
-
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('Response error:', errorText);
-                    throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
-                }
-
-                const result = await response.json();
-                console.log('Add goal response:', result);
-                
-                if (result.success) {
-                    // Reload goals from database for real-time update
-                    await loadGoals();
-                    return true;
-                } else {
-                    console.error('Error adding goal:', result.error);
-                    showErrorMessage('Error adding goal: ' + (result.error || 'Unknown error'));
-                    return false;
-                }
-            } catch (error) {
-                console.error('Error adding goal:', error);
-                showErrorMessage('Error adding goal: ' + error.message);
-                return false;
-            }
-        }
-
-        // Delete goal from database
-        async function deleteGoalFromDatabase(goalId) {
-            try {
-                console.log('Attempting to delete goal ID:', goalId);
-                console.log('CSRF Token:', getCSRFToken() ? 'Found' : 'Not found');
-                
-                const response = await fetch(goalDetailUrl(goalId), {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': getCSRFToken()
-                    }
-                });
-
-                console.log('Delete response status:', response.status);
-                console.log('Delete response headers:', response.headers);
-                
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('Delete response error:', errorText);
-                    throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
-                }
-                
-                const result = await response.json();
-                console.log('Delete response:', result);
-                
-                if (result.success) {
-                    // Reload goals from database for real-time update
-                    await loadGoals();
-                    return true;
-                } else {
-                    console.error('Error deleting goal:', result.error);
-                    showErrorMessage('Error deleting goal: ' + result.error);
-                    return false;
-                }
-            } catch (error) {
-                console.error('Error deleting goal:', error);
-                showErrorMessage('Error deleting goal: ' + error.message);
-                return false;
-            }
-        }
-
-        // Get CSRF token
+        // Get CSRF token (kept for completeness)
         function getCSRFToken() {
-            // Try to get CSRF token from cookies
             const cookies = document.cookie.split(';');
             for (let cookie of cookies) {
                 const [name, value] = cookie.trim().split('=');
@@ -1804,37 +1030,30 @@
                     return value;
                 }
             }
-            
-            // Try to get CSRF token from meta tag
             const csrfMeta = document.querySelector('meta[name="csrf-token"]');
             if (csrfMeta) {
                 return csrfMeta.getAttribute('content');
             }
-            
-            // Try to get CSRF token from form
             const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
             if (csrfInput) {
                 return csrfInput.value;
             }
-            
-            console.warn('CSRF token not found');
             return '';
         }
 
         // Enhanced goal menu functions
         function toggleGoalMenu(index) {
-            console.log('toggleGoalMenu called with index:', index);
-            // Close all menus
+            // Re-enabling the goal menu toggle function (it was already there, but ensuring it's robust)
             document.querySelectorAll('.goal-menu').forEach(menu => {
-                menu.classList.remove('open');
+                // Ensure only the clicked menu is open
+                if (menu.id !== `goal-menu-${index}`) {
+                    menu.classList.remove('open');
+                }
             });
             
-            // Toggle current menu
             const menu = document.getElementById(`goal-menu-${index}`);
-            console.log('Found menu element:', menu);
             if (menu) {
                 menu.classList.toggle('open');
-                console.log('Menu toggled, is open:', menu.classList.contains('open'));
             }
         }
 
@@ -1843,205 +1062,49 @@
             window.location.href = editGoalUrl(goalId);
         }
 
-        // Delete goal function
+        // Delete goal function (kept for completeness)
         async function deleteGoal(goalId) {
-            console.log('=== DELETE DEBUG START ===');
-            console.log('deleteGoal called with ID:', goalId, 'Type:', typeof goalId);
-            console.log('Current goals array:', goals);
-            console.log('Goals array length:', goals.length);
-            console.log('Looking for goal with ID:', parseInt(goalId));
-            
-            // Log all goal IDs for comparison
-            goals.forEach((g, index) => {
-                console.log(`Goal ${index}: ID=${g.id} (type: ${typeof g.id}), Title="${g.title}"`);
-            });
-            
-            const goal = goals.find(g => g.id === parseInt(goalId)); // Convert string to number
-            console.log('Found goal:', goal);
+            const goal = goals.find(g => g.id === parseInt(goalId));
             
             if (goal) {
-                console.log('Goal found! Showing custom confirmation dialog...');
                 const confirmed = await showDeleteConfirmation(goal.title);
-                console.log('User confirmation result:', confirmed);
                 
                 if (confirmed) {
-                    console.log('User confirmed deletion');
                     const success = await deleteGoalFromDatabase(goalId);
                     if (success) {
                         showSuccessMessage('Goal deleted successfully!');
                     }
-                } else {
-                    console.log('User cancelled deletion');
                 }
-            } else {
-                console.log('❌ Goal not found in array');
-                console.log('Available goal IDs:', goals.map(g => g.id));
-                console.log('Looking for ID:', parseInt(goalId));
             }
-            console.log('=== DELETE DEBUG END ===');
         }
 
-        // Custom delete confirmation dialog
+        // Custom delete confirmation dialog (kept for completeness)
         function showDeleteConfirmation(goalTitle) {
             return new Promise((resolve) => {
-                // Create overlay
                 const overlay = document.createElement('div');
-                overlay.style.cssText = `
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    background: rgba(0, 0, 0, 0.7);
-                    z-index: 10000;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    animation: fadeIn 0.3s ease-out;
-                `;
+                overlay.style.cssText = `position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 10000; display: flex; align-items: center; justify-content: center; animation: fadeIn 0.3s ease-out;`;
                 
-                // Create dialog
                 const dialog = document.createElement('div');
-                dialog.style.cssText = `
-                    background: white;
-                    border-radius: 16px;
-                    padding: 32px;
-                    max-width: 400px;
-                    width: 90%;
-                    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
-                    text-align: center;
-                    animation: slideIn 0.3s ease-out;
-                `;
+                dialog.style.cssText = `background: white; border-radius: 16px; padding: 32px; max-width: 400px; width: 90%; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3); text-align: center; animation: slideIn 0.3s ease-out;`;
                 
-                dialog.innerHTML = `
-                    <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
-                    <h3 style="margin: 0 0 16px 0; color: #1f2937; font-size: 20px;">Delete Goal</h3>
-                    <p style="margin: 0 0 24px 0; color: #6b7280; line-height: 1.5;">
-                        Are you sure you want to delete<br>
-                        <strong style="color: #1f2937;">"${goalTitle}"</strong>?
-                    </p>
-                    <div style="display: flex; gap: 12px; justify-content: center;">
-                        <button id="cancelDelete" style="
-                            background: #6b7280;
-                            color: white;
-                            border: none;
-                            padding: 12px 24px;
-                            border-radius: 8px;
-                            cursor: pointer;
-                            font-weight: 600;
-                            transition: background 0.2s;
-                        ">Cancel</button>
-                        <button id="confirmDelete" style="
-                            background: #dc2626;
-                            color: white;
-                            border: none;
-                            padding: 12px 24px;
-                            border-radius: 8px;
-                            cursor: pointer;
-                            font-weight: 600;
-                            transition: background 0.2s;
-                        ">Delete</button>
-                    </div>
-                `;
+                dialog.innerHTML = `<div style="font-size: 48px; margin-bottom: 16px;">⚠️</div><h3 style="margin: 0 0 16px 0; color: #1f2937; font-size: 20px;">Delete Goal</h3><p style="margin: 0 0 24px 0; color: #6b7280; line-height: 1.5;">Are you sure you want to delete<br><strong style="color: #1f2937;">"${goalTitle}"</strong>?</p><div style="display: flex; gap: 12px; justify-content: center;"><button id="cancelDelete" style="background: #6b7280; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: background 0.2s;">Cancel</button><button id="confirmDelete" style="background: #dc2626; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: background 0.2s;">Delete</button></div>`;
                 
                 overlay.appendChild(dialog);
                 document.body.appendChild(overlay);
                 
-                // Add CSS animations
                 const style = document.createElement('style');
-                style.textContent = `
-                    @keyframes fadeIn {
-                        from { opacity: 0; }
-                        to { opacity: 1; }
-                    }
-                    @keyframes slideIn {
-                        from { transform: translateY(-20px); opacity: 0; }
-                        to { transform: translateY(0); opacity: 1; }
-                    }
-                `;
+                style.textContent = `@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } } @keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }`;
                 document.head.appendChild(style);
                 
-                // Event listeners
-                document.getElementById('cancelDelete').addEventListener('click', () => {
-                    overlay.remove();
-                    style.remove();
-                    resolve(false);
-                });
-                
-                document.getElementById('confirmDelete').addEventListener('click', () => {
-                    overlay.remove();
-                    style.remove();
-                    resolve(true);
-                });
-                
-                // Close on overlay click
-                overlay.addEventListener('click', (e) => {
-                    if (e.target === overlay) {
-                        overlay.remove();
-                        style.remove();
-                        resolve(false);
-                    }
-                });
-                
-                // Close on Escape key
-                const handleEscape = (e) => {
-                    if (e.key === 'Escape') {
-                        overlay.remove();
-                        style.remove();
-                        document.removeEventListener('keydown', handleEscape);
-                        resolve(false);
-                    }
-                };
+                const cleanup = (result) => { overlay.remove(); style.remove(); resolve(result); };
+                document.getElementById('cancelDelete').addEventListener('click', () => cleanup(false));
+                document.getElementById('confirmDelete').addEventListener('click', () => cleanup(true));
+                overlay.addEventListener('click', (e) => { if (e.target === overlay) cleanup(false); });
+                const handleEscape = (e) => { if (e.key === 'Escape') { document.removeEventListener('keydown', handleEscape); cleanup(false); } };
                 document.addEventListener('keydown', handleEscape);
             });
         }
-
-        // View qualifiers function
-        async function viewQualifiers(goalId) {
-            const goal = goals.find(g => g.id === goalId);
-            if (goal) {
-                // Update overlay title
-                document.getElementById('overlayTitle').textContent = `Qualifiers for: ${goal.title}`;
-                
-                // Show loading state
-                const tbody = document.getElementById('qualifiersTbody');
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem;">Loading...</td></tr>';
-                
-                openOverlay();
-                
-                try {
-                    // Fetch projects that match this goal's criteria
-                    const response = await fetch(goalQualifiersUrl(goalId));
-                    const data = await response.json();
-                    
-                    if (data.success && data.projects) {
-                        // Update the dataset with real project data
-                        dataset = data.projects.map(project => ({
-                            title: project.title,
-                            lead: project.team_leader,
-                            start: project.start_date,
-                            status: project.status
-                        }));
-                        
-                        // Render the first page
-                        renderTablePage(1);
-                    } else {
-                        // Show error state
-                        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: #dc2626;">Error loading projects</td></tr>';
-                    }
-                } catch (error) {
-                    console.error('Error fetching qualifiers:', error);
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: #dc2626;">Error loading projects: ' + error.message + '</td></tr>';
-                }
-            }
-        }
         
-        // Make functions globally accessible
-        window.deleteGoal = deleteGoal;
-        window.editGoal = editGoal;
-        window.toggleGoalMenu = toggleGoalMenu;
-        window.viewQualifiers = viewQualifiers;
-
         function showGoalsError(message) {
             const box = document.getElementById('goalsError');
             if (!box) return;
@@ -2049,21 +1112,24 @@
             box.style.display = 'block';
         }
 
-        // Render per-goal qualifiers tables similar to agenda
+        // Render per-goal qualifiers tables similar to agenda (kept for completeness)
         async function renderQualifiersTables() {
             const container = document.getElementById('goalsTablesContainer');
             if (!container) return;
             container.innerHTML = '';
+            
+            // Sort goals again before rendering tables to ensure matching order
+            const sortedGoals = sortGoals([...goals]);
 
-            if (!goals || goals.length === 0) {
+            if (!sortedGoals || sortedGoals.length === 0) {
                 const empty = document.createElement('div');
                 empty.style.cssText = 'text-align:center; padding: 2rem; color:#6b7280;';
-                empty.textContent = 'No goals available.';
+                empty.textContent = 'No goals available to display in list view.';
                 container.appendChild(empty);
                 return;
             }
 
-            for (const goal of goals) {
+            for (const goal of sortedGoals) {
                 const section = document.createElement('div');
                 section.className = 'goal-qualifiers-section';
                 section.innerHTML = `
@@ -2087,7 +1153,6 @@
                 `;
                 container.appendChild(section);
 
-                // Fetch qualifiers for this goal
                 try {
                     const resp = await fetch(goalQualifiersUrl(goal.id));
                     const data = await resp.json();
@@ -2095,13 +1160,12 @@
                     tbody.innerHTML = '';
 
                     if (data.success && Array.isArray(data.projects) && data.projects.length > 0) {
-                        const total = data.projects.length;
                         const rows = data.projects.slice(0, 10);
                         rows.forEach(project => {
                             const tr = document.createElement('tr');
                             tr.innerHTML = `
-                                <td>${project.title}</td>
-                                <td>${project.team_leader}</td>
+                                <td><a href="/projects/${project.id}" class="name-link">${project.title}</a></td>
+                                <td><a href="/users/${project.team_leader_id}" class="name-link">${project.team_leader}</a></td>
                                 <td>${project.start_date || ''}</td>
                                 <td>${project.status || ''}</td>
                             `;
@@ -2127,106 +1191,10 @@
             }
         }
 
-        // Client-side pagination
-        const PAGE_SIZE = 5;
-        let currentPage = 1;
-        let dataset = [];
-
-        function renderTablePage(page) {
-            currentPage = page;
-            const start = (page - 1) * PAGE_SIZE;
-            const end = start + PAGE_SIZE;
-            const slice = dataset.slice(start, end);
-            const tbody = document.getElementById('qualifiersTbody');
-            tbody.innerHTML = slice.map((row, idx) => `
-                <tr>
-                    <td>${row.title}</td>
-                    <td>${row.lead}</td>
-                    <td>${row.start}</td>
-                    <td>${row.status}</td>
-                    <td class="table-settings">
-                        <button class="row-ellipsis" aria-haspopup="true" aria-expanded="false">···</button>
-                        <div class="row-menu">
-                            <button class="row-edit">Edit</button>
-                            <button class="row-delete" style="color:#d2042d;">Delete</button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
-            renderPagination();
-        }
-
-        function renderPagination() {
-            const totalPages = Math.max(1, Math.ceil(dataset.length / PAGE_SIZE));
-            const container = document.getElementById('pagination');
-            const btnPrev = `<button class="page-btn ${currentPage === 1 ? 'disabled' : ''}" data-page="prev">← Previous</button>`;
-            const btnNext = `<button class="page-btn ${currentPage === totalPages ? 'disabled' : ''}" data-page="next">Next →</button>`;
-
-            // Build numbered pages with ellipses
-            const pages = [];
-            const windowSize = 2; // neighbors around current
-            for (let p = 1; p <= totalPages; p++) {
-                const isEdge = p === 1 || p === totalPages;
-                const inWindow = Math.abs(p - currentPage) <= windowSize;
-                if (isEdge || inWindow) {
-                    pages.push(p);
-                }
-            }
-            // insert ellipses
-            const uniquePages = [...new Set(pages)].sort((a,b)=>a-b);
-            const parts = [];
-            uniquePages.forEach((p, idx) => {
-                if (idx > 0 && p - uniquePages[idx-1] > 1) parts.push('<span>…</span>');
-                parts.push(`<button class="page-num ${p === currentPage ? 'active' : ''}" data-page="${p}">${p}</button>`);
-            });
-
-            container.innerHTML = btnPrev + parts.join('') + btnNext;
-        }
-
-        document.getElementById('pagination').addEventListener('click', (e) => {
-            const btn = e.target.closest('button');
-            if (!btn) return;
-            const totalPages = Math.max(1, Math.ceil(dataset.length / PAGE_SIZE));
-            const tag = btn.getAttribute('data-page');
-            if (tag === 'prev' && currentPage > 1) renderTablePage(currentPage - 1);
-            else if (tag === 'next' && currentPage < totalPages) renderTablePage(currentPage + 1);
-            else if (!isNaN(parseInt(tag))) renderTablePage(parseInt(tag));
-        });
-
-        // Row ellipsis menu interactions for Settings column
-        document.addEventListener('click', (e) => {
-            const ellipsis = e.target.closest('.row-ellipsis');
-            const anyMenus = document.querySelectorAll('.row-menu');
-            // Close all menus by default
-            anyMenus.forEach(m => m.classList.remove('open'));
-            if (ellipsis) {
-                const cell = ellipsis.parentElement;
-                const menu = cell.querySelector('.row-menu');
-                if (menu) {
-                    menu.classList.add('open');
-                }
-            }
-        });
-
-        // Handle Edit/Delete in Settings column
-        document.addEventListener('click', (e) => {
-            const edit = e.target.closest('.row-edit');
-            const del = e.target.closest('.row-delete');
-            if (edit) {
-                const row = edit.closest('tr');
-                const title = row?.children?.[0]?.textContent?.trim() || '';
-                alert('Edit qualifier: ' + title);
-            }
-            if (del) {
-                const row = del.closest('tr');
-                const title = row?.children?.[0]?.textContent?.trim() || '';
-                const ok = confirm('Delete this qualifier?\n\n' + title);
-                if (ok) row?.remove();
-            }
-        });
-
-        // Note: View List buttons are now handled by viewQualifiers function
-        // The onclick handlers are set directly in the HTML when rows are rendered
+        // Make functions globally accessible
+        window.deleteGoal = deleteGoal;
+        window.editGoal = editGoal;
+        window.toggleGoalMenu = toggleGoalMenu;
     </script>
 </body>
 </html>

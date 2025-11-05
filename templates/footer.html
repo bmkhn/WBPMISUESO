@@ -1,0 +1,176 @@
+{% load static %}
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style> 
+    body {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Inter', sans-serif;
+    }
+    main {
+        margin: 0;
+        padding: 2.5rem 7rem;
+        font-family: Arial, Helvetica, sans-serif;
+        background-color: #245F3E; 
+    } 
+    .links, .note {
+        display: flex; 
+        flex-direction: row;  
+        align-items: flex-start; 
+        justify-content: space-between;
+        gap: 2rem;   
+    }
+
+    .links section:nth-child(1) {
+        flex-basis: 37.5%;
+        flex-shrink: 0; 
+        margin-right: 3rem;
+    }
+
+    .links section:nth-child(2), .links section:nth-child(3) {
+        flex-basis: 18%;
+        flex-shrink: 0;
+        margin-right: -1rem;
+    }
+
+    .links section:nth-child(4) {
+        flex-basis: 15%;
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: stretch;
+        height: 100%;
+        box-sizing: border-box;  
+        padding: 0;      
+        margin: 2.25rem 0 0 -6rem;
+    }
+
+    .links section:nth-child(4) a {
+        text-decoration: none; 
+        margin: 0;        
+    }
+
+    .links section:nth-child(4) button {
+        width: 14rem;
+        padding: 0.75rem;
+        font-size: 1rem;
+        font-weight: 600;
+        border: 2px solid white;
+        background: #245F3E;
+        color: white;
+        border-radius: 0.1rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        box-sizing: border-box;  
+    }
+
+    .links section:nth-child(4) button:hover {
+        background: #ffffff;
+        color: rgb(100, 100, 100);
+    }
+
+    section p {
+        font-size: 0.95rem;
+        color: rgb(208, 208, 208);
+        line-height: 1.2rem;
+    }
+    section p:hover {
+        cursor: pointer;
+    } 
+    section h2 {
+        font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+        color: white;
+        font-size: 1rem;
+        font-weight: 400; 
+        letter-spacing: 0.2rem;
+        margin-bottom: 1rem;
+    } 
+    p a {
+        text-decoration: none; 
+        color: rgb(208, 208, 208);
+    }
+    p a:hover {
+        color: white;
+    }
+    .img-holder {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 1.25rem;  
+        margin-top: 3.4rem;
+    }
+    .img-holder img {
+        max-width: 6rem;         
+        max-height: 6rem;   
+        border-radius: 50%;   
+        object-fit: cover; 
+    }
+    .note section{
+        display: flex;
+        flex-direction: row;
+        gap: 1rem;
+    }
+    .sdg img {
+        width: 20rem;
+        height: auto;
+    }
+    section p{
+        margin-bottom: 0.3rem;
+    }
+</style>
+
+<body> 
+    <main> 
+        <div class="links">
+            <section> 
+                <h2>ABOUT</h2>
+                <p>Extension is one of the mandated functions of the Palawan State University as stipulated in Section 2 of 
+                    Republic Act No. 7818. A collaborative and purposeful activity that webs together the functional expertise
+                     of instruction, research and extension, extension service involves building partnerships with partner communities 
+                     and agencies to provide capacity development programs and projects, information, communication and technology 
+                     services to communities. Through extension programs, the University strengthens institutions by applying the 
+                     knowledge, technology and expertise it generates from its two other functions --- instruction and research.</p> 
+            </section> 
+            <section> 
+                <h2>MORE</h2>
+                <p><a href="https://psu.palawan.edu.ph/">Palawan State University</a></p> 
+                <p><a href="https://psu.palawan.edu.ph/office-of-the-vice-president-for-research-and-extension/">Research Development Extension</a></p>
+                <p><a href="https://psu.palawan.edu.ph/extension-services-office/">University Extension Services Office</a></p> 
+                <p><a href="{% url 'about_us_dispatcher' %}">About Us</a></p>
+            </section>
+            <section> 
+                <h2>EXPLORE</h2>
+                <p><a href="{% url 'archive' %}">Projects</a></p> 
+                <p><a href="{% url 'announcement_dispatcher' %}">Announcements</a></p>
+                <p><a href="{% url 'about_us_dispatcher' %}">Resources</a></p> 
+            </section>
+            <section> 
+                <a href="/register/"><button>Join Us</button></a>
+                <div class="img-holder">
+                    <div class="palsu">
+                        <img src="{% static 'college/psu.png' %}" alt="palsu-logo-white">
+                    </div>
+                    <div class="ueso">
+                        <img src="{% static 'ueso.png' %}" alt="ueso-logo-white">
+                    </div>
+                </div>
+            </section>
+        </div>
+        <hr style="margin: 2rem 0rem; border: 0.5px solid rgb(180, 180, 180);">
+        <div class="note">
+            <section>
+                <div class="sdg">
+                    <img src="{% static 'sdg.png' %}" alt="sdg">
+                </div>
+            </section>
+            <section>
+                <p><a href="#"></a>Terms of Service</p>
+                <p><a href="#"></a>Privacy Notice</p>
+            </section>
+            <section>
+                <p><a href="mailto:uesoemail@psu.palawan.edu.ph">uesoemail@psu.palawan.edu.ph</a></p>
+            </section>
+        </div>
+    </main> 
+</body>

@@ -8,7 +8,6 @@ body {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    min-height: 800px;
 }
 .details-card {
     background: white;

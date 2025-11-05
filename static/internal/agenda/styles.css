@@ -160,9 +160,6 @@
 }
 
 
-
-
-
 .agenda-carousel {
     overflow: hidden;
     width: 960px;
@@ -171,7 +168,7 @@
     display: flex;
     align-items: flex-start;
     justify-content: flex-start;
-    padding: 15px 0; 
+    padding: 20px 0; 
 }
 
 .agenda-carousel-track {
@@ -371,7 +368,7 @@
 }
 
 .carousel-arrow {
-    background: none;
+    background: #ffffff;
     border: none;
     width: 40px;
     height: 40px;
@@ -379,29 +376,21 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: background 0.2s, transform 0.2s;
+    transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
     z-index: 10;
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
+    border-radius: 999px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
 }
+.carousel-arrow:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.18); }
+.left-arrow { left: 0; }
+.right-arrow { right: 0; }
+.carousel-arrow:active { background: #f3f4f6; transform: translateY(-50%) scale(0.95); }
+.carousel-arrow:disabled { opacity: 0.4; cursor: default; box-shadow: none; }
+.carousel-arrow svg { display: block; }
 
-.left-arrow {
-    left: -40px;
-}
-
-.right-arrow {
-    right: -40px;
-}
-
-.carousel-arrow:active {
-    background: none;
-    transform: scale(0.95);
-}
-
-.carousel-arrow svg {
-    display: block;
-}
 
 .user-table {
     width: 100%;
