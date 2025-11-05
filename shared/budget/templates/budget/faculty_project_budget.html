@@ -44,7 +44,9 @@
   .overlay-content{background:#fff;border-radius:1rem;padding:1.25rem;width:45rem;max-width:95%;position:relative}
 </style>
 
-<section style="margin:0 5rem 0 5rem; padding: 3rem; background:#fff; border-radius:1rem; box-shadow:0 2px 4px rgba(0,0,0,.08);">
+<title>Budget</title>
+
+<section style="margin:0; padding: 3rem; background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.08);">
   <div class="tags">
     <content style="flex-grow:2;">
       {% if project.project_leader and project.project_leader.get_campus_display %}<button class="campus">{{ project.project_leader.get_campus_display }}</button>{% endif %}
@@ -79,7 +81,7 @@
   </div>
 
   <div class="tabs">
-    <button class="tab-btn active" data-tab="overview">Overview</button>
+    <button class="tab-btn active" data-tab="overview">Invoices</button>
     <button class="tab-btn" data-tab="files">Files</button>
   </div>
 
