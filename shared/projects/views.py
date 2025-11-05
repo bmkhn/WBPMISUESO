@@ -1,7 +1,7 @@
 from django.shortcuts import get_object_or_404, render, redirect
 from shared import request
 from system.users.decorators import role_required, project_visibility_required
-from .models import SustainableDevelopmentGoal, Project, ProjectEvaluation, ProjectEvent, ProjectUpdate
+from .models import SustainableDevelopmentGoal, Project, ProjectEvaluation, ProjectEvent, ProjectUpdate, ProjectExpenses
 from internal.goals.models import Goal
 from internal.submissions.models import Submission
 from system.users.models import College, User, Campus
@@ -781,6 +781,8 @@ def admin_submission_action(request, pk, submission_id):
 
 @project_visibility_required
 def project_expenses(request, pk):
+    from django.contrib import messages
+    
     ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE, COORDINATOR_ROLE = get_role_constants()
 
     user_role = getattr(request.user, 'role', None)
@@ -790,20 +792,55 @@ def project_expenses(request, pk):
         base_template = "base_public.html"
 
     project = get_object_or_404(Project, pk=pk)
-
-    expenses = [
-        {
-            'title': 'Venue Rental',
-            'reason': 'Rented hall for event',
-            'amount': 5000.00,
-            'date': '2025-09-20',
-            'receipt': 'https://via.placeholder.com/120x120.png?text=Receipt',
-        }
-    ]
+    
+    # Check if user has permission to view expenses
+    is_admin = user_role in ADMIN_ROLES
+    is_project_member = (
+        request.user.is_authenticated and 
+        (request.user.id == project.project_leader.id if project.project_leader else False or
+         project.providers.filter(id=request.user.id).exists())
+    )
+    
+    # Redirect if user doesn't have permission
+    if not (is_admin or is_project_member):
+        messages.error(request, "You don't have permission to view expenses for this project.")
+        return redirect('project_profile', pk=pk)
+    
+    # Handle POST request - Add new expense (project members can add)
+    if request.method == 'POST' and is_project_member and not project.has_final_submission:
+        reason = request.POST.get('reason', '').strip()
+        amount = request.POST.get('amount', '').strip()
+        expense_date = request.POST.get('expense_date', '').strip()
+        description = request.POST.get('description', '').strip()
+        receipt_img = request.FILES.get('receipt_img')
+        
+        if reason and amount and expense_date:
+            try:
+                ProjectExpenses.objects.create(
+                    project=project,
+                    reason=reason,
+                    amount=amount,
+                    expense_date=expense_date,
+                    description=description,
+                    receipt_img=receipt_img,
+                    created_by=request.user
+                )
+                messages.success(request, "Expense added successfully.")
+            except Exception as e:
+                messages.error(request, f"Error adding expense: {str(e)}")
+        else:
+            messages.error(request, "Please fill in all required fields (Reason, Amount, Date).")
+        
+        return redirect('project_expenses', pk=pk)
+    
+    # Fetch actual expenses from database
+    expenses = project.expenses.select_related('created_by').order_by('-expense_date', '-created_at')
+    
     return render(request, 'projects/project_expenses.html', {
         'project': project, 
         'base_template': base_template,
         'expenses': expenses,
+        'is_project_member': is_project_member,
         "ADMIN_ROLES": ADMIN_ROLES,
         "SUPERUSER_ROLES": SUPERUSER_ROLES,
         "FACULTY_ROLE": FACULTY_ROLE

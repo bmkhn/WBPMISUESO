@@ -105,7 +105,7 @@
                 <button type="button" data-tab="submission" class="{% if '/submission/' in request.path %}active{% endif %}">Submissions</button>
                 {% endif %}
                 <button type="button" data-tab="evaluations" class="{% if '/evaluations/' in request.path %}active{% endif %}">Evaluations</button>
-                {% if request.user.role in ADMIN_ROLES %}
+                {% if request.user.role in ADMIN_ROLES or request.user.id == project.project_leader.id or request.user in project.providers.all %}
                     <button type="button" data-tab="expenses" class="{% if '/expenses/' in request.path %}active{% endif %}">Expenses</button>
                 {% endif %}
             </div>

@@ -62,6 +62,7 @@
         <!-- Overview Section -->
         <div class="overview-section">
             <div class="container-2">
+                {% if request.user.role == "UESO" or request.user.role == "VP" or request.user.role == "DIRECTOR" %}
                 <a class="container-2A" href="{% url 'request_dispatcher' %}?status=PENDING">
                     <div class="card-icon-wrapper">
                         <div class="circle">
@@ -71,6 +72,8 @@
                     <div class="container-2A-number">{{ pending_requests.count }}</div>
                     <div class="container-2A-name">Request Pending</div>
                 </a>
+                {% endif %}
+
                 <a class="container-2A" href="{% url 'project_dispatcher' %}?status=IN_PROGRESS">
                     <div class="card-icon-wrapper">
                         <div class="circle">

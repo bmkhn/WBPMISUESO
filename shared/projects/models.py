@@ -413,6 +413,33 @@ class ProjectEvent(models.Model):
 		return f"{self.title} ({self.project.title})"
 
 
+#############################################################################################################################################################################################################
+
+
+class ProjectExpenses(models.Model):
+	project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='expenses')
+	reason = models.CharField(max_length=255)
+	amount = models.DecimalField(max_digits=12, decimal_places=2)
+	description = models.CharField(max_length=255)
+	expense_date = models.DateField()
+	receipt_img = models.ImageField(upload_to='project_expense_receipts/', blank=True, null=True)
+	created_at = models.DateTimeField(auto_now_add=True)
+	created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='created_project_expenses')
+
+	class Meta:
+		indexes = [
+			# Project expense tracking
+			models.Index(fields=['project', '-expense_date'], name='proj_exp_proj_date_idx'),
+			# Date-based filtering
+			models.Index(fields=['-expense_date'], name='proj_exp_date_idx'),
+		 ]
+
+	def __str__(self):
+		return f"Expense of {self.amount} for {self.project.title} on {self.expense_date}"
+
+
+#############################################################################################################################################################################################################
+
 class ProjectUpdate(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
