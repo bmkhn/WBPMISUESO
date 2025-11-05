@@ -1,0 +1,504 @@
+body {
+    background: #F9F9F9;
+    margin: 0;
+    font-family: 'Inter', Arial, sans-serif;
+}
+
+/* Applying .main-container styles to the main content wrapper */
+.content {
+    /* Removed unused content styles from original goals.css */
+    /* Only keeping main to get the container styles */
+    padding: 0; /* Clear padding from original goals.css .content */
+}
+main {
+    margin: 1.75rem 5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Applying .container-a styles to .goals-header */
+.goals-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Applying .project-text styles to the h1 inside .goals-header */
+.goals-header h1 {
+    color: #000;
+    font-family: 'Inter', Arial, sans-serif;
+    margin: 0;
+    font-size: 1.65rem;
+    font-weight: 500;
+}
+
+/* Applying .add-user-btn styles (identical in both files) */
+.add-user-btn {
+    font-family: 'Inter', sans-serif;
+    background-color: #00681a;
+    color: #F5F5F5;
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 0.6rem 1.6rem;
+    border-radius: 2rem;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    text-decoration: none;
+}
+
+.add-user-btn:hover {
+    background-color: #444;
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+.add-user-btn i {
+    cursor: pointer;
+    margin-right: 0.3rem;
+}
+
+/* --- Carousel Styles (Applied to Goals) --- */
+
+.goals-carousel-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    position: relative;
+    margin: 0.7rem;
+    height: 30rem;
+}
+
+.goals-carousel {
+    overflow: hidden;
+    width: 960px;
+    position: relative;
+    margin: -2rem auto 0 auto; /* Matched agenda margin */
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: 15px 0;
+}
+
+.goals-carousel-track {
+    display: flex;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    gap: 24px;
+    will-change: transform;
+}
+
+.carousel-arrow {
+    background: #ffffff;
+    border: none;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+    z-index: 10;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    border-radius: 999px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+.carousel-arrow:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.18); }
+.left-arrow { left: 0; }
+.right-arrow { right: 0; }
+.carousel-arrow:active { background: #f3f4f6; transform: translateY(-50%) scale(0.95); }
+.carousel-arrow:disabled { opacity: 0.4; cursor: default; box-shadow: none; }
+.carousel-arrow svg { display: block; }
+
+
+/* Applying .agenda-card styles to .goal-card */
+.goal-card {
+    position: relative;
+    width: 100%;
+    height: 25rem;
+    padding: 35px 40px 60px 40px;
+    border-radius: 12px;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    border-left: 1px solid rgba(0, 0, 0, 0.1);
+    background-color: #ffffff;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08),
+                0 2px 4px rgba(0, 0, 0, 0.04);
+    transform: rotate(-0.5deg);
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start; /* Inherited from agenda-card */
+    box-sizing: border-box;
+    vertical-align: top;
+    flex: 0 0 calc(((960px - 2 * 24px) / 3) - 7px);
+    width: calc(((960px - 2 * 24px) / 3) - 7px);
+}
+
+.goal-card:hover {
+    transform: translateY(-16px) rotate(0deg);
+    flex: 0 0 calc((((960px - 2 * 24px) / 3) - 7px) * 2 + 24px);
+    width: calc((((960px - 2 * 24px) / 3) - 7px) * 2 + 24px);
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.25),
+                0 4px 8px rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(187, 187, 187, 0.8);
+}
+
+.goal-card.expand-left:hover {
+    transform: translateY(-16px) translateX(calc((((960px - 2 * 24px) / 3) - 7px) * -1 - 24px)) rotate(0deg);
+}
+
+.goal-card.shift-previous {
+    transform: translateX(calc((((960px - 2 * 24px) / 3) - 7px) * -1 - 24px));
+}
+
+/* Applying .agenda-card-kebab styles to .ellipsis-btn */
+.ellipsis-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    z-index: 2;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    transition: background 0.2s, transform 0.3s;
+    background: none;
+    border: none;
+    font-size: 1.3rem; /* from original goals.css */
+    color: #090909; /* from original goals.css */
+}
+
+.ellipsis-btn:hover {
+    background: rgba(0, 0, 0, 0.1);
+    transform: scale(1.1);
+}
+
+/* Applying .agenda-card-text styles to .goal-card .goal-title */
+.goal-card .goal-title {
+    font-family: 'Instrument Sans', Arial, sans-serif;
+    font-weight: 900;
+    font-size: 28px;
+    color: #1A1A1A;
+    text-align: left;
+    width: 100%;
+    margin-top: 5px;
+    position: relative;
+    padding-bottom: 25px;
+    margin-bottom: 5px;
+}
+
+.goal-card .goal-title::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 5px;
+    width: 5px;
+    height: 4px;
+    background-color: #444;
+    border-radius: 2px;
+    transition: width 0.9s ease;
+}
+
+.goal-card:hover .goal-title::after {
+    width: 100%;
+    background-color: #f8f8f8;
+}
+
+/* Applying .options-dropdown styles to .goal-menu */
+.goal-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: white;
+    min-width: 160px;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.2s ease;
+    z-index: 200; /* Increased z-index */
+    overflow: hidden;
+    display: none; /* agenda is hidden by default with opacity/visibility */
+}
+
+.goal-menu.open { /* .options-dropdown.show */
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    display: block;
+}
+
+.goal-menu .options-item { /* .options-item */
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    text-decoration: none;
+    font-size: 1rem;
+    color: #555555;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    width: 100%;
+    text-align: left;
+    background: white;
+    border: none;
+}
+
+.goal-menu .options-item:hover {
+    background-color: #F3F4F6;
+}
+
+.goal-menu .options-item:first-child {
+    border-radius: 8px 8px 0 0;
+}
+
+.goal-menu .options-item:last-child {
+    border-radius: 0 0 8px 8px;
+}
+
+.goal-menu .options-item svg {
+    width: 16px;
+    height: 16px;
+}
+
+.goal-menu .edit-option {
+    color: #1f7c57;
+}
+
+.goal-menu .delete-option {
+    color: #DC2626;
+}
+
+/* Unique style for goals progress badge - retained */
+.goal-progress-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: 10px;
+    padding: 4px 10px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #065f46;
+    background: #d1fae5;
+    border: 1px solid #86efac;
+    border-radius: 999px;
+}
+
+/* Applying .table-view-container styles to #goalsTablesContainer */
+#goalsTablesContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+
+/* --- List View Table Styles (Shared class names) --- */
+
+.title-expand-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 30px;
+}
+
+.table-title-text {
+    font-family: 'Inter', Arial, sans-serif;
+    font-weight: 400;
+    font-size: 1.25rem;
+    color: #000000;
+}
+
+.view-more {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 0.75rem;
+    color: #2EA8FF;
+    text-decoration: none;
+    margin-top: 10px;
+    cursor: pointer;
+}
+
+.view-more:hover {
+    text-decoration: underline;
+}
+
+.user-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #FFFFFF; 
+    border-radius: 10px; 
+    overflow: auto; 
+    box-shadow: 0 0 0 1px #E0E0E0, 0 8px 18px -8px rgba(0, 0, 0, 0.15); 
+    border: none;
+}
+
+.user-table th {
+    font-size: 0.95rem;
+    font-weight: 600; 
+    background: #eeeeee; 
+    border-bottom: 1px solid #E0E0E0; 
+    padding: 16px 18px; 
+    text-align: left;
+    font-family: 'Inter', Arial, sans-serif;
+    color: #333333; 
+    box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.05); 
+    transition: padding 0.2s ease-in-out; 
+}
+.user-table td {
+    font-size: 14px; 
+    font-weight: 400;
+    border: none;
+    border-bottom: 1px solid #EDEDED; 
+    padding: 14px 18px; 
+    text-align: left;
+    font-family: 'Inter', Arial, sans-serif;
+    color: #4A5568; 
+    transition: all 0.2s ease-out;
+} 
+.user-table tr:last-child td {
+    border-bottom: none;
+} 
+.user-table tr:nth-child(even) {
+    background-color: #FAFAFB; 
+}
+
+.user-table tr:hover {
+    background-color: #fffaf0; 
+    box-shadow: inset 4px 0 0 0 #FF9900; 
+    transform: translateY(-1px); 
+    cursor: pointer;
+}
+
+.settings-icon {
+    width: 16px;
+    height: 16px;
+    align-items: center;
+    justify-content: center;
+    display: inline-block;
+    vertical-align: middle;
+    cursor:pointer;
+}
+
+.user-table th.settings-col,
+.user-table td.settings-col {
+    text-align: center !important;
+    position: relative;
+    overflow: visible;
+    z-index: 5;
+}
+ 
+.name-link {
+    color: #0099FF;
+    text-decoration: none;
+} 
+.name-link:hover{
+    text-decoration: underline;
+} 
+ 
+.user-table tr:hover td {
+    padding: 18px; 
+}
+
+.user-table tr:hover {
+    background-color: #f2f2f2; 
+    cursor: pointer;
+}
+
+.user-table tr:last-child:hover td {
+    border-bottom: none; 
+}
+
+/* Generic Modal Styles (Copied from agenda.css modal for potential use) */
+
+#deleteAgendaModal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 999999;
+    align-items: center;
+    justify-content: center;
+}
+
+#deleteAgendaModal.is-open {
+    display: flex !important;
+}
+
+#deleteAgendaModal.show {
+    display: flex;
+}
+
+.modal-content {
+    background: white;
+    padding: 2rem 2.5rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 32px rgba(0, 0, 0, 0.18);
+    max-width: 350px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 1000000;
+}
+
+.modal-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #E53E3E;
+    margin-bottom: 1rem;
+}
+
+.modal-message {
+    font-size: 1rem;
+    color: #444;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 1rem;
+}
+
+.modal-btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.modal-btn-cancel {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.modal-btn-cancel:hover {
+    background: #d1d5db;
+}
+
+.modal-btn-delete {
+    background: #E53E3E;
+    color: white;
+}
+
+.modal-btn-delete:hover {
+    background: #c53030;
+}
