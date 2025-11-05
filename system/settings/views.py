@@ -22,12 +22,31 @@ from .forms import (
 
 ADMIN_ROLES = ["UESO", "VP", "DIRECTOR"]
 
-@role_required(allowed_roles=ADMIN_ROLES, require_confirmed=True)
+INTERNAL_ACCESS_ROLES = [
+    "VP", 
+    "DIRECTOR", 
+    "UESO", 
+    "PROGRAM_HEAD", 
+    "DEAN", 
+    "COORDINATOR",
+    "FACULTY",
+    "IMPLEMENTER",
+    "CLIENT",
+]
+
+@role_required(allowed_roles=INTERNAL_ACCESS_ROLES, require_confirmed=True)
 def settings_view(request):
-    base_template = 'base_internal.html'
     
+    user = request.user
+    user_role = getattr(user, 'role', None)
+    is_admin = user_role in ADMIN_ROLES
+    
+    if user_role in ["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
+        base_template = "base_internal.html"
+    else:
+        base_template = "base_public.html"
+        
     api_unlocked = request.session.get('api_unlocked', False)
-    
     current_fiscal_year = str(datetime.now().year)
     
     budget_pool_instance, created = BudgetPool.objects.get_or_create(
@@ -54,7 +73,6 @@ def settings_view(request):
             else:
                 request.session['api_unlocked'] = False
                 messages.error(request, 'Incorrect password. API Management remains locked.')
-            
             return redirect('system_settings:settings')
 
         elif 'save_general_settings' in request.POST:
@@ -65,22 +83,17 @@ def settings_view(request):
                 messages.success(request, 'System settings updated.')
             else:
                 messages.error(request, 'Failed to update settings. Please check the form for errors.')
-            
             return redirect('system_settings:settings')
         
         elif 'save_annual_budget' in request.POST:
             budget_form = AnnualBudgetForm(request.POST) 
-            
             if budget_form.is_valid():
                 new_total = budget_form.cleaned_data['annual_total']
-
                 budget_pool_instance.total_available = new_total
                 budget_pool_instance.save(update_fields=['total_available'])
-                
                 messages.success(request, f'Annual Budget Pool for {budget_pool_instance.fiscal_year} updated successfully to ₱{new_total:,.2f}.')
             else:
                 messages.error(request, 'Failed to update Annual Budget. Please check the form for errors.')
-
             return redirect('system_settings:settings')
     
     forms = [SystemSettingForm(instance=s, prefix=s.key) for s in settings_objects]
@@ -101,6 +114,7 @@ def settings_view(request):
 
     context = {
         'base_template': base_template,
+        'admin': is_admin,
         'colleges': colleges,
         'campuses': campuses,
         'sdgs': sdgs,
@@ -112,6 +126,7 @@ def settings_view(request):
     }
     
     return render(request, 'settings/settings.html', context)
+
 
 @role_required(allowed_roles=ADMIN_ROLES, require_confirmed=True)
 def manage_colleges(request):
@@ -151,7 +166,7 @@ def edit_college(request, pk):
         'base_template': 'base_internal.html',
         'form': form,
         'form_title': f'Edit College: {college.name}'
-    }
+    } 
     return render(request, 'settings/form_template.html', context)
 
 @role_required(allowed_roles=ADMIN_ROLES, require_confirmed=True)

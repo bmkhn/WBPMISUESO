@@ -40,8 +40,9 @@
 
         </div>
 
-        <div class="col-lg-8">
+        {% if admin %}
 
+        <div class="col-lg-8">
             <div class="card" id="api-settings">
                 <div class="section-header non-collapsible">
                     <div class="section-header-content">
@@ -401,6 +402,7 @@
                 </div>
             </div>
             
+            {% endif %}
             <div class="card" id="danger-zone">
                 <div class="card-header">
                     <h6 class="accordion-title">
@@ -409,7 +411,7 @@
                     </h6>
                 </div>
                 <div class="card-body">
-                    <p>Be careful. This actions is permanent and cannot be undone.</p>
+                    <p>Be careful. This action is permanent and cannot be undone.</p>
                     <a href="{% url 'system_settings:delete_account' %}" class="btn btn-danger btn-block" style="align-self: flex-end;">Delete My Account</a>
                 </div>
             </div>
