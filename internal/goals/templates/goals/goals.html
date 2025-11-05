@@ -17,8 +17,6 @@
 <body>
     
 
-    <!-- Add Goal Modal removed; using server-rendered add/edit pages -->
-
     <div class="content">
 
     <main>
@@ -36,8 +34,7 @@
                 </button>
                 <div class="goals-carousel">
                     <div class="goals-carousel-track" id="goalsTrack">
-                        <!-- Goals will be dynamically loaded here -->
-                    </div>
+                        </div>
                 </div>
                 <button class="carousel-arrow right-arrow" type="button" onclick="scrollGoals(1)">
                     <svg width="32" height="32" viewBox="0 0 32 32"><path d="M12 8l8 8-8 8" stroke="#063A1C" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -47,261 +44,67 @@
         <div>
             <div class="table-container">
                 <div id="goalsError" style="display:none; margin: 0 0 12px 0; padding: 12px 14px; border-radius: 8px; background: #fee2e2; color: #991b1b; border: 1px solid #fecaca;"></div>
-                <div id="goalsTablesContainer">
-                    <table class="qualifiers-table">
-                    <thead>
-                        <tr>
-                            <th>Title</th>
-                            <th>Team Leader</th>
-                            <th>Start Date</th>
-                            <th>Status</th>
-                            <th class="table-settings">Settings</th>
-                        </tr>
-                    </thead>
-                    <tbody id="qualifiersTbody">
-                        <!-- rows injected via JS -->
-                    </tbody>
-                </table>
-                </div>
+                <div id="goalsTablesContainer"></div>
             </div>
         </div>
     </main>
     </div>
 
-    <!-- Overlay Modal -->
-    <div class="overlay" id="qualifiersOverlay" aria-hidden="true">
-        <div class="overlay-card" role="dialog" aria-modal="true" aria-labelledby="overlayTitle">
-            <div class="overlay-header">
-                <div class="overlay-title" id="overlayTitle">List of Qualifiers</div>
-                <div class="overlay-actions">
-                    <button class="btn-export">Export</button>
-                    <button class="overlay-close" id="overlayClose" title="Close">✕</button>
-                </div>
-            </div>
-            <div class="overlay-body">
-                <table class="qualifiers-table">
-                    <thead>
-                        <tr>
-                            <th>Title</th>
-                            <th>Team Leader</th>
-                            <th>Start Date</th>
-                            <th>Status</th>
-                            <th class="table-settings">Settings</th>
-                        </tr>
-                    </thead>
-                    <tbody id="qualifiersTbody">
-                        <!-- rows injected via JS -->
-                    </tbody>
-                </table>
-                <div class="pagination" id="pagination"></div>
-            </div>
-        </div>
-    </div>
-
     <script>
         // Endpoint helpers resolved by Django
         const API_GOALS_URL = "{% url 'api_goals' %}";
-        const API_GOAL_DETAIL_URL_TEMPLATE = "{% url 'api_goal_detail' 0 %}"; // replace 0 with id
-        const API_GOAL_QUALIFIERS_URL_TEMPLATE = "{% url 'api_goal_qualifiers' 0 %}"; // replace 0 with id
-        const EDIT_GOAL_URL_TEMPLATE = "{% url 'edit_goal' 0 %}"; // replace 0 with id
+        const API_GOAL_DETAIL_URL_TEMPLATE = "{% url 'api_goal_detail' 0 %}"; 
+        const API_GOAL_QUALIFIERS_URL_TEMPLATE = "{% url 'api_goal_qualifiers' 0 %}";
+        const EDIT_GOAL_URL_TEMPLATE = "{% url 'edit_goal' 0 %}";
         function goalDetailUrl(id) { return API_GOAL_DETAIL_URL_TEMPLATE.replace('/0/', `/${id}/`); }
         function goalQualifiersUrl(id) { return API_GOAL_QUALIFIERS_URL_TEMPLATE.replace('/0/', `/${id}/`); }
         function editGoalUrl(id) { return EDIT_GOAL_URL_TEMPLATE.replace('/0/', `/${id}/`); }
-        // Export function for qualifiers
-        document.addEventListener('click', (e) => {
-            if (e.target.closest('.btn-export')) {
-                exportQualifiersToCSV();
-            }
-        });
-
-        function exportQualifiersToCSV() {
-            if (dataset.length === 0) {
-                alert('No data to export');
-                return;
-            }
-
-            // Create CSV content
-            const headers = ['Title', 'Team Leader', 'Start Date', 'Status'];
-            const csvRows = [headers.join(',')];
-
-            dataset.forEach(row => {
-                const values = [
-                    `"${row.title}"`,
-                    `"${row.lead}"`,
-                    `"${row.start}"`,
-                    `"${row.status}"`
-                ];
-                csvRows.push(values.join(','));
-            });
-
-            const csvContent = csvRows.join('\n');
-            
-            // Create and download file
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            const url = URL.createObjectURL(blob);
-            link.setAttribute('href', url);
-            link.setAttribute('download', 'goal_qualifiers.csv');
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-
-        // Plugin to draw percentage text inside the chart (with subtle shadow)
-        const centerTextPlugin = {
-            id: 'centerText',
-            beforeDraw(chart) {
-                const { width, height, ctx } = chart;
-                ctx.save();
-                const dataset = chart.data.datasets[0].data;
-                const value = dataset[0];
-
-                // Ensure value is valid for display
-                const displayValue = (value !== null && value !== undefined && !isNaN(value)) ? value : 0;
-
-                // Drop shadow for text for better contrast
-                ctx.shadowColor = 'rgba(0,0,0,0.18)';
-                ctx.shadowBlur = 8;
-                ctx.shadowOffsetY = 2;
-
-                ctx.font = '700 3.2rem Arial'; 
-                ctx.fillStyle = '#1f2937'; 
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(displayValue + '%', width / 2, height / 1.78);
-                ctx.restore();
-            }
-        };
-        // Subtle arc shadow plugin (applies to the progress arc only)
-        const arcShadowPlugin = {
-            id: 'arcShadow',
-            beforeDatasetDraw(chart, args) {
-                if (args.index !== 0) return;
-                const { ctx } = chart;
-                ctx.save();
-                ctx.shadowColor = 'rgba(0,0,0,0.20)';
-                ctx.shadowBlur = 14;
-                ctx.shadowOffsetY = 6;
-            },
-            afterDatasetDraw(chart, args) {
-                if (args.index !== 0) return;
-                chart.ctx.restore();
-            }
-        };
-        function createHalfDoughnut(ctx, value, title) {
-            // Ensure value is a valid number, default to 0 if undefined/null
-            const progressValue = (value !== null && value !== undefined && !isNaN(value)) ? value : 0;
-
-            // Choose color palette by progress bucket
-            let startColor, endColor;
-            if (progressValue < 34) {
-                startColor = '#ef4444'; // red
-                endColor   = '#f87171';
-            } else if (progressValue < 67) {
-                startColor = '#f59e0b'; // amber
-                endColor   = '#fbbf24';
-            } else {
-                startColor = '#10b981'; // green
-                endColor   = '#22c55e';
-            }
-
-            // Gradient for the progress arc
-            const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
-            gradient.addColorStop(0, startColor);
-            gradient.addColorStop(1, endColor);
-
-            return new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    datasets: [{
-                        data: [progressValue, 100 - progressValue],
-                        backgroundColor: [gradient, 'rgba(229,231,235,0.9)'],
-                        borderWidth: 0,
-                        borderRadius: 14,
-                        hoverOffset: 4
-                    }]
-                },
-                options: {
-                rotation: -90,
-                circumference: 180,
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '78%',
-                plugins: {
-                    legend: { display: false },
-                    tooltip: { enabled: false },
-                    title: { display: false },
-                    subtitle: { display: false},
-                    padding: { top: 10 }
-                    },
-                animation: {
-                    animateRotate: true,
-                    duration: 1200,
-                    easing: 'easeOutCubic'
-                    }
-                },
-                plugins: [arcShadowPlugin, centerTextPlugin] 
-            });
-        }
-
-        // === Carousel logic (mirrors Agenda) ===
-        const GOAL_CARD_BACKGROUNDS = [
-            'linear-gradient(to bottom, #FFC4A8 0%, #ffffff 100%)',
-            'linear-gradient(to bottom, #B6F3D7 0%, #ffffff 100%)',
-            'linear-gradient(to bottom, #B8D9FF 0%, #ffffff 100%)',
-            'linear-gradient(to bottom, #D0B8FF 0%, #ffffff 100%)',
-            'linear-gradient(to bottom, #FFF3B8 0%, #ffffff 100%)',
-            'linear-gradient(to bottom, #FFB8D9 0%, #ffffff 100%)',
-            'linear-gradient(to bottom, #A8FFF0 0%, #ffffff 100%)',
-            'linear-gradient(to bottom, #FFC0B8 0%, #ffffff 100%)',
-            'linear-gradient(to bottom, #D9D9F8 0%, #ffffff 100%)',
-        ];
+        
+        // --- Carousel logic (adapted for 2x2 groups) ---
 
         let goalsIndex = 0;
-        const goalsCardsToShow = 3;
+        const goalsGroupsToShow = 1; // Show 1 group of 4 cards at a time
 
         function getGoalCards() {
-            return document.querySelectorAll('.goals-carousel-track .goal-card');
+            return document.querySelectorAll('.goals-carousel-track .goal-card-group .goal-card');
+        }
+        
+        function getGoalGroups() {
+            return document.querySelectorAll('.goals-carousel-track .goal-card-group');
         }
 
         function applyGoalColors() {
-            const cards = getGoalCards();
-            cards.forEach((card, index) => {
-                const colorIndex = index % GOAL_CARD_BACKGROUNDS.length;
-                card.style.backgroundImage = GOAL_CARD_BACKGROUNDS[colorIndex];
-            });
+            // Function no longer applies colors but is kept to preserve logic flow.
+            // Colors/backgrounds are applied via CSS based on data-index attribute.
         }
 
         function updateGoalsCarousel() {
-            const track = document.querySelector('.goals-carousel-track');
-            const cards = getGoalCards();
-            const totalCards = cards.length;
-            if (!track || totalCards === 0) return;
+            const track = document.getElementById('goalsTrack');
+            const groups = getGoalGroups();
+            const totalGroups = groups.length;
+            if (!track || totalGroups === 0) return;
 
+            // 1. Clamp index
             if (goalsIndex < 0) goalsIndex = 0;
-            if (goalsIndex > totalCards - goalsCardsToShow) {
-                goalsIndex = Math.max(totalCards - goalsCardsToShow, 0);
+            if (goalsIndex > totalGroups - goalsGroupsToShow) {
+                goalsIndex = Math.max(totalGroups - goalsGroupsToShow, 0);
             }
 
-            const cardWidth = cards.length > 0 ? cards[0].offsetWidth : 0;
-            const gap = parseInt(window.getComputedStyle(track).gap) || 24;
-            const offset = goalsIndex * (cardWidth + gap);
+            // 2. Calculate offset and scroll using group width
+            const groupsArray = Array.from(groups);
+            const groupWidth = groupsArray.length > 0 ? groupsArray[0].offsetWidth : 0;
+            const trackStyle = window.getComputedStyle(track);
+            const gap = parseInt(trackStyle.gap) || 4;
+            const offset = goalsIndex * (groupWidth + gap);
             track.style.transform = `translateX(-${offset}px)`;
 
+            // 3. Arrow enable/disable
             const leftArrow = document.querySelector('.goals-carousel-wrapper .left-arrow');
             const rightArrow = document.querySelector('.goals-carousel-wrapper .right-arrow');
             if (leftArrow) leftArrow.disabled = goalsIndex === 0;
-            if (rightArrow) rightArrow.disabled = goalsIndex >= totalCards - goalsCardsToShow;
+            if (rightArrow) rightArrow.disabled = goalsIndex >= totalGroups - goalsGroupsToShow;
 
-            const lastVisibleIndex = goalsIndex + goalsCardsToShow - 1;
-            cards.forEach((card, index) => {
-                card.classList.remove('expand-left');
-                if (index === lastVisibleIndex && index < totalCards) {
-                    card.classList.add('expand-left');
-                }
-            });
-
+            // 4. Cleanup old hover classes
             setupGoalHoverShift();
             applyGoalColors();
         }
@@ -313,27 +116,14 @@
 
         function setupGoalHoverShift() {
             const cards = getGoalCards();
-            cards.forEach(card => card.classList.remove('shift-previous'));
-            cards.forEach((card, index) => {
-                if (card.classList.contains('expand-left')) {
-                    const previousCard = cards[index - 1];
-                    if (previousCard) {
-                        const over = () => { previousCard.classList.add('shift-previous'); };
-                        const out = () => { previousCard.classList.remove('shift-previous'); };
-                        card.onmouseover = over;
-                        card.onmouseout = out;
-                    }
-                } else {
-                    card.onmouseover = null;
-                    card.onmouseout = null;
-                }
+            cards.forEach(card => {
+                card.classList.remove('expand-left', 'shift-previous');
+                card.onmouseover = null;
+                card.onmouseout = null;
             });
         }
 
-        // Ellipsis dropdown behavior - REMOVED CONFLICTING EVENT DELEGATION
-        // Now using onclick handlers directly on buttons
-        
-        // Close menus when clicking outside
+        // Ellipsis dropdown behavior
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.goal-menu') && !e.target.closest('.ellipsis-btn')) {
                 document.querySelectorAll('.goal-menu').forEach(menu => {
@@ -342,185 +132,47 @@
             }
         });
 
-        // Delegate menu actions (Edit/Delete) - REMOVED OLD DELETE LOGIC
-        document.addEventListener('click', (e) => {
-            const editBtn = e.target.closest('.menu-edit');
-            if (editBtn) {
-                const card = editBtn.closest('.goal-card');
-                const title = card?.querySelector('.goal-title')?.textContent?.trim() || '';
-                alert('Edit: ' + title);
-            }
-            // Delete button now uses onclick handlers, not event delegation
-        });
-
-        // Modal logic
-        const overlay = document.getElementById('qualifiersOverlay');
-        const overlayClose = document.getElementById('overlayClose');
-        function openOverlay() { overlay.classList.add('open'); }
-        function closeOverlay() { overlay.classList.remove('open'); }
-        overlayClose.addEventListener('click', closeOverlay);
-        overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) closeOverlay();
-        });
-
-        // Removed modal wiring; using server-rendered add/edit pages
-
-        // Removed modal submission code
-
-        // Notification functions
+        // Notification functions (kept for completeness)
         function showSuccessMessage(message) {
-            // Create a beautiful success notification
             const notification = document.createElement('div');
-            notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-                color: white;
-                padding: 16px 24px;
-                border-radius: 12px;
-                box-shadow: 0 8px 32px rgba(16, 185, 129, 0.3);
-                z-index: 10000;
-                font-weight: 600;
-                font-size: 16px;
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                animation: slideInRight 0.3s ease-out;
-                max-width: 400px;
-            `;
-            
-            notification.innerHTML = `
-                <div style="font-size: 24px;">✅</div>
-                <div>${message}</div>
-            `;
-            
+            notification.style.cssText = `position: fixed; top: 20px; right: 20px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 16px 24px; border-radius: 12px; box-shadow: 0 8px 32px rgba(16, 185, 129, 0.3); z-index: 10000; font-weight: 600; font-size: 16px; display: flex; align-items: center; gap: 12px; animation: slideInRight 0.3s ease-out; max-width: 400px;`;
+            notification.innerHTML = `<div style="font-size: 24px;">✅</div><div>${message}</div>`;
             document.body.appendChild(notification);
-            
-            // Auto remove after 4 seconds
-            setTimeout(() => {
-                notification.style.animation = 'slideOutRight 0.3s ease-in';
-                setTimeout(() => notification.remove(), 300);
-            }, 4000);
+            setTimeout(() => { notification.style.animation = 'slideOutRight 0.3s ease-in'; setTimeout(() => notification.remove(), 300); }, 4000);
         }
 
         function showErrorMessage(message) {
-            // Create a beautiful error notification
             const notification = document.createElement('div');
-            notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-                color: white;
-                padding: 16px 24px;
-                border-radius: 12px;
-                box-shadow: 0 8px 32px rgba(239, 68, 68, 0.3);
-                z-index: 10000;
-                font-weight: 600;
-                font-size: 16px;
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                animation: slideInRight 0.3s ease-out;
-                max-width: 400px;
-            `;
-            
-            notification.innerHTML = `
-                <div style="font-size: 24px;">❌</div>
-                <div>${message}</div>
-            `;
-            
+            notification.style.cssText = `position: fixed; top: 20px; right: 20px; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; padding: 16px 24px; border-radius: 12px; box-shadow: 0 8px 32px rgba(239, 68, 68, 0.3); z-index: 10000; font-weight: 600; font-size: 16px; display: flex; align-items: center; gap: 12px; animation: slideInRight 0.3s ease-out; max-width: 400px;`;
+            notification.innerHTML = `<div style="font-size: 24px;">❌</div><div>${message}</div>`;
             document.body.appendChild(notification);
-            
-            // Auto remove after 5 seconds
-            setTimeout(() => {
-                notification.style.animation = 'slideOutRight 0.3s ease-in';
-                setTimeout(() => notification.remove(), 300);
-            }, 5000);
+            setTimeout(() => { notification.style.animation = 'slideOutRight 0.3s ease-in'; setTimeout(() => notification.remove(), 300); }, 5000);
         }
 
-        // Add CSS animations for notifications
+        // Add CSS animations for notifications (kept for completeness)
         const style = document.createElement('style');
-        style.textContent = `
-            @keyframes slideInRight {
-                from {
-                    transform: translateX(100%);
-                    opacity: 0;
-                }
-                to {
-                    transform: translateX(0);
-                    opacity: 1;
-                }
-            }
-            
-            @keyframes slideOutRight {
-                from {
-                    transform: translateX(0);
-                    opacity: 1;
-                }
-                to {
-                    transform: translateX(100%);
-                    opacity: 0;
-                }
-            }
-        `;
+        style.textContent = `@keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } } @keyframes slideOutRight { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }`;
         document.head.appendChild(style);
-
-        // Removed modal filter helpers
-
-        // Add reset filters button functionality (optional)
-        function addResetFiltersButton() {
-            const filterSection = document.querySelector('.filter-section');
-            const resetButton = document.createElement('button');
-            resetButton.textContent = 'Reset Filters';
-            resetButton.className = 'reset-filters-btn';
-            resetButton.style.cssText = `
-                margin-top: 12px;
-                padding: 8px 16px;
-                background: #6b7280;
-                color: white;
-                border: none;
-                border-radius: 6px;
-                cursor: pointer;
-                font-size: 14px;
-                transition: background 0.2s;
-            `;
-            resetButton.addEventListener('click', resetFilters);
-            resetButton.addEventListener('mouseenter', () => {
-                resetButton.style.background = '#4b5563';
-            });
-            resetButton.addEventListener('mouseleave', () => {
-                resetButton.style.background = '#6b7280';
-            });
-            
-            filterSection.appendChild(resetButton);
-        }
-
-        // Removed calls to undefined filter helpers to avoid halting script
 
         // Load goals when page loads
         document.addEventListener('DOMContentLoaded', function() {
-            // Set CSRF token in meta tag
             const csrfToken = getCSRFToken();
             if (csrfToken) {
                 const csrfMeta = document.querySelector('meta[name="csrf-token"]');
-                if (csrfMeta) {
-                    csrfMeta.setAttribute('content', csrfToken);
+                    if (csrfMeta) {
+                        csrfMeta.setAttribute('content', csrfToken);
+                    }
                 }
-            }
             
             loadGoals();
             window.addEventListener('resize', updateGoalsCarousel);
         });
 
         // Database integration functions
-        let goals = []; // Store goals data
+        let goals = [];
 
-        // Load goals from database
         async function loadGoals() {
             try {
-                console.log('=== LOADING GOALS FROM API ===');
                 const response = await fetch(API_GOALS_URL, { credentials: 'same-origin' });
                 if (!response.ok) {
                     const text = await response.text();
@@ -528,20 +180,15 @@
                 }
                 const data = await response.json();
                 
-                console.log('API Response:', data);
-                
                 if (data.success === false) {
                     showGoalsError(data.error || 'Failed to load goals');
                     goals = [];
-                    renderEmptyState(true);
+                    renderGoals();
                     renderQualifiersTables();
                     return;
                 }
 
                 if (data.goals && data.goals.length > 0) {
-                    console.log('Raw goals from API:', data.goals);
-                    
-                    // Validate and normalize goal data
                     goals = data.goals.map(goal => ({
                         ...goal,
                         progress: (goal.progress !== null && goal.progress !== undefined && !isNaN(goal.progress)) ? goal.progress : 0,
@@ -549,71 +196,67 @@
                         title: goal.title || 'Untitled Goal'
                     }));
                     
-                    console.log('Processed goals array:', goals);
-                    console.log('Goals array length:', goals.length);
-                    
                     renderGoals();
                     renderQualifiersTables();
                 } else {
-                    console.log('No goals found in API response');
-                    // No goals in database - show demo tiles so UI remains visible
                     goals = [];
-                    renderEmptyState(false);
+                    renderGoals();
                     renderQualifiersTables();
                 }
             } catch (error) {
-                console.error('Error loading goals from database:', error);
                 showGoalsError('Error loading goals: ' + (error?.message || error));
-                // API failed - show demo tiles instead of hiding the section
                 goals = [];
-                renderEmptyState(false);
+                renderGoals();
                 renderQualifiersTables();
             }
         }
 
-        // Fetch and populate dynamic filters from backend
-        // Removed loadFilters
 
-        // Render empty state when no goals exist
         function renderEmptyState(hasError = false) {
-            const goalContainer = document.getElementById('goalsContainer');
-            if (!goalContainer) return;
-            goalContainer.innerHTML = `
-                <div style="grid-column: 1 / -1; text-align: center; padding: 3rem 2rem; color: #6b7280;">
-                    <div style="font-size: 4rem; margin-bottom: 1rem; opacity: 0.5;">${hasError ? '⚠️' : '📋'}</div>
-                    <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem; color: #374151;">${hasError ? 'Unable to Load Goals' : 'No Goals Yet'}</h3>
-                    <p style="font-size: 1rem; margin-bottom: 1.5rem; max-width: 400px; margin-left: auto; margin-right: auto;">${hasError ? 'There was an error loading goals from the database. Please check your connection and try again.' : 'Start by adding your first goal using the "Add Goal" button above. Your goals will appear here once created.'}</p>
-                    ${!hasError ? '<a href="/goals/add/" class="add-goal" style="margin-top: 1rem; display:inline-block;"><i class="fa-solid fa-plus" style="margin-right: 0.5rem;"></i>Add Your First Goal</a>' : ''}
-                </div>
-            `;
+            const track = document.getElementById('goalsTrack');
+            if (!track) return;
+            
+            // Ensures the empty state spans the carousel width (804px)
+            const emptyStateContent = `<div style="width: 804px; text-align: center; padding: 3rem 2rem; color: #6b7280; flex-shrink: 0;">
+                <div style="font-size: 4rem; margin-bottom: 1rem; opacity: 0.5;">${hasError ? '⚠️' : '📋'}</div>
+                <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem; color: #374151;">${hasError ? 'Unable to Load Goals' : 'No Goals Yet'}</h3>
+                <p style="font-size: 1rem; margin-bottom: 1.5rem; max-width: 400px; margin-left: auto; margin-right: auto;">${hasError ? 'There was an error loading goals from the database. Please check your connection and try again.' : 'Start by adding your first goal using the "Add Goal" button above. Your goals will appear here once created.'}</p>
+                ${!hasError ? '<a href="{% url "add_goal" %}" class="add-goal" style="margin-top: 1rem; display:inline-block;"><i class="fa-solid fa-plus" style="margin-right: 0.5rem;"></i>Add Your First Goal</a>' : ''}
+            </div>`;
+
+            const emptyContainer = document.createElement('div');
+            emptyContainer.innerHTML = emptyStateContent;
+            track.appendChild(emptyContainer.firstChild);
         }
 
-        // Render goals in the UI
-        function renderGoals() {
-            const goalContainer = document.getElementById('goalsContainer');
+        // Render goals in the UI (modified for 2x2 grid and X/Y format)
+        async function renderGoals() {
             const track = document.getElementById('goalsTrack');
             if (!track) return;
 
-            // Clear existing goals
             track.innerHTML = '';
 
-            // If no goals, show empty state
             if (goals.length === 0) {
-                // If empty, center message inside carousel
-                const empty = document.createElement('div');
-                empty.style.cssText = 'width:960px;text-align:center;padding:40px;color:#888;font-size:18px;margin:0 auto;';
-                empty.textContent = 'No goals found.';
-                track.appendChild(empty);
+                renderEmptyState(false);
                 return;
             }
 
-            // Render all goals as carousel cards
-            const goalsToShow = goals;
+            let group = null;
+            const totalGoals = goals.length;
             
-            goalsToShow.forEach((goal, index) => {
-                console.log(`Rendering goal ${index}: ID=${goal.id}, Title="${goal.title}"`);
+            goals.forEach((goal, index) => {
+                const cardIndex = index % 4; // Used for CSS geometric background pattern
+
+                // Create a new group for every 4 goals
+                if (cardIndex === 0) {
+                    group = document.createElement('div');
+                    group.className = 'goal-card-group';
+                    track.appendChild(group);
+                }
+
                 const card = document.createElement('div');
                 card.className = 'goal-card';
+                card.setAttribute('data-index', cardIndex); // Set data-index for CSS styling
                 card.innerHTML = `
                     <button class=\"ellipsis-btn\" onclick=\"toggleGoalMenu(${index})\">...</button>
                     <div class=\"goal-menu\" id=\"goal-menu-${index}\">\n\
@@ -626,145 +269,18 @@
                             Delete\n\
                         </button>\n\
                     </div>
-                    <canvas id=\"goal${index + 1}\"></canvas>
+                    <div class=\"goal-number\">${index + 1}/${totalGoals}</div>
                     <div class=\"goal-title\">${goal.title}</div>
                 `;
-                track.appendChild(card);
-
-                // Create chart for this goal
-                setTimeout(() => {
-                    createHalfDoughnut(
-                        document.getElementById(`goal${index + 1}`).getContext('2d'), 
-                        goal.progress, 
-                        goal.title
-                    );
-                }, 100);
+                group.appendChild(card);
             });
 
-            // Initialize carousel after rendering
             updateGoalsCarousel();
         }
 
-        // Update list view with real data
-        function updateListView() {
-            const tbody = document.getElementById('goalsListTbody');
-            if (!tbody) return;
 
-            tbody.innerHTML = '';
-            
-            if (goals.length === 0) {
-                // Show empty state in table
-                const emptyRow = document.createElement('tr');
-                emptyRow.innerHTML = `
-                    <td colspan="3" style="text-align: center; padding: 2rem; color: #6b7280; font-style: italic;">
-                        No goals available. Add a goal to see it here.
-                    </td>
-                `;
-                tbody.appendChild(emptyRow);
-                return;
-            }
-
-            goals.forEach(goal => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${goal.title}</td>
-                    <td><button class="ListView-btn" onclick="viewQualifiers(${goal.id})">View List</button></td>
-                    <td class="progress">${goal.progress}%</td>
-                `;
-                tbody.appendChild(row);
-            });
-        }
-
-        // Add new goal to database
-        async function addGoalToDatabase(goalData) {
-            try {
-                console.log('Attempting to add goal:', goalData);
-                
-                const csrfToken = getCSRFToken();
-                console.log('CSRF Token:', csrfToken ? 'Found' : 'Not found');
-                
-                const response = await fetch(API_GOALS_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': csrfToken
-                    },
-                    body: JSON.stringify(goalData)
-                });
-
-                console.log('Add goal response status:', response.status);
-                console.log('Add goal response headers:', response.headers);
-
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('Response error:', errorText);
-                    throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
-                }
-
-                const result = await response.json();
-                console.log('Add goal response:', result);
-                
-                if (result.success) {
-                    // Reload goals from database for real-time update
-                    await loadGoals();
-                    return true;
-                } else {
-                    console.error('Error adding goal:', result.error);
-                    showErrorMessage('Error adding goal: ' + (result.error || 'Unknown error'));
-                    return false;
-                }
-            } catch (error) {
-                console.error('Error adding goal:', error);
-                showErrorMessage('Error adding goal: ' + error.message);
-                return false;
-            }
-        }
-
-        // Delete goal from database
-        async function deleteGoalFromDatabase(goalId) {
-            try {
-                console.log('Attempting to delete goal ID:', goalId);
-                console.log('CSRF Token:', getCSRFToken() ? 'Found' : 'Not found');
-                
-                const response = await fetch(goalDetailUrl(goalId), {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': getCSRFToken()
-                    }
-                });
-
-                console.log('Delete response status:', response.status);
-                console.log('Delete response headers:', response.headers);
-                
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('Delete response error:', errorText);
-                    throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
-                }
-                
-                const result = await response.json();
-                console.log('Delete response:', result);
-                
-                if (result.success) {
-                    // Reload goals from database for real-time update
-                    await loadGoals();
-                    return true;
-                } else {
-                    console.error('Error deleting goal:', result.error);
-                    showErrorMessage('Error deleting goal: ' + result.error);
-                    return false;
-                }
-            } catch (error) {
-                console.error('Error deleting goal:', error);
-                showErrorMessage('Error deleting goal: ' + error.message);
-                return false;
-            }
-        }
-
-        // Get CSRF token
+        // Get CSRF token (kept for completeness)
         function getCSRFToken() {
-            // Try to get CSRF token from cookies
             const cookies = document.cookie.split(';');
             for (let cookie of cookies) {
                 const [name, value] = cookie.trim().split('=');
@@ -772,37 +288,26 @@
                     return value;
                 }
             }
-            
-            // Try to get CSRF token from meta tag
             const csrfMeta = document.querySelector('meta[name="csrf-token"]');
             if (csrfMeta) {
                 return csrfMeta.getAttribute('content');
             }
-            
-            // Try to get CSRF token from form
             const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
             if (csrfInput) {
                 return csrfInput.value;
             }
-            
-            console.warn('CSRF token not found');
             return '';
         }
 
         // Enhanced goal menu functions
         function toggleGoalMenu(index) {
-            console.log('toggleGoalMenu called with index:', index);
-            // Close all menus
             document.querySelectorAll('.goal-menu').forEach(menu => {
                 menu.classList.remove('open');
             });
             
-            // Toggle current menu
             const menu = document.getElementById(`goal-menu-${index}`);
-            console.log('Found menu element:', menu);
             if (menu) {
                 menu.classList.toggle('open');
-                console.log('Menu toggled, is open:', menu.classList.contains('open'));
             }
         }
 
@@ -811,205 +316,49 @@
             window.location.href = editGoalUrl(goalId);
         }
 
-        // Delete goal function
+        // Delete goal function (kept for completeness)
         async function deleteGoal(goalId) {
-            console.log('=== DELETE DEBUG START ===');
-            console.log('deleteGoal called with ID:', goalId, 'Type:', typeof goalId);
-            console.log('Current goals array:', goals);
-            console.log('Goals array length:', goals.length);
-            console.log('Looking for goal with ID:', parseInt(goalId));
-            
-            // Log all goal IDs for comparison
-            goals.forEach((g, index) => {
-                console.log(`Goal ${index}: ID=${g.id} (type: ${typeof g.id}), Title="${g.title}"`);
-            });
-            
-            const goal = goals.find(g => g.id === parseInt(goalId)); // Convert string to number
-            console.log('Found goal:', goal);
+            const goal = goals.find(g => g.id === parseInt(goalId));
             
             if (goal) {
-                console.log('Goal found! Showing custom confirmation dialog...');
                 const confirmed = await showDeleteConfirmation(goal.title);
-                console.log('User confirmation result:', confirmed);
                 
                 if (confirmed) {
-                    console.log('User confirmed deletion');
                     const success = await deleteGoalFromDatabase(goalId);
                     if (success) {
                         showSuccessMessage('Goal deleted successfully!');
                     }
-                } else {
-                    console.log('User cancelled deletion');
                 }
-            } else {
-                console.log('❌ Goal not found in array');
-                console.log('Available goal IDs:', goals.map(g => g.id));
-                console.log('Looking for ID:', parseInt(goalId));
             }
-            console.log('=== DELETE DEBUG END ===');
         }
 
-        // Custom delete confirmation dialog
+        // Custom delete confirmation dialog (kept for completeness)
         function showDeleteConfirmation(goalTitle) {
             return new Promise((resolve) => {
-                // Create overlay
                 const overlay = document.createElement('div');
-                overlay.style.cssText = `
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    background: rgba(0, 0, 0, 0.7);
-                    z-index: 10000;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    animation: fadeIn 0.3s ease-out;
-                `;
+                overlay.style.cssText = `position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 10000; display: flex; align-items: center; justify-content: center; animation: fadeIn 0.3s ease-out;`;
                 
-                // Create dialog
                 const dialog = document.createElement('div');
-                dialog.style.cssText = `
-                    background: white;
-                    border-radius: 16px;
-                    padding: 32px;
-                    max-width: 400px;
-                    width: 90%;
-                    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
-                    text-align: center;
-                    animation: slideIn 0.3s ease-out;
-                `;
+                dialog.style.cssText = `background: white; border-radius: 16px; padding: 32px; max-width: 400px; width: 90%; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3); text-align: center; animation: slideIn 0.3s ease-out;`;
                 
-                dialog.innerHTML = `
-                    <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
-                    <h3 style="margin: 0 0 16px 0; color: #1f2937; font-size: 20px;">Delete Goal</h3>
-                    <p style="margin: 0 0 24px 0; color: #6b7280; line-height: 1.5;">
-                        Are you sure you want to delete<br>
-                        <strong style="color: #1f2937;">"${goalTitle}"</strong>?
-                    </p>
-                    <div style="display: flex; gap: 12px; justify-content: center;">
-                        <button id="cancelDelete" style="
-                            background: #6b7280;
-                            color: white;
-                            border: none;
-                            padding: 12px 24px;
-                            border-radius: 8px;
-                            cursor: pointer;
-                            font-weight: 600;
-                            transition: background 0.2s;
-                        ">Cancel</button>
-                        <button id="confirmDelete" style="
-                            background: #dc2626;
-                            color: white;
-                            border: none;
-                            padding: 12px 24px;
-                            border-radius: 8px;
-                            cursor: pointer;
-                            font-weight: 600;
-                            transition: background 0.2s;
-                        ">Delete</button>
-                    </div>
-                `;
+                dialog.innerHTML = `<div style="font-size: 48px; margin-bottom: 16px;">⚠️</div><h3 style="margin: 0 0 16px 0; color: #1f2937; font-size: 20px;">Delete Goal</h3><p style="margin: 0 0 24px 0; color: #6b7280; line-height: 1.5;">Are you sure you want to delete<br><strong style="color: #1f2937;">"${goalTitle}"</strong>?</p><div style="display: flex; gap: 12px; justify-content: center;"><button id="cancelDelete" style="background: #6b7280; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: background 0.2s;">Cancel</button><button id="confirmDelete" style="background: #dc2626; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: background 0.2s;">Delete</button></div>`;
                 
                 overlay.appendChild(dialog);
                 document.body.appendChild(overlay);
                 
-                // Add CSS animations
                 const style = document.createElement('style');
-                style.textContent = `
-                    @keyframes fadeIn {
-                        from { opacity: 0; }
-                        to { opacity: 1; }
-                    }
-                    @keyframes slideIn {
-                        from { transform: translateY(-20px); opacity: 0; }
-                        to { transform: translateY(0); opacity: 1; }
-                    }
-                `;
+                style.textContent = `@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } } @keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }`;
                 document.head.appendChild(style);
                 
-                // Event listeners
-                document.getElementById('cancelDelete').addEventListener('click', () => {
-                    overlay.remove();
-                    style.remove();
-                    resolve(false);
-                });
-                
-                document.getElementById('confirmDelete').addEventListener('click', () => {
-                    overlay.remove();
-                    style.remove();
-                    resolve(true);
-                });
-                
-                // Close on overlay click
-                overlay.addEventListener('click', (e) => {
-                    if (e.target === overlay) {
-                        overlay.remove();
-                        style.remove();
-                        resolve(false);
-                    }
-                });
-                
-                // Close on Escape key
-                const handleEscape = (e) => {
-                    if (e.key === 'Escape') {
-                        overlay.remove();
-                        style.remove();
-                        document.removeEventListener('keydown', handleEscape);
-                        resolve(false);
-                    }
-                };
+                const cleanup = (result) => { overlay.remove(); style.remove(); resolve(result); };
+                document.getElementById('cancelDelete').addEventListener('click', () => cleanup(false));
+                document.getElementById('confirmDelete').addEventListener('click', () => cleanup(true));
+                overlay.addEventListener('click', (e) => { if (e.target === overlay) cleanup(false); });
+                const handleEscape = (e) => { if (e.key === 'Escape') { document.removeEventListener('keydown', handleEscape); cleanup(false); } };
                 document.addEventListener('keydown', handleEscape);
             });
         }
-
-        // View qualifiers function
-        async function viewQualifiers(goalId) {
-            const goal = goals.find(g => g.id === goalId);
-            if (goal) {
-                // Update overlay title
-                document.getElementById('overlayTitle').textContent = `Qualifiers for: ${goal.title}`;
-                
-                // Show loading state
-                const tbody = document.getElementById('qualifiersTbody');
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem;">Loading...</td></tr>';
-                
-                openOverlay();
-                
-                try {
-                    // Fetch projects that match this goal's criteria
-                    const response = await fetch(goalQualifiersUrl(goalId));
-                    const data = await response.json();
-                    
-                    if (data.success && data.projects) {
-                        // Update the dataset with real project data
-                        dataset = data.projects.map(project => ({
-                            title: project.title,
-                            lead: project.team_leader,
-                            start: project.start_date,
-                            status: project.status
-                        }));
-                        
-                        // Render the first page
-                        renderTablePage(1);
-                    } else {
-                        // Show error state
-                        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: #dc2626;">Error loading projects</td></tr>';
-                    }
-                } catch (error) {
-                    console.error('Error fetching qualifiers:', error);
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: #dc2626;">Error loading projects: ' + error.message + '</td></tr>';
-                }
-            }
-        }
         
-        // Make functions globally accessible
-        window.deleteGoal = deleteGoal;
-        window.editGoal = editGoal;
-        window.toggleGoalMenu = toggleGoalMenu;
-        window.viewQualifiers = viewQualifiers;
-
         function showGoalsError(message) {
             const box = document.getElementById('goalsError');
             if (!box) return;
@@ -1017,7 +366,7 @@
             box.style.display = 'block';
         }
 
-        // Render per-goal qualifiers tables similar to agenda
+        // Render per-goal qualifiers tables similar to agenda (kept for completeness)
         async function renderQualifiersTables() {
             const container = document.getElementById('goalsTablesContainer');
             if (!container) return;
@@ -1026,7 +375,7 @@
             if (!goals || goals.length === 0) {
                 const empty = document.createElement('div');
                 empty.style.cssText = 'text-align:center; padding: 2rem; color:#6b7280;';
-                empty.textContent = 'No goals available.';
+                empty.textContent = 'No goals available to display in list view.';
                 container.appendChild(empty);
                 return;
             }
@@ -1055,7 +404,6 @@
                 `;
                 container.appendChild(section);
 
-                // Fetch qualifiers for this goal
                 try {
                     const resp = await fetch(goalQualifiersUrl(goal.id));
                     const data = await resp.json();
@@ -1063,13 +411,12 @@
                     tbody.innerHTML = '';
 
                     if (data.success && Array.isArray(data.projects) && data.projects.length > 0) {
-                        const total = data.projects.length;
                         const rows = data.projects.slice(0, 10);
                         rows.forEach(project => {
                             const tr = document.createElement('tr');
                             tr.innerHTML = `
-                                <td>${project.title}</td>
-                                <td>${project.team_leader}</td>
+                                <td><a href="/projects/${project.id}" class="name-link">${project.title}</a></td>
+                                <td><a href="/users/${project.team_leader_id}" class="name-link">${project.team_leader}</a></td>
                                 <td>${project.start_date || ''}</td>
                                 <td>${project.status || ''}</td>
                             `;
@@ -1095,106 +442,10 @@
             }
         }
 
-        // Client-side pagination
-        const PAGE_SIZE = 5;
-        let currentPage = 1;
-        let dataset = [];
-
-        function renderTablePage(page) {
-            currentPage = page;
-            const start = (page - 1) * PAGE_SIZE;
-            const end = start + PAGE_SIZE;
-            const slice = dataset.slice(start, end);
-            const tbody = document.getElementById('qualifiersTbody');
-            tbody.innerHTML = slice.map((row, idx) => `
-                <tr>
-                    <td>${row.title}</td>
-                    <td>${row.lead}</td>
-                    <td>${row.start}</td>
-                    <td>${row.status}</td>
-                    <td class="table-settings">
-                        <button class="row-ellipsis" aria-haspopup="true" aria-expanded="false">···</button>
-                        <div class="row-menu">
-                            <button class="row-edit">Edit</button>
-                            <button class="row-delete" style="color:#d2042d;">Delete</button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
-            renderPagination();
-        }
-
-        function renderPagination() {
-            const totalPages = Math.max(1, Math.ceil(dataset.length / PAGE_SIZE));
-            const container = document.getElementById('pagination');
-            const btnPrev = `<button class="page-btn ${currentPage === 1 ? 'disabled' : ''}" data-page="prev">← Previous</button>`;
-            const btnNext = `<button class="page-btn ${currentPage === totalPages ? 'disabled' : ''}" data-page="next">Next →</button>`;
-
-            // Build numbered pages with ellipses
-            const pages = [];
-            const windowSize = 2; // neighbors around current
-            for (let p = 1; p <= totalPages; p++) {
-                const isEdge = p === 1 || p === totalPages;
-                const inWindow = Math.abs(p - currentPage) <= windowSize;
-                if (isEdge || inWindow) {
-                    pages.push(p);
-                }
-            }
-            // insert ellipses
-            const uniquePages = [...new Set(pages)].sort((a,b)=>a-b);
-            const parts = [];
-            uniquePages.forEach((p, idx) => {
-                if (idx > 0 && p - uniquePages[idx-1] > 1) parts.push('<span>…</span>');
-                parts.push(`<button class="page-num ${p === currentPage ? 'active' : ''}" data-page="${p}">${p}</button>`);
-            });
-
-            container.innerHTML = btnPrev + parts.join('') + btnNext;
-        }
-
-        document.getElementById('pagination').addEventListener('click', (e) => {
-            const btn = e.target.closest('button');
-            if (!btn) return;
-            const totalPages = Math.max(1, Math.ceil(dataset.length / PAGE_SIZE));
-            const tag = btn.getAttribute('data-page');
-            if (tag === 'prev' && currentPage > 1) renderTablePage(currentPage - 1);
-            else if (tag === 'next' && currentPage < totalPages) renderTablePage(currentPage + 1);
-            else if (!isNaN(parseInt(tag))) renderTablePage(parseInt(tag));
-        });
-
-        // Row ellipsis menu interactions for Settings column
-        document.addEventListener('click', (e) => {
-            const ellipsis = e.target.closest('.row-ellipsis');
-            const anyMenus = document.querySelectorAll('.row-menu');
-            // Close all menus by default
-            anyMenus.forEach(m => m.classList.remove('open'));
-            if (ellipsis) {
-                const cell = ellipsis.parentElement;
-                const menu = cell.querySelector('.row-menu');
-                if (menu) {
-                    menu.classList.add('open');
-                }
-            }
-        });
-
-        // Handle Edit/Delete in Settings column
-        document.addEventListener('click', (e) => {
-            const edit = e.target.closest('.row-edit');
-            const del = e.target.closest('.row-delete');
-            if (edit) {
-                const row = edit.closest('tr');
-                const title = row?.children?.[0]?.textContent?.trim() || '';
-                alert('Edit qualifier: ' + title);
-            }
-            if (del) {
-                const row = del.closest('tr');
-                const title = row?.children?.[0]?.textContent?.trim() || '';
-                const ok = confirm('Delete this qualifier?\n\n' + title);
-                if (ok) row?.remove();
-            }
-        });
-
-        // Note: View List buttons are now handled by viewQualifiers function
-        // The onclick handlers are set directly in the HTML when rows are rendered
+        // Make functions globally accessible
+        window.deleteGoal = deleteGoal;
+        window.editGoal = editGoal;
+        window.toggleGoalMenu = toggleGoalMenu;
     </script>
 </body>
 </html>

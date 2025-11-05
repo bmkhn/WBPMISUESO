@@ -194,7 +194,6 @@ select#year-selector:focus {
 }
 
 .calendar-day {
-    border: 1px solid #ccc;
     padding: 10px;
     min-height: 60px;
     cursor: pointer;

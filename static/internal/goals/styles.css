@@ -4,12 +4,10 @@ body {
     font-family: 'Inter', Arial, sans-serif;
 }
 
-/* Applying .main-container styles to the main content wrapper */
 .content {
-    /* Removed unused content styles from original goals.css */
-    /* Only keeping main to get the container styles */
-    padding: 0; /* Clear padding from original goals.css .content */
+    padding: 0;
 }
+
 main {
     margin: 1.75rem 5rem;
     display: flex;
@@ -17,7 +15,6 @@ main {
     gap: 20px;
 }
 
-/* Applying .container-a styles to .goals-header */
 .goals-header {
     display: flex;
     flex-direction: row;
@@ -25,7 +22,6 @@ main {
     justify-content: space-between;
 }
 
-/* Applying .project-text styles to the h1 inside .goals-header */
 .goals-header h1 {
     color: #000;
     font-family: 'Inter', Arial, sans-serif;
@@ -34,7 +30,6 @@ main {
     font-weight: 500;
 }
 
-/* Applying .add-user-btn styles (identical in both files) */
 .add-user-btn {
     font-family: 'Inter', sans-serif;
     background-color: #00681a;
@@ -60,7 +55,7 @@ main {
     margin-right: 0.3rem;
 }
 
-/* --- Carousel Styles (Applied to Goals) --- */
+/* --- Carousel Wrapper/View (Big Square) --- */
 
 .goals-carousel-wrapper {
     display: flex;
@@ -69,14 +64,15 @@ main {
     width: 100%;
     position: relative;
     margin: 0.7rem;
-    height: 30rem;
+    height: 500px; /* Adjusted height for 2 vertical cards + spacing */
 }
 
 .goals-carousel {
     overflow: hidden;
-    width: 960px;
+    width: 468px; /* 2 * 222px card + 24px gap */
+    height: 468px; /* 2 * 222px card + 24px gap */
     position: relative;
-    margin: -2rem auto 0 auto; /* Matched agenda margin */
+    margin: -2rem auto 0 auto;
     display: flex;
     align-items: flex-start;
     justify-content: flex-start;
@@ -114,46 +110,108 @@ main {
 .carousel-arrow:disabled { opacity: 0.4; cursor: default; box-shadow: none; }
 .carousel-arrow svg { display: block; }
 
+/* --- 2x2 Grid Container (The Big Square) --- */
+.goal-card-group {
+    display: flex;
+    flex-wrap: wrap;
+    width: 468px; /* 2 * 222px + 24px gap */
+    height: 468px; /* 2 * 222px + 24px gap */
+    flex-shrink: 0;
+    gap: 24px;
+    align-content: flex-start;
+    justify-content: flex-start;
+    padding: 0;
+}
 
-/* Applying .agenda-card styles to .goal-card */
+/* --- Card (The Small Square) --- */
 .goal-card {
     position: relative;
-    width: 100%;
-    height: 25rem;
-    padding: 35px 40px 60px 40px;
+    width: 222px;
+    height: 222px;
+    padding: 20px;
     border-radius: 12px;
-    border-top: 1px solid rgba(0, 0, 0, 0.1);
-    border-left: 1px solid rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(0, 0, 0, 0.1);
     background-color: #ffffff;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08),
-                0 2px 4px rgba(0, 0, 0, 0.04);
-    transform: rotate(-0.5deg);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+    transform: none;
     transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    align-items: flex-start; /* Inherited from agenda-card */
+    gap: 5px;
+    align-items: flex-start;
+    justify-content: center; /* Center content vertically */
     box-sizing: border-box;
-    vertical-align: top;
-    flex: 0 0 calc(((960px - 2 * 24px) / 3) - 7px);
-    width: calc(((960px - 2 * 24px) / 3) - 7px);
+    cursor: pointer;
+    z-index: 1;
+    transform-origin: center center; /* Reset transform origin for consistent scaling */
 }
 
-.goal-card:hover {
-    transform: translateY(-16px) rotate(0deg);
-    flex: 0 0 calc((((960px - 2 * 24px) / 3) - 7px) * 2 + 24px);
-    width: calc((((960px - 2 * 24px) / 3) - 7px) * 2 + 24px);
-    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.25),
-                0 4px 8px rgba(0, 0, 0, 0.15);
-    border: 1px solid rgba(187, 187, 187, 0.8);
+/* Hover effect: Expand to fill the whole 468x468 group */
+.goal-card-group:hover .goal-card {
+    opacity: 0.1; /* Fade out siblings */
+    transform: scale(1);
+    box-shadow: none;
+    z-index: 1;
 }
 
-.goal-card.expand-left:hover {
-    transform: translateY(-16px) translateX(calc((((960px - 2 * 24px) / 3) - 7px) * -1 - 24px)) rotate(0deg);
+.goal-card-group .goal-card:hover {
+    opacity: 1;
+    transform-origin: top left;
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.25);
+    z-index: 10;
 }
 
-.goal-card.shift-previous {
-    transform: translateX(calc((((960px - 2 * 24px) / 3) - 7px) * -1 - 24px));
+/* --- Positioning on Hover: Scale is 2.108 for 468/222 --- */
+
+/* 1st card (top-left) */
+.goal-card-group .goal-card:nth-child(1):hover {
+    transform: translate(0px, 0px) scale(2.108);
+}
+
+/* 2nd card (top-right) */
+.goal-card-group .goal-card:nth-child(2):hover {
+    transform: translate(calc(-100% - 24px), 0px) scale(2.108); /* Move left by its full width + gap */
+}
+
+/* 3rd card (bottom-left) */
+.goal-card-group .goal-card:nth-child(3):hover {
+    transform: translate(0px, calc(-100% - 24px)) scale(2.108); /* Move up by its full height + gap */
+}
+
+/* 4th card (bottom-right) */
+.goal-card-group .goal-card:nth-child(4):hover {
+    transform: translate(calc(-100% - 24px), calc(-100% - 24px)) scale(2.108); /* Move up and left */
+}
+
+
+/* --- Card Content Styling --- */
+
+.goal-card .goal-title {
+    font-family: 'Inter', Arial, sans-serif;
+    font-weight: 700;
+    font-size: 1.5rem;
+    color: #1A1A1A;
+    text-align: center;
+    width: 100%;
+    margin-top: 10px;
+    padding-bottom: 0;
+    transition: all 0.5s;
+    line-height: 1.2;
+}
+
+.goal-card .goal-number {
+    font-family: 'Inter', Arial, sans-serif;
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: #555555;
+    text-align: center;
+    width: 100%;
+    margin-top: 0;
+    transition: all 0.5s;
+}
+
+.goal-card .goal-title::after {
+    display: none; /* Remove line animation */
 }
 
 /* Applying .agenda-card-kebab styles to .ellipsis-btn */
@@ -172,44 +230,13 @@ main {
     transition: background 0.2s, transform 0.3s;
     background: none;
     border: none;
-    font-size: 1.3rem; /* from original goals.css */
-    color: #090909; /* from original goals.css */
+    font-size: 1.3rem;
+    color: #090909;
 }
 
 .ellipsis-btn:hover {
     background: rgba(0, 0, 0, 0.1);
     transform: scale(1.1);
-}
-
-/* Applying .agenda-card-text styles to .goal-card .goal-title */
-.goal-card .goal-title {
-    font-family: 'Instrument Sans', Arial, sans-serif;
-    font-weight: 900;
-    font-size: 28px;
-    color: #1A1A1A;
-    text-align: left;
-    width: 100%;
-    margin-top: 5px;
-    position: relative;
-    padding-bottom: 25px;
-    margin-bottom: 5px;
-}
-
-.goal-card .goal-title::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    bottom: 5px;
-    width: 5px;
-    height: 4px;
-    background-color: #444;
-    border-radius: 2px;
-    transition: width 0.9s ease;
-}
-
-.goal-card:hover .goal-title::after {
-    width: 100%;
-    background-color: #f8f8f8;
 }
 
 /* Applying .options-dropdown styles to .goal-menu */
@@ -226,19 +253,19 @@ main {
     visibility: hidden;
     transform: translateY(-10px);
     transition: all 0.2s ease;
-    z-index: 200; /* Increased z-index */
+    z-index: 200;
     overflow: hidden;
-    display: none; /* agenda is hidden by default with opacity/visibility */
+    display: none;
 }
 
-.goal-menu.open { /* .options-dropdown.show */
+.goal-menu.open {
     opacity: 1;
     visibility: visible;
     transform: translateY(0);
     display: block;
 }
 
-.goal-menu .options-item { /* .options-item */
+.goal-menu .options-item {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -279,7 +306,7 @@ main {
     color: #DC2626;
 }
 
-/* Unique style for goals progress badge - retained */
+
 .goal-progress-badge {
     display: inline-flex;
     align-items: center;
@@ -294,15 +321,8 @@ main {
     border-radius: 999px;
 }
 
-/* Applying .table-view-container styles to #goalsTablesContainer */
-#goalsTablesContainer {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    width: 100%;
-}
 
-/* --- List View Table Styles (Shared class names) --- */
+/* --- List View Table Styles --- */
 
 .title-expand-container {
     display: flex;
@@ -342,6 +362,7 @@ main {
     overflow: auto; 
     box-shadow: 0 0 0 1px #E0E0E0, 0 8px 18px -8px rgba(0, 0, 0, 0.15); 
     border: none;
+    margin-top: 10px;
 }
 
 .user-table th {
