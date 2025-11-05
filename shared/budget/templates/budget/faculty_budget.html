@@ -90,6 +90,12 @@
         .expense-reason { word-break: break-word; white-space: normal; }
         .expense-amount, .expense-date { text-align: right; white-space: nowrap; }
         .expense-empty { padding: 1rem; color:#6b7280; }
+        /* Pagination styles from faculty_project.html */
+        .pagination-container { display: flex; justify-content: center; align-items: center; gap: 0.5rem; margin-top: 1.5rem; flex-wrap: wrap; }
+        .pagination-button { padding: 0.5rem 0.75rem; border: 1px solid #e5e7eb; background: white; color: #374151; border-radius: 0.375rem; cursor: pointer; font-size: 0.875rem; text-decoration: none; transition: all 0.2s; }
+        .pagination-button:hover:not(:disabled) { background: #f9fafb; border-color: #d1d5db; }
+        .pagination-button.active { background: #245F3E; color: white; border-color: #245F3E; font-weight: 500; }
+        .pagination-button:disabled { opacity: 0.5; cursor: not-allowed; }
     </style>
 
 <div data-dashboard="{% if project %}0{% else %}1{% endif %}">
@@ -235,7 +241,7 @@
                 {% if projects_overview %}
                 <div id="projectsCardView" class="projects-grid">
                     {% for p in projects_overview %}
-                    <a href="{% url 'expenses:project' p.id %}" class="proj-card">
+                    <a href="{% url 'expenses:project' p.id %}" class="proj-card" data-card-item>
                         {% if p.last_updated %}<p class="meta">Last updated {{ p.last_updated|date:"F j, Y" }}</p>{% endif %}
                         <h3 class="proj-title" style="text-align:center">{{ p.title }}</h3>
                         <div class="proj-status">
@@ -250,12 +256,15 @@
                     </a>
                     {% endfor %}
                 </div>
+                <!-- Card View Pagination -->
+                <div id="cardPagination" class="pagination-container" style="margin-top:1rem;"></div>
+                
                 <div id="projectsListView" style="display:none;">
                     <table style="width:100%; border-collapse:collapse;">
                         <thead><tr><th style="text-align:left; padding:0.6rem; background:#f7f7f7;">Title</th><th style="text-align:left; padding:0.6rem; background:#f7f7f7;">Updated</th><th style="text-align:left; padding:0.6rem; background:#f7f7f7;">Remaining</th><th style="background:#f7f7f7;"></th></tr></thead>
-                        <tbody>
+                        <tbody id="projectsListBody">
                             {% for p in projects_overview %}
-                            <tr>
+                            <tr data-list-item>
                                 <td style="padding:0.6rem;">{{ p.title }}</td>
                                 <td style="padding:0.6rem;">{% if p.last_updated %}{{ p.last_updated|date:"M d, Y" }}{% else %}-{% endif %}</td>
                                 <td style="padding:0.6rem;">{{ p.percent_remaining }}%</td>
@@ -265,6 +274,8 @@
                         </tbody>
                     </table>
                 </div>
+                <!-- List View Pagination -->
+                <div id="listPagination" class="pagination-container" style="margin-top:1rem;display:none;"></div>
                 {% else %}
                 <div>No projects found.</div>
                 {% endif %}
@@ -381,9 +392,34 @@
             const listBtn = document.getElementById('listViewBtn');
             const cardView = document.getElementById('projectsCardView');
             const listView = document.getElementById('projectsListView');
+            const cardPagination = document.getElementById('cardPagination');
+            const listPagination = document.getElementById('listPagination');
+            
             if (cardBtn && listBtn && cardView && listView){
-                cardBtn.addEventListener('click', ()=>{ cardBtn.style.background='#000'; cardBtn.style.color='#fff'; listBtn.style.background='#fff'; listBtn.style.color='#000'; if(cardView){cardView.style.display='grid';} if(listView){listView.style.display='none';} });
-                listBtn.addEventListener('click', ()=>{ listBtn.style.background='#000'; listBtn.style.color='#fff'; cardBtn.style.background='#fff'; cardBtn.style.color='#000'; if(cardView){cardView.style.display='none';} if(listView){listView.style.display='block';} });
+                cardBtn.addEventListener('click', ()=>{ 
+                    cardBtn.style.background='#000'; 
+                    cardBtn.style.color='#fff'; 
+                    listBtn.style.background='#fff'; 
+                    listBtn.style.color='#000'; 
+                    if(cardView){cardView.style.display='grid';} 
+                    if(listView){listView.style.display='none';}
+                    if(cardPagination){cardPagination.style.display='flex';}
+                    if(listPagination){listPagination.style.display='none';}
+                    // Reinitialize card pagination
+                    initCardPagination();
+                });
+                listBtn.addEventListener('click', ()=>{ 
+                    listBtn.style.background='#000'; 
+                    listBtn.style.color='#fff'; 
+                    cardBtn.style.background='#fff'; 
+                    cardBtn.style.color='#000'; 
+                    if(cardView){cardView.style.display='none';} 
+                    if(listView){listView.style.display='block';}
+                    if(cardPagination){cardPagination.style.display='none';}
+                    if(listPagination){listPagination.style.display='flex';}
+                    // Reinitialize list pagination
+                    initListPagination();
+                });
             }
         })();
 
@@ -680,6 +716,227 @@
             if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', reset); else reset();
             window.addEventListener('resize', reset);
         })();
+
+        // Card View Pagination (4 items per page)
+        function initCardPagination() {
+            if (!IS_DASH) return;
+            const cardView = document.getElementById('projectsCardView');
+            const container = document.getElementById('cardPagination');
+            if (!cardView || !container) return;
+            
+            const items = Array.from(cardView.querySelectorAll('[data-card-item]'));
+            if (items.length === 0) { container.innerHTML = ''; return; }
+            
+            const pageSize = 4;
+            let currentPage = 1;
+            
+            function renderPage(page) {
+                const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
+                currentPage = Math.min(Math.max(1, page), totalPages);
+                const start = (currentPage - 1) * pageSize;
+                const end = start + pageSize;
+                
+                items.forEach((item, i) => {
+                    item.style.display = (i >= start && i < end) ? '' : 'none';
+                });
+                
+                renderControls(totalPages);
+            }
+            
+            function renderControls(totalPages) {
+                container.innerHTML = '';
+                
+                // First button
+                const firstBtn = document.createElement('button');
+                firstBtn.className = 'pagination-button';
+                firstBtn.textContent = 'First';
+                firstBtn.disabled = currentPage === 1;
+                if (currentPage !== 1) firstBtn.addEventListener('click', () => renderPage(1));
+                container.appendChild(firstBtn);
+                
+                // Previous button
+                const prevBtn = document.createElement('button');
+                prevBtn.className = 'pagination-button';
+                prevBtn.textContent = 'Previous';
+                prevBtn.disabled = currentPage === 1;
+                if (currentPage !== 1) prevBtn.addEventListener('click', () => renderPage(currentPage - 1));
+                container.appendChild(prevBtn);
+                
+                // Page numbers
+                const pages = computePageNumbers(totalPages, currentPage);
+                pages.forEach(p => {
+                    if (p === '…') {
+                        const span = document.createElement('span');
+                        span.textContent = '…';
+                        span.style.padding = '0 0.5rem';
+                        container.appendChild(span);
+                    } else {
+                        const btn = document.createElement('button');
+                        btn.className = 'pagination-button';
+                        if (p === currentPage) btn.classList.add('active');
+                        btn.textContent = p;
+                        btn.disabled = p === currentPage;
+                        if (p !== currentPage) btn.addEventListener('click', () => renderPage(p));
+                        container.appendChild(btn);
+                    }
+                });
+                
+                // Next button
+                const nextBtn = document.createElement('button');
+                nextBtn.className = 'pagination-button';
+                nextBtn.textContent = 'Next';
+                nextBtn.disabled = currentPage === totalPages;
+                if (currentPage !== totalPages) nextBtn.addEventListener('click', () => renderPage(currentPage + 1));
+                container.appendChild(nextBtn);
+                
+                // Last button
+                const lastBtn = document.createElement('button');
+                lastBtn.className = 'pagination-button';
+                lastBtn.textContent = 'Last';
+                lastBtn.disabled = currentPage === totalPages;
+                if (currentPage !== totalPages) lastBtn.addEventListener('click', () => renderPage(totalPages));
+                container.appendChild(lastBtn);
+            }
+            
+            function computePageNumbers(total, current) {
+                const windowSize = 1;
+                const pages = [];
+                const add = n => { if (!pages.includes(n)) pages.push(n); };
+                
+                add(1);
+                add(total);
+                for (let i = current - windowSize; i <= current + windowSize; i++) {
+                    if (i > 1 && i < total) add(i);
+                }
+                pages.sort((a, b) => a - b);
+                
+                const result = [];
+                for (let i = 0; i < pages.length; i++) {
+                    result.push(pages[i]);
+                    if (i < pages.length - 1 && pages[i + 1] - pages[i] > 1) {
+                        result.push('…');
+                    }
+                }
+                return result;
+            }
+            
+            renderPage(1);
+        }
+
+        // List View Pagination (5 items per page)
+        function initListPagination() {
+            if (!IS_DASH) return;
+            const tbody = document.getElementById('projectsListBody');
+            const container = document.getElementById('listPagination');
+            if (!tbody || !container) return;
+            
+            const items = Array.from(tbody.querySelectorAll('[data-list-item]'));
+            if (items.length === 0) { container.innerHTML = ''; return; }
+            
+            const pageSize = 5;
+            let currentPage = 1;
+            
+            function renderPage(page) {
+                const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
+                currentPage = Math.min(Math.max(1, page), totalPages);
+                const start = (currentPage - 1) * pageSize;
+                const end = start + pageSize;
+                
+                items.forEach((item, i) => {
+                    item.style.display = (i >= start && i < end) ? '' : 'none';
+                });
+                
+                renderControls(totalPages);
+            }
+            
+            function renderControls(totalPages) {
+                container.innerHTML = '';
+                
+                // First button
+                const firstBtn = document.createElement('button');
+                firstBtn.className = 'pagination-button';
+                firstBtn.textContent = 'First';
+                firstBtn.disabled = currentPage === 1;
+                if (currentPage !== 1) firstBtn.addEventListener('click', () => renderPage(1));
+                container.appendChild(firstBtn);
+                
+                // Previous button
+                const prevBtn = document.createElement('button');
+                prevBtn.className = 'pagination-button';
+                prevBtn.textContent = 'Previous';
+                prevBtn.disabled = currentPage === 1;
+                if (currentPage !== 1) prevBtn.addEventListener('click', () => renderPage(currentPage - 1));
+                container.appendChild(prevBtn);
+                
+                // Page numbers
+                const pages = computePageNumbers(totalPages, currentPage);
+                pages.forEach(p => {
+                    if (p === '…') {
+                        const span = document.createElement('span');
+                        span.textContent = '…';
+                        span.style.padding = '0 0.5rem';
+                        container.appendChild(span);
+                    } else {
+                        const btn = document.createElement('button');
+                        btn.className = 'pagination-button';
+                        if (p === currentPage) btn.classList.add('active');
+                        btn.textContent = p;
+                        btn.disabled = p === currentPage;
+                        if (p !== currentPage) btn.addEventListener('click', () => renderPage(p));
+                        container.appendChild(btn);
+                    }
+                });
+                
+                // Next button
+                const nextBtn = document.createElement('button');
+                nextBtn.className = 'pagination-button';
+                nextBtn.textContent = 'Next';
+                nextBtn.disabled = currentPage === totalPages;
+                if (currentPage !== totalPages) nextBtn.addEventListener('click', () => renderPage(currentPage + 1));
+                container.appendChild(nextBtn);
+                
+                // Last button
+                const lastBtn = document.createElement('button');
+                lastBtn.className = 'pagination-button';
+                lastBtn.textContent = 'Last';
+                lastBtn.disabled = currentPage === totalPages;
+                if (currentPage !== totalPages) lastBtn.addEventListener('click', () => renderPage(totalPages));
+                container.appendChild(lastBtn);
+            }
+            
+            function computePageNumbers(total, current) {
+                const windowSize = 1;
+                const pages = [];
+                const add = n => { if (!pages.includes(n)) pages.push(n); };
+                
+                add(1);
+                add(total);
+                for (let i = current - windowSize; i <= current + windowSize; i++) {
+                    if (i > 1 && i < total) add(i);
+                }
+                pages.sort((a, b) => a - b);
+                
+                const result = [];
+                for (let i = 0; i < pages.length; i++) {
+                    result.push(pages[i]);
+                    if (i < pages.length - 1 && pages[i + 1] - pages[i] > 1) {
+                        result.push('…');
+                    }
+                }
+                return result;
+            }
+            
+            renderPage(1);
+        }
+
+        // Initialize card pagination on page load (default view)
+        if (IS_DASH) {
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initCardPagination);
+            } else {
+                initCardPagination();
+            }
+        }
     </script>
 </div>
 
