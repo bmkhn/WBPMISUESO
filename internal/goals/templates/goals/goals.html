@@ -10,9 +10,684 @@
 <title>Goals</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.css' rel='stylesheet'/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
-<link href="{% static 'internal/goals/styles.css' %}" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" xintegrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
+<!-- The external CSS link is removed as requested: <link href="{% static 'internal/goals/styles.css' %}" rel="stylesheet"> -->
+<style>
+/* INLINE STYLES based on requested changes:
+    - Card size (320px x 240px), Gap (4px).
+    - Goal Number is white with a neat shadow.
+    - Hover: Shadow removed, Denominator shifts to bottom, Qualifiers list appears on the right.
+    - NEW: Denominator next to Nominator in normal state, List invisible until hover.
+*/
+body {
+    background: #F9F9F9;
+    margin: 0;
+    font-family: 'Inter', Arial, sans-serif;
+}
+
+.content {
+    padding: 0;
+}
+
+main {
+    margin: 1.75rem 5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.goals-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.goals-header h1 {
+    color: #000;
+    font-family: 'Inter', Arial, sans-serif;
+    margin: 0;
+    font-size: 1.65rem;
+    font-weight: 500;
+}
+
+.add-user-btn {
+    font-family: 'Inter', sans-serif;
+    background-color: #00681a;
+    color: #F5F5F5;
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 0.6rem 1.6rem;
+    border-radius: 2rem;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    text-decoration: none;
+}
+
+.add-user-btn:hover {
+    background-color: #444;
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+.add-user-btn i {
+    cursor: pointer;
+    margin-right: 0.3rem;
+}
+
+/* --- Carousel Wrapper/View (Big Square) --- */
+
+.goals-carousel-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    position: relative;
+    margin: 0.7rem;
+    height: 500px;
+}
+
+.goals-carousel {
+    /* New width: (2 * 320px card) + 4px gap = 644px */
+    width: 644px; 
+    /* New height: (2 * 240px card) + 4px gap = 484px */
+    height: 484px; 
+    overflow: hidden;
+    position: relative;
+    margin: -2rem auto 0 auto;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: 15px 0;
+    background: none; 
+    border-radius: 30px;
+}
+
+.goals-carousel-track {
+    display: flex;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    gap: 4px;
+    will-change: transform;
+    position: relative;
+}
+
+/* SHARED BACKGROUND ELEMENT REMOVED */
+#sharedBackground {
+    display: none; 
+}
+
+.carousel-arrow {
+    background: #ffffff;
+    border: none;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+    z-index: 10;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    border-radius: 999px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+
+/* CAROUSEL CONTROLS WIDER (Original position) */
+.left-arrow { left: 0; }
+.right-arrow { right: 0; }
+
+.carousel-arrow:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.18); }
+.carousel-arrow:active { background: #f3f4f6; transform: translateY(-50%) scale(0.95); }
+.carousel-arrow:disabled { opacity: 0.4; cursor: default; box-shadow: none; }
+.carousel-arrow svg { display: block; }
+
+/* --- 2x2 Grid Container (The Big Square) --- */
+.goal-card-group {
+    display: flex;
+    flex-wrap: wrap;
+    width: 644px; 
+    height: 484px; 
+    flex-shrink: 0;
+    gap: 4px;
+    align-content: flex-start;
+    justify-content: flex-start;
+    padding: 0;
+    pointer-events: none;
+}
+
+/* --- Card (The Small Square) --- */
+.goal-card {
+    pointer-events: auto; 
+    position: relative;
+    width: 320px;
+    height: 240px;
+    padding: 0; 
+    border-radius: 24px; 
+    border: 1px solid rgba(0, 0, 0, 0.1); 
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08); 
+    background-color: #ffffff; 
+    transform: none;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start; 
+    box-sizing: border-box;
+    cursor: pointer;
+    z-index: 2; 
+    transform-origin: top left;
+    overflow: hidden; 
+}
+
+/* New wrapper for content to allow inverse transform */
+.card-content-wrapper {
+    padding: 20px; 
+    width: 100%;
+    height: 100%;
+    display: grid; /* Use grid for complex layout */
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto 1fr auto;
+    grid-template-areas: 
+        "title title"
+        "number list"
+        "total list"; 
+    gap: 5px 10px; /* Vertical / Horizontal gap */
+    align-items: start;
+    justify-content: start;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: top left;
+}
+
+/* Hover effect: Fade out siblings, keeping them distinct but deemphasized */
+.goal-card-group:hover .goal-card {
+    opacity: 0.1; /* Cards are distinct but faint */
+    transform: scale(1);
+    box-shadow: none;
+    z-index: 1;
+}
+
+/* Focused card hover: Must rely on nth-child for transform */
+.goal-card-group .goal-card:hover {
+    opacity: 1;
+    transform-origin: top left;
+    box-shadow: none; /* Shadow removed on hover */
+    z-index: 10;
+    /* Do NOT change border-radius on hover */
+}
+
+/* Scale Factor Calculation: (644px / 320px) = 2.0125. Inverse: 1 / 2.0125 = 0.4969 */
+.scale-factor { --scale: 2.0125; --inv-scale: 0.4969; }
+
+/* Apply INVERSE scale to the content wrapper on focused hover */
+.goal-card-group .goal-card:hover .card-content-wrapper {
+    transform: scale(var(--inv-scale)); 
+}
+
+/* Apply INVERSE scale to the ELLIPSIS button on focused hover (maintaining size) */
+.goal-card-group .goal-card:hover .ellipsis-btn {
+    transform: scale(var(--inv-scale)); 
+    transform-origin: top right;
+    z-index: 30; /* Ensure it stays on top */
+}
+
+/* 1st card (top-left) */
+.goal-card-group .goal-card:nth-child(1):hover {
+    transform: translate(0px, 0px) scale(var(--scale));
+}
+
+/* 2nd card (top-right) */
+.goal-card-group .goal-card:nth-child(2):hover {
+    /* Move left by its full width + gap (320px + 4px) */
+    transform: translate(calc(-100% - 4px), 0px) scale(var(--scale)); 
+}
+
+/* 3rd card (bottom-left) */
+.goal-card-group .goal-card:nth-child(3):hover {
+    /* Move up by its full height + gap (240px + 4px) */
+    transform: translate(0px, calc(-100% - 4px)) scale(var(--scale)); 
+}
+
+/* 4th card (bottom-right) */
+.goal-card-group .goal-card:nth-child(4):hover {
+    /* Move up and left */
+    transform: translate(calc(-100% - 4px), calc(-100% - 4px)) scale(var(--scale)); 
+}
+
+
+/* --- Card Content Styling --- */
+
+.goal-card .goal-title {
+    grid-area: title;
+    font-family: 'Inter', Arial, sans-serif;
+    font-weight: 500; 
+    font-size: 1.25rem;
+    color: #1A1A1A;
+    text-align: left;
+    width: 100%;
+    margin-top: 0; 
+    padding-bottom: 0;
+    transition: all 0.5s;
+    line-height: 1.2;
+}
+
+.goal-card .goal-number {
+    grid-area: number;
+    font-family: 'Inter', Arial, sans-serif;
+    font-weight: 900; 
+    font-size: 10rem; 
+    color: #ffffff; /* Text color is white */
+    
+    /* CLEAN, NEAT SHADOW (Adjusted for white text) */
+    text-shadow: 
+        -1px -1px 0 #cccccc, /* Shadow top-left/inner */
+        1px 1px 0 #333333,   /* Shadow bottom-right/outer */
+        3px 3px 6px rgba(0, 0, 0, 0.4); /* Soft, concentrated drop shadow */
+
+    text-align: left; 
+    width: 100%;
+    margin-top: 10px; 
+    transition: all 0.5s;
+    line-height: 1;
+    display: flex; /* Use flex to align nominator and denominator */
+    align-items: flex-end;
+    margin-bottom: 0; 
+}
+
+/* Denominator in Normal State (next to Nominator) */
+.goal-card .goal-number .progress-denominator {
+    font-size: 0.4em; 
+    font-weight: 500; 
+    color: #555555; 
+    /* To display the number next to the nominator in the small card */
+    margin-left: 5px; 
+    margin-bottom: 25px; /* Adjust vertical alignment visually */
+    line-height: 1;
+    text-shadow: none; /* Ensure no 3D effect */
+    display: inline-block;
+}
+
+/* Denominator - Now placed at the bottom */
+.goal-card .denominator-container {
+    grid-area: total;
+    font-family: 'Inter', Arial, sans-serif;
+    font-weight: 500;
+    font-size: 1.5rem; 
+    color: #555555;
+    margin-top: -5px; 
+    align-self: end;
+    text-shadow: none;
+    display: none; /* Hide in normal state */
+}
+
+/* Show Denominator Container on hover and hide the inline one */
+.goal-card:hover .denominator-container {
+    display: block; /* Show denominator at the bottom on hover */
+}
+.goal-card:hover .goal-number .progress-denominator {
+    display: none; /* Hide inline denominator on hover */
+}
+
+/* New Qualifier List */
+.qualifier-list {
+    grid-area: list;
+    font-size: 0.85rem;
+    color: #374151;
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    align-self: stretch;
+    border-left: 1px solid #e5e7eb;
+    padding-left: 15px;
+    max-height: 100%; 
+    overflow-y: auto;
+    font-weight: 400;
+    
+    /* Qualifier List hidden until hover */
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+/* Show Qualifier List on hover */
+.goal-card:hover .qualifier-list {
+    opacity: 1;
+}
+
+.qualifier-list li {
+    margin-bottom: 4px;
+    padding-left: 10px;
+    position: relative;
+}
+.qualifier-list li::before {
+    content: "•";
+    color: #00681a;
+    font-weight: 900;
+    display: inline-block;
+    width: 1em;
+    margin-left: -1em;
+}
+
+/* Styling for the small fraction part (old denominator removed) */
+.goal-card .goal-number .goal-total {
+    display: none; 
+}
+
+.goal-card .goal-title::after {
+    display: none; /* Remove line animation */
+}
+
+/* Applying .agenda-card-kebab styles to .ellipsis-btn */
+.ellipsis-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    z-index: 20; 
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    transition: background 0.2s, transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); 
+    background: none;
+    border: none;
+    font-size: 1.3rem;
+    color: #090909;
+}
+
+.ellipsis-btn:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+/* Applying .options-dropdown styles to .goal-menu */
+.goal-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: white;
+    min-width: 160px;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.2s ease;
+    z-index: 500; /* Increased z-index for visibility over expanded card */
+    overflow: hidden;
+    display: none;
+}
+
+.goal-menu.open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    display: block;
+}
+
+.goal-menu .options-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    text-decoration: none;
+    font-size: 1rem;
+    color: #555555;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    width: 100%;
+    text-align: left;
+    background: white;
+    border: none;
+}
+
+.goal-menu .options-item:hover {
+    background-color: #F3F4F6;
+}
+
+.goal-menu .options-item:first-child {
+    border-radius: 8px 8px 0 0;
+}
+
+.goal-menu .options-item:last-child {
+    border-radius: 0 0 8px 8px;
+}
+
+.goal-menu .options-item svg {
+    width: 16px;
+    height: 16px;
+}
+
+.goal-menu .edit-option {
+    color: #1f7c57;
+}
+
+.goal-menu .delete-option {
+    color: #DC2626;
+}
+
+
+.goal-progress-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: 10px;
+    padding: 4px 10px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #065f46;
+    background: #d1fae5;
+    border: 1px solid #86efac;
+    border-radius: 999px;
+}
+
+
+/* --- List View Table Styles --- */
+
+.title-expand-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 30px;
+}
+
+.table-title-text {
+    font-family: 'Inter', Arial, sans-serif;
+    font-weight: 400;
+    font-size: 1.25rem;
+    color: #000000;
+}
+
+.view-more {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 0.75rem;
+    color: #2EA8FF;
+    text-decoration: none;
+    margin-top: 10px;
+    cursor: pointer;
+}
+
+.view-more:hover {
+    text-decoration: underline;
+}
+
+.user-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #FFFFFF; 
+    border-radius: 10px; 
+    overflow: auto; 
+    box-shadow: 0 0 0 1px #E0E0E0, 0 8px 18px -8px rgba(0, 0, 0, 0.15); 
+    border: none;
+    margin-top: 10px;
+}
+
+.user-table th {
+    font-size: 0.95rem;
+    font-weight: 600; 
+    background: #eeeeee; 
+    border-bottom: 1px solid #E0E0E0; 
+    padding: 16px 18px; 
+    text-align: left;
+    font-family: 'Inter', Arial, sans-serif;
+    color: #333333; 
+    box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.05); 
+    transition: padding 0.2s ease-in-out; 
+}
+.user-table td {
+    font-size: 14px; 
+    font-weight: 400;
+    border: none;
+    border-bottom: 1px solid #EDEDED; 
+    padding: 14px 18px; 
+    text-align: left;
+    font-family: 'Inter', Arial, sans-serif;
+    color: #4A5568; 
+    transition: all 0.2s ease-out;
+} 
+.user-table tr:last-child td {
+    border-bottom: none;
+} 
+.user-table tr:nth-child(even) {
+    background-color: #FAFAFB; 
+}
+
+.user-table tr:hover {
+    background-color: #fffaf0; 
+    box-shadow: inset 4px 0 0 0 #FF9900; 
+    transform: translateY(-1px); 
+    cursor: pointer;
+}
+
+.settings-icon {
+    width: 16px;
+    height: 16px;
+    align-items: center;
+    justify-content: center;
+    display: inline-block;
+    vertical-align: middle;
+    cursor:pointer;
+}
+
+.user-table th.settings-col,
+.user-table td.settings-col {
+    text-align: center !important;
+    position: relative;
+    overflow: visible;
+    z-index: 5;
+}
+ 
+.name-link {
+    color: #0099FF;
+    text-decoration: none;
+} 
+.name-link:hover{
+    text-decoration: underline;
+} 
+ 
+.user-table tr:hover td {
+    padding: 18px; 
+}
+
+.user-table tr:hover {
+    background-color: #f2f2f2; 
+    cursor: pointer;
+}
+
+.user-table tr:last-child:hover td {
+    border-bottom: none; 
+}
+
+/* Generic Modal Styles (Copied from agenda.css modal for potential use) */
+
+#deleteAgendaModal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 999999;
+    align-items: center;
+    justify-content: center;
+}
+
+#deleteAgendaModal.is-open {
+    display: flex !important;
+}
+
+#deleteAgendaModal.show {
+    display: flex;
+}
+
+.modal-content {
+    background: white;
+    padding: 2rem 2.5rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 32px rgba(0, 0, 0, 0.18);
+    max-width: 350px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 1000000;
+}
+
+.modal-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #E53E3E;
+    margin-bottom: 1rem;
+}
+
+.modal-message {
+    font-size: 1rem;
+    color: #444;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 1rem;
+}
+
+.modal-btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.modal-btn-cancel {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.modal-btn-cancel:hover {
+    background: #d1d5db;
+}
+
+.modal-btn-delete {
+    background: #E53E3E;
+    color: white;
+}
+
+.modal-btn-delete:hover {
+    background: #c53030;
+}
+</style>
 </head>
 <body>
     
@@ -60,6 +735,25 @@
         function goalQualifiersUrl(id) { return API_GOAL_QUALIFIERS_URL_TEMPLATE.replace('/0/', `/${id}/`); }
         function editGoalUrl(id) { return EDIT_GOAL_URL_TEMPLATE.replace('/0/', `/${id}/`); }
         
+        // --- Sorting Logic: Closest to 100% first, completed goals go last ---
+        function sortGoals(goals) {
+            return goals.sort((a, b) => {
+                // Calculate actual progress based on Nominator/Denominator
+                const progressA = (a.current_qualifiers / a.target_qualifiers) * 100;
+                const progressB = (b.current_qualifiers / b.target_qualifiers) * 100;
+
+                const isCompleteA = progressA >= 100;
+                const isCompleteB = progressB >= 100;
+
+                // Rule 1: Completed goals (>= 100%) go to the back
+                if (isCompleteA && !isCompleteB) return 1;
+                if (!isCompleteA && isCompleteB) return -1;
+
+                // Rule 2: Sort by progress percentage in descending order (highest first)
+                return progressB - progressA;
+            });
+        }
+        
         // --- Carousel logic (adapted for 2x2 groups) ---
 
         let goalsIndex = 0;
@@ -75,7 +769,6 @@
 
         function applyGoalColors() {
             // Function no longer applies colors but is kept to preserve logic flow.
-            // Colors/backgrounds are applied via CSS based on data-index attribute.
         }
 
         function updateGoalsCarousel() {
@@ -92,9 +785,10 @@
 
             // 2. Calculate offset and scroll using group width
             const groupsArray = Array.from(groups);
-            const groupWidth = groupsArray.length > 0 ? groupsArray[0].offsetWidth : 0;
+            // Must calculate group width dynamically in case of screen resize
+            const groupWidth = groupsArray.length > 0 ? groupsArray[0].offsetWidth : 0; 
             const trackStyle = window.getComputedStyle(track);
-            const gap = parseInt(trackStyle.gap) || 4;
+            const gap = parseInt(trackStyle.gap) || 4; // Use new default gap
             const offset = goalsIndex * (groupWidth + gap);
             track.style.transform = `translateX(-${offset}px)`;
 
@@ -151,7 +845,7 @@
 
         // Add CSS animations for notifications (kept for completeness)
         const style = document.createElement('style');
-        style.textContent = `@keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } } @keyframes slideOutRight { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }`;
+        style.textContent = `@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } } @keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } } @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } } @keyframes slideOutRight { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }`;
         document.head.appendChild(style);
 
         // Load goals when page loads
@@ -189,13 +883,35 @@
                 }
 
                 if (data.goals && data.goals.length > 0) {
-                    goals = data.goals.map(goal => ({
-                        ...goal,
-                        progress: (goal.progress !== null && goal.progress !== undefined && !isNaN(goal.progress)) ? goal.progress : 0,
-                        goal_number: goal.goal_number || 0,
-                        title: goal.title || 'Untitled Goal'
-                    }));
+                    // --- New Data Logic: Calculate Nominator/Denominator for Display & Sorting ---
+                    goals = data.goals.map(goal => {
+                        const target = goal.goal_number > 0 ? goal.goal_number : 10; // Denominator
+                        // Calculate current qualifiers (Nominator) based on progress % and target
+                        let current = Math.floor(target * (goal.progress / 100)); 
+                        current = Math.min(current, target); // Cap current at target if progress somehow exceeds 100
+
+                        return {
+                            ...goal,
+                            progress: (goal.progress !== null && goal.progress !== undefined && !isNaN(goal.progress)) ? goal.progress : 0,
+                            title: goal.title || 'Untitled Goal',
+                            current_qualifiers: current, // Nominator (Qualifiers Met)
+                            target_qualifiers: target,   // Denominator (Target Required)
+                            
+                            // Mock project titles for display in the expanded card (Replace with real fetch if needed)
+                            qualifier_titles: [
+                                `Project Alpha QA`, 
+                                `Launch Prep: Marketing`, 
+                                `Backend Refactor V2`, 
+                                `Client Onboarding Phase 1`,
+                                `Database Optimization`,
+                                `Mobile App Design Review`
+                            ].slice(0, current) // Use slice based on current qualifiers
+                        };
+                    });
                     
+                    // Sort goals immediately after mapping
+                    goals = sortGoals(goals); 
+
                     renderGoals();
                     renderQualifiersTables();
                 } else {
@@ -211,13 +927,21 @@
             }
         }
 
+        // Helper function to render the bulleted list of qualifiers
+        function renderQualifiersList(titles) {
+            if (!titles || titles.length === 0) {
+                return '<li style="list-style-type: none;">No projects qualified yet.</li>';
+            }
+            return titles.map(title => `<li>${title}</li>`).join('');
+        }
+
 
         function renderEmptyState(hasError = false) {
             const track = document.getElementById('goalsTrack');
             if (!track) return;
             
-            // Ensures the empty state spans the carousel width (804px)
-            const emptyStateContent = `<div style="width: 804px; text-align: center; padding: 3rem 2rem; color: #6b7280; flex-shrink: 0;">
+            // Ensures the empty state spans the carousel width (644px, the new width)
+            const emptyStateContent = `<div style="width: 644px; text-align: center; padding: 3rem 2rem; color: #6b7280; flex-shrink: 0;">
                 <div style="font-size: 4rem; margin-bottom: 1rem; opacity: 0.5;">${hasError ? '⚠️' : '📋'}</div>
                 <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem; color: #374151;">${hasError ? 'Unable to Load Goals' : 'No Goals Yet'}</h3>
                 <p style="font-size: 1rem; margin-bottom: 1.5rem; max-width: 400px; margin-left: auto; margin-right: auto;">${hasError ? 'There was an error loading goals from the database. Please check your connection and try again.' : 'Start by adding your first goal using the "Add Goal" button above. Your goals will appear here once created.'}</p>
@@ -234,8 +958,9 @@
             const track = document.getElementById('goalsTrack');
             if (!track) return;
 
+            // Clear all groups and ensure no shared background exists
             track.innerHTML = '';
-
+            
             if (goals.length === 0) {
                 renderEmptyState(false);
                 return;
@@ -255,8 +980,13 @@
                 }
 
                 const card = document.createElement('div');
-                card.className = 'goal-card';
+                card.className = 'goal-card scale-factor'; /* Added scale-factor class here for CSS vars */
                 card.setAttribute('data-index', cardIndex); // Set data-index for CSS styling
+                
+                // --- Updated Goal Number Display ---
+                const nominatorDisplay = `${goal.current_qualifiers}`;
+                const denominatorDisplay = `${goal.target_qualifiers}`; // Denominator is now numbers-only
+
                 card.innerHTML = `
                     <button class=\"ellipsis-btn\" onclick=\"toggleGoalMenu(${index})\">...</button>
                     <div class=\"goal-menu\" id=\"goal-menu-${index}\">\n\
@@ -269,8 +999,20 @@
                             Delete\n\
                         </button>\n\
                     </div>
-                    <div class=\"goal-number\">${index + 1}/${totalGoals}</div>
-                    <div class=\"goal-title\">${goal.title}</div>
+                    <!-- Content wrapper for inverse scaling -->
+                    <div class="card-content-wrapper">
+                        <div class=\"goal-title\">${goal.title}</div>
+                        <div class=\"goal-number\">
+                            ${nominatorDisplay}
+                            <span class="progress-denominator">${denominatorDisplay}</span>
+                        </div>
+                        <!-- Denominator container (bottom placement) -->
+                        <div class="denominator-container">Target: ${denominatorDisplay}</div>
+                        <!-- New Qualifier List -->
+                        <ul class="qualifier-list">
+                            ${renderQualifiersList(goal.qualifier_titles)}
+                        </ul>
+                    </div>
                 `;
                 group.appendChild(card);
             });
@@ -301,8 +1043,12 @@
 
         // Enhanced goal menu functions
         function toggleGoalMenu(index) {
+            // Re-enabling the goal menu toggle function (it was already there, but ensuring it's robust)
             document.querySelectorAll('.goal-menu').forEach(menu => {
-                menu.classList.remove('open');
+                // Ensure only the clicked menu is open
+                if (menu.id !== `goal-menu-${index}`) {
+                    menu.classList.remove('open');
+                }
             });
             
             const menu = document.getElementById(`goal-menu-${index}`);
@@ -371,8 +1117,11 @@
             const container = document.getElementById('goalsTablesContainer');
             if (!container) return;
             container.innerHTML = '';
+            
+            // Sort goals again before rendering tables to ensure matching order
+            const sortedGoals = sortGoals([...goals]);
 
-            if (!goals || goals.length === 0) {
+            if (!sortedGoals || sortedGoals.length === 0) {
                 const empty = document.createElement('div');
                 empty.style.cssText = 'text-align:center; padding: 2rem; color:#6b7280;';
                 empty.textContent = 'No goals available to display in list view.';
@@ -380,7 +1129,7 @@
                 return;
             }
 
-            for (const goal of goals) {
+            for (const goal of sortedGoals) {
                 const section = document.createElement('div');
                 section.className = 'goal-qualifiers-section';
                 section.innerHTML = `
