@@ -3,12 +3,13 @@ from .views import (
     add_project_view, admin_submission_action, projects_dispatcher, project_profile,
     project_overview, project_providers, project_events, project_files, project_submissions, project_expenses, project_evaluations,
     project_submissions_details, edit_project_evaluation, delete_project_evaluation,
-    cancel_project, undo_cancel_project,
+    cancel_project, undo_cancel_project, check_college_budget,
 )
 
 urlpatterns = [
     path('', projects_dispatcher, name='project_dispatcher'),
     path('add/', add_project_view, name='add_project'),
+    path('check-budget/', check_college_budget, name='check_college_budget'),
 
     path('<int:pk>/', project_profile, name='project_profile'),
     path('<int:pk>/overview/', project_overview, name='project_overview'),

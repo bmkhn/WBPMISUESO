@@ -11,6 +11,7 @@ from django.core.paginator import Paginator
 import os
 from django.db import models
 from django.db.models import Q, BooleanField, ExpressionWrapper
+from decimal import Decimal
 
 
 def get_role_constants():
@@ -1269,6 +1270,45 @@ def add_project_view(request):
         form = ProjectForm(request.POST, request.FILES)
         if form.is_valid():
             try:
+                # Validate budget before saving
+                from shared.budget.models import CollegeBudget
+                from datetime import datetime
+                from decimal import Decimal
+                
+                project_leader = form.cleaned_data.get('project_leader')
+                logistics_type_value = form.cleaned_data['logistics_type']
+                internal_budget_value = form.cleaned_data.get('internal_budget', Decimal('0'))
+                
+                # Check budget if logistics type involves internal funding
+                if logistics_type_value in ['BOTH', 'INTERNAL'] and internal_budget_value > 0:
+                    if not project_leader:
+                        error = "Project leader is required for budget validation."
+                        raise ValueError(error)
+                    
+                    if not project_leader.college:
+                        error = f"Project leader {project_leader.get_full_name()} does not have an assigned college. Budget cannot be validated."
+                        raise ValueError(error)
+                    
+                    # Get current fiscal year
+                    current_year = str(datetime.now().year)
+                    
+                    # Get college budget for current fiscal year
+                    try:
+                        college_budget = CollegeBudget.objects.get(
+                            college=project_leader.college,
+                            fiscal_year=current_year,
+                            status='ACTIVE'
+                        )
+                    except CollegeBudget.DoesNotExist:
+                        error = f"No active budget allocation found for {project_leader.college.name} in fiscal year {current_year}. Cannot create project with internal budget."
+                        raise ValueError(error)
+                    
+                    # Check if budget is sufficient
+                    uncommitted_budget = college_budget.uncommitted_remaining
+                    if internal_budget_value > uncommitted_budget:
+                        error = f"Insufficient budget for {project_leader.college.name}. Requested: ₱{internal_budget_value:,.2f}, Available: ₱{uncommitted_budget:,.2f}"
+                        raise ValueError(error)
+                
                 # Save project (basic fields)
                 project = form.save(commit=False)
                 project.created_by = request.user
@@ -1374,3 +1414,112 @@ def add_project_view(request):
         'campus_choices': campus_choices,
         'logistics_type': logistics_type,
     })
+
+
+def check_college_budget(request):
+    """AJAX endpoint to validate college budget availability"""
+    from django.http import JsonResponse
+    from shared.budget.models import CollegeBudget
+    from datetime import datetime
+    
+    if request.method != 'GET':
+        return JsonResponse({'error': 'Invalid request method'}, status=400)
+    
+    project_leader_id = request.GET.get('project_leader_id')
+    internal_budget = request.GET.get('internal_budget', '0')
+    
+    if not project_leader_id:
+        return JsonResponse({'error': 'Project leader is required'}, status=400)
+    
+    try:
+        # Get project leader
+        leader = User.objects.select_related('college').get(id=project_leader_id)
+        
+        if not leader.college:
+            return JsonResponse({
+                'valid': False,
+                'error': 'Selected project leader does not have an assigned college.',
+                'college_name': None,
+                'total_budget': 0,
+                'uncommitted': 0,
+                'remaining': 0
+            })
+        
+        # Parse the internal budget
+        try:
+            requested_budget = Decimal(internal_budget) if internal_budget else Decimal('0')
+        except:
+            return JsonResponse({
+                'valid': False,
+                'error': 'Invalid budget amount.',
+                'college_name': leader.college.name,
+                'total_budget': 0,
+                'uncommitted': 0,
+                'remaining': 0
+            })
+        
+        # Get current fiscal year
+        current_year = str(datetime.now().year)
+        
+        # Get college budget for current fiscal year
+        try:
+            college_budget = CollegeBudget.objects.get(
+                college=leader.college,
+                fiscal_year=current_year,
+                status='ACTIVE'
+            )
+        except CollegeBudget.DoesNotExist:
+            return JsonResponse({
+                'valid': False,
+                'error': f'No active budget allocation found for {leader.college.name} in fiscal year {current_year}.',
+                'college_name': leader.college.name,
+                'total_budget': 0,
+                'uncommitted': 0,
+                'remaining': 0
+            })
+        
+        # Calculate available budget
+        uncommitted_budget = college_budget.uncommitted_remaining
+        remaining_after_project = uncommitted_budget - requested_budget
+        
+        # Check if requested budget exceeds available
+        if requested_budget > uncommitted_budget:
+            return JsonResponse({
+                'valid': False,
+                'error': f'Requested budget (₱{requested_budget:,.2f}) exceeds available budget (₱{uncommitted_budget:,.2f}) for {leader.college.name}.',
+                'college_name': leader.college.name,
+                'total_budget': float(college_budget.total_assigned),
+                'uncommitted': float(uncommitted_budget),
+                'remaining': float(remaining_after_project),
+                'requested': float(requested_budget)
+            })
+        
+        # Budget is valid
+        return JsonResponse({
+            'valid': True,
+            'message': f'Budget allocation is valid. Available: ₱{uncommitted_budget:,.2f}',
+            'college_name': leader.college.name,
+            'total_budget': float(college_budget.total_assigned),
+            'uncommitted': float(uncommitted_budget),
+            'remaining': float(remaining_after_project),
+            'requested': float(requested_budget)
+        })
+        
+    except User.DoesNotExist:
+        return JsonResponse({
+            'valid': False,
+            'error': 'Project leader not found.',
+            'college_name': None,
+            'total_budget': 0,
+            'uncommitted': 0,
+            'remaining': 0
+        }, status=404)
+    except Exception as e:
+        return JsonResponse({
+            'valid': False,
+            'error': f'Error checking budget: {str(e)}',
+            'college_name': None,
+            'total_budget': 0,
+            'uncommitted': 0,
+            'remaining': 0
+        }, status=500)

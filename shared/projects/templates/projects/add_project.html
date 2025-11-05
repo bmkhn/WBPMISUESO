@@ -162,7 +162,8 @@
                 <div class="user-details-row cols-2">
                     <div>
                         <div class="user-details-label">Internal Budget Assigned <span class="required">*</span></div>
-                        <input type="number" name="internal_budget" class="user-details-value" min="0" step="0.01">
+                        <input type="number" name="internal_budget" id="internal-budget-both" class="user-details-value internal-budget-input" min="0" step="0.01">
+                        <div id="budget-status-both" style="margin-top:0.5rem;font-size:0.9rem;min-height:20px;"></div>
                     </div>
                     <div>
                         <div class="user-details-label">External Budget Assigned <span class="required">*</span></div>
@@ -183,7 +184,8 @@
                 <div class="user-details-row cols-2">
                     <div>
                         <div class="user-details-label">Internal Budget Assigned <span class="required">*</span></div>
-                        <input type="number" name="internal_budget" class="user-details-value" min="0" step="0.01">
+                        <input type="number" name="internal_budget" id="internal-budget-internal" class="user-details-value internal-budget-input" min="0" step="0.01">
+                        <div id="budget-status-internal" style="margin-top:0.5rem;font-size:0.9rem;min-height:20px;"></div>
                     </div>
                     <div></div>
                 </div>
@@ -281,10 +283,147 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Budget validation state
+        let budgetValid = true;
+
+        // Budget validation function
+        function checkBudget() {
+            console.log('=== checkBudget called ===');
+            
+            // Get logistics type from select dropdown
+            const logisticsSelect = document.querySelector('select[name="logistics_type"]');
+            const logisticsType = logisticsSelect ? logisticsSelect.value : null;
+            console.log('Logistics type:', logisticsType);
+            
+            // Determine which status div and input to use
+            let statusDiv = null;
+            let budgetInput = null;
+            
+            if (logisticsType === 'BOTH') {
+                statusDiv = document.getElementById('budget-status-both');
+                budgetInput = document.getElementById('internal-budget-both');
+                document.getElementById('budget-status-internal').innerHTML = '';
+            } else if (logisticsType === 'INTERNAL') {
+                statusDiv = document.getElementById('budget-status-internal');
+                budgetInput = document.getElementById('internal-budget-internal');
+                document.getElementById('budget-status-both').innerHTML = '';
+            } else {
+                // External - clear both
+                document.getElementById('budget-status-both').innerHTML = '';
+                document.getElementById('budget-status-internal').innerHTML = '';
+                budgetValid = true;
+                return;
+            }
+            
+            // Get project leader from hidden input
+            const leaderTagRow = document.getElementById('project-leader-tag-row');
+            const leaderInput = leaderTagRow ? leaderTagRow.querySelector('input[name="project_leader"]') : null;
+            const leaderId = leaderInput ? leaderInput.value : null;
+            
+            console.log('Leader ID:', leaderId);
+            
+            // Check if leader is selected
+            if (!leaderId) {
+                statusDiv.innerHTML = '<span style="color:#E53E3E;font-weight:600;">⚠ Please select a Project Leader first</span>';
+                budgetValid = false;
+                return;
+            }
+            
+            // Get internal budget value
+            const internalBudget = budgetInput ? parseFloat(budgetInput.value) : null;
+            console.log('Internal budget:', internalBudget);
+            
+            // If no budget entered yet, show college info without validation
+            if (!internalBudget || internalBudget <= 0) {
+                // Show college budget info even without amount entered
+                const url = `/projects/check-budget/?project_leader_id=${leaderId}&internal_budget=0`;
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.error && data.error.includes('does not have a college')) {
+                            statusDiv.innerHTML = `<span style="color:#E53E3E;font-weight:600;">✗ ${data.error}</span>`;
+                            budgetValid = false;
+                        } else if (data.error && data.error.includes('No budget allocation')) {
+                            statusDiv.innerHTML = `<span style="color:#E53E3E;font-weight:600;">✗ ${data.error}</span>`;
+                            budgetValid = false;
+                        } else if (data.college_name) {
+                            statusDiv.innerHTML = `<span style="color:#3182CE;font-weight:600;">ℹ ${data.college_name} has ₱${parseFloat(data.uncommitted).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} available budget</span>`;
+                            budgetValid = true;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Budget check error:', error);
+                    });
+                return;
+            }
+
+            // Make AJAX request with actual budget amount
+            const url = `/projects/check-budget/?project_leader_id=${leaderId}&internal_budget=${internalBudget}`;
+            console.log('Fetching:', url);
+            
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Response:', data);
+                    if (data.valid) {
+                        budgetValid = true;
+                        statusDiv.innerHTML = `<span style="color:#38A169;font-weight:600;">✓ ${data.college_name} has ₱${parseFloat(data.uncommitted).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} available. After this project: ₱${parseFloat(data.remaining).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} remaining</span>`;
+                    } else {
+                        budgetValid = false;
+                        statusDiv.innerHTML = `<span style="color:#E53E3E;font-weight:600;">✗ ${data.error}</span>`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Budget check error:', error);
+                    budgetValid = true; // Don't block on network error
+                    statusDiv.innerHTML = '<span style="color:#D69E2E;font-weight:600;">⚠ Could not verify budget. Please check manually.</span>';
+                });
+        }
+
+        // Add event listeners for budget validation
+        setTimeout(function() {
+            // Listen to project leader changes
+            const leaderTagRow = document.getElementById('project-leader-tag-row');
+            if (leaderTagRow) {
+                const observer = new MutationObserver(checkBudget);
+                observer.observe(leaderTagRow, { childList: true, subtree: true });
+            }
+
+            // Listen to internal budget input changes
+            const budgetInputs = document.querySelectorAll('.internal-budget-input');
+            budgetInputs.forEach(input => {
+                input.addEventListener('input', checkBudget);
+                input.addEventListener('change', checkBudget);
+                input.addEventListener('keyup', checkBudget);
+            });
+
+            // Listen to logistics type select dropdown changes
+            const logisticsSelect = document.querySelector('select[name="logistics_type"]');
+            if (logisticsSelect) {
+                logisticsSelect.addEventListener('change', function() {
+                    console.log('Logistics type changed to:', this.value);
+                    // Small delay to ensure the correct section is visible
+                    setTimeout(checkBudget, 100);
+                });
+            }
+            
+            // Run initial check in case leader is already selected
+            checkBudget();
+        }, 500); // Delay to ensure tag UI is set up
+
         // Global error catcher for form submission
         var form = document.getElementById('addProjectForm');
         if (form) {
             form.addEventListener('submit', function(e) {
+                // Check budget validation before proceeding
+                const logisticsSelect = document.querySelector('select[name="logistics_type"]');
+                const logisticsType = logisticsSelect ? logisticsSelect.value : null;
+                if ((logisticsType === 'BOTH' || logisticsType === 'INTERNAL') && !budgetValid) {
+                    e.preventDefault();
+                    alert('Please resolve budget validation errors before submitting.');
+                    return;
+                }
+
                 // Remove previous error states and messages
                 let valid = true;
                 // Remove all previous error states/messages for inputs, selects, textareas
