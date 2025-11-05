@@ -20,17 +20,17 @@
         <div class="container-1">
             <div class="container-1A">
                 <h1 class="welcome-text">{{ title }}</h1>
-                <p class="viewing-text">A complete log of all budget-related actions.</p>
             </div>
-            <a href="{% url 'budget_dashboard' %}" class="btn">
+            <a href="{% url 'budget_dashboard' %}" class="export-btn view">
                 &larr; Back to Dashboard
             </a>
         </div>
         
+        <div class="another-header">
+            <h2>Log History</h2>
+        </div>
+
         <div class="table-container">
-            <div class="table-header">
-                <h2>Budget Audit Log</h2>
-            </div>
             <div class="table-wrapper">
                 <table class="user-table">
                     <thead>
@@ -54,10 +54,10 @@
                                     {% else %}action-default
                                     {% endif %}">
                                     {{ entry.get_action_display }}
-                                span>
+                                <span>
                             </td>
                             <td class="font-bold" style="white-space: nowrap;">₱{{ entry.amount|intcomma }}</td>
-                            <td style="width: 60%;">{{ entry.description }}</td>
+                            <td style="width: 35%;">{{ entry.description }}</td>
                         </tr>
                         {% empty %}
                         <tr>

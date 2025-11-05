@@ -20,17 +20,17 @@
         <div class="container-1">
             <div class="container-1A">
                 <h1 class="welcome-text">{{ title }}</h1>
-                <p class="viewing-text">Projects with committed external funding for this fiscal year.</p>
             </div>
-            <a href="{% url 'budget_dashboard' %}" class="btn">
+            <a href="{% url 'budget_dashboard' %}" class="export-btn view">
                 &larr; Back to Dashboard
             </a>
         </div>
+
+        <div class="another-header">
+            <h2>External Funding Records</h2>
+        </div>
         
         <div class="table-container">
-            <div class="table-header">
-                <h2>External Funding Records</h2>
-            </div>
             <div class="table-wrapper">
                 <table class="user-table">
                     <thead>
