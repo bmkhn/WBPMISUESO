@@ -21,7 +21,7 @@
             -->
             <div class="card" id="danger-zone">
                 <div class="card-header">
-                    <h6 class="m-0 text-danger">Warning</h6>
+                    <h6 class="m-0 text-danger accordion-title">Warning</h6>
                 </div>
                 <div class="card-body">
                     <p><strong>{{ confirm_message|default:"Are you sure you want to do this?" }}</strong></p>
@@ -37,14 +37,12 @@
                     
                     <form method="POST">
                         {% csrf_token %}
-                        <hr>
-                        <div class="d-flex justify-content-end">
-                            <!-- FIX: Button styles will be applied automatically -->
-                            <a href="{% if cancel_url %}{{ cancel_url }}{% else %}javascript:history.back(){% endif %}" class="btn btn-secondary mr-2">Cancel</a>
+                        <div class="d-flex justify-content-end fortwo">
                             <button type="submit" class="btn btn-danger">
                                 <i class="fas fa-exclamation-triangle" style="margin-right: 0.5rem;"></i>
                                 {{ confirm_button_text|default:"Yes, Confirm Delete" }}
                             </button>
+                            <a href="{% if cancel_url %}{{ cancel_url }}{% else %}javascript:history.back(){% endif %}" class="btn gray">Cancel</a>
                         </div>
                     </form>
                 </div>

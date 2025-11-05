@@ -26,7 +26,7 @@ class College(models.Model):
     name = models.CharField(max_length=255)
     # We CHANGE the 'campus' field from CharField to a ForeignKey
     campus = models.ForeignKey(Campus, on_delete=models.SET_NULL, null=True, blank=True)
-    logo = models.ImageField(upload_to='colleges/logos/', blank=True, null=True)
+    logo = models.ImageField(upload_to='colleges/logos/', null=True)
 
     def delete(self, *args, **kwargs):
         if self.logo and self.logo.storage and self.logo.storage.exists(self.logo.name):

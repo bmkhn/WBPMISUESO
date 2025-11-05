@@ -213,17 +213,19 @@
             </div>
             <div class="form-group">
                 <label class="form-label">Letter of Intent <span class="required">*</span></label>
-				<div class="upload-area" onclick="document.getElementById('request_letter_of_intent').click()">
-					<svg class="icon-upload" width="24" height="24"><use href="#icon-upload"></use></svg>
-					<span class="upload-text">Click to upload</span>
-					<input class="hidden" type="file" name="letter_of_intent" id="request_letter_of_intent" required style="flex:1;" accept="application/pdf">
-				</div>
-				<div class="file-preview" id="file-preview" style="display: none;">
-					<div class="file-info">
-						<svg width="16" height="16"><use href="#icon-upload"></use></svg>
-						<span id="file-name"></span>
+				<div style="width: 100%;">
+					<div class="upload-area" onclick="document.getElementById('request_letter_of_intent').click()">
+						<svg class="icon-upload" width="24" height="24"><use href="#icon-upload"></use></svg>
+						<span class="upload-text">Click to upload</span>
+						<input class="hidden" type="file" name="letter_of_intent" id="request_letter_of_intent" required style="flex:1;" accept="application/pdf">
 					</div>
-				</div> 
+					<div class="file-preview" id="file-preview" style="display: none; margin-top: 0.75rem;">
+						<div class="file-info">
+							<svg width="16" height="16"><use href="#icon-upload"></use></svg>
+							<span id="file-name"></span>
+						</div>
+					</div> 
+				</div>
 			</div>
 			
             <div class="form-actions">

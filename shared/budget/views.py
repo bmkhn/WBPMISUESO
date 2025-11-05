@@ -649,11 +649,19 @@ def budget_view(request):
 
     context["latest_history"] = BudgetHistory.objects.all().order_by('-timestamp')[:5]
 
-    context["latest_external_projects"] = Project.objects.filter(
+    # Initialize the base queryset for external projects
+    external_projects_qs = Project.objects.filter(
         external_budget__gt=0,
         start_date__year=int(current_year)
-    ).order_by('-external_budget')[:5]
+    )
 
+    # Apply filtering for Faculty/Implementer roles
+    if user_role in ["FACULTY", "IMPLEMENTER"]:
+        external_projects_qs = external_projects_qs.filter(
+            Q(project_leader=request.user) | Q(providers=request.user)
+        ).distinct() 
+
+    context["latest_external_projects"] = external_projects_qs.order_by('-external_budget')[:5]
     context["base_template"] = get_templates(request)
     context["title"] = f"Budget Dashboard ({current_year})"
     context["user_role"] = user_role
