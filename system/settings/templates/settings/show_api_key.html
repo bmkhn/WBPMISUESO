@@ -13,23 +13,18 @@
         <div class="col-lg-8">
             <!-- FIX: Added project-text title -->
             <h1 class="project-text">API Key Generated</h1>
-            
-            <!-- 
-              FIX: Replaced old card classes with the new id="api-key-warning"
-              to match the settings page style.
-            -->
+        
             <div class="card" id="api-key-warning">
                 <div class="card-header">
-                    <h6>API Key Generated Successfully</h6>
+                    <h6 class="accordion-title">API Key Generated Successfully</h6>
                 </div>
                 <div class="card-body">
-                    <h4 style="color: #B65900;">Please copy your new API key now.</h4>
                     <p class="mb-4">
                         For your security, this is the <strong>only time</strong> you will be able to see the full key.
                         The system cannot retrieve it again.
                     </p>
 
-                    <div class="form-group">
+                    <div class="form-group" style="margin-top: 0.6rem;">
                         <label class="form-label">Key for: {{ api_key_name }}</label>
                         <!-- FIX: Replaced input-group with custom api-key-group -->
                         <div class="api-key-group">
@@ -41,9 +36,7 @@
                         <small id="copy-success" class="text-success" style="display: none;">Copied to clipboard!</small>
                     </div>
 
-                    <hr>
-                    <!-- FIX: Updated link to go back to main settings page -->
-                    <a href="{% url 'system_settings:settings' %}" class="btn btn-secondary">
+                    <a href="{% url 'system_settings:settings' %}" class="btn btn-secondary" style="justify-self: center; align-self: center; background-color: #ff9900; margin-top: 0.4rem;">
                         <i class="fas fa-check" style="margin-right: 0.5rem;"></i> I have copied the key
                     </a>
                 </div>

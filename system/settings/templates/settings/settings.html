@@ -2,7 +2,7 @@
 {% load static %}
 {% load humanize %}
 
-{% block title %}System Settings{% endblock %}
+<title>System Settings</title>
 
 {% block content %}
 <link href="https://fonts.googleapis.com/css?family=Inter:400,500,700&display=swap" rel="stylesheet">
@@ -30,11 +30,11 @@
 
             <div class="card" id="account-settings">
                 <div class="card-header">
-                    <h6 class="m-0">Account Settings</h6>
+                    <h6 class="accordion-title m-0">Account Settings</h6>
                 </div>
                 <div class="card-body">
-                    <p>Manage your personal account details and security.</p>
-                    <a href="{% url 'profile' %}" class="btn btn-secondary btn-block mb-2">Edit Profile</a>
+                    <p>Manage your personal account details and security. You can edit your profile to reflect changes in real time, rest assured external links will not be affected by these changes.</p>
+                        <a href="{% url 'profile' %}" class="btn btn-secondary btn-block mb-2" style="align-self: flex-end;">Edit Profile</a>
                 </div>
             </div>
 
@@ -51,18 +51,12 @@
                         </h5>
                         <p class="accordion-desc">Manage API keys for external system integrations.</p>
                         {% if not api_unlocked %}
-                        <p class="accordion-intro">This section is restricted. Please enter your administrator password to manage API keys.</p>
+                        <p>This section is restricted. Please enter your administrator password to manage API keys.</p>
                         {% endif %}
                     </div>
                 </div>
                 <div class="accordion-content" style="border-top: 1px solid #EAEAEA;">
                     {% if api_unlocked %}
-                        <div class="table-controls" style="margin-bottom: 0.5rem; margin-top: 1rem;">
-                            <a href="{% url 'system_settings:add_api_key' %}" class="btn btn-primary">
-                                <i class="fas fa-plus"></i>Generate New API Key
-                            </a>
-                        </div>
-
                         <div class="table-responsive">
                             <table class="table" width="100%" cellspacing="0">
                                 <thead>
@@ -105,15 +99,22 @@
                                 </tbody>
                             </table>
                         </div>
+                    <div class="table-controls" style="margin-bottom: 0.5rem; margin-top: 1rem;">
+                        <a href="{% url 'system_settings:add_api_key' %}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i>Generate New API Key
+                        </a>
+                    </div>
 
                     {% else %}
                         <form method="POST" action="{% url 'system_settings:settings' %}" class="api-password-form">
                             {% csrf_token %}
                             <div class="form-group">
                                 <label for="api_password" class="form-label">Your Password</label>
-                                <input type="password" name="api_password" class="form-control" id="api_password" required>
+                                <div class="formone">
+                                    <input type="password" name="api_password" class="form-control" id="api_password" required>
+                                    <button type="submit" name="unlock_api" class="btn btn-primary">Unlock API Section</button>
+                                </div>
                             </div>
-                            <button type="submit" name="unlock_api" class="btn btn-primary">Unlock API Section</button>
                         </form>
                     {% endif %}
                 </div>
@@ -128,13 +129,13 @@
                         </h5>
                         <p class="accordion-desc">Set the total available budget for the current fiscal year.</p>
                         <p class="accordion-intro">
-                            This setting defines the <strong>total available budget pool</strong> (₱{{ budget_pool.total_available|floatformat:2|intcomma }}) for the current <strong>Fiscal Year {{ budget_pool.fiscal_year }}</strong>. This value is used as the ceiling for all College Budget allocations.
+                            This defines the <strong>total available budget pool</strong> (₱{{ budget_pool.total_available|floatformat:2|intcomma }}) for the current <strong>Fiscal Year {{ budget_pool.fiscal_year }}</strong>. This value is used as the ceiling for all College Budget allocations.
                         </p>
                     </div>
                     <i class="accordion-chevron fas fa-chevron-down"></i>
                 </div>
-                <div class="accordion-content" style="display: none;">
-                    <form method="POST" action="{% url 'system_settings:settings' %}">
+                <div class="accordion-content" style="display: none; position: relative;">
+                    <form method="POST" action="{% url 'system_settings:settings' %}" style="display: flex; flex-direction: column; gap: 0.8rem;">
                         {% csrf_token %}
                         
                         <div class="form-group row mb-3">
@@ -150,8 +151,6 @@
                                 <input type="text" class="form-control" name="{{ budget_form.fiscal_year.name }}" id="{{ budget_form.fiscal_year.id_for_label }}" value="{{ budget_form.fiscal_year.value|default_if_none:'' }}" readonly>
                             </div>
                         </div>
-                        <hr class="my-3">
-
                         <div class="form-group row mb-3">
                             <div class="col-sm-4">
                                 <label for="{{ budget_form.annual_total.id_for_label }}" class="form-row-label">
@@ -181,9 +180,8 @@
                                 {% endif %}
                             </div>
                         </div>
-                        <hr class="my-3">
 
-                        <div class="d-flex justify-content-end">
+                        <div class="d-flex justify-content-end" style="justify-self: center; align-self: center;">
                             <button type="submit" name="save_annual_budget" class="btn btn-primary">
                                 <i class="fas fa-save"></i> Save Annual Budget
                             </button>
@@ -205,11 +203,6 @@
                     <i class="accordion-chevron fas fa-chevron-down"></i>
                 </div>
                 <div class="accordion-content" style="display: none;">
-                    <div class="table-controls">
-                        <a href="{% url 'system_settings:add_college' %}" class="btn btn-primary">
-                            <i class="fas fa-plus"></i>Add New College
-                        </a>
-                    </div>
                     <div class="table-responsive">
                         <table class="table" width="100%" cellspacing="0">
                             <thead>
@@ -249,6 +242,11 @@
                             </tbody>
                         </table>
                     </div>
+                    <div class="table-controls">
+                        <a href="{% url 'system_settings:add_college' %}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i>Add New College
+                        </a>
+                    </div>
                 </div>
             </div>
 
@@ -260,16 +258,11 @@
                             Manage Campuses
                         </h5>
                         <p class="accordion-desc">Define the different university campuses.</p>
-                        <p class="accordion-intro">Manage the different university campuses (e.g., Main, {ADD CAMPUS NAME}). Each college or unit created must be associated with one of these campuses.</p>
+                        <p class="accordion-intro">Manage the different university campuses. Each college or unit created must be associated with one of these campuses.</p>
                     </div>
                     <i class="accordion-chevron fas fa-chevron-down"></i>
                 </div>
                 <div class="accordion-content" style="display: none;">
-                    <div class="table-controls">
-                        <a href="{% url 'system_settings:add_campus' %}" class="btn btn-primary">
-                            <i class="fas fa-plus"></i>Add New Campus
-                        </a>
-                    </div>
                     <div class="table-responsive">
                         <table class="table" width="100%" cellspacing="0">
                             <thead>
@@ -299,6 +292,11 @@
                             </tbody>
                         </table>
                     </div>
+                    <div class="table-controls">
+                        <a href="{% url 'system_settings:add_campus' %}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i>Add New Campus
+                        </a>
+                    </div>
                 </div>
             </div>
 
@@ -315,11 +313,6 @@
                     <i class="accordion-chevron fas fa-chevron-down"></i>
                 </div>
                 <div class="accordion-content" style="display: none;">
-                    <div class="table-controls">
-                        <a href="{% url 'system_settings:add_sdg' %}" class="btn btn-primary">
-                            <i class="fas fa-plus"></i>Add New SDG
-                        </a>
-                    </div>
                     <div class="table-responsive">
                         <table class="table" width="100%" cellspacing="0">
                             <thead>
@@ -351,6 +344,11 @@
                                 </tbody>
                         </table>
                     </div>
+                    <div class="table-controls">
+                        <a href="{% url 'system_settings:add_sdg' %}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i>Add New SDG
+                        </a>
+                    </div>
                 </div>
             </div>
 
@@ -366,8 +364,8 @@
                     </div>
                     <i class="accordion-chevron fas fa-chevron-down"></i>
                 </div>
-                <div class="accordion-content" style="display: none;">
-                    <form method="POST" action="{% url 'system_settings:settings' %}">
+                <div class="accordion-content" style="display: none; position: relative;">
+                    <form method="POST" action="{% url 'system_settings:settings' %}" style="display: flex; flex-direction: column; gap: 0.8rem;">
                         {% csrf_token %}
                         
                         {% for setting, form in settings_with_forms %}
@@ -392,10 +390,9 @@
                                 {% endif %}
                             </div>
                         </div>
-                        <hr class="my-3">
                         {% endfor %}
 
-                        <div class="d-flex justify-content-end">
+                        <div class="d-flex justify-content-end" style="align-self: center;">
                             <button type="submit" name="save_general_settings" class="btn btn-primary">
                                 <i class="fas fa-save"></i> Save All Settings
                             </button>
@@ -406,11 +403,14 @@
             
             <div class="card" id="danger-zone">
                 <div class="card-header">
-                    <h6 class="m-0 text-danger">Danger Zone</h6>
+                    <h6 class="accordion-title">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        Danger Zone
+                    </h6>
                 </div>
                 <div class="card-body">
-                    <p>Be careful. These actions are permanent and cannot be undone.</p>
-                    <a href="{% url 'system_settings:delete_account' %}" class="btn btn-danger btn-block">Delete My Account</a>
+                    <p>Be careful. This actions is permanent and cannot be undone.</p>
+                    <a href="{% url 'system_settings:delete_account' %}" class="btn btn-danger btn-block" style="align-self: flex-end;">Delete My Account</a>
                 </div>
             </div>
 
