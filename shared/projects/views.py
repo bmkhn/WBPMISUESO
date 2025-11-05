@@ -1,11 +1,7 @@
 from django.shortcuts import get_object_or_404, render, redirect
 from shared import request
 from system.users.decorators import role_required, project_visibility_required
-<<<<<<< HEAD
 from .models import SustainableDevelopmentGoal, Project, ProjectEvaluation, ProjectEvent, ProjectUpdate, ProjectExpense
-=======
-from .models import SustainableDevelopmentGoal, Project, ProjectEvaluation, ProjectEvent, ProjectUpdate, ProjectExpense
->>>>>>> 1dfb681 (feat(expenses): faculty budget pages, project expenses, dynamic charts)
 from internal.goals.models import Goal
 from internal.submissions.models import Submission
 from system.users.models import College, User, Campus

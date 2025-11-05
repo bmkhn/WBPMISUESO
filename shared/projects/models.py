@@ -440,7 +440,7 @@ class ProjectEvent(models.Model):
 
 
 class ProjectExpenses(models.Model):
-	project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='expenses')
+	project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='legacy_expenses')
 	reason = models.CharField(max_length=255)
 	amount = models.DecimalField(max_digits=12, decimal_places=2)
 	description = models.CharField(max_length=255)
