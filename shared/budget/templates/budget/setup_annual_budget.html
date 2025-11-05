@@ -21,7 +21,7 @@
             <div class="container-1A">
                 <h1 class="welcome-text">{{ title }}</h1>
             </div>
-            <a href="{% url 'budget_dashboard' %}" class="btn">
+            <a href="{% url 'budget_dashboard' %}" class="export-btn view">
                 &larr; Back to Dashboard
             </a>
         </div>
@@ -48,9 +48,9 @@
                     
                     <div class="form-actions">
                         {% if current_pool %}
-                            <button type="submit" class="btn btn-primary">Update Budget</button>
+                            <button type="submit" class="export-btn edit">Update Budget</button>
                         {% else %}
-                            <button type="submit" class="btn btn-primary">Initialize Budget</button>
+                            <button type="submit" class="export-btn edit">Initialize Budget</button>
                         {% endif %}
                     </div>
                 </div>

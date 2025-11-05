@@ -18,7 +18,7 @@ p, h1, h2, h3, h4, h5, h6, div {
     padding: 0;
 }
 
-/* --- Top Section & Tabs --- */
+
 .top_section {
     padding: 2rem 4rem 0 4rem;
     background-color: #f8f8f8;
@@ -131,7 +131,7 @@ h5 {
     border-bottom: 4px solid #245F3E;
 }
 
-/* --- Content & Cards --- */
+
 .content-section {
     padding: 1.2rem 4rem 4rem 4rem;
     margin-bottom: 0;
@@ -171,7 +171,7 @@ h5 {
     font-size: 0.95rem;
 }
 
-/* --- Buttons --- */
+
 .admin-button,
 .filter-apply,
 .filter-close,
@@ -230,7 +230,7 @@ h5 {
 .back { background-color: #025984; }
 .save { background-color: #00681a; }
 
-/* --- Search & Filter --- */
+
 .search-container {
     width: 100%;
     display: flex;
@@ -327,7 +327,7 @@ h5 {
     margin-top: 24px;
 }
 
-/* --- Pagination --- */
+
 .pagination-container {
     display: flex;
     justify-content: center;
@@ -374,7 +374,7 @@ h5 {
     font-weight: 500;
 }
 
-/* --- Project Overview --- */
+
 .infoseg {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr 1fr;
@@ -434,7 +434,7 @@ h5 {
     transition: width 0.5s ease;
 }
 
-/* --- Edit Project Form --- */
+
 #edit-project-form {
     padding: 0 2rem;
 }
@@ -498,7 +498,7 @@ select.user-details-value {
     margin-left: 1px;
 }
 
-/* --- College Tags --- */
+
 .college-row {
     display: flex;
     align-items: center;
@@ -552,7 +552,7 @@ select.user-details-value {
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
-/* --- Modals --- */
+
 .modal,
 .submission-modal {
     position: fixed;
@@ -612,7 +612,7 @@ select.user-details-value {
     padding: 1rem;
 }
 
-/* --- Tooltip --- */
+
 .detail-icon {
     cursor: help;
     color: #1f1f1f;
@@ -660,7 +660,7 @@ select.user-details-value {
     border-color: #333 transparent transparent transparent;
 }
 
-/* --- Providers Tab --- */
+
 .providers {
     display: flex;
     flex-wrap: wrap;
@@ -740,7 +740,7 @@ select.user-details-value {
     text-decoration: underline;
 }
 
-/* --- Files Tab --- */
+
 .file-list {
     display: flex;
     flex-direction: row;
@@ -791,7 +791,7 @@ select.user-details-value {
     text-align: center;
 }
 
-/* --- Submissions / Evaluations Tab --- */
+
 .submission-list,
 .evaluation-list {
     display: flex;
@@ -894,7 +894,7 @@ select.user-details-value {
     width: 30rem;
 }
 
-/* --- Events Tab --- */
+
 .event-card {
     display: grid;
     grid-auto-rows: auto;
@@ -945,7 +945,7 @@ select.user-details-value {
     white-space: normal;
 }
 
-/* --- Image Overlay --- */
+
 .overlay {
     display: none;
     position: fixed;
@@ -965,7 +965,7 @@ select.user-details-value {
     object-fit: contain;
 }
 
-/* --- Tables --- */
+
 .user-table {
     width: 100%;
     border-collapse: collapse;
@@ -1014,7 +1014,7 @@ select.user-details-value {
     box-shadow: inset 4px 0 0 0 #FF9900;
     transform: translateY(-1px);
     cursor: pointer;
-    background-color: #f2f2f2; /* Note: This overrides the #fffaf0 */
+    background-color: #f2f2f2; 
 }
 
 .user-table tr:hover td {
@@ -1033,7 +1033,7 @@ select.user-details-value {
     z-index: 5;
 }
 
-/* --- Media Queries --- */
+
 @media (max-width: 900px) {
     .announce-grid {
         grid-template-columns: 1fr;

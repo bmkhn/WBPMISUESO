@@ -454,7 +454,7 @@ body {
     background: #F3F4F6;
 } 
  
-/* Announcement Content Styles */
+
 .announcement-header {
     display: flex;
     justify-content: space-between;
@@ -469,18 +469,18 @@ body {
 
 .announce-card {
     background: white;
-    /* Updated: Clean, professional border and shadow */
+    
     border: 1px solid #E0E0E0; 
-    border-radius: 8px; /* Added rounded corners */
-    overflow: hidden; /* Ensures thumbnail fits perfectly */
+    border-radius: 8px; 
+    overflow: hidden; 
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     position: relative;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* More subtle initial shadow */
-    cursor: pointer; /* Added pointer for clickable feel */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); 
+    cursor: pointer; 
 }
 
 .announce-card:hover {
-    transform: translateY(-4px); /* Increased lift on hover */
+    transform: translateY(-4px); 
     box-shadow: 0 0 0 1px #dfdfdf, 0 0 15px rgba(0, 0, 0, 0.08); 
 }
 
@@ -493,7 +493,7 @@ body {
 
 .options-toggle {
     background: white;
-    border: 2px solid #E5E7EB; /* Used grey for a cleaner look */
+    border: 2px solid #E5E7EB; 
     cursor: pointer;
     padding: 0.5rem;
     border-radius: 50%;
@@ -509,7 +509,7 @@ body {
 
 .options-toggle:hover {
     background-color: #F3F4F6;
-    border-color: #374151; /* Darkened border on hover */
+    border-color: #374151; 
     transform: scale(1.05);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
@@ -517,7 +517,7 @@ body {
 .options-toggle svg {
     width: 20px;
     height: 20px;
-    color: #374151; /* Dark text color */
+    color: #374151; 
     font-weight: bold;
 }
 
@@ -635,12 +635,12 @@ body {
 }
 
 .announce-author {
-    color: #777; /* Muted author name */
+    color: #777; 
     font-size: 0.8rem;
     text-align: right;
     align-self: flex-end;
     margin-top: auto;
     position: absolute;
-    bottom: 20px; /* Moved up for better spacing */
+    bottom: 20px; 
     right: 20px;
 } 

@@ -1,5 +1,3 @@
-# shared/archive/serializers.py (MODIFIED)
-
 from rest_framework import serializers
 from shared.projects.models import Project
 from system.users.models import User, College

@@ -239,7 +239,8 @@ button:hover {
     opacity: 1;
 }
 
-/* Arrow at bottom of tooltip */
+
+
 .detail-tooltip::after {
     content: '';
     position: absolute;

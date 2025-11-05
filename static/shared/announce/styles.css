@@ -23,15 +23,15 @@ body {
 }
 .details-thumb {
     width: 100%;
-    height: 100%; /* Changed from 100 to 100% */
-    background: linear-gradient(135deg, #0A6C44, #1f7c57); /* Fallback background */
+    height: 100%; 
+    background: linear-gradient(135deg, #0A6C44, #1f7c57); 
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white; /* For potential text overlay or icons */
-    font-size: 3rem; /* Example size for fallback icon/text */
+    color: white; 
+    font-size: 3rem; 
     border-radius: 8px;
-    overflow: hidden; /* Keep rounded corners */
+    overflow: hidden; 
 }
 
 .details-thumb img {
@@ -83,14 +83,14 @@ body {
     margin-top: 1rem;
 }
 
-/* Announcement Content Styles */
+
 .announcement-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
-/* Add Announcement Button */
+
 .add-announcement-btn {
     background: #063A1C;
     color: white;

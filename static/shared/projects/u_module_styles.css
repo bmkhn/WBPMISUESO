@@ -100,7 +100,7 @@ button:hover {
     flex-direction: column;
     gap: 1rem;
     height: auto;
-    /* Make sure height is auto */
+    
 }
 
 .list-item {
@@ -423,7 +423,7 @@ button:hover {
     }
 }
 
-/* special */
+
 
 .alerts-list {
     flex-grow: 1;
@@ -520,7 +520,7 @@ button:hover {
     overflow: auto;
 }
 
-/* Submit modal */
+
 
 .event-modal {
     position: fixed;

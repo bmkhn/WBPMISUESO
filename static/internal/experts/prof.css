@@ -44,7 +44,7 @@ section > div {
     box-shadow: 0 2px 1rem rgba(0, 0, 0, 0.2);
 }
 
-/* Placeholder style for initials */
+
 .propic-placeholder {
     display: flex;
     align-items: center;
@@ -237,7 +237,7 @@ select.dropdown-btn {
     margin: 0.25rem 0 1rem 0;
     color: #222;
     text-decoration: none;
-    /* Make it block to prevent layout shift */
+    
     display: block;
 }
 
@@ -273,7 +273,7 @@ select.dropdown-btn {
     border: 0.08rem solid #ccc;
 }
 
-/* Style for avatar placeholders */
+
 .avatar-placeholder {
     display: flex;
     align-items: center;
@@ -389,7 +389,7 @@ select.dropdown-btn {
     font-size: 14px;
 }
 
-/* Modal */
+
 .modal-overlay {
     display: none;
     position: fixed;

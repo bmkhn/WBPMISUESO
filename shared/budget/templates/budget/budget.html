@@ -54,7 +54,7 @@
                     <span class="sub-description" style="padding-top: 5px; padding-left: 20px; padding-bottom: 20px; display: block;">Annual Budget Pool: ₱ {{ pool_available|floatformat:0|intcomma }}</span>
                 </div>
                 
-                <div style="flex-grow: 0; flex-shrink: 0; width: 65%; height: 100%; position: absolute; top: 0; right: 0; z-index: 0;">
+                <div style="flex-grow: 0; flex-shrink: 0; width: 65%; height: 100%; position: absolute; top: 0; right: 0; z-index: 0; margin-right: -9.5px;">
                     <canvas id="unallocatedChart" style="display: block; width: 100%; height: 100%;"></canvas>
                 </div>
             </div>
@@ -384,7 +384,7 @@
 </div>
 
 <script>
-    // --- Data Variables Initialized from Django Context (as strings) ---
+        // --- Data Variables Initialized from Django Context (as strings) ---
     const unallocRaw = '{{ unallocated_data_raw_json|safe }}';
     const unalloc = '{{ unallocated_data_json|safe }}';
     const assignedData = '{{ assigned_data_json|safe }}';
@@ -392,7 +392,7 @@
     const externalCommittedData = '{{ committed_external_data_json|safe }}';
     const rawAdminData = "{{ dashboard_data|safe }}"; 
     
-    // College/Faculty Data: These must be global/available for the second script
+    // College/Faculty Data: These must be global/available
     const collegeCommittedData = '{{ college_committed_data_json|safe }}';
     const collegeAssignedNorm = '{{ total_assigned_original_cut_norm|safe }}';
     const college_external_data_json = '{{ college_external_data_json|safe }}'; 
@@ -406,13 +406,13 @@
     
     const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
     // --------------------------------------------------------
-
+    
     const currentMonth = new Date().getMonth(); 
     let ADMIN_DATA = [];
-    // Define College/Faculty data variables globally so the next script can access them
     let COLLEGE_PROJECT_DATA = [];
     let FACULTY_PROJECT_DATA = [];
 
+    // --- Chart Options ---
     const mainCardChartOptions = {
         responsive: true,
         maintainAspectRatio: true,
@@ -420,15 +420,17 @@
         plugins: { legend: { display: false } },
         scales: {
             x: {
+                display: false,
                 offset: false,
-                grid: { color: 'rgba(255, 255, 255, 0.2)' },
+                grid: { color: 'rgba(255, 255, 255, 0.0)' },
                 ticks: { color: '#fff', font: { size: 10 } }
             },
             y: {
+                display: false,
                 beginAtZero: true, 
                 min: 0, 
                 grace: '3%', 
-                grid: { color: 'rgba(255, 255, 255, 0.2)' },
+                grid: { color: 'rgba(255, 255, 255, 0.0)' },
                 ticks: { display: true, color: '#fff', font: { size: 10 } }
             }
         },
@@ -444,19 +446,22 @@
         maintainAspectRatio: false, 
         plugins: {
             legend: { display: false },
-            tooltip: { enabled: false },
+            tooltip: { enabled: false }, // Tooltips disabled by default for mini charts
         },
         scales: { x: { display: false }, y: { display: false } },
         elements: { point: { radius: 0 } },
         layout: { padding: 0 }
     };
 
+    // --- Utility Functions ---
+
     function createGradientBackground(ctx, chartArea, isMainCard, isExternal) {
         if (!chartArea) return null;
         if (isMainCard) {
             const grad = ctx.createLinearGradient(chartArea.left, 0, chartArea.right, 0);
-            grad.addColorStop(0, 'rgba(255, 105, 180, 1)');
-            grad.addColorStop(1, 'rgba(255, 182, 193, 0.5)');
+            // Note: Colors pulled directly from your provided JS styles
+            grad.addColorStop(0, 'rgba(255, 96, 146, 0.7)'); 
+            grad.addColorStop(1, 'rgba(138, 201, 38, 0.7)'); 
             return grad;
         } else {
             const grad = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
@@ -471,7 +476,10 @@
         }
     }
     
-    // CRITICAL: Must be global for the next script to use it!
+    /**
+     * @function cleanPythonData
+     * Converts Python's Decimal('...') and single quotes into valid JSON string.
+     */
     function cleanPythonData(dataString) {
         if (typeof dataString !== 'string' || !dataString.trim()) return '[]';
         let clean = dataString.replace(/Decimal\((['"]?)(.*?)\1\)/g, (match, p1, p2) => p2);
@@ -480,7 +488,10 @@
         return clean;
     }
 
-    // CRITICAL: Must be global for the next script to use it!
+    /**
+     * @function formatCurrency
+     * Formats a numeric string or number into Philippine Peso currency (₱).
+     */
     function formatCurrency(amount) {
         return '₱' + parseFloat(amount || 0).toLocaleString('en-US', {
             minimumFractionDigits: 0,
@@ -488,7 +499,7 @@
         });
     }
 
-    // --- Chart Initialization (remains the same) ---
+    // --- Chart Initialization ---
     function initSparkline(canvasId, dataString, isExternal = false, isMainCard = false, labels = [], tooltipDataString = null, fillChart = true) {
         const ctxEl = document.getElementById(canvasId);
         if (!ctxEl) return;
@@ -502,12 +513,29 @@
             console.error(`Error parsing data for ${canvasId}:`, e, dataString);
             return;
         }
-        
-        const dataForChart = data.slice(0, currentMonth + 1);
+        if (isMainCard && data.length > 0 && data[0] !== 0) {
+            // Prepend 0 to the numeric data array
+            data.unshift(0); 
+            
+            // Prepend the formatted zero value to the tooltip data array
+            // Use a clean '0' to represent the starting point for currency formatting
+            if (tooltipData) {
+                tooltipData.unshift('0'); 
+            }
+            
+            // If the main chart (unallocatedChart) is being initialized,
+            // the labels array should also be shifted.
+            if (labels.length > 0) {
+                labels.unshift(labels[0]); // Duplicate the first month label for the new '0' point
+            }
+        }
+        const sliceLimit = isMainCard ? currentMonth + 2 : currentMonth + 1;
+        const dataForChart = data.slice(0, sliceLimit);
+
         
         if (!dataForChart || dataForChart.length === 0 || dataForChart.every(v => v === null || v === 0 || v === '0' )) {
-             ctxEl.style.display = 'none'; 
-             return;
+                ctxEl.style.display = 'none'; 
+                return;
         }
 
         try {
@@ -515,11 +543,16 @@
             let options = JSON.parse(JSON.stringify(isMainCard ? mainCardChartOptions : miniChartOptions));
             
             if (canvasId.includes('RemainingChart') && options.scales && options.scales.y) {
-                 options.scales.y.beginAtZero = false;
+                    options.scales.y.beginAtZero = false;
+            }
+            
+            // If this is a mini-chart, re-enable tooltips if tooltipData is available
+            if (!isMainCard && tooltipData) {
+                options.plugins.tooltip = { enabled: true };
             }
 
-            const labelsToUse = labels.length ? labels.slice(0, currentMonth + 1) : Array(dataForChart.length).fill('');
-            const tooltipDataForChart = tooltipData ? tooltipData.slice(0, currentMonth + 1) : null;
+            const labelsToUse = labels.length ? labels.slice(0, sliceLimit) : Array(dataForChart.length).fill('');
+            const tooltipDataForChart = tooltipData ? tooltipData.slice(0, sliceLimit) : null;
 
             new Chart(ctxEl, {
                 type: 'line',
@@ -548,6 +581,7 @@
                             mode: 'index',
                             intersect: false,
                             callbacks: {
+                                // The tooltip now uses the prepended 'Month 0' for the first point
                                 title: t => 'Month: ' + (labelsToUse[t[0].dataIndex] || ''),
                                 label: t => formatCurrency(tooltipDataForChart[t.dataIndex] || 0)
                             }
@@ -561,18 +595,17 @@
     }
 
 
-    // --- CRITICAL FIX: Admin Table (VP/Director) rendering and click handling ---
+    // --- Table Rendering and Sorting Functions ---
+
     function renderAdminTable() {
         const body = document.getElementById('adminTableBody');
         if (!body) return;
         body.innerHTML = '';
         ADMIN_DATA.forEach(item => {
             const row = body.insertRow();
-            // CRITICAL: Add class and data attribute for clickability
             row.classList.add('clickable-row');
             row.dataset.collegeId = item.college_id;
             
-            // Attach listener directly here for the Admin table
             row.addEventListener('click', () => {
                 window.location.href = `/budget/college/${item.college_id}/projects/`; 
             });
@@ -626,68 +659,7 @@
         renderAdminTable();
     }
 
-
-    document.addEventListener('DOMContentLoaded', () => {
-        
-        {% if user_role in "VP,DIRECTOR,UESO" %}
-        try {
-            ADMIN_DATA = JSON.parse(cleanPythonData(rawAdminData));
-            
-            // Initial render of the Admin table (with clickable rows)
-            renderAdminTable(); 
-
-            const currentMonths = months.slice(0, currentMonth + 1);
-
-            initSparkline('unallocatedChart', unalloc, false, true, currentMonths, unallocRaw);
-            initSparkline('assignedChart', assignedData);
-            initSparkline('internalCommittedChart', internalCommittedData);
-            initSparkline('externalCommittedChart', externalCommittedData, true);
-
-        } catch (err) { 
-            console.error("Admin Dashboard Initialization Failed:", err); 
-        }
-        {% endif %}
-
-        {% if is_college_admin %}
-        try {
-            // Populate global project data for the next script to use
-            COLLEGE_PROJECT_DATA = JSON.parse(cleanPythonData(rawCollegeData));
-            
-            const currentMonths = months.slice(0, currentMonth + 1);
-            initSparkline('collegeAssignedChart', collegeAssignedNorm); 
-            initSparkline('collegeCommittedChart', collegeCommittedData);
-            initSparkline('collegeRemainingChart', collegeRemainingData, true); 
-            // Note: The actual rendering of the project table is moved to the second script
-        } catch (err) { console.error("College init failed:", err); }
-        {% endif %}
-        
-        {% if user_role in "FACULTY,IMPLEMENTER" %}
-        try {
-            // Populate global project data for the next script to use
-            FACULTY_PROJECT_DATA = JSON.parse(cleanPythonData(rawFacultyData));
-            
-            const currentMonths = months.slice(0, currentMonth + 1);
-            initSparkline('facultyTotalChart', faculty_total_data_json);
-            initSparkline('facultyInternalChart', facultyInternalData);
-            initSparkline('facultyExternalChart', facultyExternalData, true);
-             // Note: The actual rendering of the project table is moved to the second script
-        } catch (err) { console.error("Faculty init failed:", err); }
-        {% endif %}
-
-        document.getElementById('adminSortSelect')?.addEventListener('change', e => {
-            sortAdminTable(e.target.value);
-        });
-        
-        // REMOVE the project table sort listeners here, they belong in the second script
-        // document.getElementById('collegeProjectSortSelect')?.addEventListener('change', ...);
-        // document.getElementById('facultyProjectSortSelect')?.addEventListener('change', ...);
-    });
-</script>
-
-<script>
-    // --- Helper to attach click listeners to project rows (runs after render/sort) ---
     function attachProjectClickListeners(role) {
-        // Select only the rows in the current table body
         const rows = document.getElementById(role + 'TableBody').querySelectorAll('.project-clickable-row');
         
         rows.forEach(row => {
@@ -703,9 +675,7 @@
         });
     }
     
-    // --- Function to render the project table for college or faculty ---
     function renderProjectTable(role) {
-        // Access global variables populated in the first script block
         const data = role === 'college' ? COLLEGE_PROJECT_DATA : FACULTY_PROJECT_DATA;
         const body = document.getElementById(role + 'TableBody');
         if (!body) return;
@@ -724,7 +694,6 @@
         data.forEach(item => {
             const row = body.insertRow();
             
-            // CRITICAL: Re-add class and data-attribute
             row.classList.add('project-clickable-row'); 
             row.dataset.projectId = item.id; 
             
@@ -737,11 +706,9 @@
             row.insertCell().textContent = formatCurrency(item[extKey]);
         });
         
-        // CRITICAL: Attach listeners immediately after rendering
         attachProjectClickListeners(role);
     }
 
-    // --- Function to sort project table and trigger re-render ---
     function sortProjectTable(role, sortKey) {
         const arrayToSort = role === 'college' ? COLLEGE_PROJECT_DATA : FACULTY_PROJECT_DATA;
         if (!arrayToSort.length) return;
@@ -767,32 +734,64 @@
         renderProjectTable(role);
     }
 
-
-    // --- Initialization and Event Listeners (to run on DOM Load) ---
+    // --- Main DOM Content Loaded Handler ---
     document.addEventListener('DOMContentLoaded', () => {
-
-        // COLLEGE ADMIN INITIALIZATION
-        {% if is_college_admin %}
-        // COLLEGE_PROJECT_DATA is now populated in the first script block
-        renderProjectTable('college'); 
+        const currentMonths = months.slice(0, currentMonth + 1);
         
-        // Attach listener for the college project sort dropdown
-        document.getElementById('collegeProjectSortSelect')?.addEventListener('change', e => {
-            sortProjectTable('college', e.target.value);
-        });
+        // --- ADMIN/VP/DIRECTOR Initialization ---
+        {% if user_role in "VP,DIRECTOR,UESO" %}
+        try {
+            ADMIN_DATA = JSON.parse(cleanPythonData(rawAdminData));
+            
+            renderAdminTable(); 
 
+            initSparkline('unallocatedChart', unalloc, false, true, currentMonths, unalloc);
+            initSparkline('assignedChart', assignedData);
+            initSparkline('internalCommittedChart', internalCommittedData);
+            initSparkline('externalCommittedChart', externalCommittedData, true);
+
+            document.getElementById('adminSortSelect')?.addEventListener('change', e => {
+                sortAdminTable(e.target.value);
+            });
+
+        } catch (err) { 
+            console.error("Admin Dashboard Initialization Failed:", err); 
+        }
         {% endif %}
 
-        // FACULTY/IMPLEMENTER INITIALIZATION
+        // --- COLLEGE ADMIN Initialization ---
+        {% if is_college_admin %}
+        try {
+            COLLEGE_PROJECT_DATA = JSON.parse(cleanPythonData(rawCollegeData));
+            
+            initSparkline('collegeAssignedChart', collegeAssignedNorm); 
+            initSparkline('collegeCommittedChart', collegeCommittedData);
+            initSparkline('collegeRemainingChart', collegeRemainingData, true); 
+            
+            renderProjectTable('college'); 
+
+            document.getElementById('collegeProjectSortSelect')?.addEventListener('change', e => {
+                sortProjectTable('college', e.target.value);
+            });
+
+        } catch (err) { console.error("College init failed:", err); }
+        {% endif %}
+        
+        // --- FACULTY/IMPLEMENTER Initialization ---
         {% if user_role in "FACULTY,IMPLEMENTER" %}
-        // FACULTY_PROJECT_DATA is now populated in the first script block
-        renderProjectTable('faculty');
-        
-        // Attach listener for the faculty project sort dropdown
-        document.getElementById('facultyProjectSortSelect')?.addEventListener('change', e => {
-            sortProjectTable('faculty', e.target.value);
-        });
-        
+        try {
+            FACULTY_PROJECT_DATA = JSON.parse(cleanPythonData(rawFacultyData));
+            
+            initSparkline('facultyTotalChart', faculty_total_data_json);
+            initSparkline('facultyInternalChart', facultyInternalData);
+            initSparkline('facultyExternalChart', facultyExternalData, true);
+            
+            renderProjectTable('faculty');
+
+            document.getElementById('facultyProjectSortSelect')?.addEventListener('change', e => {
+                sortProjectTable('faculty', e.target.value);
+            });
+        } catch (err) { console.error("Faculty init failed:", err); }
         {% endif %}
     });
 </script>

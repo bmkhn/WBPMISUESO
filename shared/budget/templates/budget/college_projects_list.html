@@ -20,7 +20,7 @@
     <div class="another-header">
         <h2>Projects</h2>
         <div class="container-1B">
-            <a class="export-btn" href="{% url 'budget_dashboard' %}">
+            <a class="export-btn view" href="{% url 'budget_dashboard' %}">
                 <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
             </a>
         </div>
@@ -61,18 +61,15 @@
     </div>
 
     <script>
-        // --- Project Row Click Handler ---
         function attachProjectClickListeners() {
-            // Select all rows with the clickable class
+
             const rows = document.querySelectorAll('.project-clickable-row');
             
             rows.forEach(row => {
-                // Ensure the listener is only attached once
                 if (!row.dataset.hasClickListener) { 
                     row.addEventListener('click', () => {
                         const projectId = row.dataset.projectId;
                         if (projectId) {
-                            // CORRECTED URL: Matches the Django pattern projects/<int:pk>/
                             window.location.href = `/projects/${projectId}/`; 
                         }
                     });
@@ -80,8 +77,6 @@
                 }
             });
         }
-        
-        // Run the listener attachment once the DOM is fully loaded
         document.addEventListener('DOMContentLoaded', () => {
             attachProjectClickListeners();
         });

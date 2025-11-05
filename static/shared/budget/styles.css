@@ -27,12 +27,13 @@ body {
     }
 }
 @media (min-width: 768px) {
+    
     .main-container {
         gap: 30px;
     }
 }
 
-/* Page Header */
+
 .container-1 {
     display: flex;
     flex-direction: row;
@@ -102,7 +103,7 @@ body {
     }
 }
 
-/* Button styles */
+
 .btn {
     padding: 10px 16px;
     border: none;
@@ -134,7 +135,7 @@ body {
 .btn-gray:hover {
     background-color: #374151;
 }
-/* Styles specific to edit_budget.html */
+
 .btn-primary {
     background-color: #2563eb;
     color: white;
@@ -158,7 +159,7 @@ body {
     background-color: #15803d;
 }
 
-/* Combined Annual Budget Card (White with Gradient Border) */
+
 .combined-budget-card-gradient {
     background-color: white;
     color: #111827;
@@ -172,7 +173,7 @@ body {
     margin-bottom: 0.55rem;
 }
 
-/* Main Card Figure: Increased size (was 2.5rem) */
+
 .combined-budget-card-gradient h2 { 
     font-size: 2.5rem; 
     font-weight: 900;
@@ -181,7 +182,7 @@ body {
     text-align: left !important;
 }
 
-/* Card Description/Sub-text positioning (Unallocated Funds Remaining title) */
+
 .card-description {
     display: flex;
     flex-direction: column;
@@ -190,24 +191,24 @@ body {
     width: 100%;
 }
 
-.card-description p { /* Card title - Unallocated Funds Remaining */
+.card-description p { 
     font-size: 0.9rem; 
     font-weight: 500; 
     margin: 0 ;
     color: #444;
 }
 
-/* Sub-description (Annual Budget Pool text) at the bottom left */
+
 .combined-budget-card-gradient .sub-description {
     margin-top: auto; 
     padding-top: 10px;
     width: 100%;
-    text-align: left !important; /* Align declaration to left */
+    text-align: left !important; 
     font-weight: 500;
     font-size: 0.85rem;
     color: #4b5563;
 }
-.card-description .sub-description { /* Secondary text */
+.card-description .sub-description { 
     font-size: 0.85rem;
     font-weight: 400;
     color: #4b5563; 
@@ -215,19 +216,19 @@ body {
 }
 
 
-/* Gradient Border */
+
 .combined-budget-card-gradient::before {
     content: '';
     position: absolute;
     inset: 0;
     border-radius: 16px; 
     padding: 3px; 
-    /* NEW COLORS: Pink, White, Green */
+    
     background: linear-gradient(
         45deg, 
-        #F65287, /* Pink */
-        #cafffd, /* White */
-        #8AC926  /* Green */
+        #F65287, 
+        #cafffd, 
+        #8AC926  
     );
     -webkit-mask: 
         linear-gradient(#fff 0 0) content-box, 
@@ -253,7 +254,7 @@ body {
     z-index: 1;
 }
 
-/* --- INDIVIDUAL GOAL CARD STYLES --- */
+
 
 .goal-card-container {
     display: flex;
@@ -288,17 +289,17 @@ body {
 .goal-card .amount {
     font-family: 'Inter', Arial, sans-serif;
     font-weight: 700;
-    font-size: 26px; /* Reduced figure size from 28px */
+    font-size: 26px; 
     color: #111827;
     text-align: left;
     margin: 1.6px 0 0.8px 0;
 }
 
-/* Small text under figure: pushed closer to bottom edge */
+
 .card-figure-subtext { 
     font-size: 0.75rem; 
     font-weight: 400;
-    margin-top: 4px; /* Added separation from figure */
+    margin-top: 4px; 
     margin-bottom: 0;
     color: inherit;
     opacity: 0.8; 
@@ -306,7 +307,7 @@ body {
 }
 
 
-/* 1. Assigned to Colleges (Pink: Pastel to Vibrant) */
+
 .goal-card.color-pink {
     background: linear-gradient(135deg, #ff6092 0%, #f69dac 100%); 
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
@@ -319,7 +320,7 @@ body {
     background: linear-gradient(135deg, #FFC0CB 0%, #ff6092 100%); 
 }
 
-/* 2. Committed (Internal) (Dango Green: Pastel to Vibrant) */
+
 .goal-card.color-dango-green { 
     background: linear-gradient(155deg, #8AC926 0%, #c0e98a 100%); 
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
@@ -348,13 +349,13 @@ body {
 }
 
 
-/* Table styles (used for dashboard tables, history, sponsors) */
+
 .table-container {
     width: 100%;
     background: #FFFFFF; 
     border-radius: 10px; 
     overflow: hidden;
-    box-shadow: 0 0 0 1px #E0E0E0, 0 10px 30px rgba(0, 0, 0, 0.15); /* Increased shadow */
+    box-shadow: 0 0 0 1px #E0E0E0, 0 10px 30px rgba(0, 0, 0, 0.15); 
     border: none;
 }
 .another-header {
@@ -448,7 +449,7 @@ body {
     border-bottom: none; 
 }
 
-/* Specific table style used in edit_budget.html */
+
 .styled-table {
     width: 100%;
     border-collapse: collapse;
@@ -502,7 +503,7 @@ body {
 }
 
 
-/* Bottom Grid for Lists */
+
 .bottom-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -515,7 +516,7 @@ body {
     }
 }
 
-/* List Card Styling */
+
 .list-card-header {
     display: flex;
     justify-content: space-between;
@@ -566,7 +567,7 @@ body {
     color: #6b7280;
 }
 
-/* History Log Tag Styles */
+
 .action-tag {
     display: inline-block;
     padding: 3px 10px;
@@ -588,7 +589,7 @@ body {
     color: #374151;
 }
 
-/* Pagination */
+
 .pagination {
     display: flex;
     justify-content: center;
@@ -626,7 +627,7 @@ body {
 }
 
 
-/* Form specific styles (setup_annual_budget.html & edit_budget.html forms) */
+
 .form-container {
     width: 100%;
     max-width: 700px;
@@ -711,7 +712,7 @@ body {
     font-size: 14px;
     font-family: 'Inter', sans-serif;
     box-sizing: border-box;
-    /* Focus styles */
+    
     outline: none;
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
 }
@@ -776,7 +777,7 @@ body {
     font-size: 0.8rem;
 }
 
-/* No Budget Setup Message Box */
+
 .setup-box {
     width: 100%;
     max-width: 600px;
@@ -813,7 +814,7 @@ body {
     font-weight: 500;
 }
 
-/* Utility Text Colors */
+
 .text-blue { color: #2563eb; }
 .text-green { color: #16a34a; }
 .text-yellow { color: #ca8a04; }

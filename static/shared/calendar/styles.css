@@ -91,7 +91,7 @@ select.user-details-value {
     border-bottom: 1px solid rgba(0,0,0,0.3);
 }
 
-/* --- LEFT SIDEBAR --- */
+
 #calendar-sidebar-left {
     width: 220px;
     background: #D9D9D9;
@@ -161,7 +161,7 @@ select#year-selector:focus {
     color: white;
 }
 
-/* --- CENTER CALENDAR --- */
+
 #calendar-container {
     flex:1;
     padding: 20px;
@@ -225,7 +225,7 @@ select#year-selector:focus {
     background: #e6e6e6;
 }
 
-/* --- RIGHT SIDEBAR --- */
+
 #calendar-sidebar-right {
     background: #1A1A1A;
     color: white;
@@ -235,7 +235,7 @@ select#year-selector:focus {
     width: 250px;
 }
 
-/* Universal custom scrollbar for right sidebar */
+
 #calendar-sidebar-right, #month-selector {
     scrollbar-width: thin;
     scrollbar-color: #444 transparent;
@@ -299,7 +299,7 @@ select#year-selector:focus {
     margin-top: 0 !important;
 }
 
-/* --- MODAL --- */
+
 .modal {
     display:none;
     position: fixed;
@@ -445,7 +445,7 @@ select#year-selector:focus {
     cursor: pointer;
 }
 
-/* --- General Tag UI Styles (Reusable) --- */
+
 .tag-box {
     background: #F8F8F8;
     border: 1px solid #000;
@@ -563,7 +563,7 @@ select#year-selector:focus {
 .back-btn:hover { background-color: #D1D5DB; }
 textarea { resize: none; }
 
-/* Event Details Modal Styles */
+
 #event-details-modal .event-modal-content {
     padding: 2.5rem 2.5rem 2.5rem 2.5rem;
     border-radius: 16px;

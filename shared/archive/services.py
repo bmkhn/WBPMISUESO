@@ -1,5 +1,3 @@
-# shared/archive/services.py
-
 from django.db.models import Count
 from django.db.models.functions import ExtractYear
 from django.db.models import Q
@@ -19,7 +17,7 @@ class ArchiveService:
     CATEGORY_MAP = {
         'start_year':     ('start_date', 'year', None),
         'estimated_end_date': ('estimated_end_date', 'year', None),
-        'agenda':         ('agenda', 'fk', Agenda), # FK = Foreign Key lookup
+        'agenda':         ('agenda', 'fk', Agenda),
         'project_type':   ('project_type', 'choice', Project.PROJECT_TYPE_CHOICES),
         'college':        ('project_leader__college', 'fk', College),
     }
@@ -93,7 +91,6 @@ class ArchiveService:
             elif source == College:
                 # Groups projects by the College of the Project Leader
                 source_qs = College.objects.annotate(
-                    # Count projects where a user from this college is the leader
                     count=Count('user__led_projects', distinct=True) 
                 ).filter(count__gt=0).order_by('name')
 

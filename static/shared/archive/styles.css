@@ -268,9 +268,7 @@ body {
 
 .archive-grid {
     display: grid;
-    /* ADJUSTMENT: New minmax of 380px for a flexible grid */
     grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); 
-    /* ADJUSTMENT: Steady 2rem gap between cards */
     gap: 2rem; 
     margin-bottom: 2rem;
 }
@@ -296,10 +294,10 @@ body {
     background: #ffffff;
     padding: 3px; 
     will-change: transform, box-shadow;
-    /* ADJUSTMENT: Set min-width but allow it to stretch up to its max content size */
+    
     min-width: 350px; 
-    max-width: 100%; /* Allow growth within the grid cell */
-    justify-self: stretch; /* Stretch to fill the grid cell, respecting min-width */
+    max-width: 100%; 
+    justify-self: stretch; 
 }
 
 .archive-card-v2::before {
@@ -378,7 +376,7 @@ body {
     border-radius: 20px;
     transition: all 0.7s ease-out;
     width: 70%; 
-    /* Increased max-width slightly to accommodate wider card and centered appearance */
+    
     max-width: 350px; 
     margin: 0 auto 5px auto;
 }

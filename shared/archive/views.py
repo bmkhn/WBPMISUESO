@@ -1,5 +1,3 @@
-# shared/archive/views.py (MODIFIED - Added Project Type formatting)
-
 from django.shortcuts import render
 from django.views import View
 from rest_framework.views import APIView
@@ -7,23 +5,22 @@ from rest_framework.response import Response
 from rest_framework.generics import ListAPIView
 from rest_framework.pagination import PageNumberPagination
 
-# --- Imports for role-based logic ---
 from django.db.models import Q, Count, F
 from django.db.models.functions import ExtractYear
 from shared.projects.models import Project
 from system.users.models import User
+from rest_framework.permissions import AllowAny
 
 from .serializers import ProjectSerializer
 
 
 class CustomPagination(PageNumberPagination):
     """Standard pagination class for API list views."""
-    page_size = 10  # Set default page size
+    page_size = 10 
     page_size_query_param = 'page_size'
     max_page_size = 100
 
 
-# --- Helper function for role-based filtering ---
 def _get_role_based_archive_queryset(request):
     """
     Returns a base Project queryset filtered based on the user's role
@@ -43,19 +40,15 @@ def _get_role_based_archive_queryset(request):
         return Project.objects.all()
 
     # 2. Faculty, Program Head, Coordinator, Dean:
-    #    See COMPLETED (all) + IN_PROGRESS (own college)
     if user_role in [User.Role.FACULTY, User.Role.PROGRAM_HEAD, User.Role.COORDINATOR, User.Role.DEAN]:
         college_query = Q()
         if user.college:
-            # Filter for in-progress projects only if they belong to the user's college
             college_query = Q(status="IN_PROGRESS") & Q(project_leader__college=user.college)
 
         return Project.objects.filter(
             Q(status="COMPLETED") | college_query
         ).distinct()
 
-    # 3. All other users (Guests, Client, Implementer, etc.):
-    #    See only COMPLETED
     return Project.objects.filter(status="COMPLETED")
 
 
@@ -69,7 +62,6 @@ class ArchiveView(View):
         else:
             base_template = "base_public.html"
 
-        # Define the categories for the dropdown
         categories = [
             ('start_year', 'Year Started'),
             ('estimated_end_date', 'Year Ended'),
@@ -82,7 +74,7 @@ class ArchiveView(View):
             'base_template': base_template,
             'categories': categories,
             'default_category': 'start_year',
-            'user_role': user_role,  # Added to context
+            'user_role': user_role, 
         }
         
         return render(request, 'archive/archive.html', context)
@@ -90,9 +82,9 @@ class ArchiveView(View):
 # --- API Aggregation View ---
 class ProjectAggregationAPIView(APIView):
     """Calls the service layer for project aggregation data (for cards)."""
+    permission_classes = [AllowAny]
     def get(self, request, category):
         try:
-            # Get base projects based on user's role
             base_queryset = _get_role_based_archive_queryset(request)
 
             field_map = {
@@ -108,7 +100,6 @@ class ProjectAggregationAPIView(APIView):
 
             group_by_field = field_map[category]
 
-            # Annotate date fields for aggregation
             if category == 'start_year':
                 base_queryset = base_queryset.annotate(start_year=ExtractYear('start_date'))
             elif category == 'estimated_end_date':
@@ -126,12 +117,9 @@ class ProjectAggregationAPIView(APIView):
                 label = item['label']
                 if not label:
                     label = 'N/A'
-                
-                # --- NEW FORMATTING ---
-                # If the category is project_type and label isn't N/A, format it
+ 
                 if category == 'project_type' and label != 'N/A':
-                    label = label.replace('_', ' ').title() # E.g., "Research Based"
-                # --- END NEW FORMATTING ---
+                    label = label.replace('_', ' ').title()
 
                 formatted_results.append({'label': label, 'count': item['count']})
             
@@ -139,7 +127,6 @@ class ProjectAggregationAPIView(APIView):
         except ValueError as e:
             return Response({"error": str(e)}, status=400)
         except Exception as e:
-            # It's good practice to log the exception 'e' here
             return Response({"error": "A server error occurred during aggregation."}, status=500)
 
 
@@ -148,6 +135,7 @@ class ProjectListAPIView(ListAPIView):
     """Calls the service layer for detailed project lists (for tables)."""
     serializer_class = ProjectSerializer
     pagination_class = CustomPagination
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
         category = self.kwargs.get('category')
@@ -156,13 +144,11 @@ class ProjectListAPIView(ListAPIView):
         # Get query parameters for searching and sorting
         search_params = self.request.query_params
         search_query = search_params.get('search', None)
-        sort_by = search_params.get('sort_by', 'title') # Default sort
+        sort_by = search_params.get('sort_by', 'title') 
         order = search_params.get('order', 'asc')
         
-        # Get base projects based on user's role
         queryset = _get_role_based_archive_queryset(self.request)
-        
-        # Apply category filtering from URL
+
         if category and filter_value:
             if filter_value == 'N/A':
                 if category == 'agenda':
@@ -173,10 +159,8 @@ class ProjectListAPIView(ListAPIView):
                      queryset = queryset.filter(start_date__year__isnull=True)
                 elif category == 'estimated_end_date':
                     queryset = queryset.filter(estimated_end_date__year__isnull=True)
-                # --- NEW FORMATTING ---
                 elif category == 'project_type':
                      queryset = queryset.filter(project_type__isnull=True)
-                # --- END NEW FORMATTING ---
             else:
                 if category == 'start_year':
                     queryset = queryset.filter(start_date__year=filter_value)
@@ -184,12 +168,9 @@ class ProjectListAPIView(ListAPIView):
                     queryset = queryset.filter(estimated_end_date__year=filter_value)
                 elif category == 'agenda':
                     queryset = queryset.filter(agenda__name=filter_value)
-                # --- NEW FORMATTING ---
                 elif category == 'project_type':
-                    # Convert "Research Based" back to "RESEARCH_BASED" for filtering
                     filter_db_value = filter_value.replace(' ', '_').upper()
                     queryset = queryset.filter(project_type=filter_db_value)
-                # --- END NEW FORMATTING ---
                 elif category == 'college':
                     queryset = queryset.filter(project_leader__college__name=filter_value)
 
@@ -208,7 +189,7 @@ class ProjectListAPIView(ListAPIView):
             'start_date': 'start_date',
             'end_date': 'estimated_end_date',
         }
-        sort_field = sort_field_map.get(sort_by, 'title') # Default to title
+        sort_field = sort_field_map.get(sort_by, 'title') 
         
         if order == 'desc':
             sort_field = f'-{sort_field}'

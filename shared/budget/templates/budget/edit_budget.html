@@ -9,14 +9,10 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
 <link href="{% static 'shared/budget/styles.css' %}" rel="stylesheet">
 
-<div class="user-details-container" style="max-width: 1200px; margin: auto; padding: 20px;">
+<div class="main-container">
     
-    <div class="user-details-title" style="display: flex; justify-content: space-between; align-items: center; border-bottom: none; padding-bottom: 0;">
-        <div>
-            <h2 style="font-size: 28px; font-weight: 700; color: #1f2937; margin: 0;">{{ title }}</h2>
-            <p style="font-size: 16px; color: #4b5563; margin-top: 4px;">Manage budget allocations and assignments.</p>
-        </div>
-        <a href="{% url 'budget_dashboard' %}" class="btn btn-secondary" style="font-size: 14px; padding: 8px 16px;">
+    <div class="user-details-title" style="display: flex; justify-content: flex-end; border-bottom: none; padding-bottom: 0;">
+        <a href="{% url 'budget_dashboard' %}" class="export-btn view" style="font-size: 14px; padding: 8px 16px;">
             &larr; Back to Dashboard
         </a>
     </div>
@@ -24,11 +20,10 @@
     {% if user_role in "VP,DIRECTOR,UESO" %}
     <form method="POST" id="adminBudgetForm">
         {% csrf_token %}
-        <div class="user-details-section" style="margin-top: 24px;">
-            <div class="user-details-category" style="font-size: 18px; font-weight: 600; color: #111827; border-bottom: 1px solid #e0e0e0; padding-bottom: 12px; margin-bottom: 20px;">
-                College Allocation Manager
-            </div>
-            
+        <div class="another-header">
+            <h2>Edit Budget Allocation</h2>
+        </div>
+        <div class="user-details-section" style="margin-top: 24px;">      
             <table class="styled-table">
                 <thead>
                     <tr>
@@ -60,8 +55,8 @@
                 </tbody>
             </table>
 
-            <div class="form-actions">
-                <button type="submit" name="assign_college_budget" class="btn btn-save">
+            <div class="form-actions" style="justify-content: center;">
+                <button type="submit" name="assign_college_budget" class="export-btn edit">
                     Save Allocations
                 </button>
             </div>

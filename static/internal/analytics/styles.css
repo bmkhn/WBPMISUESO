@@ -221,7 +221,7 @@ a {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     margin-top: 0;
     margin-bottom: 1.5rem;
-    font-size: 1.75rem; /* Matches Analytics heading size */
+    font-size: 1.75rem; 
     font-weight: 500;
     color: #000000;
     text-align: center;
@@ -235,7 +235,7 @@ a {
 }
 .date-input {
     width: 90%;
-    padding: 1rem; /* Bigger input area */
+    padding: 1rem; 
     border: 1px solid #ccc;
     border-radius: 0.6rem;
     margin-top: 0.5rem;
@@ -307,11 +307,11 @@ a {
     border: 2px solid white; 
     color: white; 
     min-height: 9rem;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15); /* Stronger shadow for depth */
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15); 
     transition: all 0.4s ease-in-out; 
 }
 
-/* --- Content Group Styling --- */
+
 
 .card-icon-group {
     display: flex;
@@ -360,7 +360,7 @@ a {
     margin-top: 0.2rem;
 }
 
-/* --- Metric Group Styling --- */
+
 
 .card-metric-group {
     display: flex;
@@ -376,7 +376,7 @@ a {
     margin: 0; 
     letter-spacing: -2px;
     text-align: left;
-    color: white; /* Ensure the number color is white */
+    color: white; 
 }
 
 .title-container {
@@ -422,7 +422,7 @@ a {
     opacity: 1;
 }
 
-/* Arrow at bottom of tooltip */
+
 .info-tooltip::after {
     content: '';
     position: absolute;
@@ -440,51 +440,51 @@ a {
     margin-top: 0.2rem;
 }
 
-/* 1. Projects - Teal/Green */
+
 .card-group .card.color-one {
     background: linear-gradient(135deg, #1abc9c 0%, #16a085 100%);
-    border-color: #1abc9c; /* Matching Border */
+    border-color: #1abc9c; 
 }
 .card-group .card.color-one:hover {
     background: linear-gradient(315deg, #1abc9c 0%, #16a085 100%);
     transform: scale(1.03); 
 }
 
-/* 2. Events - Blue/Indigo */
+
 .card-group .card.color-two {
     background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-    border-color: #3498db; /* Matching Border */
+    border-color: #3498db; 
 }
 .card-group .card.color-two:hover {
     background: linear-gradient(315deg, #3498db 0%, #2980b9 100%);
     transform: scale(1.03); 
 }
 
-/* 3. Active Providers - Purple/Violet */
+
 .card-group .card.color-three {
     background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
-    border-color: #9b59b6; /* Matching Border */
+    border-color: #9b59b6; 
 }
 .card-group .card.color-three:hover {
     background: linear-gradient(315deg, #9b59b6 0%, #8e44ad 100%);
     transform: scale(1.03); 
 }
 
-/* 4. Trained Individuals - Orange/Red */
+
 .card-group .card.color-four {
     background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
-    border-color: #e67e22; /* Matching Border */
+    border-color: #e67e22; 
 }
 .card-group .card.color-four:hover {
     background: linear-gradient(315deg, #e67e22 0%, #d35400 100%);
     transform: scale(1.03); 
 }
 
-/* Ensure the final CSS block is in your <style> tags */
+
 @media print {
     * {
         page-break-inside: avoid !important;
-        box-shadow: none !important;
+        box-sshadow: none !important;
     }
     #card-metrics-group {
         break-after: page !important; 
@@ -492,7 +492,7 @@ a {
         margin: 0;
     }
     
-    /* Target the newly ID'd parent DIVs */
+    
     #chart-active-projects,
     #chart-budget-allocation,
     #chart-agenda-distribution,

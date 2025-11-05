@@ -190,7 +190,7 @@ body {
     inset: 0;
     border-radius: 18px; 
     padding: 1.8px; 
-    /* Original coloring kept */
+    
     background: linear-gradient(180deg, #1CB889 0%, #000000 100%); 
     -webkit-mask:
         linear-gradient(#fff 0 0) content-box,
@@ -328,7 +328,7 @@ body {
 .project-summary-table .dropdown {
     font-family: 'Inter', Arial, sans-serif;
     font-size: 16px;
-    padding: 8px 36px 8px 12px; /* extra right padding for icon */
+    padding: 8px 36px 8px 12px; 
     border-radius: 12px;
     border: 1px solid rgba(0,0,0,0.18);
     background: #F8F8F8;
@@ -682,7 +682,7 @@ body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     margin-top: 0;
     margin-bottom: 1.5rem;
-    font-size: 1.75rem; /* Matches Analytics heading size */
+    font-size: 1.75rem; 
     font-weight: 500;
     color: #000000;
     text-align: center;

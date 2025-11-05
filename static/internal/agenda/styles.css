@@ -92,7 +92,7 @@
 }
 
 #deleteAgendaModal.is-open { 
-    display: flex !important; /* Ensures it overrides any 'display: none' from the carousel */
+    display: flex !important; 
 }
 
 #deleteAgendaModal.show {
@@ -159,9 +159,9 @@
     background: #c53030;
 }
 
-/* ========================================================= */
-/* CAROUSEL STRUCTURE & TRANSITION FIXES */
-/* ========================================================= */
+
+
+
 
 .agenda-carousel {
     overflow: hidden;

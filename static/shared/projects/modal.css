@@ -85,7 +85,7 @@ body {
 .reject-btn { background: #D5110A; }
 .reject-btn:hover { background: #a10c07; }
 
-/* Modal Styles */
+
 .modal-bg {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
@@ -141,7 +141,7 @@ textarea {
     resize: none;
 }
 
-/* Submission Modal Styles */
+
 .submission-modal {
     position: fixed;
     z-index: 1000;

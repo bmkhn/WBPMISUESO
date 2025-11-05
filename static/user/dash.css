@@ -212,7 +212,7 @@ body {
     margin: 0 70px;
 }
 
-/* Faculty Dashboard Cards */
+
 .stat-cards-container {
     display: flex;
     gap: 20px;
@@ -248,7 +248,7 @@ body {
     color: #666;
 }
 
-/* Alerts and Calendar Section */
+
 .alerts-calendar-container {
     display: flex;
     gap: 1rem;

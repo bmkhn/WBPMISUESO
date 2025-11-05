@@ -185,11 +185,9 @@
         titleElement.style.whiteSpace = 'normal';
         titleElement.style.wordBreak = 'break-word';
 
-        /* The preferred default size is 30px, based on CSS. */
         let currentFontSize = 30; 
         const minFontSize = 20;
 
-        /* Step 1: Clone the element and set it to the default size for accurate measurement */
         const tempDiv = titleElement.cloneNode(true);
         tempDiv.style.position = 'absolute';
         tempDiv.style.visibility = 'hidden';
@@ -207,14 +205,12 @@
         
         document.body.appendChild(tempDiv);
         
-        /* Step 2: Shrink only if the default size causes overflow */
         while (tempDiv.clientHeight > maxAvailableHeight && currentFontSize > minFontSize) {
             currentFontSize -= 1;
             tempDiv.style.fontSize = currentFontSize + 'px';
             if (currentFontSize <= minFontSize) break;
         }
 
-        /* Step 3: Apply the adjusted size (which will be 30px unless overflow occurred) */
         document.body.removeChild(tempDiv);
         titleElement.style.fontSize = currentFontSize + 'px';
     }

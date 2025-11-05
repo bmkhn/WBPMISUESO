@@ -623,7 +623,7 @@ button:hover {
     color: #000;
 }
 
-/* Form View */
+
 .form-view {
     display: block;
 }
@@ -701,7 +701,7 @@ select.form-group input {
     cursor: not-allowed;
 }
 
-/* Results View */
+
 .results-view {
     display: none;
     height: calc(90vh - 140px);
@@ -878,7 +878,7 @@ select.form-group input {
     color: #666;
 }
 
-/* Side Panel (like YT Shorts) */
+
 .details-panel {
     width: 350px;
     background: #f9f9f9;
