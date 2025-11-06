@@ -38,7 +38,13 @@
 <body>
     <div class="app-container">
         <div class="sidebar">
-            {% include "sidebars/"|add:request.user.role|add:"_sidebar.html" %}
+            {% if request.user.is_authenticated %}
+                {% with sidebar_name=request.user.role|lower|add:"_sidebar.html" %}
+                {% include "sidebars/"|add:sidebar_name %}
+                {% endwith %}
+            {% else %}
+                {% include "sidebars/public_sidebar.html" %} 
+            {% endif %}
         </div>
         
         <div class="main-content">

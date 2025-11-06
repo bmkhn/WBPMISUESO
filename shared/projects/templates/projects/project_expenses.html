@@ -26,6 +26,21 @@
     .tab-content.active{display:block}
     .donut-wrap{display:flex;flex-direction:column;align-items:center;gap:.5rem}
     .cash-available{font-size:1.05rem}
+    
+    /* --- NEW STYLES FOR ERROR HANDLING --- */
+    .error-input {
+      border: 2px solid #dc2626 !important; /* Red border for amount input */
+    }
+    .form-error-message {
+      background: #fee2e2; /* Light red background */
+      color: #dc2626;      /* Darker red text */
+      padding: .75rem;
+      border-radius: .5rem;
+      margin-bottom: 1rem;
+      font-weight: 500;
+      /* Hidden by default, displayed by Django messages or JS */
+    }
+    /* -------------------------------------- */
 </style>
 
 <div class="tabs-inline">
@@ -73,16 +88,31 @@
   <div class="overlay-content" style="background:#fff;border-radius:1rem;padding:1.25rem;width:45rem;max-width:95%;position:relative">
     <button type="button" class="close-x" id="closeX" aria-label="Close" style="position:absolute;right:1rem;top:1rem;background:none;border:none;font-size:1.5rem;cursor:pointer">&times;</button>
     <h2 style="margin:0 0 1rem 0;font-weight:500">Add Expense</h2>
+    
+    {# --- Django Messages container for Errors (will automatically open modal via JS) --- #}
+    {% if messages %}
+        {% for message in messages %}
+            {% if message.tags == 'error' %}
+                <div class="form-error-message active" id="budgetErrorMessage">
+                    <p>{{ message }}</p>
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+    {# -------------------------------------------------------------------------------- #}
+
     <form class="expenseForm" id="expenseForm" method="post" enctype="multipart/form-data">
       {% csrf_token %}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
         <div style="display:flex;flex-direction:column">
           <label style="font-weight:500;margin-bottom:.25rem">Reason <span style="color:#dc2626">*</span></label>
-          <input type="text" name="reason" placeholder="Meals" required aria-required="true" style="padding:.8rem;border:1px solid #868686;border-radius:.5rem;background:#e9e9e9">
+          {# Retain value if post failed #}
+          <input type="text" name="reason" placeholder="Meals" required aria-required="true" style="padding:.8rem;border:1px solid #868686;border-radius:.5rem;background:#e9e9e9" value="{{ request.POST.reason }}">
         </div>
         <div style="display:flex;flex-direction:column">
           <label style="font-weight:500;margin-bottom:.25rem">Total Expense (₱) <span style="color:#dc2626">*</span></label>
-          <input type="number" name="amount" step="0.01" placeholder="100.00" required aria-required="true" style="padding:.8rem;border:1px solid #868686;border-radius:.5rem;background:#e9e9e9">
+          {# Added ID for JS targeting #}
+          <input type="number" name="amount" id="expenseAmountInput" step="0.01" placeholder="100.00" required aria-required="true" style="padding:.8rem;border:1px solid #868686;border-radius:.5rem;background:#e9e9e9" value="{{ request.POST.amount }}">
         </div>
       </div>
       <div style="margin-top:1rem;display:flex;flex-direction:column">
@@ -94,7 +124,8 @@
       </div>
       <div style="margin-top:1rem;display:flex;flex-direction:column">
         <label style="font-weight:500;margin-bottom:.25rem">Notes <span style="color:#dc2626">*</span></label>
-        <textarea name="notes" rows="3" placeholder="(e.g. Bento box)" required aria-required="true" style="padding:.8rem;border:1px solid #868686;border-radius:.5rem;background:#e9e9e9"></textarea>
+        {# Retain value if post failed #}
+        <textarea name="notes" rows="3" placeholder="(e.g. Bento box)" required aria-required="true" style="padding:.8rem;border:1px solid #868686;border-radius:.5rem;background:#e9e9e9">{{ request.POST.notes }}</textarea>
       </div>
       <div style="margin-top:1rem;display:flex;gap:.75rem">
         <button type="submit" class="btn" style="background:#245F3E;color:#fff;border:none;border-radius:.5rem;padding:.6rem 1rem;cursor:pointer">Save</button>
@@ -161,9 +192,40 @@
     const overlay = document.getElementById('overlay');
     const closeBtn = document.getElementById('closeOverlay');
     const closeX = document.getElementById('closeX');
-    if (headerBtn && overlay) headerBtn.addEventListener('click', ()=> overlay.style.display='flex');
-    if (closeBtn && overlay) closeBtn.addEventListener('click', ()=> overlay.style.display='none');
-    if (closeX && overlay) closeX.addEventListener('click', ()=> overlay.style.display='none');
+    // ID added to target the amount input
+    const expenseAmountInput = document.getElementById('expenseAmountInput');
+    // Check for the presence of a server-side error message
+    const errorMessageDiv = document.getElementById('budgetErrorMessage'); 
+
+    // Function to close the overlay
+    const closeOverlay = () => {
+        overlay.style.display = 'none';
+        // Clear red border on close
+        if (expenseAmountInput) {
+            expenseAmountInput.classList.remove('error-input');
+        }
+    };
+    
+    // Function to open the overlay
+    const openOverlay = () => {
+        overlay.style.display = 'flex';
+    };
+
+    // 1. Initial State Check: If an error message is present after a redirect, open the modal
+    if (errorMessageDiv) {
+        openOverlay();
+        // 2. Highlight Input: If the error is present and related to budget (assuming the view sends a budget-related error message), highlight the amount field.
+        // We assume the error message text from the view will contain 'budget' or 'exceeds'.
+        const errorText = errorMessageDiv.textContent || errorMessageDiv.innerText;
+        if (expenseAmountInput && (errorText.includes('budget') || errorText.includes('exceeds'))) {
+            expenseAmountInput.classList.add('error-input');
+        }
+    }
+
+    if (headerBtn) headerBtn.addEventListener('click', openOverlay);
+    if (closeBtn) closeBtn.addEventListener('click', closeOverlay);
+    if (closeX) closeX.addEventListener('click', closeOverlay);
+
     const uploadBox = document.getElementById('uploadBox');
     const receiptInput = document.getElementById('receipt');
     const uploadText = document.getElementById('uploadText');

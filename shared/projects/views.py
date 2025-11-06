@@ -10,8 +10,15 @@ from .forms import ProjectForm, ProjectEventForm
 from django.core.paginator import Paginator
 import os
 from django.db import models
-from django.db.models import Q, BooleanField, ExpressionWrapper
-from decimal import Decimal
+from django.db.models import Q, BooleanField, ExpressionWrapper, Sum # Added Sum
+from decimal import Decimal # Added Decimal
+from django.contrib import messages # Added messages
+from django.utils import timezone # Added timezone for use in related functions
+from django.http import HttpResponseRedirect, JsonResponse # Added for related functions
+from django.urls import reverse # Added for related functions
+from datetime import date as dtdate # Added for related functions
+from shared.budget.models import CollegeBudget # Added for budget functions
+from datetime import datetime # Added for budget functions
 
 
 def get_role_constants():
@@ -143,6 +150,8 @@ def project_providers(request, pk):
                     
                     # Create alert for the newly added provider
                     from .models import ProjectUpdate
+                    # Need to import timezone for ProjectUpdate creation
+                    
                     ProjectUpdate.objects.create(
                         user=provider,
                         project=project,
@@ -236,6 +245,7 @@ def project_events(request, pk):
         if request.POST.get('add_event'):
             # Add Event button: create new ProjectEvent and increment estimated_events
             from .models import ProjectEvent
+            # timezone is imported at the top
             now = timezone.now()
             new_event = ProjectEvent.objects.create(
                 project=project,
@@ -415,7 +425,7 @@ def project_files(request, pk):
 def project_submissions(request, pk):
     ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE, COORDINATOR_ROLE = get_role_constants()
     from internal.submissions.models import Submission
-    from django.utils import timezone
+    # timezone is imported at the top
     # Get all submissions for this project
     all_submissions = Submission.objects.filter(project__pk=pk)
     events = ProjectEvent.objects.filter(project__pk=pk).order_by('datetime')
@@ -488,7 +498,7 @@ def project_submissions(request, pk):
     # Submission Logic
     from django.http import HttpResponseBadRequest
     from django.shortcuts import redirect
-    from django.contrib import messages
+    # messages is imported at the top
 
     if request.method == "POST":
         submission = get_object_or_404(Submission, pk=request.POST.get('submission_id'))
@@ -567,8 +577,7 @@ def project_submissions_details(request, pk, submission_id):
 
     # Mark submission alerts as viewed for faculty users
     if request.user.role in ["FACULTY", "IMPLEMENTER"]:
-        from django.http import HttpResponseRedirect
-        from django.urls import reverse
+        # imports are at the top
         updated = ProjectUpdate.objects.filter(
             user=request.user, 
             project__pk=pk, 
@@ -593,7 +602,7 @@ def project_submissions_details(request, pk, submission_id):
 
     # Handle submission POST requests
     if request.method == "POST":
-        from django.utils import timezone
+        # timezone is imported at the top
         action = request.POST.get('action')
         
         # Handle Submission Upload
@@ -667,7 +676,7 @@ def project_submissions_details(request, pk, submission_id):
 @role_required(allowed_roles=["UESO", "VP", "DIRECTOR", "COORDINATOR", "FACULTY", "IMPLEMENTER", "DEAN", "PROGRAM_HEAD"], require_confirmed=True)
 def admin_submission_action(request, pk, submission_id):
     submission = get_object_or_404(Submission, pk=submission_id, project__pk=pk)
-    from django.utils import timezone
+    # timezone is imported at the top
     if request.method == 'POST':
         action = request.POST.get('action')
         
@@ -782,7 +791,8 @@ def admin_submission_action(request, pk, submission_id):
 
 @project_visibility_required
 def project_expenses(request, pk):
-    from django.contrib import messages
+    # messages is imported at the top
+    # Sum and Decimal are imported at the top
     
     ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE, COORDINATOR_ROLE = get_role_constants()
 
@@ -794,17 +804,52 @@ def project_expenses(request, pk):
 
     project = get_object_or_404(Project, pk=pk)
 
+    # Calculate Total Budget (Internal + External)
+    try:
+        # Ensure Decimal is used for calculation
+        total_budget = (project.internal_budget or Decimal('0')) + (project.external_budget or Decimal('0'))
+    except Exception:
+        total_budget = Decimal('0')
+
     # Handle expense creation
     if request.method == 'POST' and request.user.is_authenticated:
         title = request.POST.get('reason') or request.POST.get('title')
         notes = request.POST.get('notes')
         amount_raw = request.POST.get('amount')
         receipt = request.FILES.get('receipt')
+        
         try:
-            amount_val = float(amount_raw or 0)
+            # Accept decimals
+            amount_val = Decimal(amount_raw) if amount_raw else Decimal('0')
         except Exception:
-            amount_val = 0
-        if title and amount_val > 0:
+            messages.error(request, "Invalid amount entered. Please use a valid number.")
+            return redirect(request.path)
+
+        # Recompute used_budget for current check
+        try:
+            agg = ProjectExpense.objects.filter(project=project).aggregate(s=Sum('amount'))
+            current_spent_total = agg.get('s') or Decimal('0')
+        except Exception:
+            current_spent_total = Decimal('0')
+
+        # Budget Validation: Check if new expense exceeds total budget
+        new_spent_total = current_spent_total + amount_val
+        
+        if total_budget <= Decimal('0'):
+            # If total budget is zero or negative, no expenses are allowed
+            messages.error(request, "Project budget is zero or negative. Cannot add expense.")
+            return redirect(request.path)
+            
+        if new_spent_total > total_budget:
+            # Block the expense if it exceeds the total budget
+            messages.error(request, 
+                           f"Expense exceeds total project budget of ₱{total_budget:,.2f}. "
+                           f"Current spent: ₱{current_spent_total:,.2f}. "
+                           f"Requested: ₱{amount_val:,.2f}.")
+            return redirect(request.path)
+
+        if title and amount_val > Decimal('0'):
+            # If validation passes, create the expense
             ProjectExpense.objects.create(
                 project=project,
                 title=title,
@@ -813,30 +858,31 @@ def project_expenses(request, pk):
                 receipt=receipt,
                 created_by=request.user,
             )
-            # Recompute used_budget as sum of expenses
-            try:
-                from django.db.models import Sum
-                agg = ProjectExpense.objects.filter(project=project).aggregate(s=Sum('amount'))
-                project.used_budget = agg.get('s') or 0
-                project.save(update_fields=['used_budget'])
-            except Exception:
-                pass
+            
+            # Update used_budget on the Project model
+            project.used_budget = new_spent_total
+            project.save(update_fields=['used_budget'])
+            
+            messages.success(request, f"Expense of ₱{amount_val:,.2f} successfully added.")
             return redirect(request.path)
+        elif amount_val <= Decimal('0'):
+             messages.error(request, "Amount must be greater than zero.")
+             return redirect(request.path)
+
 
     # Dynamic budget figures based on Project fields
+    # Use the calculated total_budget from above
     try:
-        total_budget = (project.internal_budget or 0) + (project.external_budget or 0)
+        spent_total = project.used_budget or Decimal('0')
     except Exception:
-        total_budget = 0
-    try:
-        spent_total = project.used_budget or 0
-    except Exception:
-        spent_total = 0
-    remaining_total = max(0, total_budget - spent_total)
+        spent_total = Decimal('0')
+        
+    remaining_total = max(Decimal('0'), total_budget - spent_total)
     percent_remaining = 0
-    if total_budget:
+    if total_budget > Decimal('0'):
         try:
-            percent_remaining = int(round((remaining_total / total_budget) * 100))
+            # Cast to float for division, then back to int for percentage
+            percent_remaining = int(round((float(remaining_total) / float(total_budget)) * 100))
         except Exception:
             percent_remaining = 0
 
@@ -934,7 +980,7 @@ from django.views.decorators.http import require_POST
 @role_required(allowed_roles=["VP", "DIRECTOR", "UESO"], require_confirmed=True)
 @require_POST
 def cancel_project(request, pk):
-    from django.utils import timezone
+    # timezone is imported at the top
     project = get_object_or_404(Project, pk=pk)
     project.status = 'CANCELLED'
     project.save()
@@ -963,8 +1009,7 @@ def cancel_project(request, pk):
 @role_required(allowed_roles=["VP", "DIRECTOR", "UESO"], require_confirmed=True)
 @require_POST
 def undo_cancel_project(request, pk):
-    from datetime import date as dtdate
-    from django.utils import timezone
+    # dtdate and timezone are imported at the top
     project = get_object_or_404(Project, pk=pk)
     today = dtdate.today()
     old_status = project.status
@@ -1250,7 +1295,7 @@ def admin_project(request):
 ########################################################################################################################
 
 
-from django.utils import timezone
+# timezone is imported at the top
 
 
 @role_required(allowed_roles=["VP", "DIRECTOR", "UESO"], require_confirmed=True)
@@ -1271,9 +1316,7 @@ def add_project_view(request):
         if form.is_valid():
             try:
                 # Validate budget before saving
-                from shared.budget.models import CollegeBudget
-                from datetime import datetime
-                from decimal import Decimal
+                # CollegeBudget, datetime, Decimal are imported at the top
                 
                 project_leader = form.cleaned_data.get('project_leader')
                 logistics_type_value = form.cleaned_data['logistics_type']
@@ -1305,6 +1348,7 @@ def add_project_view(request):
                     
                     # Check if budget is sufficient
                     uncommitted_budget = college_budget.uncommitted_remaining
+                    # Use Decimal formatting placeholder for budget check
                     if internal_budget_value > uncommitted_budget:
                         error = f"Insufficient budget for {project_leader.college.name}. Requested: ₱{internal_budget_value:,.2f}, Available: ₱{uncommitted_budget:,.2f}"
                         raise ValueError(error)
@@ -1418,9 +1462,7 @@ def add_project_view(request):
 
 def check_college_budget(request):
     """AJAX endpoint to validate college budget availability"""
-    from django.http import JsonResponse
-    from shared.budget.models import CollegeBudget
-    from datetime import datetime
+    # JsonResponse, CollegeBudget, datetime, Decimal are imported at the top
     
     if request.method != 'GET':
         return JsonResponse({'error': 'Invalid request method'}, status=400)
@@ -1483,6 +1525,7 @@ def check_college_budget(request):
         remaining_after_project = uncommitted_budget - requested_budget
         
         # Check if requested budget exceeds available
+        # Use float(Decimal) for JsonResponse serialization
         if requested_budget > uncommitted_budget:
             return JsonResponse({
                 'valid': False,

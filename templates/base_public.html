@@ -29,12 +29,14 @@
     <div class="app-container">
         <div class="navbar">
             {% if user.is_authenticated %}
-                {% include "navbars/"|add:request.user.role|add:"_navbar.html" %}
+                {% with navbar_name=request.user.role|lower|add:"_navbar.html" %}
+                {% include "navbars/"|add:navbar_name %}
+                {% endwith %}
             {% else %}
                 {% include "navbars/public_navbar.html" %}
             {% endif %}
         </div>
-
+        
         <div class="main-content">
             {% block content %}
             {% endblock %}
