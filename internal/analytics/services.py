@@ -18,27 +18,44 @@ ACTIVE_STATUSES = ['IN_PROGRESS', 'ON_HOLD']
 # CARD METRIC DATA FUNCTIONS (Unchanged)
 # ==============================================================================
 
-def get_total_projects_count(start_date, end_date):
+def get_total_projects_count(start_date, end_date, college=None):
     """
     FIX: Returns the count of projects that STARTED within the reporting date range.
+    If college is provided, filters to only projects where project_leader belongs to that college.
     """
-    count = Project.objects.filter(
-        start_date__range=[start_date, end_date] 
-    ).count()
+    queryset = Project.objects.filter(start_date__range=[start_date, end_date])
+    if college is not None:
+        queryset = queryset.filter(project_leader__college=college)
+    count = queryset.count()
     return {'metric': count}
 
-def get_total_events_count(start_date, end_date):
-    """Returns the total count of project events whose datetime is within the range."""
-    count = ProjectEvent.objects.filter(datetime__range=[start_date, end_date]).count()
+def get_total_events_count(start_date, end_date, college=None):
+    """
+    Returns the total count of project events whose datetime is within the range.
+    If college is provided, filters to events from projects where project_leader belongs to that college.
+    """
+    queryset = ProjectEvent.objects.filter(datetime__range=[start_date, end_date])
+    if college is not None:
+        queryset = queryset.filter(project__project_leader__college=college)
+    count = queryset.count()
     return {'metric': count}
 
-def get_total_providers_count(start_date, end_date):
-    relevant_projects = Project.objects.filter(
+def get_total_providers_count(start_date, end_date, college=None):
+    """
+    Returns the total count of unique providers (leaders + colleges).
+    If college is provided, filters to projects where project_leader belongs to that college.
+    """
+    queryset = Project.objects.filter(
         (Q(status__in=ACTIVE_STATUSES) | Q(estimated_end_date__range=[start_date, end_date])) &
         Q(start_date__lte=end_date)
     ).filter(
         project_leader__isnull=False
-    ).distinct()
+    )
+    
+    if college is not None:
+        queryset = queryset.filter(project_leader__college=college)
+    
+    relevant_projects = queryset.distinct()
 
     leader_ids = relevant_projects.values_list('project_leader_id', flat=True).distinct()
     unique_leaders_count = len(leader_ids)
@@ -52,15 +69,21 @@ def get_total_providers_count(start_date, end_date):
 
     return {'metric': total_count}
 
-def get_total_individuals_trained(start_date, end_date):
+def get_total_individuals_trained(start_date, end_date, college=None):
     """
     Returns the SUM of `num_trained_individuals` from Submissions
     linked to ProjectEvents within the date range.
+    If college is provided, filters to submissions from projects where project_leader belongs to that college.
     """
-    total_trained = Submission.objects.filter(
+    queryset = Submission.objects.filter(
         event__datetime__range=[start_date, end_date], 
         num_trained_individuals__isnull=False   
-    ).aggregate(
+    )
+    
+    if college is not None:
+        queryset = queryset.filter(event__project__project_leader__college=college)
+    
+    total_trained = queryset.aggregate(
         total_trained=Sum('num_trained_individuals')
     )['total_trained'] or 0 
 
@@ -96,16 +119,19 @@ def _get_trunc_object(start_date, end_date):
 
 # In shared/archive/services.py
 
-def get_active_projects_over_time(start_date, end_date):
+def get_active_projects_over_time(start_date, end_date, college=None):
     """
     Counts projects STARTED within the date range, grouped dynamically,
     and returns the grouping unit for chart axis scaling.
+    If college is provided, filters to projects where project_leader belongs to that college.
     """
     TruncFunc, time_unit = _get_trunc_object(start_date, end_date)
 
-    timescale_data = Project.objects.filter(
-        start_date__range=[start_date, end_date]
-    ).annotate(
+    queryset = Project.objects.filter(start_date__range=[start_date, end_date])
+    if college is not None:
+        queryset = queryset.filter(project_leader__college=college)
+    
+    timescale_data = queryset.annotate(
         timescale_unit=TruncFunc('start_date')
     ).values('timescale_unit').annotate(
         count=Count('id')
@@ -122,17 +148,22 @@ def get_active_projects_over_time(start_date, end_date):
     return {'data': data, 'timeUnit': time_unit}
 
 # --- MODIFIED FUNCTION: Returns timeUnit for JS ---
-def get_trained_individuals_data(start_date, end_date):
+def get_trained_individuals_data(start_date, end_date, college=None):
     """
     Counts individuals trained within the date range, grouped dynamically,
     and returns the grouping unit for chart axis scaling.
+    If college is provided, filters to submissions from projects where project_leader belongs to that college.
     """
     TruncFunc, time_unit = _get_trunc_object(start_date, end_date) # <-- GET UNIT HERE
 
-    timescale_data = Submission.objects.filter(
+    queryset = Submission.objects.filter(
         event__datetime__range=[start_date, end_date],
         num_trained_individuals__isnull=False
-    ).annotate(
+    )
+    if college is not None:
+        queryset = queryset.filter(event__project__project_leader__college=college)
+    
+    timescale_data = queryset.annotate(
         timescale_unit=TruncFunc('event__datetime')
     ).values('timescale_unit').annotate(
         total_trained=Sum('num_trained_individuals')
@@ -150,9 +181,17 @@ def get_trained_individuals_data(start_date, end_date):
     return {'data': data, 'timeUnit': time_unit}
 
 # --- Multi-Series Budget Functions (Unchanged from previous step) ---
-def get_budget_multi_series_data(start_date, end_date):
-    fiscal_year = str(end_date.year) 
+def get_budget_multi_series_data(start_date, end_date, college=None):
+    """
+    Returns multi-series budget data (allotted, committed, uncommitted).
+    If college is provided, filters to only that college's budget.
+    """
+    fiscal_year = str(end_date.year)
     budget_queryset = CollegeBudget.objects.filter(fiscal_year=fiscal_year, status='ACTIVE').select_related('college').order_by('college__name')
+    
+    if college is not None:
+        budget_queryset = budget_queryset.filter(college=college)
+    
     labels = []
     allotted_data = []
     committed_data = []
@@ -184,19 +223,45 @@ def get_budget_multi_series_data(start_date, end_date):
 
     return {"labels": labels, "datasets": datasets}
 
-def get_budget_allocation_data(start_date, end_date):
-    return get_budget_multi_series_data(start_date, end_date)
+def get_budget_allocation_data(start_date, end_date, college=None):
+    """
+    Returns multi-series budget allocation data.
+    If college is provided, filters to only that college's budget.
+    """
+    return get_budget_multi_series_data(start_date, end_date, college=college)
 
 
-def get_agenda_distribution_data(start_date, end_date):
-    agenda_data = Project.objects.filter((Q(status__in=ACTIVE_STATUSES) | Q(estimated_end_date__range=[start_date, end_date])) & Q(start_date__lte=end_date), agenda__isnull=False).values('agenda__name').annotate(count=Count('id')).order_by('-count')
+def get_agenda_distribution_data(start_date, end_date, college=None):
+    """
+    Returns distribution of projects by agenda.
+    If college is provided, filters to projects where project_leader belongs to that college.
+    """
+    queryset = Project.objects.filter(
+        (Q(status__in=ACTIVE_STATUSES) | Q(estimated_end_date__range=[start_date, end_date])) & 
+        Q(start_date__lte=end_date), 
+        agenda__isnull=False
+    )
+    
+    if college is not None:
+        queryset = queryset.filter(project_leader__college=college)
+    
+    agenda_data = queryset.values('agenda__name').annotate(count=Count('id')).order_by('-count')
     labels = [item['agenda__name'] for item in agenda_data]
     counts = [item['count'] for item in agenda_data]
     return {'labels': labels, 'counts': counts}
 
 
-def get_request_status_distribution(start_date, end_date):
+def get_request_status_distribution(start_date, end_date, college=None):
+    """
+    Returns distribution of client requests by status.
+    Note: ClientRequest doesn't have direct college relationship, so filtering may not apply.
+    If college filtering is needed, this would need adjustment based on your model relationships.
+    """
     requests = ClientRequest.objects.filter(submitted_at__range=[start_date, end_date])
+    
+    # Note: ClientRequest filtering by college would need to be implemented based on your model structure
+    # For now, keeping original logic as ClientRequest may not have direct college relationship
+    
     total_count = requests.count()
     if total_count == 0: return {'labels': ['Approved', 'Ongoing', 'Rejected'], 'approved_pct': 0, 'ongoing_pct': 0, 'rejected_pct': 0, 'total_count': 0}
     approved_count = requests.filter(status='APPROVED').count()
@@ -213,15 +278,35 @@ def get_request_status_distribution(start_date, end_date):
          else: rejected_pct = round(rejected_pct + diff, 1)
     return {'labels': ['Approved', 'Ongoing', 'Rejected'], 'approved_pct': approved_pct, 'ongoing_pct': ongoing_pct, 'rejected_pct': rejected_pct, 'total_count': total_count}
     
-def get_project_trends(start_date, end_date):
+def get_project_trends(start_date, end_date, college=None):
+    """
+    Returns project trends comparing current period vs previous period.
+    If college is provided, filters to projects where project_leader belongs to that college.
+    """
     current_duration = end_date.date() - start_date.date()
     previous_end_date = start_date - timedelta(days=1)
     previous_start_date = previous_end_date - current_duration
     current_tz = timezone.get_current_timezone()
     previous_start_dt = timezone.make_aware(datetime.combine(previous_start_date, datetime.min.time()), current_tz)
     previous_end_dt = timezone.make_aware(datetime.combine(previous_end_date, datetime.max.time()), current_tz)
-    current_created_count = Project.objects.filter(created_at__range=[start_date, end_date]).count()
-    previous_created_count = Project.objects.filter(created_at__range=[previous_start_dt, previous_end_dt]).count()
+    
+    # Current period queries
+    current_created_query = Project.objects.filter(created_at__range=[start_date, end_date])
+    current_completed_query = Project.objects.filter(estimated_end_date__range=[start_date, end_date])
+    
+    # Previous period queries
+    previous_created_query = Project.objects.filter(created_at__range=[previous_start_dt, previous_end_dt])
+    previous_completed_query = Project.objects.filter(estimated_end_date__range=[previous_start_dt, previous_end_dt])
+    
+    # Apply college filter if provided
+    if college is not None:
+        current_created_query = current_created_query.filter(project_leader__college=college)
+        current_completed_query = current_completed_query.filter(project_leader__college=college)
+        previous_created_query = previous_created_query.filter(project_leader__college=college)
+        previous_completed_query = previous_completed_query.filter(project_leader__college=college)
+    
+    current_created_count = current_created_query.count()
+    previous_created_count = previous_created_query.count()
     created_change = 0
     created_trend = "flat"
     if previous_created_count > 0:
@@ -229,13 +314,15 @@ def get_project_trends(start_date, end_date):
         if created_change > 0: created_trend = "up"
         elif created_change < 0: created_trend = "down"
     elif current_created_count > 0: created_change = 100; created_trend = "up"
-    current_completed_count = Project.objects.filter(estimated_end_date__range=[start_date, end_date]).count()
-    previous_completed_count = Project.objects.filter(estimated_end_date__range=[previous_start_dt, previous_end_dt]).count()
+    
+    current_completed_count = current_completed_query.count()
+    previous_completed_count = previous_completed_query.count()
     completed_change = 0
     completed_trend = "flat"
     if previous_completed_count > 0:
         completed_change = round(((current_completed_count - previous_completed_count) / previous_completed_count) * 100)
-        if created_change > 0: completed_trend = "up"
-        elif created_change < 0: completed_trend = "down"
+        if completed_change > 0: completed_trend = "up"
+        elif completed_change < 0: completed_trend = "down"
     elif current_completed_count > 0: completed_change = 100; completed_trend = "up"
+    
     return {'created': {'number': current_created_count, 'change': created_change, 'trend': created_trend}, 'completed': {'number': current_completed_count, 'change': completed_change, 'trend': completed_trend}}

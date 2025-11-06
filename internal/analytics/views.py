@@ -73,14 +73,22 @@ def analytics_view(request):
     # This call will now work
     start_date, end_date, context_dates = _get_validated_dates(request)
     
+    # Determine if user should see only their college's data
+    user_college = None
+    is_college_restricted = False
+    if hasattr(request.user, 'role') and request.user.role in ['PROGRAM_HEAD', 'DEAN', 'COORDINATOR']:
+        user_college = request.user.college
+        is_college_restricted = True
+    
     context = {
         'card_metrics': {
-            'total_projects': services.get_total_projects_count(start_date, end_date),
-            'total_events': services.get_total_events_count(start_date, end_date),
-            'total_providers': services.get_total_providers_count(start_date, end_date),
-            'total_trained': services.get_total_individuals_trained(start_date, end_date),
+            'total_projects': services.get_total_projects_count(start_date, end_date, college=user_college),
+            'total_events': services.get_total_events_count(start_date, end_date, college=user_college),
+            'total_providers': services.get_total_providers_count(start_date, end_date, college=user_college),
+            'total_trained': services.get_total_individuals_trained(start_date, end_date, college=user_college),
         },
-        'project_trends': services.get_project_trends(start_date, end_date),
+        'project_trends': services.get_project_trends(start_date, end_date, college=user_college),
+        'is_college_restricted': is_college_restricted,  # Flag to hide client requests chart
     }
     
     # Add the selected dates to the context
@@ -96,6 +104,11 @@ def export_analytics_to_excel(request):
     """
     # This call will now work
     start_date, end_date, _ = _get_validated_dates(request)
+    
+    # Determine if user should see only their college's data
+    user_college = None
+    if hasattr(request.user, 'role') and request.user.role in ['PROGRAM_HEAD', 'DEAN', 'COORDINATOR']:
+        user_college = request.user.college
     
     # --- Create Workbook ---
     wb = openpyxl.Workbook()
@@ -114,10 +127,10 @@ def export_analytics_to_excel(request):
     ws_overview['A4'].font = header_font
     
     metrics = {
-        "Total Projects Started": services.get_total_projects_count(start_date, end_date)['metric'],
-        "Total Events": services.get_total_events_count(start_date, end_date)['metric'],
-        "Total Providers (Faculty & Colleges)": services.get_total_providers_count(start_date, end_date)['metric'],
-        "Total Individuals Trained": services.get_total_individuals_trained(start_date, end_date)['metric']
+        "Total Projects Started": services.get_total_projects_count(start_date, end_date, college=user_college)['metric'],
+        "Total Events": services.get_total_events_count(start_date, end_date, college=user_college)['metric'],
+        "Total Providers (Faculty & Colleges)": services.get_total_providers_count(start_date, end_date, college=user_college)['metric'],
+        "Total Individuals Trained": services.get_total_individuals_trained(start_date, end_date, college=user_college)['metric']
     }
     
     row = 5
@@ -137,7 +150,7 @@ def export_analytics_to_excel(request):
     ws_projects['A3'].font = header_font
     ws_projects['B3'].font = header_font
     
-    project_data = services.get_active_projects_over_time(start_date, end_date).get('data', [])
+    project_data = services.get_active_projects_over_time(start_date, end_date, college=user_college).get('data', [])
     for i, item in enumerate(project_data, start=4):
         ws_projects[f'A{i}'] = item['x']
         ws_projects[f'B{i}'] = item['y']
@@ -153,7 +166,7 @@ def export_analytics_to_excel(request):
     ws_trained['A3'].font = header_font
     ws_trained['B3'].font = header_font
     
-    trained_data = services.get_trained_individuals_data(start_date, end_date).get('data', [])
+    trained_data = services.get_trained_individuals_data(start_date, end_date, college=user_college).get('data', [])
     for i, item in enumerate(trained_data, start=4):
         ws_trained[f'A{i}'] = item['x']
         ws_trained[f'B{i}'] = item['y']
@@ -166,7 +179,7 @@ def export_analytics_to_excel(request):
     ws_budget['A1'].font = title_font
     ws_budget['A2'] = f"Data Based on Fiscal Year: {end_date.year}"
     
-    budget_data = services.get_budget_allocation_data(start_date, end_date)
+    budget_data = services.get_budget_allocation_data(start_date, end_date, college=user_college)
     labels = budget_data.get('labels', [])
     datasets = budget_data.get('datasets', [])
     
@@ -212,7 +225,7 @@ def export_analytics_to_excel(request):
     ws_agenda['A3'].font = header_font
     ws_agenda['B3'].font = header_font
     
-    agenda_data = services.get_agenda_distribution_data(start_date, end_date)
+    agenda_data = services.get_agenda_distribution_data(start_date, end_date, college=user_college)
     for i, label in enumerate(agenda_data.get('labels', []), start=4):
         ws_agenda[f'A{i}'] = label
         ws_agenda[f'B{i}'] = agenda_data['counts'][i-4]
@@ -224,7 +237,7 @@ def export_analytics_to_excel(request):
     ws_requests['A1'] = "Client Request Status"
     ws_requests['A1'].font = header_font
     
-    request_data = services.get_request_status_distribution(start_date, end_date)
+    request_data = services.get_request_status_distribution(start_date, end_date, college=user_college)
     total_count = request_data.get('total_count', 0)
     
     ws_requests['A3'] = "Status"
