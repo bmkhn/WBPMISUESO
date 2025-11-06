@@ -17,7 +17,7 @@
             </select>
         </form>
     </div>
-    {% if request.user.role in ADMIN_ROLES %}
+    {% if request.user.role in ADMIN_ROLES and project.status != 'COMPLETED' %}
         <a href="{% url 'add_submission' project.id %}" class="admin-button edit">Add Submission</a>
     {% endif %}
 </div>

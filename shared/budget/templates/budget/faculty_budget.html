@@ -12,7 +12,7 @@
         h1,h2,h3 {font-weight:600; color:#111;}
         .meta {color:#6b7280;}
         .proj-title {font-weight:600;}
-        main {display: flex; flex-direction: column; gap: 1.25rem; margin: 2rem 5rem;}
+        main1 {display: flex; flex-direction: column; gap: 1.25rem; margin: 2rem 5rem; background-color:#f9f9f9;}
         .row-grid {display: grid; grid-template-columns: 2fr 1fr; gap: 1.25rem;}
         section.box {background: #fff; border-radius: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 1.25rem;}
         .projects-grid {display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem;}
@@ -98,7 +98,7 @@
         .pagination-button:disabled { opacity: 0.5; cursor: not-allowed; }
     </style>
 
-<div data-dashboard="{% if project %}0{% else %}1{% endif %}">
+<div data-dashboard="{% if project %}0{% else %}1{% endif %}" style="background-color:#f9f9f9;">
 
     {% if project %}
     <section class="box" style="margin: 0 5rem 0 5rem; padding: 3rem;">
@@ -227,7 +227,7 @@
     {% endif %}
 
     {% if not project %}
-    <main>
+    <main1>
         <!-- First row: Projects (left) and Logs (right) -->
         <div class="row-grid">
             <section class="box">
@@ -241,7 +241,7 @@
                 {% if projects_overview %}
                 <div id="projectsCardView" class="projects-grid">
                     {% for p in projects_overview %}
-                    <a href="{% url 'expenses:project' p.id %}" class="proj-card" data-card-item>
+                    <a href="{% url 'project_expenses' p.id %}" class="proj-card" data-card-item>
                         {% if p.last_updated %}<p class="meta">Last updated {{ p.last_updated|date:"F j, Y" }}</p>{% endif %}
                         <h3 class="proj-title" style="text-align:center">{{ p.title }}</h3>
                         <div class="proj-status">
@@ -268,7 +268,7 @@
                                 <td style="padding:0.6rem;">{{ p.title }}</td>
                                 <td style="padding:0.6rem;">{% if p.last_updated %}{{ p.last_updated|date:"M d, Y" }}{% else %}-{% endif %}</td>
                                 <td style="padding:0.6rem;">{{ p.percent_remaining }}%</td>
-                                <td style="padding:0.6rem;"><a href="{% url 'expenses:project' p.id %}">Open</a></td>
+                                <td style="padding:0.6rem;"><a href="{% url 'project_expenses' p.id %}">Open</a></td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -287,7 +287,7 @@
                     {% for e in recent_expenses %}
                     <div class="log-item">
                         <strong>₱{{ e.amount|floatformat:2 }}</strong> has been accounted for
-                        <a href="{% url 'faculty_project_budget' e.project_id %}">{{ e.project.title }}</a>
+                        <a href="{% url 'project_expenses' e.project_id %}">{{ e.project.title }}</a>
                         <small>{{ e.submitted_at|date:"h:i A. F d, Y" }}</small>
                     </div>
                     {% endfor %}

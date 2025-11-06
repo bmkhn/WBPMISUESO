@@ -870,6 +870,91 @@ def project_expenses(request, pk):
 
 
 @project_visibility_required
+def project_invoices(request, pk):
+    """View for displaying receipt files (invoices)"""
+    from django.contrib import messages
+    
+    ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE, COORDINATOR_ROLE = get_role_constants()
+
+    user_role = getattr(request.user, 'role', None)
+    if user_role in ["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
+        base_template = "base_internal.html"
+    else:
+        base_template = "base_public.html"
+
+    project = get_object_or_404(Project, pk=pk)
+
+    # Handle expense creation (same logic as project_expenses)
+    if request.method == 'POST' and request.user.is_authenticated:
+        title = request.POST.get('reason') or request.POST.get('title')
+        notes = request.POST.get('notes')
+        amount_raw = request.POST.get('amount')
+        receipt = request.FILES.get('receipt')
+        try:
+            amount_val = float(amount_raw or 0)
+        except Exception:
+            amount_val = 0
+        if title and amount_val > 0:
+            ProjectExpense.objects.create(
+                project=project,
+                title=title,
+                reason=notes,
+                amount=amount_val,
+                receipt=receipt,
+                created_by=request.user,
+            )
+            # Recompute used_budget as sum of expenses
+            try:
+                from django.db.models import Sum
+                agg = ProjectExpense.objects.filter(project=project).aggregate(s=Sum('amount'))
+                project.used_budget = agg.get('s') or 0
+                project.save(update_fields=['used_budget'])
+            except Exception:
+                pass
+            return redirect(request.path)
+
+    # Expenses data with search and filter
+    expenses = ProjectExpense.objects.filter(project=project)
+    
+    # Search functionality
+    search_query = request.GET.get('search', '').strip()
+    if search_query:
+        from django.db.models import Q
+        expenses = expenses.filter(
+            Q(title__icontains=search_query) |
+            Q(reason__icontains=search_query)
+        )
+    
+    # Sorting functionality
+    sort_by = request.GET.get('sort_by', 'date')
+    order = request.GET.get('order', 'desc')
+    
+    # Map sort_by to actual field names
+    sort_field_map = {
+        'date': 'date_incurred',
+        'title': 'title',
+        'amount': 'amount',
+    }
+    
+    sort_field = sort_field_map.get(sort_by, 'date_incurred')
+    
+    # Apply ordering
+    if order == 'asc':
+        expenses = expenses.order_by(sort_field, 'created_at')
+    else:
+        expenses = expenses.order_by(f'-{sort_field}', '-created_at')
+    
+    return render(request, 'projects/project_invoices.html', {
+        'project': project, 
+        'base_template': base_template,
+        'expenses': expenses,
+        "ADMIN_ROLES": ADMIN_ROLES,
+        "SUPERUSER_ROLES": SUPERUSER_ROLES,
+        "FACULTY_ROLE": FACULTY_ROLE
+    })
+
+
+@project_visibility_required
 def project_evaluations(request, pk):
     ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE, COORDINATOR_ROLE = get_role_constants()
 
