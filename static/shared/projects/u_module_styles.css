@@ -620,19 +620,6 @@ textarea {
     resize: none;
 }
 
-input[type="text"],
-input[type="date"],
-input[type="time"],
-textarea,
-select {
-    flex: 1;
-    border-radius: 8px;
-    border: 1px solid #e5e7eb;
-    padding: 0.75rem;
-    font-size: 1rem;
-    font-family: 'Inter', sans-serif;
-}
-
 .event-modal {
     position: fixed;
     z-index: 9999;
@@ -700,27 +687,6 @@ select {
 .submit-btn:hover { background-color: #07532F; }
 .back-btn:hover { background-color: #D1D5DB; }
 textarea { resize: none; }
-
-input[type="text"], input[type="date"], input[type="time"], textarea, select {
-    padding: 0.75rem 1rem;
-    border: 1px solid #8a8a8a;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-family: 'Inter', sans-serif;
-    background: #f8f8f8;
-    transition: all 0.2s ease;
-    width: 100%;
-    min-width: 0; 
-    margin-bottom: 0;
-    box-sizing: border-box;
-} 
- 
-input:focus {
-    outline: none;
-    border-color: #0A6C44;
-    box-shadow: 0 0 0 3px rgba(10, 108, 68, 0.2);
-    background: #FFFFFF; 
-}
 
 .upload-area {
     flex: 1;

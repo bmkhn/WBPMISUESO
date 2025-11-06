@@ -137,7 +137,7 @@ def add_submission_requirement(request, project_id=None):
             })
         
         # Check if all events are completed (event_progress == estimated_events)
-        all_events_completed = (project.event_progress >= project.estimated_events) if project.estimated_events > 0 else False
+        all_events_completed = (project.event_progress == project.estimated_events) if project.estimated_events > 0 else False
         
         project_event_availability[project.id] = {
             'has_available_events': available_events.exists(),
@@ -177,6 +177,17 @@ def add_submission_requirement(request, project_id=None):
         project = Project.objects.get(id=project_id)
         for downloadable_id in downloadable_ids:
             downloadable = Downloadable.objects.get(id=downloadable_id)
+            
+            # SERVER-SIDE VALIDATION: Check if final submission is allowed
+            if downloadable.submission_type == 'final':
+                # Final submissions are only allowed when all events are completed
+                if project.estimated_events > 0 and project.event_progress != project.estimated_events:
+                    return render(request, 'submissions/add_submissions.html', {
+                        'projects': projects,
+                        'downloadables': downloadables,
+                        'project_event_availability_json': project_event_availability_json,
+                        'preselected_project': preselected_project,
+                    })
             
             # For event-type submissions, link to selected event
             event = None

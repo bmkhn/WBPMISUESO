@@ -219,6 +219,7 @@
             </div>
         </div>
 
+        {% if not is_college_restricted %}
         <div class="card" id="chart-client-requests"> 
             <div class="title-container">
                 <h4>Client Requests</h4> 
@@ -232,6 +233,7 @@
             </div>
             <canvas id="clientRequestsChart"></canvas>
         </div>
+        {% endif %}
     </div>
 </main>
 
@@ -860,7 +862,11 @@
             await fetchDataAndRenderChart('budgetMultiLineChart', ENDPOINTS.budget, budgetConfig);
             await fetchDataAndRenderChart('agendaDistributionChart', ENDPOINTS.agenda, agendaConfig);
             await fetchDataAndRenderChart('trainedChart', ENDPOINTS.trained, trainedIndividualsConfig);
+            
+            // Only load client requests chart if user has access (not college-restricted)
+            {% if not is_college_restricted %}
             await fetchDataAndRenderChart('clientRequestsChart', ENDPOINTS.requests, requestStatusConfig);
+            {% endif %}
         }
 
         window.refreshAnalyticsCharts = refreshCharts;

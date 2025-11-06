@@ -48,6 +48,16 @@ def parse_dates_from_request(request, default_days=300): # Added default_days
     
     return start_date, end_date, None # Return aware datetimes
 
+def get_user_college(request):
+    """
+    Helper function to determine if user should see only their college's data.
+    Returns college object if user role is PROGRAM_HEAD, DEAN, or COORDINATOR.
+    Returns None for VP, DIRECTOR, UESO (they see all data).
+    """
+    if hasattr(request.user, 'role') and request.user.role in ['PROGRAM_HEAD', 'DEAN', 'COORDINATOR']:
+        return request.user.college
+    return None
+
 # ==============================================================================
 # CARD METRIC VIEWS (Now use aware datetimes)
 # ==============================================================================
@@ -58,7 +68,8 @@ def projects_metric_api(request):
     if error_response: return error_response
     # --- MODIFIED: Added try/except block ---
     try:
-        data = services.get_total_projects_count(start_date, end_date)
+        user_college = get_user_college(request)
+        data = services.get_total_projects_count(start_date, end_date, college=user_college)
         return JsonResponse(data)
     except Exception as e:
         return JsonResponse({
@@ -72,7 +83,8 @@ def events_metric_api(request):
     if error_response: return error_response
     # --- MODIFIED: Added try/except block ---
     try:
-        data = services.get_total_events_count(start_date, end_date)
+        user_college = get_user_college(request)
+        data = services.get_total_events_count(start_date, end_date, college=user_college)
         return JsonResponse(data)
     except Exception as e:
         return JsonResponse({
@@ -86,7 +98,8 @@ def providers_metric_api(request):
     if error_response: return error_response
     # --- MODIFIED: Added try/except block ---
     try:
-        data = services.get_total_providers_count(start_date, end_date)
+        user_college = get_user_college(request)
+        data = services.get_total_providers_count(start_date, end_date, college=user_college)
         return JsonResponse(data)
     except Exception as e:
         return JsonResponse({
@@ -100,7 +113,8 @@ def individuals_metric_api(request):
     if error_response: return error_response
     # --- MODIFIED: Added try/except block ---
     try:
-        data = services.get_total_individuals_trained(start_date, end_date)
+        user_college = get_user_college(request)
+        data = services.get_total_individuals_trained(start_date, end_date, college=user_college)
         return JsonResponse(data)
     except Exception as e:
         return JsonResponse({
@@ -118,7 +132,8 @@ def active_projects_chart_api(request):
     if error_response: return error_response
     # --- MODIFIED: Added try/except block ---
     try:
-        data = services.get_active_projects_over_time(start_date, end_date) 
+        user_college = get_user_college(request)
+        data = services.get_active_projects_over_time(start_date, end_date, college=user_college) 
         return JsonResponse(data)
     except Exception as e:
         return JsonResponse({
@@ -132,8 +147,9 @@ def budget_allocation_chart_api(request):
     if error_response: return error_response
     # --- MODIFIED: Added try/except block ---
     try:
+        user_college = get_user_college(request)
         # This now calls the multi-series function in services.py
-        data = services.get_budget_allocation_data(start_date, end_date)
+        data = services.get_budget_allocation_data(start_date, end_date, college=user_college)
         return JsonResponse(data)
     except Exception as e:
         return JsonResponse({
@@ -147,7 +163,8 @@ def agenda_distribution_chart_api(request):
     if error_response: return error_response
     # --- MODIFIED: Added try/except block ---
     try:
-        data = services.get_agenda_distribution_data(start_date, end_date)
+        user_college = get_user_college(request)
+        data = services.get_agenda_distribution_data(start_date, end_date, college=user_college)
         return JsonResponse(data)
     except Exception as e:
         return JsonResponse({
@@ -161,7 +178,8 @@ def trained_individuals_chart_api(request):
     if error_response: return error_response
     # --- MODIFIED: Added try/except block ---
     try:
-        data = services.get_trained_individuals_data(start_date, end_date)
+        user_college = get_user_college(request)
+        data = services.get_trained_individuals_data(start_date, end_date, college=user_college)
         return JsonResponse(data)
     except Exception as e:
         return JsonResponse({
@@ -175,7 +193,8 @@ def request_status_chart_api(request):
     if error_response: return error_response
     # --- MODIFIED: Added try/except block ---
     try:
-        data = services.get_request_status_distribution(start_date, end_date)
+        user_college = get_user_college(request)
+        data = services.get_request_status_distribution(start_date, end_date, college=user_college)
         return JsonResponse(data)
     except Exception as e:
         return JsonResponse({
@@ -189,7 +208,8 @@ def project_trends_api(request):
     if error_response: return error_response
     # --- MODIFIED: Added try/except block ---
     try:
-        data = services.get_project_trends(start_date, end_date)
+        user_college = get_user_college(request)
+        data = services.get_project_trends(start_date, end_date, college=user_college)
         return JsonResponse(data)
     except Exception as e:
         return JsonResponse({

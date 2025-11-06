@@ -11,7 +11,42 @@ from shared.event_calendar import services
 from django.http import JsonResponse
 from django.db.models import Count
 from collections import OrderedDict
+from internal.goals.models import Goal 
+from internal.submissions.models import Submission
+from datetime import datetime, timedelta 
+from django.utils import timezone
 
+
+def number_to_words_mock(num):
+    if num == 100: return "ONE HUNDRED"
+    
+    words = [
+        "ZERO", "ONE", "TWO", "THREE", "FOUR", "FIVE",
+        "SIX", "SEVEN", "EIGHT", "NINE", "TEN",
+        "ELEVEN", "TWELVE", "THIRTEEN", "FOURTEEN", "FIFTEEN",
+        "SIXTEEN", "SEVENTEEN", "EIGHTEEN", "NINETEEN", "TWENTY"
+    ]
+    tens = ["", "", "TWENTY", "THIRTY", "FORTY", "FIFTY", "SIXTY", "SEVENTY", "EIGHTY", "NINETY"]
+
+    if num < 0 or num > 100: return str(num)
+    if num < 20: return words[num]
+
+    last_digit = num % 10
+    tens_digit = num // 10
+
+    return (tens[tens_digit] + (" " + words[last_digit] if last_digit != 0 else "")).strip()
+
+# HELPER FUNCTION (Retained from previous fix)
+def _count_matching_projects(goal: Goal) -> int:
+    """Counts the number of projects that satisfy the Goal's filters."""
+    qs = Project.objects.all()
+    if goal.agenda_id:
+        qs = qs.filter(agenda_id=goal.agenda_id)
+    if goal.sdg_id:
+        qs = qs.filter(sdgs=goal.sdg_id)
+    if goal.project_status:
+        qs = qs.filter(status=goal.project_status)
+    return qs.count()
 
 @role_required(allowed_roles=["VP", "DIRECTOR", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD"], require_confirmed=True)
 def dashboard_view(request):
@@ -36,7 +71,43 @@ def dashboard_view(request):
         count = all_projects.filter(agenda=agenda).count()
         if count > 0:
             agenda_counts[agenda.name] = count
-            
+    
+    
+    # --- GOALS DATA GENERATION (FINAL FIX WITH CAP) ---
+    goal_objects = Goal.objects.all() 
+    
+    dashboard_goals = []
+    
+    for goal in goal_objects:
+        
+        # Target value (Y/Denominator)
+        target_value = getattr(goal, 'target_value', 1)
+        display_target = target_value if target_value > 0 else 10 
+        
+        # Current value (Actual Count)
+        current_count = _count_matching_projects(goal)
+        
+        # 1. Calculate progress percentage (0-100)
+        progress = round((current_count / target_value) * 100) if target_value and target_value > 0 else 0
+        progress = min(progress, 100) # Cap percentage at 100%
+
+        # 2. Set current_qualifiers (Nominator)
+        # FIX: Visually cap the nominator at the target_value (denominator)
+        current_qualifiers = min(current_count, display_target)
+
+        dashboard_goals.append({
+            'id': goal.id,
+            'title': goal.title,
+            'progress': progress,
+            'current_qualifiers': current_qualifiers, # CAPPED VALUE FOR DISPLAY
+            'target_qualifiers': display_target,
+            'target_words': number_to_words_mock(display_target).upper()
+        })
+    
+    # 2. Sort the final list by the calculated 'progress' in Python (highest first)
+    dashboard_goals.sort(key=lambda g: (g['progress'] >= 100, -g['progress']))
+    # -----------------------------------------------------------------------
+           
     # --- MIN-CALENDAR DATA GENERATION ---
     # Fetch events data structure used by the calendar app
     events_by_date = services.get_events_by_date(request.user, for_main_calendar_view=False)
@@ -52,22 +123,12 @@ def dashboard_view(request):
         'events_in_calendar': events_in_calendar,
         'projects': projects,
         'agenda_distribution': agenda_counts,
-        'events_json': events_json, # ADDED: Event data for mini-calendar JS
+        'events_json': events_json,
+        'dashboard_goals': dashboard_goals,
     }
 
     return render(request, 'dashboard/dashboard.html', context)
     
-from internal.submissions.models import Submission
-from shared.projects.models import Project
-
-from django.http import JsonResponse
-from django.db.models import Count
-from collections import OrderedDict
-from internal.submissions.models import Submission
-from datetime import datetime, timedelta 
-from django.utils import timezone
-
-
 @role_required(allowed_roles=["VP", "DIRECTOR", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD"], require_confirmed=True)
 def get_submission_status_data(request):
     """
@@ -158,4 +219,3 @@ def get_project_status_data(request):
         'labels': labels,
         'counts': counts,
     })
-
