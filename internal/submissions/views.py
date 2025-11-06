@@ -238,3 +238,6 @@ def add_submission_requirement(request, project_id=None):
 
 def add_submission_view(request):
     return render(request, 'submissions/add_submissions.html')
+
+
+# Include this file just to be sure

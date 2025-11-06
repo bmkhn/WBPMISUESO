@@ -37,8 +37,8 @@
                     <svg width="24" height="24"><use href="#detail-icon"/></svg>
                     <span class="detail-tooltip">The user who submitted this request.</span>
                 </span>
-                <span class="detail-item">Request Submmited by</span>
-                <span class="detail-value">{{ request.user.get_full_name }}</span>
+                <span class="detail-item">Request Submitted by</span>
+                <span class="detail-value">{{ req.submitted_by.get_full_name }}</span>
             </div>
             <div class="detail-trio">
                 <span class="detail-icon">
