@@ -1241,7 +1241,15 @@ def admin_project(request):
     date_to = request.GET.get('date_to', '')
     search = request.GET.get('search', '')
 
-    projects = Project.objects.all()
+    if request.user.role in ADMIN_ROLES:
+        projects = Project.objects.all()
+    elif request.user.role in SUPERUSER_ROLES:
+        # For PROGRAM_HEAD, DEAN, COORDINATOR: limit to their college if applicable
+        user_college = getattr(request.user, 'college', None)
+        if user_college:
+            projects = Project.objects.filter(project_leader__college=user_college)
+        else:
+            projects = Project.objects.all()
 
     # Apply filters
     if college:

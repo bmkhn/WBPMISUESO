@@ -52,7 +52,23 @@ def meeting_event_list(request):
         
     elif request.method == "POST":
         try:
-            data = json.loads(request.body)
+            # Check if it's FormData (file upload) or JSON
+            if request.content_type and 'multipart/form-data' in request.content_type:
+                # FormData with file
+                data = {
+                    'title': request.POST.get('title', ''),
+                    'description': request.POST.get('description', ''),
+                    'date': request.POST.get('date', ''),
+                    'time': request.POST.get('time', ''),
+                    'location': request.POST.get('location', ''),
+                    'notes': request.POST.get('notes', ''),
+                    'participants': request.POST.getlist('participants[]', []),
+                    'notes_attachment': request.FILES.get('notes_attachment')
+                }
+            else:
+                # Regular JSON
+                data = json.loads(request.body)
+                
             meeting, errors = services.create_meeting_event(data, request.user)
             if errors:
                 return JsonResponse({"status": "error", "errors": errors.get("errors")}, status=400)
@@ -71,7 +87,24 @@ def meeting_event_detail(request, event_id):
             return JsonResponse({"status": "error", "errors": "Permission denied. Only the event creator can edit this meeting."}, status=403)
             
         try:
-            data = json.loads(request.body)
+            # Check if it's FormData (file upload) or JSON
+            if request.content_type and 'multipart/form-data' in request.content_type:
+                # FormData with file
+                data = {
+                    'title': request.POST.get('title', ''),
+                    'description': request.POST.get('description', ''),
+                    'date': request.POST.get('date', ''),
+                    'time': request.POST.get('time', ''),
+                    'location': request.POST.get('location', ''),
+                    'notes': request.POST.get('notes', ''),
+                    'participants': request.POST.getlist('participants[]', []),
+                    'notes_attachment': request.FILES.get('notes_attachment'),
+                    'remove_attachment': request.POST.get('remove_attachment') == 'true'
+                }
+            else:
+                # Regular JSON
+                data = json.loads(request.body)
+                
             event, errors = services.update_meeting_event(event, data, request.user)
             if errors:
                 status_code = 403 if errors.get("errors") == "Permission denied." else 400

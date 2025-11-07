@@ -9,6 +9,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 <link href="{% static 'templates/top_style.css' %}" rel="stylesheet">
+<link href="{% static 'templates/topbar.css' %}" rel="stylesheet">
+
 </head>
 
 
@@ -33,26 +35,21 @@
 				<a href="{% url 'about_us_dispatcher' %}" class="nav-button {% if '/about-us/' in request.path %}active{% endif %}">About Us</a>
 			</div>
 			
-			<div class="logo-circle" id="profilePicContainer" style="position:relative;">
-				<img src="{{ request.user.profile_picture_or_initial }}" alt="Profile Picture" class="logo-circle" id="profilePic" style="object-fit: cover; cursor:pointer;">
-				
-				<!-- Notification Badge on Profile Picture -->
+			<!-- Notifications Bell Icon -->
+			<div class="topbar-icon-btn {% if '/notifications/' in request.path %}active{% endif %}" onclick="window.location.href='{% url 'notifications' %}'" title="Notifications">
+				<svg width="24" height="30"><use href="#icon-topbar-notification"/></svg>
 				{% if unread_notifications_count > 0 %}
-				<span id="profileNotificationBadge" style="position:absolute;top:-5px;right:-5px;background:#FF3300;color:white;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:bold;border:2px solid white;box-shadow:0 2px 4px rgba(0,0,0,0.2);z-index:100;">
+				<span style="position:absolute;top:-5px;right:-5px;background:#FF3300;color:white;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:bold;border:2px solid white;box-shadow:0 2px 4px rgba(0,0,0,0.2);">
 					{{ unread_notifications_count }}
 				</span>
 				{% endif %}
+			</div>
+			
+			<div class="logo-circle" id="profilePicContainer" style="position:relative;">
+				<img src="{{ request.user.profile_picture_or_initial }}" alt="Profile Picture" class="logo-circle" id="profilePic" style="object-fit: cover; cursor:pointer;">
 				
 				<div id="profileModal">
 					<a href="{% url 'profile' %}">Profile</a>
-					<a href="{% url 'notifications' %}" style="display:flex;justify-content:space-between;align-items:center;">
-						<span>Notifications</span>
-						{% if unread_notifications_count > 0 %}
-						<span style="background:#FF3300;color:white;border-radius:12px;padding:2px 8px;font-size:11px;font-weight:bold;margin-left:10px;">
-							{{ unread_notifications_count }}
-						</span>
-						{% endif %}
-					</a>
 					<a href="/settings/">Settings</a>
 					<a href="{% url 'logout' %}" style="color:#E53E3E;">Log Out</a>
 				</div>
@@ -147,5 +144,12 @@
 		});
 	});
 </script>
+
+<!-- SVG Sprite -->
+<svg style="display:none;">
+	<symbol id="icon-topbar-notification" viewBox="0 0 24 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+		<path d="M0.759766 25.3609V22.4809H3.63977V12.4009C3.63977 10.4089 4.23977 8.64486 5.43977 7.10886C6.63977 5.54886 8.19977 4.52886 10.1198 4.04886V3.04086C10.1198 2.44086 10.3238 1.93686 10.7318 1.52886C11.1638 1.09686 11.6798 0.880859 12.2798 0.880859C12.8798 0.880859 13.3838 1.09686 13.7918 1.52886C14.2238 1.93686 14.4398 2.44086 14.4398 3.04086V4.04886C16.3598 4.52886 17.9198 5.54886 19.1198 7.10886C20.3198 8.64486 20.9198 10.4089 20.9198 12.4009V22.4809H23.7998V25.3609H0.759766ZM12.2798 29.6809C11.4878 29.6809 10.8038 29.4049 10.2278 28.8529C9.67577 28.2769 9.39977 27.5929 9.39977 26.8009H15.1598C15.1598 27.5929 14.8718 28.2769 14.2958 28.8529C13.7438 29.4049 13.0718 29.6809 12.2798 29.6809ZM6.51977 22.4809H18.0398V12.4009C18.0398 10.8169 17.4758 9.46086 16.3478 8.33286C15.2198 7.20486 13.8638 6.64086 12.2798 6.64086C10.6958 6.64086 9.33977 7.20486 8.21177 8.33286C7.08377 9.46086 6.51977 10.8169 6.51977 12.4009V22.4809Z" fill="#1D1B20"/>
+	</symbol>
+</svg>
 
 </html>

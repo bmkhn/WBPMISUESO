@@ -1,0 +1,37 @@
+.topbar-icon-btn {
+    position: relative;
+    margin-right: 1rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+}
+
+.topbar-icon-btn:hover {
+    background-color: #F5F5F5;
+}
+
+.topbar-icon-btn.active {
+    background-color: #E8F5E9;
+}
+
+.topbar-icon-btn svg {
+    fill: #1D1B20;
+    transition: fill 0.2s ease;
+}
+
+.topbar-icon-btn svg path {
+    stroke: #1D1B20;
+    transition: stroke 0.2s ease;
+}
+
+.topbar-icon-btn:hover svg path {
+    stroke: #185235;
+}
+
+.topbar-icon-btn.active svg path {
+    stroke: #185235;
+}
