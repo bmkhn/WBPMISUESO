@@ -3,7 +3,12 @@ from django.db import models
 from django.conf import settings
 from internal.agenda.models import Agenda
 from django.utils import timezone
-
+from django.db.models.signals import post_save, post_delete, m2m_changed
+from django.dispatch import receiver
+from django.db.models import Sum
+from decimal import Decimal
+from django.urls import reverse
+from system.logs.models import LogEntry
 
 
 class SustainableDevelopmentGoal(models.Model):
@@ -243,11 +248,7 @@ class Project(models.Model):
 
 
 # Log creation and update actions for Project
-from django.db.models.signals import post_save, m2m_changed
-from django.dispatch import receiver
-from django.urls import reverse
-from system.logs.models import LogEntry
-
+# NOTE: Imports moved to top for organization
 @receiver(post_save, sender=Project)
 def log_project_action(sender, instance, created, **kwargs):
 	user = instance.updated_by or instance.created_by or None
@@ -347,6 +348,38 @@ class ProjectExpense(models.Model):
     def __str__(self):
         return f"{self.title} for {self.project.title} - ₱{self.amount}"
 
+# --- SIGNAL HANDLERS for Project Budget Update ---
+
+def update_project_used_budget(project_id):
+    """
+    Recalculates and updates the total used_budget for a given project.
+    """
+    # Import Project locally to avoid potential circular dependency issues
+    from .models import Project 
+    try:
+        project = Project.objects.get(id=project_id)
+        # Recalculate the sum of all related expenses. 
+        total_used = project.expenses.aggregate(Sum('amount'))['amount__sum'] or Decimal('0')
+        
+        if project.used_budget != total_used:
+            project.used_budget = total_used
+            # Manually set updated_at and include it in update_fields to avoid infinite signal loops 
+            # and ensure the auto_now field is updated.
+            project.updated_at = timezone.now()
+            project.save(update_fields=['used_budget', 'updated_at']) 
+    except Project.DoesNotExist:
+        pass
+
+@receiver(post_save, sender=ProjectExpense)
+def handle_project_expense_save(sender, instance, **kwargs):
+    """Update Project.used_budget when an expense is created or updated."""
+    update_project_used_budget(instance.project_id)
+
+@receiver(post_delete, sender=ProjectExpense)
+def handle_project_expense_delete(sender, instance, **kwargs):
+    """Update Project.used_budget when an expense is deleted."""
+    update_project_used_budget(instance.project.id)
+
 #############################################################################################################################################################################################################
 
 
@@ -439,6 +472,26 @@ class ProjectEvent(models.Model):
 #############################################################################################################################################################################################################
 
 
+class ProjectExpenses(models.Model):
+	project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='legacy_expenses')
+	reason = models.CharField(max_length=255)
+	amount = models.DecimalField(max_digits=12, decimal_places=2)
+	description = models.CharField(max_length=255)
+	expense_date = models.DateField()
+	receipt_img = models.ImageField(upload_to='project_expense_receipts/', blank=True, null=True)
+	created_at = models.DateTimeField(auto_now_add=True)
+	created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='created_project_expenses')
+
+	class Meta:
+		indexes = [
+			# Project expense tracking
+			models.Index(fields=['project', '-expense_date'], name='proj_exp_proj_date_idx'),
+			# Date-based filtering
+			models.Index(fields=['-expense_date'], name='proj_exp_date_idx'),
+		 ]
+
+	def __str__(self):
+		return f"Expense of {self.amount} for {self.project.title} on {self.expense_date}"
 
 
 #############################################################################################################################################################################################################
@@ -463,9 +516,7 @@ class ProjectUpdate(models.Model):
 
 
 # Signal handlers
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-
+# NOTE: Imports are at the top
 @receiver(post_save, sender=Project)
 def create_project_alerts(sender, instance, created, **kwargs):
     """Create project alerts when project status changes"""
