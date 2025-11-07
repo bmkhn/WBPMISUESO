@@ -362,9 +362,7 @@
         const editEndDateInput = document.getElementById('edit_project_end_date');
         
         if (editStartDateInput && editEndDateInput) {
-            // Set minimum start date to today
-            const today = new Date().toISOString().split('T')[0];
-            editStartDateInput.setAttribute('min', today);
+            // No minimum date restriction for start_date since project may have already started
             
             // Update end date minimum when start date changes
             editStartDateInput.addEventListener('change', function() {
@@ -388,14 +386,6 @@
                 editForm.addEventListener('submit', function(e) {
                     const startDate = new Date(editStartDateInput.value);
                     const endDate = new Date(editEndDateInput.value);
-                    const todayDate = new Date(today);
-                    
-                    if (startDate < todayDate) {
-                        e.preventDefault();
-                        alert('Start date cannot be in the past.');
-                        editStartDateInput.focus();
-                        return false;
-                    }
                     
                     if (endDate <= startDate) {
                         e.preventDefault();

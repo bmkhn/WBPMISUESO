@@ -243,28 +243,37 @@ def project_events(request, pk):
     event_to_edit = None
     if request.method == 'POST':
         if request.POST.get('add_event'):
-            # Add Event button: create new ProjectEvent and increment estimated_events
+            # Add Activity: create new ProjectEvent with modal data (does NOT change estimated_events)
             from .models import ProjectEvent
             # timezone is imported at the top
             now = timezone.now()
-            new_event = ProjectEvent.objects.create(
+            
+            # Get data from modal form (note: modal uses 'add_event_' prefix for field names)
+            title = request.POST.get('add_event_title', f"Event {project.events.count() + 1}")
+            description = request.POST.get('add_event_description', '')  # Optional description field
+            datetime_str = request.POST.get('add_event_datetime', None)
+            location = request.POST.get('add_event_location', '')
+            
+            # Determine if this is a placeholder based on whether datetime and location are provided
+            is_placeholder = not (datetime_str and location)
+            
+            ProjectEvent.objects.create(
                 project=project,
-                title=f"Event {project.events.count() + 1}",
-                description="Description Here",
-                datetime=None,
-                location="",
+                title=title,
+                description=description,
+                datetime=datetime_str if datetime_str else None,
+                location=location,
                 created_at=now,
                 created_by=request.user,
                 updated_at=now,
                 updated_by=request.user,
                 image=None,
-                placeholder=True
+                placeholder=is_placeholder
             )
-            project.estimated_events += 1
-            project.save(update_fields=["estimated_events"])
+            # Do NOT increment estimated_events - it's set separately and represents planned activities
             return redirect(request.path)
         elif request.POST.get('delete_event_id'):
-            # Delete event: remove ProjectEvent and decrement estimated_events
+            # Delete event: remove ProjectEvent (does NOT change estimated_events)
             event_id = request.POST.get('delete_event_id')
             from .models import ProjectEvent
             from internal.submissions.models import Submission
@@ -293,11 +302,9 @@ def project_events(request, pk):
                 
                 # Delete the event itself
                 event_to_delete.delete()
-                if project.estimated_events > 0:
-                    project.estimated_events -= 1
-                    project.save(update_fields=["estimated_events", "event_progress", "total_trained_individuals"])
-                else:
-                    project.save(update_fields=["event_progress", "total_trained_individuals"])
+                
+                # Do NOT decrement estimated_events - it represents planned activities, not actual count
+                project.save(update_fields=["event_progress", "total_trained_individuals"])
                     
             except ProjectEvent.DoesNotExist:
                 pass
@@ -605,8 +612,8 @@ def project_submissions_details(request, pk, submission_id):
         # timezone is imported at the top
         action = request.POST.get('action')
         
-        # Handle Submission Upload
-        if action == "submit" and (submission.status == "PENDING" or submission.status == "REVISION_REQUESTED"):
+        # Handle Submission Upload (allow PENDING, REVISION_REQUESTED, REJECTED, and OVERDUE)
+        if action == "submit" and submission.status in ["PENDING", "REVISION_REQUESTED", "REJECTED", "OVERDUE"]:
             sub_type = submission.downloadable.submission_type
 
             if sub_type == "final":
@@ -636,11 +643,16 @@ def project_submissions_details(request, pk, submission_id):
             else:  # "file"
                 submission.file = request.FILES.get("file_file")
 
+            # Check if submission is late
+            now = timezone.now()
+            if submission.deadline and now > submission.deadline:
+                submission.is_late_submission = True
+            
             submission.status = "SUBMITTED"
-            submission.submitted_at = timezone.now()
+            submission.submitted_at = now
             submission.submitted_by = request.user
             submission.updated_by = request.user
-            submission.updated_at = timezone.now()
+            submission.updated_at = now
             submission.save()
 
             from urllib.parse import quote
@@ -715,6 +727,7 @@ def admin_submission_action(request, pk, submission_id):
                 submission.reason_for_revision = request.POST.get('reason', '')
                 submission.updated_by = request.user
                 submission.updated_at = timezone.now()
+                submission.revision_count += 1
                 submission.save()
         # New: Allow UESO/DIRECTOR/VP to approve directly from SUBMITTED if project leader has no college
         # BUT only if they are NOT involved in the project (not leader or provider)
@@ -741,6 +754,7 @@ def admin_submission_action(request, pk, submission_id):
                     submission.reason_for_revision = request.POST.get('reason', '')
                     submission.updated_by = request.user
                     submission.updated_at = timezone.now()
+                    submission.revision_count += 1
                     submission.save()
         elif submission.status == 'FORWARDED' and request.user.role in ["VP", "DIRECTOR", "UESO"]:
             # Check if admin is NOT involved in the project
@@ -763,6 +777,7 @@ def admin_submission_action(request, pk, submission_id):
                     submission.reason_for_rejection = request.POST.get('reason', '')
                     submission.updated_by = request.user
                     submission.updated_at = timezone.now()
+                    submission.rejection_count += 1
                     submission.save()
                 
         # Create or update ProjectUpdate for key status changes that affect the project team
@@ -894,6 +909,91 @@ def project_expenses(request, pk):
         'expenses': expenses,
         'remaining_total': remaining_total,
         'percent_remaining': percent_remaining,
+        "ADMIN_ROLES": ADMIN_ROLES,
+        "SUPERUSER_ROLES": SUPERUSER_ROLES,
+        "FACULTY_ROLE": FACULTY_ROLE
+    })
+
+
+@project_visibility_required
+def project_invoices(request, pk):
+    """View for displaying receipt files (invoices)"""
+    from django.contrib import messages
+    
+    ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE, COORDINATOR_ROLE = get_role_constants()
+
+    user_role = getattr(request.user, 'role', None)
+    if user_role in ["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
+        base_template = "base_internal.html"
+    else:
+        base_template = "base_public.html"
+
+    project = get_object_or_404(Project, pk=pk)
+
+    # Handle expense creation (same logic as project_expenses)
+    if request.method == 'POST' and request.user.is_authenticated:
+        title = request.POST.get('reason') or request.POST.get('title')
+        notes = request.POST.get('notes')
+        amount_raw = request.POST.get('amount')
+        receipt = request.FILES.get('receipt')
+        try:
+            amount_val = float(amount_raw or 0)
+        except Exception:
+            amount_val = 0
+        if title and amount_val > 0:
+            ProjectExpense.objects.create(
+                project=project,
+                title=title,
+                reason=notes,
+                amount=amount_val,
+                receipt=receipt,
+                created_by=request.user,
+            )
+            # Recompute used_budget as sum of expenses
+            try:
+                from django.db.models import Sum
+                agg = ProjectExpense.objects.filter(project=project).aggregate(s=Sum('amount'))
+                project.used_budget = agg.get('s') or 0
+                project.save(update_fields=['used_budget'])
+            except Exception:
+                pass
+            return redirect(request.path)
+
+    # Expenses data with search and filter
+    expenses = ProjectExpense.objects.filter(project=project)
+    
+    # Search functionality
+    search_query = request.GET.get('search', '').strip()
+    if search_query:
+        from django.db.models import Q
+        expenses = expenses.filter(
+            Q(title__icontains=search_query) |
+            Q(reason__icontains=search_query)
+        )
+    
+    # Sorting functionality
+    sort_by = request.GET.get('sort_by', 'date')
+    order = request.GET.get('order', 'desc')
+    
+    # Map sort_by to actual field names
+    sort_field_map = {
+        'date': 'date_incurred',
+        'title': 'title',
+        'amount': 'amount',
+    }
+    
+    sort_field = sort_field_map.get(sort_by, 'date_incurred')
+    
+    # Apply ordering
+    if order == 'asc':
+        expenses = expenses.order_by(sort_field, 'created_at')
+    else:
+        expenses = expenses.order_by(f'-{sort_field}', '-created_at')
+    
+    return render(request, 'projects/project_invoices.html', {
+        'project': project, 
+        'base_template': base_template,
+        'expenses': expenses,
         "ADMIN_ROLES": ADMIN_ROLES,
         "SUPERUSER_ROLES": SUPERUSER_ROLES,
         "FACULTY_ROLE": FACULTY_ROLE

@@ -76,15 +76,6 @@
                         </div>
                     {% endif %}
                 {% endwith %}
-                {% if request.user.is_authenticated %}
-                    {% if '/expenses/' in request.path %}
-                        {% if request.user.role in SUPERUSER_ROLES or request.user.role in ADMIN_ROLES or request.user.role in FACULTY_ROLE %}
-                        <div style="position:absolute; right:0; top:50%; transform: translateY(-50%);">
-                            <button type="button" id="openExpense" style="color:#fff; background:#245F3E; padding:0.6rem 1rem; font-size:0.95rem; font-weight:500; border-radius:0.6rem; border:none; cursor:pointer;">Add Expense</button>
-                        </div>
-                        {% endif %}
-                    {% endif %}
-                {% endif %}
             </div>
             <script>
                 document.addEventListener('DOMContentLoaded', function() {
@@ -116,6 +107,7 @@
                 <button type="button" data-tab="evaluations" class="{% if '/evaluations/' in request.path %}active{% endif %}">Evaluations</button>
                 {% if request.user.role in SUPERUSER_ROLES or request.user.role in ADMIN_ROLES or request.user.role in FACULTY_ROLE %}
                     <button type="button" data-tab="expenses" class="{% if '/expenses/' in request.path %}active{% endif %}">Expenses</button>
+                    <button type="button" data-tab="invoices" class="{% if '/invoices/' in request.path %}active{% endif %}">Invoices</button>
                 {% endif %}
             </div>
         </div> 
@@ -158,7 +150,8 @@
             files: `/projects/${pk}/files/`,
             submission: `/projects/${pk}/submission/`,
             evaluations: `/projects/${pk}/evaluations/`,
-            expenses: `/projects/${pk}/expenses/`
+            expenses: `/projects/${pk}/expenses/`,
+            invoices: `/projects/${pk}/invoices/`
         };
         tabButtons.forEach(btn => {
             btn.addEventListener('click', function() {

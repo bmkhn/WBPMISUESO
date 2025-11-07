@@ -60,9 +60,9 @@
 
 		<!-- Bottom Container -->
 		<div class="bottom-container">
-			<a href="/projects/" class="bottom-nav-button {% if '/projects/' in request.path %}active{% endif %}">Projects</a>
+			<a href="/projects/" class="bottom-nav-button {% if '/projects/' in request.path and '/expenses/' not in request.path and '/invoices/' not in request.path %}active{% endif %}">Projects</a>
 			<a href="{% url 'calendar' %}" class="bottom-nav-button {% if '/calendar/' in request.path %}active{% endif %}">Calendar</a>
-			<a href="/budget/" class="bottom-nav-button {% if '/budget/' in request.path %}active{% endif %}">Budget</a>
+			<a href="/budget/" class="bottom-nav-button {% if '/budget/' in request.path or '/expenses/' in request.path or '/invoices/' in request.path %}active{% endif %}">Budget</a>
 		</div>
 
 	</div>

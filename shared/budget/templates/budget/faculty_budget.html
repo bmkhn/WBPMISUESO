@@ -232,17 +232,53 @@
         <!-- First row: Projects (left) and Logs (right) -->
         <div class="row-grid">
             <section class="box">
+                <!-- Search Bar & Filter -->
+                <div class="search-container" style="margin:0 0 1.25rem 0;">
+                    <form class="search-bar" method="get" action="" style="background:#fff; border-radius:0.5rem; padding:0.75rem 1rem; display:flex; align-items:center; gap:0.75rem; box-shadow:0 1px 3px rgba(0,0,0,0.1); position:relative;">
+                        <svg width="16" height="16"> <use href="#icon-search"></use> </svg>
+                        <input type="text" name="search" placeholder="Search Project Title" value="{{ request.GET.search|default:'' }}" style="flex:1; border:none; outline:none; font-size:0.95rem;"/>
+                        <button type="button" id="filterBtn" style="background:none;border:none;padding:0.5rem;margin-right:5px;cursor:pointer;position:relative;">
+                            <svg width="16" height="16"> <use href="#icon-filter"></use> </svg>
+                        </button>
+                        
+                        <div id="filterDropdown" class="filter-dropdown" style="display:none; position:absolute; right:1rem; top:calc(100% + 0.5rem); background:#fff; border:1px solid #e5e7eb; border-radius:0.5rem; padding:1.5rem; box-shadow:0 4px 12px rgba(0,0,0,0.15); z-index:100; min-width:400px;">
+                            <div class="filter-grid" style="display:grid; grid-template-columns:repeat(2,1fr); gap:1rem;">
+                                <label style="font-weight:500;color:#374151;display:flex;flex-direction:column;">
+                                    Sort By
+                                    <select name="sort_by" style="width:100%;margin-top:6px; padding:0.5rem; border:1px solid #e5e7eb; border-radius:0.375rem;">
+                                        <option value="title" {% if request.GET.sort_by == 'title' %}selected{% endif %}>Title</option>
+                                        <option value="last_updated" {% if request.GET.sort_by == 'last_updated' %}selected{% endif %}>Last Updated</option>
+                                        <option value="budget_remaining" {% if request.GET.sort_by == 'budget_remaining' %}selected{% endif %}>Budget Remaining (Amount)</option>
+                                        <option value="budget_percentage" {% if request.GET.sort_by == 'budget_percentage' %}selected{% endif %}>Budget Remaining (%)</option>
+                                    </select>
+                                </label>
+                                <label style="font-weight:500;color:#374151;display:flex;flex-direction:column;">
+                                    Order
+                                    <select name="order" style="width:100%;margin-top:6px; padding:0.5rem; border:1px solid #e5e7eb; border-radius:0.375rem;">
+                                        <option value="desc" {% if request.GET.order == 'desc' %}selected{% endif %}>Descending</option>
+                                        <option value="asc" {% if request.GET.order == 'asc' %}selected{% endif %}>Ascending</option>
+                                    </select>
+                                </label>
+                            </div>
+                            <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:1.5rem;">
+                                <button type="submit" style="background:#245F3E;color:#fff;border:none;border-radius:0.375rem;padding:0.5rem 1rem;cursor:pointer;font-weight:500;">Apply</button>
+                                <button type="button" id="closeFilter" style="background:#6b7280;color:#fff;border:none;border-radius:0.375rem;padding:0.5rem 1rem;cursor:pointer;font-weight:500;">Clear Filters</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
-                    <h2 style="margin:0; font-size:1.2rem;">Projects</h2>
+                    <h2 style="margin:0; font-weight:500; font-size:1.35rem; color:#000; font-family:'Inter',Arial,sans-serif; letter-spacing:normal;">Project Budget</h2>
                     <div style="display:flex; gap:0.5rem;">
-                        <button id="cardViewBtn" style="border:1px solid #ddd; background:#000; color:#fff; border-radius:0.5rem; width:2.25rem; height:2.25rem; display:flex; align-items:center; justify-content:center;"><i class="ri-apps-2-line"></i></button>
-                        <button id="listViewBtn" style="border:1px solid #ddd; background:#fff; color:#000; border-radius:0.5rem; width:2.25rem; height:2.25rem; display:flex; align-items:center; justify-content:center;"><i class="ri-list-unordered"></i></button>
+                        <button id="cardViewBtn" style="border:1px solid #ddd; background:#000; color:#fff; border-radius:0.5rem; width:2.25rem; height:2.25rem; display:flex; align-items:center; justify-content:center; cursor:pointer;"><i class="ri-apps-2-line"></i></button>
+                        <button id="listViewBtn" style="border:1px solid #ddd; background:#fff; color:#000; border-radius:0.5rem; width:2.25rem; height:2.25rem; display:flex; align-items:center; justify-content:center; cursor:pointer;"><i class="ri-list-unordered"></i></button>
                     </div>
                 </div>
                 {% if projects_overview %}
                 <div id="projectsCardView" class="projects-grid">
                     {% for p in projects_overview %}
-                    <a href="{% url 'expenses:project' p.id %}" class="proj-card" data-card-item>
+                    <a href="{% url 'project_expenses' p.id %}" class="proj-card" data-card-item>
                         {% if p.last_updated %}<p class="meta">Last updated {{ p.last_updated|date:"F j, Y" }}</p>{% endif %}
                         <h3 class="proj-title" style="text-align:center">{{ p.title }}</h3>
                         <div class="proj-status">
@@ -269,7 +305,7 @@
                                 <td style="padding:0.6rem;">{{ p.title }}</td>
                                 <td style="padding:0.6rem;">{% if p.last_updated %}{{ p.last_updated|date:"M d, Y" }}{% else %}-{% endif %}</td>
                                 <td style="padding:0.6rem;">{{ p.percent_remaining }}%</td>
-                                <td style="padding:0.6rem;"><a href="{% url 'expenses:project' p.id %}">Open</a></td>
+                                <td style="padding:0.6rem;"><a href="{% url 'project_expenses' p.id %}">Open</a></td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -288,7 +324,7 @@
                     {% for e in recent_expenses %}
                     <div class="log-item">
                         <strong>₱{{ e.amount|floatformat:2 }}</strong> has been accounted for
-                        <a href="{% url 'faculty_project_budget' e.project_id %}">{{ e.project.title }}</a>
+                        <a href="{% url 'project_expenses' e.project_id %}">{{ e.project.title }}</a>
                         <small>{{ e.submitted_at|date:"h:i A. F d, Y" }}</small>
                     </div>
                     {% endfor %}
@@ -938,7 +974,40 @@
                 initCardPagination();
             }
         }
+
+        // Filter dropdown logic
+        const filterBtn = document.getElementById('filterBtn');
+        const filterDropdown = document.getElementById('filterDropdown');
+        const closeFilter = document.getElementById('closeFilter');
+        if (filterBtn && filterDropdown) {
+            filterBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                filterDropdown.style.display = filterDropdown.style.display === 'block' ? 'none' : 'block';
+            });
+        }
+        if (closeFilter) {
+            closeFilter.addEventListener('click', function(e) {
+                e.preventDefault();
+                window.location.href = window.location.pathname;
+            });
+        }
+        document.addEventListener('mousedown', function(e) {
+            if (filterDropdown && !filterDropdown.contains(e.target) && e.target !== filterBtn) {
+                filterDropdown.style.display = 'none';
+            }
+        });
     </script>
+
+    <!-- SVG Icons -->
+    <svg style="display: none;">
+        <symbol id="icon-search" viewBox="0 0 21 21" fill="none">
+            <path d="M8.89152 15.9057C9.75056 15.9057 10.6012 15.7365 11.3948 15.4077C12.1885 15.079 12.9096 14.5972 13.5171 13.9897C14.1245 13.3823 14.6064 12.6612 14.9351 11.8675C15.2638 11.0739 15.433 10.2232 15.433 9.36417C15.433 8.50513 15.2638 7.6545 14.9351 6.86084C14.6064 6.06719 14.1245 5.34606 13.5171 4.73862C12.9096 4.13119 12.1885 3.64934 11.3948 3.3206C10.6012 2.99186 9.75056 2.82266 8.89152 2.82266C7.1566 2.82266 5.49274 3.51185 4.26597 4.73862C3.03919 5.9654 2.35 7.62926 2.35 9.36417C2.35 11.0991 3.03919 12.763 4.26597 13.9897C5.49274 15.2165 7.1566 15.9057 8.89152 15.9057V15.9057ZM15.7819 14.713L19.685 18.6161C19.7891 18.7167 19.872 18.8371 19.9291 18.9701C19.9861 19.1032 20.0161 19.2463 20.0173 19.391C20.0184 19.5358 19.9907 19.6793 19.9358 19.8133C19.8809 19.9472 19.7999 20.0689 19.6974 20.1712C19.595 20.2735 19.4732 20.3544 19.3392 20.4091C19.2052 20.4638 19.0616 20.4913 18.9168 20.4899C18.772 20.4886 18.629 20.4584 18.496 20.4012C18.3631 20.3439 18.2428 20.2608 18.1423 20.1566L14.2392 16.2535C12.4866 17.614 10.2814 18.2554 8.07247 18.0472C5.86357 17.839 3.81705 16.7968 2.34951 15.1328C0.881971 13.4688 0.103735 11.308 0.173229 9.09044C0.242723 6.87284 1.15472 4.76508 2.72357 3.19623C4.29242 1.62738 6.40018 0.715379 8.61778 0.645885C10.8354 0.576391 12.9961 1.35463 14.6601 2.82217C16.3241 4.28971 17.3663 6.33623 17.5745 8.54513C17.7827 10.754 17.1413 12.9592 15.7808 14.7119L15.7819 14.713Z" fill="#5A5252"/>
+        </symbol>
+        <symbol id="icon-filter" viewBox="0 0 23 22" fill="none">
+            <path opacity="0.9" d="M21.5399 1.92871H1.37988L9.44388 11.4644V18.0567L13.4759 20.0727V11.4644L21.5399 1.92871Z" stroke="#1E1E1E" stroke-width="2.016" stroke-linecap="round" stroke-linejoin="round"/>
+        </symbol>
+    </svg>
 </div>
 </body>
 

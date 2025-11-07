@@ -6,7 +6,7 @@
 <link href="{% static 'shared/projects/view.css' %}" rel="stylesheet">
 
 <style>
-    .project-grid{display:grid;grid-template-columns:1fr 1.3fr;gap:1rem}
+    .project-grid{display:grid;grid-template-columns:1fr 1.3fr;gap:1rem;margin-top:2rem}
     .chart-container{width:100%;height:260px}
     .expense-card{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,0.04);width:100%;font-size:.9rem}
     .expense-header,.expense-row{display:grid;grid-template-columns:minmax(240px,1fr) 150px 170px;column-gap:10px;align-items:center}
@@ -16,14 +16,6 @@
     .expense-reason{word-break:break-word;white-space:normal}
     .expense-amount,.expense-date{text-align:right;white-space:nowrap}
     .expense-empty{padding:1rem;color:#6b7280}
-    .files-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1rem}
-    .file-card{background:#fff;border:1px solid #e5e7eb;border-radius:.75rem;padding:.75rem;box-shadow:0 1px 2px rgba(0,0,0,0.05);display:flex;flex-direction:column;gap:.5rem}
-    .file-thumb{height:120px;display:flex;align-items:center;justify-content:center;background:#f9fafb;border:1px dashed #e5e7eb;border-radius:.5rem;overflow:hidden}
-    .tabs-inline{display:flex;gap:.5rem;border-bottom:1px solid #ddd;margin:1rem 0}
-    .tab-btn{background:none;border:none;padding:.75rem 1rem;cursor:pointer;border-bottom:3px solid transparent;font-size:.95rem}
-    .tab-btn.active{border-bottom-color:#245F3E;color:#245F3E;font-weight:500}
-    .tab-content{display:none}
-    .tab-content.active{display:block}
     .donut-wrap{display:flex;flex-direction:column;align-items:center;gap:.5rem}
     .cash-available{font-size:1.05rem}
     
@@ -43,44 +35,44 @@
     /* -------------------------------------- */
 </style>
 
-<div class="tabs-inline">
-    <button type="button" class="tab-btn active" data-tab="overview">Invoices</button>
-    <button type="button" class="tab-btn" data-tab="files">Files</button>
-  </div>
+<div class="card-header">
+    <h3>Expenses</h3>
+    {% if request.user.role in ADMIN_ROLES or request.user == project.project_leader or request.user in project.providers.all %}
+      <button type="button" id="openExpense" class="admin-button edit">Add Expense</button>
+    {% endif %}
+</div>
 
-<div id="overview" class="tab-content active">
-  <div class="project-grid">
-    <section>
-      <div class="donut-wrap">
-        <div class="chart-container" style="width:16rem;height:16rem">
-          <canvas id="expenseDonut" width="256" height="256" data-percentage="{{ percent_remaining|default:0 }}"></canvas>
-        </div>
-        {% if remaining_total is not None %}
-          <div class="cash-available">Current Budget: <strong>₱ {{ remaining_total|floatformat:2|intcomma }}</strong></div>
-        {% endif %}
+<div class="project-grid">
+  <section>
+    <div class="donut-wrap">
+      <div class="chart-container" style="width:16rem;height:16rem">
+        <canvas id="expenseDonut" width="256" height="256" data-percentage="{{ percent_remaining|default:0 }}"></canvas>
       </div>
-    </section>
-    <section>
-      <div class="expense-card">
-        <div class="expense-header">
-          <div>Reason</div>
-          <div class="expense-amount">Amount</div>
-          <div class="expense-date">Date</div>
-        </div>
-        <div class="expense-body" id="expensesBody">
-          {% for expense in expenses %}
-            <div class="expense-row">
-              <div class="expense-reason">{{ expense.title|default:expense.reason }}</div>
-              <div class="expense-amount">₱ {{ expense.amount|floatformat:2|intcomma }}</div>
-              <div class="expense-date">{{ expense.date_incurred|date:"m/d/Y" }}</div>
-            </div>
-          {% empty %}
-            <div class="expense-empty">No expenses recorded yet.</div>
-          {% endfor %}
-        </div>
+      {% if remaining_total is not None %}
+        <div class="cash-available">Current Budget: <strong>₱ {{ remaining_total|floatformat:2|intcomma }}</strong></div>
+      {% endif %}
+    </div>
+  </section>
+  <section>
+    <div class="expense-card">
+      <div class="expense-header">
+        <div>Reason</div>
+        <div class="expense-amount">Amount</div>
+        <div class="expense-date">Date</div>
       </div>
-    </section>
-  </div>
+      <div class="expense-body" id="expensesBody">
+        {% for expense in expenses %}
+          <div class="expense-row">
+            <div class="expense-reason">{{ expense.title|default:expense.reason }}</div>
+            <div class="expense-amount">₱ {{ expense.amount|floatformat:2|intcomma }}</div>
+            <div class="expense-date">{{ expense.date_incurred|date:"m/d/Y" }}</div>
+          </div>
+        {% empty %}
+          <div class="expense-empty">No expenses recorded yet.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
 </div>
 
 {# Real overlay with form posting to this URL #}
@@ -136,46 +128,7 @@
   
 </div>
 
-<div id="files" class="tab-content">
-  <div class="files-grid">
-                {% for expense in expenses %}
-      {% if expense.receipt and expense.receipt.url %}
-        <div class="file-card">
-          <div class="file-thumb">
-            {% if expense.receipt.name|lower|slice:"-4:" == ".pdf" %}
-              <span style="font-size:.9rem;color:#374151">PDF Receipt</span>
-                        {% else %}
-              <img src="{{ expense.receipt.url }}" alt="Receipt" style="max-width:100%;max-height:100%;object-fit:contain"/>
-            {% endif %}
-          </div>
-          <div style="display:flex;flex-direction:column;gap:.25rem">
-            <div style="font-weight:600;font-size:.95rem;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ expense.title|default:expense.reason }}</div>
-            <div style="font-size:.85rem;color:#6b7280;">{{ expense.date_incurred|date:"m/d/Y" }}</div>
-            <a href="{{ expense.receipt.url }}" target="_blank" style="margin-top:.25rem;text-decoration:none;color:#0f766e;font-weight:500">View receipt</a>
-          </div>
-        </div>
-                        {% endif %}
-                {% empty %}
-      <div class="expense-empty">No receipts uploaded yet.</div>
-                {% endfor %}
-    </div>
-</div>
-
 <script>
-  // Tabs
-  (function(){
-    const buttons = document.querySelectorAll('.tab-btn');
-    const tabs = { overview: document.getElementById('overview'), files: document.getElementById('files') };
-    buttons.forEach(btn=>btn.addEventListener('click', ()=>{
-      const key = btn.getAttribute('data-tab');
-      buttons.forEach(b=>b.classList.remove('active'));
-      Object.values(tabs).forEach(el=>{ el.classList.remove('active'); el.style.display='none'; });
-      btn.classList.add('active');
-      tabs[key].classList.add('active');
-      tabs[key].style.display='block';
-    }));
-  })();
-
   // Donut chart
   (function(){
     const canvas = document.getElementById('expenseDonut');

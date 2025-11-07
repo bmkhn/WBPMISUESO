@@ -712,7 +712,51 @@ def budget_view(request):
         # Projects overview with percent remaining
         user_projects = Project.objects.filter(
             Q(project_leader=user) | Q(providers=user)
-        ).distinct().order_by('-updated_at')
+        ).distinct()
+
+        # Apply search filter
+        search_query = request.GET.get('search', '').strip()
+        if search_query:
+            user_projects = user_projects.filter(title__icontains=search_query)
+
+        # Apply sorting
+        sort_by = request.GET.get('sort_by', 'last_updated')
+        order = request.GET.get('order', 'desc')
+        
+        # For budget_percentage, we need to calculate it for all projects first
+        if sort_by == 'budget_percentage':
+            # Calculate percentage for all projects
+            projects_with_percent = []
+            for p in user_projects:
+                total_budget = (p.internal_budget or 0) + (p.external_budget or 0)
+                spent_total = p.used_budget or 0
+                remaining = float(total_budget) - float(spent_total)
+                percent_remaining = 0
+                if total_budget:
+                    try:
+                        percent_remaining = (remaining / float(total_budget)) * 100
+                    except Exception:
+                        percent_remaining = 0
+                projects_with_percent.append((p, percent_remaining))
+            
+            # Sort by percentage
+            projects_with_percent.sort(key=lambda x: x[1], reverse=(order == 'desc'))
+            user_projects = [p[0] for p in projects_with_percent]
+        else:
+            # Map sort_by to actual field names for regular sorting
+            sort_field_map = {
+                'title': 'title',
+                'last_updated': 'updated_at',
+                'budget_remaining': 'internal_budget',
+            }
+            
+            sort_field = sort_field_map.get(sort_by, 'updated_at')
+            
+            # Apply ordering
+            if order == 'asc':
+                user_projects = user_projects.order_by(sort_field)
+            else:
+                user_projects = user_projects.order_by(f'-{sort_field}')
 
         projects_overview = []
         for p in user_projects:
