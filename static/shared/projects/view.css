@@ -439,6 +439,59 @@ h5 {
     padding: 0 2rem;
 }
 
+.upload-area {
+    flex: 1;
+    border: 2px dashed #E5E7EB;
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    background: #F9F9F9;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.upload-area:hover {
+    border-color: #0A6C44;
+    background: #F0FDF4;
+}
+
+.upload-icon {
+    width: 24px;
+    height: 24px;
+    color: #4B5563;
+}
+
+.upload-text {
+    color: #4B5563;
+    font-size: 0.95rem;
+}
+
+.file-preview {
+    padding: 1rem;
+    background: #F0FDF4;
+    border: 1px solid #BBF7D0;
+    border-radius: 8px;
+    display: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+.file-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #1f7c57;
+    font-size: 0.95rem;
+    flex: 1;
+}
+
+
 .form-group {
     display: flex;
     flex-direction: row;
@@ -593,6 +646,15 @@ select.user-details-value {
 .modal-content .close,
 .close-eval-modal,
 .event-modal-content .close {
+    position: absolute;
+    right: 1.5rem;
+    top: 1.25rem;
+    font-size: 1.5rem;
+    color: #888;
+    cursor: pointer;
+}
+
+.close {
     position: absolute;
     right: 1.5rem;
     top: 1.25rem;
@@ -1056,4 +1118,30 @@ select.user-details-value {
         padding: 0.5rem 0.75rem;
         font-size: 0.875rem;
     }
+}
+
+.project-grid{display:grid;grid-template-columns:1fr 1.3fr;gap:1rem;margin-top:2rem}
+.chart-container{width:100%;height:260px}
+.expense-card{box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4); background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,0.04);width:100%;font-size:.9rem}
+.expense-header,.expense-row{display:grid;grid-template-columns:minmax(240px,1fr) 150px 170px;column-gap:10px;align-items:center}
+.expense-header{background:#f7f8fa;color:#111;font-weight:600;padding:.6rem .8rem;border-bottom:1px solid #e5e7eb}
+.expense-row{padding:.6rem .8rem;border-bottom:1px solid #eef0f3}
+.expense-row:last-child{border-bottom:none}
+.expense-reason{word-break:break-word;white-space:normal}
+.expense-amount,.expense-date{text-align:right;white-space:nowrap}
+.expense-empty{padding:1rem;color:#6b7280}
+.donut-wrap{display:flex;flex-direction:column;align-items:center;gap:1.45rem}
+.cash-available{font-size:1.05rem}
+
+/* --- NEW STYLES FOR ERROR HANDLING --- */
+.error-input {
+    border: 2px solid #dc2626 !important; /* Red border for amount input */
+}
+.form-error-message {
+    background: #fee2e2; /* Light red background */
+    color: #dc2626;      /* Darker red text */
+    padding: .75rem;
+    border-radius: .5rem;
+    margin-bottom: 1rem;
+    font-weight: 500;
 }
