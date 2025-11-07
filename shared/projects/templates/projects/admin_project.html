@@ -147,6 +147,7 @@
                     <th>Start Date</th>
                     <th>Progress</th>
                     <th>Status</th>
+                    <th>Settings</th>
                 </tr>
             </thead>
             <tbody>
@@ -163,9 +164,26 @@
                     <td style="white-space:nowrap;">{{ project.start_date|date:"Y-m-d" }}</td>
                     <td style="white-space:nowrap;">{{ project.progress_display }}</td>
                     <td>{{ project.get_status_display }}</td>
+                    <td class="settings-col">
+                        <div class="settings-dropdown-container" style="position:relative;">
+                            <button class="settings-dropdown-toggle" style="background:none;border:none;padding:0;cursor:pointer;">
+                                <svg width="20" height="20" class="settings-icon"><use href="#settings-icon"/></svg>
+                            </button>
+                            <div class="settings-dropdown-menu">
+                                <a href="{% url 'project_profile' project.id %}" class="settings-dropdown-item" style="color:#00538E;">
+                                    <svg width="18" height="19" style="vertical-align:middle;"><use href="#info-icon" /></svg> View Details
+                                </a>
+                                {% if request.user.role in ADMIN_ROLES %}
+                                <a href="#" class="settings-dropdown-item delete-project-link" data-delete-url="{% url 'delete_project' project.id %}" data-project-title="{{ project.title }}" style="color:#E53E3E;">
+                                    <svg width="18" height="22" style="vertical-align:middle;"><use href="#delete-icon" /></svg> Delete
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </td>
                 </tr>
                 {% empty %}
-                <tr><td colspan="7" style="text-align:center;">No projects found.</td></tr>
+                <tr><td colspan="8" style="text-align:center;">No projects found.</td></tr>
                 {% endfor %}
             </tbody>
         </table>
@@ -246,6 +264,18 @@
 
 </svg>
 
+<!-- Delete Project Confirmation Modal -->
+<div id="deleteProjectModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.18);z-index:9999;align-items:center;justify-content:center;">
+    <div style="background:white;padding:2rem 2.5rem;border-radius:16px;box-shadow:0 4px 32px rgba(0,0,0,0.18);max-width:450px;margin:auto;display:flex;flex-direction:column;align-items:center;">
+        <div style="font-size:1.25rem;font-weight:600;color:#E53E3E;margin-bottom:1rem;">Delete Project</div>
+        <div id="deleteProjectMessage" style="font-size:1rem;color:#444;margin-bottom:2rem;text-align:center;"></div>
+        <div style="display:flex;gap:1rem;">
+            <button id="cancelDeleteProjectBtn" style="background:#e5e7eb;color:#374151;padding:0.75rem 1.5rem;border-radius:8px;font-size:1rem;font-weight:500;border:none;cursor:pointer;">Cancel</button>
+            <button id="confirmDeleteProjectBtn" style="background:#E53E3E;color:white;padding:0.75rem 1.5rem;border-radius:8px;font-size:1rem;font-weight:500;border:none;cursor:pointer;">Delete</button>
+        </div>
+    </div>
+</div>
+
 <!-- Export Request Submitted Modal -->
 <div id="exportRequestModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.18);z-index:9999;align-items:center;justify-content:center;">
     <div style="background:white;padding:2rem 2.5rem;border-radius:16px;box-shadow:0 4px 32px rgba(0,0,0,0.18);max-width:350px;margin:auto;display:flex;flex-direction:column;align-items:center;">
@@ -279,6 +309,7 @@ function showExportRequestModal() {
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Settings dropdown logic
         document.querySelectorAll('.settings-dropdown-toggle').forEach(function(btn) {
             btn.addEventListener('click', function(e) {
                 e.stopPropagation();
@@ -299,6 +330,61 @@ function showExportRequestModal() {
                 menu.style.display = 'none';
             });
         });
+
+        // Delete project modal logic
+        const deleteModal = document.getElementById('deleteProjectModal');
+        const deleteMessage = document.getElementById('deleteProjectMessage');
+        const cancelBtn = document.getElementById('cancelDeleteProjectBtn');
+        const confirmBtn = document.getElementById('confirmDeleteProjectBtn');
+        let projectDeleteUrl = '';
+
+        document.querySelectorAll('.delete-project-link').forEach(function(link) {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                projectDeleteUrl = this.getAttribute('data-delete-url');
+                const projectTitle = this.getAttribute('data-project-title');
+                
+                deleteMessage.innerHTML = 'Are you sure you want to delete <strong>' + projectTitle + '</strong>? This action cannot be undone.';
+                deleteModal.style.display = 'flex';
+            });
+        });
+
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', function() {
+                deleteModal.style.display = 'none';
+                projectDeleteUrl = '';
+            });
+        }
+
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', function() {
+                if (projectDeleteUrl) {
+                    // Create a form and submit it
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = projectDeleteUrl;
+                    
+                    const csrfInput = document.createElement('input');
+                    csrfInput.type = 'hidden';
+                    csrfInput.name = 'csrfmiddlewaretoken';
+                    csrfInput.value = '{{ csrf_token }}';
+                    form.appendChild(csrfInput);
+                    
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+        }
+
+        // Close modal on background click
+        if (deleteModal) {
+            deleteModal.addEventListener('click', function(e) {
+                if (e.target === deleteModal) {
+                    deleteModal.style.display = 'none';
+                    projectDeleteUrl = '';
+                }
+            });
+        }
     });
 
     // Filter dropdown logic
@@ -430,9 +516,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // Check if success parameter exists
     const urlParams = new URLSearchParams(window.location.search);
     const success = urlParams.get('success');
+    const action = urlParams.get('action');
     const newProjectId = urlParams.get('new_project_id');
     const projectTitle = urlParams.get('project_title');
+    const title = urlParams.get('title');
 
+    // Handle project creation toast
     if (success === 'true' && newProjectId && projectTitle) {
         // Create and show success toast
         const toast = document.createElement('div');
@@ -485,6 +574,34 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             };
         }, 500);
+    }
+
+    // Handle project deletion toast
+    if (success === 'true' && action === 'deleted' && title) {
+        const toast = document.createElement('div');
+        toast.id = 'deleteToast';
+        toast.style.cssText = 'display:block;position:fixed;top:20px;right:20px;background:#ef4444;color:white;padding:1rem 1.5rem;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:10000;font-size:1rem;font-weight:500;min-width:300px;';
+        toast.innerHTML = `
+            <div style="display:flex;align-items:center;gap:0.75rem;">
+                <i class="fa-solid fa-trash-can" style="font-size:1.5rem;"></i>
+                <div>
+                    <div style="font-weight:600;margin-bottom:0.25rem;">Project Deleted Successfully!</div>
+                    <div style="font-size:0.875rem;opacity:0.9;">${title ? decodeURIComponent(title) : 'Project'}</div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(toast);
+
+        // Auto-hide after 4 seconds
+        setTimeout(function() {
+            toast.style.opacity = '0';
+            toast.style.transition = 'opacity 0.3s';
+            setTimeout(function() {
+                toast.remove();
+                // Clean URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }, 300);
+        }, 4000);
     }
 });
 </script>
