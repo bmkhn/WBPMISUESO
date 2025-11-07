@@ -99,6 +99,7 @@
                     <th>Date Submitted</th>
                     <th>Submitted Forms</th>
                     <th>Status</th>
+                    <th>Settings</th>
                 </tr>
             </thead>
             <tbody>
@@ -110,9 +111,29 @@
                         <td>{{ submission.submitted_at|date:"Y-m-d H:i" }}</td>
                         <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#0099FF;"><a href="{{ submission.submitted_form_link }}" target="_blank" class="name-link" title="{{ submission.submitted_form_name_with_ext }}">{{ submission.submitted_form_name_with_ext }}</a></td>
                         <td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;">{{ submission.get_status_display }}</td>
+                        <td class="settings-col">
+                            <div class="settings-dropdown-container" style="position:relative;">
+                                <button class="settings-dropdown-toggle" style="background:none;border:none;padding:0;cursor:pointer;">
+                                    <svg width="20" height="20" class="settings-icon"><use href="#settings-icon"/></svg>
+                                </button>
+                                <div class="settings-dropdown-menu">
+                                    <a href="{% url 'project_submissions_details' submission.project.id submission.id %}" class="settings-dropdown-item" style="color:#00538E;">
+                                        <svg width="18" height="19" style="vertical-align:middle;"><use href="#info-icon" /></svg> View Details
+                                    </a>
+                                    {% if request.user.role in ADMIN_ROLES %}
+                                    <a href="{% url 'edit_submission' submission.id %}" class="settings-dropdown-item" style="color:#0A6C44;">
+                                        <svg width="18" height="19" style="vertical-align:middle;"><use href="#edit-icon" /></svg> Edit
+                                    </a>
+                                    <a href="#" class="settings-dropdown-item delete-submission-link" data-delete-url="{% url 'delete_submission' submission.id %}" data-submission-title="{{ submission.project.title }}" data-submission-form="{{ submission.downloadable.name_with_ext }}" style="color:#E53E3E;">
+                                        <svg width="18" height="22" style="vertical-align:middle;"><use href="#delete-icon" /></svg> Delete
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
                     </tr>
                 {% empty %}
-                <tr><td colspan="6" style="text-align:center;">No submissions found.</td></tr>
+                <tr><td colspan="7" style="text-align:center;">No submissions found.</td></tr>
                 {% endfor %}
             </tbody>
         </table>
@@ -145,6 +166,28 @@
 <!-- SVG Sprite Section -->
 <svg style="display:none;">
 
+    <!-- Delete -->
+    <symbol id="delete-icon" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <polyline points="3,6 5,6 21,6"></polyline>
+        <path d="m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
+    </symbol>
+
+    <!-- Settings -->
+    <symbol id="settings-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M2 4C1.45 4 0.979167 3.80417 0.5875 3.4125C0.195833 3.02083 0 2.55 0 2C0 1.45 0.195833 0.979167 0.5875 0.5875C0.979167 0.195833 1.45 0 2 0C2.55 0 3.02083 0.195833 3.4125 0.5875C3.80417 0.979167 4 1.45 4 2C4 2.55 3.80417 3.02083 3.4125 3.4125C3.02083 3.80417 2.55 4 2 4ZM8 4C7.45 4 6.97917 3.80417 6.5875 3.4125C6.19583 3.02083 6 2.55 6 2C6 1.45 6.19583 0.979167 6.5875 0.5875C6.97917 0.195833 7.45 0 8 0C8.55 0 9.02083 0.195833 9.4125 0.5875C9.80417 0.979167 10 1.45 10 2C10 2.55 9.80417 3.02083 9.4125 3.4125C9.02083 3.80417 8.55 4 8 4ZM14 4C13.45 4 12.9792 3.80417 12.5875 3.4125C12.1958 3.02083 12 2.55 12 2C12 1.45 12.1958 0.979167 12.5875 0.5875C12.9792 0.195833 13.45 0 14 0C14.55 0 15.0208 0.195833 15.4125 0.5875C15.8042 0.979167 16 1.45 16 2C16 2.55 15.8042 3.02083 15.4125 3.4125C15.0208 3.80417 14.55 4 14 4Z" fill="#1D1B20"/>
+    </symbol>
+
+    <!-- Info Icon -->
+    <symbol id="info-icon" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M11 9V17M11 5V7M11 21C16.523 21 21 16.523 21 11C21 5.477 16.523 1 11 1C5.477 1 1 5.477 1 11C1 16.523 5.477 21 11 21Z" stroke="#00538E" stroke-width="2"/>
+    </symbol>
+
+    <!-- Edit -->
+    <symbol id="edit-icon" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+        <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+    </symbol>
+
     <!-- Search -->
 	<symbol id="icon-search" viewBox="0 0 21 21" fill="none">
 		<path d="M8.89152 15.9057C9.75056 15.9057 10.6012 15.7365 11.3948 15.4077C12.1885 15.079 12.9096 14.5972 13.5171 13.9897C14.1245 13.3823 14.6064 12.6612 14.9351 11.8675C15.2638 11.0739 15.433 10.2232 15.433 9.36417C15.433 8.50513 15.2638 7.6545 14.9351 6.86084C14.6064 6.06719 14.1245 5.34606 13.5171 4.73862C12.9096 4.13119 12.1885 3.64934 11.3948 3.3206C10.6012 2.99186 9.75056 2.82266 8.89152 2.82266C7.1566 2.82266 5.49274 3.51185 4.26597 4.73862C3.03919 5.9654 2.35 7.62926 2.35 9.36417C2.35 11.0991 3.03919 12.763 4.26597 13.9897C5.49274 15.2165 7.1566 15.9057 8.89152 15.9057V15.9057ZM15.7819 14.713L19.685 18.6161C19.7891 18.7167 19.872 18.8371 19.9291 18.9701C19.9861 19.1032 20.0161 19.2463 20.0173 19.391C20.0184 19.5358 19.9907 19.6793 19.9358 19.8133C19.8809 19.9472 19.7999 20.0689 19.6974 20.1712C19.595 20.2735 19.4732 20.3544 19.3392 20.4091C19.2052 20.4638 19.0616 20.4913 18.9168 20.4899C18.772 20.4886 18.629 20.4584 18.496 20.4012C18.3631 20.3439 18.2428 20.2608 18.1423 20.1566L14.2392 16.2535C12.4866 17.614 10.2814 18.2554 8.07247 18.0472C5.86357 17.839 3.81705 16.7968 2.34951 15.1328C0.881971 13.4688 0.103735 11.308 0.173229 9.09044C0.242723 6.87284 1.15472 4.76508 2.72357 3.19623C4.29242 1.62738 6.40018 0.715379 8.61778 0.645885C10.8354 0.576391 12.9961 1.35463 14.6601 2.82217C16.3241 4.28971 17.3663 6.33623 17.5745 8.54513C17.7827 10.754 17.1413 12.9592 15.7808 14.7119L15.7819 14.713Z" fill="#5A5252"/>
@@ -156,6 +199,19 @@
 	</symbol>
 
 </svg>
+
+
+<!-- Delete Submission Confirmation Modal -->
+<div id="deleteSubmissionModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.18);z-index:9999;align-items:center;justify-content:center;">
+    <div style="background:white;padding:2rem 2.5rem;border-radius:16px;box-shadow:0 4px 32px rgba(0,0,0,0.18);max-width:450px;margin:auto;display:flex;flex-direction:column;align-items:center;">
+        <div style="font-size:1.25rem;font-weight:600;color:#E53E3E;margin-bottom:1rem;">Delete Submission Requirement</div>
+        <div id="deleteSubmissionMessage" style="font-size:1rem;color:#444;margin-bottom:2rem;text-align:center;"></div>
+        <div style="display:flex;gap:1rem;">
+            <button id="cancelDeleteSubmission" style="background:#e5e7eb;color:#374151;padding:0.75rem 1.5rem;border-radius:8px;font-size:1rem;font-weight:500;border:none;cursor:pointer;">Cancel</button>
+            <button id="confirmDeleteSubmission" style="background:#E53E3E;color:white;padding:0.75rem 1.5rem;border-radius:8px;font-size:1rem;font-weight:500;border:none;cursor:pointer;">Delete</button>
+        </div>
+    </div>
+</div>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -239,8 +295,98 @@
                 }, 300);
             }, 4000);
         }
+
+        // Handle deletion toast
+        if (success === 'true' && action === 'deleted' && title) {
+            const toast = document.createElement('div');
+            toast.id = 'deleteToast';
+            toast.style.cssText = 'display:block;position:fixed;top:20px;right:20px;background:#ef4444;color:white;padding:1rem 1.5rem;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:10000;font-size:1rem;font-weight:500;min-width:300px;';
+            toast.innerHTML = `
+                <div style="display:flex;align-items:center;gap:0.75rem;">
+                    <i class="fa-solid fa-trash-can" style="font-size:1.5rem;"></i>
+                    <div>
+                        <div style="font-weight:600;margin-bottom:0.25rem;">Submission Requirement Deleted Successfully!</div>
+                        <div style="font-size:0.875rem;opacity:0.9;">${title ? decodeURIComponent(title) : 'Submission'}</div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(toast);
+
+            // Auto-hide after 4 seconds
+            setTimeout(function() {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.3s';
+                setTimeout(function() {
+                    toast.remove();
+                    // Clean URL
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }, 300);
+            }, 4000);
+        }
     });
+
+    // Delete Submission Modal
+    const deleteSubmissionModal = document.getElementById('deleteSubmissionModal');
+    const deleteSubmissionLinks = document.querySelectorAll('.delete-submission-link');
+    const confirmDeleteSubmissionBtn = document.getElementById('confirmDeleteSubmission');
+    const cancelDeleteSubmissionBtn = document.getElementById('cancelDeleteSubmission');
+    const deleteSubmissionMessage = document.getElementById('deleteSubmissionMessage');
+    let submissionDeleteUrl = '';
+
+    deleteSubmissionLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            submissionDeleteUrl = this.getAttribute('data-delete-url');
+            const submissionTitle = this.getAttribute('data-submission-title');
+            const submissionForm = this.getAttribute('data-submission-form');
+            
+            // Update modal content
+            deleteSubmissionMessage.innerHTML = 'Are you sure you want to delete <strong>' + submissionForm + '</strong> for project <strong>' + submissionTitle + '</strong>? This action cannot be undone.';
+            
+            // Show modal
+            deleteSubmissionModal.style.display = 'flex';
+        });
+    });
+
+    if (confirmDeleteSubmissionBtn) {
+        confirmDeleteSubmissionBtn.addEventListener('click', function() {
+            if (submissionDeleteUrl) {
+                // Create a form and submit it
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = submissionDeleteUrl;
+                
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = 'csrfmiddlewaretoken';
+                csrfInput.value = '{{ csrf_token }}';
+                form.appendChild(csrfInput);
+                
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    }
+
+    if (cancelDeleteSubmissionBtn) {
+        cancelDeleteSubmissionBtn.addEventListener('click', function() {
+            deleteSubmissionModal.style.display = 'none';
+            submissionDeleteUrl = '';
+        });
+    }
+
+    // Close modal when clicking outside
+    if (deleteSubmissionModal) {
+        deleteSubmissionModal.addEventListener('click', function(e) {
+            if (e.target === deleteSubmissionModal) {
+                deleteSubmissionModal.style.display = 'none';
+                submissionDeleteUrl = '';
+            }
+        });
+    }
 </script>
+
+
 
 </body>
 </html>

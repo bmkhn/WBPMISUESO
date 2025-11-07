@@ -105,6 +105,20 @@ def get_project_notification_recipients(log_entry):
     
     recipients = []
     
+    # For DELETE action, the project no longer exists in DB
+    # So we notify all admin roles (UESO, Director, VP) who performed the action
+    if log_entry.action == 'DELETE':
+        # Notify UESO, Director, VP (admins who can see this happened)
+        supervisors = User.objects.filter(
+            role__in=['UESO', 'DIRECTOR', 'VP'],
+            is_confirmed=True,
+            is_active=True
+        )
+        recipients.extend(supervisors)
+        # Note: Project members were already notified via the log entry details
+        # which includes all involved users when the delete view created the log
+        return recipients
+    
     try:
         project = Project.objects.select_related('project_leader').prefetch_related('providers').get(
             id=log_entry.object_id
@@ -138,7 +152,13 @@ def get_project_notification_recipients(log_entry):
             recipients.extend(supervisors)
         
     except Project.DoesNotExist:
-        pass
+        # If project doesn't exist, only notify admins
+        supervisors = User.objects.filter(
+            role__in=['UESO', 'DIRECTOR', 'VP'],
+            is_confirmed=True,
+            is_active=True
+        )
+        recipients.extend(supervisors)
     
     return recipients
 
@@ -154,6 +174,19 @@ def get_submission_notification_recipients(log_entry):
     from system.users.models import User
     
     recipients = []
+    
+    # For DELETE action, the submission no longer exists in DB
+    # So we notify all admin roles (UESO, Director, VP) who can see this happened
+    if log_entry.action == 'DELETE':
+        # Notify UESO, Director, VP (admins who can see this happened)
+        supervisors = User.objects.filter(
+            role__in=['UESO', 'DIRECTOR', 'VP'],
+            is_confirmed=True,
+            is_active=True
+        )
+        recipients.extend(supervisors)
+        # Note: Project members were already notified via the log entry details
+        return recipients
     
     try:
         submission = Submission.objects.select_related(
@@ -217,7 +250,13 @@ def get_submission_notification_recipients(log_entry):
                     recipients.extend(coordinators)
         
     except Submission.DoesNotExist:
-        pass
+        # If submission doesn't exist, only notify admins
+        supervisors = User.objects.filter(
+            role__in=['UESO', 'DIRECTOR', 'VP'],
+            is_confirmed=True,
+            is_active=True
+        )
+        recipients.extend(supervisors)
     
     return recipients
 

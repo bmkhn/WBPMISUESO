@@ -1,5 +1,8 @@
 from django.shortcuts import get_object_or_404, render, redirect
+from internal.submissions.views import delete_submission
 from shared import request
+from system.logs.models import LogEntry
+from system.notifications.models import Notification
 from system.users.decorators import role_required, project_visibility_required
 from .models import SustainableDevelopmentGoal, Project, ProjectEvaluation, ProjectEvent, ProjectUpdate, ProjectExpense
 from internal.goals.models import Goal
@@ -700,9 +703,92 @@ def admin_submission_action(request, pk, submission_id):
                 submission.save()
         elif submission.status == 'PENDING' and request.user.role in ["UESO", "VP", "DIRECTOR"]:
             if action == 'delete':
+                from system.logs.models import LogEntry
+                from system.notifications.models import Notification
+                from system.users.models import User
+                
+                # Store submission data before deletion
+                project = submission.project
+                project_title = project.title
+                form_name = str(submission.downloadable.name_with_ext)
+                project_leader = project.project_leader
+                project_college = project_leader.college if project_leader else None
+                submission_id = submission.id
+                
+                # Get all people involved for notifications
+                notification_recipients = []
+                if project_leader:
+                    notification_recipients.append(project_leader)
+                notification_recipients.extend(list(project.providers.all()))
+                
+                # Also notify coordinator of the same college
+                if project_college:
+                    coordinators = User.objects.filter(
+                        role='COORDINATOR',
+                        college=project_college,
+                        is_confirmed=True,
+                        is_active=True
+                    )
+                    notification_recipients.extend(coordinators)
+                
+                # Notify UESO, Director, VP
+                supervisors = User.objects.filter(
+                    role__in=['UESO', 'DIRECTOR', 'VP'],
+                    is_confirmed=True,
+                    is_active=True
+                )
+                notification_recipients.extend(supervisors)
+                
+                # Remove duplicates
+                notification_recipients = list(set(notification_recipients))
+                
+                # Create log entry BEFORE deletion
+                log_entry = LogEntry.objects.create(
+                    user=request.user,
+                    action='DELETE',
+                    model='Submission',
+                    object_id=submission_id,
+                    object_repr=f"{form_name} - {project_title}",
+                    details=f"Submission requirement '{form_name}' for project '{project_title}' has been deleted by {request.user.get_full_name()}",
+                    url='',  # No URL since the submission no longer exists
+                    is_notification=False  # We'll create notifications manually
+                )
+                
+                # Create notifications manually for all involved users (except the actor)
+                notifications_to_create = [
+                    Notification(
+                        recipient=recipient,
+                        actor=request.user,
+                        action='DELETE',
+                        model='Submission',
+                        object_id=submission_id,
+                        object_repr=f"{form_name} - {project_title}",
+                        details=f"Submission requirement '{form_name}' for project '{project_title}' has been deleted",
+                        url='',
+                    )
+                    for recipient in notification_recipients
+                    if recipient != request.user  # Don't notify the person who deleted it
+                ]
+                
+                if notifications_to_create:
+                    Notification.objects.bulk_create(notifications_to_create, batch_size=100)
+                
+                # Delete project updates related to this submission
                 ProjectUpdate.objects.filter(submission=submission).delete()
-                project_id = submission.project.id
+                
+                # If this submission is linked to an event, mark event as not having submission
+                if submission.event:
+                    submission.event.has_submission = False
+                    submission.event.save()
+                
+                # Delete the submission
+                project_id = project.id
                 submission.delete()
+                
+                # Redirect with toast parameters
+                from urllib.parse import quote
+                return redirect(f'/projects/{project_id}/submission/?success=true&action=deleted&title={quote(form_name)}')
+
         elif submission.status == 'SUBMITTED' and request.user.role == "COORDINATOR": 
             if action == 'forward':
                 submission.status = 'FORWARDED'
@@ -1631,3 +1717,90 @@ def check_college_budget(request):
             'uncommitted': 0,
             'remaining': 0
         }, status=500)
+
+
+@role_required(allowed_roles=["UESO", "VP", "DIRECTOR"], require_confirmed=True)
+def delete_project(request, pk):
+    """Delete a project"""
+    from django.contrib import messages
+    from system.logs.models import LogEntry
+    from system.notifications.models import Notification
+    from system.users.models import User
+    
+    if request.method == "POST":
+        try:
+            project = Project.objects.select_related('project_leader__college').prefetch_related('providers').get(pk=pk)
+            project_title = project.title
+            project_leader = project.project_leader
+            project_college = project_leader.college if project_leader else None
+            
+            # Get all people involved for notifications
+            notification_recipients = []
+            if project_leader:
+                notification_recipients.append(project_leader)
+            notification_recipients.extend(list(project.providers.all()))
+            
+            # Also notify coordinator of the same college
+            if project_college:
+                coordinators = User.objects.filter(
+                    role='COORDINATOR',
+                    college=project_college,
+                    is_confirmed=True,
+                    is_active=True
+                )
+                notification_recipients.extend(coordinators)
+            
+            # Notify UESO, Director, VP
+            supervisors = User.objects.filter(
+                role__in=['UESO', 'DIRECTOR', 'VP'],
+                is_confirmed=True,
+                is_active=True
+            )
+            notification_recipients.extend(supervisors)
+            
+            # Remove duplicates
+            notification_recipients = list(set(notification_recipients))
+            
+            # Create log entry BEFORE deletion (so we still have the project data)
+            log_entry = LogEntry.objects.create(
+                user=request.user,
+                action='DELETE',
+                model='Project',
+                object_id=project.id,
+                object_repr=project_title,
+                details=f"Project '{project_title}' and all related data (submissions, events, files) have been deleted by {request.user.get_full_name()}",
+                url='',  # No URL since the project no longer exists
+                is_notification=False  # We'll create notifications manually
+            )
+            
+            # Create notifications manually for all involved users (except the actor)
+            notifications_to_create = [
+                Notification(
+                    recipient=recipient,
+                    actor=request.user,
+                    action='DELETE',
+                    model='Project',
+                    object_id=project.id,
+                    object_repr=project_title,
+                    details=f"Project '{project_title}' has been deleted",
+                    url='',
+                )
+                for recipient in notification_recipients
+                if recipient != request.user  # Don't notify the person who deleted it
+            ]
+            
+            if notifications_to_create:
+                Notification.objects.bulk_create(notifications_to_create, batch_size=100)
+            
+            # Delete the project (this will cascade delete related submissions, events, etc.)
+            project.delete()
+            
+            messages.success(request, f'Project "{project_title}" has been deleted successfully.')
+            
+            # Redirect with toast parameters
+            from urllib.parse import quote
+            return redirect(f'/projects/?success=true&action=deleted&title={quote(project_title)}')
+        except Project.DoesNotExist:
+            messages.error(request, 'Project not found.')
+    
+    return redirect('project_dispatcher')
