@@ -251,4 +251,139 @@ def add_submission_view(request):
     return render(request, 'submissions/add_submissions.html')
 
 
+@role_required(allowed_roles=["UESO", "VP", "DIRECTOR"], require_confirmed=True)
+def edit_submission(request, pk):
+    """Edit a submission requirement - only deadline and notes can be changed"""
+    try:
+        submission = Submission.objects.select_related(
+            'project',
+            'downloadable',
+            'event'
+        ).get(pk=pk)
+    except Submission.DoesNotExist:
+        messages.error(request, 'Submission requirement not found.')
+        return redirect('submissions_admin')
+    
+    if request.method == "POST":
+        deadline = request.POST.get('deadline')
+        notes = request.POST.get('notes', '')
+        
+        if not deadline:
+            messages.error(request, 'Deadline is required.')
+            return render(request, 'submissions/edit_submission.html', {
+                'submission': submission,
+            })
+        
+        # Update only the allowed fields
+        submission.deadline = deadline
+        submission.notes = notes
+        submission.save()
+        
+        messages.success(request, f'Submission requirement for "{submission.project.title}" updated successfully.')
+        return redirect('submissions_admin')
+    
+    return render(request, 'submissions/edit_submission.html', {
+        'submission': submission,
+    })
+
+
+@role_required(allowed_roles=["UESO", "VP", "DIRECTOR"], require_confirmed=True)
+def delete_submission(request, pk):
+    """Delete a submission requirement"""
+    from django.contrib import messages
+    from system.logs.models import LogEntry
+    from system.notifications.models import Notification
+    from system.users.models import User
+    
+    if request.method == "POST":
+        try:
+            submission = Submission.objects.select_related(
+                'project__project_leader__college', 
+                'downloadable',
+                'event'
+            ).prefetch_related('project__providers').get(pk=pk)
+            
+            project = submission.project
+            project_title = project.title
+            form_name = str(submission.downloadable.name_with_ext)
+            project_leader = project.project_leader
+            project_college = project_leader.college if project_leader else None
+            
+            # Get all people involved for notifications
+            notification_recipients = []
+            if project_leader:
+                notification_recipients.append(project_leader)
+            notification_recipients.extend(list(project.providers.all()))
+            
+            # Also notify coordinator of the same college
+            if project_college:
+                coordinators = User.objects.filter(
+                    role='COORDINATOR',
+                    college=project_college,
+                    is_confirmed=True,
+                    is_active=True
+                )
+                notification_recipients.extend(coordinators)
+            
+            # Notify UESO, Director, VP
+            supervisors = User.objects.filter(
+                role__in=['UESO', 'DIRECTOR', 'VP'],
+                is_confirmed=True,
+                is_active=True
+            )
+            notification_recipients.extend(supervisors)
+            
+            # Remove duplicates
+            notification_recipients = list(set(notification_recipients))
+            
+            # Create log entry BEFORE deletion
+            log_entry = LogEntry.objects.create(
+                user=request.user,
+                action='DELETE',
+                model='Submission',
+                object_id=submission.id,
+                object_repr=f"{form_name} - {project_title}",
+                details=f"Submission requirement '{form_name}' for project '{project_title}' has been deleted by {request.user.get_full_name()}",
+                url='',  # No URL since the submission no longer exists
+                is_notification=False  # We'll create notifications manually
+            )
+            
+            # Create notifications manually for all involved users (except the actor)
+            notifications_to_create = [
+                Notification(
+                    recipient=recipient,
+                    actor=request.user,
+                    action='DELETE',
+                    model='Submission',
+                    object_id=submission.id,
+                    object_repr=f"{form_name} - {project_title}",
+                    details=f"Submission requirement '{form_name}' for project '{project_title}' has been deleted",
+                    url='',
+                )
+                for recipient in notification_recipients
+                if recipient != request.user  # Don't notify the person who deleted it
+            ]
+            
+            if notifications_to_create:
+                Notification.objects.bulk_create(notifications_to_create, batch_size=100)
+            
+            # If this submission is linked to an event, mark event as not having submission
+            if submission.event:
+                submission.event.has_submission = False
+                submission.event.save()
+            
+            # Delete the submission
+            submission.delete()
+            
+            messages.success(request, f'Submission requirement "{form_name}" for project "{project_title}" has been deleted.')
+            
+            # Redirect with toast parameters
+            from urllib.parse import quote
+            return redirect(f'/submissions/?success=true&action=deleted&title={quote(form_name)}')
+        except Submission.DoesNotExist:
+            messages.error(request, 'Submission requirement not found.')
+    
+    return redirect('submissions_admin')
+
+
 # Include this file just to be sure
