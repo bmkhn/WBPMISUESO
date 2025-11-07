@@ -12,7 +12,7 @@
         h1,h2,h3 {font-weight:600; color:#111;}
         .meta {color:#6b7280;}
         .proj-title {font-weight:600;}
-        main {display: flex; flex-direction: column; gap: 1.25rem; margin: 2rem 5rem;}
+        .main {display: flex; flex-direction: column; gap: 1.25rem; margin: 2rem 5rem;}
         .row-grid {display: grid; grid-template-columns: 2fr 1fr; gap: 1.25rem;}
         section.box {background: #fff; border-radius: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 1.25rem;}
         .projects-grid {display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem;}
@@ -227,7 +227,7 @@
     {% endif %}
 
     {% if not project %}
-    <main>
+    <div class="main">
         <!-- First row: Projects (left) and Logs (right) -->
         <div class="row-grid">
             <section class="box">
@@ -331,7 +331,7 @@
                 </div>
             </div>
         </section>
-    </main>
+    </div>
     {% endif %}
 
     {# Provide JSON safely via json_script blocks #}
