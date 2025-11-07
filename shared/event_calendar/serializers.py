@@ -16,6 +16,9 @@ class MeetingEventSerializer(serializers.ModelSerializer):
         many=True, 
         allow_empty=True
     )
+    
+    # Include the attachment file field
+    notes_attachment = serializers.FileField(required=False, allow_null=True)
 
     class Meta:
         model = MeetingEvent

@@ -64,6 +64,8 @@ def get_events_by_date(user, for_main_calendar_view=False):
             'time': local_dt.strftime('%H:%M'),
             'location': event.location,
             'notes': event.notes,
+            'notes_attachment': event.notes_attachment.url if event.notes_attachment else None,
+            'notes_attachment_name': event.notes_attachment.name.split('/')[-1] if event.notes_attachment else None,
             'status': event.status,
             'participants': [str(u.id) for u in event.participants.all()],
             'participant_names': [u.get_full_name() or u.username for u in event.participants.all()],
@@ -117,6 +119,7 @@ def create_meeting_event(data, user):
     location = data.get("location", "").strip()
     participants = data.get("participants", [])
     notes = data.get("notes", "")
+    notes_attachment = data.get("notes_attachment")  # File from request
 
     if not (title and description and date and time and location):
         return None, {"errors": "Missing required fields."}
@@ -131,7 +134,8 @@ def create_meeting_event(data, user):
             location=location,
             created_by=user,
             updated_by=user,
-            notes=notes
+            notes=notes,
+            notes_attachment=notes_attachment if notes_attachment else None
         )
 
         participant_ids = set(data.get("participants", []))
@@ -166,6 +170,7 @@ def update_meeting_event(event, data, user):
     location = data.get("location", "").strip()
     participants = data.get("participants", [])
     notes = data.get("notes", "")
+    notes_attachment = data.get("notes_attachment")  # File from request
 
     if not (title and description and date and time and location):
         return None, {"errors": "Missing required fields."}
@@ -179,6 +184,13 @@ def update_meeting_event(event, data, user):
         event.location = location
         event.updated_by = user
         event.notes = notes
+        
+        # Handle file attachment
+        if notes_attachment:
+            event.notes_attachment = notes_attachment
+        elif data.get("remove_attachment"):  # Allow explicit removal
+            event.notes_attachment = None
+            
         event.save()
         
         if participants:

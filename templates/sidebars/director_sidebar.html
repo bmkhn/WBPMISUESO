@@ -10,8 +10,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 <link href="{% static 'templates/side_style.css' %}" rel="stylesheet">
-</head>
+<link href="{% static 'templates/topbar.css' %}" rel="stylesheet">
 
+</head>
 
 <body>
 	<div class="sidebar-container" id="sidebar">
@@ -125,26 +126,31 @@
 
 	<!-- Topbar -->
 	<div class="topbar">
-		<div class="logo-circle" id="profilePicContainer" style="position:relative;">
-			<img src="{{ request.user.profile_picture_or_initial }}" alt="Profile Picture" id="profilePic" style="object-fit: cover; cursor:pointer;">
-			
-			<!-- Notification Badge on Profile Picture -->
+		<!-- Projects Shortcut -->
+		<div class="topbar-icon-btn {% if '/projects/' in request.path %}active{% endif %}" onclick="window.location.href='/projects/'" title="Projects">
+			<svg width="24" height="24"><use href="#icon-topbar-projects"/></svg>
+		</div>
+		
+		<!-- Submissions Shortcut -->
+		<div class="topbar-icon-btn {% if '/submissions/' in request.path %}active{% endif %}" onclick="window.location.href='/submissions/'" title="Submissions">
+			<svg width="24" height="24"><use href="#icon-topbar-submission"/></svg>
+		</div>
+		
+		<!-- Notifications Bell Icon -->
+		<div class="topbar-icon-btn {% if '/notifications/' in request.path %}active{% endif %}" onclick="window.location.href='{% url 'notifications' %}'" title="Notifications">
+			<svg width="24" height="30"><use href="#icon-topbar-notification"/></svg>
 			{% if unread_notifications_count > 0 %}
-			<span id="profileNotificationBadge" style="position:absolute;top:-5px;right:-5px;background:#FF3300;color:white;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:bold;border:2px solid white;box-shadow:0 2px 4px rgba(0,0,0,0.2);z-index:100;">
+			<span style="position:absolute;top:-5px;right:-5px;background:#FF3300;color:white;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:bold;border:2px solid white;box-shadow:0 2px 4px rgba(0,0,0,0.2);">
 				{{ unread_notifications_count }}
 			</span>
 			{% endif %}
+		</div>
+		
+		<div class="logo-circle" id="profilePicContainer" style="position:relative;">
+			<img src="{{ request.user.profile_picture_or_initial }}" alt="Profile Picture" id="profilePic" style="object-fit: cover; cursor:pointer;">
 			
 			<div id="profileModal">
 				<a href="{% url 'profile' %}">Profile</a>
-				<a href="{% url 'notifications' %}" style="display:flex;justify-content:space-between;align-items:center;">
-					<span>Notifications</span>
-					{% if unread_notifications_count > 0 %}
-					<span style="background:#FF3300;color:white;border-radius:12px;padding:2px 8px;font-size:11px;font-weight:bold;margin-left:10px;">
-						{{ unread_notifications_count }}
-					</span>
-					{% endif %}
-				</a>
 				<a href="/settings/">Settings</a>
 				<a href="{% url 'logout' %}" style="color:#E53E3E;">Log Out</a>
 			</div>
@@ -155,6 +161,16 @@
 
 <!-- SVG Sprite Section -->
 <svg style="display:none;">
+
+	<!-- Projects [Topbar] -->
+    <symbol id="icon-topbar-projects" viewBox="0 0 22 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M19 20C19.5304 20 20.0391 19.7645 20.4142 19.3453C20.7893 18.9261 21 18.3575 21 17.7647V6.58824C21 5.9954 20.7893 5.42684 20.4142 5.00764C20.0391 4.58844 19.5304 4.35294 19 4.35294H11.1C10.7655 4.35661 10.4355 4.26645 10.1403 4.09072C9.84505 3.91499 9.59396 3.6593 9.41 3.34706L8.6 2.00588C8.41789 1.69682 8.16997 1.44312 7.8785 1.26756C7.58702 1.092 7.26111 1.00006 6.93 1H3C2.46957 1 1.96086 1.2355 1.58579 1.6547C1.21071 2.0739 1 2.64246 1 3.23529V17.7647C1 18.3575 1.21071 18.9261 1.58579 19.3453C1.96086 19.7645 2.46957 20 3 20H19Z" stroke="#1D1B20" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+
+	<!-- Submission [Topbar] -->
+    <symbol id="icon-topbar-submission" viewBox="0 0 20 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M7.75 18.6L11.125 15.3M11.125 15.3L7.75 12M11.125 15.3H3.25C2.65326 15.3 2.08097 15.5318 1.65901 15.9444C1.23705 16.3569 1 16.9165 1 17.5V20.8C1 21.3835 1.23705 21.9431 1.65901 22.3556C2.08097 22.7682 2.65326 23 3.25 23H16.75C17.3467 23 17.919 22.7682 18.341 22.3556C18.7629 21.9431 19 21.3835 19 20.8V6.5L13.375 1H3.25C2.65326 1 2.08097 1.23178 1.65901 1.64436C1.23705 2.05695 1 2.61652 1 3.2V10.9M12.25 1V5.4C12.25 5.98348 12.4871 6.54306 12.909 6.95564C13.331 7.36822 13.9033 7.6 14.5 7.6H19" stroke="#1D1B20" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
 
 	<!-- Dashboard -->
 	<symbol id="icon-dashboard" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -435,9 +451,10 @@ document.addEventListener('DOMContentLoaded', function() {
 	window.addEventListener('scroll', toggleBackToTop);
 	backToTopBtn.addEventListener('click', function() {
 		window.scrollTo({ top: 0, behavior: 'smooth' });
+		});
 	});
-});
 </script>
+
 
 
 <script>
