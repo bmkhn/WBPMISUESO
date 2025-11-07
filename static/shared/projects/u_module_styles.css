@@ -620,19 +620,6 @@ textarea {
     resize: none;
 }
 
-input[type="text"],
-input[type="date"],
-input[type="time"],
-textarea,
-select {
-    flex: 1;
-    border-radius: 8px;
-    border: 1px solid #e5e7eb;
-    padding: 0.75rem;
-    font-size: 1rem;
-    font-family: 'Inter', sans-serif;
-}
-
 .event-modal {
     position: fixed;
     z-index: 9999;

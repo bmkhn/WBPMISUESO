@@ -138,6 +138,7 @@ def add_submission_requirement(request, project_id=None):
         
         # Check if all events are completed (event_progress == estimated_events)
         all_events_completed = (project.event_progress == project.estimated_events) if project.estimated_events > 0 else False
+        all_events_completed = (project.event_progress == project.estimated_events) if project.estimated_events > 0 else False
         
         project_event_availability[project.id] = {
             'has_available_events': available_events.exists(),
