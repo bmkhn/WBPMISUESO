@@ -694,7 +694,6 @@ def get_templates(request):
         base_template = "base_public.html"
     return base_template
 
-
 @role_required(["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR", "FACULTY", "IMPLEMENTER"], require_confirmed=True)
 def budget_view(request):
 
@@ -707,6 +706,191 @@ def budget_view(request):
         context = _get_college_dashboard_data(request.user, current_year)
     elif user_role in ["FACULTY", "IMPLEMENTER"]:
         context = _get_faculty_dashboard_data(request.user)
+        
+        # 💡 FIX 1: Fetch College-level chart data required by the template for remaining budget
+        college_chart_data = _get_college_dashboard_data(request.user, current_year)
+        if college_chart_data.get('is_setup'):
+            # The college chart in the faculty template uses 'college_remaining_data_json'
+            context['college_remaining_data_json'] = college_chart_data.get('college_remaining_data_json', '[]')
+        else:
+            # Provide an empty array if the college budget isn't set
+            context['college_remaining_data_json'] = '[]'
+            
+        # Build faculty dashboard extras expected by template
+        user = request.user
+        # Projects overview with percent remaining
+        user_projects = Project.objects.filter(
+            Q(project_leader=user) | Q(providers=user)
+        ).distinct()
+
+        # Apply search filter
+        search_query = request.GET.get('search', '').strip()
+        if search_query:
+            user_projects = user_projects.filter(title__icontains=search_query)
+
+        # Apply sorting
+        sort_by = request.GET.get('sort_by', 'last_updated')
+        order = request.GET.get('order', 'desc')
+        
+        # For budget_percentage, we need to calculate it for all projects first
+        if sort_by == 'budget_percentage':
+            # Calculate percentage for all projects
+            projects_with_percent = []
+            for p in user_projects:
+                total_budget = (p.internal_budget or 0) + (p.external_budget or 0)
+                spent_total = p.used_budget or 0
+                remaining = float(total_budget) - float(spent_total)
+                percent_remaining = 0
+                if total_budget:
+                    try:
+                        percent_remaining = (remaining / float(total_budget)) * 100
+                    except Exception:
+                        percent_remaining = 0
+                projects_with_percent.append((p, percent_remaining))
+            
+            # Sort by percentage
+            projects_with_percent.sort(key=lambda x: x[1], reverse=(order == 'desc'))
+            user_projects = [p[0] for p in projects_with_percent]
+        else:
+            # Map sort_by to actual field names for regular sorting
+            sort_field_map = {
+                'title': 'title',
+                'last_updated': 'updated_at',
+                'budget_remaining': 'internal_budget',
+            }
+            
+            sort_field = sort_field_map.get(sort_by, 'updated_at')
+            
+            # Apply ordering
+            if order == 'asc':
+                user_projects = user_projects.order_by(sort_field)
+            else:
+                user_projects = user_projects.order_by(f'-{sort_field}')
+
+        projects_overview = []
+        for p in user_projects:
+            total_budget = (p.internal_budget or 0) + (p.external_budget or 0)
+            spent_total = p.used_budget or 0
+            remaining = float(total_budget) - float(spent_total)
+            percent_remaining = 0
+            if total_budget:
+                try:
+                    percent_remaining = int(round((remaining / float(total_budget)) * 100))
+                except Exception:
+                    percent_remaining = 0
+            projects_overview.append({
+                'id': p.id,
+                'title': p.title,
+                'last_updated': p.updated_at,
+                'percent_remaining': max(0, min(100, percent_remaining)),
+                'providers': [
+                    {
+                        'name': u.get_full_name() or u.username,
+                        'avatar': getattr(u, 'profile_picture_or_initial', '')
+                    } for u in list(p.providers.all())[:3]
+                ]
+            })
+        context['projects_overview'] = projects_overview
+
+        # Recent expenses logs across user's projects
+        recent_expenses = ProjectExpense.objects.filter(project__in=user_projects).select_related('project').order_by('-created_at')[:10]
+        context['recent_expenses'] = recent_expenses
+
+        # College budget donut data
+        current_budget_total = 0
+        percent_less_mean = 0
+        try:
+            user_college = getattr(user, 'college', None)
+            fiscal_year = get_current_fiscal_year()
+            if user_college:
+                cb = CollegeBudget.objects.filter(college=user_college, fiscal_year=fiscal_year, status='ACTIVE').first()
+                if cb:
+                    # Prefer the model's tracked commitment if present; otherwise compute
+                    committed_internal = getattr(cb, 'total_committed_to_projects', None)
+                    if committed_internal is None:
+                        committed_internal = Project.objects.filter(
+                            project_leader__college=user_college,
+                            start_date__year=int(fiscal_year)
+                        ).aggregate(s=Coalesce(Sum('internal_budget'), Value(Decimal('0.0'))))['s']
+                    committed_internal = committed_internal or Decimal('0')
+                    total_assigned = cb.total_assigned or Decimal('0')
+                    remaining = max(Decimal('0'), total_assigned - committed_internal)
+                    current_budget_total = remaining
+                    context['chart_data_json'] = json.dumps({
+                        'labels': ['Remaining', 'Committed'],
+                        'data': [float(remaining), float(committed_internal)],
+                        'colors': ['#16a34a', '#d1d5db']
+                    })
+                    # Minimal historical stub (optional)
+                    context['historical_data_json'] = json.dumps({ 'labels': [], 'data': [], 'color': '#0f3ea3' })
+                    context['has_college_budget'] = True
+                else:
+                    context['has_college_budget'] = False
+        except Exception:
+            context['has_college_budget'] = False
+        context['current_budget_total'] = current_budget_total
+        context['percent_less_mean'] = percent_less_mean
+    else:
+        context = {"is_setup": False, "error": "Invalid User Role"}
+
+    context["latest_history"] = BudgetHistory.objects.all().order_by('-timestamp')[:5]
+
+    # Initialize the base queryset for external projects
+    external_projects_qs = Project.objects.filter(
+        external_budget__gt=0,
+        start_date__year=int(current_year)
+    )
+
+    # Apply filtering for Faculty/Implementer roles
+    if user_role in ["FACULTY", "IMPLEMENTER"]:
+        external_projects_qs = external_projects_qs.filter(
+            Q(project_leader=request.user) | Q(providers=request.user)
+        ).distinct() 
+
+    context["latest_external_projects"] = external_projects_qs.order_by('-external_budget')[:5]
+    context["base_template"] = get_templates(request)
+    context["title"] = f"Budget Dashboard ({current_year})"
+    context["user_role"] = user_role
+    context["is_admin"] = user_role in ["VP", "DIRECTOR", "UESO"]
+    context["is_college_admin"] = user_role in ["PROGRAM_HEAD", "DEAN", "COORDINATOR"]
+
+    if not context.get('is_setup', True):
+        if context.get('user_role') in ["VP", "DIRECTOR", "UESO"]:
+            messages.info(request, "Annual Budget Pool not initialized. Please set it up.")
+            return redirect('budget_setup')
+
+        college_context = context.get('college_name')
+        if college_context:
+            messages.info(request, f"Budget for {college_context} not yet allocated for {current_year}.")
+            return render(request, 'budget/no_budget_setup.html', context)
+
+        return render(request, 'budget/no_budget_setup.html', context)
+
+    # Render template based on role: use dedicated faculty dashboard for Faculty/Implementer
+    if user_role in ["FACULTY", "IMPLEMENTER"]:
+        return render(request, 'budget/faculty_budget.html', context)
+    return render(request, 'budget/budget.html', context)@role_required(["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR", "FACULTY", "IMPLEMENTER"], require_confirmed=True)
+def budget_view(request):
+
+    current_year = get_current_fiscal_year()
+    user_role = getattr(request.user, 'role', None)
+
+    if user_role in ["VP", "DIRECTOR", "UESO"]:
+        context = _get_admin_dashboard_data(current_year)
+    elif user_role in ["PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
+        context = _get_college_dashboard_data(request.user, current_year)
+    elif user_role in ["FACULTY", "IMPLEMENTER"]:
+        context = _get_faculty_dashboard_data(request.user)
+        
+        # 💡 FIX 1: Fetch College-level chart data required by the template for remaining budget
+        college_chart_data = _get_college_dashboard_data(request.user, current_year)
+        if college_chart_data.get('is_setup'):
+            # The college chart in the faculty template uses 'college_remaining_data_json'
+            context['college_remaining_data_json'] = college_chart_data.get('college_remaining_data_json', '[]')
+        else:
+            # Provide an empty array if the college budget isn't set
+            context['college_remaining_data_json'] = '[]'
+            
         # Build faculty dashboard extras expected by template
         user = request.user
         # Projects overview with percent remaining
@@ -861,7 +1045,6 @@ def budget_view(request):
     if user_role in ["FACULTY", "IMPLEMENTER"]:
         return render(request, 'budget/faculty_budget.html', context)
     return render(request, 'budget/budget.html', context)
-
 
 @role_required(["VP", "DIRECTOR", "UESO"], require_confirmed=True)
 def edit_budget_view(request):

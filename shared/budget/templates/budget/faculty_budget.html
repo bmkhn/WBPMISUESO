@@ -1,1017 +1,520 @@
 {% extends 'base_public.html' %}
-{% load humanize %}
+{% load humanize static %}
 
 {% block content %}
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
+<link href="{% static 'shared/projects/u_module_styles.css' %}" rel="stylesheet">
+<link href="{% static 'shared/projects/gridnlist.css' %}" rel="stylesheet">
 <title>Budget</title>
-<style>
-        body {font-family: 'Inter', Arial, sans-serif; margin: 0; padding: 0; background-color: #eaeaea;}
-        h1,h2,h3 {font-weight:600; color:#111;}
-        .meta {color:#6b7280;}
-        .proj-title {font-weight:600;}
-        .main {display: flex; flex-direction: column; gap: 1.25rem; margin: 2rem 5rem;}
-        .row-grid {display: grid; grid-template-columns: 2fr 1fr; gap: 1.25rem;}
-        section.box {background: #fff; border-radius: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 1.25rem;}
-        .projects-grid {display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem;}
-        .proj-card {background: #E6F2FB; border-radius: 1rem; padding: 1rem; cursor: pointer; text-decoration:none; color:inherit;}
-        .proj-title {font-size: 1rem; margin: 0.5rem 0;}
-        .meta {font-size: 0.8rem; color:#666;}
-        .providers {display:flex; gap:0.25rem; align-items:center; margin:0.5rem 0;}
-        .providers img {width:24px; height:24px; border-radius:50%; border:1px solid #ccc;}
-        .proj-status {display:flex; flex-direction:column; align-items:center; gap:0.5rem; margin-top:0.65rem;}
-        .proj-donut {width:140px; height:140px;}
-        .logs-list {display: flex; flex-direction: column; background: #F2F1F1; border-radius: 0.75rem; overflow: hidden;}
-        .log-item {background: #fff; border-bottom: 1px solid #e5e7eb; font-size: 0.95rem; line-height: 1.4; padding: 0.85rem 1rem;}
-        .log-item small {display:block; color:#6b7280; margin-top: 0.25rem;}
-        /* Budget summary */
-        .summary-grid {display:grid; grid-template-columns: 1fr 1fr; gap:1.25rem; align-items:start;}
-        .donut-wrap {display:flex; gap:1.25rem; align-items:center;}
-        .legend {display:flex; flex-direction:column; gap:0.5rem;}
-        .legend-item {display:flex; gap:0.5rem; align-items:center;}
-        .legend-swatch {width:12px; height:12px; border-radius:2px;}
-        .num-xl {font-size:3rem; font-weight:800; background: linear-gradient(90deg, #ffc107, #28a745); background-clip:text; -webkit-background-clip:text; -webkit-text-fill-color:transparent;}
-        /* Overlay */
-        .overlay {position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,0.5);} 
-        .overlay.show {display: flex;} 
-        .overlay-content {background: white; border-radius: 1rem; padding: 1.25rem; width: 45rem; max-width: 95%;}
-        .btn {display:inline-block; background:#245F3E; color:#fff; border:none; border-radius:0.5rem; padding:0.5rem 1rem; cursor:pointer;}
-        .project-grid {display:grid; grid-template-columns: 1fr 1.4fr; gap:1rem;}
-        .chart-container {width: 100%; height: 260px;}
-        table {border-collapse: collapse; width: 100%;}
-        th, td {padding: 0.6rem; border-bottom: 1px solid #e5e7eb; text-align: left;}
-        th {background:#f7f7f7;}
-        .project-tab-btn {background: none; border: none; padding: 0.75rem 1rem; cursor: pointer; border-bottom: 3px solid transparent; font-size: 0.95rem;}
-        .project-tab-btn.active {border-bottom-color: #245F3E; color: #245F3E; font-weight: 500;}
-        .project-tab-content {display: none;}
-        .project-tab-content.active {display: block;}
-        /* Project header styles from budget-project.html */
-        .tags {display: flex; justify-content: space-between; width: 100%; margin-bottom: 2.25rem;}
-        .campus {background-color: #ff9f10; color: rgb(55, 39, 0); border: 0.08rem solid #ff9f10; font-weight: 600; padding: 0.35rem 0.6rem; margin-right: 0.5rem; cursor: pointer; border-radius: 0.25rem;}
-        .agenda {background: linear-gradient(90deg, white, #00ff6e3d); color: #313131; border: 0.08rem solid #313131; font-weight: 500; padding: 0.35rem 0.6rem; margin-right: 0.5rem; cursor: pointer; border-radius: 0.25rem;}
-        .status {background-color: whitesmoke; color: #1CB889; border: 0.08rem solid #1CB889; font-weight: 500; padding: 0.35rem 0.6rem; margin-right: 0.5rem; cursor: pointer; border-radius: 0.25rem;}
-        .project-title {font-size: 1.5rem; font-weight: 500; margin: 0.25rem 0 1rem 0; color: #222; text-decoration: none;}
-        .project-date {font-size: 0.9rem; color: #666; margin: 1rem 0 2rem 0; font-weight: 300;}
-        .project-authors {display: flex; flex-direction: row; align-items: center; gap: 1.5rem; margin: 1rem 0 2rem 0; position: relative;}
-        .project-authors content {display: flex; flex-direction: row; align-items: center; gap: 0.75rem;}
-        .project-authors img {width: 2.5rem; height: 2.5rem; border-radius: 50%; object-fit: cover; border: 0.08rem solid #ccc;}
-        .project-authors a {font-size: 0.9rem; color: #000000; text-decoration: none;}
-        .project-authors a:hover {color: #007bff;}
-        .expense-add {position: absolute; right: 0;}
-        .expense-add button {color: white; background-color: #245F3E; padding: 0.75rem 1.5rem; font-size: 1rem; font-weight: 500; border-radius: 0.75rem; border: none; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.1);}
-        .expense-add button:hover {background-color: #1a4a2e; transform: translateY(-1px); box-shadow: 0 4px 8px rgba(0,0,0,0.15);}
-        /* Enhanced expense form styles */
-        .upload-container {background-color: #f8f9fa; border: 2px dashed #245F3E; padding: 1.5rem 1.5rem; display: flex; align-items: center; border-radius: 0.75rem; cursor: pointer; margin-top: 0.5rem; width: 100%; max-width: 400px; transition: all 0.3s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.1);}
-        .upload-container:hover {background-color: #f0f8f4; border-color: #1a4a2e; transform: translateY(-1px); box-shadow: 0 4px 8px rgba(0,0,0,0.15);}
-        .expenseForm label {font-family: Helvetica, Arial, sans-serif; font-weight: 500; margin-bottom: 0.5rem; display: block;}
-        .expenseForm div {padding: 0.5rem 0;}
-        .expenseForm #notes, .expenseForm #amount, .expenseForm #reason {padding: 1rem 0.5rem; border: 1px solid #868686ff; border-radius: 0.5rem; margin-bottom: 0.5rem; width: 95%; background-color: #e9e9e9; font-family: inherit;}
-        .form-1, .form-2, .form-3 {display: flex; flex-direction: column;}
-        .form-4 {display: flex; flex-direction: row !important; justify-content: center !important; gap: 1rem; margin-top: 1rem;}
-        #closeOverlay {color: white; background-color: #5f2424ff; padding: 0.5rem 1rem; font-size: 1rem; border-radius: 2rem; border: none; cursor: pointer;}
-        #closeOverlay:hover {background-color: #000; transition: 1s;}
-        .close-x {position: absolute; top: 1rem; right: 1rem; font-size: 1.5rem; background: none; border: none; cursor: pointer; color: #666; transition: color 0.2s ease;}
-        .close-x:hover {color: #000;}
-        .project-summary {position: relative; width: 100%; display: flex; justify-content: flex-start; align-items: flex-start; flex: 0 0 50%; max-width: 50%;}
-        .chart-wrapper {display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem; max-height: 100%;}
-        .cash-available {font-size: 1.25rem; margin-top: 0.5rem;}
-        .cash-available p {margin: 0.2rem 0 0 0;}
-        .goal-title {text-align: center; margin-top: 0.5rem; font-size: 1rem; width: 100%;}
-        .logs {background-color: whitesmoke; border-radius: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); max-height: 25rem; overflow-y: auto; overflow-x: hidden; position: relative; padding: 0.5rem; margin-left: -0.5rem; flex: 0 0 50%; max-width: 50%; min-width: 0;}
-        /* Brand new Expenses list layout */
-        #overviewListWrap { width: 100%; min-width: 0; overflow-x: hidden !important; overflow-y: auto !important; }
-        .expense-card { background:#fff; border:1px solid #e5e7eb; border-radius: 0.8rem; overflow:hidden; box-shadow: 0 1px 2px rgba(0,0,0,0.04); width: 100%; font-size: 0.9rem; }
-        .expense-header, .expense-row { display:grid; grid-template-columns: minmax(240px, 1fr) 150px 170px; column-gap: 10px; align-items:center; }
-        .expense-header { background:#f7f8fa; color:#111; font-weight: 600; padding: 0.6rem 0.8rem; border-bottom: 1px solid #e5e7eb; }
-        .expense-row { padding: 0.6rem 0.8rem; border-bottom: 1px solid #eef0f3; }
-        .expense-row:last-child { border-bottom: none; }
-        .expense-reason { word-break: break-word; white-space: normal; }
-        .expense-amount, .expense-date { text-align: right; white-space: nowrap; }
-        .expense-empty { padding: 1rem; color:#6b7280; }
-        /* Pagination styles from faculty_project.html */
-        .pagination-container { display: flex; justify-content: center; align-items: center; gap: 0.5rem; margin-top: 1.5rem; flex-wrap: wrap; }
-        .pagination-button { padding: 0.5rem 0.75rem; border: 1px solid #e5e7eb; background: white; color: #374151; border-radius: 0.375rem; cursor: pointer; font-size: 0.875rem; text-decoration: none; transition: all 0.2s; }
-        .pagination-button:hover:not(:disabled) { background: #f9fafb; border-color: #d1d5db; }
-        .pagination-button.active { background: #245F3E; color: white; border-color: #245F3E; font-weight: 500; }
-        .pagination-button:disabled { opacity: 0.5; cursor: not-allowed; }
-    </style>
 
 <body>
-<div data-dashboard="{% if project %}0{% else %}1{% endif %}">
+    <div data-dashboard="1" class="main">
 
-    {% if project %}
-    <section class="box" style="margin: 0 5rem 0 5rem; padding: 3rem;">
-        <!-- Project Tags -->
-        <div class="tags">
-            <content style="flex-grow: 2;">
-                {% if project.campus %}<button class="campus">{{ project.campus }}</button>{% endif %}
-                {% if project.agenda %}<button class="agenda">{{ project.agenda }}</button>{% endif %}
-            </content>
-            <content style="flex-grow: 0;">
-                {% if project.status %}<button class="status">{{ project.status }}</button>{% endif %}
-            </content>
-        </div>
-        
-        <!-- Project Title and Date -->
-        <div>
-            <a href="#" class="project-title">{{ project.title }}</a>
-            {% if project.start_date or project.end_date %}
-            <h5 class="project-date">
-                {% if project.start_date %}{{ project.start_date|date:"F d, Y" }}{% endif %}
-                {% if project.start_date and project.end_date %} - {% endif %}
-                {% if project.end_date %}{{ project.end_date|date:"F d, Y" }}{% endif %}
-            </h5>
-            {% endif %}
-        </div>
-        
-        <!-- Providers -->
-        {% if providers_complete %}
-        <div class="project-authors">
-            {% for provider in providers %}
-            <content>
-                <img src="{{ provider.profile_picture_or_initial }}" alt="{{ provider.get_full_name }}">
-                <a href="#">{{ provider.get_full_name }}</a>
-            </content>
-            {% endfor %}
-            <div class="expense-add">
-                <button type="button" id="openExpense">Add Expense</button>
-            </div>
-        </div>
-        {% else %}
-        <div class="project-authors">
-            <content>
-                <a href="#">Providers not set yet for this project.</a>
-            </content>
-            <div class="expense-add">
-                <button type="button" id="openExpense">Add Expense</button>
-            </div>
-        </div>
-        {% endif %}
-        
-        <!-- Tabs -->
-        <div style="display:flex; gap:0.5rem; border-bottom: 1px solid #ddd; margin-top: 1rem;">
-            <button type="button" class="project-tab-btn active" data-tab="overview">Overview</button>
-            <button type="button" class="project-tab-btn" data-tab="files">Files</button>
-        </div>
-        
-        <!-- Tab Content: Overview -->
-        <div class="project-tab-content active" id="overview-tab" style="display:block; margin-top: 2rem;" data-tab="overview">
-            <div class="project-content" style="display:flex; flex-direction:row; gap:1rem; align-items:flex-start;">
-                <section class="project-summary">
-                    <div class="chart-wrapper">
-                        <div class="chart-container" style="width:16rem; height:16rem;">
-                            <canvas id="goal1" width="256" height="256" data-percentage="{{ budget_percentage|default:0 }}"></canvas>
-                        </div>
-                        <div class="cash-available">
-                            <p>Current Budget: <strong>₱ {{ remaining_budget|floatformat:2 }}</strong></p>
-                        </div>
-                        <div class="goal-title" id="goalText"></div>
-                    </div>
-                </section>
-                <section class="logs">
-                    <div id="overviewListWrap" style="max-height: 26rem; overflow:auto; align-self:start; justify-self:end;">
-                        <div class="expense-card">
-                            <div class="expense-header">
-                                <div>Reason</div>
-                                <div class="expense-amount">Amount</div>
-                                <div class="expense-date">Date</div>
+        <div style="display: flex; flex-direction: column;">
+            
+            <div class="dashboard-top-grid">
+
+                <div class="list limit">
+                    <h2 class="headerr">Recent Expense Logs</h2>
+                    <div class="logs-div">
+                        {% if recent_expenses %}
+                        {% for e in recent_expenses %}
+                        <div class="log-item-row">
+                            <div class="log-content">
+                                <span class="log-amount-main">₱{{ e.amount|floatformat:2|intcomma }} accounted for
+                                <a href="{% url 'project_expenses' e.project_id %}" class="log-project">{{ e.project.title }}</a></span>
+                                <span class="log-creator">Recorded by: {{ e.created_by.get_full_name }}</span>
                             </div>
-                            <div class="expense-body" id="overviewTbody">
-                                {% for expense in expenses %}
-                                <div class="expense-row">
-                                    <div class="expense-reason">{{ expense.title }}</div>
-                                    <div class="expense-amount">₱ {{ expense.amount|floatformat:2|intcomma }}</div>
-                                    <div class="expense-date">{{ expense.date_incurred|date:"m/d/Y" }}</div>
-                                </div>
-                                {% empty %}
-                                <div class="expense-empty">No expenses recorded yet.</div>
-                                {% endfor %}
-                            </div>
-                            <div id="overviewPagination" style="padding: 0.75rem 1rem;"></div>
-                        </div>
-                    </div>
-                </section>
-            </div>
-        </div>
-        
-        
-        <!-- Tab Content: Files -->
-        <div class="project-tab-content" id="files-tab" style="display:none; margin-top: 2rem;">
-            <div style="margin-top:1rem;">
-                <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem;">
-                    {% for expense in expenses %}
-                        {% if expense.receipt_file %}
-                        <div style="background:#fff; border:1px solid #e5e7eb; border-radius:0.75rem; padding:0.75rem; box-shadow:0 1px 2px rgba(0,0,0,0.05); display:flex; flex-direction:column; gap:0.5rem;">
-                            <div style="height:120px; display:flex; align-items:center; justify-content:center; background:#f9fafb; border:1px dashed #e5e7eb; border-radius:0.5rem; overflow:hidden;">
-                                {% if expense.receipt_file.name|lower|slice:"-4:" == ".pdf" %}
-                                    <span style="font-size:0.9rem; color:#374151;">PDF Receipt</span>
-                                {% else %}
-                                    <img src="{{ expense.receipt_file.url }}" alt="Receipt preview" style="max-width:100%; max-height:100%; object-fit:contain;"/>
-                                {% endif %}
-                            </div>
-                            <div style="display:flex; flex-direction:column; gap:0.25rem;">
-                                <div style="font-weight:600; font-size:0.95rem; color:#111; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ expense.title }}</div>
-                                <div style="font-size:0.85rem; color:#6b7280;">{{ expense.date_incurred|date:"m/d/Y" }}</div>
-                                <a href="{{ expense.receipt_file.url }}" target="_blank" style="margin-top:0.25rem; text-decoration:none; color:#0f766e; font-weight:500;">View receipt</a>
+                            <div class="log-amount-date">
+                                <span class="log-timestamp">{{ e.submitted_at|date:"F d, Y" }}</span>
+                                <span class="log-timestamp">{{ e.submitted_at|date:"h:i A" }}</span>
                             </div>
                         </div>
+                        {% endfor %}
+                        {% else %}
+                        <div class="log-item-row">No expense logs yet.</div>
                         {% endif %}
-                    {% empty %}
-                        <div class="muted">No receipts uploaded yet.</div>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-    </section>
-    {% endif %}
-
-    {% if not project %}
-    <div class="main">
-        <!-- First row: Projects (left) and Logs (right) -->
-        <div class="row-grid">
-            <section class="box">
-                <!-- Search Bar & Filter -->
-                <div class="search-container" style="margin:0 0 1.25rem 0;">
-                    <form class="search-bar" method="get" action="" style="background:#fff; border-radius:0.5rem; padding:0.75rem 1rem; display:flex; align-items:center; gap:0.75rem; box-shadow:0 1px 3px rgba(0,0,0,0.1); position:relative;">
-                        <svg width="16" height="16"> <use href="#icon-search"></use> </svg>
-                        <input type="text" name="search" placeholder="Search Project Title" value="{{ request.GET.search|default:'' }}" style="flex:1; border:none; outline:none; font-size:0.95rem;"/>
-                        <button type="button" id="filterBtn" style="background:none;border:none;padding:0.5rem;margin-right:5px;cursor:pointer;position:relative;">
-                            <svg width="16" height="16"> <use href="#icon-filter"></use> </svg>
-                        </button>
-                        
-                        <div id="filterDropdown" class="filter-dropdown" style="display:none; position:absolute; right:1rem; top:calc(100% + 0.5rem); background:#fff; border:1px solid #e5e7eb; border-radius:0.5rem; padding:1.5rem; box-shadow:0 4px 12px rgba(0,0,0,0.15); z-index:100; min-width:400px;">
-                            <div class="filter-grid" style="display:grid; grid-template-columns:repeat(2,1fr); gap:1rem;">
-                                <label style="font-weight:500;color:#374151;display:flex;flex-direction:column;">
-                                    Sort By
-                                    <select name="sort_by" style="width:100%;margin-top:6px; padding:0.5rem; border:1px solid #e5e7eb; border-radius:0.375rem;">
-                                        <option value="title" {% if request.GET.sort_by == 'title' %}selected{% endif %}>Title</option>
-                                        <option value="last_updated" {% if request.GET.sort_by == 'last_updated' %}selected{% endif %}>Last Updated</option>
-                                        <option value="budget_remaining" {% if request.GET.sort_by == 'budget_remaining' %}selected{% endif %}>Budget Remaining (Amount)</option>
-                                        <option value="budget_percentage" {% if request.GET.sort_by == 'budget_percentage' %}selected{% endif %}>Budget Remaining (%)</option>
-                                    </select>
-                                </label>
-                                <label style="font-weight:500;color:#374151;display:flex;flex-direction:column;">
-                                    Order
-                                    <select name="order" style="width:100%;margin-top:6px; padding:0.5rem; border:1px solid #e5e7eb; border-radius:0.375rem;">
-                                        <option value="desc" {% if request.GET.order == 'desc' %}selected{% endif %}>Descending</option>
-                                        <option value="asc" {% if request.GET.order == 'asc' %}selected{% endif %}>Ascending</option>
-                                    </select>
-                                </label>
-                            </div>
-                            <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:1.5rem;">
-                                <button type="submit" style="background:#245F3E;color:#fff;border:none;border-radius:0.375rem;padding:0.5rem 1rem;cursor:pointer;font-weight:500;">Apply</button>
-                                <button type="button" id="closeFilter" style="background:#6b7280;color:#fff;border:none;border-radius:0.375rem;padding:0.5rem 1rem;cursor:pointer;font-weight:500;">Clear Filters</button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
-                    <h2 style="margin:0; font-weight:500; font-size:1.35rem; color:#000; font-family:'Inter',Arial,sans-serif; letter-spacing:normal;">Project Budget</h2>
-                    <div style="display:flex; gap:0.5rem;">
-                        <button id="cardViewBtn" style="border:1px solid #ddd; background:#000; color:#fff; border-radius:0.5rem; width:2.25rem; height:2.25rem; display:flex; align-items:center; justify-content:center; cursor:pointer;"><i class="ri-apps-2-line"></i></button>
-                        <button id="listViewBtn" style="border:1px solid #ddd; background:#fff; color:#000; border-radius:0.5rem; width:2.25rem; height:2.25rem; display:flex; align-items:center; justify-content:center; cursor:pointer;"><i class="ri-list-unordered"></i></button>
                     </div>
                 </div>
-                {% if projects_overview %}
-                <div id="projectsCardView" class="projects-grid">
-                    {% for p in projects_overview %}
-                    <a href="{% url 'project_expenses' p.id %}" class="proj-card" data-card-item>
-                        {% if p.last_updated %}<p class="meta">Last updated {{ p.last_updated|date:"F j, Y" }}</p>{% endif %}
-                        <h3 class="proj-title" style="text-align:center">{{ p.title }}</h3>
-                        <div class="proj-status">
-                            <canvas class="proj-donut" width="140" height="140" data-percent="{{ p.percent_remaining|default:0 }}"></canvas>
-                            <span class="meta">{{ p.percent_remaining }}% of budget remaining</span>
-                        </div>
-                        <div class="providers" style="justify-content:center;">
-                            {% for pr in p.providers %}
-                            <img src="{{ pr.avatar }}" alt="{{ pr.name }}">
-                            {% endfor %}
-                        </div>
-                    </a>
-                    {% endfor %}
-                </div>
-                <!-- Card View Pagination -->
-                <div id="cardPagination" class="pagination-container" style="margin-top:1rem;"></div>
                 
-                <div id="projectsListView" style="display:none;">
-                    <table style="width:100%; border-collapse:collapse;">
-                        <thead><tr><th style="text-align:left; padding:0.6rem; background:#f7f7f7;">Title</th><th style="text-align:left; padding:0.6rem; background:#f7f7f7;">Updated</th><th style="text-align:left; padding:0.6rem; background:#f7f7f7;">Remaining</th><th style="background:#f7f7f7;"></th></tr></thead>
-                        <tbody id="projectsListBody">
+                {# LEFT div: PROJECT LIST (Corresponds to .list in faculty_project.html) #}
+                <div class="list kinkk"> 
+                    <div class="box" style="box-shadow:none; padding: 0;">
+                        <div class="search-container">
+                            <form class="search-bar" method="get" action="">
+                                <svg width="16" height="16"> <use href="#icon-search"></use> </svg>
+                                <input type="text" name="search" placeholder="Search Project Title" value="{{ request.GET.search|default:'' }}" class="flex-1"/>
+                                <button type="button" id="filterBtn" class="mr-1">
+                                    <svg width="16" height="16"> <use href="#icon-filter"></use> </svg>
+                                </button>
+                                
+                                <div id="filterDropdown" class="filter-dropdown" style="display:none;">
+                                    <div class="filter-grid">
+                                        <label class="font-medium text-gray-700 flex flex-col">
+                                            Sort By
+                                            <select name="sort_by" class="mt-2">
+                                                <option value="title" {% if request.GET.sort_by == 'title' %}selected{% endif %}>Title</option>
+                                                <option value="last_updated" {% if request.GET.sort_by == 'last_updated' %}selected{% endif %}>Last Updated</option>
+                                                <option value="budget_remaining" {% if request.GET.sort_by == 'budget_remaining' %}selected{% endif %}>Budget Remaining (Amount)</option>
+                                                <option value="budget_percentage" {% if request.GET.sort_by == 'budget_percentage' %}selected{% endif %}>Budget Remaining (%)</option>
+                                            </select>
+                                        </label>
+                                        <label class="font-medium text-gray-700 flex flex-col">
+                                            Order
+                                            <select name="order" class="mt-2">
+                                                <option value="desc" {% if request.GET.order == 'desc' %}selected{% endif %}>Descending</option>
+                                                <option value="asc" {% if request.GET.order == 'asc' %}selected{% endif %}>Ascending</option>
+                                            </select>
+                                        </label>
+                                    </div>
+                                    <div class="filter-actions">
+                                        <button type="submit" class="filter-apply">Apply</button>
+                                        <button type="button" id="closeFilter" class="filter-close">Clear Filters</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="files-header">
+                            <h2>Project Budget</h2>
+                            <div class="flex gap-2">
+                                <button id="cardViewBtn" class="view-toggle-btn active"><i class="ri-apps-2-line"></i></button>
+                                <button id="listViewBtn" class="view-toggle-btn inactive"><i class="ri-list-unordered"></i></button>
+                            </div>
+                        </div>
+                        {% if projects_overview %}
+                        <div id="projectsCardView" class="projects-grid js-grid">
                             {% for p in projects_overview %}
-                            <tr data-list-item>
-                                <td style="padding:0.6rem;">{{ p.title }}</td>
-                                <td style="padding:0.6rem;">{% if p.last_updated %}{{ p.last_updated|date:"M d, Y" }}{% else %}-{% endif %}</td>
-                                <td style="padding:0.6rem;">{{ p.percent_remaining }}%</td>
-                                <td style="padding:0.6rem;"><a href="{% url 'project_expenses' p.id %}">Open</a></td>
-                            </tr>
+                            <a href="{% url 'project_expenses' p.id %}" class="proj-card budget" data-card-item>
+                                <div>
+                                    {% if p.last_updated %}<p class="text-xs text-gray-500">Last updated {{ p.last_updated|date:"F j, Y" }}</p>{% endif %}
+                                    <h3 class="proj-title">{{ p.title }}</h3>
+                                </div>
+                                <div class="proj-status">
+                                    <canvas class="proj-donut" width="140" height="140" data-percent="{{ p.percent_remaining|default:0 }}"></canvas>
+                                </div>
+                                <p class="progress-done-message text-sm">{{ p.percent_remaining }}% of budget remaining</p>
+                            </a>
                             {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                <!-- List View Pagination -->
-                <div id="listPagination" class="pagination-container" style="margin-top:1rem;display:none;"></div>
-                {% else %}
-                <div>No projects found.</div>
-                {% endif %}
-            </section>
-            <section class="box">
-                <h2 style="margin:0 0 0.75rem 0; font-size:1.2rem;">Logs</h2>
-                <div id="logsList" class="logs-list">
-                    {% if recent_expenses %}
-                    {% for e in recent_expenses %}
-                    <div class="log-item">
-                        <strong>₱{{ e.amount|floatformat:2 }}</strong> has been accounted for
-                        <a href="{% url 'project_expenses' e.project_id %}">{{ e.project.title }}</a>
-                        <small>{{ e.submitted_at|date:"h:i A. F d, Y" }}</small>
-                    </div>
-                    {% endfor %}
-                    {% else %}
-                    <div class="log-item">No expense logs yet.</div>
-                    {% endif %}
-                </div>
-            </section>
-        </div>
-
-        <!-- Second row: College Budget summary full-width below Project Budget -->
-        <section class="box">
-            <div class="summary-grid">
-                <!-- Top-left: Pie chart -->
-                <div class="box" style="box-shadow:none;">
-                    <h3 style="margin:0 0 0.75rem 0;">College Budget</h3>
-                    <div style="display:flex; align-items:center; justify-content:center;">
-                        <div style="width:240px; height:240px; position:relative;">
-                            <canvas id="donutChart" width="240" height="240"></canvas>
                         </div>
-                    </div>
-                </div>
-                <!-- Top-right: Legend -->
-                <div class="box" style="box-shadow:none;">
-                    <div class="legend" id="budgetLegend"></div>
-                </div>
-                <!-- Bottom-left: Budget text -->
-                <div class="box" style="box-shadow:none;">
-                    <div style="margin-top:0.25rem;">
-                        <p style="margin:0 0 0.25rem 0;">Your college’s current budget for this quarter is <b>₱{{ current_budget_total|floatformat:2 }}</b>. It is</p>
-                        <div class="num-xl">{{ percent_less_mean }}%</div>
-                        <p style="margin:0;">less than historical mean.</p>
-                    </div>
-                </div>
-                <!-- Bottom-right: Historical graph -->
-                <div class="box" style="box-shadow:none;">
-                    <h3 style="margin:0 0 0.75rem 0;">Historical Summary</h3>
-                    <div style="width:100%; height:260px;">
-                        <canvas id="lineChart" width="500" height="260"></canvas>
+                        <div id="cardPagination" class="pagination-container"></div>
+                        
+                        <div id="projectsListView" style="margin-top: 1rem;">
+                            <table class="user-table js-hidden">
+                                <thead><tr><th>Title</th><th>Updated</th><th>Remaining</th></tr></thead>
+                                <tbody id="projectsListBody">
+                                    {% for p in projects_overview %}
+                                    <tr data-list-item>
+                                        <td>{{ p.title }}</td>
+                                        <td>{% if p.last_updated %}{{ p.last_updated|date:"M d, Y" }}{% else %}-{% endif %}</td>
+                                        <td>{{ p.percent_remaining }}%</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="listPagination" class="pagination-container js-hidden"></div>
+                        {% else %}
+                        <div>No projects found.</div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
-        </section>
-    </div>
-    {% endif %}
 
-    {# Provide JSON safely via json_script blocks #}
-    {% if chart_data_json %}<script id="chart-data" type="application/json">{{ chart_data_json|safe }}</script>{% endif %}
-    {% if historical_data_json %}<script id="historical-data" type="application/json">{{ historical_data_json|safe }}</script>{% endif %}
-    {% if project_data %}<script id="project-data" type="application/json">{{ project_data|safe }}</script>{% endif %}
-
-    {# Add Expense Overlay (project page only) #}
-    {% if project %}
-    <div class="overlay" id="overlay">
-        <div class="overlay-content">
-            <button type="button" class="close-x" id="closeX" aria-label="Close">&times;</button>
-            <h2 style="font-weight:400; margin-bottom:1rem;">Add Expense</h2>
-            <form class="expenseForm" id="expenseForm" enctype="multipart/form-data">
-                <div class="form-1">
-                    <label for="reason">Reason: <span style="color: red;">*</span></label>
-                    <input type="text" id="reason" name="reason" placeholder="Meals" required>
-
-                    <label for="amount">Total Expense (₱): <span style="color: red;">*</span></label>
-                    <input type="number" id="amount" name="amount" step="0.01" placeholder="100.00" required>
-                </div>
-                <div class="form-2">
-                    <label for="receipt">Upload Receipt/s of Expenses: <span style="color: red;">*</span></label>
-                    <div class="upload-container" onclick="document.getElementById('receipt').click()">
-                        <input type="file" id="receipt" name="receipt" accept="image/*,.pdf" style="display: none;" onchange="handleFileChange(this)">
-                        <svg width="24" height="24" style="margin-right: 12px; fill: #245F3E;">
-                            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
-                            <path d="M12,11L14,13L16,11H12Z" fill="#ffffff" opacity="0.8"/>
-                            <circle cx="12" cy="13" r="1" fill="#ffffff"/>
-                        </svg>
-                        <div style="display: flex; flex-direction: column; align-items: flex-start;">
-                            <span id="upload-text" style="font-weight: 500; color: #245F3E;">Click to upload</span>
-                            <span style="font-size: 0.8rem; color: #666; margin-top: 2px;">Images or PDF files only</span>
+            {# BOTTOM div: LOGS (Full Width) #}
+            <div class="list" style="margin-top: 1rem;">
+                <h2 class="headerr">Charts</h2>
+                    
+                    <div class="chart-box">
+                        <h3 class="chart-box-title">College Budget Remaining Over Time</h3>
+                        <div class="chart-container-large">
+                            <canvas id="collegeTimeChart" data-chart-data="{{ college_remaining_data_json }}"></canvas>
                         </div>
                     </div>
-                </div>
-                <div class="form-3">
-                    <label for="notes">Notes: <span style="color: red;">*</span></label>
-                    <textarea id="notes" name="notes" rows="3" placeholder="(e.g. Bento box)" required></textarea>
-                </div>
-                <div class="form-4">
-                    <button type="submit" id="submitexpense" class="btn">Submit</button>
-                    <button type="button" id="closeOverlay">Cancel</button>
-                </div>
-            </form>
+                    
+                    <div class="chart-box">
+                        <h3 class="chart-box-title">Total Project Funding Over Time</h3>
+                        <div class="chart-container-large">
+                            <canvas id="facultyTotalChart" data-chart-data="{{ faculty_total_data_json }}"></canvas>
+                        </div>
+                    </div>
+            </div>
         </div>
+
+        {# SVG Icons #}
+        <svg style="display: none;">
+            <symbol id="icon-search" viewBox="0 0 21 21" fill="none">
+                <path d="M8.89152 15.9057C9.75056 15.9057 10.6012 15.7365 11.3948 15.4077C12.1885 15.079 12.9096 14.5972 13.5171 13.9897C14.1245 13.3823 14.6064 12.6612 14.9351 11.8675C15.2638 11.0739 15.433 10.2232 15.433 9.36417C15.433 8.50513 15.2638 7.6545 14.9351 6.86084C14.6064 6.06719 14.1245 5.34606 13.5171 4.73862C12.9096 4.13119 12.1885 3.64934 11.3948 3.3206C10.6012 2.99186 9.75056 2.82266 8.89152 2.82266C7.1566 2.82266 5.49274 3.51185 4.26597 4.73862C3.03919 5.9654 2.35 7.62926 2.35 9.36417C2.35 11.0991 3.03919 12.763 4.26597 13.9897C5.49274 15.2165 7.1566 15.9057 8.89152 15.9057V15.9057ZM15.7819 14.713L19.685 18.6161C19.7891 18.7167 19.872 18.8371 19.9291 18.9701C19.9861 19.1032 20.0161 19.2463 20.0173 19.391C20.0184 19.5358 19.9907 19.6793 19.9358 19.8133C19.8809 19.9472 19.7999 20.0689 19.6974 20.1712C19.595 20.2735 19.4732 20.3544 19.3392 20.4091C19.2052 20.4638 19.0616 20.4913 18.9168 20.4899C18.772 20.4886 18.629 20.4584 18.496 20.4012C18.3631 20.3439 18.2428 20.2608 18.1423 20.1566L14.2392 16.2535C12.4866 17.614 10.2814 18.2554 8.07247 18.0472C5.86357 17.839 3.81705 16.7968 2.34951 15.1328C0.881971 13.4688 0.103735 11.308 0.173229 9.09044C0.242723 6.87284 1.15472 4.76508 2.72357 3.19623C4.29242 1.62738 6.40018 0.715379 8.61778 0.645885C10.8354 0.576391 12.9961 1.35463 14.6601 2.82217C16.3241 4.28971 17.3663 6.33623 17.5745 8.54513C17.7827 10.754 17.1413 12.9592 15.7808 14.7119L15.7819 14.713Z" fill="#5A5252"/>
+            </symbol>
+            <symbol id="icon-filter" viewBox="0 0 23 22" fill="none">
+                <path opacity="0.9" d="M21.5399 1.92871H1.37988L9.44388 11.4644V18.0567L13.4759 20.0727V11.4644L21.5399 1.92871Z" stroke="#1E1E1E" stroke-width="2.016" stroke-linecap="round" stroke-linejoin="round"/>
+            </symbol>
+        </svg>
     </div>
-    {% endif %}
+<script>
+    const DASH_ROOT = document.querySelector('[data-dashboard]');
+    const IS_DASH = !!(DASH_ROOT && DASH_ROOT.getAttribute('data-dashboard') === '1');
+    const MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-    <script>
-        const DASH_ROOT = document.querySelector('[data-dashboard]');
-        const IS_DASH = !!(DASH_ROOT && DASH_ROOT.getAttribute('data-dashboard') === '1');
+    // Dashboard view toggle (only when on dashboard)
+    (function dashboardToggle(){
+        if (!IS_DASH) return;
+        const cardBtn = document.getElementById('cardViewBtn');
+        const listBtn = document.getElementById('listViewBtn');
+        const cardView = document.getElementById('projectsCardView');
+        const listView = document.getElementById('projectsListView');
+        const cardPagination = document.getElementById('cardPagination');
+        const listPagination = document.getElementById('listPagination');
 
-        // Dashboard view toggle (only when on dashboard)
-        (function dashboardToggle(){
-            if (!IS_DASH) return;
-            const cardBtn = document.getElementById('cardViewBtn');
-            const listBtn = document.getElementById('listViewBtn');
-            const cardView = document.getElementById('projectsCardView');
-            const listView = document.getElementById('projectsListView');
-            const cardPagination = document.getElementById('cardPagination');
-            const listPagination = document.getElementById('listPagination');
-            
-            if (cardBtn && listBtn && cardView && listView){
-                cardBtn.addEventListener('click', ()=>{ 
-                    cardBtn.style.background='#000'; 
-                    cardBtn.style.color='#fff'; 
-                    listBtn.style.background='#fff'; 
-                    listBtn.style.color='#000'; 
-                    if(cardView){cardView.style.display='grid';} 
-                    if(listView){listView.style.display='none';}
-                    if(cardPagination){cardPagination.style.display='flex';}
-                    if(listPagination){listPagination.style.display='none';}
-                    // Reinitialize card pagination
-                    initCardPagination();
-                });
-                listBtn.addEventListener('click', ()=>{ 
-                    listBtn.style.background='#000'; 
-                    listBtn.style.color='#fff'; 
-                    cardBtn.style.background='#fff'; 
-                    cardBtn.style.color='#000'; 
-                    if(cardView){cardView.style.display='none';} 
-                    if(listView){listView.style.display='block';}
-                    if(cardPagination){cardPagination.style.display='none';}
-                    if(listPagination){listPagination.style.display='flex';}
-                    // Reinitialize list pagination
-                    initListPagination();
-                });
-            }
-        })();
-
-        // Donut + Line charts with guards (only on dashboard, not project detail page)
-        (function initBudgetCharts(){
-            if (!IS_DASH) return;
-            try {
-                const donutEl = document.getElementById('donutChart');
-                const lineEl = document.getElementById('lineChart');
-                const chartDataEl = document.getElementById('chart-data');
-                const histDataEl = document.getElementById('historical-data');
-                let chartData = { labels:['No Data'], data:[1], colors:['#cccccc'] };
-                let histData = { labels:[], data:[], color:'#0f3ea3' };
-                if (chartDataEl) { chartData = JSON.parse(chartDataEl.textContent || '{}') || chartData; }
-                if (histDataEl) { histData = JSON.parse(histDataEl.textContent || '{}') || histData; }
-                if (donutEl){
-                    // compute center percentage (share of first slice)
-                    const values = (chartData.data && chartData.data.length) ? chartData.data : [1];
-                    const total = values.reduce((a,b)=>a+(Number(b)||0),0) || 1;
-                    const pct = Math.round(((Number(values[0])||0) / total) * 100);
-                    const centerText = {
-                        id: 'collegeCenterText',
-                        afterDraw(chart){
-                            const {ctx, chartArea: {left,right,top,bottom}} = chart;
-                            const x=(left+right)/2, y=(top+bottom)/2;
-                            ctx.save();
-                            ctx.font = 'bold 22px Arial';
-                            ctx.fillStyle = '#111';
-                            ctx.textAlign = 'center';
-                            ctx.textBaseline = 'middle';
-                            ctx.fillText(`${pct}%`, x, y);
-                            ctx.restore();
-                        }
-                    };
-                    new Chart(donutEl.getContext('2d'), {
-                        type: 'doughnut',
-                        data: { labels: chartData.labels || ['No Data'], datasets: [{ data: values, backgroundColor: chartData.colors || ['#cccccc'], borderWidth: 0, cutout: '65%' }] },
-                        options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false }, tooltip:{ enabled:true } } },
-                        plugins: [centerText]
-                    });
-                    const legend = document.getElementById('budgetLegend');
-                    if (legend && chartData.labels){ legend.innerHTML = ''; (chartData.labels || []).forEach((label, i)=>{ const row = document.createElement('div'); row.className='legend-item'; const color=(chartData.colors||['#ccc'])[i]||'#ccc'; row.innerHTML = `<span class="legend-swatch" style="background:${color}"></span><span>${label}</span>`; legend.appendChild(row); }); }
-                }
-                if (lineEl){
-                    new Chart(lineEl.getContext('2d'), {
-                        type: 'line',
-                        data: { labels: histData.labels || [], datasets: [{ label:'', data: histData.data || [], borderColor: histData.color || '#0f3ea3', backgroundColor: 'rgba(0,0,0,0)', tension: 0.35 }] },
-                        options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:false } } }
-                    });
-                }
-            } catch(err){ console.error('Chart init error', err); }
-        })();
-
-        // Small project donuts on dashboard cards with center percentage text
-        (function projectDonuts(){
-            if (!IS_DASH) return;
-            if (!window.Chart) return;
-            try {
-                const centerText = pct => ({
-                    id: 'centerText',
-                    afterDraw(chart){
-                        const {ctx, chartArea:{left,right,top,bottom}} = chart;
-                        const x=(left+right)/2, y=(top+bottom)/2;
-                        ctx.save();
-                        ctx.font = '600 14px Inter, Arial, sans-serif';
-                        ctx.fillStyle = '#111';
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'middle';
-                        ctx.fillText(`${pct}%`, x, y);
-                        ctx.restore();
-                    }
-                });
-                document.querySelectorAll('.proj-donut').forEach((canvas)=>{
-                    const pct = Math.max(0, Math.min(100, Number(canvas.getAttribute('data-percent')) || 0));
-                    const ctx = canvas.getContext('2d');
-                    new Chart(ctx, {
-                        type: 'doughnut',
-                        data: { datasets: [{ data: [pct, Math.max(0, 100 - pct)], backgroundColor: ['#16a34a', '#d1d5db'], borderWidth: 0 }] },
-                        options: { responsive:false, animation:false, cutout: '70%', plugins:{ legend:{ display:false }, tooltip:{ enabled:false } } },
-                        plugins: [centerText(pct)]
-                    });
-                });
-            } catch (err) { console.error('Project donuts error', err); }
-        })();
-
-        // Project chart (goal1) if on project page
-        (function projectChart(){
-            function init() {
-                const canvas = document.getElementById('goal1');
-                if (!canvas || !window.Chart) return;
-                let value = 0;
-                try {
-                    const el = document.getElementById('project-data');
-                    if (el && el.textContent) {
-                        const pd = JSON.parse(el.textContent || '{}');
-                        value = Number(pd.budgetPercentage) || 0;
-                    }
-                } catch (e) {
-                    // ignore and fallback to data attribute
-                }
-                if (!value) {
-                    const dataAttr = canvas.getAttribute('data-percentage');
-                    value = Number(dataAttr) || 0;
-                }
-                // clamp and round
-                value = Math.max(0, Math.min(100, Math.round(value * 10) / 10));
-                try {
-                    // plugin to draw center text
-                    const centerText = {
-                        id: 'centerText',
-                        afterDraw(chart, args, options) {
-                            const {ctx, chartArea: {left, right, top, bottom}} = chart;
-                            const x = (left + right) / 2;
-                            const y = (top + bottom) / 2;
-                            ctx.save();
-                            ctx.font = 'bold 18px Arial';
-                            ctx.fillStyle = '#111';
-                            ctx.textAlign = 'center';
-                            ctx.textBaseline = 'middle';
-                            ctx.fillText(`${value}%`, x, y);
-                            ctx.restore();
-                        }
-                    };
-                    if (window.__projectGoalChart) { window.__projectGoalChart.destroy(); }
-                    window.__projectGoalChart = new Chart(canvas.getContext('2d'), {
-                        type: 'doughnut',
-                        data: { datasets: [{ data: [value, Math.max(0, 100 - value)], backgroundColor: ['#10b981', '#111111'], borderWidth: 0 }] },
-                        options: { rotation: -90, circumference: 360, responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { display:false }, tooltip: { enabled:false } } },
-                        plugins: [centerText]
-                    });
-                    const gt = document.getElementById('goalText');
-                    if (gt) gt.textContent = `Your project currently has ${value}% of its initial budget remaining.`;
-                } catch (err) { console.error('Project chart error', err); }
-            }
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', init);
-            } else { init(); }
-        })();
-
-        // Project tabs switching
-        (function projectTabs(){
-            function switchTab(tabName) {
-                // Remove active from all buttons
-                document.querySelectorAll('.project-tab-btn').forEach(b => b.classList.remove('active'));
-                // Hide all content
-                document.querySelectorAll('.project-tab-content').forEach(c => {
-                    c.classList.remove('active');
-                    c.style.display = 'none';
-                });
-                // Activate selected tab
-                const targetBtn = document.querySelector(`.project-tab-btn[data-tab="${tabName}"]`);
-                const targetContent = document.getElementById(tabName + '-tab');
-                if (targetBtn && targetContent) {
-                    targetBtn.classList.add('active');
-                    targetContent.classList.add('active');
-                    targetContent.style.display = 'block';
-                    if (tabName === 'overview') {
-                        const wrap = document.getElementById('overviewListWrap');
-                        if (wrap) wrap.scrollLeft = 0;
-                    }
-                }
-            }
-            
-            // Add click handlers
-            document.querySelectorAll('.project-tab-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const tabId = btn.getAttribute('data-tab');
-                    switchTab(tabId);
-                });
-            });
-            
-            // If URL has #overview/#files (or legacy #expenses), open the matching tab on page load
-            window.addEventListener('load', () => {
-                const hash = (location.hash || '').replace('#','');
-                if (hash === 'expenses') { switchTab('overview'); }
-                else if (hash) { switchTab(hash); }
-            });
-            
-            // Also check hash on initial DOM ready
-            const hash = (location.hash || '').replace('#','');
-            if (hash) {
-                const target = (hash === 'expenses') ? 'overview' : hash;
-                setTimeout(() => switchTab(target), 100);
-            }
-        })();
-
-        // File upload handler
-        function handleFileChange(input) {
-            const file = input.files[0];
-            if (file) {
-                const uploadText = document.getElementById('upload-text');
-                const uploadContainer = document.querySelector('.upload-container');
+        // 💡 FIX 6: Get the actual table element inside the list view wrapper
+        const innerTable = listView ? listView.querySelector('table') : null;
+        
+        if (cardBtn && listBtn && cardView && listView && innerTable){
+            cardBtn.addEventListener('click', ()=>{ 
+                cardBtn.classList.add('active'); 
+                cardBtn.classList.remove('inactive');
+                listBtn.classList.remove('active'); 
+                listBtn.classList.add('inactive');
                 
-                if (uploadText) {
-                    uploadText.textContent = file.name;
-                    uploadText.style.color = '#1a4a2e';
-                    uploadText.style.fontWeight = '600';
-                }
+                if(cardView){cardView.style.display='flex';} 
+                if(listView){listView.style.display='none';} 
+                if(innerTable){innerTable.classList.add('js-hidden');} // Hide inner table
+                if(cardPagination){cardPagination.style.display='flex';}
+                if(listPagination){listPagination.style.display='none';}
+                initCardPagination();
+            });
+            listBtn.addEventListener('click', ()=>{ 
+                listBtn.classList.add('active'); 
+                listBtn.classList.remove('inactive'); 
+                cardBtn.classList.remove('active'); 
+                cardBtn.classList.add('inactive');
                 
-                if (uploadContainer) {
-                    uploadContainer.style.backgroundColor = '#e8f5e8';
-                    uploadContainer.style.borderColor = '#1a4a2e';
-                    uploadContainer.style.borderStyle = 'solid';
+                if(cardView){cardView.style.display='none';} 
+                if(listView){listView.style.display='block';} // Show wrapper
+                if(innerTable){innerTable.classList.remove('js-hidden');} // 💡 FIX 7: Show inner table by removing class
+                if(cardPagination){cardPagination.style.display='none';}
+                if(listPagination){listPagination.style.display='flex';}
+                initListPagination();
+            });
+        }
+    })();
+
+    // Time Series Charts
+    (function initTimeCharts(){
+        if (!IS_DASH) return;
+        if (!window.Chart) return;
+        
+        // Chart 1: College Budget Remaining Over Time
+        const collegeChartEl = document.getElementById('collegeTimeChart');
+        const collegeChartDataRaw = collegeChartEl ? collegeChartEl.getAttribute('data-chart-data') : '[]';
+        const collegeData = collegeChartDataRaw ? JSON.parse(collegeChartDataRaw) : [];
+
+        if (collegeChartEl && collegeData.length > 0) {
+            new Chart(collegeChartEl.getContext('2d'), {
+                type: 'line',
+                data: { 
+                    labels: MONTH_LABELS, 
+                    datasets: [{ 
+                        label: 'College Budget Remaining', 
+                        data: collegeData, 
+                        borderColor: '#0f3ea3', 
+                        backgroundColor: 'rgba(15, 62, 163, 0.1)', 
+                        fill: true,
+                        tension: 0.35 
+                    }] 
+                },
+                options: { 
+                    responsive:true, 
+                    maintainAspectRatio:false, 
+                    plugins:{ legend:{ display:false } }, 
+                    scales:{ y:{ beginAtZero: false, title: { display: true, text: 'Percent (%)' } } } 
                 }
-            }
+            });
         }
 
-        // Overlay open/close and submit (project route only)
-        (function expenseOverlay(){
-            const openBtn = document.getElementById('openExpense');
-            const overlay = document.getElementById('overlay');
-            const closeBtn = document.getElementById('closeOverlay');
-            const closeX = document.getElementById('closeX');
-            if (openBtn && overlay){ openBtn.addEventListener('click', ()=> overlay.classList.add('show')); }
-            if (closeBtn && overlay){ closeBtn.addEventListener('click', ()=> overlay.classList.remove('show')); }
-            if (closeX && overlay){ closeX.addEventListener('click', ()=> overlay.classList.remove('show')); }
+        // Chart 2: User's Total Project Budget Over Time
+        const facultyChartEl = document.getElementById('facultyTotalChart');
+        const facultyChartDataRaw = facultyChartEl ? facultyChartEl.getAttribute('data-chart-data') : '[]';
+        const facultyData = facultyChartDataRaw ? JSON.parse(facultyChartDataRaw) : [];
 
-            const form = document.getElementById('expenseForm');
-            const projectDataEl = document.getElementById('project-data');
-            if (!form || !projectDataEl) return;
-            const projectData = JSON.parse(projectDataEl.textContent || '{}');
-            const projectId = projectData.projectId;
-
-            function getCookie(name){
-                let m = document.cookie.match(new RegExp('(^| )'+name+'=([^;]+)'));
-                if (m) return m[2];
-            }
-            const csrftoken = getCookie('csrftoken');
-
-            form.addEventListener('submit', async (e)=>{
-                e.preventDefault();
-                const fd = new FormData(form);
-                try{
-                    const res = await fetch(`/expenses/project/${projectId}/add-expense/`, { method: 'POST', headers: { 'X-CSRFToken': csrftoken }, body: fd });
-                    const json = await res.json();
-                    if (!res.ok || !json.success) throw new Error(json.error || 'Failed');
-                    window.location.reload();
-                } catch(err){ alert(err.message); }
-            })
-        })();
-
-        // Generic client-side pagination used by Overview and Expenses tables
-        (function tablePagination(){
-            function paginate(tbodySelector, containerId, pageSize){
-                const tbody = document.querySelector(tbodySelector);
-                const container = document.getElementById(containerId);
-                if (!tbody || !container) return;
-                let rows = Array.from(tbody.querySelectorAll('.expense-row'));
-                if (!rows.length) {
-                    // Fallback for table rows (legacy)
-                    rows = Array.from(tbody.querySelectorAll('tr'));
+        if (facultyChartEl && facultyData.length > 0) {
+            new Chart(facultyChartEl.getContext('2d'), {
+                type: 'line',
+                data: { 
+                    labels: MONTH_LABELS, 
+                    datasets: [{ 
+                        label: 'Total Project Funding', 
+                        data: facultyData, 
+                        borderColor: '#10b981', 
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)', 
+                        fill: true,
+                        tension: 0.35 
+                    }] 
+                },
+                options: { 
+                    responsive:true, 
+                    maintainAspectRatio:false, 
+                    plugins:{ legend:{ display:false } }, 
+                    scales:{ y:{ beginAtZero: true, title: { display: true, text: 'Percent (%)' } } } 
                 }
-                if (!rows.length) { container.innerHTML = ''; return; }
-                let current = 1;
-                function computePages(total, current){
-                    const windowSize = 1;
-                    const pages = []; const add = n => { if (!pages.includes(n)) pages.push(n); };
-                    add(1); add(total);
-                    for (let i = current - windowSize; i <= current + windowSize; i++) if (i > 1 && i < total) add(i);
-                    pages.sort((a,b)=>a-b);
-                    const out=[]; for(let i=0;i<pages.length;i++){ out.push(pages[i]); if(i<pages.length-1 && pages[i+1]-pages[i]>1) out.push('…'); }
-                    if (out.length===1) out.push(2);
-                    return out;
+            });
+        }
+    })();
+
+
+    // Small project donuts on dashboard cards with center percentage text
+    (function projectDonuts(){
+        if (!IS_DASH) return;
+        if (!window.Chart) return;
+        try {
+            const centerText = pct => ({
+                id: 'centerText',
+                afterDraw(chart){
+                    const {ctx, chartArea:{left,right,top,bottom}} = chart;
+                    const x=(left+right)/2, y=(top+bottom)/2;
+                    ctx.save();
+                    ctx.font = '600 14px Inter, Arial, sans-serif';
+                    ctx.fillStyle = '#111';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(`${pct}%`, x, y);
+                    ctx.restore();
                 }
-                function addBtn(container, label, page, opts){
-                    const { disabled=false, active=false } = opts || {};
+            });
+            document.querySelectorAll('.proj-donut').forEach((canvas)=>{
+                const pct = Math.max(0, Math.min(100, Number(canvas.getAttribute('data-percent')) || 0));
+                const ctx = canvas.getContext('2d');
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: { datasets: [{ data: [pct, Math.max(0, 100 - pct)], backgroundColor: ['#16a34a', '#d1d5db'], borderWidth: 0 }] },
+                    options: { responsive:false, animation:false, cutout: '70%', plugins:{ legend:{ display:false }, tooltip:{ enabled:false } } },
+                    plugins: [centerText(pct)]
+                });
+            });
+        } catch (err) { console.error('Project donuts error', err); }
+    })();
+
+
+    // Card View Pagination (4 items per page) (UNCHANGED)
+    function initCardPagination() {
+        if (!IS_DASH) return;
+        const cardView = document.getElementById('projectsCardView');
+        const container = document.getElementById('cardPagination');
+        if (!cardView || !container) return;
+        
+        const items = Array.from(cardView.querySelectorAll('[data-card-item]'));
+        if (items.length === 0) { container.innerHTML = ''; return; }
+        
+        const pageSize = 4;
+        let currentPage = 1;
+        
+        function renderPage(page) {
+            const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
+            currentPage = Math.min(Math.max(1, page), totalPages);
+            const start = (currentPage - 1) * pageSize;
+            const end = start + pageSize;
+            
+            items.forEach((item, i) => {
+                item.style.display = (i >= start && i < end) ? '' : 'none';
+            });
+            
+            renderControls(totalPages);
+        }
+        
+        function renderControls(totalPages) {
+            container.innerHTML = '';
+            
+            const firstBtn = document.createElement('button');
+            firstBtn.className = 'pagination-button';
+            firstBtn.textContent = 'First';
+            firstBtn.disabled = currentPage === 1;
+            if (currentPage !== 1) firstBtn.addEventListener('click', () => renderPage(1));
+            container.appendChild(firstBtn);
+            
+            const prevBtn = document.createElement('button');
+            prevBtn.className = 'pagination-button';
+            prevBtn.textContent = 'Previous';
+            prevBtn.disabled = currentPage === 1;
+            if (currentPage !== 1) prevBtn.addEventListener('click', () => renderPage(currentPage - 1));
+            container.appendChild(prevBtn);
+            
+            const pages = computePageNumbers(totalPages, currentPage);
+            pages.forEach(p => {
+                if (p === '…') {
+                    const span = document.createElement('span');
+                    span.textContent = '…';
+                    span.style.padding = '0 0.5rem';
+                    container.appendChild(span);
+                } else {
                     const btn = document.createElement('button');
-                    btn.type='button'; btn.textContent=label; btn.style.marginRight='0.5rem'; btn.style.padding='0.35rem 0.7rem'; btn.style.borderRadius='0.6rem'; btn.style.border=active?'1px solid #1e1e1e':'1px solid #d1d5db'; btn.style.background=active?'#2f2f2f':'#ffffff'; btn.style.color=active?'#ffffff':'#111827'; btn.style.opacity=disabled?'0.5':'1'; btn.style.cursor=disabled?'default':'pointer';
-                    if (!disabled && !active) btn.addEventListener('click', ()=> renderPage(page));
+                    btn.className = 'pagination-button';
+                    if (p === currentPage) btn.classList.add('active');
+                    btn.textContent = p;
+                    btn.disabled = p === currentPage;
+                    if (p !== currentPage) btn.addEventListener('click', () => renderPage(p));
                     container.appendChild(btn);
                 }
-                function renderControls(totalPages){
-                    container.innerHTML=''; container.style.display='flex'; container.style.alignItems='center'; container.style.justifyContent='center'; container.style.gap='0.75rem'; container.style.width='100%'; container.style.marginTop='0.5rem';
-                    addBtn(container,'← Previous', current-1,{disabled: current===1});
-                    const pages = computePages(Math.max(1, Math.ceil(rows.length / pageSize)), current);
-                    pages.forEach(p=>{ if(p==='…'){ const s=document.createElement('span'); s.textContent='…'; s.style.marginRight='0.5rem'; container.appendChild(s);} else { addBtn(container,String(p), p,{active:p===current}); } });
-                    addBtn(container,'Next →', current+1,{disabled: current===Math.max(1, Math.ceil(rows.length / pageSize))});
-                }
-                function renderPage(page){
-                    const totalPages = Math.max(1, Math.ceil(rows.length / pageSize));
-                    current = Math.min(Math.max(1, page), totalPages);
-                    const start=(current-1)*pageSize, end=start+pageSize; rows.forEach((row,i)=>{ row.style.display = (i>=start && i<end)?'':'none'; });
-                    renderControls(totalPages);
-                }
-                renderPage(1);
-            }
-            // Apply to Overview only (single source of truth for expenses)
-            paginate('#overviewTbody', 'overviewPagination', 7);
-        })();
-
-        // Ensure the overview table starts scrolled to the left so the Reason column is visible
-        (function ensureOverviewScrollLeft(){
-            function reset(){ const wrap = document.getElementById('overviewListWrap'); if (wrap) wrap.scrollLeft = 0; }
-            if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', reset); else reset();
-            window.addEventListener('resize', reset);
-        })();
-
-        // Card View Pagination (4 items per page)
-        function initCardPagination() {
-            if (!IS_DASH) return;
-            const cardView = document.getElementById('projectsCardView');
-            const container = document.getElementById('cardPagination');
-            if (!cardView || !container) return;
-            
-            const items = Array.from(cardView.querySelectorAll('[data-card-item]'));
-            if (items.length === 0) { container.innerHTML = ''; return; }
-            
-            const pageSize = 4;
-            let currentPage = 1;
-            
-            function renderPage(page) {
-                const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
-                currentPage = Math.min(Math.max(1, page), totalPages);
-                const start = (currentPage - 1) * pageSize;
-                const end = start + pageSize;
-                
-                items.forEach((item, i) => {
-                    item.style.display = (i >= start && i < end) ? '' : 'none';
-                });
-                
-                renderControls(totalPages);
-            }
-            
-            function renderControls(totalPages) {
-                container.innerHTML = '';
-                
-                // First button
-                const firstBtn = document.createElement('button');
-                firstBtn.className = 'pagination-button';
-                firstBtn.textContent = 'First';
-                firstBtn.disabled = currentPage === 1;
-                if (currentPage !== 1) firstBtn.addEventListener('click', () => renderPage(1));
-                container.appendChild(firstBtn);
-                
-                // Previous button
-                const prevBtn = document.createElement('button');
-                prevBtn.className = 'pagination-button';
-                prevBtn.textContent = 'Previous';
-                prevBtn.disabled = currentPage === 1;
-                if (currentPage !== 1) prevBtn.addEventListener('click', () => renderPage(currentPage - 1));
-                container.appendChild(prevBtn);
-                
-                // Page numbers
-                const pages = computePageNumbers(totalPages, currentPage);
-                pages.forEach(p => {
-                    if (p === '…') {
-                        const span = document.createElement('span');
-                        span.textContent = '…';
-                        span.style.padding = '0 0.5rem';
-                        container.appendChild(span);
-                    } else {
-                        const btn = document.createElement('button');
-                        btn.className = 'pagination-button';
-                        if (p === currentPage) btn.classList.add('active');
-                        btn.textContent = p;
-                        btn.disabled = p === currentPage;
-                        if (p !== currentPage) btn.addEventListener('click', () => renderPage(p));
-                        container.appendChild(btn);
-                    }
-                });
-                
-                // Next button
-                const nextBtn = document.createElement('button');
-                nextBtn.className = 'pagination-button';
-                nextBtn.textContent = 'Next';
-                nextBtn.disabled = currentPage === totalPages;
-                if (currentPage !== totalPages) nextBtn.addEventListener('click', () => renderPage(currentPage + 1));
-                container.appendChild(nextBtn);
-                
-                // Last button
-                const lastBtn = document.createElement('button');
-                lastBtn.className = 'pagination-button';
-                lastBtn.textContent = 'Last';
-                lastBtn.disabled = currentPage === totalPages;
-                if (currentPage !== totalPages) lastBtn.addEventListener('click', () => renderPage(totalPages));
-                container.appendChild(lastBtn);
-            }
-            
-            function computePageNumbers(total, current) {
-                const windowSize = 1;
-                const pages = [];
-                const add = n => { if (!pages.includes(n)) pages.push(n); };
-                
-                add(1);
-                add(total);
-                for (let i = current - windowSize; i <= current + windowSize; i++) {
-                    if (i > 1 && i < total) add(i);
-                }
-                pages.sort((a, b) => a - b);
-                
-                const result = [];
-                for (let i = 0; i < pages.length; i++) {
-                    result.push(pages[i]);
-                    if (i < pages.length - 1 && pages[i + 1] - pages[i] > 1) {
-                        result.push('…');
-                    }
-                }
-                return result;
-            }
-            
-            renderPage(1);
-        }
-
-        // List View Pagination (5 items per page)
-        function initListPagination() {
-            if (!IS_DASH) return;
-            const tbody = document.getElementById('projectsListBody');
-            const container = document.getElementById('listPagination');
-            if (!tbody || !container) return;
-            
-            const items = Array.from(tbody.querySelectorAll('[data-list-item]'));
-            if (items.length === 0) { container.innerHTML = ''; return; }
-            
-            const pageSize = 5;
-            let currentPage = 1;
-            
-            function renderPage(page) {
-                const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
-                currentPage = Math.min(Math.max(1, page), totalPages);
-                const start = (currentPage - 1) * pageSize;
-                const end = start + pageSize;
-                
-                items.forEach((item, i) => {
-                    item.style.display = (i >= start && i < end) ? '' : 'none';
-                });
-                
-                renderControls(totalPages);
-            }
-            
-            function renderControls(totalPages) {
-                container.innerHTML = '';
-                
-                // First button
-                const firstBtn = document.createElement('button');
-                firstBtn.className = 'pagination-button';
-                firstBtn.textContent = 'First';
-                firstBtn.disabled = currentPage === 1;
-                if (currentPage !== 1) firstBtn.addEventListener('click', () => renderPage(1));
-                container.appendChild(firstBtn);
-                
-                // Previous button
-                const prevBtn = document.createElement('button');
-                prevBtn.className = 'pagination-button';
-                prevBtn.textContent = 'Previous';
-                prevBtn.disabled = currentPage === 1;
-                if (currentPage !== 1) prevBtn.addEventListener('click', () => renderPage(currentPage - 1));
-                container.appendChild(prevBtn);
-                
-                // Page numbers
-                const pages = computePageNumbers(totalPages, currentPage);
-                pages.forEach(p => {
-                    if (p === '…') {
-                        const span = document.createElement('span');
-                        span.textContent = '…';
-                        span.style.padding = '0 0.5rem';
-                        container.appendChild(span);
-                    } else {
-                        const btn = document.createElement('button');
-                        btn.className = 'pagination-button';
-                        if (p === currentPage) btn.classList.add('active');
-                        btn.textContent = p;
-                        btn.disabled = p === currentPage;
-                        if (p !== currentPage) btn.addEventListener('click', () => renderPage(p));
-                        container.appendChild(btn);
-                    }
-                });
-                
-                // Next button
-                const nextBtn = document.createElement('button');
-                nextBtn.className = 'pagination-button';
-                nextBtn.textContent = 'Next';
-                nextBtn.disabled = currentPage === totalPages;
-                if (currentPage !== totalPages) nextBtn.addEventListener('click', () => renderPage(currentPage + 1));
-                container.appendChild(nextBtn);
-                
-                // Last button
-                const lastBtn = document.createElement('button');
-                lastBtn.className = 'pagination-button';
-                lastBtn.textContent = 'Last';
-                lastBtn.disabled = currentPage === totalPages;
-                if (currentPage !== totalPages) lastBtn.addEventListener('click', () => renderPage(totalPages));
-                container.appendChild(lastBtn);
-            }
-            
-            function computePageNumbers(total, current) {
-                const windowSize = 1;
-                const pages = [];
-                const add = n => { if (!pages.includes(n)) pages.push(n); };
-                
-                add(1);
-                add(total);
-                for (let i = current - windowSize; i <= current + windowSize; i++) {
-                    if (i > 1 && i < total) add(i);
-                }
-                pages.sort((a, b) => a - b);
-                
-                const result = [];
-                for (let i = 0; i < pages.length; i++) {
-                    result.push(pages[i]);
-                    if (i < pages.length - 1 && pages[i + 1] - pages[i] > 1) {
-                        result.push('…');
-                    }
-                }
-                return result;
-            }
-            
-            renderPage(1);
-        }
-
-        // Initialize card pagination on page load (default view)
-        if (IS_DASH) {
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', initCardPagination);
-            } else {
-                initCardPagination();
-            }
-        }
-
-        // Filter dropdown logic
-        const filterBtn = document.getElementById('filterBtn');
-        const filterDropdown = document.getElementById('filterDropdown');
-        const closeFilter = document.getElementById('closeFilter');
-        if (filterBtn && filterDropdown) {
-            filterBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                filterDropdown.style.display = filterDropdown.style.display === 'block' ? 'none' : 'block';
             });
+            
+            const nextBtn = document.createElement('button');
+            nextBtn.className = 'pagination-button';
+            nextBtn.textContent = 'Next';
+            nextBtn.disabled = currentPage === totalPages;
+            if (currentPage !== totalPages) nextBtn.addEventListener('click', () => renderPage(currentPage + 1));
+            container.appendChild(nextBtn);
+            
+            const lastBtn = document.createElement('button');
+            lastBtn.className = 'pagination-button';
+            lastBtn.textContent = 'Last';
+            lastBtn.disabled = currentPage === totalPages;
+            if (currentPage !== totalPages) lastBtn.addEventListener('click', () => renderPage(totalPages));
+            container.appendChild(lastBtn);
         }
-        if (closeFilter) {
-            closeFilter.addEventListener('click', function(e) {
-                e.preventDefault();
-                window.location.href = window.location.pathname;
-            });
-        }
-        document.addEventListener('mousedown', function(e) {
-            if (filterDropdown && !filterDropdown.contains(e.target) && e.target !== filterBtn) {
-                filterDropdown.style.display = 'none';
+        
+        function computePageNumbers(total, current) {
+            const windowSize = 1;
+            const pages = [];
+            const add = n => { if (!pages.includes(n)) pages.push(n); };
+            
+            add(1);
+            add(total);
+            for (let i = current - windowSize; i <= current + windowSize; i++) {
+                if (i > 1 && i < total) add(i);
             }
-        });
-    </script>
+            pages.sort((a, b) => a - b);
+            
+            const result = [];
+            for (let i = 0; i < pages.length; i++) {
+                result.push(pages[i]);
+                if (i < pages.length - 1 && pages[i + 1] - pages[i] > 1) {
+                    result.push('…');
+                }
+            }
+            return result;
+        }
+        
+        renderPage(1);
+    }
 
-    <!-- SVG Icons -->
-    <svg style="display: none;">
-        <symbol id="icon-search" viewBox="0 0 21 21" fill="none">
-            <path d="M8.89152 15.9057C9.75056 15.9057 10.6012 15.7365 11.3948 15.4077C12.1885 15.079 12.9096 14.5972 13.5171 13.9897C14.1245 13.3823 14.6064 12.6612 14.9351 11.8675C15.2638 11.0739 15.433 10.2232 15.433 9.36417C15.433 8.50513 15.2638 7.6545 14.9351 6.86084C14.6064 6.06719 14.1245 5.34606 13.5171 4.73862C12.9096 4.13119 12.1885 3.64934 11.3948 3.3206C10.6012 2.99186 9.75056 2.82266 8.89152 2.82266C7.1566 2.82266 5.49274 3.51185 4.26597 4.73862C3.03919 5.9654 2.35 7.62926 2.35 9.36417C2.35 11.0991 3.03919 12.763 4.26597 13.9897C5.49274 15.2165 7.1566 15.9057 8.89152 15.9057V15.9057ZM15.7819 14.713L19.685 18.6161C19.7891 18.7167 19.872 18.8371 19.9291 18.9701C19.9861 19.1032 20.0161 19.2463 20.0173 19.391C20.0184 19.5358 19.9907 19.6793 19.9358 19.8133C19.8809 19.9472 19.7999 20.0689 19.6974 20.1712C19.595 20.2735 19.4732 20.3544 19.3392 20.4091C19.2052 20.4638 19.0616 20.4913 18.9168 20.4899C18.772 20.4886 18.629 20.4584 18.496 20.4012C18.3631 20.3439 18.2428 20.2608 18.1423 20.1566L14.2392 16.2535C12.4866 17.614 10.2814 18.2554 8.07247 18.0472C5.86357 17.839 3.81705 16.7968 2.34951 15.1328C0.881971 13.4688 0.103735 11.308 0.173229 9.09044C0.242723 6.87284 1.15472 4.76508 2.72357 3.19623C4.29242 1.62738 6.40018 0.715379 8.61778 0.645885C10.8354 0.576391 12.9961 1.35463 14.6601 2.82217C16.3241 4.28971 17.3663 6.33623 17.5745 8.54513C17.7827 10.754 17.1413 12.9592 15.7808 14.7119L15.7819 14.713Z" fill="#5A5252"/>
-        </symbol>
-        <symbol id="icon-filter" viewBox="0 0 23 22" fill="none">
-            <path opacity="0.9" d="M21.5399 1.92871H1.37988L9.44388 11.4644V18.0567L13.4759 20.0727V11.4644L21.5399 1.92871Z" stroke="#1E1E1E" stroke-width="2.016" stroke-linecap="round" stroke-linejoin="round"/>
-        </symbol>
-    </svg>
-</div>
+    // List View Pagination (5 items per page) (UNCHANGED)
+    function initListPagination() {
+        if (!IS_DASH) return;
+        const tbody = document.getElementById('projectsListBody');
+        const container = document.getElementById('listPagination');
+        // The table element itself is the parent of tbody, so we also ensure the table is visible
+        const tableWrapper = document.getElementById('projectsListView');
+        if (!tbody || !container || !tableWrapper) return;
+        
+        // 💡 FIX 8: Since the table element inside the wrapper has the js-hidden class, we must remove it.
+        const innerTable = tableWrapper.querySelector('table');
+        if (innerTable) {
+            innerTable.classList.remove('js-hidden'); 
+        }
+
+        const items = Array.from(tbody.querySelectorAll('[data-list-item]'));
+        if (items.length === 0) { container.innerHTML = ''; return; }
+        
+        const pageSize = 5;
+        let currentPage = 1;
+        
+        function renderPage(page) {
+            const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
+            currentPage = Math.min(Math.max(1, page), totalPages);
+            const start = (currentPage - 1) * pageSize;
+            const end = start + pageSize;
+            
+            items.forEach((item, i) => {
+                item.style.display = (i >= start && i < end) ? '' : 'none';
+            });
+            
+            renderControls(totalPages);
+        }
+        
+        function renderControls(totalPages) {
+            container.innerHTML = '';
+            
+            const firstBtn = document.createElement('button');
+            firstBtn.className = 'pagination-button';
+            firstBtn.textContent = 'First';
+            firstBtn.disabled = currentPage === 1;
+            if (currentPage !== 1) firstBtn.addEventListener('click', () => renderPage(1));
+            container.appendChild(firstBtn);
+            
+            const prevBtn = document.createElement('button');
+            prevBtn.className = 'pagination-button';
+            prevBtn.textContent = 'Previous';
+            prevBtn.disabled = currentPage === 1;
+            if (currentPage !== 1) prevBtn.addEventListener('click', () => renderPage(currentPage - 1));
+            container.appendChild(prevBtn);
+            
+            const pages = computePageNumbers(totalPages, currentPage);
+            pages.forEach(p => {
+                if (p === '…') {
+                    const span = document.createElement('span');
+                    span.textContent = '…';
+                    span.style.padding = '0 0.5rem';
+                    container.appendChild(span);
+                } else {
+                    const btn = document.createElement('button');
+                    btn.className = 'pagination-button';
+                    if (p === currentPage) btn.classList.add('active');
+                    btn.textContent = p;
+                    btn.disabled = p === currentPage;
+                    if (p !== currentPage) btn.addEventListener('click', () => renderPage(p));
+                    container.appendChild(btn);
+                }
+            });
+            
+            const nextBtn = document.createElement('button');
+            nextBtn.className = 'pagination-button';
+            nextBtn.textContent = 'Next';
+            nextBtn.disabled = currentPage === totalPages;
+            if (currentPage !== totalPages) nextBtn.addEventListener('click', () => renderPage(currentPage + 1));
+            container.appendChild(nextBtn);
+            
+            const lastBtn = document.createElement('button');
+            lastBtn.className = 'pagination-button';
+            lastBtn.textContent = 'Last';
+            lastBtn.disabled = currentPage === totalPages;
+            if (currentPage !== totalPages) lastBtn.addEventListener('click', () => renderPage(totalPages));
+            container.appendChild(lastBtn);
+        }
+        
+        function computePageNumbers(total, current) {
+            const windowSize = 1;
+            const pages = [];
+            const add = n => { if (!pages.includes(n)) pages.push(n); };
+            
+            add(1);
+            add(total);
+            for (let i = current - windowSize; i <= current + windowSize; i++) {
+                if (i > 1 && i < total) add(i);
+            }
+            pages.sort((a, b) => a - b);
+            
+            const result = [];
+            for (let i = 0; i < pages.length; i++) {
+                result.push(pages[i]);
+                if (i < pages.length - 1 && pages[i + 1] - pages[i] > 1) {
+                    result.push('…');
+                }
+            }
+            return result;
+        }
+        
+        renderPage(1);
+    }
+
+    // Initialize card pagination on page load (default view)
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initCardPagination);
+    } else {
+        initCardPagination();
+    }
+</script>
 </body>
 
 {% endblock %}
-
-
-

@@ -87,7 +87,7 @@ button:hover {
     align-items: center;
 }
 
-.files-header h2 {
+.files-header h2, .headerr {
     margin: 0;
     font-size: 1.35rem;
     font-weight: 500;
@@ -714,13 +714,6 @@ input[type="text"], input[type="date"], input[type="time"], textarea, select {
     margin-bottom: 0;
     box-sizing: border-box;
 } 
- 
-input:focus {
-    outline: none;
-    border-color: #0A6C44;
-    box-shadow: 0 0 0 3px rgba(10, 108, 68, 0.2);
-    background: #FFFFFF; 
-}
 
 .upload-area {
     flex: 1;

@@ -109,9 +109,15 @@
 
 	<div id="projectsCardView" class="projects-grid js-grid">
 		{% for project in projects %}
-		<a href="{% url 'project_profile' project.id %}" class="proj-card" data-card-item>
+        {# 1. CONDITIONAL CLASS FOR GREEN CARD #}
+		<a href="{% url 'project_profile' project.id %}" class="proj-card {% if project.status == 'COMPLETED' %}completed{% endif %}" data-card-item>
 			<div>
-				<div class="text-xs text-gray-500">Last updated {{ project.updated_at|date:"M d, Y" }}</div>
+                {# 2. CONDITIONAL TEXT FOR LAST UPDATED DATE #}
+                {% if project.status == 'COMPLETED' %}
+                    <div class="text-xs text-gray-500" style="font-style: 900; color: #38a169;">Completed</div>
+                {% else %}
+				    <div class="text-xs text-gray-500">Last updated {{ project.updated_at|date:"M d, Y" }}</div>
+                {% endif %}
 				<h3>{{ project.title }}</h3>
 			</div>
 
@@ -125,15 +131,20 @@
 					<img src="{{ provider.profile_picture_or_initial }}" alt="" class="profile-img">
 					{% endfor %}
 				</div>
+                
+                {% if project.event_progress|default:0 > 0 and project.event_progress == project.estimated_events %}
 					<div class="progress-bar-wrap">
 						<div class="progress-bar" style="width:{% if project.estimated_events > 0 %}{% widthratio project.event_progress project.estimated_events 100 %}{% else %}0{% endif %}%; transition:width 0.3s ease;"></div>
 					</div>
-					<div class="text-sm text-gray-700">
+                    <div class="progress-done-message text-sm" style="color: #38a169;">All Activities Completed</div>
+                {% else %}
+					<div class="text-sm text-gray-700 activity-counter">
 						<span class="text-primary font-semibold">{{ project.event_progress }}</span>
 						<span class="text-secondary"> / </span>
 						<span class="text-secondary font-semibold">{{ project.estimated_events }}</span>
 						<span class="text-gray-500"> activities completed</span>
 					</div>
+                {% endif %}
 				</div>
 			</div>
 
@@ -164,7 +175,14 @@
                     </td> 
                     <td class="project-list-cell">{{ project.progress_display }}</td>
                     <td class="project-list-cell">{{ project.start_date|date:"Y-m-d" }}</td>
-                    <td class="project-list-cell">{{ project.updated_at|date:"Y-m-d" }}</td>
+                    <td class="project-list-cell">
+                        {# Display 'Completed' instead of updated_at in list view if status is completed #}
+                        {% if project.status == 'completed' %}
+                            Completed
+                        {% else %}
+                            {{ project.updated_at|date:"Y-m-d" }}
+                        {% endif %}
+                    </td>
                     <td class="project-list-cell">{{ project.get_status_display }}</td>
                 </tr>
                 {% empty %}
@@ -315,7 +333,6 @@
 			const end = start + pageSize;
 			
 			items.forEach((item, i) => {
-				// Use JS-controlled class for item visibility
 				item.classList.toggle(CLASS_HIDDEN, !(i >= start && i < end));
 			});
 			
@@ -416,7 +433,6 @@
 			const end = start + pageSize;
 			
 			items.forEach((item, i) => {
-				// Use JS-controlled class for item visibility
 				item.classList.toggle(CLASS_HIDDEN, !(i >= start && i < end));
 			});
 			
