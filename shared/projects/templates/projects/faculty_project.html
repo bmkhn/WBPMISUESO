@@ -11,13 +11,9 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
 <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
 <link href="{% static 'shared/projects/u_module_styles.css' %}" rel="stylesheet">
-</head>
+<link href="{% static 'shared/projects/gridnlist.css' %}" rel="stylesheet">
 
-<style>
-	.proj-card {
-		display:flex;
-	}
-</style>
+</head>
 
 <body>
 
@@ -33,7 +29,7 @@
 					<div class="alert-date">
 						{{ alert.updated_at|date:"M d, Y - h:i A" }}
 						{% if not alert.viewed %}
-							<span style="background:#E37910;color:white;border-radius:8px;padding:2px 8px;font-size:11px;margin-left:8px;">New</span>
+							<span class="bg-new-alert ml-2">New</span>
 						{% endif %}
 					</div>
 				</div>
@@ -46,23 +42,21 @@
 
 	<div class="list">
 
-		<!-- Search Bar -->
 		<div class="search-container">
 			<form class="search-bar" method="get" action="">
 				<svg width="16" height="16"> <use href="#icon-search"></use> </svg>
-				<input type="text" name="search" placeholder="Search Project Title" value="{{ search|default:'' }}" style="background:none;"/>
-				<button type="button" id="filterBtn" style="background:none;border:none;padding:0;margin-right:5px;cursor:pointer;">
+				<input type="text" name="search" placeholder="Search Project Title" value="{{ search|default:'' }}" class="flex-1" />
+				<button type="button" id="filterBtn" class="mr-1">
 					<svg width="16" height="16"> <use href="#icon-filter"></use> </svg>
 				</button>
 				
-				<div id="filterDropdown" class="filter-dropdown">
+				<div id="filterDropdown" class="filter-dropdown js-hidden">
 					<div class="filter-grid">
 
 						
-						<!-- Sort By -->
-						<label style="font-weight:500;color:#374151;display:flex;flex-direction:column;">
+						<label class="font-medium text-gray-700 flex flex-col">
 							Sort By
-							<select name="sort_by" style="width:100%;margin-top:6px;">
+							<select name="sort_by" class="mt-2">
 								<option value="title" {% if sort_by == 'title' %}selected{% endif %}>Title</option>
                                 <option value="last_updated" {% if sort_by == 'last_updated' %}selected{% endif %}>Last Updated</option>
                                 <option value="start_date" {% if sort_by == 'start_date' %}selected{% endif %}>Start Date</option>
@@ -70,19 +64,17 @@
                             </select>
 						</label>
 
-						<!-- Order -->
-						<label style="font-weight:500;color:#374151;display:flex;flex-direction:column;">
+						<label class="font-medium text-gray-700 flex flex-col">
 							Order
-							<select name="order" style="width:100%;margin-top:6px;">
+							<select name="order" class="mt-2">
 								<option value="desc" {% if order == 'desc' %}selected{% endif %}>Descending</option>
 								<option value="asc" {% if order == 'asc' %}selected{% endif %}>Ascending</option>
 							</select>
 						</label>
 
-						<!-- Status Filter -->
-						<label style="font-weight:500;color:#374151;display:flex;flex-direction:column;">
+						<label class="font-medium text-gray-700 flex flex-col">
 							Status
-							<select name="status" style="width:100%;margin-top:6px;">
+							<select name="status" class="mt-2">
 								<option value="">All Status</option>
 								{% for status_code, status_name in status_choices %}
 									<option value="{{ status_code }}" {% if status == status_code %}selected{% endif %}>{{ status_name }}</option>
@@ -90,18 +82,16 @@
 							</select>
 						</label>
 
-						<!-- Bottom Right - Date -->
-                        <label>Date From
-                            <input type="date" name="date_from" value="{{ date_from|default:'' }}"/>
+						<label class="flex flex-col">Date From
+                            <input type="date" name="date_from" value="{{ date_from|default:'' }}" class="mt-2"/>
                         </label>
-                        <label>Date To
-                            <input type="date" name="date_to" value="{{ date_to|default:'' }}"/>
+                        <label class="flex flex-col">Date To
+                            <input type="date" name="date_to" value="{{ date_to|default:'' }}" class="mt-2"/>
                         </label>
 					</div>
 
 
-				<!-- Buttons Row -->
-				<div style="display:flex;justify-content:flex-end;gap:10px;margin-top:24px;">
+				<div class="filter-actions">
 				<button type="submit" class="filter-apply">Apply</button>
 				<button type="button" id="closeFilter" class="filter-close">Clear Filters</button>
 				</div>
@@ -111,53 +101,50 @@
 	
 	<div class="files-header">
 		<h2>Project Overview</h2>
-		<div style="display:flex; gap:0.5rem;">
-			<button id="cardViewBtn" style="border:1px solid #ddd; background:#000; color:#fff; border-radius:0.5rem; width:2.25rem; height:2.25rem; display:flex; align-items:center; justify-content:center; cursor:pointer;"><i class="ri-apps-2-line"></i></button>
-			<button id="listViewBtn" style="border:1px solid #ddd; background:#fff; color:#000; border-radius:0.5rem; width:2.25rem; height:2.25rem; display:flex; align-items:center; justify-content:center; cursor:pointer;"><i class="ri-list-unordered"></i></button>
+		<div class="flex gap-2">
+			<button id="cardViewBtn" class="view-toggle-btn active"><i class="ri-apps-2-line"></i></button>
+			<button id="listViewBtn" class="view-toggle-btn inactive"><i class="ri-list-unordered"></i></button>
 		</div>
 	</div>
 
-	<!-- Card View -->
-	<div id="projectsCardView" class="projects-grid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:1rem; margin-top:1rem;">
+	<div id="projectsCardView" class="projects-grid js-grid">
 		{% for project in projects %}
-		<a href="{% url 'project_profile' project.id %}" class="proj-card" data-card-item style="background:rgba(32,160,245,0.11); border-radius:15px; padding:1.25rem; text-decoration:none; color:inherit; display:flex !important; justify-content:space-between; flex-direction:column;">
+		<a href="{% url 'project_profile' project.id %}" class="proj-card" data-card-item>
 			<div>
-				<div style="font-size:0.8rem; color:#6b7280;">Last updated {{ project.updated_at|date:"M d, Y" }}</div>
-				<h3 style="font-size:1rem; font-weight:600; margin:0; color:#111; padding-bottom:0.5rem;">{{ project.title }}</h3>
-				<div style="display:flex; gap:0.25rem; align-items:center; padding:0.5rem 0;flex:1">
-					{% if project.project_leader %}
-					<img src="{{ project.project_leader.profile_picture_or_initial }}" alt="" style="width:24px; height:24px; border-radius:50%; border:1px solid #ccc;">
-					{% endif %}
-					{% for provider in project.providers.all|slice:":3" %}
-					<img src="{{ provider.profile_picture_or_initial }}" alt="" style="width:24px; height:24px; border-radius:50%; border:1px solid #ccc;">
-					{% endfor %}
-				</div>
+				<div class="text-xs text-gray-500">Last updated {{ project.updated_at|date:"M d, Y" }}</div>
+				<h3>{{ project.title }}</h3>
 			</div>
 
-			<div>
-				<div style="display:flex; flex-direction:column; gap:0.75rem; padding-top:0.5rem;margin-top:auto;">
-					<div style="font-size:0.85rem; color:#374151;">
-						<span style="color:#30CE76; font-weight:600;">{{ project.event_progress }}</span>
-						<span style="color:#385682;"> / </span>
-						<span style="color:#385682; font-weight:600;">{{ project.estimated_events }}</span>
-						<span style="color:#6b7280;"> activities completed</span>
+			<div class="mt-3">
+				<div class="flex flex-col gap-3 pt-2 mt-auto">
+					<div class="flex gap-1 items-center pt-2 pb-2 flex-1">
+					{% if project.project_leader %}
+					<img src="{{ project.project_leader.profile_picture_or_initial }}" alt="" class="profile-img">
+					{% endif %}
+					{% for provider in project.providers.all|slice:":7" %}
+					<img src="{{ provider.profile_picture_or_initial }}" alt="" class="profile-img">
+					{% endfor %}
+				</div>
+					<div class="progress-bar-wrap">
+						<div class="progress-bar" style="width:{% if project.estimated_events > 0 %}{% widthratio project.event_progress project.estimated_events 100 %}{% else %}0{% endif %}%; transition:width 0.3s ease;"></div>
 					</div>
-					<div style="background:#385682; height:8px; border-radius:4px; overflow:hidden; position:relative;">
-						<div style="background:#30CE76; height:100%; width:{% if project.estimated_events > 0 %}{% widthratio project.event_progress project.estimated_events 100 %}{% else %}0{% endif %}%; transition:width 0.3s ease;"></div>
+					<div class="text-sm text-gray-700">
+						<span class="text-primary font-semibold">{{ project.event_progress }}</span>
+						<span class="text-secondary"> / </span>
+						<span class="text-secondary font-semibold">{{ project.estimated_events }}</span>
+						<span class="text-gray-500"> activities completed</span>
 					</div>
 				</div>
 			</div>
 
 		</a>
 		{% empty %}
-		<div style="grid-column:1/-1; text-align:center; color:#888; padding:2rem;">No projects found.</div>
+		<div class="grid-no-projects">No projects found.</div>
 		{% endfor %}
 	</div>
-	<!-- Card View Pagination -->
-	<div id="cardPagination" class="pagination-container" style="display:flex;"></div>
+	<div id="cardPagination" class="pagination-container js-flex"></div>
 
-	<!-- List View -->   
-	<table class="user-table" id="projectsListView" style="display:none;">
+	<table class="user-table js-hidden" id="projectsListView">
             <thead>
                 <tr>
                     <th>Title</th>
@@ -170,81 +157,43 @@
             <tbody>
                 {% for project in projects %}
                 <tr>
-                    <td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                        <a href="{% url 'project_profile' project.id %}" class="name-link" title="{{ project.title }}" style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                    <td class="project-title-link overflow-ellipsis">
+                        <a href="{% url 'project_profile' project.id %}" class="name-link" title="{{ project.title }}">
                             {{ project.title }}
                         </a>
                     </td> 
-                    <td style="white-space:nowrap;">{{ project.progress_display }}</td>
-                    <td style="white-space:nowrap;">{{ project.start_date|date:"Y-m-d" }}</td>
-                    <td style="white-space:nowrap;">{{ project.updated_at|date:"Y-m-d" }}</td>
-                    <td style="white-space:nowrap;">{{ project.get_status_display }}</td>
+                    <td class="project-list-cell">{{ project.progress_display }}</td>
+                    <td class="project-list-cell">{{ project.start_date|date:"Y-m-d" }}</td>
+                    <td class="project-list-cell">{{ project.updated_at|date:"Y-m-d" }}</td>
+                    <td class="project-list-cell">{{ project.get_status_display }}</td>
                 </tr>
                 {% empty %}
-                <tr><td colspan="5" style="text-align:center;">No projects found.</td></tr>
+                <tr><td colspan="5" class="text-center">No projects found.</td></tr>
                 {% endfor %}
             </tbody>
         </table>
-	<!-- List View Pagination -->
-	<div id="listPagination" class="pagination-container" style="display:none;"></div>
+	<div id="listPagination" class="pagination-container js-hidden"></div>
 </div>
 
-<!-- SVG Icons -->
 <svg style="display: none;">
 
-	<!-- Search -->
 	<symbol id="icon-search" viewBox="0 0 21 21" fill="none">
 		<path d="M8.89152 15.9057C9.75056 15.9057 10.6012 15.7365 11.3948 15.4077C12.1885 15.079 12.9096 14.5972 13.5171 13.9897C14.1245 13.3823 14.6064 12.6612 14.9351 11.8675C15.2638 11.0739 15.433 10.2232 15.433 9.36417C15.433 8.50513 15.2638 7.6545 14.9351 6.86084C14.6064 6.06719 14.1245 5.34606 13.5171 4.73862C12.9096 4.13119 12.1885 3.64934 11.3948 3.3206C10.6012 2.99186 9.75056 2.82266 8.89152 2.82266C7.1566 2.82266 5.49274 3.51185 4.26597 4.73862C3.03919 5.9654 2.35 7.62926 2.35 9.36417C2.35 11.0991 3.03919 12.763 4.26597 13.9897C5.49274 15.2165 7.1566 15.9057 8.89152 15.9057V15.9057ZM15.7819 14.713L19.685 18.6161C19.7891 18.7167 19.872 18.8371 19.9291 18.9701C19.9861 19.1032 20.0161 19.2463 20.0173 19.391C20.0184 19.5358 19.9907 19.6793 19.9358 19.8133C19.8809 19.9472 19.7999 20.0689 19.6974 20.1712C19.595 20.2735 19.4732 20.3544 19.3392 20.4091C19.2052 20.4638 19.0616 20.4913 18.9168 20.4899C18.772 20.4886 18.629 20.4584 18.496 20.4012C18.3631 20.3439 18.2428 20.2608 18.1423 20.1566L14.2392 16.2535C12.4866 17.614 10.2814 18.2554 8.07247 18.0472C5.86357 17.839 3.81705 16.7968 2.34951 15.1328C0.881971 13.4688 0.103735 11.308 0.173229 9.09044C0.242723 6.87284 1.15472 4.76508 2.72357 3.19623C4.29242 1.62738 6.40018 0.715379 8.61778 0.645885C10.8354 0.576391 12.9961 1.35463 14.6601 2.82217C16.3241 4.28971 17.3663 6.33623 17.5745 8.54513C17.7827 10.754 17.1413 12.9592 15.7808 14.7119L15.7819 14.713Z" fill="#5A5252"/>
 	</symbol>
 
-	<!-- Filter -->
 	<symbol id="icon-filter" viewBox="0 0 23 22" fill="none">
 		<path opacity="0.9" d="M21.5399 1.92871H1.37988L9.44388 11.4644V18.0567L13.4759 20.0727V11.4644L21.5399 1.92871Z" stroke="#1E1E1E" stroke-width="2.016" stroke-linecap="round" stroke-linejoin="round"/>
 	</symbol>
 
 </svg>
 
-<!-- Submit Request Modal -->
-<div id="submit-request-modal" class="event-modal" style="display:none;align-items:center;justify-content:center;">
-    <div class="event-modal-content" style="min-width:400px;max-width:95vw;max-height:535px;height:535px;overflow-y:auto;">
-        <span class="close" id="close-submit-request-modal">&times;</span>
-        <h2 id="submit-request-modal-title" style="margin-bottom:1rem;">Submit Request</h2>
-        <form id="submit-request-form" method="post" enctype="multipart/form-data" action="/requests/submit/">
-            {% csrf_token %}
-            <div class="form-group">
-                <label class="form-label">Project Title <span class="required">*</span></label>
-                <input type="text" name="title" id="request_title" required style="flex:1;">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Name of Your Organization <span class="required">*</span></label>
-                <input type="text" name="organization" id="request_organization" required style="flex:1;">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Primary Location <span class="required">*</span></label>
-                <input type="text" name="primary_location" id="request_primary_location" required style="flex:1;">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Primary Beneficiaries <span class="required">*</span></label>
-                <input type="text" name="primary_beneficiary" id="request_primary_beneficiary" required style="flex:1;">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Brief Summary <span class="required">*</span></label>
-                <textarea name="summary" id="request_summary" rows="2" required style="flex:1;border-radius:8px;border:1px solid #e5e7eb;padding:0.75rem;font-size:1rem;"></textarea>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Letter of Intent <span class="required">*</span></label>
-                <input type="file" name="letter_of_intent" id="request_letter_of_intent" required style="flex:1;" accept="application/pdf">
-            </div>
-            <div class="form-actions" style="justify-content:flex-end;">
-                <button type="button" class="back-btn" id="cancel-submit-request-modal">Cancel</button>
-                <button type="submit" class="submit-btn">Submit Request</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-
 <script>
+	// Custom classes for display control
+	const CLASS_HIDDEN = 'js-hidden';
+	const CLASS_GRID = 'js-grid';
+	const CLASS_FLEX = 'js-flex';
+	const CLASS_TABLE = 'js-table';
+	
 	// Modal open/close logic for Submit Request
 	const submitRequestModal = document.getElementById('submit-request-modal');
 	const openSubmitRequestBtn = document.querySelector('.add-request-btn');
@@ -253,22 +202,22 @@
 
 	if (openSubmitRequestBtn) {
 	    openSubmitRequestBtn.addEventListener('click', function() {
-	        submitRequestModal.style.display = 'flex';
+	        submitRequestModal.classList.remove(CLASS_HIDDEN);
 	    });
 	}
 	if (closeSubmitRequestModal) {
 	    closeSubmitRequestModal.onclick = function() {
-	        submitRequestModal.style.display = 'none';
+	        submitRequestModal.classList.add(CLASS_HIDDEN);
 	    };
 	}
 	if (cancelSubmitRequestModal) {
 	    cancelSubmitRequestModal.onclick = function() {
-	        submitRequestModal.style.display = 'none';
+	        submitRequestModal.classList.add(CLASS_HIDDEN);
 	    };
 	}
 	if (submitRequestModal) {
 	    submitRequestModal.onclick = function(e) {
-	        if (e.target === submitRequestModal) submitRequestModal.style.display = 'none';
+	        if (e.target === submitRequestModal) submitRequestModal.classList.add(CLASS_HIDDEN);
 	    };
 	}
 
@@ -280,7 +229,7 @@
 	if (filterBtn && filterDropdown) {
 		filterBtn.addEventListener('click', function(e) {
 			e.preventDefault();
-			filterDropdown.style.display = 'block';
+			filterDropdown.classList.remove(CLASS_HIDDEN);
 		});
 	}
 	if (closeFilter && filterDropdown) {
@@ -293,7 +242,7 @@
 	// Hide dropdown when clicking outside
 	document.addEventListener('mousedown', function(e) {
 		if (filterDropdown && !filterDropdown.contains(e.target) && e.target !== filterBtn) {
-			filterDropdown.style.display = 'none';
+			filterDropdown.classList.add(CLASS_HIDDEN);
 		}
 	});
 
@@ -307,25 +256,43 @@
 	
 	if (cardBtn && listBtn && cardView && listView) {
 		cardBtn.addEventListener('click', () => {
-			cardBtn.style.background = '#000';
-			cardBtn.style.color = '#fff';
-			listBtn.style.background = '#fff';
-			listBtn.style.color = '#000';
-			cardView.style.display = 'grid';
-			listView.style.display = 'none';
-			cardPagination.style.display = 'flex';
-			listPagination.style.display = 'none';
+			// Button States
+			cardBtn.classList.add('active');
+			cardBtn.classList.remove('inactive');
+			listBtn.classList.add('inactive');
+			listBtn.classList.remove('active');
+			
+			// View & Pagination Display
+			cardView.classList.add(CLASS_GRID);
+			cardView.classList.remove(CLASS_HIDDEN);
+			listView.classList.add(CLASS_HIDDEN);
+			listView.classList.remove(CLASS_TABLE);
+			
+			cardPagination.classList.add(CLASS_FLEX);
+			cardPagination.classList.remove(CLASS_HIDDEN);
+			listPagination.classList.add(CLASS_HIDDEN);
+			listPagination.classList.remove(CLASS_FLEX);
+			
 			initCardPagination();
 		});
 		listBtn.addEventListener('click', () => {
-			listBtn.style.background = '#000';
-			listBtn.style.color = '#fff';
-			cardBtn.style.background = '#fff';
-			cardBtn.style.color = '#000';
-			cardView.style.display = 'none';
-			listView.style.display = 'table';
-			cardPagination.style.display = 'none';
-			listPagination.style.display = 'flex';
+			// Button States
+			listBtn.classList.add('active');
+			listBtn.classList.remove('inactive');
+			cardBtn.classList.add('inactive');
+			cardBtn.classList.remove('active');
+			
+			// View & Pagination Display
+			cardView.classList.add(CLASS_HIDDEN);
+			cardView.classList.remove(CLASS_GRID);
+			listView.classList.add(CLASS_TABLE);
+			listView.classList.remove(CLASS_HIDDEN);
+
+			cardPagination.classList.add(CLASS_HIDDEN);
+			cardPagination.classList.remove(CLASS_FLEX);
+			listPagination.classList.add(CLASS_FLEX);
+			listPagination.classList.remove(CLASS_HIDDEN);
+			
 			initListPagination();
 		});
 	}
@@ -348,7 +315,8 @@
 			const end = start + pageSize;
 			
 			items.forEach((item, i) => {
-				item.style.display = (i >= start && i < end) ? '' : 'none';
+				// Use JS-controlled class for item visibility
+				item.classList.toggle(CLASS_HIDDEN, !(i >= start && i < end));
 			});
 			
 			renderControls(totalPages);
@@ -448,7 +416,8 @@
 			const end = start + pageSize;
 			
 			items.forEach((item, i) => {
-				item.style.display = (i >= start && i < end) ? '' : 'none';
+				// Use JS-controlled class for item visibility
+				item.classList.toggle(CLASS_HIDDEN, !(i >= start && i < end));
 			});
 			
 			renderControls(totalPages);

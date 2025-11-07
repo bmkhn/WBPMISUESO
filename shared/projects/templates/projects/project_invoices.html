@@ -4,24 +4,15 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
 <link href="{% static 'shared/projects/view.css' %}" rel="stylesheet">
 
-<style>
-    .files-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1rem}
-    .file-card{background:#fff;border:1px solid #e5e7eb;border-radius:.75rem;padding:.75rem;box-shadow:0 1px 2px rgba(0,0,0,0.05);display:flex;flex-direction:column;gap:.5rem}
-    .file-thumb{height:120px;display:flex;align-items:center;justify-content:center;background:#f9fafb;border:1px dashed #e5e7eb;border-radius:.5rem;overflow:hidden}
-    .expense-empty{padding:1rem;color:#6b7280}
-</style>
-
-<!-- Search Bar & Filter -->
 <div class="search-container">
     <form class="search-bar" method="get" action="">
         <svg width="16" height="16"> <use href="#icon-search"></use> </svg>
         <input type="text" name="search" placeholder="Search Receipt" value="{{ request.GET.search|default:'' }}"/>
-        <button type="button" id="filterBtn" style="background:none;border:none;padding:0;margin-right:5px;cursor:pointer;">
+        <button type="button" id="filterBtn" class="bg-none border-none p-0 mr-1 cursor-pointer">
             <svg width="16" height="16"> <use href="#icon-filter"></use> </svg>
         </button>
         <div id="filterDropdown" class="filter-dropdown" style="top: 455px;">
             <div class="filter-grid" style="grid-template-columns: repeat(2, 1fr); grid-template-rows: auto; grid-gap: 24px;">
-                <!-- Sort By -->
                 <label>Sort By
                     <select name="sort_by">
                         <option value="date" {% if request.GET.sort_by == 'date' %}selected{% endif %}>Date</option>
@@ -29,7 +20,6 @@
                         <option value="amount" {% if request.GET.sort_by == 'amount' %}selected{% endif %}>Amount</option>
                     </select>
                 </label>
-                <!-- Order By -->
                 <label>Order By
                     <select name="order">
                         <option value="desc" {% if request.GET.order == 'desc' %}selected{% endif %}>Descending</option>
@@ -55,59 +45,70 @@
 <div style="margin-top:2rem;">
     <div class="files-grid">
   {% for expense in expenses %}
-    {% if expense.receipt and expense.receipt.url %}
+    {# Display file card for every expense, showing placeholder if receipt is missing #}
     <div class="file-card">
       <div class="file-thumb">
-        {% if expense.receipt.name|lower|slice:"-4:" == ".pdf" %}
-          <span style="font-size:.9rem;color:#374151">PDF Receipt</span>
+        {% if expense.receipt and expense.receipt.url %}
+          {% if expense.receipt.name|lower|slice:"-4:" == ".pdf" %}
+            <span style="font-size:.9rem;color:#374151">PDF Receipt</span>
+          {% else %}
+            <img src="{{ expense.receipt.url }}" alt="Receipt"/>
+          {% endif %}
         {% else %}
-          <img src="{{ expense.receipt.url }}" alt="Receipt" style="max-width:100%;max-height:100%;object-fit:contain"/>
+            {# Placeholder if receipt is missing #}
+            <span class="no-receipt-text">Receipt Not Available</span>
         {% endif %}
       </div>
-      <div style="display:flex;flex-direction:column;gap:.25rem">
-        <div style="font-weight:600;font-size:.95rem;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ expense.title|default:expense.reason }}</div>
-        <div style="font-size:.85rem;color:#6b7280;">{{ expense.date_incurred|date:"m/d/Y" }}</div>
-        <a href="{{ expense.receipt.url }}" target="_blank" style="margin-top:.25rem;text-decoration:none;color:#0f766e;font-weight:500">View receipt</a>
+      <div class="file-info">
+        <div class="file-title">{{ expense.title|default:expense.reason }}</div>
+        <div class="file-date">{{ expense.date_incurred|date:"m/d/Y" }}</div>
+        
+        {% if expense.receipt and expense.receipt.url %}
+            <a href="{{ expense.receipt.url }}" target="_blank" class="file-link">View receipt</a>
+        {% else %}
+             <span class="file-date">Upload required</span>
+        {% endif %}
+
       </div>
     </div>
-    {% endif %}
   {% empty %}
-    <div class="expense-empty" style="grid-column:1/-1;text-align:center;">No receipts uploaded yet.</div>
+    {# This only shows if the 'expenses' list is entirely empty #}
+    <div class="expense-empty" style="grid-column:1/-1;text-align:center;">No expenses recorded yet.</div>
   {% endfor %}
   </div>
 </div>
 
 {# Expense form overlay #}
-<div class="overlay" id="overlay" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.5)">
-  <div class="overlay-content" style="background:#fff;border-radius:1rem;padding:1.25rem;width:45rem;max-width:95%;position:relative">
-    <button type="button" class="close-x" id="closeX" aria-label="Close" style="position:absolute;right:1rem;top:1rem;background:none;border:none;font-size:1.5rem;cursor:pointer">&times;</button>
-    <h2 style="margin:0 0 1rem 0;font-weight:500">Add Expense</h2>
+<div class="overlay-container" id="overlay">
+  <div class="overlay-content-modal">
+    <button type="button" class="close-x" id="closeX" aria-label="Close">&times;</button>
+    <h2 class="modal-title">Add Expense</h2>
     <form class="expenseForm" id="expenseForm" method="post" enctype="multipart/form-data">
       {% csrf_token %}
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
-        <div style="display:flex;flex-direction:column">
-          <label style="font-weight:500;margin-bottom:.25rem">Reason <span style="color:#dc2626">*</span></label>
-          <input type="text" name="reason" placeholder="Meals" required aria-required="true" style="padding:.8rem;border:1px solid #868686;border-radius:.5rem;background:#e9e9e9">
+      <div class="form-group-grid">
+        <div class="form-field-col">
+          <label class="form-label-modal">Reason <span class="text-red-600">*</span></label>
+          <input type="text" name="reason" placeholder="Meals" required aria-required="true" class="input-field">
         </div>
-        <div style="display:flex;flex-direction:column">
-          <label style="font-weight:500;margin-bottom:.25rem">Total Expense (₱) <span style="color:#dc2626">*</span></label>
-          <input type="number" name="amount" step="0.01" placeholder="100.00" required aria-required="true" style="padding:.8rem;border:1px solid #868686;border-radius:.5rem;background:#e9e9e9">
+        <div class="form-field-col">
+          <label class="form-label-modal">Total Expense (₱) <span class="text-red-600">*</span></label>
+          <input type="number" name="amount" step="0.01" placeholder="100.00" required aria-required="true" class="input-field">
         </div>
       </div>
-      <div style="margin-top:1rem;display:flex;flex-direction:column">
-        <label style="font-weight:500;margin-bottom:.25rem">Upload Receipt <span style="color:#dc2626">*</span></label>
-        <div id="uploadBox" class="upload-container" style="background:#f8f9fa;border:2px dashed #245F3E;padding:1.25rem;display:flex;align-items:center;border-radius:.75rem;cursor:pointer">
+      <div class="form-field-col mt-4">
+        <label class="form-label-modal">Upload Receipt <span class="text-red-600">*</span></label>
+        <div id="uploadBox" class="upload-container">
           <input id="receipt" name="receipt" type="file" accept="image/*,.pdf" required aria-required="true" style="display:none" />
-          <span id="uploadText" style="font-weight:600;color:#245F3E">Click to upload</span>
+          <span id="uploadText" class="upload-text-modal">Click to upload</span>
         </div>
       </div>
-      <div style="margin-top:1rem;display:flex;flex-direction:column">
-        <label style="font-weight:500;margin-bottom:.25rem">Notes <span style="color:#dc2626">*</span></label>
-        <textarea name="notes" rows="3" placeholder="(e.g. Bento box)" required aria-required="true" style="padding:.8rem;border:1px solid #868686;border-radius:.5rem;background:#e9e9e9"></textarea>
+      <div class="form-field-col mt-4">
+        <label class="form-label-modal">Notes <span class="text-red-600">*</span></label>
+        <textarea name="notes" rows="3" placeholder="(e.g. Bento box)" required aria-required="true" class="input-field"></textarea>
       </div>
-      <div style="margin-top:1rem;display:flex;gap:.75rem">
-        <button type="submit" class="btn" style="background:#245F3E;color:#fff;border:none;border-radius:.5rem;padding:.6rem 1rem;cursor:pointer">Save</button>
-        <button type="button" id="closeOverlay" style="background:#6b7280;color:#fff;border:none;border-radius:.5rem;padding:.6rem 1rem;cursor:pointer">Cancel</button>
+      <div class="form-actions-row">
+        <button type="submit" class="btn-save">Save</button>
+        <button type="button" id="closeOverlay" class="btn-cancel">Cancel</button>
       </div>
     </form>
   </div>
@@ -146,9 +147,12 @@
     if (headerBtn && overlay) headerBtn.addEventListener('click', ()=> overlay.style.display='flex');
     if (closeBtn && overlay) closeBtn.addEventListener('click', ()=> overlay.style.display='none');
     if (closeX && overlay) closeX.addEventListener('click', ()=> overlay.style.display='none');
+    
+    // Receipt upload logic
     const uploadBox = document.getElementById('uploadBox');
     const receiptInput = document.getElementById('receipt');
-    const uploadText = document.getElementById('uploadText');
+    const uploadText = document.getElementById('uploadText'); // Changed from 'uploadText' to 'uploadText-modal' in CSS, but keeping JS logic consistent with original HTML ID/class intent
+    
     if (uploadBox && receiptInput){
       uploadBox.addEventListener('click', ()=> receiptInput.click());
       receiptInput.addEventListener('change', ()=>{
