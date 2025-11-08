@@ -1,3 +1,4 @@
+from django.http import HttpResponse
 from django.urls import path
 from .views import login_view, logout_view, register_view, quick_login, role_redirect, home, dashboard, forgot_password_view
 from .views import verify_login_2fa_view, send_password_reset_code_view, verify_reset_code_view, reset_password_view
@@ -6,7 +7,7 @@ from .views import registration_unified_view, verify_unified_view, thank_you_vie
 from .views import not_authenticated_view, no_permission_view, not_confirmed_view
 from .views import manage_user, add_user, user_details_view, edit_user, check_email_view, verify_user, unverify_user, delete_user
 from .views import profile_view, update_bio, update_profile_picture
-from .views import newp_view, otp_view, end  # Temp views for testing
+from .views import health_check
 
 urlpatterns = [
     path('session-test/', session_test_view, name='session_test'),  # Session Test Page
@@ -56,4 +57,6 @@ urlpatterns = [
     path('', role_redirect, name='role_redirect'),              # Default Redirector
 
     path('quick-login/<str:role>/', quick_login, name='quick_login'),       # Quick Login URL (For Testing Purposes)
+
+    path('health/', health_check, name='health_check'),
 ]
