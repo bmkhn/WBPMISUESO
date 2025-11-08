@@ -67,7 +67,7 @@
             <div class="card-content-wrapper" style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
                 <div>
                     <h3 style="color: white;">Assigned to Colleges</h3>
-                    <p class="amount" style="color: white;">₱ {{ total_assigned_to_colleges|floatformat:0|intcomma }}</p>
+                    <p class="amount" style="color: white; font-size: 24px;">₱ {{ total_assigned_to_colleges|floatformat:0|intcomma }}</p>
                 </div>
                 <div style="height: 80px; width: 130px; flex-shrink: 0; margin-top: -5px;">
                     <canvas id="assignedChart"></canvas>
@@ -513,22 +513,30 @@
             console.error(`Error parsing data for ${canvasId}:`, e, dataString);
             return;
         }
-        if (isMainCard && data.length > 0 && data[0] !== 0) {
-            // Prepend 0 to the numeric data array
-            data.unshift(0); 
-            
-            // Prepend the formatted zero value to the tooltip data array
-            // Use a clean '0' to represent the starting point for currency formatting
-            if (tooltipData) {
-                tooltipData.unshift('0'); 
-            }
-            
-            // If the main chart (unallocatedChart) is being initialized,
-            // the labels array should also be shifted.
-            if (labels.length > 0) {
-                labels.unshift(labels[0]); // Duplicate the first month label for the new '0' point
+        
+        // --- FIX IS IN THIS BLOCK ---
+        if (isMainCard && data.length > 0) {
+            // Check if the first point is not already zero.
+            if (data[0] !== 0) {
+                // Prepend 0 to the numeric data array
+                data.unshift(0); 
+                
+                // Prepend the formatted zero value to the tooltip data array
+                if (tooltipData) {
+                    tooltipData.unshift('0'); 
+                }
+                
+                // CORRECTED: Prepend a blank label to account for the new '0' start point.
+                // This prevents shifting the month labels.
+                if (labels.length > 0) {
+                    labels.unshift(''); 
+                }
             }
         }
+        // --- END OF FIX ---
+        
+        // The main card chart needs to show the new '0' point AND the current month's value.
+        // If prepended, the current month is at index 'currentMonth + 1'.
         const sliceLimit = isMainCard ? currentMonth + 2 : currentMonth + 1;
         const dataForChart = data.slice(0, sliceLimit);
 
@@ -745,7 +753,8 @@
             
             renderAdminTable(); 
 
-            initSparkline('unallocatedChart', unalloc, false, true, currentMonths, unalloc);
+            // Corrected call: Use unallocRaw for the tooltip data string
+            initSparkline('unallocatedChart', unalloc, false, true, currentMonths, unalloc, true);
             initSparkline('assignedChart', assignedData);
             initSparkline('internalCommittedChart', internalCommittedData);
             initSparkline('externalCommittedChart', externalCommittedData, true);
@@ -798,4 +807,5 @@
 
 </body>
 </html>
+
 {% endblock %}

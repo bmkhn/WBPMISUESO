@@ -13,7 +13,7 @@ from system.users.decorators import role_required
 from system.users.models import College
 from shared.projects.models import Project, ProjectExpense
 
-from .models import CollegeBudget, BudgetPool, ExternalFunding, BudgetHistory
+from .models import CollegeBudget, BudgetPool, BudgetHistory, BudgetPool
 
 from .forms import AnnualBudgetForm, CollegeAllocationForm, ProjectInternalBudgetForm, ExternalFundingEditForm
 
@@ -23,6 +23,8 @@ import csv
 
 def get_current_fiscal_year():
     return str(timezone.now().year)
+
+# --- REVISED _get_admin_dashboard_data FUNCTION ---
 
 def _get_admin_dashboard_data(fiscal_year):
     """
@@ -96,19 +98,32 @@ def _get_admin_dashboard_data(fiscal_year):
 
     year_int = int(fiscal_year)
 
-    # --- Monthly Pool Value Calculation ---
+    # --- Monthly Pool Value Calculation (CORRECTED LOGIC) ---
     pool_history_qs = BudgetHistory.objects.filter(
         Q(description__icontains='Annual Budget Pool'),
         timestamp__year=year_int
-    ).order_by('timestamp')
+    ).order_by('timestamp') # Order by timestamp is CRITICAL for historical tracking
 
-    pool_values = {i: pool_available for i in range(1, 13)}
-    current_pool_value = pool_available
+    # 1. Initialize all 12 months with the earliest known pool value
+    pool_values = {i: Decimal('0') for i in range(1, 13)}
+    
+    first_history = pool_history_qs.first()
+    initial_pool_value = first_history.amount if first_history else pool_available
+    
+    # Set the initial value for all months until an update occurs
+    for m in range(1, 13):
+        pool_values[m] = initial_pool_value
+
+    # 2. Iterate through history chronologically and update the pool value 
+    #    from the month of the change onwards.
     for history in pool_history_qs:
-        current_pool_value = history.amount
-        month = history.timestamp.month
-        for m in range(month, 13):
-            pool_values[m] = current_pool_value
+        new_pool_value = history.amount
+        month_of_change = history.timestamp.month
+        
+        # Update pool value for the month of change and all subsequent months
+        for m in range(month_of_change, 13):
+            pool_values[m] = new_pool_value
+
 
     # --- Monthly Assigned to Colleges Calculation ---
     assigned_cumulatives_raw = {i: Decimal('0') for i in range(1, 13)}
@@ -146,6 +161,7 @@ def _get_admin_dashboard_data(fiscal_year):
     for m in range(1, 13):
         running_total = assigned_cumulatives_raw[m]
         if total_assigned_to_colleges > 0:
+            # Note: Normalizing against total_assigned_to_colleges is for a percentage of the final allocation
             normalized_value = (running_total / total_assigned_to_colleges) * 100
             normalized_value = min(100, max(0, int(normalized_value)))
         else:
