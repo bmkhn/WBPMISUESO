@@ -10,26 +10,6 @@
 <link href="https://fonts.googleapis.com/css?family=Inter:400,500,700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
 <link href="{% static 'shared/projects/styles.css' %}" rel="stylesheet">
-<style>
-    .profile-picture-upload {
-        margin-top: 1rem;
-    }
-
-    .profile-picture-preview {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        margin-top: 1rem;
-    }
-
-    .profile-picture-preview img {
-        width: 120px;
-        height: 120px;
-        object-fit: cover;
-        border-radius: 50%;
-        border: 3px solid #e9ecef;
-    }
-</style>
 </head>
 
 <body>
@@ -94,13 +74,25 @@
             <!-- Profile Picture Upload -->
             <div class="profile-picture-upload">
                 <div class="user-details-label">Profile Picture</div>
-                <input type="file" name="profile_picture" id="profile_picture_input" accept="image/*" class="user-details-value" data-optional style="padding: 0.5rem;">
-                <div class="profile-picture-preview" id="profile-picture-preview" style="display: none;">
-                    <img src="" alt="Profile Picture" id="profile-picture-img">
-                    <div>
-                        <div style="font-weight: 500; margin-bottom: 0.25rem;">Profile Picture Preview</div>
-                        <small style="color: #6c757d;">This will be uploaded</small>
-                    </div>
+                <div style="width: 100%;">
+                    <label for="profile_picture_input" class="upload-area" id="upload-label">
+                        <svg class="icon-upload" width="24" height="24"><use href="#icon-upload"></use></svg>
+                        <span class="upload-text">Click to upload (JPG, PNG)</span>
+                        <input 
+                            class="hidden" 
+                            type="file" 
+                            name="profile_picture" 
+                            id="profile_picture_input" 
+                            accept="image/jpeg,image/png"
+                            data-optional 
+                            onchange="displayProfileFileName(this, 'file-preview-pp', 'file-name-pp', 'upload-label')"> 
+                    </label>
+                    
+                    <div class="file-preview" id="file-preview-pp" style="display: none; margin-top: 0.75rem; align-items: center; gap: 8px; border: 1px solid #e5e7eb; padding: 0.5rem; border-radius: 0.375rem;">
+                        <svg width="16" height="16" style="color: #6b7280;"><use href="#icon-upload"></use></svg>
+                        <span id="file-name-pp" style="font-size: 0.9rem; color: #1f2937;"></span>
+                        <button type="button" onclick="clearProfileFile('profile_picture_input', 'file-preview-pp', 'upload-label')" style="background:none; border:none; color:#ef4444; cursor:pointer; margin-left: auto;">&times;</button>
+                    </div> 
                 </div>
             </div>
         </div>
@@ -193,15 +185,49 @@
 
 </svg>
 
-
 <script>
-    // Role-specific field logic
+    // --- Helper Functions for File Upload ---
+
+    // Function to display the selected file name and toggle visibility
+    function displayProfileFileName(input, previewId, nameId, labelId) {
+        const previewDiv = document.getElementById(previewId);
+        const nameSpan = document.getElementById(nameId);
+        const uploadLabel = document.getElementById(labelId);
+        
+        if (input.files.length > 0) {
+            nameSpan.textContent = input.files[0].name;
+            previewDiv.style.display = 'flex';
+            if (uploadLabel) uploadLabel.style.display = 'none';
+        } else {
+            previewDiv.style.display = 'none';
+            if (uploadLabel) uploadLabel.style.display = 'flex';
+        }
+    }
+
+    // Function to clear the selected file
+    function clearProfileFile(inputId, previewId, labelId) {
+        const input = document.getElementById(inputId);
+        const previewDiv = document.getElementById(previewId);
+        const uploadLabel = document.getElementById(labelId);
+        
+        input.value = ''; // Clears the file input
+        previewDiv.style.display = 'none';
+        
+        if (uploadLabel) uploadLabel.style.display = 'flex'; // Show upload area again
+    }
+
+    // --- Role-specific field logic & Validation ---
+    
     document.addEventListener('DOMContentLoaded', function() {
         const roleSelect = document.querySelector('select[name="role"]');
-        const allRoleFields = Array.from(document.querySelectorAll('[data-role-required]')).map(f => f.closest('.user-details-row'));
+        // Select all rows that contain a role-specific field.
+        const allRoleRows = Array.from(document.querySelectorAll('[data-role-required]'))
+                                .map(f => f.closest('.user-details-row'))
+                                .filter((row, i, self) => row && self.indexOf(row) === i); // Ensure unique rows
+        
         const roleSection = document.getElementById('role-specific-section');
-        // Map of role to required field selectors (adjust as needed)
-        // NOTE: campus removed - derived from college
+
+        // Map of role to required field names
         const roleFieldMap = {
             'FACULTY': ['college', 'degree', 'expertise'],
             'COORDINATOR': ['college'],
@@ -210,131 +236,181 @@
             'IMPLEMENTER': ['degree', 'expertise'],
             'CLIENT': ['company', 'industry'],
         };
+        
         function showRoleFields(role) {
-            // Hide all role fields
-            allRoleFields.forEach(row => row.style.display = 'none');
-            // Hide section if no role
+            // Hide all role field rows and remove required attribute
+            allRoleRows.forEach(row => {
+                row.style.display = 'none';
+                Array.from(row.querySelectorAll('[data-role-required]')).forEach(f => f.removeAttribute('required'));
+            });
+
+            // Hide section if no role is selected or required
             if (!role || !roleFieldMap[role]) {
                 roleSection.style.display = 'none';
                 return;
             }
+            
             // Show section
             roleSection.style.display = '';
-            // Show only relevant fields for the selected role
+
+            // Show only relevant fields for the selected role and set required attribute
             const fields = roleFieldMap[role];
             if (!fields) return;
+
             fields.forEach(fieldName => {
                 const field = document.querySelector(`[name="${fieldName}"]`);
                 if (field) {
                     const row = field.closest('.user-details-row');
-                    if (row) row.style.display = '';
+                    if (row) {
+                        row.style.display = '';
+                        field.setAttribute('required', 'required'); // Set required attribute
+                    }
                 }
             });
         }
-        // Initial hide
-        allRoleFields.forEach(row => row.style.display = 'none');
+
+        // Initial setup: Hide fields and section
+        allRoleRows.forEach(row => row.style.display = 'none');
         if (roleSection) roleSection.style.display = 'none';
+
         // On role change
         if (roleSelect) {
             roleSelect.addEventListener('change', function() {
                 showRoleFields(this.value);
             });
-            // Show fields if value is pre-selected
+            // Show fields if value is pre-selected (in case of validation failure/initial load)
             if (roleSelect.value) showRoleFields(roleSelect.value);
         }
-    });
-    document.addEventListener('DOMContentLoaded', function() {
-        // AJAX email uniqueness check (unchanged)
+
+        // --- AJAX email uniqueness check ---
         var emailInput = document.getElementById('email-input');
         var emailError = document.getElementById('email-error');
+        var emailTimer;
+
         function checkEmailAjax() {
-            var email = emailInput.value.trim();
-            if (!email) {
-                emailError.textContent = '';
-                emailError.style.display = 'none';
-                return;
-            }
-            fetch('/check-email/?email=' + encodeURIComponent(email))
-                .then(response => response.json())
-                .then(data => {
-                    if (data.exists) {
-                        emailError.textContent = 'This email is already registered.'; 
-                        emailError.style.fontSize = '0.75rem';
-                        emailError.style.marginTop = '0.25rem';
-                        emailError.style.display = 'block';
-                    } else {
-                        emailError.textContent = '';
-                        emailError.style.display = 'none';
-                    }
-                })
-                .catch(() => {
-                    emailError.textContent = 'Error checking email.';
+            clearTimeout(emailTimer);
+            emailTimer = setTimeout(() => {
+                var email = emailInput.value.trim();
+                if (!email) {
+                    emailError.textContent = '';
+                    emailError.style.display = 'none';
+                    return;
+                }
+                
+                // Simple email regex validation before AJAX call
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                    emailError.textContent = 'Invalid email format.';
                     emailError.style.fontSize = '0.75rem';
                     emailError.style.marginTop = '0.25rem';
                     emailError.style.display = 'block';
-                });
+                    return;
+                }
+
+                fetch('/check-email/?email=' + encodeURIComponent(email))
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.exists) {
+                            emailError.textContent = 'This email is already registered.'; 
+                            emailError.style.color = '#E53E3E';
+                            emailError.style.fontSize = '0.75rem';
+                            emailError.style.marginTop = '0.25rem';
+                            emailError.style.display = 'block';
+                        } else {
+                            emailError.textContent = '';
+                            emailError.style.display = 'none';
+                        }
+                    })
+                    .catch(() => {
+                        emailError.textContent = 'Error checking email.';
+                        emailError.style.color = '#E53E3E';
+                        emailError.style.fontSize = '0.75rem';
+                        emailError.style.marginTop = '0.25rem';
+                        emailError.style.display = 'block';
+                    });
+            }, 500); // Debounce time
         }
+
         if (emailInput) {
             emailInput.addEventListener('blur', checkEmailAjax);
             emailInput.addEventListener('input', checkEmailAjax);
         }
 
-        // Robust form validation for all required fields
+        // --- Robust form validation for all required fields ---
         document.getElementById('addUserForm').addEventListener('submit', function(e) {
             let valid = true;
-            // Remove previous error states/messages for inputs, selects, textareas
+            let firstInvalidField = null;
+
+            // 1. Remove previous error states/messages
             const fields = Array.from(document.getElementById('addUserForm').querySelectorAll('input, select, textarea'));
             fields.forEach(field => {
                 field.classList.remove('error-input');
+                field.classList.remove('error-select');
                 let err = field.parentNode.querySelector('.field-error');
                 if (err) err.remove();
             });
 
-            // Validate all visible required fields
+            // 2. Validate all visible required fields
             fields.forEach(field => {
-                // Only validate visible fields
-                if (field.offsetParent === null) return;
-                // Skip optional fields
-                if (field.hasAttribute('data-optional')) return;
-                // Validate required fields
-                if ((field.tagName === 'INPUT' || field.tagName === 'TEXTAREA') && field.type !== 'file' && !field.value.trim()) {
-                    valid = false;
-                    field.classList.add('error-input');
-                    let err = document.createElement('div');
-                    err.className = 'field-error';
-                    err.textContent = 'This field is required.';
-                    err.style.color = '#E53E3E';
-                    err.style.fontSize = '0.75rem';
-                    err.style.marginTop = '0.25rem';
-                    field.parentNode.appendChild(err);
-                }
-                if (field.tagName === 'SELECT' && (!field.value || field.value === '' || field.value === field.querySelector('option[disabled]')?.value)) {
-                    valid = false;
-                    field.classList.add('error-select');
-                    let err = document.createElement('div');
-                    err.className = 'field-error';
-                    err.textContent = 'This field is required.';
-                    err.style.color = '#E53E3E';
-                    err.style.fontSize = '0.75rem';
-                    err.style.marginTop = '0.25rem';
-                    field.parentNode.appendChild(err);
+                // Only validate fields currently visible (e.g., in the DOM structure and not hidden)
+                const computedStyle = window.getComputedStyle(field.closest('.user-details-row') || field.parentNode);
+                if (computedStyle.display === 'none' && !field.classList.contains('hidden-file-input')) return;
+                
+                // Skip optional fields unless they have the 'required' attribute dynamically added
+                if (field.hasAttribute('data-optional') && !field.hasAttribute('required')) return;
+                
+                // Check if field is required (either static or dynamic)
+                const isRequired = field.hasAttribute('required') || (field.tagName === 'SELECT' && field.name !== 'sex' && field.value === field.querySelector('option[disabled]')?.value);
+
+
+                // Validation logic
+                if (field.type !== 'file' && field.type !== 'submit' && field.type !== 'button' && (field.hasAttribute('required') || field.tagName === 'SELECT' || (field.closest('.user-details-row')?.style.display !== 'none' && !field.hasAttribute('data-optional')))) {
+                     
+                    let isFieldInvalid = false;
+                    
+                    if (field.tagName === 'SELECT' && (!field.value || field.value === field.querySelector('option[disabled]')?.value)) {
+                        isFieldInvalid = true;
+                    } else if ((field.tagName === 'INPUT' || field.tagName === 'TEXTAREA') && field.type !== 'file' && !field.value.trim()) {
+                        isFieldInvalid = true;
+                    }
+                    
+                    // Specific validation for Role-Required fields
+                    if (field.hasAttribute('data-role-required') && field.closest('.user-details-row')?.style.display === 'none') {
+                        isFieldInvalid = false; // Don't validate if hidden by role logic
+                    }
+
+                    if (isFieldInvalid) {
+                        valid = false;
+                        if (!firstInvalidField) firstInvalidField = field;
+                        field.classList.add(field.tagName === 'SELECT' ? 'error-select' : 'error-input');
+                        let err = document.createElement('div');
+                        err.className = 'field-error';
+                        err.textContent = 'This field is required.';
+                        err.style.color = '#E53E3E';
+                        err.style.fontSize = '0.75rem';
+                        err.style.marginTop = '0.25rem';
+                        field.parentNode.appendChild(err);
+                    }
                 }
             });
-
-            // Email uniqueness error
+            
+            // 3. Email uniqueness error check
             var email = emailInput.value.trim();
             if (email && emailError.style.display === 'block') {
                 valid = false;
+                if (!firstInvalidField) firstInvalidField = emailInput;
                 emailInput.classList.add('error-input');
-                emailInput.focus();
             }
 
             if (!valid) {
                 e.preventDefault();
+                if (firstInvalidField) {
+                    firstInvalidField.focus();
+                }
             }
         });
     });
 </script>
+
 
 <script>
     // Profile Picture Preview

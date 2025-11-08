@@ -36,7 +36,7 @@
 			</div>
 			
 			<!-- Notifications Bell Icon -->
-			<div class="topbar-icon-btn {% if '/notifications/' in request.path %}active{% endif %}" onclick="window.location.href='{% url 'notifications' %}'" title="Notifications">
+			<div style="margin-right: 1.2rem;" class="topbar-icon-btn {% if '/notifications/' in request.path %}active{% endif %}" onclick="window.location.href='{% url 'notifications' %}'" title="Notifications">
 				<svg width="24" height="30"><use href="#icon-topbar-notification"/></svg>
 				{% if unread_notifications_count > 0 %}
 				<span style="position:absolute;top:-5px;right:-5px;background:#FF3300;color:white;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:bold;border:2px solid white;box-shadow:0 2px 4px rgba(0,0,0,0.2);">
