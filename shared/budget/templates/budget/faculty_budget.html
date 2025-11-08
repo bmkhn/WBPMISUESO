@@ -128,19 +128,19 @@
             <div class="list" style="margin-top: 1rem;">
                 <h2 class="headerr">Charts</h2>
                     
-                    <div class="chart-box">
-                        <h3 class="chart-box-title">College Budget Remaining Over Time</h3>
-                        <div class="chart-container-large">
-                            <canvas id="collegeTimeChart" data-chart-data="{{ college_remaining_data_json }}"></canvas>
-                        </div>
+                <div class="chart-box">
+                    <h3 class="chart-box-title">College Budget Remaining Over Time</h3>
+                    <div class="chart-container-large">
+                        <canvas id="collegeTimeChart" data-chart-data="{{ college_remaining_data_json }}"></canvas>
                     </div>
+                </div>
                     
-                    <div class="chart-box">
-                        <h3 class="chart-box-title">Total Project Funding Over Time</h3>
-                        <div class="chart-container-large">
-                            <canvas id="facultyTotalChart" data-chart-data="{{ faculty_total_data_json }}"></canvas>
-                        </div>
+                <div class="chart-box">
+                    <h3 class="chart-box-title">Total Project Funding Over Time</h3>
+                    <div class="chart-container-large">
+                        <canvas id="facultyTotalChart" data-chart-data="{{ faculty_total_data_json }}"></canvas>
                     </div>
+                </div>
             </div>
         </div>
 
@@ -158,6 +158,12 @@
     const DASH_ROOT = document.querySelector('[data-dashboard]');
     const IS_DASH = !!(DASH_ROOT && DASH_ROOT.getAttribute('data-dashboard') === '1');
     const MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+    // --- FIX: Define missing class constants ---
+    const CLASS_HIDDEN = 'js-hidden';
+    const CLASS_GRID = 'js-grid';
+    const CLASS_TABLE = 'js-table'; // NOTE: This class is not explicitly defined in the HTML/CSS but is used for logical separation in JS.
+    const CLASS_FLEX = 'flex'; // Assuming flex is a utility class for the pagination container
 
     // Filter dropdown logic
     const filterBtn = document.getElementById('filterBtn');
@@ -235,9 +241,10 @@
                 cardBtn.classList.add('inactive');
                 
                 // List View ON
-                if(cardView){cardView.classList.add(CLASS_HIDDEN); cardView.classList.remove(CLASS_GRID);} 
-                if(listView){listView.classList.add(CLASS_TABLE); listView.classList.remove(CLASS_HIDDEN);}
-                if(innerTable){innerTable.classList.remove(CLASS_HIDDEN);}
+                // FIX: Removed CLASS_GRID/CLASS_TABLE logic that was confusing. Focus on HIDDEN class.
+                if(cardView){cardView.classList.add(CLASS_HIDDEN);} 
+                if(listView){listView.classList.remove(CLASS_HIDDEN);}
+                if(innerTable){innerTable.classList.remove(CLASS_HIDDEN);} // Ensure table is visible
                 if(cardPagination){cardPagination.classList.add(CLASS_HIDDEN); cardPagination.classList.remove(CLASS_FLEX);}
                 if(listPagination){listPagination.classList.add(CLASS_FLEX); listPagination.classList.remove(CLASS_HIDDEN);}
                 initListPagination();
