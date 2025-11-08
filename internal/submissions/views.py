@@ -8,8 +8,17 @@ from django.core.paginator import Paginator
 from django.contrib import messages
 
 
+def get_role_constants():
+    ADMIN_ROLES = ["VP", "DIRECTOR", "UESO"]
+    SUPERUSER_ROLES = ["PROGRAM_HEAD", "DEAN", "COORDINATOR"]
+    FACULTY_ROLE = ["FACULTY", "IMPLEMENTER"]
+    COORDINATOR_ROLE = ["COORDINATOR"]
+    return ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE, COORDINATOR_ROLE
+
+
 @role_required(allowed_roles=["UESO", "VP", "DIRECTOR", "COORDINATOR"], require_confirmed=True)
 def submission_admin_view(request):
+    ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE, COORDINATOR_ROLE = get_role_constants()
     from django.db.models import Case, When, Value, IntegerField
     user_role = getattr(request.user, 'role', None)
     # Optimize query with select_related
@@ -96,6 +105,10 @@ def submission_admin_view(request):
         'paginator': paginator,
         'page_range': page_range,
         'querystring': request.GET.urlencode().replace('&page='+str(page_obj.number), '') if page_obj else '',
+        'ADMIN_ROLES': ADMIN_ROLES,
+        'SUPERUSER_ROLES': SUPERUSER_ROLES,
+        'FACULTY_ROLE': FACULTY_ROLE,
+        'COORDINATOR_ROLE': COORDINATOR_ROLE,
     })
 
 
