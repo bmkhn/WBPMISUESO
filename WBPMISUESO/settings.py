@@ -18,7 +18,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # ============================================================
 # CORE SETTINGS
 # ============================================================
-    
+
 DEBUG = os.getenv('DEPLOYED', 'False')
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-fallback-key-change-in-production')
@@ -245,12 +245,10 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 if os.getenv('DEPLOYED', 'False') == 'True':
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
-    SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_HTTPONLY = True
 else: 
     SESSION_COOKIE_SECURE = False
     CSRF_COOKIE_SECURE = False
-    SECURE_SSL_REDIRECT = False
     SESSION_COOKIE_HTTPONLY = False
 
 
