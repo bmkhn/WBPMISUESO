@@ -21,3 +21,6 @@ staticfiles/
 
 # Migrations backup
 *.bak
+
+# Ignore specific files
+**/migrations/*.py

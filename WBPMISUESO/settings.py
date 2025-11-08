@@ -8,7 +8,6 @@ https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 """
 
 from pathlib import Path
-from decouple import config, Csv
 import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -19,12 +18,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # CORE SETTINGS
 # ============================================================
 
-SECRET_KEY = config('SECRET_KEY')
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-fallback-key-change-in-production')
 
-DEBUG = config("DEBUG", default=False, cast=bool)
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="*", cast=Csv())
-CSRF_TRUSTED_ORIGINS = config("CSRF_TRUSTED_ORIGINS", default="", cast=Csv())
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
+CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',') if os.getenv('CSRF_TRUSTED_ORIGINS') else []
 
 
 # ============================================================
@@ -130,12 +129,12 @@ WSGI_APPLICATION = 'WBPMISUESO.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': config('DB_ENGINE', default='django.db.backends.sqlite3'),
-        'NAME': config('DB_NAME', default=str(BASE_DIR / 'db.sqlite3')),
-        'USER': config('DB_USER', default=''),
-        'PASSWORD': config('DB_PASSWORD', default=''),
-        'HOST': config('DB_HOST', default=''),
-        'PORT': config('DB_PORT', default=''),
+        'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.sqlite3'),
+        'NAME': os.getenv('DB_NAME', str(BASE_DIR / 'db.sqlite3')),
+        'USER': os.getenv('DB_USER', ''),
+        'PASSWORD': os.getenv('DB_PASSWORD', ''),
+        'HOST': os.getenv('DB_HOST', ''),
+        'PORT': os.getenv('DB_PORT', ''),
         'OPTIONS': {
             'connect_timeout': 10,  # Connection timeout in seconds
         },
@@ -147,16 +146,13 @@ DATABASES = {
 # AUTHENTICATION & AUTHORIZATION
 # ============================================================
 
-# Custom authentication backend to allow email login
 AUTHENTICATION_BACKENDS = [
-    'system.users.backends.EmailBackend',           # Email-based authentication (primary)
-    'django.contrib.auth.backends.ModelBackend',    # Username-based authentication (fallback)
+    'system.users.backends.EmailBackend',
+    'django.contrib.auth.backends.ModelBackend',
 ]
 
-# Custom User Model
 AUTH_USER_MODEL = 'users.User'
 
-# Password validation rules
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -164,7 +160,7 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
         'OPTIONS': {
-            'min_length': 8,  # Minimum 8 characters
+            'min_length': 8,
         }
     },
     {
@@ -175,10 +171,8 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-# Password reset timeout (1 hour)
 PASSWORD_RESET_TIMEOUT = 3600
 
-# Login/Logout URLs
 LOGIN_URL = '/login/'
 LOGOUT_REDIRECT_URL = '/login/'
 
@@ -188,9 +182,9 @@ LOGOUT_REDIRECT_URL = '/login/'
 # ============================================================
 
 LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'Asia/Manila'  # Philippine Standard Time (UTC+8)
+TIME_ZONE = 'Asia/Manila'
 USE_I18N = True
-USE_TZ = True  # Use timezone-aware datetimes
+USE_TZ = True
 
 
 # ============================================================
@@ -199,8 +193,6 @@ USE_TZ = True  # Use timezone-aware datetimes
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / "static"]
-
-# Production: Collect static files with: python manage.py collectstatic
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
@@ -211,19 +203,17 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# Production: Consider using cloud storage (AWS S3, Google Cloud Storage) or a CDN for better performance and scalability
-
 # ============================================================
 # EMAIL CONFIGURATION
 # ============================================================
 
-EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
-EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
-EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
-EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
-EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@example.com')
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@example.com')
 
 # ============================================================
 # SITE CONFIGURATION
@@ -231,44 +221,42 @@ DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@example.com')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-SESSION_COOKIE_AGE = 86400                      # 24 hours (1 day)
-SESSION_SAVE_EVERY_REQUEST = True               # Reset timeout on each activity (sliding window)
-SESSION_EXPIRE_AT_BROWSER_CLOSE = False         # Persist across browser restarts
-
+SESSION_COOKIE_AGE = 86400
+SESSION_SAVE_EVERY_REQUEST = True
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
 # ============================================================
 # SECURITY SETTINGS
 # ============================================================
 
-# Security Headers
-SECURE_BROWSER_XSS_FILTER = True                # XSS protection
-X_FRAME_OPTIONS = 'DENY'                        # Prevent clickjacking
-SECURE_CONTENT_TYPE_NOSNIFF = True              # Prevent MIME-sniffing
+SECURE_BROWSER_XSS_FILTER = True
+X_FRAME_OPTIONS = 'DENY'
+SECURE_CONTENT_TYPE_NOSNIFF = True
 
-# PRODUCTION (HTTPS):
-SESSION_COOKIE_SECURE = True                    # Cookies only sent over HTTPS
-CSRF_COOKIE_SECURE = True                       # CSRF token only sent over HTTPS
-SECURE_SSL_REDIRECT = True                      # Force all traffic to HTTPS
+# Only enable HTTPS settings in production
+if not DEBUG:
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_SSL_REDIRECT = True
 
-SESSION_COOKIE_HTTPONLY = True                  # Prevent JavaScript access (XSS protection)
-SESSION_COOKIE_SAMESITE = 'Lax'                 # CSRF protection (Strict/Lax/None)
-SESSION_COOKIE_NAME = 'wbpmisueso_sessionid'    # Custom name for additional security
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_NAME = 'wbpmisueso_sessionid'
 
-CSRF_COOKIE_HTTPONLY = False                    # Allow JavaScript access for AJAX
+CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_NAME = 'csrftoken'
 
 # ============================================================
 # CACHE CONFIGURATION
 # ============================================================
-# Used for notification count optimization and query caching
 
 CACHES = {
     'default': {
-        'BACKEND': config('CACHE_BACKEND', default='django.core.cache.backends.locmem.LocMemCache'),
-        'LOCATION': config('CACHE_LOCATION', default='unique-snowflake'),
-        'TIMEOUT': 300,  # 5 minutes default
+        'BACKEND': os.getenv('CACHE_BACKEND', 'django.core.cache.backends.locmem.LocMemCache'),
+        'LOCATION': os.getenv('CACHE_LOCATION', 'unique-snowflake'),
+        'TIMEOUT': 300,
         'OPTIONS': {
             'MAX_ENTRIES': 1000
         }
