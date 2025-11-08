@@ -18,10 +18,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # ============================================================
 # CORE SETTINGS
 # ============================================================
+    
+DEBUG = os.getenv('DEPLOYED', 'False')
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-fallback-key-change-in-production')
 
-ALLOWED_HOSTS = [ 'localhost', '127.0.0.1', 'uesopmis.up.railway.app']
+ALLOWED_HOSTS = [ 'localhost', '127.0.0.1', 'uesopmis.up.railway.app', 'healthcheck.railway.app']
 CSRF_TRUSTED_ORIGINS = [ 'https://uesopmis.up.railway.app' ]
 
 # ============================================================
