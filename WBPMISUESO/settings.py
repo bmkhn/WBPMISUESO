@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 from pathlib import Path
 import os
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,13 +21,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-fallback-key-change-in-production')
 
-if os.getenv('DEPLOYED', 'False') == 'True':
-    DEBUG = False
-    ALLOWED_HOSTS = [host.strip() for host in os.getenv('ALLOWED_HOSTS', '').split(',') if host.strip()]
-    CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',') if origin.strip()]
-else:
-    DEBUG = True
-    ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+ALLOWED_HOSTS = [ 'localhost', '127.0.0.1', 'uesopmis.up.railway.app']
+CSRF_TRUSTED_ORIGINS = [ 'https://uesopmis.up.railway.app' ]
 
 # ============================================================
 # APPLICATION DEFINITION
@@ -127,69 +123,18 @@ WSGI_APPLICATION = 'WBPMISUESO.wsgi.application'
 # DATABASE CONFIGURATION
 # ============================================================
 
-if os.getenv('DEPLOYED', 'False') == 'True' and os.getenv('DATABASE_URL'):
-    # Railway PostgreSQL (auto-configured)
-    try:
-        import dj_database_url
-        DATABASES = {
-            'default': dj_database_url.config(
-                default=os.getenv('DATABASE_URL'),
-                conn_max_age=600,
-                conn_health_checks=True,
-            )
-        }
-        print("✓ Using DATABASE_URL for database connection")
-    except ImportError:
-        print("✗ dj-database-url not installed, falling back to manual config")
-        DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.postgresql',
-                'NAME': os.getenv('PGDATABASE', 'railway'),
-                'USER': os.getenv('PGUSER', 'postgres'),
-                'PASSWORD': os.getenv('PGPASSWORD', ''),
-                'HOST': os.getenv('PGHOST', 'localhost'),
-                'PORT': os.getenv('PGPORT', '5432'),
-                'CONN_MAX_AGE': 600,
-            }
-        }
-
-elif os.getenv('DB_ENGINE'):
-    # Manual Database Configuration
-    db_engine = os.getenv('DB_ENGINE')
+if os.getenv('DEPLOYED', 'False') == 'True':    
+    DATABASES = {
+        'default': dj_database_url.parse(os.getenv('DATABASE_URL'))
+    }
     
-    if 'sqlite' in db_engine:
-        # SQLite configuration (no timeout option)
-        DATABASES = {
-            'default': {
-                'ENGINE': db_engine,
-                'NAME': os.getenv('DB_NAME', str(BASE_DIR / 'db.sqlite3')),
-            }
-        }
-    else:
-        # PostgreSQL/MySQL Manual Configuration
-        DATABASES = {
-            'default': {
-                'ENGINE': db_engine,
-                'NAME': os.getenv('DB_NAME', ''),
-                'USER': os.getenv('DB_USER', ''),
-                'PASSWORD': os.getenv('DB_PASSWORD', ''),
-                'HOST': os.getenv('DB_HOST', ''),
-                'PORT': os.getenv('DB_PORT', ''),
-                'OPTIONS': {
-                    'connect_timeout': 10,
-                },
-                'CONN_MAX_AGE': 600,
-            }
-        }
 else:
-    # Default to SQLite if no configuration provided
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': str(BASE_DIR / 'db.sqlite3'),
         }
     }
-
 
 # ============================================================
 # AUTHENTICATION & AUTHORIZATION
@@ -318,27 +263,13 @@ CSRF_COOKIE_NAME = 'csrftoken'
 # CACHE CONFIGURATION
 # ============================================================
 
-if os.getenv('DEPLOYED', 'False') == 'True':
-    # Production Cache Configuration
-    CACHES = {
-        'default': {
-            'BACKEND': os.getenv('CACHE_BACKEND', 'django.core.cache.backends.locmem.LocMemCache'),
-            'LOCATION': os.getenv('REDIS_URL', 'unique-snowflake'),
-            'TIMEOUT': 300,
-            'OPTIONS': {
-                'MAX_ENTRIES': 1000
-            }
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+        'TIMEOUT': 300,
+        'OPTIONS': {
+            'MAX_ENTRIES': 1000
         }
     }
-else:
-    # Development Cache Configuration
-    CACHES = {
-        'default': {
-            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-            'LOCATION': 'unique-snowflake',
-            'TIMEOUT': 300,
-            'OPTIONS': {
-                'MAX_ENTRIES': 1000
-            }
-        }
-    }
+}

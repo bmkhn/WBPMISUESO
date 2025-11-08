@@ -6,7 +6,6 @@ from django.core.mail import send_mail
 from django.db.models import Q
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.cache import never_cache
-from sklearn import logger
 
 from system.users.models import College, Campus
 from system.users.decorators import role_required
@@ -18,15 +17,8 @@ import random
 @never_cache
 @csrf_exempt
 def health_check(request):
-    """Ultra-simple healthcheck that always returns 200"""
-    logger.info(f"Healthcheck called from {request.META.get('HTTP_HOST')}")
-    return JsonResponse(
-        {
-            "status": "healthy",
-            "host": request.META.get('HTTP_HOST'),
-        },
-        status=200
-    )
+    """Lightweight healthcheck for Railway"""
+    return JsonResponse({"status": "healthy", "service": "WBPMISUESO"}, status=200)
 
 def get_role_constants():
     ADMIN_ROLES = ["VP", "DIRECTOR", "UESO"]
