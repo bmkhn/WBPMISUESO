@@ -95,7 +95,7 @@
             </div>
             {% elif request.user.role in ADMIN_ROLES %}
             <div class="action-form">
-                <button type="button" class="reject-btn" id="delete-btn">Delete</button>
+                <button type="button" class="action-btn reject-btn" id="delete-btn">Delete</button>
             </div>
             {% endif %}
 
@@ -103,19 +103,19 @@
             {% if request.user.id == project.project_leader.id or request.user.id in provider_ids %}
            <form method="post" action="{% url 'admin_submission_action' project.id submission.id %}" class="action-form">
                 {% csrf_token %}
-                <button type="submit" name="action" value="unsubmit" class="reject-btn">Unsubmit</button>
+                <button type="submit" name="action" value="unsubmit" class="action-btn reject-btn">Unsubmit</button>
             </form>
             {% elif request.user.role == 'COORDINATOR' %}
             <form method="post" action="{% url 'admin_submission_action' project.id submission.id %}" class="action-form">
                 {% csrf_token %}
                 <button type="submit" name="action" value="forward" class="action-btn endorse-btn">Forward to UESO</button>
-                <button type="button" class="reject-btn" id="action-btn reject-btn">Request Revision</button>
+                <button type="button" class="action-btn reject-btn" id="reject-btn">Request Revision</button>
             </form>
             {% elif project_leader_has_no_college and request.user.role in ADMIN_ROLES and user_not_in_project %}
             <form method="post" action="{% url 'admin_submission_action' project.id submission.id %}" class="action-form">
                 {% csrf_token %}
                 <button type="submit" name="action" value="accept" class="action-btn approve-btn">Approve</button>
-                <button type="button" class="reject-btn" id="action-btn reject-btn">Request Revision</button>
+                <button type="button" class="action-btn reject-btn" id="reject-btn">Request Revision</button>
             </form>
             {% endif %}
 
@@ -123,13 +123,13 @@
         <form method="post" action="{% url 'admin_submission_action' project.id submission.id %}" class="action-form">
             {% csrf_token %}
             <button type="submit" name="action" value="accept" class="action-btn approve-btn">Accept</button>
-            <button type="button" class="reject-btn" id="action-btn reject-btn">Reject</button>
+            <button type="button" class="action-btn reject-btn" id="reject-btn">Reject</button>
         </form>
 
         {% elif submission.status == 'REVISION_REQUESTED' %}
             {% if request.user.id == project.project_leader.id or request.user.id in provider_ids %}
             <div class="action-form">
-                <button type="button" class="action-btn endorse-btn id="submit-revision-btn" 
+                <button type="button" class="action-btn endorse-btn" id="submit-revision-btn"
                         data-submission-type="{{ submission.downloadable.submission_type }}" 
                         data-submission-id="{{ submission.id }}">Submit Revision</button>
             </div>
@@ -179,8 +179,8 @@
                 </div>
 
                 <div class="form-actions" style="justify-content:flex-end;">
-                    <button type="button" class="back-btn">Cancel</button>
-                    <button type="submit" class="submit-btn">Submit</button>
+                    <button type="button" class="action-btn cancel-btn">Cancel</button>
+                    <button type="submit" class="action-btn endorse-btn">Submit</button>
                 </div>
             </form>
         </div>
@@ -212,8 +212,8 @@
                 </div>
 
                 <div class="form-actions" style="justify-content:flex-end;">
-                    <button type="button" class="back-btn">Cancel</button>
-                    <button type="submit" class="submit-btn">Submit</button>
+                    <button type="button" class="action-btn cancel-btn">Cancel</button>
+                    <button type="submit" class="action-btn endorse-btn">Submit</button>
                 </div>
             </form>
         </div>
@@ -237,8 +237,8 @@
                 </div>
 
                 <div class="form-actions" style="justify-content:flex-end;">
-                    <button type="button" class="back-btn">Cancel</button>
-                    <button type="submit" class="submit-btn">Submit</button>
+                    <button type="button" class="action-btn cancel-btn">Cancel</button>
+                    <button type="submit" class="action-btn endorse-btn">Submit</button>
                 </div>
             </form>
         </div>
@@ -251,17 +251,17 @@
             <form method="post" action="{% url 'admin_submission_action' project.id submission.id %}" style="width:100%;">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="reject" />
-                <textarea name="reason" rows="3" required placeholder="Enter reason..." style="resize:vertical;"></textarea>
+                <textarea name="reason" rows="3" required placeholder="Enter reason..." style="resize:vertical; min-height: 10rem;"></textarea>
                 <div style="margin-top:1rem;">
-                    <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.95rem;color:#374151;cursor:pointer;">
-                        <input type="checkbox" id="update-deadline-reject" style="width:18px;height:18px;cursor:pointer;" onchange="document.getElementById('new-deadline-reject').disabled = !this.checked; if(!this.checked) document.getElementById('new-deadline-reject').value = '';">
+                    <label style="display:flex; margin-bottom: 0.6rem; align-items: center; gap:0.5rem;font-size:0.95rem;color:#374151;cursor:pointer;">
+                        <input type="checkbox" id="update-deadline-reject" class="user-details-value" onchange="document.getElementById('new-deadline-reject').disabled = !this.checked; if(!this.checked) document.getElementById('new-deadline-reject').value = '';">
                         Update Deadline
                     </label>
-                    <input type="datetime-local" name="new_deadline" id="new-deadline-reject" disabled style="margin-top:0.5rem;width:100%;" value="{{ submission.deadline|date:'Y-m-d\TH:i' }}">
+                    <input type="datetime-local" name="new_deadline" class="user-details-value" id="new-deadline-reject" disabled style="margin-bottom:1rem;width:100%;" value="{{ submission.deadline|date:'Y-m-d\TH:i' }}">
                 </div>
                 <div class="modal-actions">
-                    <button type="button" class="back-btn" id="cancel-reject">Cancel</button>
-                    <button type="submit" class="reject-btn">Reject</button>
+                    <button type="button" class="action-btn cancel-btn" id="cancel-reject">Cancel</button>
+                    <button type="submit" class="action-btn reject-btn">Reject</button>
                 </div>
             </form>
         </div>
@@ -274,14 +274,14 @@
                 <textarea name="reason" rows="3" required placeholder="Enter reason..." style="resize:vertical;"></textarea>
                 <div style="margin-top:1rem;">
                     <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.95rem;color:#374151;cursor:pointer;">
-                        <input type="checkbox" id="update-deadline-revision" style="width:18px;height:18px;cursor:pointer;" onchange="document.getElementById('new-deadline-revision').disabled = !this.checked; if(!this.checked) document.getElementById('new-deadline-revision').value = '';">
+                        <input type="checkbox" id="update-deadline-revision" class="user-details-value" style="width:18px;height:18px;cursor:pointer;" onchange="document.getElementById('new-deadline-revision').disabled = !this.checked; if(!this.checked) document.getElementById('new-deadline-revision').value = '';">
                         Update Deadline
                     </label>
-                    <input type="datetime-local" name="new_deadline" id="new-deadline-revision" disabled style="margin-top:0.5rem;width:100%;" value="{{ submission.deadline|date:'Y-m-d\TH:i' }}">
+                    <input type="datetime-local" name="new_deadline" class="user-details-value" id="new-deadline-revision" disabled style="margin-top:0.5rem;width:100%;" value="{{ submission.deadline|date:'Y-m-d\TH:i' }}">
                 </div>
                 <div class="modal-actions">
-                    <button type="button" class="back-btn" id="cancel-request-revision">Cancel</button>
-                    <button type="submit" class="reject-btn">Request Revision</button>
+                    <button type="button" class="action-btn cancel-btn" id="cancel-request-revision">Cancel</button>
+                    <button type="submit" class="action-btn reject-btn">Request Revision</button>
                 </div>
             </form>
         </div>
@@ -292,8 +292,8 @@
                 {% csrf_token %}
                 <input type="hidden" name="action" value="delete" />
                 <div class="modal-actions">
-                    <button type="button" class="back-btn" id="cancel-delete">Cancel</button>
-                    <button type="submit" class="reject-btn">Delete</button>
+                    <button type="button" class="action-btn cancel-btn" id="cancel-delete">Cancel</button>
+                    <button type="submit" class="action-btn reject-btn">Delete</button>
                 </div>
             </form>
         </div>
@@ -429,7 +429,7 @@
             });
         });
         
-        document.querySelectorAll('.submission-modal .back-btn').forEach(function(btn) {
+        document.querySelectorAll('.submission-modal .cancel-btn').forEach(function(btn) {
             btn.addEventListener('click', function() {
                 btn.closest('.submission-modal').style.display = 'none';
             });
