@@ -1,3 +1,4 @@
+from decimal import Decimal
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
 import faker 
@@ -348,3 +349,36 @@ class Command(BaseCommand):
             )
             self.stdout.write(self.style.SUCCESS("About Us created.\n"))
         self.stdout.write(self.style.SUCCESS("✅ Data population completed safely (idempotent).\n"))
+
+
+        # --- BUDGET ---
+        from shared.budget.models import CollegeBudget
+        from shared.budget.models import BudgetPool
+
+        if BudgetPool.objects.exists():
+            self.stdout.write(self.style.WARNING("Annual Budget already populated - skipping;.\n"))
+        else:
+            self.stdout.write("Populating annual budget...")
+            # Create annual budget
+            BudgetPool.objects.create(
+                fiscal_year = "2025",
+                total_available = 100000000000,
+                created_at = timezone.now(),
+            )
+            self.stdout.write(self.style.SUCCESS("Annual Budget created.\n"))
+
+
+        if CollegeBudget.objects.exists():
+            self.stdout.write(self.style.WARNING("College Budget already populated — skipping.\n"))
+        else:
+            self.stdout.write("Populating college budget...")
+            # Create a budget for each college
+            for college in College.objects.all():
+                CollegeBudget.objects.create(
+                    college=college,
+                    total_assigned=Decimal('100000000.00'),  # Default budget amount
+                    fiscal_year = "2025",
+                    assigned_by=director_user,
+                    created_at=timezone.now(),
+                )
+            self.stdout.write(self.style.SUCCESS("College Budget created.\n"))
