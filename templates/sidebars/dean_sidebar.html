@@ -105,11 +105,6 @@
 
 	<!-- Topbar -->
 	<div class="topbar">
-		<!-- Projects Shortcut -->
-		<div class="topbar-icon-btn {% if '/projects/' in request.path %}active{% endif %}" onclick="window.location.href='/projects/'" title="Projects">
-			<svg width="24" height="24"><use href="#icon-topbar-projects"/></svg>
-		</div>
-		
 		<!-- Notifications Bell Icon -->
 		<div class="topbar-icon-btn {% if '/notifications/' in request.path %}active{% endif %}" onclick="window.location.href='{% url 'notifications' %}'" title="Notifications">
 			<svg width="24" height="30"><use href="#icon-topbar-notification"/></svg>
@@ -118,6 +113,11 @@
 				{{ unread_notifications_count }}
 			</span>
 			{% endif %}
+		</div>
+		
+		<!-- Projects Shortcut -->
+		<div class="topbar-icon-btn {% if '/projects/' in request.path %}active{% endif %}" onclick="window.location.href='/projects/'" title="Projects">
+			<svg width="24" height="24"><use href="#icon-topbar-projects"/></svg>
 		</div>
 		
 		<div class="logo-circle" id="profilePicContainer" style="position:relative;">

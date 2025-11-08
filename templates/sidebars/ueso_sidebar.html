@@ -111,16 +111,6 @@
 
 	<!-- Topbar -->
 	<div class="topbar">
-		<!-- Projects Shortcut -->
-		<div class="topbar-icon-btn {% if '/projects/' in request.path %}active{% endif %}" onclick="window.location.href='/projects/'" title="Projects">
-			<svg width="24" height="24"><use href="#icon-topbar-projects"/></svg>
-		</div>
-		
-		<!-- Submissions Shortcut -->
-		<div class="topbar-icon-btn {% if '/submissions/' in request.path %}active{% endif %}" onclick="window.location.href='/submissions/'" title="Submissions">
-			<svg width="24" height="24"><use href="#icon-topbar-submission"/></svg>
-		</div>
-		
 		<!-- Notifications Bell Icon -->
 		<div class="topbar-icon-btn {% if '/notifications/' in request.path %}active{% endif %}" onclick="window.location.href='{% url 'notifications' %}'" title="Notifications">
 			<svg width="24" height="30"><use href="#icon-topbar-notification"/></svg>
@@ -131,6 +121,16 @@
 			{% endif %}
 		</div>
 		
+		<!-- Projects Shortcut -->
+		<div class="topbar-icon-btn {% if '/projects/' in request.path %}active{% endif %}" onclick="window.location.href='/projects/'" title="Projects">
+			<svg width="24" height="24"><use href="#icon-topbar-projects"/></svg>
+		</div>
+		
+		<!-- Submissions Shortcut -->
+		<div class="topbar-icon-btn {% if '/submissions/' in request.path %}active{% endif %}" onclick="window.location.href='/submissions/'" title="Submissions">
+			<svg width="24" height="24"><use href="#icon-topbar-submission"/></svg>
+		</div>
+	
 		<div class="logo-circle" id="profilePicContainer" style="position:relative;">
 			<img src="{{ request.user.profile_picture_or_initial }}" alt="Profile Picture" id="profilePic" style="object-fit: cover; cursor:pointer;">
 			
