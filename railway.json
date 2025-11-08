@@ -5,8 +5,8 @@
     "buildCommand": "pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate"
   },
   "deploy": {
-    "startCommand": "gunicorn WBPMISUESO.wsgi:application --bind 0.0.0.0:$PORT",
-    "healthcheckPath": "/",
+    "startCommand": "gunicorn WBPMISUESO.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120",
+    "healthcheckPath": "/login/",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }
