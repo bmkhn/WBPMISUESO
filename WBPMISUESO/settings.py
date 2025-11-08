@@ -20,11 +20,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-fallback-key-change-in-production')
 
-DEBUG = os.getenv('DEBUG', 'False') == 'True'
-
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
-CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',') if os.getenv('CSRF_TRUSTED_ORIGINS') else []
-
+if os.getenv('DEPLOYED', 'False') == 'True':
+    DEBUG = False
+    ALLOWED_HOSTS = [host.strip() for host in os.getenv('ALLOWED_HOSTS', '').split(',') if host.strip()]
+    CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',') if origin.strip()]
+else:
+    DEBUG = True
+    ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
 # ============================================================
 # APPLICATION DEFINITION
@@ -124,21 +126,36 @@ WSGI_APPLICATION = 'WBPMISUESO.wsgi.application'
 # ============================================================
 # DATABASE CONFIGURATION
 # ============================================================
-# Railway provides DATABASE_URL automatically for PostgreSQL
 
-if os.getenv('DATABASE_URL'):
+if os.getenv('DEPLOYED', 'False') == 'True' and os.getenv('DATABASE_URL'):
     # Railway PostgreSQL (auto-configured)
-    import dj_database_url
-    DATABASES = {
-        'default': dj_database_url.config(
-            default=os.getenv('DATABASE_URL'),
-            conn_max_age=600,
-            conn_health_checks=True,
-        )
-    }
-else:
-    # Local development or fallback
-    db_engine = os.getenv('DB_ENGINE', 'django.db.backends.sqlite3')
+    try:
+        import dj_database_url
+        DATABASES = {
+            'default': dj_database_url.config(
+                default=os.getenv('DATABASE_URL'),
+                conn_max_age=600,
+                conn_health_checks=True,
+            )
+        }
+        print("✓ Using DATABASE_URL for database connection")
+    except ImportError:
+        print("✗ dj-database-url not installed, falling back to manual config")
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql',
+                'NAME': os.getenv('PGDATABASE', 'railway'),
+                'USER': os.getenv('PGUSER', 'postgres'),
+                'PASSWORD': os.getenv('PGPASSWORD', ''),
+                'HOST': os.getenv('PGHOST', 'localhost'),
+                'PORT': os.getenv('PGPORT', '5432'),
+                'CONN_MAX_AGE': 600,
+            }
+        }
+
+elif os.getenv('DB_ENGINE'):
+    # Manual Database Configuration
+    db_engine = os.getenv('DB_ENGINE')
     
     if 'sqlite' in db_engine:
         # SQLite configuration (no timeout option)
@@ -149,27 +166,35 @@ else:
             }
         }
     else:
-        # PostgreSQL/MySQL configuration
+        # PostgreSQL/MySQL Manual Configuration
         DATABASES = {
             'default': {
                 'ENGINE': db_engine,
-                'NAME': os.getenv('DB_NAME', 'wbpmisueso'),
+                'NAME': os.getenv('DB_NAME', ''),
                 'USER': os.getenv('DB_USER', ''),
                 'PASSWORD': os.getenv('DB_PASSWORD', ''),
-                'HOST': os.getenv('DB_HOST', 'localhost'),
-                'PORT': os.getenv('DB_PORT', '5432'),
+                'HOST': os.getenv('DB_HOST', ''),
+                'PORT': os.getenv('DB_PORT', ''),
                 'OPTIONS': {
                     'connect_timeout': 10,
                 },
                 'CONN_MAX_AGE': 600,
             }
         }
-
+else:
+    # Default to SQLite if no configuration provided
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': str(BASE_DIR / 'db.sqlite3'),
+        }
+    }
 
 
 # ============================================================
 # AUTHENTICATION & AUTHORIZATION
 # ============================================================
+
 
 AUTHENTICATION_BACKENDS = [
     'system.users.backends.EmailBackend',
@@ -206,6 +231,7 @@ LOGOUT_REDIRECT_URL = '/login/'
 # INTERNATIONALIZATION
 # ============================================================
 
+
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'Asia/Manila'
 USE_I18N = True
@@ -216,21 +242,26 @@ USE_TZ = True
 # STATIC FILES (CSS, JavaScript, Images)
 # ============================================================
 
+
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
+
 # ============================================================
 # MEDIA FILES (User uploads)
 # ============================================================
 
+
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 
 # ============================================================
 # EMAIL CONFIGURATION
 # ============================================================
+
 
 EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
 EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
@@ -240,9 +271,11 @@ EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@example.com')
 
+
 # ============================================================
 # SITE CONFIGURATION
 # ============================================================
+
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -251,39 +284,61 @@ SESSION_SAVE_EVERY_REQUEST = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
+
 # ============================================================
 # SECURITY SETTINGS
 # ============================================================
+
 
 SECURE_BROWSER_XSS_FILTER = True
 X_FRAME_OPTIONS = 'DENY'
 SECURE_CONTENT_TYPE_NOSNIFF = True
 
-# Only enable HTTPS settings in production
-if not DEBUG:
+
+if os.getenv('DEPLOYED', 'False') == 'True':
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_HTTPONLY = True
+else: 
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
+    SECURE_SSL_REDIRECT = False
+    SESSION_COOKIE_HTTPONLY = False
 
-SESSION_COOKIE_HTTPONLY = True
+
 SESSION_COOKIE_SAMESITE = 'Lax'
 SESSION_COOKIE_NAME = 'wbpmisueso_sessionid'
-
 CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_NAME = 'csrftoken'
+
 
 # ============================================================
 # CACHE CONFIGURATION
 # ============================================================
 
-CACHES = {
-    'default': {
-        'BACKEND': os.getenv('CACHE_BACKEND', 'django.core.cache.backends.locmem.LocMemCache'),
-        'LOCATION': os.getenv('CACHE_LOCATION', 'unique-snowflake'),
-        'TIMEOUT': 300,
-        'OPTIONS': {
-            'MAX_ENTRIES': 1000
+if os.getenv('DEPLOYED', 'False') == 'True':
+    # Production Cache Configuration
+    CACHES = {
+        'default': {
+            'BACKEND': os.getenv('CACHE_BACKEND', 'django.core.cache.backends.locmem.LocMemCache'),
+            'LOCATION': os.getenv('REDIS_URL', 'unique-snowflake'),
+            'TIMEOUT': 300,
+            'OPTIONS': {
+                'MAX_ENTRIES': 1000
+            }
         }
     }
-}
+else:
+    # Development Cache Configuration
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'unique-snowflake',
+            'TIMEOUT': 300,
+            'OPTIONS': {
+                'MAX_ENTRIES': 1000
+            }
+        }
+    }
