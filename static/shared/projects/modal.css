@@ -63,29 +63,6 @@ body {
 }
 
 
-.back-btn, .action-btn, .reject-btn {
-    display: inline-block;
-    color: white;
-    padding: 0.75rem 1.5rem;
-    border-radius: 8px;
-    text-decoration: none;
-    font-size: 1rem;
-    font-weight: 500;
-    border: none;
-    text-align: center;
-    font-family: 'Inter', sans-serif;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-
-.back-btn { background: #6B7280; }
-.back-btn:hover { background: #4b5563; }
-.action-btn { background: #063A1C; }
-.action-btn:hover { background: #095c2d; }
-.reject-btn { background: #D5110A; }
-.reject-btn:hover { background: #a10c07; }
-
-
 .modal-bg {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
@@ -511,3 +488,38 @@ input[type="checkbox"] {
 .final-adjust {
     margin-left: 0.5rem;
 }
+
+.action-btn {
+    font-family: 'Inter', sans-serif;
+    color: #F5F5F5;
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 0.6rem 1.6rem;
+    border-radius: 2rem;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    text-decoration: none;
+}
+
+.action-btn:hover {
+    background-color: #444;
+    color: #fff;
+    transform: translateY(-1px);
+} 
+ 
+.approve-btn {
+    background-color: #10da56;
+}
+
+.reject-btn {
+    background-color: #ff0000;
+} 
+ 
+.endorse-btn {
+    background-color: #005e03;
+}  
+ 
+.cancel-btn {
+    background-color: #919191;
+}  

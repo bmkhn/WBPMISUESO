@@ -153,18 +153,12 @@
     color: #000;
 }
 
-/* Search/Filter */
-.search-bar input {
-    background: none;
-}
-.search-bar button {
+.search-bar button#filterBtn {
+    margin-right: 5px;
     background: none;
     border: none;
     padding: 0;
     cursor: pointer;
-}
-.search-bar button#filterBtn {
-    margin-right: 5px;
 }
 .filter-dropdown .filter-grid label {
     font-weight: 500;

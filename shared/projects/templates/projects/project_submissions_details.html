@@ -88,7 +88,7 @@
         {% if submission.status == 'PENDING' %}
             {% if request.user.id == project.project_leader.id or request.user.id in provider_ids %}
             <div class="action-form">
-                <button type="button" class="action-btn" id="submit-btn" 
+                <button type="button" class="action-btn endorse-btn" id="submit-btn" 
                         data-submission-type="{{ submission.downloadable.submission_type }}" 
                         data-submission-id="{{ submission.id }}">Submit
                 </button>
@@ -108,28 +108,28 @@
             {% elif request.user.role == 'COORDINATOR' %}
             <form method="post" action="{% url 'admin_submission_action' project.id submission.id %}" class="action-form">
                 {% csrf_token %}
-                <button type="submit" name="action" value="forward" class="action-btn">Forward to UESO</button>
-                <button type="button" class="reject-btn" id="request-revision-btn">Request Revision</button>
+                <button type="submit" name="action" value="forward" class="action-btn endorse-btn">Forward to UESO</button>
+                <button type="button" class="reject-btn" id="action-btn reject-btn">Request Revision</button>
             </form>
             {% elif project_leader_has_no_college and request.user.role in ADMIN_ROLES and user_not_in_project %}
             <form method="post" action="{% url 'admin_submission_action' project.id submission.id %}" class="action-form">
                 {% csrf_token %}
-                <button type="submit" name="action" value="accept" class="action-btn">Approve</button>
-                <button type="button" class="reject-btn" id="request-revision-btn">Request Revision</button>
+                <button type="submit" name="action" value="accept" class="action-btn approve-btn">Approve</button>
+                <button type="button" class="reject-btn" id="action-btn reject-btn">Request Revision</button>
             </form>
             {% endif %}
 
         {% elif submission.status == 'FORWARDED' and request.user.role in ADMIN_ROLES and user_not_in_project %}
         <form method="post" action="{% url 'admin_submission_action' project.id submission.id %}" class="action-form">
             {% csrf_token %}
-            <button type="submit" name="action" value="accept" class="action-btn">Accept</button>
-            <button type="button" class="reject-btn" id="reject-btn">Reject</button>
+            <button type="submit" name="action" value="accept" class="action-btn approve-btn">Accept</button>
+            <button type="button" class="reject-btn" id="action-btn reject-btn">Reject</button>
         </form>
 
         {% elif submission.status == 'REVISION_REQUESTED' %}
             {% if request.user.id == project.project_leader.id or request.user.id in provider_ids %}
             <div class="action-form">
-                <button type="button" class="action-btn" id="submit-revision-btn" 
+                <button type="button" class="action-btn endorse-btn id="submit-revision-btn" 
                         data-submission-type="{{ submission.downloadable.submission_type }}" 
                         data-submission-id="{{ submission.id }}">Submit Revision</button>
             </div>
@@ -138,7 +138,7 @@
         {% elif submission.status == 'REJECTED' %}
             {% if request.user.id == project.project_leader.id or request.user.id in provider_ids %}
             <div class="action-form">
-                <button type="button" class="action-btn" id="submit-revision-btn" 
+                <button type="button" class="action-btn endorse-btn" id="submit-revision-btn" 
                         data-submission-type="{{ submission.downloadable.submission_type }}" 
                         data-submission-id="{{ submission.id }}">Submit</button>
             </div>
@@ -147,7 +147,7 @@
         {% elif submission.status == 'OVERDUE' %}
             {% if request.user.id == project.project_leader.id or request.user.id in provider_ids %}
             <div class="action-form">
-                <button type="button" class="action-btn" id="submit-revision-btn" 
+                <button type="button" class="action-btn endorse-btn" id="submit-revision-btn" 
                         data-submission-type="{{ submission.downloadable.submission_type }}" 
                         data-submission-id="{{ submission.id }}">Submit (Late)</button>
             </div>

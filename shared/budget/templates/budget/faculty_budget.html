@@ -159,6 +159,47 @@
     const IS_DASH = !!(DASH_ROOT && DASH_ROOT.getAttribute('data-dashboard') === '1');
     const MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
+    // Filter dropdown logic
+    const filterBtn = document.getElementById('filterBtn');
+    const filterDropdown = document.getElementById('filterDropdown');
+    const closeFilter = document.getElementById('closeFilter');
+    
+    // Set initial state for dropdown if it's supposed to be hidden by default but might have style attribute issue
+    if (filterDropdown) {
+        // Ensure the style attribute starts as hidden if no parameters are set (assuming Django logic handles visibility on filter search submit)
+        if (!window.location.search.includes('search') && !window.location.search.includes('sort_by')) {
+             filterDropdown.style.display = 'none'; 
+        } else {
+             filterDropdown.style.display = 'block'; 
+        }
+    }
+
+    if (filterBtn && filterDropdown) {
+        filterBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation(); 
+            // Toggles visibility
+            if (filterDropdown.style.display === 'none' || filterDropdown.style.display === '') {
+                filterDropdown.style.display = 'block';
+            } else {
+                filterDropdown.style.display = 'none';
+            }
+        });
+    }
+    if (closeFilter && filterDropdown) {
+        closeFilter.addEventListener('click', function(e) {
+            e.preventDefault();
+            // Clear filters by redirecting to base URL without query parameters
+            window.location.href = window.location.pathname;
+        });
+    }
+    // Hide dropdown when clicking outside
+    document.addEventListener('mousedown', function(e) {
+        if (filterDropdown && filterDropdown.style.display !== 'none' && e.target !== filterBtn && !filterBtn.contains(e.target) && !filterDropdown.contains(e.target)) {
+            filterDropdown.style.display = 'none';
+        }
+    });
+
     // Dashboard view toggle (only when on dashboard)
     (function dashboardToggle(){
         if (!IS_DASH) return;
@@ -169,7 +210,7 @@
         const cardPagination = document.getElementById('cardPagination');
         const listPagination = document.getElementById('listPagination');
 
-        // 💡 FIX 6: Get the actual table element inside the list view wrapper
+        // Get the actual table element inside the list view wrapper
         const innerTable = listView ? listView.querySelector('table') : null;
         
         if (cardBtn && listBtn && cardView && listView && innerTable){
@@ -179,11 +220,12 @@
                 listBtn.classList.remove('active'); 
                 listBtn.classList.add('inactive');
                 
-                if(cardView){cardView.style.display='flex';} 
-                if(listView){listView.style.display='none';} 
-                if(innerTable){innerTable.classList.add('js-hidden');} // Hide inner table
-                if(cardPagination){cardPagination.style.display='flex';}
-                if(listPagination){listPagination.style.display='none';}
+                // Card View ON
+                if(cardView){cardView.classList.add(CLASS_GRID); cardView.classList.remove(CLASS_HIDDEN);} 
+                if(listView){listView.classList.add(CLASS_HIDDEN); listView.classList.remove(CLASS_TABLE);} 
+                if(innerTable){innerTable.classList.add(CLASS_HIDDEN);} 
+                if(cardPagination){cardPagination.classList.add(CLASS_FLEX); cardPagination.classList.remove(CLASS_HIDDEN);}
+                if(listPagination){listPagination.classList.add(CLASS_HIDDEN); listPagination.classList.remove(CLASS_FLEX);}
                 initCardPagination();
             });
             listBtn.addEventListener('click', ()=>{ 
@@ -192,11 +234,12 @@
                 cardBtn.classList.remove('active'); 
                 cardBtn.classList.add('inactive');
                 
-                if(cardView){cardView.style.display='none';} 
-                if(listView){listView.style.display='block';} // Show wrapper
-                if(innerTable){innerTable.classList.remove('js-hidden');} // 💡 FIX 7: Show inner table by removing class
-                if(cardPagination){cardPagination.style.display='none';}
-                if(listPagination){listPagination.style.display='flex';}
+                // List View ON
+                if(cardView){cardView.classList.add(CLASS_HIDDEN); cardView.classList.remove(CLASS_GRID);} 
+                if(listView){listView.classList.add(CLASS_TABLE); listView.classList.remove(CLASS_HIDDEN);}
+                if(innerTable){innerTable.classList.remove(CLASS_HIDDEN);}
+                if(cardPagination){cardPagination.classList.add(CLASS_HIDDEN); cardPagination.classList.remove(CLASS_FLEX);}
+                if(listPagination){listPagination.classList.add(CLASS_FLEX); listPagination.classList.remove(CLASS_HIDDEN);}
                 initListPagination();
             });
         }
@@ -229,7 +272,10 @@
                 options: { 
                     responsive:true, 
                     maintainAspectRatio:false, 
-                    plugins:{ legend:{ display:false } }, 
+                    plugins:{ 
+                        legend:{ display:false },
+                        tooltip:{ enabled:false } // <--- FIX APPLIED HERE
+                    }, 
                     scales:{ y:{ beginAtZero: false, title: { display: true, text: 'Percent (%)' } } } 
                 }
             });
@@ -257,8 +303,11 @@
                 options: { 
                     responsive:true, 
                     maintainAspectRatio:false, 
-                    plugins:{ legend:{ display:false } }, 
-                    scales:{ y:{ beginAtZero: true, title: { display: true, text: 'Percent (%)' } } } 
+                    plugins:{ 
+                        legend:{ display:false }, 
+                        tooltip:{ enabled:false } // <--- FIX APPLIED HERE
+                    }, 
+                    scales:{ y:{ beginAtZero: true, title: { display: true, text: 'Amount (₱)' } } } 
                 }
             });
         }
@@ -290,7 +339,15 @@
                 new Chart(ctx, {
                     type: 'doughnut',
                     data: { datasets: [{ data: [pct, Math.max(0, 100 - pct)], backgroundColor: ['#16a34a', '#d1d5db'], borderWidth: 0 }] },
-                    options: { responsive:false, animation:false, cutout: '70%', plugins:{ legend:{ display:false }, tooltip:{ enabled:false } } },
+                    options: { 
+                        responsive:false, 
+                        animation:false, 
+                        cutout: '70%', 
+                        plugins:{ 
+                            legend:{ display:false }, 
+                            tooltip:{ enabled:false } // <--- FIX APPLIED HERE
+                        } 
+                    },
                     plugins: [centerText(pct)]
                 });
             });
@@ -298,7 +355,7 @@
     })();
 
 
-    // Card View Pagination (4 items per page) (UNCHANGED)
+    // Card View Pagination (4 items per page)
     function initCardPagination() {
         if (!IS_DASH) return;
         const cardView = document.getElementById('projectsCardView');
@@ -399,7 +456,7 @@
         renderPage(1);
     }
 
-    // List View Pagination (5 items per page) (UNCHANGED)
+    // List View Pagination (5 items per page)
     function initListPagination() {
         if (!IS_DASH) return;
         const tbody = document.getElementById('projectsListBody');
@@ -408,7 +465,7 @@
         const tableWrapper = document.getElementById('projectsListView');
         if (!tbody || !container || !tableWrapper) return;
         
-        // 💡 FIX 8: Since the table element inside the wrapper has the js-hidden class, we must remove it.
+        // FIX: The list view needs the inner table to be visible (by removing js-hidden)
         const innerTable = tableWrapper.querySelector('table');
         if (innerTable) {
             innerTable.classList.remove('js-hidden'); 
