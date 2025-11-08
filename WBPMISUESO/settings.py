@@ -124,23 +124,48 @@ WSGI_APPLICATION = 'WBPMISUESO.wsgi.application'
 # ============================================================
 # DATABASE CONFIGURATION
 # ============================================================
-# Supports both PostgreSQL (recommended) and SQLite (development)
-# Configure via .env file
+# Railway provides DATABASE_URL automatically for PostgreSQL
 
-DATABASES = {
-    'default': {
-        'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.sqlite3'),
-        'NAME': os.getenv('DB_NAME', str(BASE_DIR / 'db.sqlite3')),
-        'USER': os.getenv('DB_USER', ''),
-        'PASSWORD': os.getenv('DB_PASSWORD', ''),
-        'HOST': os.getenv('DB_HOST', ''),
-        'PORT': os.getenv('DB_PORT', ''),
-        'OPTIONS': {
-            'connect_timeout': 10,  # Connection timeout in seconds
-        },
-        'CONN_MAX_AGE': 600,  # Keep database connections alive for 10 minutes (connection pooling)
+if os.getenv('DATABASE_URL'):
+    # Railway PostgreSQL (auto-configured)
+    import dj_database_url
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=os.getenv('DATABASE_URL'),
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
     }
-}
+else:
+    # Local development or fallback
+    db_engine = os.getenv('DB_ENGINE', 'django.db.backends.sqlite3')
+    
+    if 'sqlite' in db_engine:
+        # SQLite configuration (no timeout option)
+        DATABASES = {
+            'default': {
+                'ENGINE': db_engine,
+                'NAME': os.getenv('DB_NAME', str(BASE_DIR / 'db.sqlite3')),
+            }
+        }
+    else:
+        # PostgreSQL/MySQL configuration
+        DATABASES = {
+            'default': {
+                'ENGINE': db_engine,
+                'NAME': os.getenv('DB_NAME', 'wbpmisueso'),
+                'USER': os.getenv('DB_USER', ''),
+                'PASSWORD': os.getenv('DB_PASSWORD', ''),
+                'HOST': os.getenv('DB_HOST', 'localhost'),
+                'PORT': os.getenv('DB_PORT', '5432'),
+                'OPTIONS': {
+                    'connect_timeout': 10,
+                },
+                'CONN_MAX_AGE': 600,
+            }
+        }
+
+
 
 # ============================================================
 # AUTHENTICATION & AUTHORIZATION
