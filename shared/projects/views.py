@@ -575,6 +575,7 @@ def project_submissions(request, pk):
         'page_number': page_number,
         'page_obj': page_obj,
         'page_range': page_range,
+        "now": now,
     }
     return render(request, "projects/project_submissions.html", context)
 

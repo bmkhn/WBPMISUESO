@@ -147,7 +147,20 @@
             <!-- Profile Picture Upload -->
             <div class="profile-picture-upload">
                 <div class="user-details-label">Profile Picture</div>
-                <input type="file" name="profile_picture" id="profile_picture_input" accept="image/*" class="user-details-value" data-optional style="padding: 0.5rem;">
+                <div style="width: 100%;">
+                    <label for="profile_picture_input" class="upload-area" id="upload-label">
+                        <svg class="icon-upload" width="24" height="24"><use href="#icon-upload"></use></svg>
+                        <span class="upload-text">Click to upload (JPG, PNG)</span>
+                        <input 
+                            class="hidden" 
+                            type="file" 
+                            name="profile_picture" 
+                            id="profile_picture_input" 
+                            accept="image/jpeg,image/png"
+                            data-optional 
+                            onchange="displayProfileFileName(this, 'file-preview-pp', 'file-name-pp', 'upload-label')"> 
+                    </label>
+                </div>
                 {% if user.profile_picture %}
                 <div class="profile-picture-preview" id="profile-picture-preview">
                     <img src="{{ user.profile_picture.url }}" alt="Profile Picture" id="profile-picture-img">

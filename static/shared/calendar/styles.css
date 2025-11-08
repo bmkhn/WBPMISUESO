@@ -586,3 +586,62 @@ textarea { resize: none; }
     color: #245F3E;
     margin-right: 8px;
 }
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.fa-spinner.fa-spin {
+    animation: spin 1s linear infinite;
+}
+
+/* Past date styling */
+.calendar-day.past-date {
+    opacity: 0.6;
+    cursor: default !important;
+}
+
+.calendar-day.past-date:hover {
+    background-color: transparent !important;
+}
+.upload-area {
+    flex: 1;
+    border: 2px dashed #E5E7EB;
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    background: #F9F9F9;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.upload-area:hover {
+    border-color: #0A6C44;
+    background: #F0FDF4;
+}
+
+.upload-icon {
+    width: 24px;
+    height: 24px;
+    color: #4B5563;
+}
+
+.upload-text {
+    color: #4B5563;
+    font-size: 0.95rem;
+}
+
+.upload-group-wrapper {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.hidden {
+    display: none !important;
+}
