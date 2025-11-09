@@ -129,7 +129,7 @@
             <div class="user-details-row cols-3">
                 <div>
                     <div class="user-details-label">Sex <span class="required">*</span></div>
-                    <select name="sex" class="user-details-value">
+                    <select name="sex" class="user-details-value" style="transition: none;">
                         <option value="Male" {% if user.sex == 'Male' %}selected{% endif %}>Male</option>
                         <option value="Female" {% if user.sex == 'Female' %}selected{% endif %}>Female</option>
                     </select>
@@ -213,7 +213,7 @@
                 <div>
                     <div class="user-details-label">Role <span class="required">*</span></div>
                     {% if can_edit_role_and_verify %}
-                    <select name="role" class="user-details-value">
+                    <select name="role" class="user-details-value" style="transition: none;">
                         <option value="" disabled>Select Role</option>
                         {% for r in roles %}
                         <option value="{{ r.0 }}" {% if user.role == r.0 %}selected{% endif %}>{{ r.1 }}</option>
@@ -226,7 +226,8 @@
                 </div>
                 <div>
                     <div class="user-details-label">Password</div>
-                    <input type="password" name="password" class="user-details-value" value="" placeholder="Leave blank to keep current password" data-optional>
+                    <input type="password" id="password-input" name="password" class="user-details-value" value="" placeholder="Leave blank to keep current password" data-optional>
+                    <small style="color: #f59e0b; font-size: 0.875rem; margin-top: 0.25rem; display: block;">⚠️ Changing password will require email verification</small>
                 </div>
             </div>
         </div>
@@ -240,7 +241,7 @@
             <div class="user-details-row cols-2" data-role-group="college" style="display: none;">
                 <div>
                     <div class="user-details-label">College <span class="required">*</span></div>
-                    <select name="college" class="user-details-value" data-role-required="college">
+                    <select name="college" class="user-details-value" data-role-required="college" style="transition: none;">
                         <option value="">Select College</option>
                         {% for college in colleges %}
                             <option value="{{ college.id }}" {% if user.college and user.college.id == college.id %}selected{% endif %}>{{ college.name }}</option>
@@ -301,11 +302,11 @@
     </button>
 </div>
 
-<!-- Email Verification Modal -->
+<!-- Email/Password Verification Modal -->
 <div id="email-modal" class="modal-overlay" style="display: none;">
     <div class="modal-content" style="background: white; padding: 2rem; border-radius: 8px; max-width: 400px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
         <h3 style="margin-bottom: 1rem; font-size: 1.5rem; font-weight: 600; color: #2D3748;">Email Verification Required</h3>
-        <p style="color: #718096; margin-bottom: 1.5rem; line-height: 1.6;">A verification code has been sent to your <strong>current</strong> email address: <strong style="color: #0099FF;">{{ user.email }}</strong></p>
+        <p id="modal-message" style="color: #718096; margin-bottom: 1.5rem; line-height: 1.6;">A verification code has been sent to your <strong>current</strong> email address: <strong style="color: #0099FF;">{{ user.email }}</strong></p>
         <div style="margin-bottom: 1.5rem;">
             <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #2D3748;">Verification Code</label>
             <input type="text" id="email-verify-code" placeholder="000000" maxlength="6" style="width: 100%; padding: 0.75rem; border: 1px solid #dee2e6; border-radius: 6px; font-size: 1.5rem; text-align: center; letter-spacing: 0.5rem; font-weight: 600; font-family: monospace;">
@@ -594,9 +595,18 @@
 
         // Robust form validation for all required fields
         document.querySelector('form').addEventListener('submit', function(e) {
-            // Check if email changed and not yet verified
-            if (emailChanged && !emailVerified) {
+            // Check if email or password changed and not yet verified
+            if ((emailChanged || passwordChanged) && !emailVerified) {
                 e.preventDefault();
+                // Update modal message based on what changed
+                const modalMessage = document.getElementById('modal-message');
+                if (emailChanged && passwordChanged) {
+                    modalMessage.innerHTML = 'You are changing your <strong>email</strong> and <strong>password</strong>. A verification code has been sent to your <strong>current</strong> email address: <strong style="color: #0099FF;">{{ user.email }}</strong>';
+                } else if (emailChanged) {
+                    modalMessage.innerHTML = 'A verification code has been sent to your <strong>current</strong> email address: <strong style="color: #0099FF;">{{ user.email }}</strong>';
+                } else if (passwordChanged) {
+                    modalMessage.innerHTML = 'You are changing your <strong>password</strong>. A verification code has been sent to your email address: <strong style="color: #0099FF;">{{ user.email }}</strong>';
+                }
                 showEmailModal();
                 return false;
             }
@@ -703,6 +713,15 @@
                 previewLink.href = valid_id_url ? valid_id_url : "#";
                 if (fileNameSpan) fileNameSpan.textContent = '';
             }
+        });
+    }
+
+    // Track password changes
+    let passwordChanged = false;
+    const passwordInput = document.getElementById('password-input');
+    if (passwordInput) {
+        passwordInput.addEventListener('input', function() {
+            passwordChanged = (this.value.trim() !== '');
         });
     }
 </script>

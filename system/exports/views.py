@@ -166,6 +166,9 @@ def export_download(request, request_id):
     file_buffer = BytesIO()
     filename = None
     qs = parse_qs(export_request.querystring)
+    
+    # Get the original submitter to check their role-based restrictions
+    submitter = export_request.submitted_by
 
     if export_request.type == 'MANAGE_USER':
         users = User.objects.all()
@@ -186,6 +189,11 @@ def export_download(request, request_id):
         date = qs.get('date', [''])[0]
         college = qs.get('college', [''])[0]
         campus = qs.get('campus', [''])[0]
+        
+        # Auto-filter by submitter's college if they have restricted role
+        if submitter.role in ['PROGRAM_HEAD', 'DEAN', 'COORDINATOR'] and submitter.college:
+            college = str(submitter.college.id)
+        
         if role:
             users = users.filter(role=role)
         if verified == 'true':
@@ -245,6 +253,11 @@ def export_download(request, request_id):
         year = qs.get('year', [''])[0]
         quarter = qs.get('quarter', [''])[0]
         date = qs.get('date', [''])[0]
+        
+        # Auto-filter by submitter's college if they have restricted role
+        if submitter.role in ['PROGRAM_HEAD', 'DEAN', 'COORDINATOR'] and submitter.college:
+            college = str(submitter.college.id)
+        
         if college:
             projects = projects.filter(project_leader__college__id=college)
         if campus:
@@ -340,13 +353,12 @@ def export_manage_user(request):
     college = request.GET.get('college', '')
     campus = request.GET.get('campus', '')
 
-    # Auto-filter by college for PROGRAM_HEAD, DEAN, COORDINATOR
+    # Auto-filter by college for PROGRAM_HEAD, DEAN, COORDINATOR (override any college filter)
     if user.role in ['PROGRAM_HEAD', 'DEAN', 'COORDINATOR'] and user.college:
-        # Override college parameter to user's college
+        # Force college to be user's college - they can only see their own college data
         college = str(user.college.id)
-        # Also filter users to only those from user's college
-        users = users.filter(college=user.college)
 
+    # Apply filters
     if sort_by:
         query_params['sort_by'] = sort_by
     if order:
@@ -447,14 +459,12 @@ def export_project(request):
     date_from = request.GET.get('date_from', '')
     date_to = request.GET.get('date_to', '')
 
-    # Auto-filter by college for PROGRAM_HEAD, DEAN, COORDINATOR
+    # Auto-filter by college for PROGRAM_HEAD, DEAN, COORDINATOR (override any college filter)
     if user.role in ['PROGRAM_HEAD', 'DEAN', 'COORDINATOR'] and user.college:
-        # Override college parameter to user's college
-        college = str(user.college.id)
-        # Also filter projects to only those from user's college
-        projects = projects.filter(project_leader__college=user.college)
+        # Force college to be user's college - they can only see their own college data
+        college = user.college.id
 
-    # Filter by college/campus via team leader
+    # Apply all filters
     if college:
         projects = projects.filter(project_leader__college__id=college)
     if campus:

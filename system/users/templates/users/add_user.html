@@ -54,7 +54,7 @@
             <div class="user-details-row cols-3">
                 <div>
                     <div class="user-details-label">Sex <span class="required">*</span></div>
-                    <select name="sex" class="user-details-value">
+                    <select name="sex" class="user-details-value" style="transition: none;">
                         <option value="" selected disabled>Select Sex</option>
                         <option value="Male">Male</option>
                         <option value="Female">Female</option>
@@ -106,7 +106,7 @@
             <div class="user-details-row cols-2">
                 <div>
                     <div class="user-details-label">Role <span class="required">*</span></div>
-                    <select name="role" class="user-details-value">
+                    <select name="role" class="user-details-value" style="transition: none;">
                         <option value="" selected disabled>Select Role</option>
                         {% for r in roles %}
                         <option value="{{ r.0 }}">{{ r.1 }}</option>
@@ -128,7 +128,7 @@
             <div class="user-details-row cols-2">
                 <div>
                     <div class="user-details-label">College <span class="required">*</span></div>
-                    <select name="college" class="user-details-value" data-role-required>
+                    <select name="college" class="user-details-value" data-role-required style="transition: none;">
                         <option value="">Select College</option>
                         {% for college in colleges %}
                             <option value="{{ college.id }}" {% if user.college == college.id %}selected{% endif %}>{{ college.name }}</option>

@@ -83,17 +83,79 @@ def async_send_verification_code(user_email, verification_code):
     Returns:
         None (email sends in background)
     """
-    subject = 'Your Verification Code'
+    subject = 'Your Verification Code - UESOPMIS'
     message = f'Your verification code is: {verification_code}\n\nThis code will expire in 10 minutes.'
     html_message = f'''
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h2 style="color: #333;">Verification Code</h2>
-        <p>Your verification code is:</p>
-        <div style="background: #f0f0f0; padding: 15px; border-radius: 5px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 5px;">
-            {verification_code}
-        </div>
-        <p style="color: #666; margin-top: 15px;">This code will expire in 10 minutes.</p>
-    </div>
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 20px;">
+            <tr>
+                <td align="center">
+                    <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <!-- Header -->
+                        <tr>
+                            <td style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 30px 40px; text-align: center;">
+                                <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: bold;">
+                                    ✓ Verification Code
+                                </h1>
+                            </td>
+                        </tr>
+                        
+                        <!-- Content -->
+                        <tr>
+                            <td style="padding: 40px;">
+                                <h2 style="margin: 0 0 20px 0; color: #1f2937; font-size: 20px;">
+                                    Welcome to UESOPMIS!
+                                </h2>
+                                
+                                <p style="margin: 0 0 20px 0; color: #4b5563; font-size: 16px; line-height: 1.6;">
+                                    To complete your registration, please enter the verification code below:
+                                </p>
+                                
+                                <!-- Code Display -->
+                                <table width="100%" cellpadding="0" cellspacing="0" style="margin: 30px 0;">
+                                    <tr>
+                                        <td align="center">
+                                            <div style="display: inline-block; background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); padding: 25px 50px; border-radius: 12px; border: 3px solid #10b981; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);">
+                                                <span style="font-size: 36px; font-weight: bold; letter-spacing: 10px; color: #065f46; font-family: 'Courier New', monospace;">
+                                                    {verification_code}
+                                                </span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                                
+                                <p style="margin: 20px 0 0 0; padding: 15px; background-color: #fffbeb; border-left: 4px solid #f59e0b; color: #92400e; font-size: 14px; line-height: 1.5;">
+                                    <strong>⏱️ This code expires in 10 minutes</strong><br>
+                                    For security reasons, do not share this code with anyone.
+                                </p>
+                                
+                                <p style="margin: 20px 0 0 0; color: #6b7280; font-size: 14px; line-height: 1.5; text-align: center;">
+                                    If you didn't request this code, you can safely ignore this email.
+                                </p>
+                            </td>
+                        </tr>
+                        
+                        <!-- Footer -->
+                        <tr>
+                            <td style="background-color: #f9fafb; padding: 20px 40px; text-align: center; border-top: 1px solid #e5e7eb;">
+                                <p style="margin: 0; color: #6b7280; font-size: 12px;">
+                                    This is an automated notification from UESOPMIS<br>
+                                    Please do not reply to this email
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </body>
+    </html>
     '''
     
     async_send_mail(
@@ -610,3 +672,96 @@ def async_send_email_changed(user_email, user_name, old_email, new_email):
         recipient_list=[user_email],
         html_message=html_message
     )
+
+
+def async_send_password_changed(user_email, user_name, new_password):
+    """
+    Send password change notification email with the new password.
+    
+    Args:
+        user_email (str): User's email address
+        user_name (str): User's full name
+        new_password (str): The new password that was set
+    
+    Returns:
+        None (email sends in background)
+    """
+    subject = 'Password Changed Successfully - UESOPMIS'
+    message = f'Hello {user_name},\n\nYour password has been changed successfully.\n\nYour new password is: {new_password}\n\nIf you did not make this change, please contact support immediately.'
+    html_message = f'''
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 20px;">
+            <tr>
+                <td align="center">
+                    <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <tr>
+                            <td style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 30px 40px; text-align: center;">
+                                <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: bold;">🔒 Password Changed</h1>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 40px;">
+                                <h2 style="margin: 0 0 20px 0; color: #1f2937; font-size: 20px;">Hello {user_name},</h2>
+                                <p style="margin: 0 0 15px 0; color: #4b5563; font-size: 16px; line-height: 1.6;">This email confirms that your password has been <strong>successfully changed</strong>.</p>
+                                
+                                <p style="margin: 20px 0; padding: 20px; background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border: 3px solid #10b981; border-radius: 12px; text-align: center;">
+                                    <strong style="color: #065f46; font-size: 14px; display: block; margin-bottom: 10px;">Your New Password:</strong>
+                                    <span style="font-size: 24px; font-weight: bold; letter-spacing: 2px; color: #047857; font-family: 'Courier New', monospace; display: block;">{new_password}</span>
+                                </p>
+                                
+                                <p style="margin: 0 0 20px 0; padding: 15px; background-color: #f0fdf4; border-left: 4px solid #10b981; color: #065f46; font-size: 14px; line-height: 1.5;"><strong>✓ Password Updated</strong><br>Your account is now secured with your new password. You can use it to log in immediately.</p>
+                                <p style="margin: 20px 0 0 0; padding: 15px; background-color: #fef2f2; border-left: 4px solid #ef4444; color: #991b1b; font-size: 14px; line-height: 1.5;"><strong>⚠️ Security Alert</strong><br>If you did not make this change, your account may have been compromised. Please contact support immediately and reset your password.</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="background-color: #f9fafb; padding: 20px 40px; text-align: center; border-top: 1px solid #e5e7eb;">
+                                <p style="margin: 0; color: #6b7280; font-size: 12px;">This is an automated notification from UESOPMIS<br>Please do not reply to this email</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </body>
+    </html>
+    '''
+    async_send_mail(subject=subject, message=message, recipient_list=[user_email], html_message=html_message)
+
+
+def async_send_password_change_verification(user_email, verification_code):
+    """Send verification code for password change in profile."""
+    subject = 'Verify Password Change - UESOPMIS'
+    message = f'Your password change verification code is: {verification_code}\n\nThis code will expire in 10 minutes.'
+    html_message = f'''
+    <!DOCTYPE html>
+    <html>
+    <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+    <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 20px;">
+            <tr><td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <tr><td style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 30px 40px; text-align: center;"><h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: bold;">🔐 Verify Password Change</h1></td></tr>
+                    <tr><td style="padding: 40px;">
+                        <h2 style="margin: 0 0 20px 0; color: #1f2937; font-size: 20px;">Confirm Your Password Change</h2>
+                        <p style="margin: 0 0 20px 0; color: #4b5563; font-size: 16px; line-height: 1.6;">You've requested to change your password. To confirm this change, please enter the verification code below:</p>
+                        <table width="100%" cellpadding="0" cellspacing="0" style="margin: 30px 0;"><tr><td align="center">
+                            <div style="display: inline-block; background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); padding: 25px 50px; border-radius: 12px; border: 3px solid #f59e0b; box-shadow: 0 4px 6px rgba(245, 158, 11, 0.2);">
+                                <span style="font-size: 36px; font-weight: bold; letter-spacing: 10px; color: #92400e; font-family: 'Courier New', monospace;">{verification_code}</span>
+                            </div>
+                        </td></tr></table>
+                        <p style="margin: 20px 0 0 0; padding: 15px; background-color: #fffbeb; border-left: 4px solid #f59e0b; color: #92400e; font-size: 14px; line-height: 1.5;"><strong>⏱️ This code expires in 10 minutes</strong><br>If you didn't request this password change, please ignore this email or contact support if you have concerns.</p>
+                    </td></tr>
+                    <tr><td style="background-color: #f9fafb; padding: 20px 40px; text-align: center; border-top: 1px solid #e5e7eb;"><p style="margin: 0; color: #6b7280; font-size: 12px;">This is an automated notification from UESOPMIS<br>Please do not reply to this email</p></td></tr>
+                </table>
+            </td></tr>
+        </table>
+    </body>
+    </html>
+    '''
+    async_send_mail(subject=subject, message=message, recipient_list=[user_email], html_message=html_message)

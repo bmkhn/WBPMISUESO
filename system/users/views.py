@@ -785,6 +785,15 @@ def edit_user(request, id):
 
                 user.save()
                 
+                # Send password changed confirmation email (if password was changed)
+                if password_changed:
+                    try:
+                        from system.utils.email_utils import async_send_password_changed
+                        async_send_password_changed(user.email, user.get_full_name(), password)
+                        print(f"✓ Password changed notification queued for {user.email}")
+                    except Exception as e:
+                        print(f"✗ Failed to queue password changed notification: {str(e)}")
+                
                 # Log the user edit
                 details = f"Edited by {request.user.get_role_display()}"
                 if changes:
