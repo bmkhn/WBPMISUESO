@@ -3,6 +3,9 @@
 REM Delete all migrations
 py delete_all_migrations.py
 
+REM Delete media files
+py manage.py clean_media
+
 REM Delete/Reset Database
 if exist db.sqlite3 del db.sqlite3
 py manage.py reset_database

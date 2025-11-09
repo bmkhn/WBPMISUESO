@@ -232,64 +232,51 @@
         </div>
 
         <!-- Role Specific Information -->
-        {% if user.role in 'FACULTY,COORDINATOR,DEAN,PROGRAM_HEAD,IMPLEMENTER,CLIENT' %}
-        <div class="user-details-section" id="role-specific-section">
+        <!-- Role Specific Information Section -->
+        <div class="user-details-section" id="role-specific-section" style="display: none;">
             <div class="user-details-category">Role Specific Information</div>
 
-            <!-- If FACULTY, COORDINATOR, DEAN, PROGRAM_HEAD - Show College/Campus -->
-            {% if user.role in 'FACULTY,COORDINATOR,DEAN,PROGRAM_HEAD' %}
-            <div class="user-details-row cols-2">
+            <!-- College/Campus Row - For FACULTY, COORDINATOR, DEAN, PROGRAM_HEAD -->
+            <div class="user-details-row cols-2" data-role-group="college" style="display: none;">
                 <div>
                     <div class="user-details-label">College <span class="required">*</span></div>
-                    {% if user.role == 'FACULTY' or can_edit_role_and_verify %}
-                    <select name="college" class="user-details-value">
+                    <select name="college" class="user-details-value" data-role-required="college">
                         <option value="">Select College</option>
                         {% for college in colleges %}
                             <option value="{{ college.id }}" {% if user.college and user.college.id == college.id %}selected{% endif %}>{{ college.name }}</option>
                         {% endfor %}
                     </select>
-                    {% else %}
-                    <input type="text" class="user-details-value" value="{{ user.college.name|default:'N/A' }}" readonly style="background-color: #f8f9fa; cursor: not-allowed;">
-                    <input type="hidden" name="college" value="{{ user.college.id }}">
-                    {% endif %}
                 </div>
                 <div>
                     <div class="user-details-label">Campus (from College)</div>
-                    <!-- Campus is now derived from college, displayed as read-only -->
-                    <input type="text" class="user-details-value" value="{{ user.get_campus_display|default:'N/A' }}" readonly style="background-color: #f8f9fa; cursor: not-allowed;">
+                    <input type="text" class="user-details-value" value="{{ user.get_campus_display|default:'Will be set from College' }}" readonly style="background-color: #f8f9fa; cursor: not-allowed;">
                 </div>
             </div>
-            {% endif %}
 
-            <!-- If IMPLEMENTER or FACULTY - Show Degree/Expertise -->
-            {% if user.role in 'IMPLEMENTER,FACULTY' %}
-            <div class="user-details-row cols-2">
+            <!-- Degree/Expertise Row - For FACULTY, IMPLEMENTER -->
+            <div class="user-details-row cols-2" data-role-group="degree" style="display: none;">
                 <div>
                     <div class="user-details-label">Degree <span class="required">*</span></div>
-                    <input type="text" name="degree" class="user-details-value" value="{{ user.degree|default_if_none:'' }}">
+                    <input type="text" name="degree" class="user-details-value" value="{{ user.degree|default_if_none:'' }}" data-role-required="degree">
                 </div>
                 <div>
                     <div class="user-details-label">Expertise <span class="required">*</span></div>
-                    <input type="text" name="expertise" class="user-details-value" value="{{ user.expertise|default_if_none:'' }}">
+                    <input type="text" name="expertise" class="user-details-value" value="{{ user.expertise|default_if_none:'' }}" data-role-required="expertise">
                 </div>
             </div>
-            {% endif %}
 
-            <!-- If CLIENT - Show Company/Industry -->
-            {% if user.role == 'CLIENT' %}
-            <div class="user-details-row cols-2">
+            <!-- Company/Industry Row - For CLIENT -->
+            <div class="user-details-row cols-2" data-role-group="company" style="display: none;">
                 <div>
                     <div class="user-details-label">Company <span class="required">*</span></div>
-                    <input type="text" name="company" class="user-details-value" value="{{ user.company|default_if_none:'' }}">
+                    <input type="text" name="company" class="user-details-value" value="{{ user.company|default_if_none:'' }}" data-role-required="company">
                 </div>
                 <div>
                     <div class="user-details-label">Industry <span class="required">*</span></div>
-                    <input type="text" name="industry" class="user-details-value" value="{{ user.industry|default_if_none:'' }}">
+                    <input type="text" name="industry" class="user-details-value" value="{{ user.industry|default_if_none:'' }}" data-role-required="industry">
                 </div>
             </div>
-            {% endif %}
         </div>
-        {% endif %}
 
         <div class="form-actions">
             <a href="{% if is_editing_self %}{% url 'profile' %}{% else %}{% url 'user_details' user.id %}{% endif %}" class="back btn">Back</a>
@@ -469,8 +456,86 @@
         }
     });
 
-    // Role-specific fields are now conditionally rendered by Django template
-    // No JavaScript needed for showing/hiding role-specific fields
+    // Role-specific field logic (show/hide based on role selection)
+    document.addEventListener('DOMContentLoaded', function() {
+        const roleSelect = document.querySelector('select[name="role"]');
+        const roleSection = document.getElementById('role-specific-section');
+        
+        // Only execute if user can edit role (VP/DIRECTOR) and role select exists
+        const canEditRole = {{ can_edit_role_and_verify|yesno:"true,false" }};
+        
+        if (canEditRole && roleSelect && roleSection) {
+            // Get all role-specific row groups
+            const collegeRow = document.querySelector('[data-role-group="college"]');
+            const degreeRow = document.querySelector('[data-role-group="degree"]');
+            const companyRow = document.querySelector('[data-role-group="company"]');
+            
+            // Map roles to their required field groups
+            const roleFieldMap = {
+                'FACULTY': ['college', 'degree'],
+                'COORDINATOR': ['college'],
+                'DEAN': ['college'],
+                'PROGRAM_HEAD': ['college'],
+                'IMPLEMENTER': ['degree'],
+                'CLIENT': ['company'],
+            };
+            
+            function showRoleFields(role) {
+                // Hide all rows and remove required attributes
+                [collegeRow, degreeRow, companyRow].forEach(row => {
+                    if (row) {
+                        row.style.display = 'none';
+                        // Remove required from all fields in this row
+                        row.querySelectorAll('[data-role-required]').forEach(field => {
+                            field.removeAttribute('required');
+                        });
+                    }
+                });
+
+                // Hide section if no role selected or no fields needed
+                if (!role || !roleFieldMap[role]) {
+                    roleSection.style.display = 'none';
+                    return;
+                }
+                
+                // Show section
+                roleSection.style.display = '';
+
+                // Show only the rows needed for this role
+                const requiredGroups = roleFieldMap[role];
+                if (!requiredGroups) return;
+
+                requiredGroups.forEach(groupName => {
+                    let row = null;
+                    if (groupName === 'college' && collegeRow) {
+                        row = collegeRow;
+                    } else if (groupName === 'degree' && degreeRow) {
+                        row = degreeRow;
+                    } else if (groupName === 'company' && companyRow) {
+                        row = companyRow;
+                    }
+                    
+                    if (row) {
+                        row.style.display = '';
+                        // Add required to all fields in this row
+                        row.querySelectorAll('[data-role-required]').forEach(field => {
+                            field.setAttribute('required', 'required');
+                        });
+                    }
+                });
+            }
+            
+            // Listen for role changes
+            roleSelect.addEventListener('change', function() {
+                showRoleFields(this.value);
+            });
+            
+            // Initialize on page load with current role
+            if (roleSelect.value) {
+                showRoleFields(roleSelect.value);
+            }
+        }
+    });
 
     // DOMContentLoaded for event listeners
     document.addEventListener('DOMContentLoaded', function() {

@@ -279,11 +279,12 @@
         btn.addEventListener('click', function(e) {
             e.preventDefault();
             var id = btn.getAttribute('data-id');
+            
             fetch('/exports/approve/' + id + '/', {
                 method: 'POST',
                 headers: {
                     'X-CSRFToken': getCookie('csrftoken'),
-                    'Approve': 'application/json',
+                    'Content-Type': 'application/json',
                 },
             })
             .then(response => response.json())
@@ -291,11 +292,27 @@
                 if (data.message) {
                     // Show toast
                     showToast('Export Request Approved Successfully!', data.type || 'Export');
-                    // Update row to show approved state (text version)
-                    btn.parentElement.innerHTML = '<button class="action-btn" title="Already approved" disabled style="cursor:not-allowed;opacity:1;color:#999;">Approved</button>';
+                    
+                    // Update row to show approved state immediately
+                    var row = document.getElementById('export-' + id);
+                    if (row) {
+                        var actionCell = row.querySelector('.action-col');
+                        if (actionCell) {
+                            actionCell.innerHTML = '<button class="action-btn" title="Already approved" disabled style="cursor:not-allowed;opacity:1;color:#999;">Approved</button>';
+                        }
+                    }
+
+                    // 🔄 Reload after a short delay so toast shows first
+                    setTimeout(() => {
+                        location.reload();
+                    }, 2500); // 2.5 seconds lets user see the toast briefly
                 } else {
                     alert(data.error || 'Failed to approve.');
                 }
+            })
+            .catch(error => {
+                console.error('Approval failed:', error);
+                alert('Something went wrong during approval.');
             });
         });
     });

@@ -319,7 +319,7 @@
                 
                 // Mark in storage
                 markNotificationAsReadInStorage(notificationId);
-                
+
                 // Make the API call in the background
                 fetch(`/notifications/mark-as-read/${notificationId}/`, {
                     method: 'POST',
@@ -327,8 +327,15 @@
                         'X-CSRFToken': getCookie('csrftoken'),
                         'Content-Type': 'application/json',
                     },
-                }).catch(error => {
+                })
+                .then(() => {
+                    // Safely reload after marking as read
+                    location.reload();
+                })
+                .catch(error => {
                     console.error('Failed to mark as read:', error);
+                    // Still reload to sync UI
+                    location.reload();
                 });
             }
         }
@@ -453,6 +460,7 @@
             const modal = document.getElementById('rejectedExportModal');
             if (modal) {
                 modal.style.display = 'none';
+                location.reload();
             }
         }
     </script>

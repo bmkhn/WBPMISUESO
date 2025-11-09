@@ -204,6 +204,19 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+# File upload settings
+# Increase max upload size to 10MB (default is 2.5MB)
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB in bytes
+FILE_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB in bytes
+
+# Use MEDIA_ROOT for temp uploads on Railway
+# Railway filesystem is ephemeral by default - for persistent storage, mount a volume at /app/media
+# Guide: https://docs.railway.app/guides/volumes
+if os.getenv('DEPLOYED', 'False') == 'True':
+    FILE_UPLOAD_TEMP_DIR = os.path.join(MEDIA_ROOT, 'temp_uploads')
+    # Create temp directory if it doesn't exist
+    os.makedirs(FILE_UPLOAD_TEMP_DIR, exist_ok=True)
+
 
 # ============================================================
 # EMAIL CONFIGURATION

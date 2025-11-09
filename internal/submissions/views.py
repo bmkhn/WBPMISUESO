@@ -322,6 +322,8 @@ def delete_submission(request, pk):
             form_name = str(submission.downloadable.name_with_ext)
             project_leader = project.project_leader
             project_college = project_leader.college if project_leader else None
+            submission_type = submission.downloadable.submission_type
+            was_approved = submission.status == 'APPROVED'
             
             # Get all people involved for notifications
             notification_recipients = []
@@ -349,6 +351,45 @@ def delete_submission(request, pk):
             
             # Remove duplicates
             notification_recipients = list(set(notification_recipients))
+            
+            # REVERSE LOGIC: Handle project status changes when deleting APPROVED submissions
+            if was_approved:
+                if submission_type == 'event':
+                    # Decrease event_progress
+                    new_progress = max(0, project.event_progress - 1)
+                    project.event_progress = new_progress
+                    
+                    # If project was COMPLETED and progress is now less than estimated, revert to IN_PROGRESS
+                    if project.status == 'COMPLETED' and project.estimated_events > 0:
+                        if new_progress < project.estimated_events:
+                            # Check if there's still an approved final submission
+                            has_approved_final = Submission.objects.filter(
+                                project=project,
+                                downloadable__submission_type='final',
+                                status='APPROVED'
+                            ).exclude(pk=pk).exists()
+                            
+                            # Only revert if no final submission exists
+                            if not has_approved_final:
+                                project.status = 'IN_PROGRESS'
+                                project.save(update_fields=['event_progress', 'status'])
+                            else:
+                                project.save(update_fields=['event_progress'])
+                        else:
+                            project.save(update_fields=['event_progress'])
+                    else:
+                        project.save(update_fields=['event_progress'])
+                
+                elif submission_type == 'final':
+                    # Set has_final_submission to False
+                    project.has_final_submission = False
+                    
+                    # ALWAYS revert COMPLETED project to IN_PROGRESS when deleting final submission
+                    if project.status == 'COMPLETED':
+                        project.status = 'IN_PROGRESS'
+                        project.save(update_fields=['has_final_submission', 'status'])
+                    else:
+                        project.save(update_fields=['has_final_submission'])
             
             # Create log entry BEFORE deletion
             log_entry = LogEntry.objects.create(
