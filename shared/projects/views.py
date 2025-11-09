@@ -1292,7 +1292,7 @@ def faculty_project(request):
         projects = projects.order_by(sort_field)
 
     # Pagination
-    paginator = Paginator(projects, 5)
+    paginator = Paginator(projects, 10000000)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
 

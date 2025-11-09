@@ -362,7 +362,7 @@ class Command(BaseCommand):
             # Create annual budget
             BudgetPool.objects.create(
                 fiscal_year = "2025",
-                total_available = 100000000000,
+                total_available = 30000000,
                 created_at = timezone.now(),
             )
             self.stdout.write(self.style.SUCCESS("Annual Budget created.\n"))
@@ -376,7 +376,7 @@ class Command(BaseCommand):
             for college in College.objects.all():
                 CollegeBudget.objects.create(
                     college=college,
-                    total_assigned=Decimal('100000000.00'),  # Default budget amount
+                    total_assigned=Decimal('700000.00'),  # Default budget amount
                     fiscal_year = "2025",
                     assigned_by=director_user,
                     created_at=timezone.now(),

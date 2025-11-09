@@ -109,15 +109,14 @@
 
 	<div id="projectsCardView" class="projects-grid js-grid">
 		{% for project in projects %}
-        {# 1. CONDITIONAL CLASS FOR GREEN CARD #}
 		<a href="{% url 'project_profile' project.id %}" class="proj-card {% if project.status == 'COMPLETED' %}completed{% endif %}" data-card-item>
 			<div>
-                {# 2. CONDITIONAL TEXT FOR LAST UPDATED DATE #}
-                {% if project.status == 'COMPLETED' %}
-                    <div class="text-xs text-gray-500" style="font-style: 900; color: #38a169;">Completed</div>
-                {% else %}
-				    <div class="text-xs text-gray-500">Last updated {{ project.updated_at|date:"M d, Y" }}</div>
-                {% endif %}
+				{# 2. CONDITIONAL TEXT FOR LAST UPDATED DATE #}
+				{% if project.status == 'COMPLETED' %}
+					<div class="text-xs text-gray-500" style="font-style: 900; color: #38a169;">Completed</div>
+				{% else %}
+					<div class="text-xs text-gray-500">Last updated {{ project.updated_at|date:"M d, Y" }}</div>
+				{% endif %}
 				<h3>{{ project.title }}</h3>
 			</div>
 
@@ -132,19 +131,23 @@
 					{% endfor %}
 				</div>
                 
-                {% if project.event_progress|default:0 > 0 and project.event_progress == project.estimated_events %}
-					<div class="progress-bar-wrap">
-						<div class="progress-bar" style="width:{% if project.estimated_events > 0 %}{% widthratio project.event_progress project.estimated_events 100 %}{% else %}0{% endif %}%; transition:width 0.3s ease;"></div>
+                <div class="progress-bar-wrap">
+					<div class="progress-bar" 
+						style="width:{% if project.estimated_events > 0 %}{% widthratio project.event_progress|default:0 project.estimated_events 100 %}{% else %}0{% endif %}%; 
+						transition:width 0.3s ease;">
 					</div>
-                    <div class="progress-done-message text-sm" style="color: #38a169;">All Activities Completed</div>
-                {% else %}
+				</div>
+
+				{% if project.event_progress|default:0 > 0 and project.event_progress == project.estimated_events %}
+					<div class="progress-done-message text-sm" style="color: #38a169;">All Activities Completed</div>
+				{% else %}
 					<div class="text-sm text-gray-700 activity-counter">
-						<span class="text-primary font-semibold">{{ project.event_progress }}</span>
+						<span class="text-primary font-semibold">{{ project.event_progress|default:0 }}</span>
 						<span class="text-secondary"> / </span>
 						<span class="text-secondary font-semibold">{{ project.estimated_events }}</span>
 						<span class="text-gray-500"> activities completed</span>
 					</div>
-                {% endif %}
+				{% endif %}
 				</div>
 			</div>
 
@@ -212,42 +215,20 @@
 	const CLASS_FLEX = 'js-flex';
 	const CLASS_TABLE = 'js-table';
 	
-	// Modal open/close logic for Submit Request
-	const submitRequestModal = document.getElementById('submit-request-modal');
-	const openSubmitRequestBtn = document.querySelector('.add-request-btn');
-	const closeSubmitRequestModal = document.getElementById('close-submit-request-modal');
-	const cancelSubmitRequestModal = document.getElementById('cancel-submit-request-modal');
-
-	if (openSubmitRequestBtn) {
-	    openSubmitRequestBtn.addEventListener('click', function() {
-	        submitRequestModal.classList.remove(CLASS_HIDDEN);
-	    });
-	}
-	if (closeSubmitRequestModal) {
-	    closeSubmitRequestModal.onclick = function() {
-	        submitRequestModal.classList.add(CLASS_HIDDEN);
-	    };
-	}
-	if (cancelSubmitRequestModal) {
-	    cancelSubmitRequestModal.onclick = function() {
-	        submitRequestModal.classList.add(CLASS_HIDDEN);
-	    };
-	}
-	if (submitRequestModal) {
-	    submitRequestModal.onclick = function(e) {
-	        if (e.target === submitRequestModal) submitRequestModal.classList.add(CLASS_HIDDEN);
-	    };
-	}
-
-
 	// Filter dropdown logic
 	const filterBtn = document.getElementById('filterBtn');
 	const filterDropdown = document.getElementById('filterDropdown');
 	const closeFilter = document.getElementById('closeFilter');
+
 	if (filterBtn && filterDropdown) {
 		filterBtn.addEventListener('click', function(e) {
 			e.preventDefault();
+			e.stopPropagation(); 
+			
+			// *** FIX APPLIED HERE: Force visibility by removing the hidden class 
+			// and explicitly setting display: block (to override potential CSS conflicts) ***
 			filterDropdown.classList.remove(CLASS_HIDDEN);
+			filterDropdown.style.display = 'block'; 
 		});
 	}
 	if (closeFilter && filterDropdown) {
@@ -259,8 +240,9 @@
 	}
 	// Hide dropdown when clicking outside
 	document.addEventListener('mousedown', function(e) {
-		if (filterDropdown && !filterDropdown.contains(e.target) && e.target !== filterBtn) {
+		if (filterDropdown && !filterDropdown.contains(e.target) && e.target !== filterBtn && !filterBtn.contains(e.target)) {
 			filterDropdown.classList.add(CLASS_HIDDEN);
+			filterDropdown.style.display = 'none'; // Also explicitly hide it when clicking outside
 		}
 	});
 

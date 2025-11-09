@@ -23,7 +23,7 @@ DEBUG = os.getenv('DEPLOYED', 'False')
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-fallback-key-change-in-production')
 
-ALLOWED_HOSTS = [ 'localhost', '127.0.0.1', 'uesopmis.up.railway.app', 'healthcheck.railway.app']
+ALLOWED_HOSTS = [ 'localhost', '127.0.0.1', 'uesopmis.up.railway.app', 'healthcheck.railway.app', 'uesomis.pythonanywhere.com' ]
 CSRF_TRUSTED_ORIGINS = [ 'https://uesopmis.up.railway.app' ]
 
 # ============================================================
