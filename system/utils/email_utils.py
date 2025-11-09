@@ -1,12 +1,14 @@
 """
 Asynchronous Email Utility
 Provides non-blocking email sending using threading to prevent UI blocking.
+Now using SendGrid API for reliable delivery on cloud platforms.
 """
 
 import threading
 import logging
-from django.core.mail import send_mail as django_send_mail
 from django.conf import settings
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail, Email, To, Content
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +16,7 @@ logger = logging.getLogger(__name__)
 def async_send_mail(subject, message, from_email=None, recipient_list=None, 
                     fail_silently=False, html_message=None, **kwargs):
     """
-    Send email asynchronously in a background thread.
+    Send email asynchronously using SendGrid API in a background thread.
     
     This prevents email sending from blocking the HTTP response,
     solving the 2-minute delay issue when SMTP is slow.
@@ -26,7 +28,7 @@ def async_send_mail(subject, message, from_email=None, recipient_list=None,
         recipient_list (list): List of recipient email addresses
         fail_silently (bool): If False, raises exceptions. If True, suppresses errors
         html_message (str, optional): HTML version of email body
-        **kwargs: Additional arguments to pass to send_mail()
+        **kwargs: Additional arguments (for compatibility)
     
     Returns:
         None (email sends in background thread)
@@ -40,27 +42,34 @@ def async_send_mail(subject, message, from_email=None, recipient_list=None,
         )
     """
     if from_email is None:
-        from_email = settings.DEFAULT_FROM_EMAIL
+        from_email = settings.SENDGRID_FROM_EMAIL
     
     if recipient_list is None:
         logger.error("async_send_mail called without recipient_list")
         return
     
     def send_email():
-        """Inner function to send email in background thread."""
+        """Inner function to send email via SendGrid API in background thread."""
         try:
-            django_send_mail(
+            # Create SendGrid message
+            sg_message = Mail(
+                from_email=Email(from_email),
+                to_emails=[To(email) for email in recipient_list],
                 subject=subject,
-                message=message,
-                from_email=from_email,
-                recipient_list=recipient_list,
-                fail_silently=fail_silently,
-                html_message=html_message,
-                **kwargs
+                plain_text_content=Content("text/plain", message)
             )
-            logger.info(f"Email sent successfully to {recipient_list}: {subject}")
+            
+            # Add HTML content if provided
+            if html_message:
+                sg_message.add_content(Content("text/html", html_message))
+            
+            # Send via SendGrid API
+            sg = SendGridAPIClient(settings.SENDGRID_API_KEY)
+            response = sg.send(sg_message)
+            
+            logger.info(f"Email sent successfully via SendGrid to {recipient_list}: {subject} (status: {response.status_code})")
         except Exception as e:
-            logger.error(f"Failed to send email to {recipient_list}: {str(e)}")
+            logger.error(f"Failed to send email via SendGrid to {recipient_list}: {str(e)}")
             if not fail_silently:
                 # Re-raise in background thread (will be logged but won't crash request)
                 raise
@@ -69,7 +78,7 @@ def async_send_mail(subject, message, from_email=None, recipient_list=None,
     thread = threading.Thread(target=send_email, daemon=True)
     thread.start()
     
-    logger.debug(f"Email queued for async sending to {recipient_list}: {subject}")
+    logger.debug(f"Email queued for async SendGrid delivery to {recipient_list}: {subject}")
 
 
 def async_send_verification_code(user_email, verification_code):
