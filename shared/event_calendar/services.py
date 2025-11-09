@@ -1,21 +1,24 @@
 import pytz
-from datetime import datetime
+from datetime import datetime, date as date_class
 from django.utils import timezone
 from django.db import models
 from .models import MeetingEvent
 from system.users.models import User
 from shared.projects.models import ProjectEvent, Project
+from .holidays import get_philippine_holidays
 
-def get_events_by_date(user, for_main_calendar_view=False):
+def get_events_by_date(user, for_main_calendar_view=False, include_holidays=True):
     """
-    Fetches MeetingEvents and ProjectEvents formatted for the calendar.
+    Fetches MeetingEvents, ProjectEvents, and Philippine holidays formatted for the calendar.
     Filters based on user role.
-    If 'for_main_calendar_view' is True, it fetches all events for the
-    initial page load's JSON dump, bypassing user-specific filters
-    (as the calendar_view itself is role-restricted).
     
-    If 'for_main_calendar_view' is False (default), it fetches events
-    for the dynamic JSON endpoint, filtered by user role.
+    Args:
+        user: The requesting user
+        for_main_calendar_view: If True, loads all events for initial page JSON
+        include_holidays: If True, includes Philippine holidays in the calendar
+    
+    Returns:
+        dict: Events grouped by date {date_str: [event_dict, ...]}
     """
     events_qs = MeetingEvent.objects.none()
     project_events_qs = ProjectEvent.objects.select_related('project').none()
@@ -95,6 +98,31 @@ def get_events_by_date(user, for_main_calendar_view=False):
             'project_id': pevent.project.id,
             'project_name': pevent.project.title if pevent.project else '',
         })
+    
+    # Add Philippine holidays
+    if include_holidays:
+        # Get current year and next year holidays
+        from datetime import datetime
+        current_year = datetime.now().year
+        
+        for year in [current_year, current_year + 1]:
+            holidays = get_philippine_holidays(year)
+            for holiday_date, holiday_info in holidays.items():
+                date_str = holiday_date.strftime('%Y-%m-%d')
+                if date_str not in events_by_date:
+                    events_by_date[date_str] = []
+                
+                # Add holiday as a special event type
+                events_by_date[date_str].append({
+                    'id': f'holiday-{date_str}',
+                    'type': 'holiday',
+                    'title': holiday_info['name'],
+                    'description': f"Philippine {holiday_info['type'].capitalize()} Holiday",
+                    'date': date_str,
+                    'time': '00:00',
+                    'holiday_type': holiday_info['type'],  # 'regular' or 'special'
+                    'is_holiday': True,
+                })
         
     return events_by_date
 

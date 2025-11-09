@@ -220,8 +220,41 @@ select#year-selector:focus {
     background: linear-gradient(90deg, #A9C6DD 50%, #B6D3C2 50%);
 }
 
+.calendar-day.holiday {
+    background-color: #FCD116;
+    color: white; 
+    font-weight: 600;
+    border: 1px solid #FCD116;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.calendar-day.holiday-special {
+    background-color: #FCD116;
+    color: white; 
+    font-weight: 700; 
+    border: 2px solid #FCD116; 
+    box-shadow: 0 2px 8px rgba(206, 17, 38, 0.4);
+}
+
+.calendar-day.holiday-with-events {
+    background-color: #245F3E;
+    color: white;
+    font-weight: 600;
+    border: 2px solid #FCD116; 
+    box-shadow: 0 2px 8px rgba(36, 95, 62, 0.5);
+}
+
 .calendar-day:hover {
     background: #e6e6e6;
+}
+
+/* Don't change holiday background on hover */
+.calendar-day.holiday:hover,
+.calendar-day.holiday-special:hover,
+.calendar-day.holiday-with-events:hover {
+    opacity: 0.9;
+    transform: scale(1.02);
+    transition: all 0.2s ease;
 }
 
 

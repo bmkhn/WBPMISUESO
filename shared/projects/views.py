@@ -260,6 +260,31 @@ def project_events(request, pk):
             # Determine if this is a placeholder based on whether datetime and location are provided
             is_placeholder = not (datetime_str and location)
             
+            # Validate that the event is not scheduled on a Philippine holiday
+            if datetime_str and not is_placeholder:
+                from shared.event_calendar.holidays import is_philippine_holiday
+                from datetime import datetime
+                
+                # Parse the datetime string to get the date
+                try:
+                    event_datetime = datetime.fromisoformat(datetime_str.replace('Z', '+00:00'))
+                    event_date = event_datetime.date()
+                    
+                    # Check if this date is a holiday
+                    if is_philippine_holiday(event_date):
+                        from django.contrib import messages
+                        holiday_info = is_philippine_holiday(event_date)
+                        messages.error(
+                            request, 
+                            f"Cannot schedule project event on {event_date.strftime('%B %d, %Y')}. "
+                            f"This is a Philippine {holiday_info['type'].capitalize()} Holiday: {holiday_info['name']}. "
+                            f"Please choose a different date."
+                        )
+                        return redirect(request.path)
+                except (ValueError, AttributeError) as e:
+                    # If date parsing fails, allow the event to be created (existing validation will catch it)
+                    pass
+            
             ProjectEvent.objects.create(
                 project=project,
                 title=title,
@@ -319,8 +344,35 @@ def project_events(request, pk):
                 event_to_edit = get_object_or_404(project.events, pk=event_id, project=project)
                 event_to_edit.title = request.POST.get('title', event_to_edit.title)
                 event_to_edit.description = request.POST.get('description', event_to_edit.description)
-                event_to_edit.datetime = request.POST.get('datetime', event_to_edit.datetime)
+                new_datetime = request.POST.get('datetime', event_to_edit.datetime)
                 event_to_edit.location = request.POST.get('location', event_to_edit.location)
+                
+                # Validate that the event is not scheduled on a Philippine holiday
+                if new_datetime:
+                    from shared.event_calendar.holidays import is_philippine_holiday
+                    from datetime import datetime
+                    
+                    try:
+                        # Parse the datetime string to get the date
+                        event_datetime = datetime.fromisoformat(new_datetime.replace('Z', '+00:00'))
+                        event_date = event_datetime.date()
+                        
+                        # Check if this date is a holiday
+                        if is_philippine_holiday(event_date):
+                            from django.contrib import messages
+                            holiday_info = is_philippine_holiday(event_date)
+                            messages.error(
+                                request, 
+                                f"Cannot schedule project event on {event_date.strftime('%B %d, %Y')}. "
+                                f"This is a Philippine {holiday_info['type'].capitalize()} Holiday: {holiday_info['name']}. "
+                                f"Please choose a different date."
+                            )
+                            return redirect(request.path)
+                    except (ValueError, AttributeError) as e:
+                        # If date parsing fails, allow the update (existing validation will catch it)
+                        pass
+                
+                event_to_edit.datetime = new_datetime
                 
                 if event_to_edit.datetime and event_to_edit.location:
                     event_to_edit.placeholder = False

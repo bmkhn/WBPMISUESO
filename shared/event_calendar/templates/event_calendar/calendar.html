@@ -567,7 +567,7 @@
         const eventList = document.getElementById('event-list');
         eventList.innerHTML = '';
         const todayStr = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`;
-        let todayEvents = [], meetings = [], projects = [], done = [];
+        let todayEvents = [], meetings = [], projects = [], holidays = [], done = [];
         const today = new Date();
         for (const dateStr in events) {
             if (events.hasOwnProperty(dateStr)) {
@@ -575,7 +575,9 @@
                 if (dateObj.getFullYear() === currentYear && dateObj.getMonth() === currentMonth) {
                     events[dateStr].forEach(ev => {
                         const isPast = dateObj < today;
-                        if (isPast) {
+                        if (ev.type === 'holiday') {
+                            holidays.push({...ev, dateStr});
+                        } else if (isPast) {
                             done.push({...ev, dateStr});
                         } else if (dateStr === todayStr) {
                             todayEvents.push({...ev, dateStr});
@@ -614,6 +616,77 @@
                 eventList.appendChild(li);
             });
         }
+        
+        // Holidays section with special styling
+        if (holidays.length) {
+            // Sort holidays chronologically by dateStr
+            holidays.sort(function(a, b) {
+                // Compare as dates
+                return new Date(a.dateStr) - new Date(b.dateStr);
+            });
+            const h = document.createElement('h4');
+            h.innerHTML = 'Holidays';
+            h.style.color = '#FCD116';
+            h.style.fontSize = '1.5rem';
+            eventList.appendChild(h);
+            holidays.forEach(ev => {
+                const li = document.createElement('li');
+                li.className = 'sidebar-holiday-item'; // Use a specific class for holidays
+
+                // --- Dynamic Color Assignment ---
+                let cardTextColor;
+                let labelBgColor;
+                let labelTextColor;
+                let labelBorderColor;
+                let labelBorderRadius = '12px';
+
+                if (ev.holiday_type === 'regular') {
+                    // Regular Holiday (Matching Light Red/Pink from calendar day)
+                    cardTextColor = 'white'; 
+                    labelBgColor = '#FCD116';
+                    labelTextColor = 'white';
+                    labelBorderColor = '#FCD116'; 
+                } else {
+                    // Special Holiday (Matching Medium Red from calendar day)
+                    cardTextColor = 'white'; 
+                    labelBgColor = '#FCD116';
+                    labelTextColor = 'white'; 
+                    labelBorderColor = '#FCD116'; 
+                }
+
+                // Apply styles
+                li.style.color = cardTextColor; // Sets text color for the date string
+
+                li.style.borderRadius = '8px';
+                li.style.marginBottom = '10px';
+
+                let holidayIcon = ev.holiday_type === 'regular' ? '🇵🇭' : '⭐';
+                let holidayTypeLabel = ev.holiday_type === 'regular' ? 'Regular' : 'Special';
+
+                // Update innerHTML to use the new class and inline styles for dynamic colors
+                li.innerHTML = `
+                    <div style='display:flex;align-items:center;gap:8px;'>
+                        <span style='font-size:1.2em;'>${holidayIcon}</span>
+                        <span style='font-weight:700;font-size:1em;color:${cardTextColor};flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'>
+                            ${ev.title}
+                        </span>
+                        <span class='holiday-type-label' 
+                            style='background:${labelBgColor}; color:${labelTextColor}; border-color:${labelBorderColor}; border-radius:${labelBorderRadius}; padding:2px 8px; font-size:0.75em; font-weight:600; white-space:nowrap; flex-shrink:0; border: 1px solid ${labelBorderColor};'>
+                            ${holidayTypeLabel}
+                        </span>
+                    </div>
+                    <span style='font-size:0.85em;font-weight:500;margin-top:4px;display:block;color:${cardTextColor};'>
+                        ${ev.dateStr}
+                    </span>`;
+
+                li.onclick = function(e) {
+                    e.stopPropagation();
+                    showEventDetails([ev], ev.dateStr);
+                };
+                eventList.appendChild(li);
+            });
+        }
+        
         // Today
         if (todayEvents.length) {
             const h = document.createElement('h4');
@@ -668,7 +741,7 @@
                 eventList.appendChild(li);
             });
         }
-        if (!todayEvents.length && !meetings.length && !projects.length && !done.length) {
+        if (!todayEvents.length && !meetings.length && !projects.length && !done.length && !holidays.length) {
             eventList.innerHTML = '<li>No events this month.</li>';
         }
     }
@@ -1000,8 +1073,42 @@
         eventDate.setHours(0, 0, 0, 0);
         const isPast = eventDate < today;
         
+        // Check if there's a holiday on this date
+        const hasHoliday = eventArr.some(ev => ev.type === 'holiday');
+        
         eventArr.forEach(ev => {
-            if (ev.type === 'meeting') {
+            if (ev.type === 'holiday') {
+                // Holiday event styling - distinctive Philippine holiday theme
+                let holidayIcon = ev.holiday_type === 'regular' ? '🇵🇭' : '⭐';
+                let holidayTypeLabel = ev.holiday_type === 'regular' ? 'Regular Holiday' : 'Special Non-Working Holiday';
+                let borderColor = ev.holiday_type === 'regular' ? '#FCD116' : '#FCD116';
+                let bgGradient = ev.holiday_type === 'regular' 
+                    ? 'linear-gradient(135deg, #FFF9F0 0%, #FFE6E6 100%)' 
+                    : 'linear-gradient(135deg, #FFFEF0 0%, #FFF9E6 100%)';
+                
+                html += `<div style="background:${bgGradient};border-left:6px solid ${borderColor};padding:20px;margin-bottom:12px;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+                    <div class="event-details-row" style="display:flex;align-items:center;margin-bottom:12px;">
+                        <div style="font-size:2rem;margin-right:12px;">${holidayIcon}</div>
+                        <div style="flex:1;">
+                            <div style="font-size:1.75rem;font-weight:700;color:${borderColor};line-height:1.2;">${ev.title}</div>
+                            <div style="font-size:0.95rem;font-weight:600;color:#666;margin-top:4px;text-transform:uppercase;letter-spacing:0.5px;">${holidayTypeLabel}</div>
+                        </div>
+                    </div>
+                    <div style="font-size:1.05rem;color:#444;margin-bottom:8px;line-height:1.6;">${ev.description}</div>
+                    <div style="font-size:1rem;color:#666;display:flex;align-items:center;gap:8px;">
+                        <i class="fa-regular fa-calendar" style="color:${borderColor};"></i>
+                        <span style="font-weight:500;">${ev.date}</span>
+                    </div>
+                    <div style="margin-top:16px;padding:12px;background:rgba(255,255,255,0.6);border-radius:8px;border:1px solid ${borderColor};">
+                        <i class="fa-solid fa-info-circle" style="color:${borderColor};margin-right:6px;"></i>
+                        <span style="font-size:0.9rem;color:#555;font-style:italic;">
+                            ${ev.holiday_type === 'regular' 
+                                ? 'Regular holidays are paid rest days for all employees. Meetings and project activities should not be scheduled on this date.' 
+                                : 'Special non-working holidays provide time off for specific observances. Please avoid scheduling meetings or project activities on this date.'}
+                        </span>
+                    </div>
+                </div>`;
+            } else if (ev.type === 'meeting') {
                 let canEdit = false;
                 if (currentUserId !== "" && (ev.created_by == currentUserId || ["DIRECTOR","UESO","VP"].includes(currentUserRole))) {
                     canEdit = true;
@@ -1080,8 +1187,10 @@
             existingBtn.remove();
         }
         
-        // Only show Add button if date is not in the past
-        if (!isPast) {
+        // Only show Add Meeting button if:
+        // 1. Date is not in the past
+        // 2. There is NO holiday on this date
+        if (!isPast && !hasHoliday) {
             // Create floating button and append to modal container (not content)
             const floatingBtn = document.createElement('button');
             floatingBtn.id = 'floating-add-event-btn';
@@ -1308,10 +1417,22 @@
                 // Count events by type
                 let activityCount = events[dateStr].filter(ev => ev.type === 'project').length;
                 let meetingCount = events[dateStr].filter(ev => ev.type === 'meeting').length;
-                let totalCount = events[dateStr].length;
+                let holidayCount = events[dateStr].filter(ev => ev.type === 'holiday').length;
+                let hasHoliday = holidayCount > 0;
+                let holidayType = hasHoliday ? events[dateStr].find(ev => ev.type === 'holiday').holiday_type : null;
                 
-                // Set green background for dates with events
-                cell.style.backgroundColor = '#245F3E'; // Green
+                // Holiday styling takes priority
+                if (hasHoliday && activityCount === 0 && meetingCount === 0) {
+                    // Pure holiday - no other events
+                    cell.classList.add(holidayType === 'regular' ? 'holiday' : 'holiday-special');
+                } else if (hasHoliday) {
+                    // Holiday with events
+                    cell.classList.add('holiday-with-events');
+                } else {
+                    // Regular events (no holiday)
+                    cell.style.backgroundColor = '#245F3E'; // Green
+                }
+                
                 cell.style.color = 'white';
                 cell.style.position = 'relative';
                 cell.style.cursor = 'pointer';
@@ -1326,6 +1447,7 @@
                 dayNumber.textContent = d;
                 dayNumber.style.textAlign = 'center';
                 dayNumber.style.paddingTop = '8px';
+                dayNumber.style.fontWeight = hasHoliday ? '700' : '400';
                 cell.appendChild(dayNumber);
                 
                 // Create badge container in bottom corners
@@ -1373,6 +1495,17 @@
                     badgeContainer.appendChild(meetingBadge);
                 }
                 
+                // Add holiday indicator badge if there's a holiday
+                if (hasHoliday) {
+                    const holidayBadge = document.createElement('span');
+                    holidayBadge.style.position = 'absolute';
+                    holidayBadge.style.top = '2px';
+                    holidayBadge.style.right = '2px';
+                    holidayBadge.style.fontSize = '12px';
+                    holidayBadge.title = 'Philippine Holiday';
+                    cell.appendChild(holidayBadge);
+                }
+                
                 cell.appendChild(badgeContainer);
                 
                 cell.onclick = function() {
@@ -1394,8 +1527,8 @@
             
             // Highlight current day
             if (isToday) {
-                cell.style.border = '2px solid #FFE066';
-                cell.style.boxShadow = '0 0 0 2px #FFE066';
+                cell.style.border = '2px solid #00BCD4';
+                cell.style.boxShadow = '0 0 0 2px #00BCD4';
             }
             
             calendar.appendChild(cell);
