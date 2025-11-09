@@ -105,12 +105,19 @@ def approve_export_request(request, request_id):
     export_request.reviewed_at = timezone.now()
     export_request.save()
 
-    # Send email asynchronously (non-blocking, no 2-minute delay!)
+    # Send email asynchronously with download link (non-blocking, no 2-minute delay!)
     user = export_request.submitted_by
     export_type_display = export_request.get_type_display()
     
     if user.email:
-        async_send_export_approved(user.email, export_type_display)
+        # Build full download URL
+        from django.urls import reverse
+        scheme = 'https' if request.is_secure() else 'http'
+        domain = request.get_host()
+        download_path = reverse('export_download', args=[export_request.id])
+        download_url = f"{scheme}://{domain}{download_path}"
+        
+        async_send_export_approved(user.email, export_type_display, download_url)
     
     messages.success(request, f'{export_type_display} export request approved. Email sent to {user.get_full_name()}.')
     
@@ -333,6 +340,13 @@ def export_manage_user(request):
     college = request.GET.get('college', '')
     campus = request.GET.get('campus', '')
 
+    # Auto-filter by college for PROGRAM_HEAD, DEAN, COORDINATOR
+    if user.role in ['PROGRAM_HEAD', 'DEAN', 'COORDINATOR'] and user.college:
+        # Override college parameter to user's college
+        college = str(user.college.id)
+        # Also filter users to only those from user's college
+        users = users.filter(college=user.college)
+
     if sort_by:
         query_params['sort_by'] = sort_by
     if order:
@@ -432,6 +446,13 @@ def export_project(request):
     quarter = request.GET.get('quarter', '')
     date_from = request.GET.get('date_from', '')
     date_to = request.GET.get('date_to', '')
+
+    # Auto-filter by college for PROGRAM_HEAD, DEAN, COORDINATOR
+    if user.role in ['PROGRAM_HEAD', 'DEAN', 'COORDINATOR'] and user.college:
+        # Override college parameter to user's college
+        college = str(user.college.id)
+        # Also filter projects to only those from user's college
+        projects = projects.filter(project_leader__college=user.college)
 
     # Filter by college/campus via team leader
     if college:

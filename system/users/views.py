@@ -186,13 +186,8 @@ def send_password_reset_code_view(request):
         
         # Send password reset code via email ASYNCHRONOUSLY (no 2-minute block!)
         try:
-            async_send_mail(
-                subject='Password Reset Code',
-                message=f'Your password reset code is: {code}\n\nThis code will expire in 10 minutes.',
-                from_email='noreply@yourdomain.com',
-                recipient_list=[email],
-                fail_silently=False,
-            )
+            from system.utils.email_utils import async_send_password_reset_code
+            async_send_password_reset_code(email, code)
             print(f"Password reset code queued for {email}: {code}")  # Debug
         except Exception as e:
             print(f"Email queuing failed: {str(e)}")  # Debug
@@ -694,11 +689,23 @@ def edit_user(request, id):
                 
                 # Email change requires verification (handled by frontend modal)
                 new_email = data.get('email')
+                old_email = user.email
                 if user.email != new_email:
                     changes.append('email')
                     email_changed = True
                     user.email = new_email
                     user.username = new_email
+                    
+                    # Send email notification to both old and new email addresses
+                    try:
+                        from system.utils.email_utils import async_send_email_changed
+                        # Send to old email
+                        async_send_email_changed(old_email, user.get_full_name(), old_email, new_email)
+                        # Send to new email
+                        async_send_email_changed(new_email, user.get_full_name(), old_email, new_email)
+                        print(f"✓ Email change notifications queued for {old_email} and {new_email}")
+                    except Exception as e:
+                        print(f"✗ Failed to queue email change notifications: {str(e)}")
 
                 # Only VP/DIRECTOR can change role
                 if can_edit_role_and_verify:
@@ -844,42 +851,15 @@ def verify_user(request, id):
     
     # Send email notification to the user
     try:
-        from django.conf import settings
-        site_url = getattr(settings, 'SITE_URL', 'http://localhost:8000')
-        
-        email_subject = 'Your Account Has Been Verified'
-        email_body = f"""
-Hello {user.get_full_name()},
-
-Good news! Your account has been verified by {request.user.get_full_name()} ({request.user.get_role_display()}).
-
-You can now access all features of the WBPMISUESO system.
-
-Account Details:
-- Email: {user.email}
-- Role: {user.get_role_display()}
-- Verified by: {request.user.get_full_name()}
-
-You can log in here: {site_url}/login/
-
-If you have any questions, please contact the administrator.
-
----
-This is an automated notification from WBPMISUESO.
-"""
-        
-        # Send email asynchronously (no 2-minute block!)
-        async_send_mail(
-            subject=email_subject,
-            message=email_body,
-            from_email=settings.EMAIL_HOST_USER,
-            recipient_list=[user.email],
-            fail_silently=True,
+        from system.utils.email_utils import async_send_account_activated
+        async_send_account_activated(
+            user.email, 
+            user.get_full_name(), 
+            request.user.get_full_name()
         )
-        print(f"✓ Verification email queued for {user.email}")
-        
+        print(f"✓ Activation email queued for {user.email}")
     except Exception as e:
-        print(f"✗ Failed to queue verification email to {user.email}: {str(e)}")
+        print(f"✗ Failed to queue activation email to {user.email}: {str(e)}")
     
     from urllib.parse import quote
     return redirect(f'/users/?success=true&action=confirmed&title={quote(user.get_full_name())}')
@@ -898,42 +878,15 @@ def unverify_user(request, id):
     
     # Send email notification to the user
     try:
-        from django.conf import settings
-        site_url = getattr(settings, 'SITE_URL', 'http://localhost:8000')
-        
-        email_subject = 'Your Account Verification Has Been Revoked'
-        email_body = f"""
-Hello {user.get_full_name()},
-
-This is to inform you that your account verification has been revoked by {request.user.get_full_name()} ({request.user.get_role_display()}).
-
-Account Details:
-- Email: {user.email}
-- Role: {user.get_role_display()}
-- Action taken by: {request.user.get_full_name()}
-
-Your account is now unverified and you will have limited access to the WBPMISUESO system until your account is verified again.
-
-If you believe this is a mistake or have any questions, please contact the administrator immediately.
-
-Contact: {settings.EMAIL_HOST_USER}
-
----
-This is an automated notification from WBPMISUESO.
-"""
-        
-        # Send email asynchronously (no 2-minute block!)
-        async_send_mail(
-            subject=email_subject,
-            message=email_body,
-            from_email=settings.EMAIL_HOST_USER,
-            recipient_list=[user.email],
-            fail_silently=True,
+        from system.utils.email_utils import async_send_account_deactivated
+        async_send_account_deactivated(
+            user.email, 
+            user.get_full_name(), 
+            request.user.get_full_name()
         )
-        print(f"✓ Unverification email queued for {user.email}")
-        
+        print(f"✓ Deactivation email queued for {user.email}")
     except Exception as e:
-        print(f"✗ Failed to queue unverification email to {user.email}: {str(e)}")
+        print(f"✗ Failed to queue deactivation email to {user.email}: {str(e)}")
     
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
 
@@ -1091,15 +1044,3 @@ def quick_login(request, role):
         return redirect("role_redirect")
     else:
         return redirect("login") 
-
-## temp stuff
-def newp_view(request):
-    logout(request)
-    return render(request, 'users/new_pass.html')
-
-def otp_view(request):
-    logout(request)
-    return render(request, 'users/otp.html')
-
-def end(request):
-    logout(request)

@@ -10,6 +10,9 @@ https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 from pathlib import Path
 import os
 import dj_database_url
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -19,12 +22,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # CORE SETTINGS
 # ============================================================
 
-if os.getenv('DEPLOYED', 'False') == 'True':
+if os.environ.get('DEPLOYED', 'False') == 'True':
     DEBUG = False
 else:
     DEBUG = True
 
-SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-fallback-key-change-in-production')
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-fallback-key-change-in-production')
 
 ALLOWED_HOSTS = [ 'localhost', '127.0.0.1', 'uesopmis.up.railway.app', 'healthcheck.railway.app', 'uesomis.pythonanywhere.com' ]
 CSRF_TRUSTED_ORIGINS = [ 'https://uesopmis.up.railway.app' ]
@@ -128,9 +131,9 @@ WSGI_APPLICATION = 'WBPMISUESO.wsgi.application'
 # DATABASE CONFIGURATION
 # ============================================================
 
-if os.getenv('DEPLOYED', 'False') == 'True':    
+if os.environ.get('DEPLOYED', 'False') == 'True':    
     DATABASES = {
-        'default': dj_database_url.parse(os.getenv('DATABASE_URL'))
+        'default': dj_database_url.parse(os.environ.get('DATABASE_URL'))
     }
     
 else:
@@ -215,7 +218,7 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB in bytes
 # Use MEDIA_ROOT for temp uploads on Railway
 # Railway filesystem is ephemeral by default - for persistent storage, mount a volume at /app/media
 # Guide: https://docs.railway.app/guides/volumes
-if os.getenv('DEPLOYED', 'False') == 'True':
+if os.environ.get('DEPLOYED', 'False') == 'True':
     FILE_UPLOAD_TEMP_DIR = os.path.join(MEDIA_ROOT, 'temp_uploads')
     # Create temp directory if it doesn't exist
     os.makedirs(FILE_UPLOAD_TEMP_DIR, exist_ok=True)
@@ -226,13 +229,13 @@ if os.getenv('DEPLOYED', 'False') == 'True':
 # ============================================================
 
 
-EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
-EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
-EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
-EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@example.com')
+EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@example.com')
 
 
 # ============================================================
@@ -258,7 +261,7 @@ X_FRAME_OPTIONS = 'DENY'
 SECURE_CONTENT_TYPE_NOSNIFF = True
 
 
-if os.getenv('DEPLOYED', 'False') == 'True':
+if os.environ.get('DEPLOYED', 'False') == 'True':
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_HTTPONLY = True
