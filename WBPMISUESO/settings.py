@@ -82,6 +82,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'django.middleware.cache.UpdateCacheMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -92,6 +93,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'system.users.middleware.SessionSecurityMiddleware',
     'system.users.middleware.RoleBasedSessionMiddleware',
+    'django.middleware.cache.FetchFromCacheMiddleware',
 ]
 
 REST_FRAMEWORK = {
@@ -232,7 +234,7 @@ if os.environ.get('DEPLOYED', 'False') == 'True':
     SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY', '')
     SENDGRID_FROM_EMAIL = os.environ.get('SENDGRID_FROM_EMAIL', 'noreply@example.com')
 else:
-    EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # ============================================================
 # SITE CONFIGURATION
@@ -274,9 +276,13 @@ CSRF_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_NAME = 'csrftoken'
 
 
+
 # ============================================================
 # CACHE CONFIGURATION
 # ============================================================
+
+CACHE_MIDDLEWARE_SECONDS = 3600  # Cache duration in seconds (1 hour)
+CACHE_MIDDLEWARE_KEY_PREFIX = ''
 
 CACHES = {
     'default': {
