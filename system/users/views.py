@@ -9,6 +9,7 @@ from django.views.decorators.cache import never_cache
 
 from system.users.models import College, Campus
 from system.users.decorators import role_required
+from system.utils.email_utils import async_send_mail, async_send_verification_code
 from .forms import LoginForm, ClientRegistrationForm, FacultyRegistrationForm, ImplementerRegistrationForm
 
 import random
@@ -76,18 +77,12 @@ def login_view(request):
                 # Generate 2FA code
                 code = str(random.randint(100000, 999999))
                 
-                # Send 2FA code via email
+                # Send 2FA code via email ASYNCHRONOUSLY (no 2-minute block!)
                 try:
-                    send_mail(
-                        'Your Login Verification Code',
-                        f'Your verification code is: {code}\n\nThis code will expire in 10 minutes.',
-                        'noreply@yourdomain.com',
-                        [user.email],
-                        fail_silently=False,
-                    )
-                    print(f"Login 2FA code sent to {user.email}: {code}")  # Debug
+                    async_send_verification_code(user.email, code)
+                    print(f"Login 2FA code queued for {user.email}: {code}")  # Debug
                 except Exception as e:
-                    print(f"Email sending failed: {str(e)}")  # Debug
+                    print(f"Email queuing failed: {str(e)}")  # Debug
                 
                 # Store in session (including the backend attribute from authenticate())
                 request.session['login_2fa_code'] = code
@@ -189,18 +184,18 @@ def send_password_reset_code_view(request):
         # Generate 6-digit code
         code = str(random.randint(100000, 999999))
         
-        # Send password reset code via email
+        # Send password reset code via email ASYNCHRONOUSLY (no 2-minute block!)
         try:
-            send_mail(
-                'Password Reset Code',
-                f'Your password reset code is: {code}\n\nThis code will expire in 10 minutes.',
-                'noreply@yourdomain.com',
-                [email],
+            async_send_mail(
+                subject='Password Reset Code',
+                message=f'Your password reset code is: {code}\n\nThis code will expire in 10 minutes.',
+                from_email='noreply@yourdomain.com',
+                recipient_list=[email],
                 fail_silently=False,
             )
-            print(f"Password reset code sent to {email}: {code}")  # Debug
+            print(f"Password reset code queued for {email}: {code}")  # Debug
         except Exception as e:
-            print(f"Email sending failed: {str(e)}")  # Debug
+            print(f"Email queuing failed: {str(e)}")  # Debug
         
         # Store code and email in session
         request.session['password_reset_code'] = code
@@ -310,7 +305,7 @@ def register_view(request):
 
 
 def send_verification_code_view(request):
-    """Send verification code to email without creating user"""
+    """Send verification code to email without creating user - ASYNC VERSION"""
     if request.method == 'POST':
         email = request.POST.get('email')
         role = request.POST.get('role')
@@ -326,18 +321,12 @@ def send_verification_code_view(request):
         # Generate 6-digit code
         code = str(random.randint(100000, 999999))
         
-        # Send verification code via email
+        # Send verification code via email ASYNCHRONOUSLY (no 2-minute block!)
         try:
-            send_mail(
-                'Your Verification Code',
-                f'Your verification code is: {code}\n\nThis code will expire in 10 minutes.',
-                'noreply@yourdomain.com',
-                [email],
-                fail_silently=False,
-            )
-            print(f"Verification code sent to {email}: {code}")  # Debug
+            async_send_verification_code(email, code)
+            print(f"Verification code queued for {email}: {code}")  # Debug
         except Exception as e:
-            print(f"Email sending failed: {str(e)}")  # Debug
+            print(f"Email queuing failed: {str(e)}")  # Debug
 
         # Store code and email in session
         request.session['2fa_code'] = code
@@ -879,17 +868,18 @@ If you have any questions, please contact the administrator.
 This is an automated notification from WBPMISUESO.
 """
         
-        send_mail(
+        # Send email asynchronously (no 2-minute block!)
+        async_send_mail(
             subject=email_subject,
             message=email_body,
             from_email=settings.EMAIL_HOST_USER,
             recipient_list=[user.email],
             fail_silently=True,
         )
-        print(f"✓ Verification email sent to {user.email}")
+        print(f"✓ Verification email queued for {user.email}")
         
     except Exception as e:
-        print(f"✗ Failed to send verification email to {user.email}: {str(e)}")
+        print(f"✗ Failed to queue verification email to {user.email}: {str(e)}")
     
     from urllib.parse import quote
     return redirect(f'/users/?success=true&action=confirmed&title={quote(user.get_full_name())}')
@@ -932,17 +922,18 @@ Contact: {settings.EMAIL_HOST_USER}
 This is an automated notification from WBPMISUESO.
 """
         
-        send_mail(
+        # Send email asynchronously (no 2-minute block!)
+        async_send_mail(
             subject=email_subject,
             message=email_body,
             from_email=settings.EMAIL_HOST_USER,
             recipient_list=[user.email],
             fail_silently=True,
         )
-        print(f"✓ Unverification email sent to {user.email}")
+        print(f"✓ Unverification email queued for {user.email}")
         
     except Exception as e:
-        print(f"✗ Failed to send unverification email to {user.email}: {str(e)}")
+        print(f"✗ Failed to queue unverification email to {user.email}: {str(e)}")
     
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
 

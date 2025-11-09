@@ -13,6 +13,36 @@
 </head>
 <body>
 	<div class="main-container">
+        <!-- Django Messages -->
+        {% if messages %}
+        <div style="position:fixed;top:20px;right:20px;z-index:10000;max-width:400px;">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}" style="background:{% if message.tags == 'success' %}#10b981{% elif message.tags == 'error' %}#ef4444{% else %}#3b82f6{% endif %};color:white;padding:1rem 1.5rem;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);margin-bottom:0.5rem;display:flex;align-items:center;gap:0.75rem;animation:slideIn 0.3s ease;">
+                <i class="fa-solid {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'error' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %}" style="font-size:1.5rem;"></i>
+                <div style="flex:1;">{{ message }}</div>
+                <button onclick="this.parentElement.remove()" style="background:none;border:none;color:white;font-size:1.25rem;cursor:pointer;opacity:0.8;padding:0;margin:0;line-height:1;">&times;</button>
+            </div>
+            {% endfor %}
+        </div>
+        <style>
+            @keyframes slideIn {
+                from { transform: translateX(400px); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            .alert { animation: slideIn 0.3s ease; }
+        </style>
+        <script>
+            // Auto-hide messages after 5 seconds
+            setTimeout(function() {
+                document.querySelectorAll('.alert').forEach(function(alert) {
+                    alert.style.opacity = '0';
+                    alert.style.transition = 'opacity 0.3s';
+                    setTimeout(function() { alert.remove(); }, 300);
+                });
+            }, 5000);
+        </script>
+        {% endif %}
+        
         <!-- Top Section -->
 
         <!-- Search Bar & Filter (3x2 Grid) -->
@@ -108,8 +138,14 @@
                     </td>
                     <td class="action-col" style="display:block;">
                         {% if export.status == 'PENDING' %}
-                            <button class="action-btn approve-btn" title="Approve" data-id="{{ export.id }}">Approve</button>
-                            <button class="action-btn reject-btn" title="Reject" data-id="{{ export.id }}">Reject</button>
+                            <form method="post" action="{% url 'approve_export_request' export.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="action-btn approve-btn" title="Approve">Approve</button>
+                            </form>
+                            <form method="post" action="{% url 'reject_export_request' export.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="action-btn reject-btn" title="Reject">Reject</button>
+                            </form>
                         {% elif export.status == 'APPROVED' %}
                             <button class="action-btn" title="Already approved" style="color:#999;" disabled>Approved</button>
                         {% elif export.status == 'REJECTED' %}
@@ -248,114 +284,8 @@
         }
     });
 
-    // Toast Notification Function
-    function showToast(message, subtitle) {
-        const toast = document.createElement('div');
-        toast.id = 'successToast';
-        toast.style.cssText = 'display:block;position:fixed;top:20px;right:20px;background:#10b981;color:white;padding:1rem 1.5rem;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:10000;font-size:1rem;font-weight:500;min-width:300px;';
-        toast.innerHTML = `
-            <div style="display:flex;align-items:center;gap:0.75rem;">
-                <i class="fa-solid fa-check-circle" style="font-size:1.5rem;"></i>
-                <div>
-                    <div style="font-weight:600;margin-bottom:0.25rem;">${message}</div>
-                    ${subtitle ? `<div style="font-size:0.875rem;opacity:0.9;">${subtitle}</div>` : ''}
-                </div>
-            </div>
-        `;
-        document.body.appendChild(toast);
-
-        // Auto-hide after 4 seconds
-        setTimeout(function() {
-            toast.style.opacity = '0';
-            toast.style.transition = 'opacity 0.3s';
-            setTimeout(function() {
-                toast.remove();
-            }, 300);
-        }, 4000);
-    }
-
-    // Approve button AJAX
-    document.querySelectorAll('.approve-btn').forEach(function(btn) {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            var id = btn.getAttribute('data-id');
-            
-            fetch('/exports/approve/' + id + '/', {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': getCookie('csrftoken'),
-                    'Content-Type': 'application/json',
-                },
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.message) {
-                    // Show toast
-                    showToast('Export Request Approved Successfully!', data.type || 'Export');
-                    
-                    // Update row to show approved state immediately
-                    var row = document.getElementById('export-' + id);
-                    if (row) {
-                        var actionCell = row.querySelector('.action-col');
-                        if (actionCell) {
-                            actionCell.innerHTML = '<button class="action-btn" title="Already approved" disabled style="cursor:not-allowed;opacity:1;color:#999;">Approved</button>';
-                        }
-                    }
-
-                    // 🔄 Reload after a short delay so toast shows first
-                    setTimeout(() => {
-                        location.reload();
-                    }, 2500); // 2.5 seconds lets user see the toast briefly
-                } else {
-                    alert(data.error || 'Failed to approve.');
-                }
-            })
-            .catch(error => {
-                console.error('Approval failed:', error);
-                alert('Something went wrong during approval.');
-            });
-        });
-    });
-    // Reject button AJAX
-    document.querySelectorAll('.reject-btn').forEach(function(btn) {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            var id = btn.getAttribute('data-id');
-            fetch('/exports/reject/' + id + '/', {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': getCookie('csrftoken'),
-                    'Approve': 'application/json',
-                },
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.message) {
-                    // Show toast
-                    showToast('Export Request Rejected Successfully!', data.type || 'Export');
-                    // Update row to show rejected state (text version)
-                    btn.parentElement.innerHTML = '<button class="action-btn" title="Already rejected" disabled style="cursor:not-allowed;opacity:1;color:#999;">Rejected</button>';
-                } else {
-                    alert(data.error || 'Failed to reject.');
-                }
-            });
-        });
-    });
-    // CSRF helper
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
+    // No AJAX needed - using simple form submissions with redirects
+    // Django messages will show feedback after redirect
     
     // Modal functions for rejected exports
     function showRejectedModal() {

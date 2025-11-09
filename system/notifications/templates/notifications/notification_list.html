@@ -150,6 +150,13 @@
 </div>
 
     <script>
+        // Handle browser back/forward buttons
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted) {
+                window.location.reload();
+            }
+        });
+        
         function getCookie(name) {
             let cookieValue = null;
             if (document.cookie && document.cookie !== '') {

@@ -19,7 +19,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # CORE SETTINGS
 # ============================================================
 
-DEBUG = os.getenv('DEPLOYED', 'False')
+if os.getenv('DEPLOYED', 'False') == 'True':
+    DEBUG = False
+else:
+    DEBUG = True
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-fallback-key-change-in-production')
 

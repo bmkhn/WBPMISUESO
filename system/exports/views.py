@@ -2,13 +2,15 @@ from django.conf import settings
 from django.core.paginator import Paginator
 from django.core.mail import EmailMultiAlternatives
 from django.http import FileResponse, HttpResponse, JsonResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, render, redirect
 from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
+from django.contrib import messages
 
 from .models import ExportRequest, can_export_direct, must_request_export
 from system.users.decorators import role_required
 from system.users.models import User
+from system.utils.email_utils import async_send_export_approved, async_send_export_rejected
 from shared.projects.models import Project
 
 import openpyxl
@@ -90,200 +92,58 @@ def exports_view(request):
 
 @role_required(allowed_roles=["UESO", "VP", "DIRECTOR"], require_confirmed=True)
 def approve_export_request(request, request_id):
+    """Approve an export request and send email asynchronously"""
     try:
-        # Optimize with select_related
         export_request = ExportRequest.objects.select_related('submitted_by', 'reviewed_by').get(id=request_id, status='PENDING')
     except ExportRequest.DoesNotExist:
-        return JsonResponse({'error': 'Export request not found or already processed.'}, status=404)
+        messages.error(request, 'Export request not found or already processed.')
+        return redirect('exports')
     
-    # Set who approved it and when
-    from django.utils import timezone
+    # Set approval details
     export_request.status = 'APPROVED'
     export_request.reviewed_by = request.user
     export_request.reviewed_at = timezone.now()
-    export_type_display = export_request.get_type_display()
     export_request.save()
 
+    # Send email asynchronously (non-blocking, no 2-minute delay!)
     user = export_request.submitted_by
-    file_buffer = BytesIO()
-    filename = None
-    subject = None
-
-    # Build download link for the export_download view
-    from django.urls import reverse
-    scheme = 'https' if request.is_secure() else 'http'
-    domain = request.get_host()
-    download_path = reverse('export_download', args=[export_request.id])
-    download_url = f"{scheme}://{domain}{download_path}"
-
-    from urllib.parse import parse_qs
-    qs = parse_qs(export_request.querystring)
-
-    if export_request.type == 'PROJECT':
-        projects = Project.objects.all()
-        search = qs.get('search', [''])[0].strip()
-        sort_by = qs.get('sort_by', ['last_updated'])[0]
-        order = qs.get('order', ['desc'])[0]
-        college = qs.get('college', [''])[0]
-        campus = qs.get('campus', [''])[0]
-        agenda = qs.get('agenda', [''])[0]
-        status = qs.get('status', [''])[0]
-        year = qs.get('year', [''])[0]
-        quarter = qs.get('quarter', [''])[0]
-        date = qs.get('date', [''])[0]
-        if college:
-            projects = projects.filter(project_leader__college__id=college)
-        if campus:
-            projects = projects.filter(project_leader__college__campus_id=campus)
-        if agenda:
-            projects = projects.filter(agenda__id=agenda)
-        if status:
-            projects = projects.filter(status=status)
-        if year:
-            projects = projects.filter(start_date__year=year)
-        if quarter:
-            qmap = {'1': (1,3), '2': (4,6), '3': (7,9), '4': (10,12)}
-            if quarter in qmap:
-                start, end = qmap[quarter]
-                projects = projects.filter(start_date__month__gte=start, start_date__month__lte=end)
-        if date:
-            projects = projects.filter(start_date=date)
-        if search:
-            projects = projects.filter(title__icontains=search)
-        sort_map = {
-            'title': 'title',
-            'last_updated': 'updated_at',
-            'start_date': 'start_date',
-            'progress': '',
-        }
-        sort_field = sort_map.get(sort_by, 'title')
-        if sort_field:
-            if order == 'desc':
-                sort_field = '-' + sort_field
-            projects = projects.order_by(sort_field)
-        elif sort_by == 'progress':
-            projects = sorted(projects, key=lambda p: (p.progress[0] / p.progress[1]) if p.progress[1] else 0, reverse=(order=='desc'))
-        wb = openpyxl.Workbook()
-        ws = wb.active
-        ws.title = "Projects"
-        headers = [
-            'Title', 'Leader', 'College/Unit', 'Last Updated', 'Start Date', 'Progress', 'Status'
-        ]
-        ws.append(headers)
-        for p in projects:
-            ws.append([
-                p.title,
-                p.project_leader.get_full_name() if p.project_leader else '',
-                p.project_leader.college.name if p.project_leader and p.project_leader.college else '',
-                p.updated_at.strftime('%Y-%m-%d') if p.updated_at else '',
-                p.start_date.strftime('%Y-%m-%d') if p.start_date else '',
-                getattr(p, 'progress_display', ''),
-                p.get_status_display() if hasattr(p, 'get_status_display') else p.status,
-            ])
-        wb.save(file_buffer)
-        filename = 'projects_export.xlsx'
-        subject = 'Your Project Export File'
-
-    elif export_request.type == 'PROJECT_CSV':
-        projects = Project.objects.all()
-        search = qs.get('search', [''])[0].strip()
-        sort_by = qs.get('sort_by', ['last_updated'])[0]
-        order = qs.get('order', ['desc'])[0]
-        college = qs.get('college', [''])[0]
-        campus = qs.get('campus', [''])[0]
-        agenda = qs.get('agenda', [''])[0]
-        status = qs.get('status', [''])[0]
-        year = qs.get('year', [''])[0]
-        quarter = qs.get('quarter', [''])[0]
-        date = qs.get('date', [''])[0]
-        if college:
-            projects = projects.filter(project_leader__college__id=college)
-        if campus:
-            projects = projects.filter(project_leader__college__campus_id=campus)
-        if agenda:
-            projects = projects.filter(agenda__id=agenda)
-        if status:
-            projects = projects.filter(status=status)
-        if year:
-            projects = projects.filter(start_date__year=year)
-        if quarter:
-            qmap = {'1': (1,3), '2': (4,6), '3': (7,9), '4': (10,12)}
-            if quarter in qmap:
-                start, end = qmap[quarter]
-                projects = projects.filter(start_date__month__gte=start, start_date__month__lte=end)
-        if date:
-            projects = projects.filter(start_date=date)
-        if search:
-            projects = projects.filter(title__icontains=search)
-        sort_map = {
-            'title': 'title',
-            'last_updated': 'updated_at',
-            'start_date': 'start_date',
-            'progress': '',
-        }
-        sort_field = sort_map.get(sort_by, 'title')
-        if sort_field:
-            if order == 'desc':
-                sort_field = '-' + sort_field
-            projects = projects.order_by(sort_field)
-        elif sort_by == 'progress':
-            projects = sorted(projects, key=lambda p: (p.progress[0] / p.progress[1]) if p.progress[1] else 0, reverse=(order=='desc'))
-        wb = openpyxl.Workbook()
-        ws = wb.active
-        ws.title = "Projects"
-        headers = [
-            'Title', 'Leader', 'College/Unit', 'Last Updated', 'Start Date', 'Progress', 'Status'
-        ]
-        ws.append(headers)
-        for p in projects:
-            ws.append([
-                p.title,
-                p.project_leader.get_full_name() if p.project_leader else '',
-                p.project_leader.college.name if p.project_leader and p.project_leader.college else '',
-                p.updated_at.strftime('%Y-%m-%d') if p.updated_at else '',
-                p.start_date.strftime('%Y-%m-%d') if p.start_date else '',
-                getattr(p, 'progress_display', ''),
-                p.get_status_display() if hasattr(p, 'get_status_display') else p.status,
-            ])
-        wb.save(file_buffer)
-        filename = 'projects_export.xlsx'
-        subject = 'Your Project Export File'
-
-    # BUDGET
-    # GOAL
-
-    if filename and user.email:
-        file_buffer.seek(0)
-        
-        email = EmailMultiAlternatives(
-            subject,
-            f'Your export request has been approved. Download: {download_url}',
-            getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@yourdomain.com'),
-            [user.email],
-        )
-        html_body = f'Your export request has been approved. <a href="{download_url}">Click here</a> to download your file.'
-        email.attach_alternative(html_body, "text/html")
-        email.send(fail_silently=True)
-
-    return JsonResponse({'message': 'Export request approved and file sent to submitter.', 'type': export_type_display})
+    export_type_display = export_request.get_type_display()
+    
+    if user.email:
+        async_send_export_approved(user.email, export_type_display)
+    
+    messages.success(request, f'{export_type_display} export request approved. Email sent to {user.get_full_name()}.')
+    
+    # Redirect back to exports page
+    return redirect('exports')
 
 
 @require_POST
 @role_required(allowed_roles=["UESO", "VP", "DIRECTOR"], require_confirmed=True)
 def reject_export_request(request, request_id):
+    """Reject an export request and send notification email asynchronously"""
     try:
-        export_request = ExportRequest.objects.get(id=request_id, status='PENDING')
+        export_request = ExportRequest.objects.select_related('submitted_by').get(id=request_id, status='PENDING')
     except ExportRequest.DoesNotExist:
-        return JsonResponse({'error': 'Export request not found or already processed.'}, status=404)
+        messages.error(request, 'Export request not found or already processed.')
+        return redirect('exports')
     
-    # Set who rejected it and when
-    from django.utils import timezone
+    # Set rejection details
     export_request.status = 'REJECTED'
     export_request.reviewed_by = request.user
     export_request.reviewed_at = timezone.now()
     export_type_display = export_request.get_type_display()
     export_request.save()
-    return JsonResponse({'message': 'Export request rejected.', 'type': export_type_display})
+    
+    # Send rejection email asynchronously (non-blocking)
+    user = export_request.submitted_by
+    if user.email:
+        async_send_export_rejected(user.email, export_type_display)
+    
+    messages.success(request, f'{export_type_display} export request rejected. Email sent to {user.get_full_name()}.')
+    
+    # Redirect back to exports page
+    return redirect('exports')
 
 
 # Robust download endpoint for filtered export files
