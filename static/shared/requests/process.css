@@ -449,3 +449,7 @@ input[type="checkbox"] {
     gap: 15px;
     justify-content: center;
 }
+
+.no-data {
+    margin-top: 2rem;
+}
