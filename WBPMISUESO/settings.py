@@ -71,6 +71,9 @@ INSTALLED_APPS = [
     'rest_framework',           # Django REST Framework
     'rest_framework_api_key',
     'rest_framework.authtoken',
+
+    # Bootstrap
+    'widget_tweaks',
 ]
 
 MIDDLEWARE = [

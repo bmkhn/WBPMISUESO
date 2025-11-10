@@ -108,44 +108,6 @@ a:hover {
     align-self: flex-start;
 }
 
-.fillbox-field {
-    position: relative;
-}
-
-.fillbox-field input {
-    width: 17.5rem; 
-    border: 1px solid #B9B9B9;
-    font-family: 'Inter', sans-serif;
-    padding: 0.75rem 0.75rem 0.75rem 3.25rem;
-    color: #000000;
-    border-radius: 0.5rem;
-    font-size: 0.85rem;
-    font-weight: 500;
-    margin: 0;
-    display: block;
-}
-
-.input-icon-wrapper {
-    position: relative;
-    display: block;
-}
-
-.icon {
-    position: absolute;
-    left: 0.6rem; 
-    top: 50%;
-    transform: translateY(-50%); 
-    color: #6B6B6B;
-    font-size: 0.9rem; 
-    display: flex;
-    width: 2rem;
-    height: 2rem;
-    align-items: center;
-    justify-content: center;
-    border: none;
-    background: transparent;
-    pointer-events: none;
-}
 .center-container {
     justify-content: center;
     align-items: center;
@@ -159,13 +121,6 @@ a:hover {
     margin-top: 15px; 
 }
 
-.remember-container {
-    display: flex;
-    flex-direction: row;
-    gap: 12px;
-    align-items: center;
-}
-
 .remember-checkbox {
     width: 15px;
     height: 15px;
@@ -174,10 +129,9 @@ a:hover {
 
 .remember-text {
     font-family: 'Inter', sans-serif;
-    font-weight: 500;
+    font-weight: 300;
     font-size: 0.85rem; 
     color: #2A2A2A;
-    margin-left: -0.6rem;
 }
 
 .forgot-text {

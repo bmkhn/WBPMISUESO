@@ -8,10 +8,11 @@ body {
     padding: 0;
     display: flex;  
     align-items: flex-start;
-    overflow: hidden;
+    /* overflow: hidden; Removed to allow scrolling if content is too long */
     box-sizing: border-box; 
     justify-content: center; 
-    height: 100vh; 
+    /* Set min-height to ensure the card covers the whole screen vertically */
+    min-height: 100vh; 
     position: relative;
 }
 
@@ -19,11 +20,20 @@ p, h1, h2, h3, h4, h5, h6, div {
     cursor: default;
 } 
 
+.derived-field .form-input {
+    background-color: #f7f7f7; 
+    cursor: not-allowed;
+    color: #4A5568;
+}
+
+.hidden, #hidden {
+    display: none !important;
+}
+
 .card {
-    width: 55rem;  
-    min-width: 80%; 
-    min-height: 35rem;
-    margin: 4.5rem auto 0 auto; 
+    width: 63rem;  
+    min-height: 43rem; /* Changed min-height to span most of the viewport */
+    margin: 1.5rem auto 0 auto; 
     padding: 4rem 5rem;
     border-radius: 1rem;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
@@ -35,6 +45,7 @@ p, h1, h2, h3, h4, h5, h6, div {
             rgba(255, 255, 255, 0.9) 99%  
         );  
     flex-shrink: 0; 
+    position: relative; /* Needed for absolute positioning of .actions */
 }
 
 h2 {
@@ -91,8 +102,8 @@ select {
     justify-content: space-between;
     align-items: center;
     position: absolute;
-    left: 2rem;
-    right: 2rem;
+    left: 4rem; /* Adjusted to match card padding */
+    right: 4rem; /* Adjusted to match card padding */
     bottom: 2rem;
 } 
 
@@ -135,6 +146,14 @@ select {
     width: 15px;
     height: 15px;
     cursor: pointer;
+}
+
+.input-group {
+    flex-wrap: nowrap !important;
+}
+
+.mt-1 {
+    margin-top: 1rem !important;
 }
 
 .id-options {
@@ -217,11 +236,46 @@ select.form-input {
     appearance: none;
 }
 
+/* Fix for password toggle overflow */
+.input-group .form-input {
+    flex: 1 1 auto; /* Take up available space */
+    border-right: none !important;
+    border-top-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+}
+
+/* Style for the password toggle button */
+.input-group .input-group-text {
+    flex-shrink: 0; /* Prevent the toggle button from shrinking/wrapping */
+    border: 1px solid #8a8a8a;
+    border-left: none !important;
+    background: #F9F9F9;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+    height: auto; 
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+}
+
 .form-input:focus, input:focus {
     outline: none;
     border-color: #00681a;
     background: white;
     box-shadow: 0 0 0 3px rgba(10, 108, 68, 0.1);
+}
+
+.input-group:focus-within .form-input, 
+.input-group:focus-within .input-group-text {
+    border-color: #00681a;
+}
+.input-group:focus-within .input-group-text {
+    background: white;
+}
+.input-group:focus-within .form-input {
+    background: white;
 }
 
 .email-error {
@@ -240,23 +294,11 @@ select.form-input {
 }
 
 .upload-area {
-    flex: 1;
-    border: 2px dashed #E5E7EB;
-    border-radius: 8px;
-    padding: 2rem;
-    text-align: center;
-    background: #F9F9F9;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
+    /* original upload-area styles hidden */
+    display: none; 
 }
 
 .upload-area:hover {
-    border-color: #0A6C44;
-    background: #F0FDF4;
 }
 
 .upload-icon {
@@ -275,24 +317,12 @@ select.form-input {
 }
 
 .file-preview {
-    margin-top: 1rem;
-    padding: 1rem;
-    background: #F0FDF4;
-    border: 1px solid #BBF7D0;
-    border-radius: 8px;
-    display: none;
 }
 
 .file-preview.show {
-    display: block;
 }
 
 .file-info {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: #1f7c57;
-    font-size: 0.9rem;
 }  
  
 /* forgot pass unique classes */ 
@@ -415,14 +445,31 @@ a:hover {
     color:#fff; 
     border:none; 
     border-radius:1rem; 
-    padding:1rem 2rem; 
+    padding:0.4rem 1rem; 
     font-size:1rem; 
     font-weight:500;  
-    margin: 1rem 0 0 0;
+    margin: 0 1rem 0 0;
     cursor:pointer; 
 }  
+
+.cancel {
+    background: #444;
+}
  
 .card-verify .form-group input{ 
     margin-top: 0.5rem;
     width: 20rem;
+}
+
+/* NEW: Style for the link inside the terms/privacy label to override existing a style */
+.form-group span a {
+    color: #0099FF; 
+    font-weight: 500;
+}
+.form-group span a:hover {
+    color: #ff9900; 
+}
+
+.progress-bar {
+    transition: width 0.4s ease;
 }
