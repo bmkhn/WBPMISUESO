@@ -847,3 +847,35 @@ input[readonly] {
     flex-grow: 1;
     width: 100%;
 }
+.custom-dropdown-container {
+    display: none;
+    position: absolute;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    z-index: 1000; 
+    min-width: 250px;
+    max-height: 350px;
+    overflow-y: auto;
+    padding: 8px;
+}
+.custom-dropdown-container input[type="text"] {
+    width: 100%;
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    box-sizing: border-box;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 14px;
+}
+.custom-dropdown-option {
+    padding: 8px 10px;
+    cursor: pointer;
+    font-size: 13px;
+    border-radius: 4px;
+}
+.custom-dropdown-option:hover {
+    background-color: #f0f0f0;
+}

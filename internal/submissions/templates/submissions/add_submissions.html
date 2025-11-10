@@ -10,6 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
 <link href="{% static 'shared/projects/styles.css' %}" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <style>
     .checkbox-item.disabled {
         opacity: 0.6;
@@ -22,6 +23,27 @@
     .checkbox-item.disabled label {
         cursor: not-allowed !important;
         color: #999 !important;
+    }
+
+    /* Style adjustment for Select2 to match other form elements */
+    .select2-container .select2-selection--single {
+        height: 40px !important; /* Match other form input height */
+        display: flex;
+        align-items: center;
+        border: 1px solid #ccc !important;
+        border-radius: 4px !important;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 40px; /* Vertically align text */
+        padding-left: 12px;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 38px;
+    }
+
+    /* Ensure the search box appears even with few results */
+    .select2-dropdown .select2-search--dropdown {
+        display: block !important;
     }
 </style>
 </head>
@@ -72,7 +94,6 @@
                 </div>
             </div>
 
-            <!-- Event Selection (shown only when event-type downloadable is selected) -->
             <div class="form-group" id="event-selection-group" style="display:none;">
                 <label class="user-details-label">Select Event: <span class="required">*</span></label>
                 <select class="form-input user-details-value" name="selected_event" id="id_selected_event">
@@ -99,12 +120,15 @@
         </form>
     </div>
 
-<!-- SVG Sprite Section -->
 <svg style="display:none;" xmlns="http://www.w3.org/2000/svg">
     <symbol id="icon-add" viewBox="0 0 16 16">
         <path d="M6.80039 14.4004C6.80039 14.7187 6.92682 15.0239 7.15186 15.2489C7.37691 15.474 7.68213 15.6004 8.00039 15.6004C8.31865 15.6004 8.62388 15.474 8.84892 15.2489C9.07396 15.0239 9.20039 14.7187 9.20039 14.4004V9.20039H14.4004C14.7187 9.20039 15.0239 9.07396 15.2489 8.84892C15.474 8.62388 15.6004 8.31865 15.6004 8.00039C15.6004 7.68213 15.474 7.37691 15.2489 7.15186C15.0239 6.92682 14.7187 6.80039 14.4004 6.80039H9.20039V1.60039C9.20039 1.28213 9.07396 0.976906 8.84892 0.751863C8.62388 0.526819 8.31865 0.400391 8.00039 0.400391C7.68213 0.400391 7.37691 0.526819 7.15186 0.751863C6.92682 0.976906 6.80039 1.28213 6.80039 1.60039V6.80039H1.60039C1.28213 6.80039 0.976906 6.92682 0.751863 7.15186C0.526819 7.37691 0.400391 7.68213 0.400391 8.00039C0.400391 8.31865 0.526819 8.62388 0.751863 8.84892C0.976906 9.07396 1.28213 9.20039 1.60039 9.20039H6.80039V14.4004Z" fill="black"/>
     </symbol>
 </svg>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 
 <script>
     // Form Validation for Required Fields (Submission Requirement)
@@ -320,21 +344,26 @@
         }
     });
 
-    // Add event listeners to downloadable checkboxes
-    document.addEventListener('DOMContentLoaded', function() {
-        // Add change listeners to all downloadable checkboxes
+    // Initialize Select2 and other DOM content
+    $(document).ready(function() {
+        // 1. Initialize Select2 on the Project dropdown for search functionality
+        $('#id_project').select2({
+            placeholder: "Search or select an Extension Project",
+            allowClear: false,
+            minimumResultsForSearch: 0 
+        });
+
+        // 2. Add change listeners to all downloadable checkboxes
         document.querySelectorAll('input[name="downloadables"]').forEach(function(checkbox) {
             checkbox.addEventListener('change', updateEventSelectionVisibility);
         });
         
-        // Initialize event status display (especially important when project is preselected)
-        // Use setTimeout to ensure DOM is fully ready
+        // 3. Trigger the change event if a project is preselected
         const projectSelect = document.getElementById('id_project');
-        setTimeout(function() {
-            if (projectSelect.value) {
-                projectSelect.dispatchEvent(new Event('change'));
-            }
-        }, 100);
+        if (projectSelect.value && projectSelect.getAttribute('data-preselected') === 'true') {
+            // Use jQuery's trigger('change') which works reliably with Select2
+            $('#id_project').trigger('change');
+        }
     });
 </script>
 
