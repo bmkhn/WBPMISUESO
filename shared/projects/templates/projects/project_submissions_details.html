@@ -158,7 +158,7 @@
     <div id="modal-final" class="submission-modal" style="display:none;">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
-            <h2 style="margin-bottom:1rem;">Final Submission</h2>
+            <h2>Final Submission</h2>
             <form method="post" enctype="multipart/form-data" class="submission-form">
                 {% csrf_token %}
                 <input type="hidden" name="submission_id" value="{{ submission.id }}" />
@@ -172,13 +172,13 @@
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label style="margin-left: 0.7rem;"><input type="checkbox" name="for_product_production"> For Product Production</label><br>
-                    <label style="margin-left: 0.7rem;"><input type="checkbox" name="for_research"> For Research</label><br>
-                    <label style="margin-left: 0.7rem;"><input type="checkbox" name="for_extension"> For Extension</label>
+                <div class="form-group chcklist">
+                    <label style="margin-left: 0.7rem;"><input type="checkbox" name="for_product_production"> <p>For Product Production</p></label><br>
+                    <label style="margin-left: 0.7rem;"><input type="checkbox" name="for_research"> <p>For Research</p></label><br>
+                    <label style="margin-left: 0.7rem;"><input type="checkbox" name="for_extension"> <p>For Extension</p></label>
                 </div>
 
-                <div class="form-actions" style="justify-content:flex-end;">
+                <div class="form-actions" style="justify-content:center;">
                     <button type="button" class="action-btn cancel-btn">Cancel</button>
                     <button type="submit" class="action-btn endorse-btn">Submit</button>
                 </div>
@@ -189,7 +189,7 @@
     <div id="modal-event" class="submission-modal" style="display:none;">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
-            <h2 style="margin-bottom:1rem;">Event Submission</h2>
+            <h2>Event Submission</h2>
             <form method="post" enctype="multipart/form-data" class="submission-form">
                 {% csrf_token %}
                 <input type="hidden" name="submission_id" value="{{ submission.id }}" />
@@ -211,7 +211,7 @@
                     <textarea name="image_description" rows="3" required></textarea>
                 </div>
 
-                <div class="form-actions" style="justify-content:flex-end;">
+                <div class="form-actions" style="justify-content:center;">
                     <button type="button" class="action-btn cancel-btn">Cancel</button>
                     <button type="submit" class="action-btn endorse-btn">Submit</button>
                 </div>
@@ -222,7 +222,7 @@
     <div id="modal-file" class="submission-modal" style="display:none;">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
-            <h2 style="margin-bottom:1rem;">File Submission</h2>
+            <h2>File Submission</h2>
             <form method="post" enctype="multipart/form-data" class="submission-form">
                 {% csrf_token %}
                 <input type="hidden" name="submission_id" value="{{ submission.id }}" />
@@ -236,7 +236,7 @@
                     </div>
                 </div>
 
-                <div class="form-actions" style="justify-content:flex-end;">
+                <div class="form-actions" style="justify-content:center;">
                     <button type="button" class="action-btn cancel-btn">Cancel</button>
                     <button type="submit" class="action-btn endorse-btn">Submit</button>
                 </div>
