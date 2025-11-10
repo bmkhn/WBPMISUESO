@@ -8,10 +8,8 @@ body {
     padding: 0;
     display: flex;  
     align-items: flex-start;
-    /* overflow: hidden; Removed to allow scrolling if content is too long */
     box-sizing: border-box; 
     justify-content: center; 
-    /* Set min-height to ensure the card covers the whole screen vertically */
     min-height: 100vh; 
     position: relative;
 }
@@ -29,7 +27,6 @@ p, h1, h2, h3, h4, h5, h6, div {
 .hidden, #hidden {
     display: none !important;
 }
-
 .card {
     width: 63rem;  
     min-height: 43rem; /* Changed min-height to span most of the viewport */
@@ -182,11 +179,6 @@ a {
     font-family: 'Inter', sans-serif;
     color: #007bff;
 }
-
-a:hover {
-    color: purple;
-}
-
 .error-input {
     border-color: #E53E3E !important;
     background: #FFF5F5 !important;
@@ -298,9 +290,6 @@ select.form-input {
     display: none; 
 }
 
-.upload-area:hover {
-}
-
 .upload-icon {
     width: 24px;
     height: 24px;
@@ -316,15 +305,6 @@ select.form-input {
     display: none;
 }
 
-.file-preview {
-}
-
-.file-preview.show {
-}
-
-.file-info {
-}  
- 
 /* forgot pass unique classes */ 
 .back-container {
     position: absolute;
@@ -350,9 +330,6 @@ a {
     color: #0099FF;
 }
 
-a:hover {
-    color: #ff9900;
-}
 
 .back-btn-text, .proceed-btn {
     font-family: 'Inter', sans-serif;

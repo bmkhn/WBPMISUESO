@@ -11,53 +11,7 @@
 <link href="https://fonts.googleapis.com/css?family=Inter:400,500,700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
 <link href="{% static 'shared/projects/styles.css' %}" rel="stylesheet">
-<style>
-    .modal-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.5);
-        z-index: 9999;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    
-    .modal-content {
-        background: white;
-        padding: 2rem;
-        border-radius: 8px;
-        max-width: 400px;
-        width: 90%;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-    }
-    
-    input[readonly] {
-        background-color: #f8f9fa !important;
-        cursor: not-allowed !important;
-    }
 
-    .profile-picture-upload {
-        margin-top: 1rem;
-    }
-
-    .profile-picture-preview {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        margin-top: 1rem;
-    }
-
-    .profile-picture-preview img {
-        width: 120px;
-        height: 120px;
-        object-fit: cover;
-        border-radius: 50%;
-        border: 3px solid #e9ecef;
-    }
-</style>
 </head>
 <body>
 <form method="post" enctype="multipart/form-data">
@@ -108,14 +62,34 @@
                 <i class="fa-regular fa-user"></i>
                 User Profile 
             </div>
+            
+            <div class="profile-picture-container">
+                <label for="profile_picture_input" class="profile-picture-upload-area">
+                    <img id="profile-picture-preview-img" class="profile-picture-preview-img" 
+                         src="{% if user.profile_picture and user.profile_picture.name %}{{ user.profile_picture.url }}{% else %}{% static 'default_avatar.png' %}{% endif %}" 
+                         alt="Profile Preview"
+                         style="{% if not user.profile_picture or not user.profile_picture.name %}display: none;{% else %}display: block;{% endif %}">
+                    <i id="profile-picture-icon" class="fa-solid fa-camera profile-picture-icon" 
+                       style="{% if user.profile_picture and user.profile_picture.name %}display: none;{% else %}display: block;{% endif %}"></i>
+                </label>
+                <div class="upload-text-info">Click the picture to change (JPG, PNG)</div>
+                <input 
+                    class="hidden" 
+                    type="file" 
+                    name="profile_picture" 
+                    id="profile_picture_input" 
+                    accept="image/jpeg,image/png"
+                    data-optional 
+                    onchange="displayProfilePicture(this)">
+            </div>
             <div class="user-details-row cols-4">
                 <div>
                     <div class="user-details-label">Last Name <span class="required">*</span></div>
-                    <input type="text" name="last_name" class="user-details-value" value="{{ user.last_name }}">
+                    <input type="text" name="last_name" class="user-details-value" value="{{ user.last_name }}" required>
                 </div>
                 <div>
                     <div class="user-details-label">Given Name <span class="required">*</span></div>
-                    <input type="text" name="given_name" class="user-details-value" value="{{ user.given_name }}">
+                    <input type="text" name="given_name" class="user-details-value" value="{{ user.given_name }}" required>
                 </div>
                 <div>
                     <div class="user-details-label">M.I.</div>
@@ -129,81 +103,38 @@
             <div class="user-details-row cols-3">
                 <div>
                     <div class="user-details-label">Sex <span class="required">*</span></div>
-                    <select name="sex" class="user-details-value">
-                        <option value="Male" {% if user.sex == 'Male' %}selected{% endif %}>Male</option>
-                        <option value="Female" {% if user.sex == 'Female' %}selected{% endif %}>Female</option>
+                    <select name="sex" class="user-details-value" required>
+                        <option value="MALE" {% if user.sex == 'MALE' %}selected{% endif %}>Male</option>
+                        <option value="FEMALE" {% if user.sex == 'FEMALE' %}selected{% endif %}>Female</option>
                     </select>
                 </div>
                 <div>
                     <div class="user-details-label">Email <span class="required">*</span></div>
-                    <input type="email" name="email" class="user-details-value" value="{{ user.email }}" id="email-input">
+                    <input type="email" name="email" class="user-details-value" value="{{ user.email }}" id="email-input" required>
                     <small style="color: #6c757d; font-size: 0.85rem; margin-top: 0.25rem; display: block;">Changing email will require verification</small>
                 </div>
                 <div>
                     <div class="user-details-label">Contact Number <span class="required">*</span></div>
-                    <input type="text" name="contact_no" class="user-details-value" value="{{ user.contact_no }}">
+                    <input type="text" name="contact_no" class="user-details-value" value="{{ user.contact_no }}" id="id_contact_no" required>
                 </div>
             </div>
-            <!-- Profile Picture Upload -->
-            <div class="profile-picture-upload">
-                <div class="user-details-label">Profile Picture</div>
-                <div style="width: 100%;">
-                    <label for="profile_picture_input" class="upload-area" id="upload-label">
-                        <svg class="icon-upload" width="24" height="24"><use href="#icon-upload"></use></svg>
-                        <span class="upload-text">Click to upload (JPG, PNG)</span>
-                        <input 
-                            class="hidden" 
-                            type="file" 
-                            name="profile_picture" 
-                            id="profile_picture_input" 
-                            accept="image/jpeg,image/png"
-                            data-optional 
-                            onchange="displayProfileFileName(this, 'file-preview-pp', 'file-name-pp', 'upload-label')"> 
-                    </label>
-                </div>
-                {% if user.profile_picture %}
-                <div class="profile-picture-preview" id="profile-picture-preview">
-                    <img src="{{ user.profile_picture.url }}" alt="Profile Picture" id="profile-picture-img">
-                    <div>
-                        <div style="font-weight: 500; margin-bottom: 0.25rem;">Current Profile Picture</div>
-                        <small style="color: #6c757d;">Choose a new file to replace</small>
-                    </div>
-                </div>
-                {% else %}
-                <div class="profile-picture-preview" id="profile-picture-preview" style="display: none;">
-                    <img src="" alt="Profile Picture" id="profile-picture-img">
-                    <div>
-                        <div style="font-weight: 500; margin-bottom: 0.25rem;">New Profile Picture</div>
-                        <small style="color: #6c757d;">This will be uploaded</small>
-                    </div>
-                </div>
-                {% endif %}
-            </div>
-
+            
             {% if user.valid_id %}
-            <div>
-
-                <!-- Valid ID Upload -->
-                <div class="form-group">
-                    <div>
-                        <div class="user-details-label">Valid ID</div>
-                        <div style="display:flex;align-items:center;">
-                        <img id="preview-img" src="{{ user.valid_id.url }}" alt="Valid ID" class="user-details-picture">
-                        <a id="preview-link" href="{{ user.valid_id.url }}" style="font-size:18px;color:#00538E;margin-left:18px;vertical-align:middle;text-decoration:none;">View ID</a>
-                        </div>
-                    </div>  
+            <div style="margin-top: 1.5rem;">
+                <div class="user-details-label">Valid ID</div>
+                <div style="display:flex;align-items:center;">
+                    <img id="preview-img" src="{{ user.valid_id.url }}" alt="Valid ID" class="user-details-picture">
+                    <a id="preview-link" href="{{ user.valid_id.url }}" style="font-size:18px;color:#00538E;margin-left:18px;vertical-align:middle;text-decoration:none;">View ID</a>
                 </div>
-
             </div>
             {% else %}
-            <div>
+            <div style="margin-top: 1.5rem;">
                 <div class="user-details-label">Valid ID</div>
                 <div class="user-details-value">No valid ID uploaded.</div>
             </div>
             {% endif %}
         </div>
 
-        <!-- Account Info Section -->
         <div class="user-details-section">
             <div class="user-details-category">  
                 <i class="fa-regular fa-user"></i>
@@ -213,7 +144,7 @@
                 <div>
                     <div class="user-details-label">Role <span class="required">*</span></div>
                     {% if can_edit_role_and_verify %}
-                    <select name="role" class="user-details-value">
+                    <select name="role" class="user-details-value" required>
                         <option value="" disabled>Select Role</option>
                         {% for r in roles %}
                         <option value="{{ r.0 }}" {% if user.role == r.0 %}selected{% endif %}>{{ r.1 }}</option>
@@ -224,25 +155,34 @@
                     <input type="hidden" name="role" value="{{ user.role }}">
                     {% endif %}
                 </div>
-                <div>
+                <div class="form-group">
                     <div class="user-details-label">Password</div>
-                    <input type="password" name="password" class="user-details-value" value="" placeholder="Leave blank to keep current password" data-optional>
+                    <div class="input-group">
+                        <input type="password" name="password" class="user-details-value" value="" placeholder="Leave blank to keep current password" id="id_password" data-optional onkeyup="checkPasswordStrength();">
+                        <span class="input-group-text toggle-password" id="togglePassword">
+                            <i class="fa-solid fa-eye-slash" style="cursor: pointer;"></i>
+                        </span>
+                    </div>
+                    <div class="progress mt-1" style="height: 5px;">
+                        <div id="password-strength-bar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <small id="passwordHelpBlock" class="form-text text-muted" style="font-size: 0.75rem; margin-top: 0.25rem;">
+                        Password must be at least 8 characters long, and include uppercase, lowercase, and a number.
+                    </small>
                 </div>
             </div>
         </div>
 
-        <!-- Role Specific Information -->
         {% if user.role in 'FACULTY,COORDINATOR,DEAN,PROGRAM_HEAD,IMPLEMENTER,CLIENT' %}
         <div class="user-details-section" id="role-specific-section">
             <div class="user-details-category">Role Specific Information</div>
 
-            <!-- If FACULTY, COORDINATOR, DEAN, PROGRAM_HEAD - Show College/Campus -->
             {% if user.role in 'FACULTY,COORDINATOR,DEAN,PROGRAM_HEAD' %}
             <div class="user-details-row cols-2">
                 <div>
                     <div class="user-details-label">College <span class="required">*</span></div>
                     {% if user.role == 'FACULTY' or can_edit_role_and_verify %}
-                    <select name="college" class="user-details-value">
+                    <select name="college" class="user-details-value" required>
                         <option value="">Select College</option>
                         {% for college in colleges %}
                             <option value="{{ college.id }}" {% if user.college and user.college.id == college.id %}selected{% endif %}>{{ college.name }}</option>
@@ -255,36 +195,33 @@
                 </div>
                 <div>
                     <div class="user-details-label">Campus (from College)</div>
-                    <!-- Campus is now derived from college, displayed as read-only -->
                     <input type="text" class="user-details-value" value="{{ user.get_campus_display|default:'N/A' }}" readonly style="background-color: #f8f9fa; cursor: not-allowed;">
                 </div>
             </div>
             {% endif %}
 
-            <!-- If IMPLEMENTER or FACULTY - Show Degree/Expertise -->
             {% if user.role in 'IMPLEMENTER,FACULTY' %}
             <div class="user-details-row cols-2">
                 <div>
                     <div class="user-details-label">Degree <span class="required">*</span></div>
-                    <input type="text" name="degree" class="user-details-value" value="{{ user.degree|default_if_none:'' }}">
+                    <input type="text" name="degree" class="user-details-value" value="{{ user.degree|default_if_none:'' }}" required>
                 </div>
                 <div>
                     <div class="user-details-label">Expertise <span class="required">*</span></div>
-                    <input type="text" name="expertise" class="user-details-value" value="{{ user.expertise|default_if_none:'' }}">
+                    <input type="text" name="expertise" class="user-details-value" value="{{ user.expertise|default_if_none:'' }}" required>
                 </div>
             </div>
             {% endif %}
 
-            <!-- If CLIENT - Show Company/Industry -->
             {% if user.role == 'CLIENT' %}
             <div class="user-details-row cols-2">
                 <div>
                     <div class="user-details-label">Company <span class="required">*</span></div>
-                    <input type="text" name="company" class="user-details-value" value="{{ user.company|default_if_none:'' }}">
+                    <input type="text" name="company" class="user-details-value" value="{{ user.company|default_if_none:'' }}" required>
                 </div>
                 <div>
                     <div class="user-details-label">Industry <span class="required">*</span></div>
-                    <input type="text" name="industry" class="user-details-value" value="{{ user.industry|default_if_none:'' }}">
+                    <input type="text" name="industry" class="user-details-value" value="{{ user.industry|default_if_none:'' }}" required>
                 </div>
             </div>
             {% endif %}
@@ -298,7 +235,6 @@
     </div>
 </form>
 
-<!-- Code Display Modal (Testing - Top Left) -->
 <div id="email-code-modal" style="display:none; position:fixed; top:20px; left:20px; background:white; padding:1.5rem; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); z-index:10001; min-width:280px; border-left:4px solid #0099FF;">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
         <h4 style="margin:0; font-size:0.875rem; font-weight:600; color:#2D3748;">Verification Code (Testing)</h4>
@@ -314,7 +250,6 @@
     </button>
 </div>
 
-<!-- Email Verification Modal -->
 <div id="email-modal" class="modal-overlay" style="display: none;">
     <div class="modal-content" style="background: white; padding: 2rem; border-radius: 8px; max-width: 400px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
         <h3 style="margin-bottom: 1rem; font-size: 1.5rem; font-weight: 600; color: #2D3748;">Email Verification Required</h3>
@@ -334,10 +269,8 @@
     </div>
 </div>
 
-<!-- SVG Sprite Section -->
 <svg style="display:none;">
 
-    <!-- Upload Icon -->
     <symbol id="icon-upload" viewBox="0 0 24 24" fill="currentColor">
         <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
         <path d="M12,11L8,15H16L12,11Z" />
@@ -345,11 +278,52 @@
 
 </svg>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
 <script>
     // Email verification state
     let originalEmail = "{{ user.email }}";
     let emailChanged = false;
     let emailVerified = false;
+    
+    // --- Profile Picture Functions (Circular UI) ---
+
+    function displayProfilePicture(input) {
+        const previewImg = document.getElementById('profile-picture-preview-img');
+        const icon = document.getElementById('profile-picture-icon');
+        
+        if (input.files.length > 0) {
+            const file = input.files[0];
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                previewImg.src = evt.target.result;
+                previewImg.style.display = 'block';
+                if(icon) icon.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        } else {
+            // Restore default view if file is cleared 
+            const hasExistingPicture = "{% if user.profile_picture and user.profile_picture.name %}true{% else %}false{% endif %}" === 'true';
+
+            if (hasExistingPicture) {
+                 previewImg.src = "{% if user.profile_picture and user.profile_picture.name %}{{ user.profile_picture.url }}{% else %}{% static 'default_avatar.png' %}{% endif %}";
+                 previewImg.style.display = 'block';
+                 if(icon) icon.style.display = 'none';
+            } else {
+                 previewImg.src = "{% static 'default_avatar.png' %}";
+                 previewImg.style.display = 'none';
+                 if(icon) icon.style.display = 'block';
+            }
+        }
+    }
+    
+    // Initial profile picture load handler
+    document.addEventListener('DOMContentLoaded', function() {
+        const profilePictureInput = document.getElementById('profile_picture_input');
+        if (profilePictureInput && profilePictureInput.files.length > 0) {
+             displayProfilePicture(profilePictureInput);
+        }
+    });
 
     // Email Code Modal Functions
     function showEmailCodeModal(code) {
@@ -377,6 +351,10 @@
 
     function showEmailModal() {
         // Automatically send code when modal opens
+        // Clear previous input/errors before showing
+        document.getElementById('email-verify-code').value = '';
+        document.getElementById('email-verify-error').style.display = 'none';
+
         sendVerificationCode();
         document.getElementById('email-modal').style.display = 'flex';
     }
@@ -394,6 +372,13 @@
         const currentEmail = originalEmail; // Send to CURRENT email, not new email
         const errorEl = document.getElementById('email-verify-error');
         
+        // Disable resend link temporarily
+        const resendLink = document.getElementById('resend-email-code');
+        if (resendLink) {
+             resendLink.style.pointerEvents = 'none';
+             resendLink.textContent = 'Sending...';
+        }
+
         // Send verification code to CURRENT email via your backend
         fetch('/send-password-reset-code/', {
             method: 'POST',
@@ -405,6 +390,11 @@
         })
         .then(response => response.json())
         .then(data => {
+            if (resendLink) {
+                 resendLink.style.pointerEvents = 'auto';
+                 resendLink.textContent = 'Resend Code';
+            }
+
             if (data.success) {
                 // Show code modal for testing
                 if (data.code) {
@@ -416,6 +406,10 @@
             }
         })
         .catch(error => {
+            if (resendLink) {
+                 resendLink.style.pointerEvents = 'auto';
+                 resendLink.textContent = 'Resend Code';
+            }
             errorEl.textContent = 'An error occurred. Please try again.';
             errorEl.style.display = 'block';
         });
@@ -431,6 +425,7 @@
             return;
         }
         
+        // Verify code
         fetch('/verify-reset-code/', {
             method: 'POST',
             headers: {
@@ -457,79 +452,133 @@
             errorEl.style.display = 'block';
         });
     }
+    
+    // --- Password Strength and Toggle Functions ---
 
-    // Resend code functionality
-    document.addEventListener('DOMContentLoaded', function() {
-        const resendLink = document.getElementById('resend-email-code');
-        if (resendLink) {
-            resendLink.addEventListener('click', function(e) {
-                e.preventDefault();
-                sendVerificationCode();
-            });
-        }
-    });
-
-    // Role-specific fields are now conditionally rendered by Django template
-    // No JavaScript needed for showing/hiding role-specific fields
-
-    // DOMContentLoaded for event listeners
-    document.addEventListener('DOMContentLoaded', function() {
-        // Get email input element
-        const emailInput = document.getElementById('email-input');
-        const emailError = document.getElementById('email-error');
+    function checkPasswordStrength() {
+        const password = document.getElementById('id_password').value;
+        const bar = document.getElementById('password-strength-bar');
+        let score = 0;
         
-        // AJAX email uniqueness check
+        if (password.length >= 8) score += 25;
+        if (/[A-Z]/.test(password)) score += 25;
+        if (/[a-z]/.test(password)) score += 25;
+        if (/[0-9!@#$%^&*()]/.test(password)) score += 25;
+
+        bar.style.width = score + '%';
+        bar.setAttribute('aria-valuenow', score);
+        
+        bar.className = 'progress-bar'; 
+        if (score <= 25) {
+            bar.classList.add('bg-danger');
+        } else if (score <= 75) {
+            bar.classList.add('bg-warning');
+        } else {
+            bar.classList.add('bg-success');
+        }
+    }
+
+    // --- Validation and Role Logic ---
+    
+    // Helper to show/hide field errors dynamically
+    function showFieldError(field, message) {
+        let err = document.createElement('div');
+        err.className = 'field-error';
+        err.textContent = message;
+        err.style.color = '#E53E3E';
+        err.style.fontSize = '0.95rem';
+        err.style.marginTop = '0.25rem';
+        
+        const inputGroup = field.closest('.input-group');
+
+        if (inputGroup) {
+            // Insert error message after the input group
+            inputGroup.parentNode.insertBefore(err, inputGroup.nextSibling);
+            field.classList.add('error-input');
+        } else if (field.tagName === 'SELECT') {
+            field.parentNode.appendChild(err);
+            field.classList.add('error-input'); 
+        } else {
+            field.parentNode.appendChild(err);
+            field.classList.add('error-input');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const emailInput = document.getElementById('email-input');
+        const emailErrorContainer = document.getElementById('email-error');
+        const originalEmailInput = originalEmail;
+
+        // Password Toggle
+        document.querySelectorAll('.toggle-password').forEach(toggle => {
+            toggle.addEventListener('click', function() {
+                const input = this.closest('.input-group').querySelector('input');
+                const icon = this.querySelector('i');
+                const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+                input.setAttribute('type', type);
+                icon.classList.toggle('fa-eye');
+                icon.classList.toggle('fa-eye-slash');
+            });
+        });
+
+        // --- AJAX email uniqueness check ---
         function checkEmailAjax() {
             const email = emailInput.value.trim();
             
-            // Skip check if email hasn't changed
-            if (email === originalEmail) {
-                if (emailError) {
-                    emailError.textContent = '';
-                    emailError.style.display = 'none';
+            // Skip check if email hasn't changed or is empty
+            if (email === originalEmailInput) {
+                if (emailErrorContainer) {
+                    emailErrorContainer.textContent = '';
+                    emailErrorContainer.style.display = 'none';
                 }
+                emailChanged = false;
+                return;
+            }
+            if (!email) return;
+
+            // Simple format validation
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                if (emailErrorContainer) {
+                    emailErrorContainer.textContent = 'Invalid email format (e.g., user@example.com).';
+                    emailErrorContainer.style.display = 'block';
+                }
+                emailChanged = true;
                 return;
             }
             
-            if (!email) {
-                if (emailError) {
-                    emailError.textContent = '';
-                    emailError.style.display = 'none';
-                }
-                return;
-            }
+            emailChanged = true; // Mark as changed, will require verification/check
             
             fetch('/check-email/?email=' + encodeURIComponent(email))
                 .then(response => response.json())
                 .then(data => {
-                    if (data.exists && emailError) {
-                        emailError.textContent = 'This email is already registered.';
-                        emailError.style.display = 'block';
-                    } else if (emailError) {
-                        emailError.textContent = '';
-                        emailError.style.display = 'none';
+                    if (data.exists && emailErrorContainer) {
+                        emailErrorContainer.textContent = 'This email is already registered.';
+                        emailErrorContainer.style.display = 'block';
+                    } else if (emailErrorContainer) {
+                        emailErrorContainer.textContent = '';
+                        emailErrorContainer.style.display = 'none';
                     }
                 })
                 .catch(() => {
-                    if (emailError) {
-                        emailError.textContent = 'Error checking email.';
-                        emailError.style.display = 'block';
+                    if (emailErrorContainer) {
+                        emailErrorContainer.textContent = 'Error checking email.';
+                        emailErrorContainer.style.display = 'block';
                     }
                 });
         }
         
-        // Check for email changes on input
         if (emailInput) {
             emailInput.addEventListener('blur', checkEmailAjax);
             emailInput.addEventListener('input', checkEmailAjax);
-            emailInput.addEventListener('change', function() {
-                emailChanged = (this.value.trim() !== originalEmail);
-            });
         }
 
-        // Robust form validation for all required fields
+        // --- Form validation on submit ---
         document.querySelector('form').addEventListener('submit', function(e) {
-            // Check if email changed and not yet verified
+            // 0. Re-check email state immediately before submission
+            const currentEmail = emailInput.value.trim();
+            emailChanged = currentEmail !== originalEmailInput;
+            
+            // 1. Email Verification Gate
             if (emailChanged && !emailVerified) {
                 e.preventDefault();
                 showEmailModal();
@@ -537,109 +586,81 @@
             }
             
             let valid = true;
-            // Remove previous error states/messages for inputs, selects, textareas
+            let firstInvalidField = null;
+
+            // 2. Clear all previous errors
+            document.querySelectorAll('.field-error').forEach(el => el.remove());
+            document.querySelectorAll('[class*="error-input"]').forEach(el => el.classList.remove('error-input'));
+
+            // 3. Validate all required fields
             const fields = Array.from(document.querySelector('form').querySelectorAll('input, select, textarea'));
+            
             fields.forEach(field => {
-                field.classList.remove('error-input');
-                let err = field.parentNode.querySelector('.field-error');
-                if (err) err.remove();
-            });
+                // Skip optional fields unless they have a value (e.g., password field)
+                if (field.hasAttribute('data-optional') && !field.value.trim()) return;
 
-            // Validate all visible required fields
-            fields.forEach(field => {
-                // Only validate visible fields
-                if (field.offsetParent === null) return;
-                // Skip optional fields
-                if (field.hasAttribute('data-optional')) return;
-                // Validate required fields
-                if ((field.tagName === 'INPUT' || field.tagName === 'TEXTAREA') && field.type !== 'file' && !field.value.trim()) {
-                    valid = false;
-                    field.classList.add('error-input');
-                    let err = document.createElement('div');
-                    err.className = 'field-error';
-                    err.textContent = 'This field is required.';
-                    err.style.color = '#E53E3E';
-                    err.style.fontSize = '0.95rem';
-                    err.style.marginTop = '0.25rem';
-                    field.parentNode.appendChild(err);
+                let isFieldInvalid = false;
+                let errorMessage = 'This field is required.';
+                
+                // Check if field is required (either static or value-based check)
+                const isRequired = field.hasAttribute('required') || (field.name === 'password' && field.value.trim());
+
+                if (isRequired) {
+                    
+                    // Standard emptiness check (for required fields)
+                    if (field.tagName === 'SELECT' && (!field.value || field.value === field.querySelector('option[disabled]')?.value)) {
+                        isFieldInvalid = true;
+                    } else if ((field.tagName === 'INPUT' || field.tagName === 'TEXTAREA') && field.type !== 'file' && !field.value.trim()) {
+                        isFieldInvalid = true;
+                    }
+
+                    // Specific Format Checks
+                    if (!isFieldInvalid && field.name === 'contact_no' && field.value.trim()) {
+                        if (!/^\+?[\d\s-]{7,}$/.test(field.value.trim())) {
+                            isFieldInvalid = true;
+                            errorMessage = 'Please enter a valid contact number.';
+                        }
+                    }
+                    
+                    if (!isFieldInvalid && field.name === 'password' && field.value.trim()) {
+                        let password = field.value.trim();
+                        let score = 0;
+                        if (password.length >= 8) score += 25;
+                        if (/[A-Z]/.test(password)) score += 25;
+                        if (/[a-z]/.test(password)) score += 25;
+                        if (/[0-9!@#$%^&*()]/.test(password)) score += 25;
+
+                        if (score < 100) {
+                            isFieldInvalid = true;
+                            errorMessage = 'Password is too weak. Must meet strength requirements.';
+                        }
+                    }
                 }
-                if (field.tagName === 'SELECT' && (!field.value || field.value === '' || field.value === field.querySelector('option[disabled]')?.value)) {
+
+                if (isFieldInvalid) {
                     valid = false;
+                    if (!firstInvalidField) firstInvalidField = field;
+                    showFieldError(field, errorMessage);
                     field.classList.add('error-input');
-                    let err = document.createElement('div');
-                    err.className = 'field-error';
-                    err.textContent = 'This field is required.';
-                    err.style.color = '#E53E3E';
-                    err.style.fontSize = '0.95rem';
-                    err.style.marginTop = '0.25rem';
-                    field.parentNode.appendChild(err);
                 }
             });
-
-            // File upload is optional for editing
-            // (Valid ID was required during registration)
-
-            // Email uniqueness error
-            var email = emailInput.value.trim();
-            if (email && emailError && emailError.style.display === 'block') {
+            
+            // 4. Email uniqueness error check
+            if (emailInput && emailInput.value.trim() && emailErrorContainer && emailErrorContainer.textContent.includes('already registered')) {
                 valid = false;
+                if (!firstInvalidField) firstInvalidField = emailInput;
                 emailInput.classList.add('error-input');
-                emailInput.focus();
             }
 
             if (!valid) {
                 e.preventDefault();
+                if (firstInvalidField) {
+                    firstInvalidField.focus();
+                }
             }
         });
+        
     });
-
-    // Profile Picture Preview
-    const profilePictureInput = document.getElementById('profile_picture_input');
-    if (profilePictureInput) {
-        profilePictureInput.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            const preview = document.getElementById('profile-picture-preview');
-            const previewImg = document.getElementById('profile-picture-img');
-            
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(evt) {
-                    previewImg.src = evt.target.result;
-                    preview.style.display = 'flex';
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-    }
-
-    // Image Preview (if elements exist)
-    var fileInput = document.getElementById('id_valid_id');
-    if (fileInput) {
-        var valid_id_url = "{% if user.valid_id and user.valid_id.name %}{{ user.valid_id.url }}{% else %}{% endif %}";
-        fileInput.addEventListener('change', function(e) {
-            var file = e.target.files[0];
-            var previewImg = document.getElementById('preview-img');
-            var previewLink = document.getElementById('preview-link');
-            var fileNameSpan = document.getElementById('file-name');
-            if (file && previewImg && previewLink) {
-                var reader = new FileReader();
-                reader.onload = function(evt) {
-                    previewImg.src = evt.target.result;
-                    previewLink.href = evt.target.result;
-                    previewLink.style.opacity = '0.5';
-                    previewLink.style.pointerEvents = 'none';
-                    previewLink.style.cursor = 'not-allowed';
-                };
-                reader.readAsDataURL(file);
-                if (fileNameSpan) fileNameSpan.textContent = file.name;
-            } else if (previewImg && previewLink) {
-                // Reset to original
-                previewImg.src = valid_id_url;
-                previewLink.href = valid_id_url ? valid_id_url : "#";
-                if (fileNameSpan) fileNameSpan.textContent = '';
-            }
-        });
-    }
 </script>
 
 </body>
