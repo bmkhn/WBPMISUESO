@@ -3,11 +3,12 @@ from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
 from django.contrib import messages
-from django.db.models import Sum 
-from decimal import Decimal # <--- CORRECT: Keep the Decimal import global
+from django.db.models import Sum, Value, DecimalField
+from django.db.models.functions import Coalesce 
+from decimal import Decimal 
 from system.users.decorators import role_required
 from datetime import datetime
-from shared.budget.models import BudgetPool, BudgetHistory # Ensure BudgetHistory is imported
+from shared.budget.models import BudgetPool, BudgetHistory, CollegeBudget
 from shared.budget.forms import AnnualBudgetForm
 from system.users.models import College, User, Campus
 from shared.projects.models import SustainableDevelopmentGoal
@@ -36,9 +37,7 @@ INTERNAL_ACCESS_ROLES = [
     "CLIENT",
 ]
 
-# --- HELPER FUNCTION FOR HISTORY LOGGING ---
 def _log_budget_pool_history(user, pool_instance, new_total, is_creation):
-    """Logs the budget pool change to BudgetHistory."""
     action_type = 'ALLOCATED' if is_creation else 'ADJUSTED'
     description_str = f'Annual Budget Pool initialized/set for {pool_instance.fiscal_year}: ₱{new_total:,.2f}'
     
@@ -48,7 +47,6 @@ def _log_budget_pool_history(user, pool_instance, new_total, is_creation):
         description=description_str,
         user=user
     )
-# ------------------------------------------------
 
 @role_required(allowed_roles=INTERNAL_ACCESS_ROLES, require_confirmed=True)
 def settings_view(request):
@@ -67,12 +65,21 @@ def settings_view(request):
     
     budget_pool_instance, created = BudgetPool.objects.get_or_create(
         fiscal_year=current_fiscal_year,
-        defaults={'total_available': '0.00'}
+        defaults={'total_available': Decimal('0.00')}
     )
    
-    # Store the initial total before POST request alters it
-    # Uses the globally imported Decimal
-    current_pool_total = Decimal(budget_pool_instance.total_available)
+    current_pool_total = budget_pool_instance.total_available
+    
+    total_assigned_aggregate = CollegeBudget.objects.filter(
+        fiscal_year=current_fiscal_year,
+        status='ACTIVE'
+    ).aggregate(total=Coalesce(Sum('total_assigned'), Value(Decimal('0.00'))))
+
+    total_assigned_budget = total_assigned_aggregate['total']
+
+    initial_unallocated_remaining = budget_pool_instance.total_available - total_assigned_budget
+    is_save_disabled = initial_unallocated_remaining < 0
+
 
     defaults = {
         'site_name': ('WBPMIS UESO', 'The public name of the website.'),
@@ -110,16 +117,9 @@ def settings_view(request):
             if budget_form.is_valid():
                 new_total_str = budget_form.cleaned_data['annual_total']
                 
-                # Uses the globally imported Decimal
                 new_total = Decimal(new_total_str)
                 
-                # Check if the total pool value actually changed
                 is_changed = new_total != current_pool_total
-                
-                # Check for failsafe logic (no setting budget lower than assigned)
-                # Uses the globally imported Decimal
-                total_assigned_aggregate = College.objects.aggregate(total=Sum('collegebudget'))['total']
-                total_assigned_budget = total_assigned_aggregate if total_assigned_aggregate is not None else Decimal('0.00')
                 
                 if new_total < total_assigned_budget:
                     messages.error(
@@ -127,14 +127,12 @@ def settings_view(request):
                         f'The Annual Budget Pool (₱{new_total:,.2f}) cannot be set lower than the total amount already assigned to colleges (₱{total_assigned_budget:,.2f}).'
                     )
                 else:
-                    # Determine if this was an initial creation or an adjustment
                     is_creation = current_pool_total == Decimal('0.00')
                     
                     if is_changed or is_creation:
                         budget_pool_instance.total_available = new_total
                         budget_pool_instance.save(update_fields=['total_available'])
                         
-                        # Log the history record to update the graphs
                         _log_budget_pool_history(request.user, budget_pool_instance, new_total, is_creation)
                         
                         messages.success(request, f'Annual Budget Pool for {budget_pool_instance.fiscal_year} updated successfully to ₱{new_total:,.2f}.')
@@ -171,7 +169,10 @@ def settings_view(request):
         'api_unlocked': api_unlocked,
         'settings_with_forms': settings_with_forms,
         'budget_pool': budget_pool_instance, 
-        'budget_form': budget_form,         
+        'budget_form': budget_form,   
+        'total_assigned_budget': total_assigned_budget,
+        'initial_unallocated_remaining': initial_unallocated_remaining,
+        'is_save_disabled': is_save_disabled,
     }
     
     return render(request, 'settings/settings.html', context)

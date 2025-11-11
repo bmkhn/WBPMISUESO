@@ -168,9 +168,10 @@
                                     min="0" 
                                     class="form-control" 
                                     name="{{ budget_form.annual_total.name }}" 
-                                    id="{{ budget_form.annual_total.id_for_label }}" 
+                                    id="id_annual_total" 
                                     value="{{ budget_form.annual_total.value|default_if_none:'0.00' }}" 
-                                    required>
+                                    required
+                                    oninput="calculateUnallocated()">
                                 
                                 {% if budget_form.annual_total.errors %}
                                     <div class="invalid-feedback d-block">
@@ -179,11 +180,18 @@
                                         {% endfor %}
                                     </div>
                                 {% endif %}
+
+                                <div id="unallocated-display" style="margin-top: 0.5rem; font-size: 0.9rem;">
+                                    Current Assigned to Colleges: <strong>₱{{ total_assigned_budget|floatformat:2|intcomma }}</strong>
+                                    <br>
+                                    Remaining Unallocated: <strong id="remaining-unallocated-value" class="{% if is_save_disabled %}text-danger{% else %}text-success{% endif %}">₱{{ initial_unallocated_remaining|floatformat:2|intcomma }}</strong>
+                                    <span id="unallocated-warning" class="text-danger" style="display: none; margin-left: 10px;">Warning: Cannot set budget lower than assigned!</span>
+                                </div>
                             </div>
                         </div>
 
                         <div class="d-flex justify-content-end" style="justify-self: center; align-self: center;">
-                            <button type="submit" name="save_annual_budget" class="btn btn-primary">
+                            <button type="submit" name="save_annual_budget" id="save_annual_budget_btn" class="btn btn-primary" {% if is_save_disabled %}disabled{% endif %}>
                                 <i class="fas fa-save"></i> Save Annual Budget
                             </button>
                         </div>
@@ -442,6 +450,50 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+
+    const totalAssignedBudget = parseFloat("{{ total_assigned_budget|floatformat:2 }}".replace(/,/g, ''));
+    
+    const initialPoolTotal = parseFloat("{{ budget_pool.total_available|floatformat:2 }}".replace(/,/g, ''));
+
+    const annualTotalInput = document.getElementById('id_annual_total');
+    const remainingValueSpan = document.getElementById('remaining-unallocated-value');
+    const warningSpan = document.getElementById('unallocated-warning');
+    const saveButton = document.getElementById('save_annual_budget_btn');
+    
+    if (annualTotalInput.value === '') {
+        annualTotalInput.value = initialPoolTotal.toFixed(2);
+    }
+
+    function formatCurrency(amount) {
+        const formatter = new Intl.NumberFormat('en-PH', {
+            style: 'currency',
+            currency: 'PHP',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        });
+        return formatter.format(amount).replace('PHP', '₱');
+    }
+
+    window.calculateUnallocated = function() {
+        const annualTotal = parseFloat(annualTotalInput.value) || 0.00;
+        const remaining = annualTotal - totalAssignedBudget;
+
+        remainingValueSpan.textContent = formatCurrency(remaining);
+
+        if (remaining < 0) {
+            remainingValueSpan.classList.add('text-danger');
+            remainingValueSpan.classList.remove('text-success');
+            warningSpan.style.display = 'inline';
+            saveButton.disabled = true; 
+        } else {
+            remainingValueSpan.classList.remove('text-danger');
+            remainingValueSpan.classList.add('text-success');
+            warningSpan.style.display = 'none';
+            saveButton.disabled = false; 
+        }
+    };
+    
+    calculateUnallocated();
 });
 </script>
 
