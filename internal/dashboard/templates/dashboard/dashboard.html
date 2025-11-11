@@ -77,7 +77,6 @@
                     <div class="container-2A-name">Experts Active</div>
                 </a>
 
-                {% if request.user.role == "UESO" or request.user.role == "VP" or request.user.role == "DIRECTOR" %}
                 <a class="container-2A" href="{% url 'calendar' %}">
                     <div class="card-icon-wrapper">
                         <div class="circle"><i class="fas fa-calendar-alt"></i></div>
@@ -85,7 +84,6 @@
                     <div class="container-2A-number">{{ events_in_calendar }}</div>
                     <div class="container-2A-name">Events in Calendar</div>
                 </a>
-                {% endif %}
             </div>
         </div>
 

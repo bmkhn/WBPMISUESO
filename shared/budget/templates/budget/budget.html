@@ -75,6 +75,19 @@
             </div>
             <span class="card-figure-subtext">Percentage of total pool assigned</span>
         </div>
+
+                <div class="goal-card color-milky-white">
+            <div class="card-content-wrapper" style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
+                <div>
+                    <h3 style="color: #4b5563;">Committed (External)</h3>
+                    <p class="amount" style="color: #111827;">₱ {{ total_external_to_projects_agg|floatformat:0|intcomma }}</p>
+                </div>
+                <div style="height: 80px; width: 130px; flex-shrink: 0; margin-top: -5px;">
+                    <canvas id="externalCommittedChart"></canvas>
+                </div>
+            </div>
+            <span class="card-figure-subtext">Funding secured from external sponsors</span>
+        </div>
         
         <div class="goal-card color-dango-green">
             <div class="card-content-wrapper" style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
@@ -89,18 +102,6 @@
             <span class="card-figure-subtext">Funding committed from internal pool</span>
         </div>
         
-        <div class="goal-card color-milky-white">
-            <div class="card-content-wrapper" style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
-                <div>
-                    <h3 style="color: #4b5563;">Committed (External)</h3>
-                    <p class="amount" style="color: #111827;">₱ {{ total_external_to_projects_agg|floatformat:0|intcomma }}</p>
-                </div>
-                <div style="height: 80px; width: 130px; flex-shrink: 0; margin-top: -5px;">
-                    <canvas id="externalCommittedChart"></canvas>
-                </div>
-            </div>
-            <span class="card-figure-subtext">Funding secured from external sponsors</span>
-        </div>
     </div>
 
     <div class="another-header" style="justify-content: space-between; align-items: center;">
@@ -261,18 +262,7 @@
             </div>
             <span class="card-figure-subtext">Overall budget across all your projects</span>
         </div>
-        <div class="goal-card color-dango-green">
-            <div class="card-content-wrapper" style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
-                <div>
-                    <h3 style="color: white;">Total Internal</h3>
-                    <p class="amount text-green" style="color: white;">₱{{ total_internal|floatformat:0|intcomma }}</p>
-                </div>
-                <div style="height: 80px; width: 130px; flex-shrink: 0; margin-top: -5px;">
-                    <canvas id="facultyInternalChart"></canvas>
-                </div>
-            </div>
-            <span class="card-figure-subtext">Funding from internal pool</span>
-        </div>
+
         <div class="goal-card color-milky-white">
             <div class="card-content-wrapper" style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
                 <div>
@@ -284,6 +274,19 @@
                 </div>
             </div>
             <span class="card-figure-subtext">Funding secured from sponsors</span>
+        </div>
+
+        <div class="goal-card color-dango-green">
+            <div class="card-content-wrapper" style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
+                <div>
+                    <h3 style="color: white;">Total Internal</h3>
+                    <p class="amount text-green" style="color: white;">₱{{ total_internal|floatformat:0|intcomma }}</p>
+                </div>
+                <div style="height: 80px; width: 130px; flex-shrink: 0; margin-top: -5px;">
+                    <canvas id="facultyInternalChart"></canvas>
+                </div>
+            </div>
+            <span class="card-figure-subtext">Funding from internal pool</span>
         </div>
     </div>
     
