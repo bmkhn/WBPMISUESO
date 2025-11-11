@@ -12,31 +12,65 @@
 <link href="{% static 'shared/projects/styles.css' %}" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <style>
+    .checkbox-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 0;
+        transition: opacity 0.2s;
+    }
+    
     .checkbox-item.disabled {
-        opacity: 0.6;
+        opacity: 0.5;
         pointer-events: none;
         cursor: not-allowed !important;
     }
+    
     .checkbox-item.disabled input[type="checkbox"] {
         cursor: not-allowed !important;
     }
+    
     .checkbox-item.disabled label {
         cursor: not-allowed !important;
         color: #999 !important;
     }
+    
+    .event-status, .final-status {
+        font-size: 0.875rem;
+        margin-left: 8px;
+        font-weight: 500;
+    }
+    
+    .event-status.pending {
+        color: #888;
+    }
+    
+    .event-status.has-events {
+        color: #16a34a;
+    }
+    
+    .event-status.no-events {
+        color: #dc2626;
+    }
+    
+    .final-status {
+        color: #ea580c;
+    }
 
     /* Style adjustment for Select2 to match other form elements */
     .select2-container .select2-selection--single {
-        height: 40px !important; /* Match other form input height */
+        height: 40px !important;
         display: flex;
         align-items: center;
         border: 1px solid #ccc !important;
         border-radius: 4px !important;
     }
+    
     .select2-container--default .select2-selection--single .select2-selection__rendered {
-        line-height: 40px; /* Vertically align text */
+        line-height: 40px;
         padding-left: 12px;
     }
+    
     .select2-container--default .select2-selection--single .select2-selection__arrow {
         height: 38px;
     }
@@ -76,16 +110,15 @@
                 <label class="user-details-label">Choose Form/s: <span class="required">*</span></label>
                 <div class="downloadable-checkboxes">
                     {% for downloadable in downloadables %}
-                        <div class="checkbox-item" 
-                             data-project-dependent="{% if downloadable.submission_type == 'event' %}true{% else %}false{% endif %}"
+                        <div class="checkbox-item disabled" 
                              data-submission-type="{{ downloadable.submission_type }}"
                              data-downloadable-id="{{ downloadable.id }}">
                             <input type="checkbox" name="downloadables" id="downloadable_{{ downloadable.id }}" value="{{ downloadable.id }}">
                             <label for="downloadable_{{ downloadable.id }}">{{ downloadable.name }}</label>
                             {% if downloadable.submission_type == 'event' %}
-                                <span class="event-status" id="event_status_{{ downloadable.id }}">Select a project first</span>
+                                <span class="event-status pending" id="event_status_{{ downloadable.id }}">Select a project first</span>
                             {% elif downloadable.submission_type == 'final' %}
-                                <span class="final-status" id="final_status_{{ downloadable.id }}" style="color:#888;font-size:0.875rem;display:none;" title="Final submissions are only available when all activities are completed">
+                                <span class="final-status" id="final_status_{{ downloadable.id }}" style="display:none;" title="Final submissions are only available when all activities are completed">
                                     <i class="fa-solid fa-info-circle"></i> Requires all activities completed
                                 </span>
                             {% endif %}
@@ -95,7 +128,7 @@
             </div>
 
             <div class="form-group" id="event-selection-group" style="display:none;">
-                <label class="user-details-label">Select Event: <span class="required">*</span></label>
+                <label class="user-details-label" for="id_selected_event">Select Event: <span class="required">*</span></label>
                 <select class="form-input user-details-value" name="selected_event" id="id_selected_event">
                     <option value="">Choose an event</option>
                 </select>
@@ -165,7 +198,7 @@
                 const eventGroup = document.getElementById('event-selection-group');
                 const err = document.createElement('div');
                 err.id = 'event-error';
-                err.textContent = 'Please select an event for the event submission.';
+                err.textContent = 'Please select an activity for the activity submission.';
                 err.style.color = '#E53E3E';
                 err.style.fontSize = '0.95rem';
                 err.style.marginTop = '0.5rem';
@@ -194,17 +227,22 @@
     // Project Event Availability Data
     const projectEventAvailability = {{ project_event_availability_json|safe }};
 
-    // Handle project selection change to update event availability and final submission eligibility
-    document.getElementById('id_project').addEventListener('change', function() {
-        const selectedProjectId = this.value;
+    // Fix Select2: Use jQuery event for project select
+    $('#id_project').on('change', function() {
+        const selectedProjectId = $(this).val();
         const eventSelectionGroup = document.getElementById('event-selection-group');
         const eventSelect = document.getElementById('id_selected_event');
         const deadlineInput = document.getElementById('id_deadline');
         const deadlineHint = document.getElementById('deadline-hint');
-        
+
+        // Clear event selection when project changes
+        eventSelect.innerHTML = '<option value="">Choose an event</option>';
+        eventSelectionGroup.style.display = 'none';
+
         // Update deadline minimum based on project
         if (!selectedProjectId) {
             deadlineInput.removeAttribute('min');
+            deadlineInput.value = '';
             deadlineHint.textContent = 'Must be after project start date';
         } else {
             const availability = projectEventAvailability[selectedProjectId];
@@ -216,32 +254,34 @@
                 deadlineHint.textContent = `Must be after project start date (${formattedDate})`;
             }
         }
-        
-        // Update event-dependent downloadables
-        document.querySelectorAll('.checkbox-item[data-project-dependent="true"]').forEach(function(checkboxItem) {
+
+        // Update event-dependent downloadables (submission_type = 'event')
+        document.querySelectorAll('.checkbox-item[data-submission-type="event"]').forEach(function(checkboxItem) {
             const checkbox = checkboxItem.querySelector('input[type="checkbox"]');
             const eventStatus = checkboxItem.querySelector('.event-status');
-            
+
             if (!selectedProjectId) {
-                // No project selected
+                // No project selected - disable event downloadables
                 checkboxItem.classList.add('disabled');
                 checkbox.disabled = true;
                 checkbox.checked = false;
-                eventStatus.textContent = 'Select a project first';
-                eventStatus.className = 'event-status pending';
-                eventSelectionGroup.style.display = 'none';
+                if (eventStatus) {
+                    eventStatus.textContent = 'Select a project first';
+                    eventStatus.className = 'event-status pending';
+                }
             } else {
                 const availability = projectEventAvailability[selectedProjectId];
-                
+
                 if (availability && availability.has_available_events) {
-                    // Has available events
+                    // Has available events - enable checkbox
                     checkboxItem.classList.remove('disabled');
                     checkbox.disabled = false;
-                    eventStatus.textContent = `${availability.available_events.length} event(s) available`;
-                    eventStatus.className = 'event-status has-events';
-                    
+                    if (eventStatus) {
+                        eventStatus.textContent = `${availability.available_events.length} event(s) available`;
+                        eventStatus.className = 'event-status has-events';
+                    }
+
                     // Populate event selection dropdown
-                    eventSelect.innerHTML = '<option value="">Choose an event</option>';
                     availability.available_events.forEach(function(event) {
                         const option = document.createElement('option');
                         option.value = event.id;
@@ -249,67 +289,83 @@
                         eventSelect.appendChild(option);
                     });
                 } else {
-                    // No available events
+                    // No available events - disable checkbox
                     checkboxItem.classList.add('disabled');
                     checkbox.disabled = true;
                     checkbox.checked = false;
-                    eventStatus.textContent = 'No Available Events';
-                    eventStatus.className = 'event-status no-events';
-                    eventSelectionGroup.style.display = 'none';
+                    if (eventStatus) {
+                        eventStatus.textContent = 'No available activities';
+                        eventStatus.className = 'event-status no-events';
+                    }
                 }
             }
         });
-        
-        // Update final submission type downloadables // FIXED?
+
+        // Update final submission type downloadables (submission_type = 'final')
         document.querySelectorAll('.checkbox-item[data-submission-type="final"]').forEach(function(checkboxItem) {
             const checkbox = checkboxItem.querySelector('input[type="checkbox"]');
             const finalStatus = checkboxItem.querySelector('.final-status');
-            const label = checkboxItem.querySelector('label');
-            
+
             if (!selectedProjectId) {
-                // No project selected - disable and hide status
+                // No project selected - disable final submissions
                 checkboxItem.classList.add('disabled');
                 checkbox.disabled = true;
                 checkbox.checked = false;
-                if (label) label.style.opacity = '0.5';
-                if (finalStatus) finalStatus.style.display = 'none';
+                if (finalStatus) {
+                    finalStatus.style.display = 'none';
+                }
             } else {
                 const availability = projectEventAvailability[selectedProjectId];
-                
+
                 if (availability && availability.all_events_completed) {
                     // All events completed - enable final submission
                     checkboxItem.classList.remove('disabled');
                     checkbox.disabled = false;
-                    if (label) label.style.opacity = '1';
-                    if (finalStatus) finalStatus.style.display = 'none';
+                    if (finalStatus) {
+                        finalStatus.style.display = 'none';
+                    }
                 } else {
                     // Not all events completed - disable final submission
                     const progress = availability ? `${availability.event_progress}/${availability.estimated_events}` : '0/0';
                     checkboxItem.classList.add('disabled');
                     checkbox.disabled = true;
                     checkbox.checked = false;
-                    if (label) label.style.opacity = '0.5';
                     if (finalStatus) {
                         finalStatus.style.display = 'inline';
-                        finalStatus.innerHTML = `<i class="fa-solid fa-info-circle"></i> Requires all events completed (${progress})`;
+                        finalStatus.innerHTML = `<i class="fa-solid fa-info-circle"></i> Requires all activities completed (${progress})`;
                     }
                 }
             }
         });
-        
+
+        // Update file-type downloadables (submission_type = 'file') - always enabled when project is selected
+        document.querySelectorAll('.checkbox-item[data-submission-type="file"]').forEach(function(checkboxItem) {
+            const checkbox = checkboxItem.querySelector('input[type="checkbox"]');
+
+            if (!selectedProjectId) {
+                checkboxItem.classList.add('disabled');
+                checkbox.disabled = true;
+                checkbox.checked = false;
+            } else {
+                checkboxItem.classList.remove('disabled');
+                checkbox.disabled = false;
+            }
+        });
+
         // Check if event selection should be shown
         updateEventSelectionVisibility();
     });
 
     // Handle downloadable checkbox changes to show/hide event selection
     function updateEventSelectionVisibility() {
-        const eventCheckboxes = document.querySelectorAll('.checkbox-item[data-project-dependent="true"] input[type="checkbox"]:checked');
+        const eventCheckboxes = document.querySelectorAll('.checkbox-item[data-submission-type="event"] input[type="checkbox"]:checked:not(:disabled)');
         const eventSelectionGroup = document.getElementById('event-selection-group');
         
         if (eventCheckboxes.length > 0) {
-            eventSelectionGroup.style.display = 'flex';
+            eventSelectionGroup.style.display = 'block';
         } else {
             eventSelectionGroup.style.display = 'none';
+            document.getElementById('id_selected_event').value = '';
         }
     }
 
@@ -361,8 +417,17 @@
         // 3. Trigger the change event if a project is preselected
         const projectSelect = document.getElementById('id_project');
         if (projectSelect.value && projectSelect.getAttribute('data-preselected') === 'true') {
-            // Use jQuery's trigger('change') which works reliably with Select2
+            // Trigger change to update downloadables and event availability
             $('#id_project').trigger('change');
+        }
+        
+        // 4. Initialize all downloadables as disabled until project is selected
+        if (!projectSelect.value) {
+            document.querySelectorAll('.checkbox-item').forEach(function(item) {
+                item.classList.add('disabled');
+                const checkbox = item.querySelector('input[type="checkbox"]');
+                if (checkbox) checkbox.disabled = true;
+            });
         }
     });
 </script>
