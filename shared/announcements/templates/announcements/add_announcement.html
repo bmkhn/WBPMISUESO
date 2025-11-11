@@ -40,17 +40,9 @@
 				<label class="user-details-label" for="id_cover_photo">Attach Cover Photo:</label>
 				<div class="upload-area" onclick="document.getElementById('id_cover_photo').click()">
 					<svg class="upload-icon"><use href="#icon-upload"></use></svg>
-					<span class="upload-text">Click to upload</span>
+					<span class="upload-text" id="upload-text">Click to upload</span>
 					<input class="file-input user-details-value" type="file" name="cover_photo" id="id_cover_photo" style="display: none;" accept="image/jpeg,image/png,image/jpg,image/gif,image/webp" value="{{ form.cover_photo.value|default:'' }}">
-
 				</div>
-				
-				<div class="file-preview" id="file-preview" style="display: none;">
-					<div class="file-info">
-						<svg width="16" height="16"><use href="#icon-upload"></use></svg>
-						<span id="file-name"></span>
-					</div>
-				</div> 
 			</div>
 
 			<div class="form-group">
@@ -85,6 +77,20 @@
 </svg>
 
 <script>
+	// File Upload Handling
+	document.getElementById('id_cover_photo').addEventListener('change', function(e) {
+		const file = e.target.files[0];
+		const fileInput = document.getElementById('id_cover_photo');
+		fileInput.classList.remove('error-input');
+		const uploadText = document.getElementById('upload-text');
+		if (file) {
+			uploadText.textContent = file.name;
+		} else {
+			uploadText.textContent = 'Click to upload';
+		}
+	});
+
+
 	// Form Validation for required fields and scheduled_at
 	document.querySelector('.announcement-form').addEventListener('submit', function(e) {
 		let valid = true;
@@ -145,31 +151,12 @@
 		}
 	});
 
-	// File Upload Handling
-	document.getElementById('id_cover_photo').addEventListener('change', function(e) {
-		const file = e.target.files[0];
-		const preview = document.getElementById('file-preview');
-		if (file) {
-			document.getElementById('file-name').textContent = file.name;
-			preview.style.display = 'block';
-		} else {
-			preview.style.display = 'none';
-		}
-	});
-
 	// Schedule Handling - Checkbox toggle
 	document.getElementById('publish_now').addEventListener('change', function(e) {
 
 		const scheduleInput = document.getElementById('id_scheduled_at');
 		
 		if (e.target.checked) {
-
-
-
-
-
-
-
 			scheduleInput.style.display = 'none';
 			scheduleInput.required = false;
 			scheduleInput.value = '';

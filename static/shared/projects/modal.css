@@ -566,3 +566,9 @@ input[type="checkbox"] {
 .cancel-btn {
     background-color: #919191;
 }  
+
+.upload-area-group {
+    display: flex;
+    flex-direction: column;
+    width: 80% !important;
+}

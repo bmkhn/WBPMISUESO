@@ -3,6 +3,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
+from system.utils.file_validators import validate_image_size
 
 class Campus(models.Model):
     """
@@ -26,7 +27,7 @@ class College(models.Model):
     name = models.CharField(max_length=255)
     # We CHANGE the 'campus' field from CharField to a ForeignKey
     campus = models.ForeignKey(Campus, on_delete=models.SET_NULL, null=True, blank=True)
-    logo = models.ImageField(upload_to='colleges/logos/', null=True)
+    logo = models.ImageField(upload_to='colleges/logos/', null=True, validators=[validate_image_size])
 
     def delete(self, *args, **kwargs):
         if self.logo and self.logo.storage and self.logo.storage.exists(self.logo.name):
@@ -98,7 +99,7 @@ class User(AbstractUser):
     company = models.CharField(max_length=255, blank=True, null=True)
     industry = models.CharField(max_length=255, blank=True, null=True)
     is_expert = models.BooleanField(default=False)
-    profile_picture = models.ImageField(upload_to='users/profile_pictures/', blank=True, null=True)
+    profile_picture = models.ImageField(upload_to='users/profile_pictures/', blank=True, null=True, validators=[validate_image_size])
     bio = models.TextField(blank=True, null=True)
     @property
     def profile_picture_or_initial(self):
@@ -116,7 +117,7 @@ class User(AbstractUser):
         svg_b64 = base64.b64encode(svg.encode('utf-8')).decode('utf-8')
         return f'data:image/svg+xml;base64,{svg_b64}'
     preferred_id = models.CharField(max_length=50, blank=True, null=True, choices=PreferenceID.choices)  # e.g., Passport, Driver's License
-    valid_id = models.ImageField(upload_to='users/valid_ids/', blank=True, null=True)       # Required Logic will be backend
+    valid_id = models.ImageField(upload_to='users/valid_ids/', blank=True, null=True, validators=[validate_image_size])       # Required Logic will be backend
     created_by = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='created_users')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_by = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='updated_users')

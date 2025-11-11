@@ -35,14 +35,8 @@
                     <label class="user-details-label" for="id_file">Attach File <span class="required">*</span></label>
                     <div class="upload-area" onclick="document.getElementById('id_file').click()">
                         <svg class="upload-icon"><use href="#icon-upload"></use></svg>
-                        <span class="upload-text">Click to upload</span>
+                        <span class="upload-text" id="upload-text">Click to upload</span>
                         <input class="file-input" type="file" name="file" id="id_file" style="display:none;" accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
-                    </div>
-                </div>
-                <div class="file-preview" id="file-preview" style="display:none;">
-                    <div class="file-info">
-                        <svg width="16" height="16"><use href="#icon-upload"></use></svg>
-                        <span id="file-name"></span>
                     </div>
                 </div>
                 <div class="checkbox-row">
@@ -85,14 +79,12 @@
     document.getElementById('id_file').addEventListener('change', function(e) {
         const file = e.target.files[0];
         const fileInput = document.getElementById('id_file');
-        const fileError = document.getElementById('file-error');
+        const uploadText = document.getElementById('upload-text');
         fileInput.classList.remove('error-input');
         if (file) {
-            document.getElementById('file-name').textContent = file.name;
-            document.getElementById('file-preview').style.display = 'block';
-            fileError.style.display = 'none';
+            uploadText.textContent = file.name;
         } else {
-            document.getElementById('file-preview').style.display = 'none';
+            uploadText.textContent = 'Click to upload';
         }
     });
 

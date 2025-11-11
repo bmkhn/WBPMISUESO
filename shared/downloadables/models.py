@@ -2,6 +2,7 @@ from django.db import models
 from django.conf import settings
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
+from system.utils.file_validators import validate_file_size, validate_image_size
 import os
 
 class Downloadable(models.Model):
@@ -18,8 +19,8 @@ class Downloadable(models.Model):
         ('published', 'Published'),
         ('archived', 'Archived'),
     ]
-    file = models.FileField(upload_to='downloadables/files/')
-    thumbnail = models.ImageField(upload_to='downloadables/thumbnails/', blank=True, null=True)
+    file = models.FileField(upload_to='downloadables/files/', validators=[validate_file_size])
+    thumbnail = models.ImageField(upload_to='downloadables/thumbnails/', blank=True, null=True, validators=[validate_image_size])
     available_for_non_users = models.BooleanField(default=False, help_text="Available for non-logged-in users")
     uploaded_at = models.DateTimeField(auto_now_add=True)
     uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='uploaded_downloadables')

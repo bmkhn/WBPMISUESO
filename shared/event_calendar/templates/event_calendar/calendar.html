@@ -95,7 +95,7 @@
                 <div class="form-group">
                     <label class="user-details-label">Attachment (Optional)</label>
                     <div style="width: 100%;">
-                        
+
                         <label for="add_event_attachment" class="upload-area">
                             <svg class="icon-upload" width="24" height="24"><use href="#icon-upload"></use></svg>
                             <span class="upload-text">Click to upload</span>
@@ -103,17 +103,11 @@
                                 type="file" 
                                 name="notes_attachment" 
                                 id="add_event_attachment" 
-                                accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.zip" 
-                                class="hidden" 
-                                onchange="displayFileName(this, 'file-preview', 'file-name')"> </label>
-                        
-                        <div class="file-preview" id="file-preview" style="display: none; margin-top: 0.75rem; align-items: center; gap: 8px; border: 1px solid #e5e7eb; padding: 0.5rem; border-radius: 0.375rem;">
-                            <svg width="16" height="16" style="color: #6b7280;"><use href="#icon-upload"></use></svg>
-                            <span id="file-name" style="font-size: 0.9rem; color: #1f2937;"></span>
-                            <button type="button" onclick="clearFile('add_event_attachment', 'file-preview', 'file-name')" style="background:none; border:none; color:#ef4444; cursor:pointer; margin-left: auto;">&times;</button>
-                        </div>
+                                accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.zip"
+                                class="hidden"> 
+                        </label>
+
                     </div>
-                    <small style="color:#6b7280;font-size:0.85rem;margin-top:0.25rem;display:block;">Supported: PDF, Word, Excel, PowerPoint, Images, ZIP (Max 10MB)</small>
                 </div>
             </div>
             <div class="form-actions" style="justify-content:flex-end;position:sticky;bottom:0;background:white;padding-top:16px;margin-top:16px;border-top:1px solid #e5e7eb;">
@@ -190,7 +184,6 @@
                     </label>
                     
                     <input type="hidden" id="edit_remove_attachment_flag" name="remove_attachment" value="false">
-                    <small style="color:#6b7280;font-size:0.85rem;margin-top:0.25rem;display:block;">Supported: PDF, Word, Excel, PowerPoint, Images, ZIP (Max 10MB)</small>
                 </div>
             </div>
             <div class="form-actions" style="justify-content:flex-end;position:sticky;bottom:0;background:white;padding-top:16px;margin-top:16px;border-top:1px solid #e5e7eb;">

@@ -9,6 +9,7 @@ from django.db.models import Sum
 from decimal import Decimal
 from django.urls import reverse
 from system.logs.models import LogEntry
+from system.utils.file_validators import validate_image_size
 
 
 class SustainableDevelopmentGoal(models.Model):
@@ -427,7 +428,7 @@ class ProjectEvent(models.Model):
 	created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='created_project_events')
 	updated_at = models.DateTimeField(auto_now=True)
 	updated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='updated_project_events')
-	image = models.ImageField(upload_to=project_event_image_upload_to, blank=True, null=True)
+	image = models.ImageField(upload_to=project_event_image_upload_to, blank=True, null=True, validators=[validate_image_size])
 	placeholder = models.BooleanField(default=False)
 	has_submission = models.BooleanField(default=False)
 

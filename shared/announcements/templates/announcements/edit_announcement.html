@@ -41,36 +41,14 @@
 					<label class="user-details-label" for="id_cover_photo">Attach Cover Photo:</label>
 					<div class="upload-area" onclick="document.getElementById('id_cover_photo').click()">
 						<svg class="upload-icon"><use href="#icon-upload"></use></svg>
-						<span class="upload-text">Click to upload</span>
+						<span class="upload-text" id="upload-text">
+							{% if announcement.cover_photo %}
+								{{ announcement.cover_photo.name|default:'Click to upload'|slice:'announcement/cover_photo/'|default:'Click to upload' }}
+							{% else %}
+								Click to upload
+							{% endif %}
+						</span>
 						<input class="file-input" style="display:none;" type="file" name="cover_photo" id="id_cover_photo" accept="image/jpeg,image/png,image/jpg,image/gif,image/webp" value="{{ form.cover_photo.value|default:'' }}">
-					</div>
-					
-					{% if announcement.cover_photo %}
-					<div class="file-preview show" id="existing-file-preview">
-						<div class="file-info">
-							<svg width="16" height="16"><use href="#icon-upload"></use></svg>
-							<span id="existing-file-name">Current: <a href="{{ announcement.cover_photo.url }}" target="_blank">{{ announcement.title }}</a></span>
-						</div>
-						<button type="button" class="remove-file-btn" onclick="removeExistingFile()" title="Remove file">
-							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-								<line x1="18" y1="6" x2="6" y2="18"></line>
-								<line x1="6" y1="6" x2="18" y2="18"></line>
-							</svg>
-						</button>
-					</div>
-					{% endif %}
-					
-					<div class="file-preview" id="new-file-preview" style="display: none;">
-						<div class="file-info">
-							<svg width="16" height="16"><use href="#icon-upload"></use></svg>
-							<span id="file-name"></span>
-						</div>
-						<button type="button" class="remove-file-btn" onclick="removeNewFile()" title="Remove file">
-							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-								<line x1="18" y1="6" x2="6" y2="18"></line>
-								<line x1="6" y1="6" x2="18" y2="18"></line>
-							</svg>
-						</button>
 					</div>
 				</div>
 
@@ -161,6 +139,37 @@
 </style>
 
 <script>
+
+	// On load, set upload-text to cover photo name if it exists
+	document.addEventListener('DOMContentLoaded', function() {
+		var uploadText = document.getElementById('upload-text');
+		var coverPhotoName = "{% if announcement.cover_photo %}{{ announcement.cover_photo.name|escapejs }}{% endif %}";
+		if (coverPhotoName) {
+			uploadText.textContent = coverPhotoName;
+		} else {
+			uploadText.textContent = 'Click to upload';
+		}
+	});
+
+	// File Upload Handling
+	document.getElementById('id_cover_photo').addEventListener('change', function(e) {
+		const file = e.target.files[0];
+		const uploadText = document.getElementById('upload-text');
+		const existingPreview = document.getElementById('existing-file-preview');
+		if (file) {
+			uploadText.textContent = file.name;
+			if (existingPreview) {
+				existingPreview.style.display = 'none';
+			}
+		} else {
+			uploadText.textContent = 'Click to upload';
+			if (existingPreview) {
+				existingPreview.style.display = 'flex';
+			}
+		}
+	});
+
+
 	// Form Validation for required fields and scheduled_at
 	document.querySelector('.announcement-form').addEventListener('submit', function(e) {
 		let valid = true;
@@ -221,26 +230,7 @@
 		}
 	});
 
-	// File Upload Handling
-	document.getElementById('id_cover_photo').addEventListener('change', function(e) {
-		const file = e.target.files[0];
-		const newPreview = document.getElementById('new-file-preview');
-		const existingPreview = document.getElementById('existing-file-preview');
-		
-		if (file) {
-			document.getElementById('file-name').textContent = file.name;
-			newPreview.style.display = 'flex';
-			if (existingPreview) {
-				existingPreview.style.display = 'none';
-			}
-		} else {
-			newPreview.style.display = 'none';
-			if (existingPreview) {
-				existingPreview.style.display = 'flex';
-			}
-		}
-	});
-	
+
 	// Remove existing file
 	function removeExistingFile() {
 		const existingPreview = document.getElementById('existing-file-preview');

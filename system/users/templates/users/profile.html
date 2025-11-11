@@ -955,8 +955,10 @@
 		<h3>Change Profile Picture</h3>
 		<form id="imageForm" method="POST" action="{% url 'update_profile_picture' %}" enctype="multipart/form-data">
 			{% csrf_token %}
-			<input type="file" name="profile_picture" accept="image/jpeg,image/png,image/jpg,image/gif,image/webp" required>
-			<div class="modal-actions">
+			<div>
+				<input type="file" name="profile_picture" style="margin-bottom:5px;" accept="image/jpeg,image/png,image/jpg,image/gif,image/webp" required>
+			</div>
+			<div class="modal-actions" style="margin-top:20px;">
 				<button type="submit" class="upload-btn">Upload</button>
 				<button type="button" class="cancel-btn" onclick="closeImageModal()">Cancel</button>
 			</div>

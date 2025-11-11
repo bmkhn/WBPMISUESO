@@ -2,6 +2,7 @@ from django.db import models
 from django.conf import settings
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
+from system.utils.file_validators import validate_file_size
 
 
 class MeetingEvent(models.Model):
@@ -14,7 +15,7 @@ class MeetingEvent(models.Model):
 	updated_at = models.DateTimeField(auto_now=True)
 	updated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='updated_meeting_events')
 	notes = models.TextField(blank=True, null=True)
-	notes_attachment = models.FileField(upload_to='meeting_attachments/', blank=True, null=True, help_text='Optional file attachment for meeting notes')
+	notes_attachment = models.FileField(upload_to='meeting_attachments/', blank=True, null=True, help_text='Optional file attachment for meeting notes', validators=[validate_file_size])
 	participants = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='meeting_participants')
 	STATUS_CHOICES = [
 		("SCHEDULED", "Scheduled"),

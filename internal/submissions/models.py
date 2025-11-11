@@ -6,6 +6,7 @@ from shared.downloadables.models import Downloadable
 from system.logs.models import LogEntry
 from django.dispatch import receiver
 from django.db.models.signals import post_save
+from system.utils.file_validators import validate_file_size, validate_image_size
 import os
 
 
@@ -20,7 +21,7 @@ class Submission(models.Model):
 	# Submission/Response fields
 	submitted_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='submitted_submissions')
 	submitted_at = models.DateTimeField(null=True, blank=True)
-	file = models.FileField(upload_to='submissions/files/', null=True, blank=True)
+	file = models.FileField(upload_to='submissions/files/', null=True, blank=True, validators=[validate_file_size])
 
 	# Submission Type [Final]
 	for_product_production = models.BooleanField(default=False)
@@ -30,7 +31,7 @@ class Submission(models.Model):
 	# Submission Type [Event]
 	event = models.ForeignKey(ProjectEvent, on_delete=models.SET_NULL, null=True, blank=True, related_name='submissions')
 	num_trained_individuals = models.PositiveIntegerField(null=True, blank=True)
-	image_event = models.ImageField(upload_to='submissions/event_images/', null=True, blank=True)
+	image_event = models.ImageField(upload_to='submissions/event_images/', null=True, blank=True, validators=[validate_image_size])
 	image_description = models.TextField(blank=True, null=True)
 
 

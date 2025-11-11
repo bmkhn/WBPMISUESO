@@ -164,11 +164,13 @@
                 <input type="hidden" name="submission_id" value="{{ submission.id }}" />
                 <input type="hidden" name="action" value="submit" />
                 <div class="form-group">
-                    <label class="form-label">File:</label>
-                    <div class="upload-area" onclick="document.getElementById('id_final_file').click()">
-                        <svg class="upload-icon"><use href="#icon-upload"></use></svg>
-                        <span class="upload-text">Click to upload</span>
-                        <input class="file-input" type="file" name="final_file" id="id_final_file" style="display:none;" accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,image/jpeg,image/png,image/jpg,image/gif,image/webp" required>
+                    <label class="form-label">File <span class="required">*</span></label></label>
+                    <div class="upload-area-group">
+                        <div class="upload-area" onclick="document.getElementById('id_final_file').click()">
+                            <svg class="upload-icon"><use href="#icon-upload"></use></svg>
+                            <span class="upload-text">Click to upload</span>
+                            <input class="file-input" type="file" name="final_file" id="id_final_file" style="display:none;" accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,image/jpeg,image/png,image/jpg,image/gif,image/webp" required>
+                        </div>
                     </div>
                 </div>
 
@@ -200,11 +202,14 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">Image File <span class="required">*</span></label><br>
-                    <div class="upload-area" onclick="document.getElementById('id_image_event').click()">
-                        <svg class="upload-icon"><use href="#icon-upload"></use></svg>
-                        <span class="upload-text">Click to upload</span>
-                        <input class="file-input" type="file" name="image_event" id="id_image_event" style="display:none;" accept="image/jpeg,image/png,image/jpg,image/gif,image/webp" required>
+                    <div class="upload-area-group">
+                        <div class="upload-area" onclick="document.getElementById('id_image_event').click()">
+                            <svg class="upload-icon"><use href="#icon-upload"></use></svg>
+                            <span class="upload-text">Click to upload</span>
+                            <input class="file-input" type="file" name="image_event" id="id_image_event" style="display:none;" accept="image/jpeg,image/png,image/jpg,image/gif,image/webp" required>
+                        </div>
                     </div>
+
                 </div>
                 <div class="form-group">
                     <label class="form-label">Description of Picture <span class="required">*</span></label><br>
@@ -229,11 +234,14 @@
                 <input type="hidden" name="action" value="submit" />
                 <div class="form-group">
                     <label class="form-label">File <span class="required">*</span></label>
-                    <div class="upload-area" onclick="document.getElementById('id_file_file').click()">
-                        <svg class="upload-icon"><use href="#icon-upload"></use></svg>
-                        <span class="upload-text">Click to upload</span>
-                        <input class="file-input" type="file" name="file_file" id="id_file_file" style="display:none;" accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,image/jpeg,image/png,image/jpg,image/gif,image/webp" required>
+                    <div class="upload-area-group">
+                        <div class="upload-area" onclick="document.getElementById('id_file_file').click()" style="width: 100%;">
+                            <svg class="upload-icon"><use href="#icon-upload"></use></svg>
+                            <span class="upload-text">Click to upload</span>
+                            <input class="file-input" type="file" name="file_file" id="id_file_file" style="display:none;" accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,image/jpeg,image/png,image/jpg,image/gif,image/webp" required>
+                        </div>
                     </div>
+
                 </div>
 
                 <div class="form-actions" style="justify-content:center;">
