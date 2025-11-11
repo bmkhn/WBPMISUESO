@@ -78,12 +78,9 @@
 							Status
 							<select name="status" style="width:100%;margin-top:6px;">
 								<option value="">All Status</option>
-								<option value="RECEIVED" {% if status == 'RECEIVED' %}selected{% endif %}>Received</option>
-								<option value="UNDER_REVIEW" {% if status == 'UNDER_REVIEW' %}selected{% endif %}>Under Review</option>
-								<option value="APPROVED" {% if status == 'APPROVED' %}selected{% endif %}>Approved</option>
-								<option value="REJECTED" {% if status == 'REJECTED' %}selected{% endif %}>Rejected</option>
-								<option value="ENDORSED" {% if status == 'ENDORSED' %}selected{% endif %}>Endorsed</option>
-								<option value="DENIED" {% if status == 'DENIED' %}selected{% endif %}>Denied</option>
+								{% for value, label in status_choices %}
+									<option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>
+								{% endfor %}
 							</select>
 						</label>
 

@@ -616,8 +616,63 @@
                 eventList.appendChild(li);
             });
         }
-        
-        // Holidays section with special styling
+
+        // Today
+        if (todayEvents.length) {
+            const h = document.createElement('h4');
+            h.textContent = 'Today';
+            h.style.color = '';
+            eventList.appendChild(h);
+            renderItems(todayEvents);
+        }
+        // Meetings
+        if (meetings.length) {
+            const h = document.createElement('h4');
+            h.textContent = meetings.length === 1 ? 'Meeting' : 'Meetings';
+            h.style.color = '';
+            eventList.appendChild(h);
+            renderItems(meetings, 'meeting');
+        }
+        // Activities
+        if (projects.length) {
+            const h = document.createElement('h4');
+            h.textContent = projects.length === 1 ? 'Activity' : 'Activities';
+            h.style.color = '';
+            eventList.appendChild(h);
+            renderItems(projects, 'project');
+        }
+        // Done
+        if (done.length) {
+            const h = document.createElement('h4');
+            h.textContent = 'Done';
+            h.style.color = '#bbb';
+            eventList.appendChild(h);
+            done.forEach(ev => {
+                const li = document.createElement('li');
+                li.className = 'sidebar-event-item';
+                li.style.cursor = 'pointer';
+                li.style.opacity = '0.5'; // Grayed out
+                
+                // Determine tag color and label based on event type
+                let tagColor = (ev.type === 'meeting') ? '#fd7e14' : '#007bff'; // Orange for meeting, Blue for activity
+                let tagLabel = (ev.type === 'meeting') ? 'Meeting' : 'Activity';
+                
+                // Add ONGOING badge if status is ONGOING (shouldn't appear in Done, but just in case)
+                let statusBadge = '';
+                if (ev.status === 'ONGOING') {
+                    statusBadge = '<span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:12px;font-size:0.75em;font-weight:600;white-space:nowrap;flex-shrink:0;margin-left:4px;">Ongoing</span>';
+                }
+                
+                li.innerHTML = `<div style='display:flex;align-items:center;gap:6px;'><span style='font-weight:600;font-size:1.1em;color:#245F3E;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'>${ev.title}</span><span style='background:${tagColor};color:#fff;padding:2px 8px;border-radius:12px;font-size:0.75em;font-weight:600;white-space:nowrap;flex-shrink:0;'>${tagLabel}</span>${statusBadge}</div><span style='font-size:0.95em;color:#bbb;'>${ev.dateStr}</span>`;
+                li.onclick = function(e) {
+                    e.stopPropagation();
+                    showEventDetails([ev], ev.dateStr);
+                };
+                eventList.appendChild(li);
+            });
+        }
+
+        // Holidays
         if (holidays.length) {
             // Sort holidays chronologically by dateStr
             holidays.sort(function(a, b) {
@@ -625,9 +680,8 @@
                 return new Date(a.dateStr) - new Date(b.dateStr);
             });
             const h = document.createElement('h4');
-            h.innerHTML = 'Holidays';
-            h.style.color = '#FCD116';
-            h.style.fontSize = '1.5rem';
+            h.textContent = holidays.length === 1 ? 'Holiday' : 'Holidays';
+            h.style.color = '';
             eventList.appendChild(h);
             holidays.forEach(ev => {
                 const li = document.createElement('li');
@@ -686,61 +740,7 @@
                 eventList.appendChild(li);
             });
         }
-        
-        // Today
-        if (todayEvents.length) {
-            const h = document.createElement('h4');
-            h.textContent = 'Today';
-            h.style.color = '';
-            eventList.appendChild(h);
-            renderItems(todayEvents);
-        }
-        // Meetings
-        if (meetings.length) {
-            const h = document.createElement('h4');
-            h.textContent = meetings.length === 1 ? 'Meeting' : 'Meetings';
-            h.style.color = '';
-            eventList.appendChild(h);
-            renderItems(meetings, 'meeting');
-        }
-        // Activities
-        if (projects.length) {
-            const h = document.createElement('h4');
-            h.textContent = projects.length === 1 ? 'Activity' : 'Activities';
-            h.style.color = '';
-            eventList.appendChild(h);
-            renderItems(projects, 'project');
-        }
-        // Done
-        if (done.length) {
-            const h = document.createElement('h4');
-            h.textContent = 'Done';
-            h.style.color = '#bbb';
-            eventList.appendChild(h);
-            done.forEach(ev => {
-                const li = document.createElement('li');
-                li.className = 'sidebar-event-item';
-                li.style.cursor = 'pointer';
-                li.style.opacity = '0.5'; // Grayed out
-                
-                // Determine tag color and label based on event type
-                let tagColor = (ev.type === 'meeting') ? '#fd7e14' : '#007bff'; // Orange for meeting, Blue for activity
-                let tagLabel = (ev.type === 'meeting') ? 'Meeting' : 'Activity';
-                
-                // Add ONGOING badge if status is ONGOING (shouldn't appear in Done, but just in case)
-                let statusBadge = '';
-                if (ev.status === 'ONGOING') {
-                    statusBadge = '<span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:12px;font-size:0.75em;font-weight:600;white-space:nowrap;flex-shrink:0;margin-left:4px;">Ongoing</span>';
-                }
-                
-                li.innerHTML = `<div style='display:flex;align-items:center;gap:6px;'><span style='font-weight:600;font-size:1.1em;color:#245F3E;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'>${ev.title}</span><span style='background:${tagColor};color:#fff;padding:2px 8px;border-radius:12px;font-size:0.75em;font-weight:600;white-space:nowrap;flex-shrink:0;'>${tagLabel}</span>${statusBadge}</div><span style='font-size:0.95em;color:#bbb;'>${ev.dateStr}</span>`;
-                li.onclick = function(e) {
-                    e.stopPropagation();
-                    showEventDetails([ev], ev.dateStr);
-                };
-                eventList.appendChild(li);
-            });
-        }
+
         if (!todayEvents.length && !meetings.length && !projects.length && !done.length && !holidays.length) {
             eventList.innerHTML = '<li>No events this month.</li>';
         }

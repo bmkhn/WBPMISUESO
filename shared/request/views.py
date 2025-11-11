@@ -160,11 +160,15 @@ def request_client_view(request):
     else:
         page_range = range(current - 2, current + 3)
 
+    # Get all possible status choices
+    status_choices = ClientRequest._meta.get_field('status').choices
+
     return render(request, 'request/request_client.html', {
         'requests': page_obj.object_list,
         'search': search,
         'sort_by': sort_by,
         'order': order,
+        'status_choices': status_choices,
         'status': status,
         'date_from': date_from,
         'date_to': date_to,
@@ -281,11 +285,15 @@ def request_admin_view(request):
     else:
         page_range = range(current - 2, current + 3)
 
+    # Get all possible status choices
+    status_choices = ClientRequest._meta.get_field('status').choices
+
     return render(request, 'request/request_admin.html', {
         'requests': page_obj.object_list,
         'search': search,
         'sort_by': sort_by,
         'order': order,
+        'status_choices': status_choices,
         'status': status,
         'date_from': date_from,
         'date_to': date_to,

@@ -40,9 +40,9 @@
                         </label>
                         <label>Status
                             <select name="status">
-                                <option value="">All Statuses</option>
-                                {% for s in all_statuses %}
-                                <option value="{{ s.0 }}" {% if status == s.0 %}selected{% endif %}>{{ s.1 }}</option>
+                                <option value="">All Status</option>
+                                {% for value, label in status_choices %}
+                                    <option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>
                                 {% endfor %}
                             </select>
                         </label>
