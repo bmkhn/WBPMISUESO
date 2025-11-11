@@ -10,13 +10,44 @@
 <link href="https://fonts.googleapis.com/css?family=Inter:400,500,700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
 <link href="{% static 'shared/calendar/styles.css' %}" rel="stylesheet">
-
+<style>
+    .custom-dropdown-container {
+        display: none;
+        position: fixed; 
+        background: white;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        z-index: 99; 
+        min-width: 250px;
+        max-height: 350px;
+        overflow-y: auto;
+        padding: 8px;
+    }
+    .custom-dropdown-container input[type="text"] {
+        width: 100%;
+        padding: 8px 10px;
+        margin-bottom: 8px;
+        box-sizing: border-box;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-family: inherit;
+        font-size: 14px;
+    }
+    .custom-dropdown-option {
+        padding: 8px 10px;
+        cursor: pointer;
+        font-size: 13px;
+        border-radius: 4px;
+    }
+    .custom-dropdown-option:hover {
+        background-color: #f0f0f0;
+    }
+</style>
 </head>
 <body>
 
-<!-- Main Calendar -->
 <div id="calendar-wrapper">
-    <!-- LEFT -->
     <div id="calendar-sidebar-left">
         <h2>My Calendar</h2>
         <select id="year-selector"></select>
@@ -30,7 +61,6 @@
         </ul>
     </div>
 
-    <!-- CENTER -->
     <div id="calendar-container">
         <h2 id="month-name"></h2>
         <div class="weekdays">
@@ -39,14 +69,12 @@
         <div id="calendar" class="calendar-grid"></div>
     </div>
 
-    <!-- RIGHT -->
     <div id="calendar-sidebar-right">
     <div style="height:8px;"></div>
     <ul id="event-list"></ul>
     </div>
 </div>
 
-<!-- Add Event Modal -->
 <div id="add-event-modal" class="event-modal" style="display:none;align-items:center;justify-content:center;">
     <div class="event-modal-content" style="display:flex;flex-direction:column;max-height:90vh;">
         <span class="close" id="close-add-event-modal">&times;</span>
@@ -118,7 +146,6 @@
     </div>
 </div>
 
-<!-- Edit Event Modal -->
 <div id="edit-event-modal" class="event-modal" style="display:none;align-items:center;justify-content:center;">
     <div class="event-modal-content" style="display:flex;flex-direction:column;max-height:90vh;">
         <span class="close" id="close-edit-event-modal">&times;</span>
@@ -195,18 +222,15 @@
 </div>
 
 
-<!-- Event Details Modal -->
 <div id="event-details-modal" class="event-modal" style="display:none;align-items:center;justify-content:center;">
     <div class="event-modal-content" style="max-width:600px;position:relative;">
         <span class="close" id="close-event-details-modal">&times;</span>
         <h2 id="event-details-title" style="margin-bottom:10px;"></h2>
         <div id="event-details-info">
-            <!-- Details will be injected here -->
-        </div>
+            </div>
     </div>
 </div>
 
-<!-- Delete Confirmation Modal -->
 <div id="delete-confirm-modal" class="event-modal" style="display:none;align-items:center;justify-content:center;">
     <div style="background:white;padding:2rem 2.5rem;border-radius:16px;box-shadow:0 4px 32px rgba(0,0,0,0.18);max-width:350px;margin:auto;display:flex;flex-direction:column;align-items:center;">
         <div style="font-size:1.25rem;font-weight:600;color:#E53E3E;margin-bottom:1rem;">Confirm Deletion</div>
@@ -218,22 +242,68 @@
     </div>
 </div>
 
+<div id="custom-dropdown-container" class="custom-dropdown-container">
+    <input type="text" id="custom-dropdown-filter" placeholder="Search..." autocomplete="off">
+    <div id="custom-dropdown-options">
+    </div>
+</div>
+
 <svg style="display: none;">
-    <!-- Add Icon -->
     <symbol id="icon-add" viewBox="0 0 16 16">
         <path d="M6.80039 14.4004C6.80039 14.7187 6.92682 15.0239 7.15186 15.2489C7.37691 15.474 7.68213 15.6004 8.00039 15.6004C8.31865 15.6004 8.62388 15.474 8.84892 15.2489C9.07396 15.0239 9.20039 14.7187 9.20039 14.4004V9.20039H14.4004C14.7187 9.20039 15.0239 9.07396 15.2489 8.84892C15.474 8.62388 15.6004 8.31865 15.6004 8.00039C15.6004 7.68213 15.474 7.37691 15.2489 7.15186C15.0239 6.92682 14.7187 6.80039 14.4004 6.80039H9.20039V1.60039C9.20039 1.28213 9.07396 0.976906 8.84892 0.751863C8.62388 0.526819 8.31865 0.400391 8.00039 0.400391C7.68213 0.400391 7.37691 0.526819 7.15186 0.751863C6.92682 0.976906 6.80039 1.28213 6.80039 1.60039V6.80039H1.60039C1.28213 6.80039 0.976906 6.92682 0.751863 7.15186C0.526819 7.37691 0.400391 7.68213 0.400391 8.00039C0.400391 8.31865 0.526819 8.62388 0.751863 8.84892C0.976906 9.07396 1.28213 9.20039 1.60039 9.20039H6.80039V14.4004Z" fill="black"/>
     </symbol>
 
-	<!-- Upload Icon -->
 	<symbol id="icon-upload" viewBox="0 0 24 24" fill="currentColor">
 		<path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
 		<path d="M12,11L8,15H16L12,11Z" />
 	</symbol>
 
+    <symbol id="icon-edit" viewBox="0 0 18 18" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+    <path d="M2 16H3.425L13.2 6.225L11.775 4.8L2 14.575V16ZM1 18C0.716667 18 0.479333 17.904 0.288 17.712C0.0966668 17.52 0.000666667 17.2827 0 17V14.575C0 14.3083 0.0500001 14.054 0.15 13.812C0.25 13.57 0.391667 13.3577 0.575 13.175L13.2 0.575C13.4 0.391667 13.621 0.25 13.863 0.15C14.105 0.0500001 14.359 0 14.625 0C14.891 0 15.1493 0.0500001 15.4 0.15C15.6507 0.25 15.8673 0.4 16.05 0.6L17.425 2C17.625 2.18333 17.7707 2.4 17.862 2.65C17.9533 2.9 17.9993 3.15 18 3.4C18 3.66667 17.954 3.921 17.862 4.163C17.77 4.405 17.6243 4.62567 17.425 4.825L4.825 17.425C4.64167 17.6083 4.429 17.75 4.187 17.85C3.945 17.95 3.691 18 3.425 18H1ZM12.475 5.525L11.775 4.8L13.2 6.225L12.475 5.525Z" fill="black"/>
+    </symbol>
 </svg>
-<!-- Participants Tagging -->
 <script>
-    // Toast Notification Function
+    // Global references to the custom dropdown elements
+    const dropdownContainer = document.getElementById('custom-dropdown-container');
+    const dropdownFilter = document.getElementById('custom-dropdown-filter');
+    const dropdownOptionsDiv = document.getElementById('custom-dropdown-options');
+    
+    // Function to hide the custom dropdown
+    function hideDropdown() {
+        if (dropdownContainer) {
+            dropdownContainer.style.display = 'none';
+        }
+    }
+
+    // Function to filter options when user types (called when dropdown is shown)
+    function filterDropdownOptions() {
+        const filterText = dropdownFilter.value.toLowerCase();
+        Array.from(dropdownOptionsDiv.children).forEach(optionEl => {
+            const text = optionEl.textContent.toLowerCase();
+            if (text.includes(filterText)) {
+                optionEl.style.display = 'block';
+            } else {
+                optionEl.style.display = 'none';
+            }
+        });
+    }
+
+    // Attach filter event listener only once
+    document.addEventListener('DOMContentLoaded', function() {
+        if (dropdownFilter) {
+            dropdownFilter.addEventListener('keyup', filterDropdownOptions);
+        }
+        // Hide dropdown when clicking outside
+        document.addEventListener('mousedown', function(e) {
+            // Use .tag-row to check if the click target or its parent is the tag row
+            if (dropdownContainer && dropdownContainer.style.display === 'block' && 
+                !dropdownContainer.contains(e.target) && !e.target.closest('.tag-add-btn') && !e.target.closest('.tag-row')) {
+                hideDropdown();
+            }
+        });
+    });
+
+    // Toast Notification Function (omitted body for brevity)
     function showToast(message, title) {
         const toast = document.createElement('div');
         toast.id = 'successToast';
@@ -259,7 +329,7 @@
         }, 4000);
     }
 
-    // Function to display the selected file name and show the preview div
+    // Function to display the selected file name and show the preview div (omitted body for brevity)
     function displayFileName(input, previewId, nameId) {
         const previewDiv = document.getElementById(previewId);
         const nameSpan = document.getElementById(nameId);
@@ -275,7 +345,7 @@
         }
     }
 
-    // Function to clear the selected file
+    // Function to clear the selected file (omitted body for brevity)
     function clearFile(inputId, previewId, nameId) {
         const input = document.getElementById(inputId);
         const previewDiv = document.getElementById(previewId);
@@ -290,7 +360,7 @@
     }
 
     // Edit modal logic (adapted from project_events.html)
-    function openEditEventModal(eventObj) {
+    window.openEditEventModal = function(eventObj) {
         document.getElementById('event-details-modal').style.display = 'none';
         document.getElementById('edit-event-modal').style.display = 'flex';
         document.getElementById('edit_event_id').value = eventObj.id;
@@ -301,11 +371,6 @@
         document.getElementById('edit_event_location').value = eventObj.location || '';
         document.getElementById('edit_event_notes').value = eventObj.notes || '';
         
-        // Handle attachment display
-        const currentAttachment = document.getElementById('edit-current-attachment');
-        const attachmentLink = document.getElementById('edit-attachment-link');
-        const attachmentName = document.getElementById('edit-attachment-name');
-        const removeAttachmentBtn = document.getElementById('edit-remove-attachment-btn');
         const removeFlag = document.getElementById('edit_remove_attachment_flag');
         const attachmentInput = document.getElementById('edit_event_attachment');
         
@@ -313,110 +378,24 @@
         removeFlag.value = 'false';
         attachmentInput.value = '';
         
-        if (eventObj.notes_attachment) {
-            currentAttachment.style.display = 'block';
-            attachmentLink.href = eventObj.notes_attachment;
-            attachmentName.textContent = eventObj.notes_attachment_name || 'attachment';
-            removeAttachmentBtn.onclick = function() {
-                currentAttachment.style.display = 'none';
-                removeFlag.value = 'true';
-            };
-        } else {
-            currentAttachment.style.display = 'none';
-        }
-        
         // Participants tag UI
-        const tagRow = document.getElementById('edit-participants-tag-row');
-        while (tagRow.firstChild) tagRow.removeChild(tagRow.firstChild);
-        // Set JSON data for participants
-        document.getElementById('participants-data').textContent = JSON.stringify(eventObj.participants || []);
-
-        // Call renderParticipantTags AFTER setting the participants-data
-        renderParticipantTags();
+        const tagController = window.editParticipantTagUI; // Use the global controller
+        if (tagController) {
+            // Ensure participants are passed as an array of strings
+            const participantIds = (eventObj.participants || []).map(String);
+            tagController.setSelected(participantIds);
+        } else {
+            // Fallback for debugging if controller isn't ready
+            document.getElementById('edit-participants-data').textContent = JSON.stringify(eventObj.participants || []);
+            // renderParticipantTags(); // Do not call old render func
+        }
 
         document.getElementById('edit-event-modal').style.display = 'flex';
     }
 
-    function renderParticipantTags() {
-        const tagRow = document.getElementById('edit-participants-tag-row');
-        const optionsTemplate = document.getElementById('edit-participants-options-template');
-        let selectedParticipants = [];
-        try {
-            selectedParticipants = JSON.parse(document.getElementById('participants-data').textContent || '[]');
-        } catch (e) {
-            selectedParticipants = [];
-        }
-        tagRow.innerHTML = '';
-        selectedParticipants.forEach(id => {
-            const opt = Array.from(optionsTemplate.options).find(o => String(o.value) === String(id));
-            if (opt) {
-                const tag = document.createElement('span');
-                tag.className = 'tag-box';
-                tag.textContent = opt.textContent;
-                const removeBtn = document.createElement('button');
-                removeBtn.type = 'button';
-                removeBtn.className = 'tag-remove';
-                removeBtn.innerHTML = '&times;';
-                removeBtn.onclick = function() {
-                    selectedParticipants = selectedParticipants.filter(pid => String(pid) !== stringId);
-                    document.getElementById('participants-data').textContent = JSON.stringify(selectedParticipants);
-                    renderParticipantTags();
-                };
-                tag.appendChild(removeBtn);
-                tagRow.appendChild(tag);
-            }
-        });
-        // Add button logic
-        const addBtn = document.createElement('button');
-        addBtn.type = 'button';
-        addBtn.innerHTML = '<svg width="16" height="16"><use href="#icon-add" /></svg>';
-        addBtn.className = 'tag-add-btn';
-        addBtn.onclick = function(e) {
-            const selectDropdown = document.createElement('select');
-            selectDropdown.multiple = false;
-            selectDropdown.style.position = 'absolute';
-            selectDropdown.style.zIndex = 9999;
-            selectDropdown.style.display = 'block';
-            selectDropdown.style.left = (addBtn.getBoundingClientRect().left + window.scrollX) + 'px';
-            selectDropdown.style.top = (addBtn.getBoundingClientRect().bottom + window.scrollY) + 'px';
-            Array.from(optionsTemplate.options).forEach(opt => {
-                if (!opt.value || selectedParticipants.includes(opt.value)) return;
-                const option = document.createElement('option');
-                option.value = opt.value;
-                option.textContent = opt.textContent;
-                selectDropdown.appendChild(option);
-            });
-            selectDropdown.onchange = function() {
-                const selectedId = selectDropdown.value;
-                if (selectedId && !selectedParticipants.includes(selectedId)) {
-                    selectedParticipants.push(selectedId);
-                    document.getElementById('participants-data').textContent = JSON.stringify(selectedParticipants);
-                    renderParticipantTags();
-                }
-                selectDropdown.value = '';
-                selectDropdown.style.display = 'none';
-            };
-            document.body.appendChild(selectDropdown);
-            selectDropdown.focus();
-            document.addEventListener('mousedown', function handler(e) {
-                if (!selectDropdown.contains(e.target) && e.target.className !== 'tag-add-btn') {
-                    selectDropdown.style.display = 'none';
-                    selectDropdown.remove();
-                    document.removeEventListener('mousedown', handler);
-                }
-            });
-        };
-        tagRow.appendChild(addBtn);
+    // The old renderParticipantTags (kept as a reference for old tag UI, but replaced by setupTagUI)
+    function renderParticipantTags() { /* ... */ }
 
-        // Add hidden input fields for form submission
-        selectedParticipants.forEach(id => {
-            const hidden = document.createElement('input');
-            hidden.type = 'hidden';
-            hidden.name = 'participants[]'; // Important for backend processing
-            hidden.value = id;
-            tagRow.appendChild(hidden); // Append hidden input *after* the button
-        });
-    }
     document.getElementById('close-edit-event-modal').onclick = function() {
         document.getElementById('edit-event-modal').style.display = 'none';
     };
@@ -429,7 +408,8 @@
         }
     };
     
-    const editEventForm = document.getElementById('edit-event-form'); // <-- ADD THIS LINE
+    // Edit form submission logic (omitted body for brevity)
+    const editEventForm = document.getElementById('edit-event-form');
     editEventForm.onsubmit = function(e) {
         e.preventDefault();
         const event_id = document.getElementById('edit_event_id').value;
@@ -438,19 +418,10 @@
         const date = document.getElementById('edit_event_date').value;
         const time = document.getElementById('edit_event_time').value;
         const location = document.getElementById('edit_event_location').value.trim();
+        const participants = Array.from(document.querySelectorAll('#edit-participants-tag-row input[name="participants[]"]')).map(input => input.value);
         const notes = document.getElementById('edit_event_notes').value.trim();
         const attachmentFile = document.getElementById('edit_event_attachment').files[0];
         const removeAttachment = document.getElementById('edit_remove_attachment_flag').value === 'true';
-
-        // Get participants from the updated data store
-        let participants = [];
-        try {
-            participants = JSON.parse(document.getElementById('participants-data').textContent || '[]');
-        } catch (parseError) {
-            console.error("Error parsing participants data on submit:", parseError);
-            alert("Error processing participant list.");
-            return; // Prevent submission if data is corrupted
-        }
 
         if (!event_id || !title || !description || !date || !time || !location) {
             alert('Please fill in all required fields.');
@@ -486,14 +457,14 @@
         }
 
         // *** CORRECTED URL and METHOD ***
-        fetch('/calendar/events/' + event_id + '/', { // Use the specific event URL
-            method: 'PUT',                            // Use PUT for updates
+        fetch('/calendar/events/' + event_id + '/', { 
+            method: 'PUT',                            
             headers: {
                 'X-CSRFToken': csrfToken
             },
             body: formData
         })
-        .then(response => { // Check response status first
+        .then(response => { 
             if (!response.ok) {
                 return response.text().then(text => {
                     throw new Error(`Server responded with status ${response.status}: ${text}`);
@@ -517,7 +488,7 @@
                 showToast('Meeting Event Updated Successfully!', eventTitle);
 
                 // Refresh events list
-                fetch('/calendar/events/') // Fetch the updated list
+                fetch('/calendar/events/') 
                 .then(r => {
                     if (!r.ok) { throw new Error(`Failed to refresh events: ${r.status}`); }
                     return r.json();
@@ -554,7 +525,7 @@
         });
     };
     
-    // Placeholder for fetchEvents function
+    // Placeholder for fetchEvents function (omitted body for brevity)
     function fetchEvents() {
         // Display events for the selected month in the right sidebar with categories
         const eventList = document.getElementById('event-list');
@@ -738,105 +709,149 @@
             eventList.innerHTML = '<li>No events this month.</li>';
         }
     }
-    // Tag UI logic for participants (similar to providers in add_project)
-    function setupTagUI(rowId, templateId, inputName, single=false) {
-        var tagRow = document.getElementById(rowId);
-        var templateOptions = Array.from(document.getElementById(templateId).options);
-        var selected = [];
-        var excludeIds = [];
-        var selectDropdown = document.createElement('select');
-        selectDropdown.multiple = !single;
-        selectDropdown.style.position = 'absolute';
-        selectDropdown.style.zIndex = 9999;
-        selectDropdown.style.display = 'none';
+    
+    // MODIFIED: Tag UI logic using custom dropdown
+    function setupTagUI(rowId, optionsTemplateId, inputName, single=false) {
+        const tagRow = document.getElementById(rowId);
+        const optionsTemplate = document.getElementById(optionsTemplateId);
+
+        // Get options from the template select element
+        const options = Array.from(optionsTemplate.options)
+            .filter(opt => opt.value)
+            .map(opt => ({id: opt.value, name: opt.text}));
+
+        let selected = [];
+        
         function renderTags() {
             tagRow.innerHTML = '';
-            selected.forEach(cid => {
-                var opt = templateOptions.find(o => o.value == cid);
-                if (opt) {
-                    var tag = document.createElement('span');
-                    tag.className = 'tag-box';
-                    tag.textContent = opt.textContent;
-                    var removeBtn = document.createElement('button');
+            
+            // 1. Render selected tags
+            selected.forEach(id => {
+                const obj = options.find(o => String(o.id) === String(id));
+                if (obj) {
+                    const tag = document.createElement('span');
+                    tag.className = 'tag-box'; // Use tag-box class from your styles
+                    
+                    const tagText = document.createElement('span');
+                    tagText.textContent = obj.name;
+                    tag.appendChild(tagText);
+                    
+                    const removeBtn = document.createElement('button');
                     removeBtn.type = 'button';
-                    removeBtn.innerHTML = '<span class="tag-remove">&times;</span>';
                     removeBtn.className = 'tag-remove';
+                    removeBtn.innerHTML = '&times;';
                     removeBtn.onclick = function() {
-                        selected = selected.filter(id => id != cid);
+                        selected = selected.filter(cid => String(cid) !== String(id));
                         renderTags();
                     };
                     tag.appendChild(removeBtn);
                     tagRow.appendChild(tag);
                 }
             });
-            var addBtn = document.createElement('button');
-            addBtn.type = 'button';
-            addBtn.innerHTML = '<svg width="16" height="16"><use href="#icon-add" /></svg>';
-            addBtn.className = 'tag-add-btn';
-            addBtn.onclick = function(e) {
-                selectDropdown.innerHTML = '';
-                var template = document.getElementById(templateId);
-                Array.from(template.options).forEach(opt => {
-                    if (!opt.value || selected.includes(opt.value) || excludeIds.includes(opt.value)) return;
-                    var option = document.createElement('option');
-                    option.value = opt.value;
-                    option.textContent = opt.textContent;
-                    selectDropdown.appendChild(option);
-                });
-                selectDropdown.style.display = 'block';
-                selectDropdown.style.position = 'absolute';
-                selectDropdown.style.left = (addBtn.getBoundingClientRect().left + window.scrollX) + 'px';
-                selectDropdown.style.top = (addBtn.getBoundingClientRect().bottom + window.scrollY) + 'px';
-                document.body.appendChild(selectDropdown);
-                selectDropdown.focus();
-            };
-            tagRow.appendChild(addBtn);
+
+            // 2. Add button logic (always an Add button for non-single select)
+            if (!single) {
+                const addBtn = document.createElement('button');
+                addBtn.type = 'button';
+                addBtn.id = rowId + '-add-btn';
+                addBtn.className = 'tag-add-btn';
+                addBtn.innerHTML = '<svg width="16" height="16"><use href="#icon-add" /></svg>';
+                
+                // --- CORRECTED BUTTON CLICK HANDLER (with fixed positioning) ---
+                addBtn.onclick = function(e) {
+                    e.preventDefault();
+                    hideDropdown(); // Hide any currently open dropdown
+                    
+                    const button = e.currentTarget;
+                    const btnRect = button.getBoundingClientRect();
+                    
+                    // Position dropdown relative to the viewport (FIXED POSITIONING)
+                    dropdownContainer.style.display = 'block';
+                    dropdownContainer.style.left = (btnRect.left) + 'px';
+                    dropdownContainer.style.top = (btnRect.bottom + 4) + 'px'; // No scrollY needed for fixed
+                    
+                    // Clear and populate dropdown options
+                    dropdownOptionsDiv.innerHTML = '';
+                    dropdownFilter.value = '';
+                    
+                    options.forEach(opt => {
+                        // Only add options that are NOT already selected
+                        if (!selected.some(id => String(id) === String(opt.id))) {
+                            const optionEl = document.createElement('div');
+                            optionEl.className = 'custom-dropdown-option';
+                            optionEl.textContent = opt.name;
+                            optionEl.setAttribute('data-id', opt.id);
+                            
+                            optionEl.onclick = function() {
+                                const selectedId = this.getAttribute('data-id');
+                                selected.push(selectedId);
+                                renderTags();
+                                hideDropdown();
+                            };
+                            dropdownOptionsDiv.appendChild(optionEl);
+                        }
+                    });
+
+                    filterDropdownOptions(); // Run filter on initial load
+                    dropdownFilter.focus(); 
+                };
+                tagRow.appendChild(addBtn);
+            }
+
+            // 3. Add hidden input fields for form submission
             selected.forEach(cid => {
-                var hidden = document.createElement('input');
+                const hidden = document.createElement('input');
                 hidden.type = 'hidden';
                 hidden.name = inputName + (single ? '' : '[]');
                 hidden.value = cid;
                 tagRow.appendChild(hidden);
             });
         }
-        selectDropdown.onchange = function() {
-            var selectedId = selectDropdown.value;
-            if (selectedId && !selected.includes(selectedId)) {
-                if (single) {
-                    selected = [selectedId];
-                } else {
-                    selected.push(selectedId);
-                }
-                renderTags();
-            }
-            selectDropdown.value = '';
-            selectDropdown.style.display = 'none';
-        };
-        document.addEventListener('mousedown', function(e) {
-            if (selectDropdown && !selectDropdown.contains(e.target) && e.target.className !== 'add-tag-btn') {
-                selectDropdown.style.display = 'none';
-            }
-        });
-        tagRow.appendChild(selectDropdown);
+        
         renderTags();
-        function setSelected(ids) {
-            selected = Array.isArray(ids) ? ids.slice() : [];
-            renderTags();
-        }
+
         return {
             getSelected: () => selected.slice(),
-            setExclude: (ids) => { excludeIds = ids; renderTags(); },
-            setSelected,
+            setSelected: (ids) => { 
+                // Ensure IDs are strings when setting
+                selected = Array.isArray(ids) ? ids.map(String).slice() : []; 
+                renderTags(); 
+            },
         };
     }
+
     document.addEventListener('DOMContentLoaded', function() {
-        setupTagUI('participants-tag-row', 'participants-options-template', 'participants');
+        // Setup tag UI for the Add Event Modal
+        const addTagController = setupTagUI('participants-tag-row', 'participants-options-template', 'participants');
+        
+        // Setup tag UI for the Edit Event Modal
+        window.editParticipantTagUI = setupTagUI('edit-participants-tag-row', 'edit-participants-options-template', 'participants');
+        
+        // Function called by openAddEventModal
+        window.openAddEventModal = function(dateStr) {
+            // Reset all form fields
+            document.getElementById('add_event_title').value = '';
+            document.getElementById('add_event_description').value = '';
+            document.getElementById('add_event_time').value = '';
+            document.getElementById('add_event_location').value = '';
+            document.getElementById('add_event_notes').value = '';
+            document.getElementById('add_event_attachment').value = '';  // Reset file input
+            
+            // Clear file preview/upload area for add modal
+            clearFile('add_event_attachment', 'file-preview', 'file-name');
+
+            // Re-initialize tag UI and pre-select current user
+            const currentUserId = "{{ request.user.id|default:'' }}";
+            addTagController.setSelected(currentUserId ? [currentUserId] : []);
+            
+            document.getElementById('add_event_date').value = dateStr;
+            addEventModal.style.display = 'flex';
+        }
     });
 </script>
 
-<!-- Add Event Modal -->
 <script>
-    // --- Add Event Modal Logic ---
+    // --- Add Event Modal Logic (Re-implemented to use setupTagUI) ---
     const addEventModal = document.getElementById('add-event-modal');
     const closeAddEventModal = document.getElementById('close-add-event-modal');
     const cancelAddEventModal = document.getElementById('cancel-add-event-modal');
@@ -844,31 +859,13 @@
     const addEventDateInput = document.getElementById('add_event_date');
     const currentUserId = "{{ request.user.id|default:'' }}";
 
-    function openAddEventModal(dateStr) {
-        // Reset all form fields
-        document.getElementById('add_event_title').value = '';
-        document.getElementById('add_event_description').value = '';
-        document.getElementById('add_event_time').value = '';
-        document.getElementById('add_event_location').value = '';
-        document.getElementById('add_event_notes').value = '';
-        document.getElementById('add_event_attachment').value = '';  // Reset file input
-        // Remove all participant tags
-        const tagRow = document.getElementById('participants-tag-row');
-        while (tagRow.firstChild) tagRow.removeChild(tagRow.firstChild);
-        // Re-initialize tag UI and pre-select current user
-        const tagController = setupTagUI('participants-tag-row', 'participants-options-template', 'participants');
-        if (currentUserId) {
-            tagController.setSelected([currentUserId]);
-        }
-        addEventDateInput.value = dateStr;
-        addEventModal.style.display = 'flex';
-    }
+    // openAddEventModal is now defined inside DOMContentLoaded block above
 
     closeAddEventModal.onclick = function() { addEventModal.style.display = 'none'; };
     cancelAddEventModal.onclick = function() { addEventModal.style.display = 'none'; };
     addEventModal.onclick = function(e) { if (e.target === addEventModal) addEventModal.style.display = 'none'; };
 
-    // Intercept form submit for AJAX
+    // Intercept form submit for AJAX (omitted body for brevity)
     addEventForm.onsubmit = function(e) {
         e.preventDefault();
         const title = document.getElementById('add_event_title').value.trim();
@@ -876,6 +873,7 @@
         const date = document.getElementById('add_event_date').value;
         const time = document.getElementById('add_event_time').value;
         const location = document.getElementById('add_event_location').value.trim();
+        // Get participants from the tag row's hidden inputs
         const participants = Array.from(document.querySelectorAll('#participants-tag-row input[name="participants[]"]')).map(input => input.value);
         const notes = document.getElementById('add_event_notes').value.trim();
         const attachmentFile = document.getElementById('add_event_attachment').files[0];
@@ -973,7 +971,7 @@
         });
     };
 
-    // Hook up calendar day click to open modal
+    // Hook up calendar day click to open modal (omitted body for brevity)
     function renderCalendar(year, month) {
         const monthNames=["January","February","March","April","May","June","July","August","September","October","November","December"];
         document.getElementById('month-name').textContent=monthNames[month];
@@ -981,61 +979,122 @@
         const firstDay=new Date(year,month,1).getDay();
         const daysInMonth=new Date(year,month+1,0).getDate();
         for(let i=0;i<firstDay;i++){ calendar.appendChild(document.createElement('div')); }
+        
+        // Get today's date once for comparison
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
         for(let d=1;d<=daysInMonth;d++){
             const cell=document.createElement('div');
             const dateStr=`${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
             cell.className='calendar-day';
-            cell.textContent=d;
             cell.dataset.date=dateStr;
+            
+            // Calculate if this date is in the past
+            const cellDate = new Date(year, month, d);
+            cellDate.setHours(0, 0, 0, 0);
+            const isPast = cellDate < today;
+            const isToday = (year === today.getFullYear() && month === today.getMonth() && d === today.getDate());
+            
             if(events[dateStr]){
-                let hasMeeting = events[dateStr].some(ev => ev.type === 'meeting');
-                let hasProject = events[dateStr].some(ev => ev.type === 'project');
-                // Determine if all events are done (past date)
-                const today = new Date();
-                const cellDate = new Date(year, month, d);
-                let isPast = cellDate < today;
+                // Count events by type
+                let activityCount = events[dateStr].filter(ev => ev.type === 'project').length;
+                let meetingCount = events[dateStr].filter(ev => ev.type === 'meeting').length;
+                let totalCount = events[dateStr].length;
+                
+                // Set green background for dates with events
+                cell.style.backgroundColor = '#245F3E'; // Green
+                cell.style.color = 'white';
+                cell.style.position = 'relative';
+                cell.style.cursor = 'pointer';
+                
+                // Gray out past dates with events
                 if (isPast) {
-                    // Faded blue/green for done
-                    if (hasMeeting && hasProject) {
-                        cell.classList.add('gradient-faded');
-                    } else if (hasMeeting) {
-                        cell.classList.add('meeting-faded');
-                    } else if (hasProject) {
-                        cell.classList.add('project-faded');
-                    }
-                    cell.style.color = '#eee';
-                } else {
-                    if (hasMeeting && hasProject) {
-                        cell.classList.add('gradient');
-                        cell.style.color = 'white';
-                    } else if (hasMeeting) {
-                        cell.classList.add('meeting');
-                        cell.style.color = 'white';
-                    } else if (hasProject) {
-                        cell.classList.add('project');
-                        cell.style.color = 'white';
-                    }
+                    cell.style.opacity = '0.5';
                 }
-                cell.style.cursor = "pointer";
+                
+                // Create day number
+                const dayNumber = document.createElement('div');
+                dayNumber.textContent = d;
+                dayNumber.style.textAlign = 'center';
+                dayNumber.style.paddingTop = '8px';
+                cell.appendChild(dayNumber);
+                
+                // Create badge container in bottom corners
+                const badgeContainer = document.createElement('div');
+                badgeContainer.style.position = 'absolute';
+                badgeContainer.style.bottom = '4px';
+                badgeContainer.style.left = '4px';
+                badgeContainer.style.right = '4px';
+                badgeContainer.style.display = 'flex';
+                badgeContainer.style.justifyContent = 'space-between';
+                badgeContainer.style.fontSize = '10px';
+                badgeContainer.style.fontWeight = 'bold';
+                
+                // Add activity badge (blue) on left if there are activities
+                if (activityCount > 0) {
+                    const activityBadge = document.createElement('span');
+                    activityBadge.textContent = activityCount;
+                    activityBadge.style.backgroundColor = '#007bff'; 
+                    activityBadge.style.color = 'white';
+                    activityBadge.style.borderRadius = '50%';
+                    activityBadge.style.width = '18px';
+                    activityBadge.style.height = '18px';
+                    activityBadge.style.display = 'flex';
+                    activityBadge.style.alignItems = 'center';
+                    activityBadge.style.justifyContent = 'center';
+                    activityBadge.style.boxShadow = '0 1px 3px rgba(0,0,0,0.3)';
+                    badgeContainer.appendChild(activityBadge);
+                } else {
+                    badgeContainer.appendChild(document.createElement('span')); 
+                }
+                
+                // Add meeting badge (orange) on right if there are meetings
+                if (meetingCount > 0) {
+                    const meetingBadge = document.createElement('span');
+                    meetingBadge.textContent = meetingCount;
+                    meetingBadge.style.backgroundColor = '#fd7e14';
+                    meetingBadge.style.color = 'white';
+                    meetingBadge.style.borderRadius = '50%';
+                    meetingBadge.style.width = '18px';
+                    meetingBadge.style.height = '18px';
+                    meetingBadge.style.display = 'flex';
+                    meetingBadge.style.alignItems = 'center';
+                    meetingBadge.style.justifyContent = 'center';
+                    meetingBadge.style.boxShadow = '0 1px 3px rgba(0,0,0,0.3)';
+                    badgeContainer.appendChild(meetingBadge);
+                }
+                
+                cell.appendChild(badgeContainer);
+                
                 cell.onclick = function() {
                     showEventDetails(events[dateStr], dateStr);
                 };
             } else {
-                cell.onclick = function() {
-                    openAddEventModal(dateStr);
-                };
+                // No events on this date
+                cell.textContent = d;
+                if (isPast) {
+                    // Past date with no events - add past-date class and no onclick
+                    cell.classList.add('past-date');
+                } else {
+                    // Future/today date with no events - allow adding new events
+                    cell.onclick = function() {
+                        openAddEventModal(dateStr);
+                    };
+                }
             }
+            
             // Highlight current day
-            const today = new Date();
-            if (year === today.getFullYear() && month === today.getMonth() && d === today.getDate()) {
+            if (isToday) {
                 cell.style.border = '2px solid #FFE066';
                 cell.style.boxShadow = '0 0 0 2px #FFE066';
             }
+            
             calendar.appendChild(cell);
         }
     }
 
-    // Event Details Modal Logic
+    // Event Details Modal Logic (omitted body for brevity)
     const eventDetailsModal = document.getElementById('event-details-modal');
     const closeEventDetailsModal = document.getElementById('close-event-details-modal');
     closeEventDetailsModal.onclick = function() { 
@@ -1189,7 +1248,7 @@
             floatingBtn.id = 'floating-add-event-btn';
             floatingBtn.title = 'Add Meeting';
             floatingBtn.innerHTML = '<i class="fa-solid fa-plus" style="margin-right:8px;"></i>Add Meeting';
-            floatingBtn.style.cssText = 'position:fixed;bottom:40px;background:#245F3E;color:#fff;border:none;border-radius:28px;padding:14px 24px;font-size:1rem;font-weight:600;box-shadow:0 4px 12px rgba(0,0,0,0.15);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.3s ease;z-index:10000;white-space:nowrap;';
+            floatingBtn.style.cssText = 'position:fixed;bottom:40px;right:40px;background:#245F3E;color:#fff;border:none;border-radius:28px;padding:14px 24px;font-size:1rem;font-weight:600;box-shadow:0 4px 12px rgba(0,0,0,0.15);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.3s ease;z-index:10000;white-space:nowrap;';
             floatingBtn.onmouseover = function() {
                 this.style.transform = 'scale(1.05)';
                 this.style.boxShadow = '0 6px 16px rgba(0,0,0,0.2)';
@@ -1204,11 +1263,11 @@
                 floatingBtn.remove();
                 openAddEventModal(dateStr);
             };
-            eventDetailsModal.appendChild(floatingBtn);
+            document.body.appendChild(floatingBtn); // Append to body for fixed positioning
         }
     }
 
-    // Delete event logic
+    // Delete event logic (omitted body for brevity)
     window.confirmDeleteEvent = function(eventId, eventTitle) {
         // Hide all other modals
         document.getElementById('event-details-modal').style.display = 'none';
@@ -1317,7 +1376,6 @@
     }
 </script>
 
-<!-- Render Calendar Scripts -->
 <script>
     let events = {};
     const calendar = document.getElementById('calendar');
@@ -1528,12 +1586,6 @@
         }
     }
 
-    // --- Initial render ---
-    renderCalendar(currentYear, currentMonth);
-    fetchEvents();
-    
-    // Function to highlight a specific date from notification
-    function highlightDate(dateStr) {
         setTimeout(() => {
             const cell = document.querySelector(`.calendar-day[data-date="${dateStr}"]`);
             if (cell) {

@@ -267,6 +267,55 @@ input:focus {
     background: #FFFFFF; 
 }
 
+
+.info-icon {
+    cursor: help;
+    color: #666;
+    font-size: 1rem;
+    position: relative;
+    display: inline-flex;
+    align-items: flex-start;
+    margin-top: -1.2rem; 
+    margin-right: 0.75rem;
+}
+
+.info-tooltip {
+    visibility: hidden;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 100%;
+    width: 15rem;
+    background-color: #333;
+    color: white;
+    text-align: center;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.85rem;
+    font-weight: normal;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    z-index: 1;
+    opacity: 0;
+    transition: opacity 0.2s, visibility 0.2s;
+}
+
+.info-icon:hover .info-tooltip {
+    visibility: visible;
+    opacity: 1;
+}
+
+
+.info-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #333 transparent transparent transparent;
+}  
+
 .upload-area {
     flex: 1;
     border: 2px dashed #E5E7EB;

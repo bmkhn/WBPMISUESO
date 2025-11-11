@@ -9,7 +9,7 @@ import json
 
 from shared.event_calendar import services 
 from django.http import JsonResponse
-from django.db.models import Count
+from django.db.models import Count, Q
 from collections import OrderedDict
 from internal.goals.models import Goal 
 from internal.submissions.models import Submission
@@ -36,9 +36,7 @@ def number_to_words_mock(num):
 
     return (tens[tens_digit] + (" " + words[last_digit] if last_digit != 0 else "")).strip()
 
-# HELPER FUNCTION (Retained from previous fix)
 def _count_matching_projects(goal: Goal) -> int:
-    """Counts the number of projects that satisfy the Goal's filters."""
     qs = Project.objects.all()
     if goal.agenda_id:
         qs = qs.filter(agenda_id=goal.agenda_id)
@@ -51,19 +49,17 @@ def _count_matching_projects(goal: Goal) -> int:
 @role_required(allowed_roles=["VP", "DIRECTOR", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD"], require_confirmed=True)
 def dashboard_view(request):
     user_role = getattr(request.user, 'role', None)
-    vpde_content = user_role in ["VP", "DIRECTOR"]
+    user_college = getattr(request.user, 'college', None)
+    
+    show_admin_content = user_role in ["VP", "DIRECTOR", "UESO"]
+    show_events_card = show_admin_content or user_role in ["COORDINATOR", "DEAN", "PROGRAM_HEAD"]
 
     pending_requests = ClientRequest.objects.filter(status__in=['RECEIVED', 'UNDER_REVIEW'])
     inprogress_projects = Project.objects.filter(status='IN_PROGRESS')
     expert_users = User.objects.filter(is_expert=True)
 
-    all_events = list(chain(ProjectEvent.objects.filter(placeholder=False), MeetingEvent.objects.all()))
-    events_in_calendar = len(all_events)
-    
-
     projects = Project.objects.all().order_by('-updated_at')[:5]
 
-    # Agenda Distribution Calculation
     from internal.agenda.models import Agenda
     all_projects = Project.objects.all()
     agenda_counts = {}
@@ -72,51 +68,69 @@ def dashboard_view(request):
         if count > 0:
             agenda_counts[agenda.name] = count
     
+    events_in_calendar = 0 
+    now = timezone.now()
     
-    # --- GOALS DATA GENERATION (FINAL FIX WITH CAP) ---
+    if show_events_card:
+        future_project_events = ProjectEvent.objects.filter(placeholder=False, datetime__gte=now)
+        future_meeting_events = MeetingEvent.objects.filter(datetime__gte=now)
+        
+        if show_admin_content:
+            all_events = list(chain(future_project_events, future_meeting_events))
+        elif user_college:
+            
+            relevant_projects = Project.objects.filter(
+                Q(project_leader__college=user_college) |
+                Q(providers__college=user_college)
+            ).distinct()
+            
+            filtered_project_events = future_project_events.filter(
+                project__in=relevant_projects
+            ).distinct()
+            
+            filtered_meeting_events = future_meeting_events.filter(
+                participants__college=user_college
+            ).distinct()
+            
+            all_events = list(chain(filtered_project_events, filtered_meeting_events))
+        else:
+            all_events = []
+            
+        events_in_calendar = len(all_events)
+    
     goal_objects = Goal.objects.all() 
     
     dashboard_goals = []
     
     for goal in goal_objects:
         
-        # Target value (Y/Denominator)
         target_value = getattr(goal, 'target_value', 1)
         display_target = target_value if target_value > 0 else 10 
         
-        # Current value (Actual Count)
         current_count = _count_matching_projects(goal)
         
-        # 1. Calculate progress percentage (0-100)
         progress = round((current_count / target_value) * 100) if target_value and target_value > 0 else 0
-        progress = min(progress, 100) # Cap percentage at 100%
+        progress = min(progress, 100)
 
-        # 2. Set current_qualifiers (Nominator)
-        # FIX: Visually cap the nominator at the target_value (denominator)
         current_qualifiers = min(current_count, display_target)
 
         dashboard_goals.append({
             'id': goal.id,
             'title': goal.title,
             'progress': progress,
-            'current_qualifiers': current_qualifiers, # CAPPED VALUE FOR DISPLAY
+            'current_qualifiers': current_qualifiers,
             'target_qualifiers': display_target,
             'target_words': number_to_words_mock(display_target).upper()
         })
     
-    # 2. Sort the final list by the calculated 'progress' in Python (highest first)
     dashboard_goals.sort(key=lambda g: (g['progress'] >= 100, -g['progress']))
-    # -----------------------------------------------------------------------
            
-    # --- MIN-CALENDAR DATA GENERATION ---
-    # Fetch events data structure used by the calendar app
     events_by_date = services.get_events_by_date(request.user, for_main_calendar_view=False)
     events_json = json.dumps(events_by_date)
-    # ------------------------------------
 
     context = {
         'user_role': user_role,
-        'vpde_content': vpde_content,
+        'vpde_content': show_admin_content,
         'pending_requests': pending_requests,
         'inprogress_projects': inprogress_projects,
         'expert_users': expert_users,
@@ -125,39 +139,31 @@ def dashboard_view(request):
         'agenda_distribution': agenda_counts,
         'events_json': events_json,
         'dashboard_goals': dashboard_goals,
+        'show_events_card': show_events_card,
     }
 
     return render(request, 'dashboard/dashboard.html', context)
     
 @role_required(allowed_roles=["VP", "DIRECTOR", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD"], require_confirmed=True)
 def get_submission_status_data(request):
-    """
-    Provides data for the Submission Status bar chart, filtered by date.
-    """
     
     start_str = request.GET.get('start')
     end_str = request.GET.get('end')
     
-    # Get the current time zone from Django settings
     current_tz = timezone.get_current_timezone()
 
     if not end_str:
-        # Default 'end' is the end of today (aware)
         end_date = timezone.now().replace(hour=23, minute=59, second=59)
     else:
-        # Create an aware datetime for the *end* of the selected day
         dt = datetime.strptime(end_str, '%Y-%m-%d')
         end_date = timezone.make_aware(dt.replace(hour=23, minute=59, second=59), current_tz)
         
     if not start_str:
-        # Default 'start' is 300 days ago, at the start of that day
         start_date = (end_date - timedelta(days=300)).replace(hour=0, minute=0, second=0)
     else:
-        # Create an aware datetime for the *start* of the selected day
         dt = datetime.strptime(start_str, '%Y-%m-%d')
         start_date = timezone.make_aware(dt.replace(hour=0, minute=0, second=0), current_tz)
 
-    # This query will now use time-zone-aware dates
     status_data = Submission.objects.filter(
         created_at__range=(start_date, end_date)
     ).values('status').annotate(count=Count('status')).order_by('status')
@@ -179,9 +185,6 @@ def get_submission_status_data(request):
 
 @role_required(allowed_roles=["VP", "DIRECTOR", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD"], require_confirmed=True)
 def get_project_status_data(request):
-    """
-    Provides data for the Project Status pie chart, filtered by date.
-    """
     
     start_str = request.GET.get('start')
     end_str = request.GET.get('end')
@@ -200,7 +203,6 @@ def get_project_status_data(request):
         dt = datetime.strptime(start_str, '%Y-%m-%d')
         start_date = timezone.make_aware(dt.replace(hour=0, minute=0, second=0), current_tz)
 
-    # This query will now use time-zone-aware dates
     status_data = Project.objects.filter(
         created_at__range=(start_date, end_date)
     ).values('status').annotate(count=Count('status')).order_by('status')

@@ -75,6 +75,19 @@
             </div>
             <span class="card-figure-subtext">Percentage of total pool assigned</span>
         </div>
+
+                <div class="goal-card color-milky-white">
+            <div class="card-content-wrapper" style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
+                <div>
+                    <h3 style="color: #4b5563;">Committed (External)</h3>
+                    <p class="amount" style="color: #111827;">₱ {{ total_external_to_projects_agg|floatformat:0|intcomma }}</p>
+                </div>
+                <div style="height: 80px; width: 130px; flex-shrink: 0; margin-top: -5px;">
+                    <canvas id="externalCommittedChart"></canvas>
+                </div>
+            </div>
+            <span class="card-figure-subtext">Funding secured from external sponsors</span>
+        </div>
         
         <div class="goal-card color-dango-green">
             <div class="card-content-wrapper" style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
@@ -89,18 +102,6 @@
             <span class="card-figure-subtext">Funding committed from internal pool</span>
         </div>
         
-        <div class="goal-card color-milky-white">
-            <div class="card-content-wrapper" style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
-                <div>
-                    <h3 style="color: #4b5563;">Committed (External)</h3>
-                    <p class="amount" style="color: #111827;">₱ {{ total_external_to_projects_agg|floatformat:0|intcomma }}</p>
-                </div>
-                <div style="height: 80px; width: 130px; flex-shrink: 0; margin-top: -5px;">
-                    <canvas id="externalCommittedChart"></canvas>
-                </div>
-            </div>
-            <span class="card-figure-subtext">Funding secured from external sponsors</span>
-        </div>
     </div>
 
     <div class="another-header" style="justify-content: space-between; align-items: center;">
@@ -261,18 +262,7 @@
             </div>
             <span class="card-figure-subtext">Overall budget across all your projects</span>
         </div>
-        <div class="goal-card color-dango-green">
-            <div class="card-content-wrapper" style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
-                <div>
-                    <h3 style="color: white;">Total Internal</h3>
-                    <p class="amount text-green" style="color: white;">₱{{ total_internal|floatformat:0|intcomma }}</p>
-                </div>
-                <div style="height: 80px; width: 130px; flex-shrink: 0; margin-top: -5px;">
-                    <canvas id="facultyInternalChart"></canvas>
-                </div>
-            </div>
-            <span class="card-figure-subtext">Funding from internal pool</span>
-        </div>
+
         <div class="goal-card color-milky-white">
             <div class="card-content-wrapper" style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
                 <div>
@@ -284,6 +274,19 @@
                 </div>
             </div>
             <span class="card-figure-subtext">Funding secured from sponsors</span>
+        </div>
+
+        <div class="goal-card color-dango-green">
+            <div class="card-content-wrapper" style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
+                <div>
+                    <h3 style="color: white;">Total Internal</h3>
+                    <p class="amount text-green" style="color: white;">₱{{ total_internal|floatformat:0|intcomma }}</p>
+                </div>
+                <div style="height: 80px; width: 130px; flex-shrink: 0; margin-top: -5px;">
+                    <canvas id="facultyInternalChart"></canvas>
+                </div>
+            </div>
+            <span class="card-figure-subtext">Funding from internal pool</span>
         </div>
     </div>
     
@@ -384,7 +387,6 @@
 </div>
 
 <script>
-        // --- Data Variables Initialized from Django Context (as strings) ---
     const unallocRaw = '{{ unallocated_data_raw_json|safe }}';
     const unalloc = '{{ unallocated_data_json|safe }}';
     const assignedData = '{{ assigned_data_json|safe }}';
@@ -392,27 +394,24 @@
     const externalCommittedData = '{{ committed_external_data_json|safe }}';
     const rawAdminData = "{{ dashboard_data|safe }}"; 
     
-    // College/Faculty Data: These must be global/available
     const collegeCommittedData = '{{ college_committed_data_json|safe }}';
     const collegeAssignedNorm = '{{ total_assigned_original_cut_norm|safe }}';
     const college_external_data_json = '{{ college_external_data_json|safe }}'; 
     const collegeRemainingData = '{{ college_remaining_data_json|safe }}'; 
-    const rawCollegeData = "{{ dashboard_data|safe }}"; // Used for college projects
+    const rawCollegeData = "{{ dashboard_data|safe }}"; 
     
     const facultyInternalData = '{{ faculty_internal_data_json|safe }}';
     const facultyExternalData = '{{ faculty_external_data_json|safe }}';
     const faculty_total_data_json = '{{ faculty_total_data_json|safe }}';
-    const rawFacultyData = "{{ dashboard_data|safe }}"; // Used for faculty projects
+    const rawFacultyData = "{{ dashboard_data|safe }}"; 
     
     const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-    // --------------------------------------------------------
     
     const currentMonth = new Date().getMonth(); 
     let ADMIN_DATA = [];
     let COLLEGE_PROJECT_DATA = [];
     let FACULTY_PROJECT_DATA = [];
 
-    // --- Chart Options ---
     const mainCardChartOptions = {
         responsive: true,
         maintainAspectRatio: true,
@@ -446,20 +445,17 @@
         maintainAspectRatio: false, 
         plugins: {
             legend: { display: false },
-            tooltip: { enabled: false }, // Tooltips disabled by default for mini charts
+            tooltip: { enabled: false }, 
         },
         scales: { x: { display: false }, y: { display: false } },
         elements: { point: { radius: 0 } },
         layout: { padding: 0 }
     };
 
-    // --- Utility Functions ---
-
     function createGradientBackground(ctx, chartArea, isMainCard, isExternal) {
         if (!chartArea) return null;
         if (isMainCard) {
             const grad = ctx.createLinearGradient(chartArea.left, 0, chartArea.right, 0);
-            // Note: Colors pulled directly from your provided JS styles
             grad.addColorStop(0, 'rgba(255, 96, 146, 0.7)'); 
             grad.addColorStop(1, 'rgba(138, 201, 38, 0.7)'); 
             return grad;
@@ -476,10 +472,6 @@
         }
     }
     
-    /**
-     * @function cleanPythonData
-     * Converts Python's Decimal('...') and single quotes into valid JSON string.
-     */
     function cleanPythonData(dataString) {
         if (typeof dataString !== 'string' || !dataString.trim()) return '[]';
         let clean = dataString.replace(/Decimal\((['"]?)(.*?)\1\)/g, (match, p1, p2) => p2);
@@ -488,10 +480,6 @@
         return clean;
     }
 
-    /**
-     * @function formatCurrency
-     * Formats a numeric string or number into Philippine Peso currency (₱).
-     */
     function formatCurrency(amount) {
         return '₱' + parseFloat(amount || 0).toLocaleString('en-US', {
             minimumFractionDigits: 0,
@@ -499,7 +487,6 @@
         });
     }
 
-    // --- Chart Initialization ---
     function initSparkline(canvasId, dataString, isExternal = false, isMainCard = false, labels = [], tooltipDataString = null, fillChart = true) {
         const ctxEl = document.getElementById(canvasId);
         if (!ctxEl) return;
@@ -514,29 +501,20 @@
             return;
         }
         
-        // --- FIX IS IN THIS BLOCK ---
         if (isMainCard && data.length > 0) {
-            // Check if the first point is not already zero.
             if (data[0] !== 0) {
-                // Prepend 0 to the numeric data array
                 data.unshift(0); 
                 
-                // Prepend the formatted zero value to the tooltip data array
                 if (tooltipData) {
-                    tooltipData.unshift('0'); 
+                    tooltipData.unshift(formatCurrency(0)); 
                 }
                 
-                // CORRECTED: Prepend a blank label to account for the new '0' start point.
-                // This prevents shifting the month labels.
                 if (labels.length > 0) {
                     labels.unshift(''); 
                 }
             }
         }
-        // --- END OF FIX ---
         
-        // The main card chart needs to show the new '0' point AND the current month's value.
-        // If prepended, the current month is at index 'currentMonth + 1'.
         const sliceLimit = isMainCard ? currentMonth + 2 : currentMonth + 1;
         const dataForChart = data.slice(0, sliceLimit);
 
@@ -554,7 +532,6 @@
                     options.scales.y.beginAtZero = false;
             }
             
-            // If this is a mini-chart, re-enable tooltips if tooltipData is available
             if (!isMainCard && tooltipData) {
                 options.plugins.tooltip = { enabled: true };
             }
@@ -589,9 +566,8 @@
                             mode: 'index',
                             intersect: false,
                             callbacks: {
-                                // The tooltip now uses the prepended 'Month 0' for the first point
                                 title: t => 'Month: ' + (labelsToUse[t[0].dataIndex] || ''),
-                                label: t => formatCurrency(tooltipDataForChart[t.dataIndex] || 0)
+                                label: t => tooltipDataForChart[t.dataIndex] || formatCurrency(0)
                             }
                         } : options.plugins.tooltip
                     }
@@ -602,8 +578,6 @@
         }
     }
 
-
-    // --- Table Rendering and Sorting Functions ---
 
     function renderAdminTable() {
         const body = document.getElementById('adminTableBody');
@@ -742,19 +716,16 @@
         renderProjectTable(role);
     }
 
-    // --- Main DOM Content Loaded Handler ---
     document.addEventListener('DOMContentLoaded', () => {
         const currentMonths = months.slice(0, currentMonth + 1);
         
-        // --- ADMIN/VP/DIRECTOR Initialization ---
         {% if user_role in "VP,DIRECTOR,UESO" %}
         try {
             ADMIN_DATA = JSON.parse(cleanPythonData(rawAdminData));
             
             renderAdminTable(); 
 
-            // Corrected call: Use unallocRaw for the tooltip data string
-            initSparkline('unallocatedChart', unalloc, false, true, currentMonths, unalloc, true);
+            initSparkline('unallocatedChart', unalloc, false, true, currentMonths, unallocRaw, true);
             initSparkline('assignedChart', assignedData);
             initSparkline('internalCommittedChart', internalCommittedData);
             initSparkline('externalCommittedChart', externalCommittedData, true);
@@ -768,7 +739,6 @@
         }
         {% endif %}
 
-        // --- COLLEGE ADMIN Initialization ---
         {% if is_college_admin %}
         try {
             COLLEGE_PROJECT_DATA = JSON.parse(cleanPythonData(rawCollegeData));
@@ -786,7 +756,6 @@
         } catch (err) { console.error("College init failed:", err); }
         {% endif %}
         
-        // --- FACULTY/IMPLEMENTER Initialization ---
         {% if user_role in "FACULTY,IMPLEMENTER" %}
         try {
             FACULTY_PROJECT_DATA = JSON.parse(cleanPythonData(rawFacultyData));
@@ -807,5 +776,4 @@
 
 </body>
 </html>
-
 {% endblock %}

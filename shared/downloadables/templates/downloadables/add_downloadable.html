@@ -41,15 +41,23 @@
                 </div>
                 <div class="checkbox-row">
                     <input type="checkbox" id="id_available_for_non_users" name="available_for_non_users" style="width:18px;height:18px;">
-                    <label for="id_available_for_non_users" style="font-size:1rem;color:#245F3E;cursor:pointer;">Available for the public</label>
+                    <label for="id_available_for_non_users" style="font-size:1rem;color:#245F3E;cursor:pointer;">Available for the public</label> 
                 </div>
                 <div class="checkbox-row" id="submission-template-row" style="display:none;">
                     <input type="checkbox" id="id_is_submission_template" name="is_submission_template" style="width:18px;height:18px;">
                     <label for="id_is_submission_template" style="font-size:1rem;color:#245F3E;cursor:pointer;">Submission Template</label>
                 </div>
                 <div class="form-group" id="submission-type-row" style="display:none;">
-                    <label class="user-details-label" for="id_submission_type">Submission Type</label>
-                    <select id="id_submission_type" name="submission_type" class="user-details-value"">
+                    <div style="margin-top: 1rem; margin-bottom: 0.4rem;">
+                        <label class="user-details-label" for="id_submission_type">Submission Type</label>
+                        <span class="info-icon">    
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-info-circle" viewBox="0 0 16 16">
+                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                                <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
+                            </svg>
+                        <span class="info-tooltip">'Events' are submissions for extension activities. 'Files' are general submissions of the specific template. 'Final' is the submissions to be required at the end of a project's lifetime.</span>
+                    </div>
+                    <select id="id_submission_type" name="submission_type" class="user-details-value">
                         {% for value, label in submission_type_choices %}
                             <option value="{{ value }}">{{ label }}</option>
                         {% endfor %}

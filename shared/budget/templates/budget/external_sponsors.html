@@ -42,10 +42,11 @@
                     </thead>
                     <tbody>
                         {% for project in page_obj %}
-                        <tr>
+                        <tr class="project-clickable-row" data-project-id="{{ project.id }}">
                             <td class="font-bold">{{ project.title }}</td>
                             <td>{{ project.get_status_display }}</td> <td>{{ project.sponsor_name }}</td>
-                            <td class="font-bold">₱{{ project.external_budget|intcomma }}</td> <td>{{ project.start_date|date:"Y-m-d" }}</td>
+                            <td class="font-bold">₱{{ project.external_budget|intcomma }}</td> 
+                            <td style="width: 8rem;">{{ project.start_date|date:"Y-m-d" }}</td>
                         </tr>
                         {% empty %}
                         <tr>
@@ -89,6 +90,26 @@
             {% endif %}
         </div>
     </div>
+    <script>
+        function attachProjectClickListeners() {
+            const rows = document.querySelectorAll('.project-clickable-row');
+            
+            rows.forEach(row => {
+                if (!row.dataset.hasClickListener) { 
+                    row.addEventListener('click', () => {
+                        const projectId = row.dataset.projectId;
+                        if (projectId) {
+                            window.location.href = `/projects/${projectId}/`; 
+                        }
+                    });
+                    row.dataset.hasClickListener = 'true';
+                }
+            });
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            attachProjectClickListeners();
+        });
+    </script>
 </body>
 </html>
 {% endblock %}
