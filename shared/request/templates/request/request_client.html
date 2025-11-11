@@ -128,7 +128,7 @@
 			<tbody>
 				{% for req in requests %}
 				<tr>
-					<td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><a href="{% url 'request_details_dispatcher' req.pk %}" style="color:#063A1C;font-weight:600;text-decoration:underline;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="{{ req.title }}">{{ req.title }}</a></td>
+					<td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><a href="{% url 'request_details_dispatcher' req.pk %}" title="{{ req.title }}">{{ req.title }}</a></td>
 					<td style="white-space:nowrap;">{{ req.submitted_at|date:'Y-m-d H:i' }}</td>
 					<td style="white-space:nowrap;">{{ req.updated_at|date:'Y-m-d H:i' }}</td>
 					<td style="white-space:nowrap;">{{ req.get_status_display }}</td>
@@ -191,43 +191,49 @@
         <h2 id="submit-request-modal-title" style="margin-bottom:1rem;">Submit Request</h2>
         <form id="submit-request-form" method="post" enctype="multipart/form-data" action="/requests/submit/">
             {% csrf_token %}
-            <div class="form-group">
-                <label class="form-label">Project Title <span class="required">*</span></label>
-                <input type="text" name="title" id="request_title" required style="flex:1;">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Name of Your Organization <span class="required">*</span></label>
-                <input type="text" name="organization" id="request_organization" required style="flex:1;">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Primary Location <span class="required">*</span></label>
-                <input type="text" name="primary_location" id="request_primary_location" required style="flex:1;">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Primary Beneficiaries <span class="required">*</span></label>
-                <input type="text" name="primary_beneficiary" id="request_primary_beneficiary" required style="flex:1;">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Brief Summary <span class="required">*</span></label>
-                <textarea name="summary" id="request_summary" rows="2" required style="flex:1;border-radius:8px;padding:0.75rem;font-size:1rem;"></textarea>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Letter of Intent <span class="required">*</span></label>
-				<div style="width: 100%;">
-					<div class="upload-area" onclick="document.getElementById('request_letter_of_intent').click()">
-						<svg class="icon-upload" width="24" height="24"><use href="#icon-upload"></use></svg>
-						<span class="upload-text">Click to upload</span>
-						<input class="hidden" type="file" name="letter_of_intent" id="request_letter_of_intent" required style="flex:1;" accept="application/pdf">
+			<div class="grid">
+				<section style="flex-grow: 1;">
+					<div class="form-group">
+						<label class="form-label">Project Title <span class="required">*</span></label>
+						<input type="text" name="title" id="request_title" required style="flex:1;">
 					</div>
-					<div class="file-preview" id="file-preview" style="display: none; margin-top: 0.75rem;">
-						<div class="file-info">
-							<svg width="16" height="16"><use href="#icon-upload"></use></svg>
-							<span id="file-name"></span>
+					<div class="form-group">
+						<label class="form-label">Name of Your Organization <span class="required">*</span></label>
+						<input type="text" name="organization" id="request_organization" required style="flex:1;">
+					</div>
+					<div class="form-group">
+						<label class="form-label">Primary Location <span class="required">*</span></label>
+						<input type="text" name="primary_location" id="request_primary_location" required style="flex:1;">
+					</div>
+					<div class="form-group">
+						<label class="form-label">Primary Beneficiaries <span class="required">*</span></label>
+						<input type="text" name="primary_beneficiary" id="request_primary_beneficiary" required style="flex:1;">
+					</div>
+				</section>
+				<section>
+					<div class="form-group">
+						<label class="form-label">Brief Summary <span class="required">*</span></label>
+						<textarea name="summary" id="request_summary" rows="5" required style="flex:1;border-radius:8px;padding:0.75rem;font-size:1rem;"></textarea>
+					</div>
+					<div class="form-group">
+						<label class="form-label">Letter of Intent <span class="required">*</span></label>
+						<div style="width: 100%;">
+							<div class="upload-area" onclick="document.getElementById('request_letter_of_intent').click()">
+								<svg class="icon-upload" width="24" height="24"><use href="#icon-upload"></use></svg>
+								<span class="upload-text">Click to upload</span>
+								<input class="hidden" type="file" name="letter_of_intent" id="request_letter_of_intent" required style="flex:1;" accept="application/pdf">
+							</div>
+							<div class="file-preview" id="file-preview" style="display: none; margin-top: 0.75rem;">
+								<div class="file-info">
+									<svg width="16" height="16"><use href="#icon-upload"></use></svg>
+									<span id="file-name"></span>
+								</div>
+							</div> 
 						</div>
-					</div> 
-				</div>
+					</div>
+				</section>
 			</div>
-			
+
             <div class="form-actions">
                 <button type="button" class="back-btn" id="cancel-submit-request-modal">Cancel</button>
                 <button type="submit" class="submit-btn">Submit Request</button>

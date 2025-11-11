@@ -79,6 +79,9 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_api_key',
     'rest_framework.authtoken',
+
+    # Bootstrap
+    'widget_tweaks',
 ]
 
 MIDDLEWARE = [

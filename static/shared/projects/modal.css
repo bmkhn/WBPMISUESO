@@ -131,12 +131,6 @@ select.user-details-value {
     margin-bottom: 0.5rem;
     color: #222;
 }
-.modal-content {
-    font-size: 1rem;
-    color: #444;
-    margin-bottom: 1rem;
-    text-align: center;
-}
 .modal-actions {
     display: flex;
     gap: 20px;
@@ -160,8 +154,8 @@ textarea {
 .submission-modal .modal-content {
     background: #fff;
     border-radius: 1rem;
-    padding: 2.5rem 2.5rem 2rem 2.5rem;
-    min-width: 340px;
+    padding: 2.5rem 2.75rem 2rem 2.75rem;
+    min-width: 730px;
     max-width: 95vw;
     box-shadow: 0 4px 32px 0 rgba(0,0,0,0.18);
     position: relative;
@@ -228,9 +222,28 @@ textarea {
 
 .submission-modal h2 {
     margin-top: 0;
+    margin-bottom: 2rem;
     font-size: 1.5rem;
     color: #000;
     font-weight: 400;
+}
+
+.chcklist {
+    font-size: 0.78rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.chcklist label {
+    display: flex;
+    flex-direction: row;
+}
+
+.chcklist label p {
+    margin-left: 0.3rem;
+    margin-top: 0.35rem;
 }
 
 input[type="text"], input[type="date"], textarea, input[type="file"], input[type="datetime-local"], input[type="number"] {

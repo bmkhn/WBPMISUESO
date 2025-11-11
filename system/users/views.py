@@ -1,5 +1,5 @@
 from django.http import JsonResponse
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout, authenticate, get_user_model
 from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
@@ -10,10 +10,16 @@ from django.views.decorators.cache import never_cache
 from system.users.models import College, Campus
 from system.users.decorators import role_required
 from system.utils.email_utils import async_send_mail, async_send_verification_code
-from .forms import LoginForm, ClientRegistrationForm, FacultyRegistrationForm, ImplementerRegistrationForm
+from django.core.paginator import Paginator
+from django.urls import reverse
+from django.http import HttpResponseRedirect
+from urllib.parse import urlencode, quote
+from .forms import LoginForm, ClientRegistrationForm, FacultyRegistrationForm, ImplementerRegistrationForm, UnifiedRegistrationForm
 
 import random
-
+from django.conf import settings
+from shared.request.models import ClientRequest
+from shared.projects.models import Project
 
 @never_cache
 @csrf_exempt
@@ -37,18 +43,7 @@ def get_templates(request):
     return base_template
 
 
-# Helper function to create user-related log entries
 def create_user_log(user, action, target_user, details, is_notification=False):
-    """
-    Create a log entry for user-related actions.
-    
-    Args:
-        user: The user performing the action (None for registration)
-        action: 'CREATE', 'UPDATE', or 'DELETE'
-        target_user: The user being affected
-        details: String describing what changed
-        is_notification: Whether to create notifications from this log
-    """
     from system.logs.models import LogEntry
     from django.urls import reverse
     
@@ -66,15 +61,13 @@ def create_user_log(user, action, target_user, details, is_notification=False):
 
 ####################################################################################################
 
-# Login, Logout, Forgot Password, and Role-Based Redirection Views
 def login_view(request):
-    logout(request) # Remove this line if you want to keep users logged in when they revisit the login page
+    logout(request)
     if request.method == 'POST':
         form = LoginForm(request, data=request.POST)
         if form.is_valid():
             user = authenticate(request, email=form.cleaned_data.get('username'), password=form.cleaned_data.get('password'))
             if user:
-                # Generate 2FA code
                 code = str(random.randint(100000, 999999))
                 
                 # Send 2FA code via email ASYNCHRONOUSLY (no 2-minute block!)
@@ -84,13 +77,12 @@ def login_view(request):
                 except Exception as e:
                     print(f"Email queuing failed: {str(e)}")  # Debug
                 
-                # Store in session (including the backend attribute from authenticate())
                 request.session['login_2fa_code'] = code
                 request.session['pending_login_user_id'] = user.id
-                request.session['pending_login_backend'] = user.backend  # Preserve backend
+                request.session['pending_login_backend'] = user.backend
                 request.session['remember_me'] = request.POST.get('remember') == 'on'
                 
-                return JsonResponse({'success': True, 'code': code})  # For testing
+                return JsonResponse({'success': True, 'code': code})
         else:
             return JsonResponse({'success': False, 'error': 'Invalid email or password.'})
     else:
@@ -99,7 +91,6 @@ def login_view(request):
 
 
 def verify_login_2fa_view(request):
-    """Verify 2FA code for login"""
     if request.method == 'POST':
         code_entered = request.POST.get('code')
         code_sent = request.session.get('login_2fa_code')
@@ -107,34 +98,29 @@ def verify_login_2fa_view(request):
         backend = request.session.get('pending_login_backend')
         remember_me = request.session.get('remember_me', False)
         
-        print(f"DEBUG - Code entered: {code_entered}, Code sent: {code_sent}, User ID: {user_id}, Remember: {remember_me}")  # Debug
+        print(f"DEBUG - Code entered: {code_entered}, Code sent: {code_sent}, User ID: {user_id}, Remember: {remember_me}")
         
         if code_entered == code_sent and user_id:
             User = get_user_model()
             try:
                 user = User.objects.get(id=user_id)
                 
-                # Restore the backend attribute to the user object
                 user.backend = backend
                 
-                # Clear session data BEFORE login to preserve them
                 request.session.pop('login_2fa_code', None)
                 request.session.pop('pending_login_user_id', None)
                 request.session.pop('pending_login_backend', None)
                 request.session.pop('remember_me', None)
                 
-                # Login the user (this regenerates the session)
                 login(request, user)
                 
-                # Set session expiry AFTER login
                 if remember_me:
-                    request.session.set_expiry(1209600)  # 2 weeks in seconds
-                    print("DEBUG - Session set to 2 weeks")  # Debug
+                    request.session.set_expiry(1209600)
+                    print("DEBUG - Session set to 2 weeks")
                 else:
-                    request.session.set_expiry(0)  # Browser close
-                    print("DEBUG - Session set to browser close")  # Debug
+                    request.session.set_expiry(0)
+                    print("DEBUG - Session set to browser close")
                 
-                # Make sure session is saved
                 request.session.modified = True
                 
                 return JsonResponse({'success': True})
@@ -152,7 +138,6 @@ def logout_view(request):
 
 
 def session_test_view(request):
-    """Test page to check session settings"""
     context = {
         'session_expiry': request.session.get_expiry_age(),
         'expires_at_browser_close': request.session.get_expire_at_browser_close(),
@@ -161,27 +146,23 @@ def session_test_view(request):
 
 
 def forgot_password_view(request):
-    """Handle forgot password flow"""
     logout(request)
     return render(request, 'users/forgot_password.html')
 
 
 def send_password_reset_code_view(request):
-    """Send password reset code via email"""
     if request.method == 'POST':
         email = request.POST.get('email')
         
         if not email:
             return JsonResponse({'success': False, 'error': 'Email is required.'})
         
-        # Check if user exists
         User = get_user_model()
         try:
             user = User.objects.get(email=email)
         except User.DoesNotExist:
             return JsonResponse({'success': False, 'error': 'No account found with this email.'})
         
-        # Generate 6-digit code
         code = str(random.randint(100000, 999999))
         
         # Send password reset code via email ASYNCHRONOUSLY (no 2-minute block!)
@@ -192,17 +173,15 @@ def send_password_reset_code_view(request):
         except Exception as e:
             print(f"Email queuing failed: {str(e)}")  # Debug
         
-        # Store code and email in session
         request.session['password_reset_code'] = code
         request.session['password_reset_email'] = email
         
-        return JsonResponse({'success': True, 'code': code})  # For testing
+        return JsonResponse({'success': True, 'code': code})
     
     return JsonResponse({'success': False, 'error': 'Invalid request method.'})
 
 
 def verify_reset_code_view(request):
-    """Verify password reset code"""
     if request.method == 'POST':
         code_entered = request.POST.get('code')
         verify_only = request.POST.get('verify_only', 'false')
@@ -212,7 +191,6 @@ def verify_reset_code_view(request):
             return JsonResponse({'success': False, 'error': 'Code is required.'})
         
         if code_entered == code_sent:
-            # Mark code as verified in session
             request.session['code_verified'] = True
             return JsonResponse({'success': True})
         else:
@@ -222,7 +200,6 @@ def verify_reset_code_view(request):
 
 
 def reset_password_view(request):
-    """Reset password after code verification"""
     if request.method == 'POST':
         new_password = request.POST.get('new_password')
         email = request.session.get('password_reset_email')
@@ -241,7 +218,6 @@ def reset_password_view(request):
                 user.set_password(new_password)
                 user.save()
                 
-                # Log the password change
                 create_user_log(
                     user=user,
                     action='UPDATE',
@@ -250,7 +226,6 @@ def reset_password_view(request):
                     is_notification=False
                 )
                 
-                # Clear session data
                 request.session.pop('password_reset_code', None)
                 request.session.pop('password_reset_email', None)
                 request.session.pop('code_verified', None)
@@ -274,14 +249,13 @@ def role_redirect(request):
         return redirect("home")
 
 def home(request):
-    return render(request, 'base_public.html')  # extends base_public.html
+    return render(request, 'base_public.html')
 
 def dashboard(request):
-    return render(request, 'base_internal.html')  # extends base_internal.html
+    return render(request, 'base_internal.html')
 
 ####################################################################################################
 
-# Registration Views for Different User Types
 def check_email_view(request):
     email = request.GET.get('email', '').strip()
     exists = False
@@ -291,9 +265,7 @@ def check_email_view(request):
     return JsonResponse({'exists': exists})
 
 def register_view(request):
-    """Unified registration role selector"""
     logout(request)
-    # Clear any pending registration data
     for key in ['pending_user_id', '2fa_code', 'registration_role', 'registration_data']:
         request.session.pop(key, None)
     return render(request, 'users/register.html')
@@ -304,39 +276,50 @@ def send_verification_code_view(request):
     if request.method == 'POST':
         email = request.POST.get('email')
         role = request.POST.get('role')
-        
+
         if not email or not role:
             return JsonResponse({'success': False, 'error': 'Email and role are required.'})
-        
-        # Check if email already exists
+
         User = get_user_model()
         if User.objects.filter(email=email).exists():
             return JsonResponse({'success': False, 'error': 'This email is already registered.'})
-        
-        # Generate 6-digit code
+
+        # Always generate the code
         code = str(random.randint(100000, 999999))
-        
-        # Send verification code via email ASYNCHRONOUSLY (no 2-minute block!)
+
+        # Try to send asynchronously, fallback to sync if needed
+        sent = False
         try:
             async_send_verification_code(email, code)
             print(f"Verification code queued for {email}: {code}")  # Debug
+            sent = True
         except Exception as e:
             print(f"Email queuing failed: {str(e)}")  # Debug
+            try:
+                send_mail(
+                    'Your Verification Code',
+                    f'Your verification code is: {code}\n\nThis code will expire in 10 minutes.',
+                    'noreply@yourdomain.com',
+                    [email],
+                    fail_silently=False,
+                )
+                print(f"Verification code sent to {email}: {code}")
+                sent = True
+            except Exception as e2:
+                print(f"Email sending failed: {str(e2)}")
 
-        # Store code and email in session
-        request.session['2fa_code'] = code
-        request.session['pending_email'] = email
-        request.session['registration_role'] = role
-        
-        # Return code in response for testing purposes
-        return JsonResponse({'success': True, 'code': code})
-    
+        # Always set session variables if sent
+        if sent:
+            request.session['2fa_code'] = code
+            request.session['pending_email'] = email
+            request.session['registration_role'] = role
+            return JsonResponse({'success': True, 'code': code})
+        else:
+            return JsonResponse({'success': False, 'error': 'Failed to send verification code.'})
+
     return JsonResponse({'success': False, 'error': 'Invalid request method.'})
 
-
 def registration_unified_view(request, role):
-    """Unified registration view for all roles (faculty, implementer, client)"""
-    # Validate role
     role_upper = role.upper()
     valid_roles = ['FACULTY', 'IMPLEMENTER', 'CLIENT']
    
@@ -352,50 +335,63 @@ def registration_unified_view(request, role):
     if request.method == 'POST':
         verification_code = request.POST.get('verification_code')
         
-        # Step 4: Verify code and create user
         if verification_code:
             code_sent = request.session.get('2fa_code')
-            pending_email = request.session.get('pending_email')
+            registration_data = request.session.get('registration_data')
             
             if verification_code != code_sent:
                 return JsonResponse({'success': False, 'error': 'Invalid verification code.'})
             
-            form = UnifiedRegistrationForm(request.POST, request.FILES, role=role_upper)
+            if not registration_data:
+                return JsonResponse({'success': False, 'error': 'Session expired or registration data missing. Please start registration over.'})
+                
+            data_to_save = registration_data.copy()
+            
+            form = UnifiedRegistrationForm(data_to_save, request.FILES, role=role_upper)
             
             if form.is_valid():
                 user = form.save(commit=False)
                 user.role = role_upper
                 user.username = form.cleaned_data['email']
-                user.is_confirmed = False  # User needs admin verification
-                user.set_password(form.cleaned_data['password'])
+                user.is_confirmed = False
+                
+                user.set_password(data_to_save['password'])
+                
+                if request.FILES.get('valid_id'):
+                    user.valid_id = request.FILES['valid_id']
+                if request.FILES.get('profile_picture'):
+                    user.profile_picture = request.FILES['profile_picture']
+
                 user.save()
                 
-                # Log the registration
                 create_user_log(
-                    user=None,  # Self-registration
+                    user=None,
                     action='CREATE',
                     target_user=user,
                     details=f"Self-registered as {user.get_role_display()}",
                     is_notification=False
                 )
                 
-                # Clear session data
                 request.session.pop('2fa_code', None)
                 request.session.pop('pending_email', None)
                 request.session.pop('registration_role', None)
+                request.session.pop('registration_data', None)
 
-                # Return JSON success (frontend will show Step 5)
                 return JsonResponse({'success': True})
             else:
-                return JsonResponse({'success': False, 'error': 'Invalid form data.'})
+                print("Final form validation failed after code verification:", form.errors)
+                return JsonResponse({'success': False, 'errors': form.errors, 'error': 'Invalid form data. Please refresh and try again.'})
         else:
-            # Normal POST without verification code - just show the form again
-            form = UnifiedRegistrationForm(role=role_upper)
+            form = UnifiedRegistrationForm(request.POST, request.FILES, role=role_upper)
     else:
         form = UnifiedRegistrationForm(role=role_upper)
     
-    # Get colleges for faculty
-    colleges = College.objects.all() if role_upper == 'FACULTY' else None
+    colleges = None
+    campuses = None
+    if role_upper == 'FACULTY':
+        colleges = College.objects.select_related('campus').all()
+        campuses = Campus.objects.all()
+
     
     return render(request, 'users/registration_unified.html', {
         'form': form,
@@ -404,11 +400,11 @@ def registration_unified_view(request, role):
         'role': role_upper,
         'role_display': role.capitalize(),
         'colleges': colleges,
+        'campuses': campuses,
     })
 
 
 def verify_unified_view(request):
-    """Unified verification view for all roles"""
     error = None
     role = "THANK-YOU"
     
@@ -440,7 +436,6 @@ def verify_unified_view(request):
 
 
 def thank_you_view(request):
-    """Legacy thank you page - no longer used, kept for backward compatibility"""
     return render(request, 'users/thank_you.html')
 
 ####################################################################################################
@@ -456,19 +451,14 @@ def not_confirmed_view(request):
 
 ####################################################################################################
 
-from django.core.paginator import Paginator
-from django.shortcuts import get_object_or_404
-
 @role_required(allowed_roles=["VP", "DIRECTOR"], require_confirmed=True)
 def manage_user(request):
     query_params = {}
     User = get_user_model()
-    # Optimize with select_related
     users = User.objects.select_related('college', 'college__campus').all()
 
     search = request.GET.get('search', '').strip()
     if search:
-        # Search by full name (given_name, middle_initial, last_name, suffix)
         from django.db.models import Q
         users = users.filter(
             Q(given_name__icontains=search) |
@@ -479,7 +469,6 @@ def manage_user(request):
         )
         query_params['search'] = search
 
-    # Filters
     sort_by = request.GET.get('sort_by', 'date')
     order = request.GET.get('order', 'desc')
     role = request.GET.get('role', '')
@@ -515,7 +504,6 @@ def manage_user(request):
         users = users.filter(college__campus_id=campus)
         query_params['campus'] = campus
 
-    # Sorting
     if sort_by == 'name':
         sort_field = ['last_name', 'given_name', 'middle_initial', 'suffix']
     else:
@@ -544,12 +532,10 @@ def manage_user(request):
     else:
         page_range = range(current - 2, current + 3)
 
-    # Roles for dropdown - optimize filter options
     roles = list(User.Role.choices)
     colleges = College.objects.select_related('campus').all()
     campuses = Campus.objects.only('id', 'name').all()
 
-    # Build querystring for pagination/filter links
     from urllib.parse import urlencode
     querystring = urlencode(query_params)
 
@@ -582,7 +568,6 @@ def user_details_view(request, id):
     return render(request, 'users/user_details.html', {'user': user, 'base_template': base_template})
 
 
-
 @role_required(allowed_roles=["VP", "DIRECTOR"], require_confirmed=True)
 def add_user(request):
     User = get_user_model()
@@ -611,7 +596,6 @@ def add_user(request):
                     username=data.get('email'),
 
                     college=College.objects.get(id=data.get('college')) if data.get('college') else None,
-                    # campus removed - derived from college.campus
                     degree=data.get('degree'),
                     expertise=data.get('expertise'),
                     company=data.get('company'),
@@ -622,13 +606,11 @@ def add_user(request):
                 )
                 user.set_password(data.get('password', ''))
                 
-                # Handle profile picture upload
                 if request.FILES.get('profile_picture'):
                     user.profile_picture = request.FILES['profile_picture']
                 
                 user.save()
                 
-                # Log the user creation
                 create_user_log(
                     user=request.user,
                     action='CREATE',
@@ -648,14 +630,13 @@ def add_user(request):
         'campus_choices': campus_choices,
     })
 
-# Edit user view
+
 @login_required
 def edit_user(request, id):
     User = get_user_model()
     user = get_object_or_404(User, id=id)
     base_template = get_templates(request)
     
-    # Permission check: Users can edit themselves, or VP/DIRECTOR can edit anyone
     can_edit_role_and_verify = request.user.role in ["VP", "DIRECTOR"]
     can_edit_this_user = (request.user.id == user.id) or can_edit_role_and_verify
     
@@ -675,11 +656,9 @@ def edit_user(request, id):
             error = "Email already exists."
         else:
             try:
-                # Track what changed for logging
                 changes = []
                 old_role = user.role
                 
-                # All users can edit these fields
                 user.last_name = data.get('last_name')
                 user.given_name = data.get('given_name')
                 user.middle_initial = data.get('middle_initial') or None
@@ -687,7 +666,6 @@ def edit_user(request, id):
                 user.sex = data.get('sex')
                 user.contact_no = data.get('contact_no')
                 
-                # Email change requires verification (handled by frontend modal)
                 new_email = data.get('email')
                 old_email = user.email
                 if user.email != new_email:
@@ -707,64 +685,51 @@ def edit_user(request, id):
                     except Exception as e:
                         print(f"✗ Failed to queue email change notifications: {str(e)}")
 
-                # Only VP/DIRECTOR can change role
                 if can_edit_role_and_verify:
                     new_role = data.get('role')
                     if user.role != new_role:
                         changes.append(f'role from {user.get_role_display()} to {dict(User.Role.choices)[new_role]}')
                     user.role = new_role
 
-                # Role-specific field updates
                 if user.role == "CLIENT":
                     user.college = None
-                    # campus removed - derived from college (will be None when college is None)
                     user.degree = None
                     user.expertise = None
-                    # CLIENT can edit company and industry
                     user.company = data.get('company') or None
                     user.industry = data.get('industry') or None
 
                 elif user.role == "FACULTY":
-                    # FACULTY can edit college (campus derived from college), degree, and expertise
                     college_id = data.get('college')
                     user.college = College.objects.get(id=college_id) if college_id else None
-                    # campus removed - automatically derived from college.campus
                     user.degree = data.get('degree') or None
                     user.expertise = data.get('expertise') or None
                     user.company = None
                     user.industry = None
 
                 elif user.role in ["PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
-                    # Only VP/DIRECTOR can edit these roles' info
                     if can_edit_role_and_verify:
                         college_id = data.get('college')
                         user.college = College.objects.get(id=college_id) if college_id else None
-                        # campus removed - automatically derived from college.campus
                     user.degree = None
                     user.expertise = None
                     user.company = None
                     user.industry = None
 
                 elif user.role == "IMPLEMENTER":
-                    # IMPLEMENTER can edit degree and expertise
                     user.college = None
-                    # campus removed - will be None when college is None
                     user.degree = data.get('degree') or None
                     user.expertise = data.get('expertise') or None
                     user.company = None
                     user.industry = None
                 
                 else:
-                    # UESO, DIRECTOR, VP - only editable by VP/DIRECTOR
                     if can_edit_role_and_verify:
                         user.college = None
-                        # campus removed - will be None when college is None
-                        user.degree = None
-                        user.expertise = None
-                        user.company = None
-                        user.industry = None
+                    user.degree = None
+                    user.expertise = None
+                    user.company = None
+                    user.industry = None
 
-                # Only update password if provided and not blank
                 password = data.get('password', '').strip()
                 password_changed = False
                 if password:
@@ -772,9 +737,7 @@ def edit_user(request, id):
                     password_changed = True
                     changes.append('password')
 
-                # Handle profile picture upload
                 if request.FILES.get('profile_picture'):
-                    # Delete old profile picture if exists
                     if user.profile_picture:
                         try:
                             user.profile_picture.delete(save=False)
@@ -807,18 +770,14 @@ def edit_user(request, id):
                     is_notification=True
                 )
                 
-                # Redirect back to referrer with success toast
-                from urllib.parse import quote
                 referrer = request.META.get('HTTP_REFERER', '')
                 user_full_name = quote(user.get_full_name())
                 
-                # Determine redirect URL based on referrer
                 if '/details/' in referrer:
                     redirect_url = f'/users/details/{user.id}/?success=true&action=edited&title={user_full_name}'
                 elif '/profile/' in referrer:
                     redirect_url = f'/profile/{user.id}/?success=true&action=edited&title={user_full_name}'
                 else:
-                    # Default to profile for self-edit, user_details for others
                     if request.user.id == user.id:
                         redirect_url = f'/profile/{user.id}/?success=true&action=edited&title={user_full_name}'
                     else:
@@ -843,22 +802,17 @@ def edit_user(request, id):
     })
 
 
-# Verify/Unverify user views
-from django.http import HttpResponseRedirect
-
 @role_required(allowed_roles=["VP", "DIRECTOR"], require_confirmed=True)
 def verify_user(request, id):
     User = get_user_model()
     user = get_object_or_404(User, id=id)
     
-    # VP/DIRECTOR cannot verify themselves
     if request.user.id == user.id:
         return redirect('no_permission')
     
     user.is_confirmed = True
     user.save()
     
-    # Send email notification to the user
     try:
         from system.utils.email_utils import async_send_account_activated
         async_send_account_activated(
@@ -870,7 +824,6 @@ def verify_user(request, id):
     except Exception as e:
         print(f"✗ Failed to queue activation email to {user.email}: {str(e)}")
     
-    from urllib.parse import quote
     return redirect(f'/users/?success=true&action=confirmed&title={quote(user.get_full_name())}')
 
 @role_required(allowed_roles=["VP", "DIRECTOR"], require_confirmed=True)
@@ -878,14 +831,12 @@ def unverify_user(request, id):
     User = get_user_model()
     user = get_object_or_404(User, id=id)
     
-    # VP/DIRECTOR cannot unverify themselves
     if request.user.id == user.id:
         return redirect('no_permission')
     
     user.is_confirmed = False
     user.save()
     
-    # Send email notification to the user
     try:
         from system.utils.email_utils import async_send_account_deactivated
         async_send_account_deactivated(
@@ -900,10 +851,6 @@ def unverify_user(request, id):
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
 
 
-from django.http import HttpResponseRedirect
-from django.urls import reverse
-
-# Delete user view with confirmation
 @role_required(allowed_roles=["VP", "DIRECTOR"], require_confirmed=True)
 def delete_user(request, id):
     User = get_user_model()
@@ -913,11 +860,6 @@ def delete_user(request, id):
 
 ####################################################################################################
 
-# User Profile View
-from django.contrib.auth.decorators import login_required
-from django.db.models import Q
-
-
 def profile_role_constants():
     HAS_COLLEGE_CAMPUS = ["FACULTY", "PROGRAM_HEAD", "DEAN", "COORDINATOR"]
     HAS_DEGREE_EXPERTISE = ["FACULTY", "IMPLEMENTER"]
@@ -926,39 +868,27 @@ def profile_role_constants():
 
 
 def can_view_project(user, project):
-    """
-    Check if a user can view a project based on visibility restrictions:
-    - Non-authenticated users: only COMPLETED projects
-    - Project leader/providers: can see their projects regardless of status
-    - Dean/Coordinator/Program Head: can see all projects from their college
-    - UESO/Director/VP: can see everything
-    """
-    # UESO, Director, VP can see everything
     if user.is_authenticated and hasattr(user, 'role'):
         if user.role in ["UESO", "DIRECTOR", "VP"]:
             return True
         
-        # Project leader or provider can see their own projects
         if project.project_leader == user or user in project.providers.all():
             return True
         
-        # Dean, Coordinator, Program Head can see all projects from their college
         if user.role in ["DEAN", "COORDINATOR", "PROGRAM_HEAD"]:
             if user.college and project.project_leader.college == user.college:
                 return True
     
-    # Non-authenticated or other users can only see COMPLETED projects
     return project.status == 'COMPLETED'
 
 
 def profile_view(request, id=None):
-    # If id is provided, show that user's profile, otherwise show logged-in user's profile
     User = get_user_model()
     if id:
         try:
             user = User.objects.get(id=id)
         except User.DoesNotExist:
-            return redirect('profile')  # Fallback to own profile if user not found
+            return redirect('profile')
     else:
         user = request.user
     
@@ -966,27 +896,20 @@ def profile_view(request, id=None):
 
     base_template = get_templates(request)
 
-    # Get campus display name
     campus_display = user.campus.name if user.campus else "N/A"
 
-    # Get college name and logo
     college_name = user.college.name if user.college else "N/A"
     college_logo = user.college.logo.url if user.college and user.college.logo else None
 
-    # Get content items based on role
-    # For ALL roles except CLIENT: show only projects where the profile user is leader or provider
-    # Then apply visibility filtering based on what the VIEWING user can see
     content_items = []
 
     if user.role == User.Role.CLIENT:
-        # Get client requests
         from shared.request.models import ClientRequest
         content_items = ClientRequest.objects.filter(
             submitted_by=user
         ).order_by('-submitted_at')
     
     else:
-        # For all other roles: Get only THEIR OWN projects (where they are leader or provider)
         from shared.projects.models import Project
         all_projects = Project.objects.filter(
             Q(project_leader=user) | Q(providers=user)
@@ -996,17 +919,16 @@ def profile_view(request, id=None):
             'providers', 'sdgs'
         ).order_by('-start_date')
         
-        # Filter projects based on what the VIEWING user can see
         content_items = [p for p in all_projects if can_view_project(request.user, p)]
 
     return render(request, 'users/profile.html', {
-        'profile_user': user,  # The user whose profile is being viewed
-        'can_edit': request.user.id == user.id,  # Can only edit own profile
+        'profile_user': user,
+        'can_edit': request.user.id == user.id,
         'campus_display': campus_display,
         'college_name': college_name,
         'college_logo': college_logo,
         'content_items': content_items,
-        'content_items_count': len(content_items),  # Count of visible items
+        'content_items_count': len(content_items),
         'base_template': base_template,
 
         'HAS_COLLEGE_CAMPUS': HAS_COLLEGE_CAMPUS,
@@ -1037,7 +959,6 @@ def update_profile_picture(request):
 
 ####################################################################################################
 
-# Quick Login View for Testing Purposes
 User = get_user_model()
 
 def quick_login(request, role):
