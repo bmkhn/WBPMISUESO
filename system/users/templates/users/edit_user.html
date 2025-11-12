@@ -530,30 +530,6 @@
         }
     });
 
-    // DOMContentLoaded for event listeners
-    document.addEventListener('DOMContentLoaded', function() {
-        // Get email input element
-        const emailInput = document.getElementById('email-input');
-        const emailError = document.getElementById('email-error');
-        
-        if (password.length >= 8) score += 25;
-        if (/[A-Z]/.test(password)) score += 25;
-        if (/[a-z]/.test(password)) score += 25;
-        if (/[0-9!@#$%^&*()]/.test(password)) score += 25;
-
-        bar.style.width = score + '%';
-        bar.setAttribute('aria-valuenow', score);
-        
-        bar.className = 'progress-bar'; 
-        if (score <= 25) {
-            bar.classList.add('bg-danger');
-        } else if (score <= 75) {
-            bar.classList.add('bg-warning');
-        } else {
-            bar.classList.add('bg-success');
-        }
-    }
-
     // --- Validation and Role Logic ---
     
     // Helper to show/hide field errors dynamically
