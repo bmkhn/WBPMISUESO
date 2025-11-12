@@ -20,7 +20,7 @@
         <div class="search-container" style="box-shadow: none;">
             <form class="search-bar" style="box-shadow: 0 0 15px rgba(0, 0, 0, 0.08);" method="get" action="">
                 <svg width="16" height="16" style="margin-right:10px;"> <use href="#icon-search"></use> </svg>
-				<input type="text" name="search" placeholder="Disabled" value="{{ search_query|default:'' }}" disabled style="cursor:not-allowed"/>
+				<input type="text" name="search" placeholder="Search" value="{{ search_query|default:'' }}"/>
                 <button type="button" id="filterBtn" style="background:none;border:none;padding:0;margin-right:5px;cursor:pointer;">
                     <svg width="16" height="16"> <use href="#icon-filter"></use> </svg>
                 </button>
@@ -85,23 +85,28 @@
 		<div class="expert-container visible" id="expertGrid">
 		{% for expert in experts %}
 		<a href="{% url 'expert_profile' expert.id %}" class="expert-card" style="text-decoration:none; color:inherit;">
-			<div class="campus-tag">{{ expert.get_campus_display|default:"N/A" }}</div>
+
+			{% if expert.campus %}
+			<div class="campus-tag">{{ expert.get_campus_display|default:"" }}</div>
+			{% else %}
+			<div class="campus-tag" style="display:none;"></div>
+			{% endif %}
+
 			{% if expert.college and expert.college.logo %}
 			<img src="{{ expert.college.logo.url }}" class="college-logo" alt="{{ expert.college.name }}">
 			{% else %}
 			<div class="college-logo" style="background:none;"></div>
 			{% endif %}
-			<img src="{{ expert.profile_picture_or_initial }}" class="profile-icon" alt="{{ expert.get_full_name }}">
-			<div class="expert-name">{{ expert.get_full_name }}</div>
-			<div class="expert-degree">{{ expert.degree|default:"No Degree Listed" }}</div>
-			<div class="expert-projects">Projects: {{ expert.led_completed|add:expert.member_completed }}</div>
-		</a>
-		{% empty %}
-		<div style="grid-column: 1 / -1; text-align:center; padding:40px; color:#666;">No experts found.</div>
-		{% endfor %}
-		</div>
 
-		<!-- Pagination for Grid View -->
+		<img src="{{ expert.profile_picture_or_initial }}" class="profile-icon" alt="{{ expert.get_full_name }}">
+		<div class="expert-name">{{ expert.last_name }}, {{ expert.given_name }}{% if expert.middle_initial %} {{ expert.middle_initial }}.{% endif %}{% if expert.suffix %} {{ expert.suffix }}{% endif %}</div>
+		<div class="expert-degree">{{ expert.degree|default:"No Degree Listed" }}</div>
+		<div class="expert-projects">Projects: {{ expert.total_completed }}</div>
+	</a>
+	{% empty %}
+	<div style="grid-column: 1 / -1; text-align:center; padding:40px; color:#666;">No experts found.</div>
+	{% endfor %}
+	</div>		<!-- Pagination for Grid View -->
 		<div class="pagination-container" id="gridPagination">
 			{% if page_obj.has_previous %}
 				<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page=1">First</a>
@@ -130,30 +135,30 @@
 
 		<!-- Expert List (toggle alternative) -->
 		<table class="user-table" id="expertList">
-		<thead>
-			<tr>
-				<th>Name</th>
-				<th>Campus</th>
-				<th>College</th>
-				<th>No. of Projects</th>
-			</tr>
-		</thead>
-		<tbody>
-			{% for expert in experts %}
-			<tr>
-				<td><a href="{% url 'expert_profile' expert.id %}" class="name-link">{{ expert.get_full_name }}</a></td>
-				<td>{{ expert.get_campus_display|default:"N/A" }}</td>
-				<td>{{ expert.college.name|default:"N/A" }}</td>
-				<td>{{ expert.led_completed|add:expert.member_completed }}</td>
-			</tr>
-			{% empty %}
-			<tr>
-			<td colspan="4" style="text-align:center; color:#666;">No experts found.</td>
-			</tr>
-			{% endfor %}
-		</tbody>
-		</table>
-
+			<thead>
+				<tr>
+					<th>Name</th>
+					<th>Campus</th>
+					<th>College</th>
+					<th>No. of Projects</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for expert in experts %}
+				<tr>
+					<td><a href="{% url 'expert_profile' expert.id %}" class="name-link">{{ expert.get_full_name }}</a></td>
+					<td>{{ expert.get_campus_display|default:"-" }}</td>
+					<td>{{ expert.college.name|default:"-" }}</td>
+					<td>{{ expert.total_completed }}</td>
+				</tr>
+				{% empty %}
+				<tr>
+				<td colspan="4" style="text-align:center; color:#666;">No experts found.</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>		
+	
 		<!-- Pagination for List View -->
 		<div class="pagination-container" id="listPagination">
 			{% if page_obj.has_previous %}
@@ -249,7 +254,7 @@
 		<!-- Results View -->
 		<div class="results-view" id="resultsView">
 			<button class="back-btn" id="backToFormBtn">
-				← Back to Search
+				<i class="fa-solid fa-arrow-left"></i> Back to Search
 			</button>
 
 			{% if can_create_projects %}
@@ -266,7 +271,7 @@
 				<div class="team-members-list" id="teamMembersList"></div>
 				
 				<div class="details-panel-placeholder" id="detailsPlaceholder">
-					← Select a team member to view details
+					<i class="fa-solid fa-arrow-left"></i> Select a team member to view details
 				</div>
 				
 				<div class="details-panel" id="detailsPanel"></div>
@@ -378,100 +383,88 @@
     const gridPagination = document.getElementById('gridPagination');
     const listPagination = document.getElementById('listPagination');
 
-    gridViewBtn.addEventListener('click', function() {
-        gridViewBtn.classList.add('active');
-        listViewBtn.classList.remove('active');
-        expertGrid.classList.remove('hidden');
-        expertGrid.classList.add('visible');
-        expertList.classList.add('hidden');
-        if (gridPagination) {
-            gridPagination.classList.remove('hidden');
-            gridPagination.classList.add('visible');
+    // Function to update URL with view parameter
+    function updateViewParam(viewType) {
+        const url = new URL(window.location);
+        url.searchParams.set('view', viewType);
+        window.history.replaceState({}, '', url);
+    }
+    
+    // Update icons based on current view
+    const gridIconUse = document.getElementById('gridIconUse');
+    const listIconUse = document.getElementById('listIconUse');
+    
+    function updateIcons(viewType) {
+        if (viewType === 'grid') {
+            gridIconUse.setAttribute('href', '#icon-grid-active');
+            listIconUse.setAttribute('href', '#icon-list');
+        } else {
+            gridIconUse.setAttribute('href', '#icon-grid');
+            listIconUse.setAttribute('href', '#icon-list-active');
         }
-        if (listPagination) {
-            listPagination.classList.add('hidden');
-            listPagination.classList.remove('visible');
-        }
-    });
+    }
 
-    listViewBtn.addEventListener('click', function() {
-        listViewBtn.classList.add('active');
-        gridViewBtn.classList.remove('active');
-        expertGrid.classList.remove('visible');
-        expertGrid.classList.add('hidden');
-        expertList.classList.remove('hidden');
-        if (listPagination) {
-            listPagination.classList.remove('hidden');
-            listPagination.classList.add('visible');
-        }
-        if (gridPagination) {
-            gridPagination.classList.add('hidden');
-            gridPagination.classList.remove('visible');
-        }
-    });
 
-    // Optionally, set default view on page load
-    document.addEventListener('DOMContentLoaded', function() {
-        gridViewBtn.classList.add('active');
-        expertGrid.classList.add('visible');
-        expertList.classList.add('hidden');
-        if (gridPagination) {
-            gridPagination.classList.add('visible');
-        }
-        if (listPagination) {
-            listPagination.classList.add('hidden');
-        }
-    });
-
-	const gridIconUse = document.getElementById('gridIconUse');
-	const listIconUse = document.getElementById('listIconUse');
+	function reloadWithView(viewType) {
+		const url = new URL(window.location);
+		url.searchParams.set('view', viewType);
+		window.location.href = url;
+	}
 
 	gridViewBtn.addEventListener('click', function() {
-		gridViewBtn.classList.add('active');
-		listViewBtn.classList.remove('active');
-		expertGrid.classList.remove('hidden');
-		expertGrid.classList.add('visible');
-		expertList.classList.add('hidden');
-		if (gridPagination) {
-            gridPagination.classList.remove('hidden');
-            gridPagination.classList.add('visible');
-        }
-        if (listPagination) {
-            listPagination.classList.add('hidden');
-        }
-		gridIconUse.setAttribute('href', '#icon-grid-active');
-		listIconUse.setAttribute('href', '#icon-list');
+		reloadWithView('grid');
 	});
 
 	listViewBtn.addEventListener('click', function() {
-		listViewBtn.classList.add('active');
-		gridViewBtn.classList.remove('active');
-		expertGrid.classList.remove('visible');
-		expertGrid.classList.add('hidden');
-		expertList.classList.remove('hidden');
-		if (listPagination) {
-            listPagination.classList.remove('hidden');
-            listPagination.classList.add('visible');
-        }
-        if (gridPagination) {
-            gridPagination.classList.add('hidden');
-        }
-		gridIconUse.setAttribute('href', '#icon-grid');
-		listIconUse.setAttribute('href', '#icon-list-active');
+		reloadWithView('list');
 	});
 
-	document.addEventListener('DOMContentLoaded', function() {
-		gridViewBtn.classList.add('active');
-		expertGrid.classList.add('visible');
+    // Set view on page load based on URL parameter
+    document.addEventListener('DOMContentLoaded', function() {
+		const currentView = '{{ view|default:"grid" }}';
+		// Always hide both views and paginations first
+		expertGrid.classList.add('hidden');
 		expertList.classList.add('hidden');
-		if (gridPagination) {
-            gridPagination.classList.add('visible');
-        }
-        if (listPagination) {
-            listPagination.classList.add('hidden');
-        }
-		gridIconUse.setAttribute('href', '#icon-grid-active');
-		listIconUse.setAttribute('href', '#icon-list');
+		expertGrid.style.display = 'none';
+		expertList.style.display = 'none';
+
+		if (currentView === 'list') {
+			listViewBtn.classList.add('active');
+			gridViewBtn.classList.remove('active');
+
+			expertList.classList.remove('hidden');
+			expertList.style.display = '';
+
+			expertGrid.classList.add('hidden');
+			expertGrid.classList.remove('visible');
+			expertGrid.style.display = 'none';
+			
+			if (listPagination) {
+				listPagination.classList.remove('hidden');
+			}
+			if (gridPagination) {
+				gridPagination.classList.add('hidden');
+			}
+		} else {
+			gridViewBtn.classList.add('active');
+			listViewBtn.classList.remove('active');
+			
+			expertGrid.classList.remove('hidden');
+			expertGrid.style.display = 'block';
+			
+			expertList.classList.add('hidden');
+			expertList.classList.remove('visible');
+			expertList.style.display = 'none';
+			
+			if (gridPagination) {
+				gridPagination.classList.remove('hidden');
+			}
+			if (listPagination) {
+				listPagination.classList.add('hidden');
+			}
+		}
+		// Update icons
+		updateIcons(currentView);
 	});
 
 	// Modal functionality
@@ -638,10 +631,13 @@
 				</div>
 				<div class="member-info">
 					<div class="member-name">${member.name}</div>
-					<div class="member-score">Match: ${(member.final_score * 100).toFixed(1)}%</div>
+
 				</div>
 				<span class="leader-badge">👑 Leader</span>
 			`;
+
+			// THIS IS COMMENTED OUT FOR NOW - CAN BE ADDED BACK LATER IF DETAILED SCORES ARE NEEDED
+					// <div class="member-score">Match: ${(member.final_score * 100).toFixed(1)}%</div>
 			
 			// Checkbox click handler (only if checkbox exists)
 			if (canCreateProjects) {
@@ -763,7 +759,7 @@
 		detailsPanel.innerHTML = `
 			<div class="panel-header">
 				<div class="panel-name">${member.name}</div>
-				<div class="panel-score">Final Score: ${member.final_score.toFixed(3)}</div>
+
 			</div>
 			
 			<div class="details-grid">
@@ -797,67 +793,75 @@
 					</div>
 				</div>
 				<div class="detail-item">
-					<span class="detail-label">Avg Rating</span>
-					<span class="detail-value">${member.avg_rating.toFixed(2)}/5</span>
+					<span class="detail-label">Average Evaluation Score</span>
+					<span class="detail-value">${member.avg_rating % 1 === 0 ? member.avg_rating.toFixed(0) : member.avg_rating.toFixed(1)}/5</span>
 				</div>
 			</div>
-			
-			<div class="scores-section">
-				<div class="scores-title">Scoring Breakdown</div>
-				
-				<div class="score-item">
-					<div class="score-header">
-						<span class="score-label">Semantic Match (70%)</span>
-						<div class="score-values">
-							<span class="score-raw">${member.semantic_score.toFixed(3)}</span> → 
-							<span class="score-weighted">${semanticWeighted.toFixed(3)}</span>
-						</div>
-					</div>
-					<div class="score-bar-bg">
-						<div class="score-bar-fill score-bar-semantic" style="width: ${semanticBarWidth}%"></div>
-					</div>
-				</div>
-				
-				<div class="score-item">
-					<div class="score-header">
-						<span class="score-label">Rating Score (15%)</span>
-						<div class="score-values">
-							<span class="score-raw">${member.normalized_rating.toFixed(3)}</span> → 
-							<span class="score-weighted">${ratingWeighted.toFixed(3)}</span>
-						</div>
-					</div>
-					<div class="score-bar-bg">
-						<div class="score-bar-fill score-bar-rating" style="width: ${ratingBarWidth}%"></div>
-					</div>
-				</div>
-				
-				<div class="score-item">
-					<div class="score-header">
-						<span class="score-label">Availability (15%)</span>
-						<div class="score-values">
-							<span class="score-raw">${member.availability_score.toFixed(3)}</span> → 
-							<span class="score-weighted">${availabilityWeighted.toFixed(3)}</span>
-						</div>
-					</div>
-					<div class="score-bar-bg">
-						<div class="score-bar-fill score-bar-availability" style="width: ${availabilityBarWidth}%"></div>
-					</div>
-				</div>
-				
-				<div class="score-item final-score-item">
-					<div class="score-header">
-						<span class="score-label"><strong>Final Score</strong></span>
-						<div class="score-values">
-							<span class="score-weighted" style="font-size: 16px;">${member.final_score.toFixed(3)}</span>
-						</div>
-					</div>
-					<div class="score-bar-bg">
-						<div class="score-bar-fill score-bar-final" style="width: ${finalBarWidth}%"></div>
-					</div>
-				</div>
-			</div>
+		
 		`;
 	}
+
+	// THIS IS IN COMMENTED OUT FOR NOW - CAN BE ADDED BACK LATER IF DETAILED SCORES ARE NEEDED
+
+				// <div class="panel-score">Final Score: ${member.final_score.toFixed(3)}</div>
+
+
+
+			// <div class="scores-section">
+			// 	<div class="scores-title">Scoring Breakdown</div>
+				
+			// 	<div class="score-item">
+			// 		<div class="score-header">
+			// 			<span class="score-label">Semantic Match (70%)</span>
+			// 			<div class="score-values">
+			// 				<span class="score-raw">${member.semantic_score.toFixed(3)}</span> <i class="fa-solid fa-arrow-right"></i>
+							 
+			// 				<span class="score-weighted">${semanticWeighted.toFixed(3)}</span>
+			// 			</div>
+			// 		</div>
+			// 		<div class="score-bar-bg">
+			// 			<div class="score-bar-fill score-bar-semantic" style="width: ${semanticBarWidth}%"></div>
+			// 		</div>
+			// 	</div>
+				
+			// 	<div class="score-item">
+			// 		<div class="score-header">
+			// 			<span class="score-label">Rating Score (15%)</span>
+			// 			<div class="score-values">
+			// 				<span class="score-raw">${member.normalized_rating.toFixed(3)}</span> <i class="fa-solid fa-arrow-right"></i>
+			// 				<span class="score-weighted">${ratingWeighted.toFixed(3)}</span>
+			// 			</div>
+			// 		</div>
+			// 		<div class="score-bar-bg">
+			// 			<div class="score-bar-fill score-bar-rating" style="width: ${ratingBarWidth}%"></div>
+			// 		</div>
+			// 	</div>
+				
+			// 	<div class="score-item">
+			// 		<div class="score-header">
+			// 			<span class="score-label">Availability (15%)</span>
+			// 			<div class="score-values">
+			// 				<span class="score-raw">${member.availability_score.toFixed(3)}</span> <i class="fa-solid fa-arrow-right"></i>
+			// 				<span class="score-weighted">${availabilityWeighted.toFixed(3)}</span>
+			// 			</div>
+			// 		</div>
+			// 		<div class="score-bar-bg">
+			// 			<div class="score-bar-fill score-bar-availability" style="width: ${availabilityBarWidth}%"></div>
+			// 		</div>
+			// 	</div>
+				
+			// 	<div class="score-item final-score-item">
+			// 		<div class="score-header">
+			// 			<span class="score-label"><strong>Final Score</strong></span>
+			// 			<div class="score-values">
+			// 				<span class="score-weighted" style="font-size: 16px;">${member.final_score.toFixed(3)}</span>
+			// 			</div>
+			// 		</div>
+			// 		<div class="score-bar-bg">
+			// 			<div class="score-bar-fill score-bar-final" style="width: ${finalBarWidth}%"></div>
+			// 		</div>
+			// 	</div>
+			// </div>
 
 	// Get CSRF token from cookie
 	function getCookie(name) {

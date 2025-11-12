@@ -4,7 +4,7 @@ from django.views.decorators.http import require_POST
 from system.users.decorators import role_required
 from system.users.decorators import role_required
 from system.users.models import Campus, College, User
-#from .ai_team_generator import get_team_generator
+from .ai_team_generator import get_team_generator
 import json
 
 
@@ -19,30 +19,49 @@ def get_templates(request):
 
 @role_required(allowed_roles=["VP", "DIRECTOR", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD"], require_confirmed=True)
 def experts_view(request):
+    query_params = {}
     from django.core.paginator import Paginator
-
-    # Get filter options for the modal
-    campuses = Campus.objects.all()
-    colleges = College.objects.all()
-    
     from shared.projects.models import Project
     from django.db.models import Q, Count
 
-    # Get all experts and annotate with completed projects count
-    experts = User.objects.filter(is_expert=True, is_confirmed=True).select_related('college')
+    # Get all experts (any role except CLIENT and IMPLEMENTER, as long as they are marked as expert and confirmed)
+    experts = User.objects.filter(
+        is_expert=True, 
+        is_confirmed=True
+    ).exclude(
+        role__in=['CLIENT', 'IMPLEMENTER']
+    ).select_related('college')
     
+    # Get all for filter dropdowns
+    campuses = Campus.objects.all()
+    colleges = College.objects.all()
+
     # Apply search filter
     search_query = request.GET.get('search', '').strip()
     if search_query:
         experts = experts.filter(
-            Q(first_name__icontains=search_query) |
+            Q(given_name__icontains=search_query) |
             Q(last_name__icontains=search_query) |
-            Q(middle_name__icontains=search_query)
+            Q(middle_initial__icontains=search_query) |
+            Q(college__name__icontains=search_query) |
+            Q(college__campus__name__icontains=search_query) |
+            Q(degree__icontains=search_query) |
+            Q(expertise__icontains=search_query) 
         )
+        query_params['search'] = search_query
     
+    sort_by = request.GET.get('sort_by', 'name').strip()
+    order = request.GET.get('order', 'asc').strip()
+
+    if sort_by:
+        query_params['sort_by'] = sort_by
+    if order:
+        query_params['order'] = order
+
     # Apply campus filter (filter by college's campus since user.campus is derived from college)
     campus_filter = request.GET.get('campus', '').strip()
     if campus_filter:
+        query_params['campus'] = campus_filter
         try:
             campus_id = int(campus_filter)
             experts = experts.filter(college__campus_id=campus_id)
@@ -52,38 +71,41 @@ def experts_view(request):
     # Apply college filter
     college_filter = request.GET.get('college', '').strip()
     if college_filter:
+        query_params['college'] = college_filter
         try:
             college_id = int(college_filter)
             experts = experts.filter(college_id=college_id)
         except ValueError:
             pass
     
-    # Annotate each expert with completed_projects count
-    # Count projects where user is leader with COMPLETED status
-    # Plus count projects where user is provider with COMPLETED status
+    # Annotate each expert with completed_projects count (Count COMPLETED Project where they are leader/provider)
+    from django.db.models import F, IntegerField, ExpressionWrapper
     experts = experts.annotate(
         led_completed=Count('led_projects', filter=Q(led_projects__status='COMPLETED'), distinct=True),
         member_completed=Count('member_projects', filter=Q(member_projects__status='COMPLETED'), distinct=True)
     )
+    experts = experts.annotate(
+        total_completed=ExpressionWrapper(F('led_completed') + F('member_completed'), output_field=IntegerField())
+    )
     
     # Filter to only show experts with at least 1 completed project
-    # We need to filter after annotation
-    experts = [e for e in experts if (e.led_completed + e.member_completed) >= 1]
+    experts = experts.filter(total_completed__gte=1)
     
-    # Apply sorting (experts is now a list, not a queryset)
-    sort_by = request.GET.get('sort_by', 'name')  # name, projects, campus, college
-    order = request.GET.get('order', 'asc')  # asc or desc
-    
+    # Apply sorting after annotations
     if sort_by == 'name':
-        experts.sort(key=lambda x: (x.last_name, x.given_name), reverse=(order == 'desc'))
-    elif sort_by == 'projects':
-        experts.sort(key=lambda x: x.led_completed + x.member_completed, reverse=(order == 'desc'))
-    elif sort_by == 'campus':
-        experts.sort(key=lambda x: (x.campus.name if x.campus else '', x.last_name, x.given_name), reverse=(order == 'desc'))
-    elif sort_by == 'college':
-        experts.sort(key=lambda x: (x.college.name if x.college else '', x.last_name, x.given_name), reverse=(order == 'desc'))
+        sort_field = ['last_name', 'given_name', 'middle_initial', 'suffix']
     else:
-        experts.sort(key=lambda x: (x.last_name, x.given_name), reverse=(order == 'desc'))
+        sort_map = {
+            'projects': 'total_completed',
+            'campus': 'college__campus__name',
+            'college': 'college__name',
+        }
+        sort_field = [sort_map.get(sort_by, 'last_name')]
+    
+    if order == 'desc':
+        sort_field = ['-' + f if not f.startswith('-') else f for f in sort_field]
+    
+    experts = experts.order_by(*sort_field)
 
     # Pagination
     page_number = request.GET.get('page', 1)
@@ -105,18 +127,44 @@ def experts_view(request):
     # Check if user can create projects (UESO, DIRECTOR, VP only)
     can_create_projects = request.user.role in ['UESO', 'DIRECTOR', 'VP']
     
+    # Get view preference (grid or list), default to 'grid' if not present
+    view = request.GET.get('view', 'grid').strip()
+    
+    # Build querystring for pagination links (only include non-default values)
+    querystring_parts = []
+    if search_query:
+        querystring_parts.append(f'search={search_query}')
+    # Only add sort_by if it's not the default
+    if sort_by and sort_by != 'name':
+        querystring_parts.append(f'sort_by={sort_by}')
+    # Only add order if it's not the default
+    if order and order != 'asc':
+        querystring_parts.append(f'order={order}')
+    if campus_filter:
+        querystring_parts.append(f'campus={campus_filter}')
+    if college_filter:
+        querystring_parts.append(f'college={college_filter}')
+    # Always add view parameter to maintain state
+    querystring_parts.append(f'view={view}')
+    querystring = '&'.join(querystring_parts)
+    
     return render(request, 'experts/experts.html', {
-        'campuses': campuses,
-        'colleges': colleges,
+        'campus_filter': campus_filter,
+        'college_filter': college_filter,
+
         'experts': page_obj,
         'paginator': paginator,
         'page_obj': page_obj,
         'page_range': page_range,
+
         'search_query': search_query,
-        'campus_filter': campus_filter,
-        'college_filter': college_filter,
         'sort_by': sort_by,
         'order': order,
+        'campuses': campuses,
+        'colleges': colleges,
+        
+        'view': view,
+        'querystring': querystring,
         'can_create_projects': can_create_projects,
     })
 
@@ -207,3 +255,83 @@ def generate_team_view(request):
         'success': False,
         'error': 'AI Team Generation is temporarily disabled for deployment.'
     }, status=503)
+
+
+    # ORGIINAL IMPLEMENTATION BELOW - COMMENTED OUT FOR TEMPORARY DISABLEMENT
+
+    # try:
+    #     data = json.loads(request.body)
+        
+    #     keywords = data.get('keywords', '').strip()
+    #     campus_filter = data.get('campus', '').strip() or None
+    #     college_filter = data.get('college', '').strip() or None
+    #     num_participants = int(data.get('num_participants', 5))
+        
+    #     if not keywords:
+    #         return JsonResponse({
+    #             'success': False,
+    #             'error': 'Keywords are required'
+    #         }, status=400)
+        
+    #     if num_participants < 1 or num_participants > 20:
+    #         return JsonResponse({
+    #             'success': False,
+    #             'error': 'Number of participants must be between 1 and 20'
+    #         }, status=400)
+        
+    #     # Convert college to int if provided
+    #     if college_filter:
+    #         try:
+    #             college_filter = int(college_filter)
+    #         except ValueError:
+    #             college_filter = None
+        
+    #     # Generate team
+    #     generator = get_team_generator()
+    #     team_members = generator.generate_team(
+    #         keywords=keywords,
+    #         campus_filter=campus_filter,
+    #         college_filter=college_filter,
+    #         num_participants=num_participants
+    #     )
+        
+    #     # Format response
+    #     results = []
+    #     for member in team_members:
+    #         # Get profile picture URL if available
+    #         profile_pic_url = None
+    #         if member.get('user'):
+    #             user = member['user']
+    #             if user.profile_picture:
+    #                 profile_pic_url = user.profile_picture.url
+            
+    #         results.append({
+    #             'id': member['id'],
+    #             'name': member['name'],
+    #             'campus': member['campus'],
+    #             'college': member['college'],
+    #             'degree': member['degree'],
+    #             'expertise': member['expertise'],
+    #             'total_projects': member['total_projects'],
+    #             'ongoing_projects': member['ongoing_projects'],
+    #             'avg_rating': round(member['avg_rating'], 2),
+    #             'semantic_score': round(member['semantic_score'], 3),
+    #             'normalized_rating': round(member['normalized_rating'], 3),
+    #             'availability_score': round(member['availability_score'], 3),
+    #             'final_score': round(member['final_score'], 3),
+    #             'profile_picture': profile_pic_url,
+    #         })
+        
+    #     return JsonResponse({
+    #         'success': True,
+    #         'team_members': results,
+    #         'count': len(results)
+    #     })
+        
+    # except Exception as e:
+    #     import traceback
+    #     traceback.print_exc()
+    #     return JsonResponse({
+    #         'success': False,
+    #         'error': str(e)
+    #     }, status=500)
