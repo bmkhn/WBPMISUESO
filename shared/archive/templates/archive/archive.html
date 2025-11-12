@@ -109,6 +109,7 @@
                                 <th>Progress</th>
                                 <th>Trainees</th>
                                 <th>Status</th>
+                                <th>Further Action/s</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -348,7 +349,7 @@
     function renderProjectTable(data) {
         projectsTableBody.innerHTML = '';
         if (data.length === 0) {
-            projectsTableBody.innerHTML = `<tr><td colspan="7" style="text-align: center;">No projects found for this filter.</td></tr>`;
+            projectsTableBody.innerHTML = `<tr><td colspan="8" style="text-align: center;">No projects found for this filter.</td></tr>`;
             return;
         }
 
@@ -358,6 +359,18 @@
             const collegeName = (project.project_leader && project.project_leader.college) ? ` (${project.project_leader.college.name})` : '';
             const progressDisplay = project.progress_display || '0/0 (0%)';
             const projectDetailUrl = `/projects/${project.id}/`;
+            
+            // Format further action
+            let furtherActionHTML = '';
+            if (project.further_action && project.further_action.length > 0) {
+                furtherActionHTML = '<ul style="margin:0; padding-left:1em;">';
+                project.further_action.forEach(action => {
+                    furtherActionHTML += `<li>${action}</li>`;
+                });
+                furtherActionHTML += '</ul>';
+            } else {
+                furtherActionHTML = '<span style="color:#999;">Not yet applicable</span>';
+            }
 
             row.innerHTML = `
                 <td><a href="${projectDetailUrl}" class="link">${project.title}</a></td>
@@ -367,6 +380,7 @@
                 <td>${progressDisplay}</td>
                 <td class="center">${project.estimated_trainees || 0}</td>
                 <td>${project.status}</td>
+                <td>${furtherActionHTML}</td>
             `;
         });
     }
@@ -406,7 +420,7 @@
             loadAggregationData(currentCategorySlug);
         });
 
-        projectsTableBody.innerHTML = `<tr><td colspan="7" style="text-align: center;">Loading projects...</td></tr>`;
+        projectsTableBody.innerHTML = `<tr><td colspan="8" style="text-align: center;">Loading projects...</td></tr>`;
         const formData = new FormData(document.getElementById('searchForm'));
         const searchParams = new URLSearchParams(formData).toString();
         const apiURL = `/archives/api/projects/${category}/${encodeURIComponent(filterValue)}/?${searchParams}`;
@@ -433,13 +447,13 @@
             }
         } catch (error) {
             console.error("Error fetching project list:", error);
-            projectsTableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: red;">Failed to load project list.</td></tr>`;
+            projectsTableBody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: red;">Failed to load project list.</td></tr>`;
         }
     }
 
     async function loadProjectTablePage(queryString) {
         const apiURL = `/archives/api/projects/${currentCategorySlug}/${encodeURIComponent(currentFilterKey)}/${queryString}`;
-        projectsTableBody.innerHTML = `<tr><td colspan="7" style="text-align: center;">Loading page...</td></tr>`;
+        projectsTableBody.innerHTML = `<tr><td colspan="8" style="text-align: center;">Loading page...</td></tr>`;
         try {
             const response = await fetch(apiURL);
             if (!response.ok) {
@@ -460,7 +474,7 @@
             }
         } catch (error) {
             console.error("Error fetching paginated list:", error);
-            projectsTableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: red;">Failed to load page.</td></tr>`;
+            projectsTableBody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: red;">Failed to load page.</td></tr>`;
         }
     }
 

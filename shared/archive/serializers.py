@@ -42,13 +42,14 @@ class ProjectSerializer(serializers.ModelSerializer):
     progress_display = serializers.CharField(read_only=True) 
     duration = serializers.SerializerMethodField()
     status = serializers.SerializerMethodField()
+    further_action = serializers.SerializerMethodField()
 
     class Meta:
         model = Project
         fields = [
             'id', 'title', 'project_leader', 'agenda', 'start_date', 
             'estimated_end_date', 'progress_display', 'duration',
-            'estimated_trainees', 'status'
+            'estimated_trainees', 'status', 'further_action'
         ]
 
     def get_status(self, obj):
@@ -62,3 +63,28 @@ class ProjectSerializer(serializers.ModelSerializer):
             days = duration.days % 365
             return f"{years} years, {days} days"
         return "N/A"
+    
+    def get_further_action(self, obj):
+        """Get further action from final submission type if project is completed."""
+        if obj.status != 'COMPLETED':
+            return None
+        
+        # Get final submissions for this project
+        from internal.submissions.models import Submission
+        final_submissions = Submission.objects.filter(
+            project=obj,
+            downloadable__submission_type='final'
+        ).first()
+        
+        if not final_submissions:
+            return None
+        
+        actions = []
+        if final_submissions.for_product_production:
+            actions.append('For Product Production')
+        if final_submissions.for_research:
+            actions.append('For Research')
+        if final_submissions.for_extension:
+            actions.append('For Extension')
+        
+        return actions if actions else None
