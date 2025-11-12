@@ -181,7 +181,6 @@ body {
 .container-2A:hover {
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.08); 
     transform: translateY(-5px) scale(1.02); 
-    border-color: #ffffff;
 }
 
 .container-2A::before {
