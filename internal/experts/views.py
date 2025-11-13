@@ -4,7 +4,7 @@ from django.views.decorators.http import require_POST
 from system.users.decorators import role_required
 from system.users.decorators import role_required
 from system.users.models import Campus, College, User
-from .ai_team_generator import get_team_generator
+# from .ai_team_generator import get_team_generator
 import json
 
 
