@@ -1234,8 +1234,8 @@
                 html += `<div style="background:#f8f9fa;border-left:4px solid #fd7e14;padding:16px;margin-bottom:12px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.08);">
                     <div class="event-details-row" style="display:flex;align-items:center;margin-bottom:8px;">
                         <div style="font-size:1.5rem;font-weight:600;color:#fd7e14;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;flex:1;">${ev.title}${statusBadge}</div>
-                        ${canEdit ? `<i class='fa-solid fa-pen-to-square' style='font-size:1.3rem;color:#fd7e14;cursor:pointer;margin-left:10px;' title='Edit' onclick='window.openEditEventModal(${JSON.stringify(ev)})'></i>` : ''}
-                        ${canEdit ? `<i class='fa-solid fa-trash' style='font-size:1.3rem;color:#E53E3E;cursor:pointer;margin-left:10px;' title='Delete' onclick='window.confirmDeleteEvent(${ev.id}, ${JSON.stringify(ev.title)})'></i>` : ''}
+                        ${canEdit ? `<i class='fa-solid fa-pen-to-square' style='font-size:1.3rem;color:#fd7e14;cursor:pointer;margin-left:10px;' title='Edit' onclick='(function(){var btn=document.getElementById("floating-add-event-btn");if(btn)btn.remove();window.openEditEventModal(${JSON.stringify(ev)});})()'></i>` : ''}
+                        ${canEdit ? `<i class='fa-solid fa-trash' style='font-size:1.3rem;color:#E53E3E;cursor:pointer;margin-left:10px;' title='Delete' onclick='(function(){var btn=document.getElementById("floating-add-event-btn");if(btn)btn.remove();window.confirmDeleteEvent(${ev.id}, ${JSON.stringify(ev.title)});})()'></i>` : ''}
                     </div>
                     <div style="font-size:1.1rem;font-weight:400;color:#222;margin-bottom:6px;">${ev.description}</div>
                     <div style="font-size:1rem;color:#666;margin-bottom:6px;"><i class="fa-regular fa-clock" style="margin-right:6px;"></i>${ev.date} at ${ev.time}</div>
@@ -1296,7 +1296,7 @@
             floatingBtn.id = 'floating-add-event-btn';
             floatingBtn.title = 'Add Meeting';
             floatingBtn.innerHTML = '<i class="fa-solid fa-plus" style="margin-right:8px;"></i>Add Meeting';
-            floatingBtn.style.cssText = 'position:fixed;bottom:40px;right:40px;background:#245F3E;color:#fff;border:none;border-radius:28px;padding:14px 24px;font-size:1rem;font-weight:600;box-shadow:0 4px 12px rgba(0,0,0,0.15);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.3s ease;z-index:10000;white-space:nowrap;';
+            floatingBtn.style.cssText = 'position:fixed;bottom:40px;left:45%;background:#245F3E;color:#fff;border:none;border-radius:28px;padding:14px 24px;font-size:1rem;font-weight:600;box-shadow:0 4px 12px rgba(0,0,0,0.15);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.3s ease;z-index:10000;white-space:nowrap;';
             floatingBtn.onmouseover = function() {
                 this.style.transform = 'scale(1.05)';
                 this.style.boxShadow = '0 6px 16px rgba(0,0,0,0.2)';
