@@ -66,14 +66,30 @@ def meeting_event_list(request):
                     'notes_attachment': request.FILES.get('notes_attachment')
                 }
             else:
-                # Regular JSON
-                data = json.loads(request.body)
+                # Check if there's any POST data (FormData without explicit content-type)
+                if request.POST:
+                    data = {
+                        'title': request.POST.get('title', ''),
+                        'description': request.POST.get('description', ''),
+                        'date': request.POST.get('date', ''),
+                        'time': request.POST.get('time', ''),
+                        'location': request.POST.get('location', ''),
+                        'notes': request.POST.get('notes', ''),
+                        'participants': request.POST.getlist('participants[]', []),
+                        'notes_attachment': request.FILES.get('notes_attachment')
+                    }
+                else:
+                    # Regular JSON
+                    data = json.loads(request.body)
                 
             meeting, errors = services.create_meeting_event(data, request.user)
             if errors:
                 return JsonResponse({"status": "error", "errors": errors.get("errors")}, status=400)
+            
             return JsonResponse({"status": "success", "event_id": meeting.id}, status=201) 
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             return JsonResponse({"status": "error", "errors": str(e)}, status=500)
 
 @csrf_exempt
@@ -87,20 +103,39 @@ def meeting_event_detail(request, event_id):
             return JsonResponse({"status": "error", "errors": "Permission denied. Only the event creator can edit this meeting."}, status=403)
             
         try:
+            # Django doesn't populate request.POST and request.FILES for PUT requests
+            # We need to manually parse the request body
+            from django.http.multipartparser import MultiPartParser
+            from django.http import QueryDict
+            
             # Check if it's FormData (file upload) or JSON
-            if request.content_type and 'multipart/form-data' in request.content_type:
-                # FormData with file
+            content_type = request.META.get('CONTENT_TYPE', '')
+            
+            if 'multipart/form-data' in content_type:
+                # For PUT requests with multipart data, we need to manually parse
+                # Use MultiPartParser directly
+                parser = MultiPartParser(request.META, request, request.upload_handlers)
+                post_data, files = parser.parse()
+                
                 data = {
-                    'title': request.POST.get('title', ''),
-                    'description': request.POST.get('description', ''),
-                    'date': request.POST.get('date', ''),
-                    'time': request.POST.get('time', ''),
-                    'location': request.POST.get('location', ''),
-                    'notes': request.POST.get('notes', ''),
-                    'participants': request.POST.getlist('participants[]', []),
-                    'notes_attachment': request.FILES.get('notes_attachment'),
-                    'remove_attachment': request.POST.get('remove_attachment') == 'true'
+                    'title': post_data.get('title', ''),
+                    'description': post_data.get('description', ''),
+                    'date': post_data.get('date', ''),
+                    'time': post_data.get('time', ''),
+                    'location': post_data.get('location', ''),
+                    'notes': post_data.get('notes', ''),
+                    'participants': post_data.getlist('participants[]', []),
+                    'notes_attachment': files.get('notes_attachment'),
+                    'remove_attachment': post_data.get('remove_attachment') == 'true'
                 }
+                
+                # Debug logging
+                print("=== PUT REQUEST DEBUG ===")
+                print(f"Content-Type: {content_type}")
+                print(f"POST data: {dict(post_data)}")
+                print(f"FILES data: {dict(files)}")
+                print(f"Parsed data: {data}")
+                print("========================")
             else:
                 # Regular JSON
                 data = json.loads(request.body)
@@ -111,6 +146,8 @@ def meeting_event_detail(request, event_id):
                 return JsonResponse({"status": "error", "errors": errors.get("errors")}, status=status_code)
             return JsonResponse({"status": "success", "event_id": event.id})
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             return JsonResponse({"status": "error", "errors": str(e)}, status=500)
             
     elif request.method == "DELETE":
