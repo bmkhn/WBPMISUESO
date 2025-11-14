@@ -269,53 +269,6 @@ class Command(BaseCommand):
                 agenda.save()
             self.stdout.write(self.style.SUCCESS(f"Created {len(agenda_samples)} agendas.\n"))
 
-        # --- DOWNLOADABLES ---
-        from shared.downloadables.models import Downloadable
-        if Downloadable.objects.exists():
-            self.stdout.write(self.style.WARNING("Downloadables already populated — skipping.\n"))
-        else:
-            self.stdout.write("Populating downloadables (using static for default files)...")
-            # Prefer staticfiles only if it exists and contains files, else use static
-            staticfiles_dir = os.path.join(settings.BASE_DIR, 'staticfiles', 'downloadables', 'files')
-            static_dir = os.path.join(settings.BASE_DIR, 'static', 'downloadables', 'files')
-            if os.path.exists(staticfiles_dir) and os.listdir(staticfiles_dir):
-                downloadables_dir = staticfiles_dir
-            else:
-                downloadables_dir = static_dir
-            uploader = User.objects.filter(role=User.Role.UESO).first() or User.objects.filter(role=User.Role.DIRECTOR).first()
-            data = [
-                {'name': 'ATTENDANCE SHEET FOR FOOD V2 (2025).xlsx', 'is_submission_template': True, 'submission_type': 'file'},
-                {'name': 'PSU-ESO 001 - Needs Assessment (2025).pdf', 'is_submission_template': True, 'submission_type': 'file'},
-                {'name': 'PSU-ESO 002 - Client Satisfactory Form (TAGALOG)(2025).pdf', 'is_submission_template': True, 'submission_type': 'file'},
-                {'name': 'PSU-ESO 003 - Monitoring and Evaluation Form (2025).pdf', 'is_submission_template': True, 'submission_type': 'file'},
-                {'name': 'PSU-ESO 004 - Evaluation Form (2025).pdf', 'is_submission_template': True, 'submission_type': 'final'},
-                {'name': 'PSU-ESO 005 - Feedback Form (2025).pdf', 'is_submission_template': True, 'submission_type': 'file'},
-                {'name': 'PSU-ESO 006 - Extension Accomplishment Form (2025).pdf', 'is_submission_template': True, 'submission_type': 'file'},
-                {'name': 'PSU-ESO 007 - Attendance Form (2025).pdf', 'is_submission_template': True, 'submission_type': 'event'},
-            ]
-            # Ensure all downloadables files are present in media for Django to serve
-            media_downloadables_dir = os.path.join(settings.MEDIA_ROOT, 'downloadables', 'files')
-            os.makedirs(media_downloadables_dir, exist_ok=True)
-            for d in data:
-                src_path = os.path.join(downloadables_dir, d['name'])
-                dest_path = os.path.join(media_downloadables_dir, d['name'])
-                if os.path.exists(src_path) and not os.path.exists(dest_path):
-                    import shutil
-                    shutil.copy2(src_path, dest_path)
-                if os.path.exists(dest_path):
-                    Downloadable.objects.get_or_create(
-                        file=f'downloadables/files/{d["name"]}',
-                        defaults={
-                            'available_for_non_users': not d['is_submission_template'],
-                            'is_submission_template': d['is_submission_template'],
-                            'submission_type': d['submission_type'],
-                            'uploaded_by': uploader,
-                            'status': 'published',
-                            'file_type': 'pdf',
-                        },
-                    )
-            self.stdout.write(self.style.SUCCESS("Downloadables created and copied to media.\n"))
-
 
         # --- ANNOUNCEMENTS ---
         from shared.announcements.models import Announcement
