@@ -214,7 +214,7 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 MEDIA_URL = '/media/'
 
-# For Railway deployment with volume mounted at /media/
+# For Railway deployment with volume mounted at /media/ ### Check this ###
 if os.environ.get('DEPLOYED', 'False') == 'True':
     MEDIA_ROOT = '/media'
 else:
