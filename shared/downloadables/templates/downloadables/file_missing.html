@@ -1,0 +1,11 @@
+{% extends "base_public.html" %}
+{% block content %}
+<div style="max-width:600px;margin:40px auto;padding:32px;background:#fff;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.08);text-align:center;">
+    <h2 style="color:#E53E3E;margin-bottom:1rem;">File Not Available</h2>
+    <p style="font-size:1.1em;color:#444;margin-bottom:2rem;">
+        Sorry, the file <strong>{{ file_name }}</strong> could not be downloaded.<br>
+        It may have been removed or is temporarily unavailable.
+    </p>
+    <a href="/downloadables/" style="display:inline-block;padding:0.75rem 2rem;background:#245F3E;color:#fff;border-radius:8px;font-weight:600;text-decoration:none;">Back to Downloadables</a>
+</div>
+{% endblock %}

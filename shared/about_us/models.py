@@ -40,13 +40,17 @@ class AboutUs(models.Model):
 	edited_at = models.DateTimeField(auto_now=True)
 
 
-	def get_image_url(self):
+	def get_director_image_url(self):
 		'''Return the director image URL or org chart image URL or default image'''
 		if self.director_image and hasattr(self.director_image, 'url'):
 			return self.director_image.url
+		return 'faker/image.png'
+	
+	def get_org_chart_image_url(self):
+		'''Return the org chart image URL or default image'''
 		if self.org_chart_image and hasattr(self.org_chart_image, 'url'):
 			return self.org_chart_image.url
-		return 'faker/image.png'
+		return static('faker/UESO ORG CHART.png')
 
 	class Meta:
 		indexes = [

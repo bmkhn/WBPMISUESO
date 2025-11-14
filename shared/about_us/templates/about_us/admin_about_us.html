@@ -57,7 +57,7 @@
 			<div class="container">
 				<div class="leadership-section">
 					<div class="profile-image">
-						<img src="{{ about.get_image_url }}" alt="Director Image" style="max-width:200px; margin-bottom:8px;">
+						<img src="{{ about.get_director_image_url }}" alt="Director Image" style="max-width:200px; margin-bottom:8px;">
 						<div class="profile-info">
 							<h3>{{ about.director_name }}</h3>
 							<p>Director, Extension Services Office</p>
@@ -74,7 +74,7 @@
 		<section class="section">
 			<h2 class="section-title">Organizational Chart</h2>
 			<div class="org-chart">
-				<img src="{{ about.get_image_url }}" alt="Org Chart Image" style="max-width: 100%; margin-bottom: 16px;">
+				<img src="{{ about.get_org_chart_image_url }}" alt="Org Chart Image" style="max-width: 100%; margin-bottom: 16px;">
 				<p class="lead">{{ about.org_chart_description|linebreaksbr }}</p>
 			</div>
 		</section>

@@ -303,17 +303,27 @@ def add_downloadable(request):
 
 # Download file
 def downloadable_download(request, pk):
+    from django.contrib import messages
     try:
         downloadable = Downloadable.objects.get(pk=pk)
-        file_path = downloadable.file.path
+        file_path = getattr(downloadable.file, 'path', None)
+        if not file_path or not os.path.exists(file_path):
+            # File missing on disk
+            messages.error(request, "Sorry, this file is not available for download. Please contact the administrator.")
+            return render(request, "downloadables/file_missing.html", {"file_name": getattr(downloadable, 'name', 'Unknown')})
         file_name = os.path.basename(file_path)
         mime_type, _ = mimetypes.guess_type(file_path)
-        with open(file_path, 'rb') as f:
-            response = HttpResponse(f.read(), content_type=mime_type or 'application/octet-stream')
-            response['Content-Disposition'] = f'attachment; filename="{file_name}"'
-            return response
-    except Exception:
-        raise Http404("File not found.")
+        try:
+            with open(file_path, 'rb') as f:
+                response = HttpResponse(f.read(), content_type=mime_type or 'application/octet-stream')
+                response['Content-Disposition'] = f'attachment; filename="{file_name}"'
+                return response
+        except Exception as e:
+            messages.error(request, f"Error reading file: {str(e)}")
+            return render(request, "downloadables/file_missing.html", {"file_name": file_name})
+    except Downloadable.DoesNotExist:
+        messages.error(request, "Downloadable file not found.")
+        return render(request, "downloadables/file_missing.html", {"file_name": "Unknown"})
 
 
 # Delete file
