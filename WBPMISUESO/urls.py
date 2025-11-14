@@ -56,5 +56,6 @@ urlpatterns = [
     path('api/get-token/', authtoken_views.obtain_auth_token, name='api_get_token'),
 ] 
 
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# Serve media files in both development and production
+# In production, this works because Railway volume persists files at /media
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
