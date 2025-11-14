@@ -20,7 +20,7 @@ REM Create test assets
 py manage.py create_test_assets
 
 REM Create accurate assets
-py manage.py accurate_assets
+@REM py manage.py accurate_assets
 
 echo Database reset and test assets created.
 

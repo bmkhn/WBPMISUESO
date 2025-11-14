@@ -10,6 +10,7 @@ from decimal import Decimal
 from django.urls import reverse
 from system.logs.models import LogEntry
 from system.utils.file_validators import validate_image_size
+from django.templatetags.static import static
 
 
 class SustainableDevelopmentGoal(models.Model):
@@ -231,7 +232,7 @@ class Project(models.Model):
 		latest_event = self.events.filter(placeholder=False, image__isnull=False).order_by('-datetime', '-created_at').first()
 		if latest_event and latest_event.image:
 			return latest_event.image.url
-		return '/static/image.png'
+		return static('image.png')
 
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)

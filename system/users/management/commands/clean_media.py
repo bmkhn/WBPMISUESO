@@ -10,51 +10,26 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         media_root = settings.MEDIA_ROOT
         
-        # Folders to DELETE
-        folders_to_delete = [
-            'about_us',
-            'client_requests',
-            'projects',
-            'submissions',
-            'users',
-        ]
-        
-        # Folders to KEEP (these will not be deleted)
-        # - colleges/logos/*
-        # - default/*
-        # - downloadables/files/*
-        # - faker/*
-        
+        self.stdout.write(self.style.WARNING(f'Fully wiping media folder: {media_root}'))
         deleted_count = 0
         error_count = 0
-        
-        self.stdout.write(self.style.WARNING(f'Cleaning media folder: {media_root}'))
-        self.stdout.write(self.style.WARNING('The following folders will be DELETED:'))
-        for folder in folders_to_delete:
-            self.stdout.write(f'  - {folder}/')
-        
-        self.stdout.write(self.style.SUCCESS('\nThe following folders will be KEPT:'))
-        self.stdout.write('  - colleges/logos/*')
-        self.stdout.write('  - default/*')
-        self.stdout.write('  - downloadables/files/*')
-        self.stdout.write('  - faker/*')
-        
-        for folder in folders_to_delete:
-            folder_path = os.path.join(media_root, folder)
-            
-            if os.path.exists(folder_path) and os.path.isdir(folder_path):
-                try:
-                    # Delete the folder and all its contents
-                    shutil.rmtree(folder_path)
-                    deleted_count += 1
-                    self.stdout.write(self.style.SUCCESS(f'✓ Deleted: {folder}/'))
-                except Exception as e:
-                    error_count += 1
-                    self.stdout.write(self.style.ERROR(f'✗ Error deleting {folder}/: {str(e)}'))
-            else:
-                self.stdout.write(self.style.WARNING(f'⊘ Skipped (not found): {folder}/'))
-        
-        self.stdout.write(self.style.SUCCESS(f'\n--- Cleanup Complete ---'))
-        self.stdout.write(f'Deleted: {deleted_count} folders')
+
+        # Delete everything inside media_root
+        for item in os.listdir(media_root):
+            item_path = os.path.join(media_root, item)
+            try:
+                if os.path.isdir(item_path):
+                    shutil.rmtree(item_path)
+                    self.stdout.write(self.style.SUCCESS(f'✓ Deleted folder: {item}/'))
+                else:
+                    os.remove(item_path)
+                    self.stdout.write(self.style.SUCCESS(f'✓ Deleted file: {item}'))
+                deleted_count += 1
+            except Exception as e:
+                error_count += 1
+                self.stdout.write(self.style.ERROR(f'✗ Error deleting {item}: {str(e)}'))
+
+        self.stdout.write(self.style.SUCCESS(f'\n--- Media folder fully wiped ---'))
+        self.stdout.write(f'Deleted: {deleted_count} items')
         if error_count > 0:
             self.stdout.write(self.style.ERROR(f'Errors: {error_count}'))

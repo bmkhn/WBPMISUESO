@@ -44,7 +44,7 @@ class AboutUs(models.Model):
 		'''Return the director image URL or org chart image URL or default image'''
 		if self.director_image and hasattr(self.director_image, 'url'):
 			return self.director_image.url
-		return 'faker/image.png'
+		return static('faker/image.png')
 	
 	def get_org_chart_image_url(self):
 		'''Return the org chart image URL or default image'''

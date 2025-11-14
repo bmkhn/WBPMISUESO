@@ -93,9 +93,8 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING("Colleges already populated — skipping.\n"))
             college_objs_list = list(College.objects.all())
         else:
-            self.stdout.write("Populating colleges (with logos)...")
-            logo_dir = os.path.join(settings.MEDIA_ROOT, 'colleges', 'logos')
-            os.makedirs(logo_dir, exist_ok=True)
+            self.stdout.write("Populating colleges (with logos from static)...")
+            logo_dir = os.path.join(settings.STATIC_ROOT or os.path.join(settings.BASE_DIR, 'static'), 'college', 'logos')
             tinuigiban_campus = campus_objs.get("Tinuigiban")
 
             college_objs_list = []
@@ -106,7 +105,7 @@ class Command(BaseCommand):
                 obj.save(update_fields=["campus"])
                 college_objs_list.append(obj)
 
-                # Assign logo if exists
+                # Assign logo if exists in static
                 logo_assigned = False
                 for ext in [".png", ".jpg", ".jpeg", ".svg"]:
                     logo_path = os.path.join(logo_dir, f"{name}{ext}")
@@ -259,28 +258,23 @@ class Command(BaseCommand):
         if Downloadable.objects.exists():
             self.stdout.write(self.style.WARNING("Downloadables already populated — skipping.\n"))
         else:
-            self.stdout.write("Populating downloadables...")
-            downloadables_dir = os.path.join(settings.MEDIA_ROOT, 'downloadables', 'files')
-            os.makedirs(downloadables_dir, exist_ok=True)
+            self.stdout.write("Populating downloadables (using static for default files)...")
+            static_downloadables_dir = os.path.join(settings.STATIC_ROOT or os.path.join(settings.BASE_DIR, 'static'), 'downloadables', 'files')
             uploader = User.objects.filter(role=User.Role.UESO).first() or User.objects.filter(role=User.Role.DIRECTOR).first()
             data = [
-                {'name': 'PSU ESO 001 – Needs Assessment Form.docx', 'is_submission_template': True, 'submission_type': 'file'},
-                {'name': 'PSU ESO 002 – Client Satisfaction Form (English Version).docx', 'is_submission_template': True, 'submission_type': 'file'},
-                {'name': 'PSU ESO 002 – Client Sattisfaction Form (Filipino Version).docx', 'is_submission_template': True, 'submission_type': 'file'},
-                {'name': 'PSU ESO 003 – Project Monitoring Report Template.docx', 'is_submission_template': True, 'submission_type': 'file'},
-                {'name': 'PSU ESO 004 – Training Evaluation Form.docx', 'is_submission_template': True, 'submission_type': 'file'},
-                {'name': 'PSU ESO 005 – Feedback Form.docx', 'is_submission_template': True, 'submission_type': 'file'},
-                {'name': 'PSU ESO 006 – Accomplishment Report.docx', 'is_submission_template': True, 'submission_type': 'final'},
-                {'name': 'PSU ESO 007 – Attendance Form.docx', 'is_submission_template': True, 'submission_type': 'event'},
-                {'name': 'PSU ESO 008 – Certificate of Appearance.docx', 'is_submission_template': True, 'submission_type': 'file'},
-                {'name': 'PSU ESO 008 – Certificate of Participation.docx', 'is_submission_template': True, 'submission_type': 'file'},
-                {'name': 'PSU ESO 008 – Certificate of Recognition.docx', 'is_submission_template': True, 'submission_type': 'file'},
-                {'name': 'UESO Brochure.docx', 'is_submission_template': False, 'submission_type': 'file'},
+                {'name': 'ATTENDANCE SHEET FOR FOOD V2 (2025).xlsx', 'is_submission_template': True, 'submission_type': 'file'},
+                {'name': 'PSU-ESO 001 - Needs Assessment (2025).pdf', 'is_submission_template': True, 'submission_type': 'file'},
+                {'name': 'PSU-ESO 002 - Client Satisfactory Form (TAGALOG)(2025).pdf', 'is_submission_template': True, 'submission_type': 'file'},
+                {'name': 'PSU-ESO 003 - Monitoring and Evaluation Form (2025).pdf', 'is_submission_template': True, 'submission_type': 'file'},
+                {'name': 'PSU-ESO 004 - Evaluation Form (2025).pdf', 'is_submission_template': True, 'submission_type': 'final'},
+                {'name': 'PSU-ESO 005 - Feedback Form (2025).pdf', 'is_submission_template': True, 'submission_type': 'file'},
+                {'name': 'PSU-ESO 006 - Extension Accomplishment Form (2025).pdf', 'is_submission_template': True, 'submission_type': 'file'},
+                {'name': 'PSU-ESO 007 - Attendance Form (2025).pdf', 'is_submission_template': True, 'submission_type': 'event'},
             ]
             for d in data:
-                path = os.path.join(downloadables_dir, d['name'])
-                if not os.path.exists(path):
-                    with open(path, 'w') as f:
+                static_path = os.path.join(static_downloadables_dir, d['name'])
+                if not os.path.exists(static_path):
+                    with open(static_path, 'w') as f:
                         f.write(f"Placeholder for {d['name']}")
                 Downloadable.objects.get_or_create(
                     file=f'downloadables/files/{d["name"]}',
@@ -290,7 +284,7 @@ class Command(BaseCommand):
                         'submission_type': d['submission_type'],
                         'uploaded_by': uploader,
                         'status': 'published',
-                        'file_type': 'docx',
+                        'file_type': 'pdf',
                     },
                 )
             self.stdout.write(self.style.SUCCESS("Downloadables created.\n"))
