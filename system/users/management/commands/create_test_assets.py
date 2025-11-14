@@ -89,37 +89,53 @@ class Command(BaseCommand):
         campus_objs = {c.name: c for c in Campus.objects.all()}
 
         # --- COLLEGES ---
-        if College.objects.exists():
-            self.stdout.write(self.style.WARNING("Colleges already populated — skipping.\n"))
-            college_objs_list = list(College.objects.all())
+        # Robust college logo copy logic: check staticfiles first, then static
+        staticfiles_logo_dir = os.path.join(settings.BASE_DIR, 'staticfiles', 'colleges', 'logos')
+        static_logo_dir = os.path.join(settings.BASE_DIR, 'static', 'colleges', 'logos')
+        if os.path.exists(staticfiles_logo_dir) and os.listdir(staticfiles_logo_dir):
+            logo_dir = staticfiles_logo_dir
         else:
-            self.stdout.write("Populating colleges (with logos from static)...")
-            logo_dir = os.path.join(settings.STATIC_ROOT or os.path.join(settings.BASE_DIR, 'static'), 'college', 'logos')
-            tinuigiban_campus = campus_objs.get("Tinuigiban")
+            logo_dir = static_logo_dir
+        tinuigiban_campus = campus_objs.get("Tinuigiban")
+        media_logo_dir = os.path.join(settings.MEDIA_ROOT, 'colleges', 'logos')
+        os.makedirs(media_logo_dir, exist_ok=True)
+        for name in COLLEGES:
+            for ext in [".png", ".jpg", ".jpeg", ".svg"]:
+                src_logo_path = os.path.join(logo_dir, f"{name}{ext}")
+                dest_logo_path = os.path.join(media_logo_dir, f"{name}{ext}")
+                if os.path.exists(src_logo_path):
+                    import shutil
+                    shutil.copy2(src_logo_path, dest_logo_path)
+        # Default logo
+        default_logo_src = os.path.join(logo_dir, "Default.png")
+        default_logo_dest = os.path.join(media_logo_dir, "Default.png")
+        if os.path.exists(default_logo_src):
+            import shutil
+            shutil.copy2(default_logo_src, default_logo_dest)
 
-            college_objs_list = []
-            for name in COLLEGES:
-                obj, _ = College.objects.get_or_create(name=name)
-                campus_match = next((campus for cname, campus in campus_objs.items() if cname in name), None)
-                obj.campus = campus_match or tinuigiban_campus
-                obj.save(update_fields=["campus"])
-                college_objs_list.append(obj)
+        college_objs_list = []
+        for name in COLLEGES:
+            obj, _ = College.objects.get_or_create(name=name)
+            campus_match = next((campus for cname, campus in campus_objs.items() if cname in name), None)
+            obj.campus = campus_match or tinuigiban_campus
+            obj.save(update_fields=["campus"])
+            college_objs_list.append(obj)
 
-                # Assign logo if exists in static
-                logo_assigned = False
-                for ext in [".png", ".jpg", ".jpeg", ".svg"]:
-                    logo_path = os.path.join(logo_dir, f"{name}{ext}")
-                    if os.path.exists(logo_path):
-                        obj.logo = f"colleges/logos/{name}{ext}"
-                        obj.save(update_fields=["logo"])
-                        logo_assigned = True
-                        break
-                if not logo_assigned:
-                    default_logo = os.path.join(logo_dir, "Default.png")
-                    if os.path.exists(default_logo):
-                        obj.logo = "colleges/logos/Default.png"
-                        obj.save(update_fields=["logo"])
-            self.stdout.write(self.style.SUCCESS(f"Created {len(college_objs_list)} colleges.\n"))
+            # Assign logo if exists in static
+            logo_assigned = False
+            for ext in [".png", ".jpg", ".jpeg", ".svg"]:
+                logo_path = os.path.join(logo_dir, f"{name}{ext}")
+                if os.path.exists(logo_path):
+                    obj.logo = f"colleges/logos/{name}{ext}"
+                    obj.save(update_fields=["logo"])
+                    logo_assigned = True
+                    break
+            if not logo_assigned:
+                default_logo = os.path.join(logo_dir, "Default.png")
+                if os.path.exists(default_logo):
+                    obj.logo = "colleges/logos/Default.png"
+                    obj.save(update_fields=["logo"])
+        self.stdout.write(self.style.SUCCESS(f"Created {len(college_objs_list)} colleges.\n"))
 
         # --- USERS ---
         self.stdout.write("Checking test users...")
@@ -259,7 +275,13 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING("Downloadables already populated — skipping.\n"))
         else:
             self.stdout.write("Populating downloadables (using static for default files)...")
-            static_downloadables_dir = os.path.join(settings.STATIC_ROOT or os.path.join(settings.BASE_DIR, 'static'), 'downloadables', 'files')
+            # Prefer staticfiles only if it exists and contains files, else use static
+            staticfiles_dir = os.path.join(settings.BASE_DIR, 'staticfiles', 'downloadables', 'files')
+            static_dir = os.path.join(settings.BASE_DIR, 'static', 'downloadables', 'files')
+            if os.path.exists(staticfiles_dir) and os.listdir(staticfiles_dir):
+                downloadables_dir = staticfiles_dir
+            else:
+                downloadables_dir = static_dir
             uploader = User.objects.filter(role=User.Role.UESO).first() or User.objects.filter(role=User.Role.DIRECTOR).first()
             data = [
                 {'name': 'ATTENDANCE SHEET FOR FOOD V2 (2025).xlsx', 'is_submission_template': True, 'submission_type': 'file'},
@@ -271,23 +293,28 @@ class Command(BaseCommand):
                 {'name': 'PSU-ESO 006 - Extension Accomplishment Form (2025).pdf', 'is_submission_template': True, 'submission_type': 'file'},
                 {'name': 'PSU-ESO 007 - Attendance Form (2025).pdf', 'is_submission_template': True, 'submission_type': 'event'},
             ]
+            # Ensure all downloadables files are present in media for Django to serve
+            media_downloadables_dir = os.path.join(settings.MEDIA_ROOT, 'downloadables', 'files')
+            os.makedirs(media_downloadables_dir, exist_ok=True)
             for d in data:
-                static_path = os.path.join(static_downloadables_dir, d['name'])
-                if not os.path.exists(static_path):
-                    with open(static_path, 'w') as f:
-                        f.write(f"Placeholder for {d['name']}")
-                Downloadable.objects.get_or_create(
-                    file=f'downloadables/files/{d["name"]}',
-                    defaults={
-                        'available_for_non_users': not d['is_submission_template'],
-                        'is_submission_template': d['is_submission_template'],
-                        'submission_type': d['submission_type'],
-                        'uploaded_by': uploader,
-                        'status': 'published',
-                        'file_type': 'pdf',
-                    },
-                )
-            self.stdout.write(self.style.SUCCESS("Downloadables created.\n"))
+                src_path = os.path.join(downloadables_dir, d['name'])
+                dest_path = os.path.join(media_downloadables_dir, d['name'])
+                if os.path.exists(src_path) and not os.path.exists(dest_path):
+                    import shutil
+                    shutil.copy2(src_path, dest_path)
+                if os.path.exists(dest_path):
+                    Downloadable.objects.get_or_create(
+                        file=f'downloadables/files/{d["name"]}',
+                        defaults={
+                            'available_for_non_users': not d['is_submission_template'],
+                            'is_submission_template': d['is_submission_template'],
+                            'submission_type': d['submission_type'],
+                            'uploaded_by': uploader,
+                            'status': 'published',
+                            'file_type': 'pdf',
+                        },
+                    )
+            self.stdout.write(self.style.SUCCESS("Downloadables created and copied to media.\n"))
 
 
         # --- ANNOUNCEMENTS ---

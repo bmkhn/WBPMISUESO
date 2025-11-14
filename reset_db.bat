@@ -1,7 +1,7 @@
 @echo off
 
 REM Delete all migrations
-py delete_all_migrations.py
+@REM py delete_all_migrations.py
 
 REM Delete media files
 py manage.py clean_media
