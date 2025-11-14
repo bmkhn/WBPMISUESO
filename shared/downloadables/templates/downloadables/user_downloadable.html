@@ -45,15 +45,8 @@
 						<button type="button" id="filterBtn" style="background:none;border:none;padding:0;margin-right:5px;cursor:pointer;">
 							<svg width="16" height="16"> <use href="#icon-filter"></use> </svg>
 						</button>
-						
-						{% if not user.is_authenticated %}
-						<style>
-							.filter-dropdown {
-								top: 300px;
-							}
-						</style>
-						{% endif %}
-						<div id="filterDropdown" class="filter-dropdown">
+
+						<div id="filterDropdown" class="filter-dropdown" style="right:495px;">
 							<div class="filter-grid">
 								<!-- Top Left - Sort By -->
 								<label>

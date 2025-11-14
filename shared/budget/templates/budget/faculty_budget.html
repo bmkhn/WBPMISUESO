@@ -11,7 +11,7 @@
 <title>Budget</title>
 
 <body>
-    <div data-dashboard="1" class="main">
+    <div data-dashboard="1" class="main" style="flex-direction:column;">
 
         <div style="display: flex; flex-direction: column;">
             
@@ -52,7 +52,7 @@
                                 </button>
                                 
                                 <div id="filterDropdown" class="filter-dropdown" style="display:none;">
-                                    <div class="filter-grid">
+                                    <div class="filter-grid" style="grid-template-columns:none">
                                         <label class="font-medium text-gray-700 flex flex-col">
                                             Sort By
                                             <select name="sort_by" class="mt-2">
@@ -123,23 +123,23 @@
                     </div>
                 </div>
             </div>
+        </div>
 
-            {# BOTTOM div: LOGS (Full Width) #}
-            <div class="list" style="margin-top: 1rem;">
-                <h2 class="headerr">Charts</h2>
-                    
-                <div class="chart-box">
-                    <h3 class="chart-box-title">College Budget Remaining Over Time</h3>
-                    <div class="chart-container-large">
-                        <canvas id="collegeTimeChart" data-chart-data="{{ college_remaining_data_json }}"></canvas>
-                    </div>
+        {# BOTTOM div: LOGS (Full Width) #}
+        <div class="list" style="margin-top: 1rem;">
+            <h2 class="headerr">Charts</h2>
+                
+            <div class="chart-box">
+                <h3 class="chart-box-title">College Budget Remaining Over Time</h3>
+                <div class="chart-container-large">
+                    <canvas id="collegeTimeChart" data-chart-data="{{ college_remaining_data_json }}"></canvas>
                 </div>
-                    
-                <div class="chart-box">
-                    <h3 class="chart-box-title">Total Project Funding Over Time</h3>
-                    <div class="chart-container-large">
-                        <canvas id="facultyTotalChart" data-chart-data="{{ faculty_total_data_json }}"></canvas>
-                    </div>
+            </div>
+                
+            <div class="chart-box">
+                <h3 class="chart-box-title">Total Project Funding Over Time</h3>
+                <div class="chart-container-large">
+                    <canvas id="facultyTotalChart" data-chart-data="{{ faculty_total_data_json }}"></canvas>
                 </div>
             </div>
         </div>
