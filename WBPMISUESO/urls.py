@@ -15,9 +15,10 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.static import serve
 from rest_framework.authtoken import views as authtoken_views
 
 urlpatterns = [
@@ -54,8 +55,13 @@ urlpatterns = [
     path('api/requests/', include('shared.request.api_urls')), 
     path('api/projects/', include('shared.projects.api_urls')),
     path('api/get-token/', authtoken_views.obtain_auth_token, name='api_get_token'),
-] 
+]
 
-# Serve media files in both development and production
-# In production, this works because Railway volume persists files at /media
-urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# Serve media files in development
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+else:
+    # Serve media files in production using Django's serve view
+    urlpatterns += [
+        re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
+    ]
