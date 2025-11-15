@@ -19,6 +19,15 @@ def get_templates(request):
 
 @role_required(allowed_roles=["VP", "DIRECTOR", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD"], require_confirmed=True)
 def experts_view(request):
+    from django.shortcuts import redirect
+    
+    # If no view parameter is present, redirect to grid view
+    if 'view' not in request.GET:
+        # Preserve all existing query parameters and add view=grid
+        query_dict = request.GET.copy()
+        query_dict['view'] = 'grid'
+        return redirect(f"{request.path}?{query_dict.urlencode()}")
+    
     query_params = {}
     from django.core.paginator import Paginator
     from shared.projects.models import Project

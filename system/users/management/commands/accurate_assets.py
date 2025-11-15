@@ -17,6 +17,19 @@ from faker import Faker
 User = get_user_model()
 fake = Faker()
 
+# Helper to resolve faker file path
+def get_faker_path(filename):
+    staticfiles_path = os.path.join(settings.BASE_DIR, 'staticfiles', 'faker', filename)
+    static_path = os.path.join(settings.BASE_DIR, 'static', 'faker', filename)
+    media_path = os.path.join(settings.MEDIA_ROOT, 'faker', filename)
+    if os.path.exists(staticfiles_path):
+        return staticfiles_path
+    elif os.path.exists(static_path):
+        return static_path
+    else:
+        return media_path
+
+
 class Command(BaseCommand):
     help = "Generate accurate test data with proper relationships and realistic statuses"
 
@@ -57,63 +70,78 @@ class Command(BaseCommand):
         degree_expertise_map = {
             # Computer Science & IT
             'Bachelor of Science in Computer Science': ['Artificial Intelligence', 'Machine Learning', 'Software Development', 'Data Science', 'Cybersecurity', 'Web Development'],
-            'Master of Information Technology': ['Artificial Intelligence', 'Cloud Computing', 'Database Management', 'Network Security', 'Software Engineering', 'IT Project Management'],
+            'Bachelor of Science in Information Technology': ['Database Systems', 'Network Administration', 'Systems Analysis', 'Software Engineering', 'IT Support', 'Cloud Infrastructure'],
+            'Master of Information Technology': ['AI Systems', 'Cloud Computing', 'Database Management', 'Network Security', 'IT Project Management', 'Enterprise Architecture'],
             'Doctor of Philosophy in Computer Science': ['Artificial Intelligence', 'Machine Learning', 'Deep Learning', 'Natural Language Processing', 'Computer Vision', 'Robotics'],
-            
+            'Bachelor of Science in Information Systems': ['Business Analytics', 'Systems Integration', 'Information Management', 'Digital Transformation', 'Process Automation'],
+
             # Engineering
             'Bachelor of Science in Civil Engineering': ['Structural Engineering', 'Construction Management', 'Transportation Engineering', 'Geotechnical Engineering', 'Water Resources'],
+            'Bachelor of Science in Electrical Engineering': ['Power Systems', 'Control Systems', 'Renewable Energy', 'Electronics', 'Telecommunications'],
+            'Bachelor of Science in Mechanical Engineering': ['Thermodynamics', 'Manufacturing Engineering', 'Machine Design', 'Automotive Engineering', 'Energy Systems'],
             'Master of Engineering': ['Sustainable Engineering', 'Project Engineering', 'Systems Engineering', 'Industrial Engineering', 'Infrastructure Development'],
             'Doctor of Philosophy in Engineering': ['Advanced Materials', 'Renewable Energy', 'Automation', 'Structural Analysis', 'Environmental Engineering'],
             
             # Education
             'Bachelor of Science in Education': ['Curriculum Development', 'Pedagogy', 'Educational Psychology', 'Classroom Management', 'Special Education'],
+            'Bachelor of Early Childhood Education': ['Early Learning', 'Child Development', 'Inclusive Education', 'Play-Based Learning', 'Parent Engagement'],
             'Master of Education': ['Educational Leadership', 'Instructional Design', 'Educational Technology', 'Assessment and Evaluation', 'Teacher Training'],
             'Doctor of Philosophy in Education': ['Educational Research', 'Educational Policy', 'Higher Education Administration', 'Learning Sciences', 'Educational Innovation'],
             
             # Business & Management
             'Bachelor of Science in Business Administration': ['Business Management', 'Marketing', 'Operations Management', 'Strategic Planning', 'Entrepreneurship'],
+            'Bachelor of Science in Human Resource Management': ['Talent Acquisition', 'Training and Development', 'Labor Relations', 'Compensation and Benefits', 'Organizational Development'],
             'Master of Business Administration': ['Strategic Management', 'Finance', 'Marketing Strategy', 'Leadership', 'Business Analytics'],
             'Bachelor of Science in Accountancy': ['Financial Accounting', 'Auditing', 'Tax Management', 'Cost Accounting', 'Financial Analysis'],
+            'Master of Finance': ['Investment Analysis', 'Financial Modeling', 'Corporate Finance', 'Risk Management', 'Mergers and Acquisitions'],
             'Doctor of Philosophy in Business': ['Business Strategy', 'Organizational Behavior', 'International Business', 'Innovation Management', 'Corporate Governance'],
             
             # Health Sciences
             'Bachelor of Science in Nursing': ['Patient Care', 'Clinical Nursing', 'Community Health', 'Health Education', 'Medical-Surgical Nursing'],
             'Doctor of Medicine': ['Clinical Medicine', 'Public Health', 'Medical Research', 'Healthcare Management', 'Preventive Medicine'],
             'Master of Health Administration': ['Healthcare Management', 'Health Policy', 'Hospital Administration', 'Healthcare Quality', 'Health Informatics'],
-            
+            'Bachelor of Science in Pharmacy': ['Pharmacology', 'Pharmaceutical Care', 'Pharmacy Management', 'Clinical Pharmacy', 'Drug Safety'],
+
             # Environmental & Agricultural Sciences
             'Bachelor of Science in Environmental Science': ['Environmental Conservation', 'Climate Change', 'Sustainability', 'Ecology', 'Environmental Policy'],
             'Master of Environmental Science': ['Environmental Management', 'Conservation Biology', 'Renewable Resources', 'Environmental Impact Assessment', 'Green Technology'],
             'Bachelor of Science in Agriculture': ['Crop Production', 'Agricultural Economics', 'Sustainable Farming', 'Agribusiness', 'Soil Science'],
-            
+            'Master of Agricultural Technology': ['Agroecology', 'Precision Farming', 'Micro-Farming Systems', 'Agricultural Extension', 'Post-Harvest Technology'],
+
             # Social Sciences
             'Bachelor of Science in Psychology': ['Clinical Psychology', 'Counseling', 'Organizational Psychology', 'Child Development', 'Behavioral Science'],
             'Bachelor of Science in Social Work': ['Community Development', 'Social Welfare', 'Family Counseling', 'Crisis Intervention', 'Case Management'],
             'Master of Social Work': ['Community Development', 'Social Policy', 'Mental Health', 'Family Services', 'Social Justice'],
             'Master of Community Development': ['Community Organizing', 'Rural Development', 'Urban Planning', 'Participatory Development', 'Social Enterprise'],
-            
+            'Bachelor of Arts in Sociology': ['Cultural Studies', 'Social Theory', 'Human Behavior', 'Gender Studies', 'Population Studies'],
+
             # Public Administration & Law
             'Master of Public Administration': ['Public Policy', 'Governance', 'Public Management', 'Government Relations', 'Policy Analysis'],
             'Doctor of Public Administration': ['Public Governance', 'Policy Development', 'Public Sector Management', 'Administrative Law', 'Public Finance'],
             'Juris Doctor': ['Legal Practice', 'Constitutional Law', 'Corporate Law', 'Environmental Law', 'Human Rights Law'],
-            
+            'Bachelor of Laws': ['Civil Law', 'Criminal Law', 'Property Law', 'Commercial Law', 'Public International Law'],
+
             # Sciences
             'Bachelor of Science in Mathematics': ['Applied Mathematics', 'Statistics', 'Mathematical Modeling', 'Data Analysis', 'Quantitative Research'],
             'Bachelor of Science in Biology': ['Marine Biology', 'Ecology', 'Genetics', 'Microbiology', 'Conservation Biology'],
             'Bachelor of Science in Chemistry': ['Analytical Chemistry', 'Environmental Chemistry', 'Chemical Research', 'Materials Science', 'Quality Control'],
             'Bachelor of Science in Physics': ['Applied Physics', 'Renewable Energy', 'Materials Science', 'Computational Physics', 'Environmental Physics'],
             'Doctor of Philosophy in Science': ['Scientific Research', 'Environmental Science', 'Biotechnology', 'Marine Science', 'Climate Science'],
-            
+
             # Architecture & Design
             'Bachelor of Science in Architecture': ['Architectural Design', 'Urban Planning', 'Sustainable Design', 'Building Technology', 'Landscape Architecture'],
-            
+            'Bachelor of Fine Arts': ['Graphic Design', 'Visual Communication', 'Illustration', 'Mixed Media', 'Studio Art'],
+            'Bachelor of Interior Design': ['Interior Architecture', 'Space Planning', 'Design Aesthetics', 'Furniture Design', 'Sustainable Interiors'],
+
             # Tourism & Hospitality
             'Bachelor of Science in Tourism Management': ['Tourism Development', 'Hospitality Management', 'Event Management', 'Sustainable Tourism', 'Cultural Tourism'],
-            
+            'Bachelor of Science in Hotel and Restaurant Management': ['Food and Beverage Management', 'Culinary Arts', 'Hotel Operations', 'Hospitality Marketing', 'Customer Service'],
+
             # Languages & Communication
             'Bachelor of Arts in English': ['Communication', 'Technical Writing', 'Literature', 'English Language Teaching', 'Creative Writing'],
             'Bachelor of Arts in Communication': ['Media Relations', 'Public Relations', 'Digital Communication', 'Journalism', 'Corporate Communication'],
-            
+            'Bachelor of Arts in Journalism': ['News Reporting', 'Investigative Journalism', 'Editorial Writing', 'Digital Media Production', 'Broadcast Journalism'],
+
             # Project Management
             'Master of Project Management': ['Project Planning', 'Risk Management', 'Agile Methodologies', 'Stakeholder Management', 'Program Management'],
         }
@@ -165,7 +193,10 @@ class Command(BaseCommand):
                 faculty_users.append(User.objects.get(email=email))
         self.stdout.write(self.style.SUCCESS(f"Created {len(faculty_users)} faculty users.\n"))
 
+
+        ########################################################################################################################
         
+
         # Create X Client users (using Faker)
         self.stdout.write('Creating {} client users...'.format(client_user_count))
         client_users = []
@@ -204,9 +235,13 @@ class Command(BaseCommand):
                 client_users.append(User.objects.get(email=email))
         self.stdout.write(self.style.SUCCESS(f"Created {len(client_users)} client users."))
 
+
+        ########################################################################################################################
+
+
         # Create Client Requests for each client user (1-2 requests per client)
         self.stdout.write('Creating client requests...')
-        faker_loi_path = os.path.join(settings.MEDIA_ROOT, 'faker', 'Faker File.docx')
+        faker_loi_path = get_faker_path('Faker File.docx')
         request_count = 0
         
         for client in client_users:
@@ -255,7 +290,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f"Created {request_count} client requests.\n"))
 
 
-#################################################################################################################################################################################
+        ########################################################################################################################
 
 
         # Get submission type downloadables
@@ -313,7 +348,7 @@ class Command(BaseCommand):
             project.sdgs.set(random.sample(sdgs, k=random.randint(2, 4)))
             
             # Add proposal document
-            faker_proposal_path = os.path.join(settings.MEDIA_ROOT, 'faker', 'Faker File.docx')
+            faker_proposal_path = get_faker_path('Faker File.docx')
             if os.path.exists(faker_proposal_path):
                 proposal_doc = ProjectDocument.objects.create(
                     project=project,
@@ -340,6 +375,9 @@ class Command(BaseCommand):
             project_count += 1
             self.stdout.write(self.style.SUCCESS(f"  Created NOT_STARTED project: {project.title}"))
         
+
+        ########################################################################################################################
+
 
         # IN_PROGRESS projects (X) - Between start and end date, with events and submissions
         for i in range(in_progress_projects):
@@ -389,7 +427,7 @@ class Command(BaseCommand):
             project.sdgs.set(random.sample(sdgs, k=random.randint(2, 4)))
             
             # Add proposal document
-            faker_proposal_path = os.path.join(settings.MEDIA_ROOT, 'faker', 'Faker File.docx')
+            faker_proposal_path = get_faker_path('Faker File.docx')
             if os.path.exists(faker_proposal_path):
                 proposal_doc = ProjectDocument.objects.create(
                     project=project,
@@ -417,12 +455,10 @@ class Command(BaseCommand):
             for j in range(estimated_events):
                 days_offset = random.randint(0, days_ago)
                 event_date = now - timedelta(days=days_offset)
-                
-                # Determine event status based on whether it's completed
-                if j < completed_events:
+
+                # Determine event status based on whether the event date has passed
+                if event_date.date() <= now.date():
                     event_status = 'COMPLETED'
-                elif j == completed_events and random.random() > 0.5:
-                    event_status = 'ONGOING'
                 else:
                     event_status = 'SCHEDULED'
                 
@@ -433,7 +469,7 @@ class Command(BaseCommand):
                     datetime=event_date,
                     location=project.primary_location,
                     status=event_status,
-                    has_submission=j < completed_events,  # Completed events have submissions
+                    has_submission=True,  # Completed events have submissions
                     placeholder=False,
                     created_by=leader,
                     updated_by=leader,
@@ -450,7 +486,7 @@ class Command(BaseCommand):
                     ).first()
                     
                     # Use Faker Event.docx file
-                    faker_event_path = os.path.join(settings.MEDIA_ROOT, 'faker', 'Faker Event.docx')
+                    faker_event_path = get_faker_path('Faker Event.docx')
                     submission = Submission.objects.create(
                         project=project,
                         downloadable=random.choice(event_templates),
@@ -478,7 +514,7 @@ class Command(BaseCommand):
                     # Attach random image
                     image_files = ['background.png', 'image.png', 'lightbg.jpg']
                     random_image = random.choice(image_files)
-                    image_path = os.path.join(settings.MEDIA_ROOT, 'faker', random_image)
+                    image_path = get_faker_path(random_image)
                     if os.path.exists(image_path):
                         with open(image_path, 'rb') as f:
                             submission.image_event.save(random_image, File(f), save=True)
@@ -486,7 +522,7 @@ class Command(BaseCommand):
             # Create some file submissions (monitoring, evaluation, etc.)
             if file_templates:
                 num_file_submissions = random.randint(2, 4)
-                faker_file_path = os.path.join(settings.MEDIA_ROOT, 'faker', 'Faker File.docx')
+                faker_file_path = get_faker_path('Faker File.docx')
                 
                 # Get coordinator from the same college as project leader
                 coordinator = User.objects.filter(
@@ -533,6 +569,9 @@ class Command(BaseCommand):
             project_count += 1
             self.stdout.write(self.style.SUCCESS(f"  Created IN_PROGRESS project: {project.title} ({estimated_events} events, {completed_events} completed)"))
         
+
+        ########################################################################################################################
+
         
         # COMPLETED projects (X) - Past dates, all events and submissions completed
         for i in range(completed_projects):
@@ -583,7 +622,7 @@ class Command(BaseCommand):
             project.sdgs.set(random.sample(sdgs, k=random.randint(2, 5)))
             
             # Add proposal document
-            faker_proposal_path = os.path.join(settings.MEDIA_ROOT, 'faker', 'Faker File.docx')
+            faker_proposal_path = get_faker_path('Faker File.docx')
             if os.path.exists(faker_proposal_path):
                 proposal_doc = ProjectDocument.objects.create(
                     project=project,
@@ -628,7 +667,7 @@ class Command(BaseCommand):
                 # Create event submission (all approved)
                 if event_templates:
                     submitter = random.choice([leader] + list(project.providers.all()))
-                    faker_event_path = os.path.join(settings.MEDIA_ROOT, 'faker', 'Faker Event.docx')
+                    faker_event_path = get_faker_path('Faker Event.docx')
                     
                     # Get coordinator from the same college as project leader
                     coordinator = User.objects.filter(
@@ -663,21 +702,21 @@ class Command(BaseCommand):
                     # Attach random image
                     image_files = ['background.png', 'image.png', 'lightbg.jpg']
                     random_image = random.choice(image_files)
-                    image_path = os.path.join(settings.MEDIA_ROOT, 'faker', random_image)
+                    image_path = get_faker_path(random_image)
                     if os.path.exists(image_path):
                         with open(image_path, 'rb') as f:
                             submission.image_event.save(random_image, File(f), save=True)
             
             # Create all required file submissions (all approved)
             if file_templates:
-                faker_file_path = os.path.join(settings.MEDIA_ROOT, 'faker', 'Faker File.docx')
-                
+                faker_file_path = get_faker_path('Faker File.docx')
+
                 # Get coordinator from the same college as project leader
                 coordinator = User.objects.filter(
                     role=User.Role.COORDINATOR,
                     college=leader.college
                 ).first()
-                
+
                 for k in range(3):
                     submitter = random.choice([leader] + list(project.providers.all()))
                     # Convert date to timezone-aware datetime
@@ -711,13 +750,13 @@ class Command(BaseCommand):
                 # Convert date to timezone-aware datetime
                 deadline_date = end_date + timedelta(days=7)
                 deadline = timezone.make_aware(timezone.datetime.combine(deadline_date, timezone.datetime.min.time()))
-                faker_final_path = os.path.join(settings.MEDIA_ROOT, 'faker', 'Faker Final.docx')
+                faker_final_path = get_faker_path('Faker Final.docx')
                 
                 submission = Submission.objects.create(
                     project=project,
                     downloadable=random.choice(final_templates),
                     deadline=deadline,
-                    notes="Final accomplishment report",
+                    notes="Final Accomplishment Report",
                     created_by=director,
                     submitted_by=submitter,
                     submitted_at=deadline - timedelta(days=2),
@@ -753,7 +792,8 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(f"  Created COMPLETED project: {project.title} (All {estimated_events} events completed with evaluations)"))
 
   
-#################################################################################################################################################################################
+        ########################################################################################################################
+
 
         self.stdout.write('\nCreating projects with realistic statuses where Test Faculty is Leader...')
 
@@ -802,7 +842,7 @@ class Command(BaseCommand):
             project.sdgs.set(random.sample(sdgs, k=random.randint(2, 4)))
             
             # Add proposal document
-            faker_proposal_path = os.path.join(settings.MEDIA_ROOT, 'faker', 'Faker File.docx')
+            faker_proposal_path = get_faker_path('Faker File.docx')
             if os.path.exists(faker_proposal_path):
                 proposal_doc = ProjectDocument.objects.create(
                     project=project,
@@ -828,6 +868,9 @@ class Command(BaseCommand):
             
             project_count += 1
             self.stdout.write(self.style.SUCCESS(f"  Created NOT_STARTED project: {project.title}"))
+        
+
+        ########################################################################################################################
         
 
         # IN_PROGRESS projects (X) - Between start and end date, with events and submissions
@@ -878,7 +921,7 @@ class Command(BaseCommand):
             project.sdgs.set(random.sample(sdgs, k=random.randint(2, 4)))
             
             # Add proposal document
-            faker_proposal_path = os.path.join(settings.MEDIA_ROOT, 'faker', 'Faker File.docx')
+            faker_proposal_path = get_faker_path('Faker File.docx')
             if os.path.exists(faker_proposal_path):
                 proposal_doc = ProjectDocument.objects.create(
                     project=project,
@@ -906,12 +949,10 @@ class Command(BaseCommand):
             for j in range(estimated_events):
                 days_offset = random.randint(0, days_ago)
                 event_date = now - timedelta(days=days_offset)
-                
-                # Determine event status based on whether it's completed
-                if j < completed_events:
+
+                # Determine event status based on whether the event date has passed
+                if event_date.date() <= now.date():
                     event_status = 'COMPLETED'
-                elif j == completed_events and random.random() > 0.5:
-                    event_status = 'ONGOING'
                 else:
                     event_status = 'SCHEDULED'
                 
@@ -922,7 +963,7 @@ class Command(BaseCommand):
                     datetime=event_date,
                     location=project.primary_location,
                     status=event_status,
-                    has_submission=j < completed_events,  # Completed events have submissions
+                    has_submission=True,  # Completed events have submissions
                     placeholder=False,
                     created_by=leader,
                     updated_by=leader,
@@ -939,7 +980,7 @@ class Command(BaseCommand):
                     ).first()
                     
                     # Use Faker Event.docx file
-                    faker_event_path = os.path.join(settings.MEDIA_ROOT, 'faker', 'Faker Event.docx')
+                    faker_event_path = get_faker_path('Faker Event.docx')
                     submission = Submission.objects.create(
                         project=project,
                         downloadable=random.choice(event_templates),
@@ -967,7 +1008,7 @@ class Command(BaseCommand):
                     # Attach random image
                     image_files = ['background.png', 'image.png', 'lightbg.jpg']
                     random_image = random.choice(image_files)
-                    image_path = os.path.join(settings.MEDIA_ROOT, 'faker', random_image)
+                    image_path = get_faker_path(random_image)
                     if os.path.exists(image_path):
                         with open(image_path, 'rb') as f:
                             submission.image_event.save(random_image, File(f), save=True)
@@ -975,7 +1016,7 @@ class Command(BaseCommand):
             # Create some file submissions (monitoring, evaluation, etc.)
             if file_templates:
                 num_file_submissions = random.randint(2, 4)
-                faker_file_path = os.path.join(settings.MEDIA_ROOT, 'faker', 'Faker File.docx')
+                faker_file_path = get_faker_path('Faker File.docx')
                 
                 # Get coordinator from the same college as project leader
                 coordinator = User.objects.filter(
@@ -1023,6 +1064,9 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(f"  Created IN_PROGRESS project: {project.title} ({estimated_events} events, {completed_events} completed)"))
         
         
+        ########################################################################################################################
+
+
         # COMPLETED projects (X) - Past dates, all events and submissions completed
         for i in range(completed_projects):
             days_ago = random.randint(180, 365)
@@ -1072,7 +1116,7 @@ class Command(BaseCommand):
             project.sdgs.set(random.sample(sdgs, k=random.randint(2, 5)))
             
             # Add proposal document
-            faker_proposal_path = os.path.join(settings.MEDIA_ROOT, 'faker', 'Faker File.docx')
+            faker_proposal_path = get_faker_path('Faker File.docx')
             if os.path.exists(faker_proposal_path):
                 proposal_doc = ProjectDocument.objects.create(
                     project=project,
@@ -1117,7 +1161,7 @@ class Command(BaseCommand):
                 # Create event submission (all approved)
                 if event_templates:
                     submitter = random.choice([leader] + list(project.providers.all()))
-                    faker_event_path = os.path.join(settings.MEDIA_ROOT, 'faker', 'Faker Event.docx')
+                    faker_event_path = get_faker_path('Faker Event.docx')
                     
                     # Get coordinator from the same college as project leader
                     coordinator = User.objects.filter(
@@ -1152,14 +1196,14 @@ class Command(BaseCommand):
                     # Attach random image
                     image_files = ['background.png', 'image.png', 'lightbg.jpg']
                     random_image = random.choice(image_files)
-                    image_path = os.path.join(settings.MEDIA_ROOT, 'faker', random_image)
+                    image_path = get_faker_path(random_image)
                     if os.path.exists(image_path):
                         with open(image_path, 'rb') as f:
                             submission.image_event.save(random_image, File(f), save=True)
             
             # Create all required file submissions (all approved)
             if file_templates:
-                faker_file_path = os.path.join(settings.MEDIA_ROOT, 'faker', 'Faker File.docx')
+                faker_file_path = get_faker_path('Faker File.docx')
                 
                 # Get coordinator from the same college as project leader
                 coordinator = User.objects.filter(
@@ -1200,7 +1244,7 @@ class Command(BaseCommand):
                 # Convert date to timezone-aware datetime
                 deadline_date = end_date + timedelta(days=7)
                 deadline = timezone.make_aware(timezone.datetime.combine(deadline_date, timezone.datetime.min.time()))
-                faker_final_path = os.path.join(settings.MEDIA_ROOT, 'faker', 'Faker Final.docx')
+                faker_final_path = get_faker_path('Faker Final.docx')
                 
                 submission = Submission.objects.create(
                     project=project,
@@ -1241,6 +1285,8 @@ class Command(BaseCommand):
             project_count += 1
             self.stdout.write(self.style.SUCCESS(f"  Created COMPLETED project: {project.title} (All {estimated_events} events completed with evaluations)"))
 
+
+        ########################################################################################################################
 
         self.stdout.write(self.style.SUCCESS(f'\n✅ Successfully created {project_count} projects with realistic data!'))
         self.stdout.write(self.style.SUCCESS(f'✅ Created {faculty_user_count} faculty users (email = password)'))
