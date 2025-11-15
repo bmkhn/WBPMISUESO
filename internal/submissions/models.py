@@ -11,6 +11,24 @@ import os
 
 
 class Submission(models.Model):
+	def delete(self, *args, **kwargs):
+		# Delete associated files from storage (skip placeholders)
+		PLACEHOLDER_PATHS = ['downloadables/files/Placeholder.pdf', 'about_us/director/image.png']
+		if self.file and hasattr(self.file, 'name') and self.file.name not in PLACEHOLDER_PATHS:
+			try:
+				if self.file.storage.exists(self.file.name):
+					self.file.storage.delete(self.file.name)
+			except Exception:
+				pass
+		if self.image_event and hasattr(self.image_event, 'name') and self.image_event.name not in PLACEHOLDER_PATHS:
+			try:
+				if self.image_event.storage.exists(self.image_event.name):
+					self.image_event.storage.delete(self.image_event.name)
+			except Exception:
+				pass
+		super().delete(*args, **kwargs)
+
+
 	project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='submissions')
 	downloadable = models.ForeignKey(Downloadable, on_delete=models.CASCADE, related_name='submissions')
 	deadline = models.DateTimeField()

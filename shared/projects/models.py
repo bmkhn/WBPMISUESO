@@ -75,9 +75,11 @@ class ProjectDocument(models.Model):
 		super().save(*args, **kwargs)
 		
 	def delete(self, *args, **kwargs):
-		# Delete associated file from storage
+		# Delete associated file from storage (skip placeholders)
+		PLACEHOLDER_PATHS = ['downloadables/files/Placeholder.pdf', 'about_us/director/image.png']
 		if self.file and self.file.storage and self.file.storage.exists(self.file.name):
-			self.file.storage.delete(self.file.name)
+			if self.file.name not in PLACEHOLDER_PATHS:
+				self.file.storage.delete(self.file.name)
 		super().delete(*args, **kwargs)
 
 	DOCUMENT_TYPE_CHOICES = [
@@ -131,6 +133,7 @@ class ProjectDocument(models.Model):
 
 class Project(models.Model):
 	def delete(self, *args, **kwargs):
+		# Delete associated documents (placeholders will be preserved by ProjectDocument.delete)
 		if self.proposal_document:
 			self.proposal_document.delete()
 		for doc in self.additional_documents.all():
