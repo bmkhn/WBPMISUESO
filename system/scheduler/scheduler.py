@@ -3,6 +3,7 @@ from django.utils import timezone
 from django.db.models import Q
 from datetime import timedelta
 from django.core.management import call_command
+from pytz import timezone as pytz_timezone
 
 
 def publish_scheduled_announcements():
@@ -331,21 +332,31 @@ def notify_project_status_change(project, old_status, new_status):
 
 def start_scheduler():
     """
-    Start the centralized background scheduler for all automated tasks.
-    This runs when Django starts up.
+    Start centralized background scheduler for all automated tasks.
+    Handles midnight jobs, interval jobs, and immediate startup triggers.
     """
-    scheduler = BackgroundScheduler()
+    # Use Manila timezone
+    manila_tz = pytz_timezone('Asia/Manila')
+    scheduler = BackgroundScheduler(timezone=manila_tz)
     
-    # Run publish_scheduled_announcements every minute
+    # -------------------
+    # Interval Jobs
+    # -------------------
+    # Publish scheduled announcements every minute
+    
     scheduler.add_job(
         publish_scheduled_announcements,
         'interval',
         minutes=1,
         id='publish_announcements',
         replace_existing=True,
-        max_instances=1  # Prevent overlapping runs
+        max_instances=1
     )
-    
+
+    # -------------------
+    # Cron Jobs (Daily / Midnight)
+    # -------------------
+
     # Clear expired sessions daily at 3:00 AM
     scheduler.add_job(
         clear_expired_sessions,
@@ -353,9 +364,10 @@ def start_scheduler():
         hour=3,
         minute=0,
         id='clear_sessions',
-        replace_existing=True
+        replace_existing=True,
+        misfire_grace_time=3600  # run within 1 hour if missed
     )
-    
+
     # Update event statuses daily at midnight
     scheduler.add_job(
         update_event_statuses,
@@ -363,9 +375,10 @@ def start_scheduler():
         hour=0,
         minute=0,
         id='update_event_statuses',
-        replace_existing=True
+        replace_existing=True,
+        misfire_grace_time=3600
     )
-    
+
     # Update project statuses daily at midnight
     scheduler.add_job(
         update_project_statuses,
@@ -373,56 +386,65 @@ def start_scheduler():
         hour=0,
         minute=0,
         id='update_project_statuses',
-        replace_existing=True
+        replace_existing=True,
+        misfire_grace_time=3600
     )
-    
-    # Update user expert status daily at midnight
+
+    # Update user expert status daily at 12:01 AM
     scheduler.add_job(
         update_user_expert_status,
         'cron',
         hour=0,
-        minute=1,  # 1 minute after midnight
+        minute=1,
         id='update_expert_status',
-        replace_existing=True
+        replace_existing=True,
+        misfire_grace_time=3600
     )
-    
-    scheduler.start()
-    print("✓ Centralized Scheduler started:")
-    print("  - Announcements: checking every minute")
-    print("  - Session cleanup: daily at 3:00 AM")
-    print("  - Event status updates: daily at midnight")
-    print("  - Project status updates: daily at midnight")
-    print("  - Expert status updates: daily at midnight")
-    
-    # Schedule immediate checks after startup (after Django is fully ready)
+
+    # -------------------
+    # Immediate Startup Triggers
+    # -------------------
+
+    now = timezone.now()
     scheduler.add_job(
         publish_scheduled_announcements,
         'date',
-        run_date=timezone.now() + timedelta(seconds=5),
+        run_date=now + timedelta(seconds=5),
         id='publish_announcements_startup',
         replace_existing=True
     )
-    
+
     scheduler.add_job(
         update_project_statuses,
         'date',
-        run_date=timezone.now() + timedelta(seconds=10),
+        run_date=now + timedelta(seconds=10),
         id='update_project_statuses_startup',
         replace_existing=True
     )
-    
+
     scheduler.add_job(
         update_event_statuses,
         'date',
-        run_date=timezone.now() + timedelta(seconds=10),
+        run_date=now + timedelta(seconds=10),
         id='update_event_statuses_startup',
         replace_existing=True
     )
-    
+
     scheduler.add_job(
         update_user_expert_status,
         'date',
-        run_date=timezone.now() + timedelta(seconds=15),
+        run_date=now + timedelta(seconds=15),
         id='update_expert_status_startup',
         replace_existing=True
     )
+
+    # -------------------
+    # Start Scheduler
+    # -------------------
+    scheduler.start()
+    print("✓ Scheduler started (Manila timezone)")
+    print("  - Announcements: every minute")
+    print("  - Session cleanup: 3:00 AM")
+    print("  - Event & project status updates: midnight")
+    print("  - Expert status updates: 12:01 AM")
+    print("  - Immediate startup triggers active")
