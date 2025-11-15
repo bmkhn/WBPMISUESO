@@ -21,9 +21,9 @@ class Command(BaseCommand):
         self.stdout.write(self.style.WARNING('Starting Faculty U. Test project generation...\n'))
 
         # CONFIGURABLE COUNTS - Edit these to change amounts
-        not_started_projects = 1
-        in_progress_projects = 1
-        completed_projects = 1
+        not_started_projects = 3
+        in_progress_projects = 3
+        completed_projects = 3
 
         # PLACEHOLDER URLS - Files already in Railway media
         PLACEHOLDER_PDF_URL = "https://uesopmis.up.railway.app/media/downloadables/files/Placeholder.pdf"
@@ -87,7 +87,11 @@ class Command(BaseCommand):
         now = timezone.now()
         project_count = 0
         
-        # NOT_STARTED project (1) - Future start date
+
+        ####################################################################################################################################
+
+
+        # NOT_STARTED project (X) - Future start date
         for i in range(not_started_projects):
             start_date = now.date() + timedelta(days=random.randint(30, 90))
             end_date = start_date + timedelta(days=random.randint(180, 365))
@@ -160,7 +164,10 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(f"  ✅ Created NOT_STARTED project: {project.title}"))
         
 
-        # IN_PROGRESS project (1) - Between start and end date, with events and submissions
+        ####################################################################################################################################
+
+
+        # IN_PROGRESS project (X) - Between start and end date, with events and submissions
         for i in range(in_progress_projects):
             days_ago = random.randint(30, 120)
             start_date = (now - timedelta(days=days_ago)).date()
@@ -235,32 +242,26 @@ class Command(BaseCommand):
             
             # Create events for in-progress projects
             for j in range(estimated_events):
-                # Events spread across project timeline
-                days_offset = int((days_ago / estimated_events) * j)
-                event_date = now - timedelta(days=days_ago - days_offset)
-                
-                # Determine event status
-                if j < completed_events:
+                days_offset = random.randint(0, days_ago)
+                event_date = now - timedelta(days=days_offset)
+
+                # Determine event status based on whether the event date has passed
+                if event_date.date() <= now.date():
                     event_status = 'COMPLETED'
-                    has_submission = True
-                elif j == completed_events:
-                    event_status = 'ONGOING'
-                    has_submission = False
                 else:
                     event_status = 'SCHEDULED'
-                    has_submission = False
                 
                 event = ProjectEvent.objects.create(
                     project=project,
-                    title=f"Event {j+1}: {fake.bs().title()}",
-                    description=fake.paragraph(),
+                    title=f"{random.choice(['Training Session', 'Workshop', 'Seminar', 'Consultation', 'Field Visit'])}",
+                    description=f"A description of an activity for {project.title}",
                     datetime=event_date,
-                    location=random.choice(['Puerto Princesa', 'Roxas', 'Taytay', 'Coron', 'El Nido']),
+                    location=project.primary_location,
                     status=event_status,
+                    has_submission=True,    # Events have submissions
                     placeholder=False,
-                    has_submission=has_submission,
-                    created_by=director,
-                    updated_by=director,
+                    created_by=leader,
+                    updated_by=leader,
                 )
                 
                 # Add event image using placeholder
@@ -341,8 +342,9 @@ class Command(BaseCommand):
             project_count += 1
             self.stdout.write(self.style.SUCCESS(f"  ✅ Created IN_PROGRESS project: {project.title} ({estimated_events} events, {completed_events} completed)"))
         
+        ##########################################################################################################################################
         
-        # COMPLETED project (1) - Past dates, all events and submissions completed
+        # COMPLETED project (X) - Past dates, all events and submissions completed
         for i in range(completed_projects):
             days_ago = random.randint(180, 365)
             start_date = (now - timedelta(days=days_ago)).date()
@@ -538,10 +540,24 @@ class Command(BaseCommand):
                 # Attach placeholder file
                 submission.file.name = PLACEHOLDER_PDF_PATH
                 submission.save()
-            
-            project_count += 1
-            self.stdout.write(self.style.SUCCESS(f"  ✅ Created COMPLETED project: {project.title} ({estimated_events} events, all completed)"))
 
+            project_evaluation_count = random.randint(1, 3)
+            random_rating = random.randint(3, 5)
+
+            for eval_num in range(1, project_evaluation_count + 1):
+                ProjectEvaluation.objects.create(
+                    project=project,
+                    rating=random_rating,
+                    comment=f"Computer-Generated Evaluation Comment with a rating of {random_rating}",
+                    evaluated_by=director,
+                    created_at=timezone.now() - timedelta(days=random.randint(1, 30)),
+                )
+
+            project_count += 1
+            self.stdout.write(self.style.SUCCESS(f"  ✅ Created COMPLETED project: {project.title} (All {estimated_events} events completed with evaluations)"))
+
+
+        ####################################################################################################################################
 
         self.stdout.write(self.style.SUCCESS(f'\n✅ Successfully created {project_count} projects for Faculty U. Test!'))
         self.stdout.write(self.style.SUCCESS(f'✅ All projects led by: {faculty_user.get_full_name()} ({faculty_user.email})'))

@@ -21,10 +21,10 @@ class Command(BaseCommand):
         self.stdout.write(self.style.WARNING('Starting Railway asset generation...\n'))
 
         # CONFIGURABLE COUNTS - Edit these to change amounts
-        faculty_user_count = 5
-        not_started_projects = 1
-        in_progress_projects = 1
-        completed_projects = 1
+        faculty_user_count = 25
+        not_started_projects = 5
+        in_progress_projects = 5
+        completed_projects = 5
 
         # PLACEHOLDER URLS - Files already in Railway media
         PLACEHOLDER_PDF_URL = "https://uesopmis.up.railway.app/media/downloadables/files/Placeholder.pdf"
@@ -62,66 +62,82 @@ class Command(BaseCommand):
         degree_expertise_map = {
             # Computer Science & IT
             'Bachelor of Science in Computer Science': ['Artificial Intelligence', 'Machine Learning', 'Software Development', 'Data Science', 'Cybersecurity', 'Web Development'],
-            'Master of Information Technology': ['Artificial Intelligence', 'Cloud Computing', 'Database Management', 'Network Security', 'Software Engineering', 'IT Project Management'],
+            'Bachelor of Science in Information Technology': ['Database Systems', 'Network Administration', 'Systems Analysis', 'Software Engineering', 'IT Support', 'Cloud Infrastructure'],
+            'Master of Information Technology': ['AI Systems', 'Cloud Computing', 'Database Management', 'Network Security', 'IT Project Management', 'Enterprise Architecture'],
             'Doctor of Philosophy in Computer Science': ['Artificial Intelligence', 'Machine Learning', 'Deep Learning', 'Natural Language Processing', 'Computer Vision', 'Robotics'],
-            
+            'Bachelor of Science in Information Systems': ['Business Analytics', 'Systems Integration', 'Information Management', 'Digital Transformation', 'Process Automation'],
+
             # Engineering
             'Bachelor of Science in Civil Engineering': ['Structural Engineering', 'Construction Management', 'Transportation Engineering', 'Geotechnical Engineering', 'Water Resources'],
+            'Bachelor of Science in Electrical Engineering': ['Power Systems', 'Control Systems', 'Renewable Energy', 'Electronics', 'Telecommunications'],
+            'Bachelor of Science in Mechanical Engineering': ['Thermodynamics', 'Manufacturing Engineering', 'Machine Design', 'Automotive Engineering', 'Energy Systems'],
             'Master of Engineering': ['Sustainable Engineering', 'Project Engineering', 'Systems Engineering', 'Industrial Engineering', 'Infrastructure Development'],
             'Doctor of Philosophy in Engineering': ['Advanced Materials', 'Renewable Energy', 'Automation', 'Structural Analysis', 'Environmental Engineering'],
             
             # Education
             'Bachelor of Science in Education': ['Curriculum Development', 'Pedagogy', 'Educational Psychology', 'Classroom Management', 'Special Education'],
+            'Bachelor of Early Childhood Education': ['Early Learning', 'Child Development', 'Inclusive Education', 'Play-Based Learning', 'Parent Engagement'],
             'Master of Education': ['Educational Leadership', 'Instructional Design', 'Educational Technology', 'Assessment and Evaluation', 'Teacher Training'],
             'Doctor of Philosophy in Education': ['Educational Research', 'Educational Policy', 'Higher Education Administration', 'Learning Sciences', 'Educational Innovation'],
             
             # Business & Management
             'Bachelor of Science in Business Administration': ['Business Management', 'Marketing', 'Operations Management', 'Strategic Planning', 'Entrepreneurship'],
+            'Bachelor of Science in Human Resource Management': ['Talent Acquisition', 'Training and Development', 'Labor Relations', 'Compensation and Benefits', 'Organizational Development'],
             'Master of Business Administration': ['Strategic Management', 'Finance', 'Marketing Strategy', 'Leadership', 'Business Analytics'],
             'Bachelor of Science in Accountancy': ['Financial Accounting', 'Auditing', 'Tax Management', 'Cost Accounting', 'Financial Analysis'],
+            'Master of Finance': ['Investment Analysis', 'Financial Modeling', 'Corporate Finance', 'Risk Management', 'Mergers and Acquisitions'],
             'Doctor of Philosophy in Business': ['Business Strategy', 'Organizational Behavior', 'International Business', 'Innovation Management', 'Corporate Governance'],
             
             # Health Sciences
             'Bachelor of Science in Nursing': ['Patient Care', 'Clinical Nursing', 'Community Health', 'Health Education', 'Medical-Surgical Nursing'],
             'Doctor of Medicine': ['Clinical Medicine', 'Public Health', 'Medical Research', 'Healthcare Management', 'Preventive Medicine'],
             'Master of Health Administration': ['Healthcare Management', 'Health Policy', 'Hospital Administration', 'Healthcare Quality', 'Health Informatics'],
-            
+            'Bachelor of Science in Pharmacy': ['Pharmacology', 'Pharmaceutical Care', 'Pharmacy Management', 'Clinical Pharmacy', 'Drug Safety'],
+
             # Environmental & Agricultural Sciences
             'Bachelor of Science in Environmental Science': ['Environmental Conservation', 'Climate Change', 'Sustainability', 'Ecology', 'Environmental Policy'],
             'Master of Environmental Science': ['Environmental Management', 'Conservation Biology', 'Renewable Resources', 'Environmental Impact Assessment', 'Green Technology'],
             'Bachelor of Science in Agriculture': ['Crop Production', 'Agricultural Economics', 'Sustainable Farming', 'Agribusiness', 'Soil Science'],
-            
+            'Master of Agricultural Technology': ['Agroecology', 'Precision Farming', 'Micro-Farming Systems', 'Agricultural Extension', 'Post-Harvest Technology'],
+
             # Social Sciences
             'Bachelor of Science in Psychology': ['Clinical Psychology', 'Counseling', 'Organizational Psychology', 'Child Development', 'Behavioral Science'],
             'Bachelor of Science in Social Work': ['Community Development', 'Social Welfare', 'Family Counseling', 'Crisis Intervention', 'Case Management'],
             'Master of Social Work': ['Community Development', 'Social Policy', 'Mental Health', 'Family Services', 'Social Justice'],
             'Master of Community Development': ['Community Organizing', 'Rural Development', 'Urban Planning', 'Participatory Development', 'Social Enterprise'],
-            
+            'Bachelor of Arts in Sociology': ['Cultural Studies', 'Social Theory', 'Human Behavior', 'Gender Studies', 'Population Studies'],
+
             # Public Administration & Law
             'Master of Public Administration': ['Public Policy', 'Governance', 'Public Management', 'Government Relations', 'Policy Analysis'],
             'Doctor of Public Administration': ['Public Governance', 'Policy Development', 'Public Sector Management', 'Administrative Law', 'Public Finance'],
             'Juris Doctor': ['Legal Practice', 'Constitutional Law', 'Corporate Law', 'Environmental Law', 'Human Rights Law'],
-            
+            'Bachelor of Laws': ['Civil Law', 'Criminal Law', 'Property Law', 'Commercial Law', 'Public International Law'],
+
             # Sciences
             'Bachelor of Science in Mathematics': ['Applied Mathematics', 'Statistics', 'Mathematical Modeling', 'Data Analysis', 'Quantitative Research'],
             'Bachelor of Science in Biology': ['Marine Biology', 'Ecology', 'Genetics', 'Microbiology', 'Conservation Biology'],
             'Bachelor of Science in Chemistry': ['Analytical Chemistry', 'Environmental Chemistry', 'Chemical Research', 'Materials Science', 'Quality Control'],
             'Bachelor of Science in Physics': ['Applied Physics', 'Renewable Energy', 'Materials Science', 'Computational Physics', 'Environmental Physics'],
             'Doctor of Philosophy in Science': ['Scientific Research', 'Environmental Science', 'Biotechnology', 'Marine Science', 'Climate Science'],
-            
+
             # Architecture & Design
             'Bachelor of Science in Architecture': ['Architectural Design', 'Urban Planning', 'Sustainable Design', 'Building Technology', 'Landscape Architecture'],
-            
+            'Bachelor of Fine Arts': ['Graphic Design', 'Visual Communication', 'Illustration', 'Mixed Media', 'Studio Art'],
+            'Bachelor of Interior Design': ['Interior Architecture', 'Space Planning', 'Design Aesthetics', 'Furniture Design', 'Sustainable Interiors'],
+
             # Tourism & Hospitality
             'Bachelor of Science in Tourism Management': ['Tourism Development', 'Hospitality Management', 'Event Management', 'Sustainable Tourism', 'Cultural Tourism'],
-            
+            'Bachelor of Science in Hotel and Restaurant Management': ['Food and Beverage Management', 'Culinary Arts', 'Hotel Operations', 'Hospitality Marketing', 'Customer Service'],
+
             # Languages & Communication
             'Bachelor of Arts in English': ['Communication', 'Technical Writing', 'Literature', 'English Language Teaching', 'Creative Writing'],
             'Bachelor of Arts in Communication': ['Media Relations', 'Public Relations', 'Digital Communication', 'Journalism', 'Corporate Communication'],
-            
+            'Bachelor of Arts in Journalism': ['News Reporting', 'Investigative Journalism', 'Editorial Writing', 'Digital Media Production', 'Broadcast Journalism'],
+
             # Project Management
             'Master of Project Management': ['Project Planning', 'Risk Management', 'Agile Methodologies', 'Stakeholder Management', 'Program Management'],
         }
+
         
         # Get all available degree-expertise pairs
         degree_expertise_pairs = []
@@ -180,7 +196,11 @@ class Command(BaseCommand):
         now = timezone.now()
         project_count = 0
         
-        # NOT_STARTED project (1) - Future start date
+
+        ####################################################################################################################################
+
+
+        # NOT_STARTED project (X) - Future start date
         for i in range(not_started_projects):
             start_date = now.date() + timedelta(days=random.randint(30, 90))
             end_date = start_date + timedelta(days=random.randint(180, 365))
@@ -250,9 +270,12 @@ class Command(BaseCommand):
             
             project_count += 1
             self.stdout.write(self.style.SUCCESS(f"  Created NOT_STARTED project: {project.title}"))
-        
 
-        # IN_PROGRESS project (1) - Between start and end date, with events and submissions
+
+        ####################################################################################################################################
+
+
+        # IN_PROGRESS project (X) - Between start and end date, with events and submissions
         for i in range(in_progress_projects):
             days_ago = random.randint(30, 120)
             start_date = (now - timedelta(days=days_ago)).date()
@@ -328,12 +351,10 @@ class Command(BaseCommand):
             for j in range(estimated_events):
                 days_offset = random.randint(0, days_ago)
                 event_date = now - timedelta(days=days_offset)
-                
-                # Determine event status based on whether it's completed
-                if j < completed_events:
+
+                # Determine event status based on whether the event date has passed
+                if event_date.date() <= now.date():
                     event_status = 'COMPLETED'
-                elif j == completed_events and random.random() > 0.5:
-                    event_status = 'ONGOING'
                 else:
                     event_status = 'SCHEDULED'
                 
@@ -344,7 +365,7 @@ class Command(BaseCommand):
                     datetime=event_date,
                     location=project.primary_location,
                     status=event_status,
-                    has_submission=j < completed_events,  # Completed events have submissions
+                    has_submission=True,    # Events have submissions
                     placeholder=False,
                     created_by=leader,
                     updated_by=leader,
@@ -427,8 +448,11 @@ class Command(BaseCommand):
             project_count += 1
             self.stdout.write(self.style.SUCCESS(f"  Created IN_PROGRESS project: {project.title} ({estimated_events} events, {completed_events} completed)"))
         
-        
-        # COMPLETED project (1) - Past dates, all events and submissions completed
+
+        ####################################################################################################################################
+
+
+        # COMPLETED project (X) - Past dates, all events and submissions completed
         for i in range(completed_projects):
             days_ago = random.randint(180, 365)
             start_date = (now - timedelta(days=days_ago)).date()
