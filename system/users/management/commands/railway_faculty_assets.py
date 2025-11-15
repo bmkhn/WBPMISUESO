@@ -200,7 +200,7 @@ class Command(BaseCommand):
                 agenda=random.choice(agendas),
                 project_type=random.choice(['NEEDS_BASED', 'RESEARCH_BASED']),
                 estimated_events=estimated_events,
-                event_progress=0,  # Will be set by signal when submissions are created
+                event_progress=completed_events,
                 estimated_trainees=random.randint(50, 200),
                 total_trained_individuals=random.randint(20, 100),
                 primary_beneficiary=random.choice(['Students', 'Farmers', 'Teachers', 'Community Members', 'LGU Officials', 'Barangay Officials']),
@@ -264,12 +264,10 @@ class Command(BaseCommand):
                     updated_by=leader,
                 )
                 
-                # Add event image using placeholder
-                event.image.name = PLACEHOLDER_IMAGE_PATH
-                event.save()
-                
-                # Create event submission ONLY for completed events
-                if event_status == 'COMPLETED' and event_templates:
+                # Create event submission if event is completed (APPROVED to contribute to progress)
+                if j < completed_events and event_templates:
+                    submitter = random.choice([leader] + list(project.providers.all()))
+                    
                     # Get coordinator from the same college as project leader
                     coordinator = User.objects.filter(
                         role=User.Role.COORDINATOR,
@@ -282,7 +280,7 @@ class Command(BaseCommand):
                         deadline=event_date + timedelta(days=7),
                         notes=f"Event documentation for {event.title}",
                         created_by=director,
-                        submitted_by=leader,  # Faculty U. Test submits
+                        submitted_by=submitter,
                         submitted_at=event_date + timedelta(days=random.randint(1, 5)),
                         event=event,
                         num_trained_individuals=random.randint(20, 80),
@@ -295,7 +293,7 @@ class Command(BaseCommand):
                         updated_by=director,
                     )
                     
-                    # Attach placeholder file and image (signal will update event_progress)
+                    # Attach placeholder file and image
                     submission.file.name = PLACEHOLDER_PDF_PATH
                     submission.image_event.name = PLACEHOLDER_IMAGE_PATH
                     submission.save()
@@ -311,6 +309,7 @@ class Command(BaseCommand):
                 ).first()
                 
                 for k in range(num_file_submissions):
+                    submitter = random.choice([leader] + list(project.providers.all()))
                     # Convert date to timezone-aware datetime
                     deadline_date = start_date + timedelta(days=random.randint(30, days_ago))
                     deadline = timezone.make_aware(timezone.datetime.combine(deadline_date, timezone.datetime.min.time()))
@@ -325,7 +324,7 @@ class Command(BaseCommand):
                         deadline=deadline,
                         notes=f"Required documentation {k+1}",
                         created_by=director,
-                        submitted_by=leader,  # Faculty U. Test submits
+                        submitted_by=submitter,
                         submitted_at=deadline - timedelta(days=random.randint(1, 3)),
                         status=status,
                         reviewed_by=coordinator if coordinator and status != 'SUBMITTED' else (director if status != 'SUBMITTED' else None),
@@ -342,8 +341,10 @@ class Command(BaseCommand):
             project_count += 1
             self.stdout.write(self.style.SUCCESS(f"  ✅ Created IN_PROGRESS project: {project.title} ({estimated_events} events, {completed_events} completed)"))
         
+        
         ##########################################################################################################################################
         
+
         # COMPLETED project (X) - Past dates, all events and submissions completed
         for i in range(completed_projects):
             days_ago = random.randint(180, 365)
