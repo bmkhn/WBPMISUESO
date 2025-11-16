@@ -524,7 +524,18 @@ class ProjectUpdate(models.Model):
 # NOTE: Imports are at the top
 @receiver(post_save, sender=Project)
 def create_project_alerts(sender, instance, created, **kwargs):
-    """Create project alerts when project status changes"""
+    """Create project alerts when project status changes and send email to leader when created"""
+    from system.utils.email_utils import async_send_added_to_project
+    
+    # Send email to project leader when project is created
+    if created and instance.project_leader and instance.project_leader.email:
+        async_send_added_to_project(
+            recipient_email=instance.project_leader.email,
+            project=instance,
+            role='leader'
+        )
+    
+    # Handle status change notifications
     if not created and hasattr(instance, '_old_status') and instance._old_status != instance.status:
         # Notify project leader and providers about status changes
         users_to_notify = [instance.project_leader]
