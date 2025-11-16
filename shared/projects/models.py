@@ -566,3 +566,23 @@ def send_project_event_email(sender, instance, created, **kwargs):
                 recipient_emails=team_emails,
                 project_event=instance
             )
+
+
+@receiver(m2m_changed, sender=Project.providers.through)
+def send_email_on_provider_added(sender, instance, action, pk_set, **kwargs):
+    """Send email when new providers are added to a project"""
+    from system.utils.email_utils import async_send_added_to_project
+    
+    if action == "post_add" and pk_set:
+        # Get the newly added providers
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        new_providers = User.objects.filter(pk__in=pk_set)
+        
+        for provider in new_providers:
+            if provider.email:
+                async_send_added_to_project(
+                    recipient_email=provider.email,
+                    project=instance,
+                    role='provider'
+                )

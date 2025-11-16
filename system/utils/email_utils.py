@@ -1064,3 +1064,305 @@ def async_send_event_reminder(recipient_emails, event_title, event_datetime, eve
         recipient_list=recipient_emails,
         html_message=html_message
     )
+
+def async_send_added_to_project(recipient_email, project, role='provider'):
+    """
+    Send email when a user is added to a project.
+
+    Args:
+        recipient_email (str): Email address of the user being added
+        project: Project instance
+        role (str): 'leader' or 'provider'
+    """
+    from django.utils.dateformat import format as date_format
+    
+    role_display = 'Project Leader' if role == 'leader' else 'Project Provider'
+    start_date = date_format(project.start_date, 'F d, Y')
+    end_date = date_format(project.estimated_end_date, 'F d, Y')
+    
+    subject = "You have been added to project: $(){project.title}"
+    message = "You have been added to the project \"{project.title}\" as {role_display}.\n\nProject Period: {start_date} - {end_date}"
+    
+    html_message = f'''
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 20px;">
+            <tr>
+                <td align="center">
+                    <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <tr>
+                            <td style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 30px 40px; text-align: center;">
+                                <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: bold;">
+                                     Added to Project
+                                </h1>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 40px;">
+                                <h2 style="margin: 0 0 20px 0; color: #1f2937; font-size: 20px;">
+                                    You've been added to a project
+                                </h2>
+                                <p style="margin: 0 0 20px 0; color: #4b5563; font-size: 16px; line-height: 1.6;">
+                                    You have been assigned to the following project as <strong>{role_display}</strong>:
+                                </p>
+                                <table width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0; border: 2px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
+                                    <tr>
+                                        <td style="padding: 20px; background-color: #f9fafb;">
+                                            <h3 style="margin: 0 0 15px 0; color: #1f2937; font-size: 18px;">
+                                                {project.title}
+                                            </h3>
+                                            <p style="margin: 0 0 10px 0; color: #4b5563; font-size: 14px;">
+                                                <strong> Type:</strong> {project.get_project_type_display()}
+                                            </p>
+                                            <p style="margin: 0 0 10px 0; color: #4b5563; font-size: 14px;">
+                                                <strong> Start Date:</strong> {start_date}
+                                            </p>
+                                            <p style="margin: 0 0 10px 0; color: #4b5563; font-size: 14px;">
+                                                <strong> End Date:</strong> {end_date}
+                                            </p>
+                                            <p style="margin: 0 0 10px 0; color: #4b5563; font-size: 14px;">
+                                                <strong> Location:</strong> {project.primary_location}
+                                            </p>
+                                            <p style="margin: 0 0 10px 0; color: #4b5563; font-size: 14px;">
+                                                <strong> Beneficiary:</strong> {project.primary_beneficiary}
+                                            </p>
+                                            <p style="margin: 0; color: #4b5563; font-size: 14px;">
+                                                <strong> Events:</strong> {project.estimated_events} planned event(s)
+                                            </p>
+                                        </td>
+                                    </tr>
+                                </table>
+                                <p style="margin: 20px 0 0 0; padding: 15px; background-color: #f0fdf4; border-left: 4px solid #10b981; color: #065f46; font-size: 14px; line-height: 1.5;">
+                                    <strong> Welcome to the Team!</strong><br>
+                                    You can now access this project in your dashboard and collaborate with other team members.
+                                </p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="background-color: #f9fafb; padding: 20px 40px; text-align: center; border-top: 1px solid #e5e7eb;">
+                                <p style="margin: 0; color: #6b7280; font-size: 12px;">
+                                    This is an automated notification from UESOPMIS<br>
+                                    Please do not reply to this email
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </body>
+    </html>
+    '''
+    
+    async_send_mail(
+        subject=subject,
+        message=message,
+        recipient_list=[recipient_email],
+        html_message=html_message
+    )
+
+
+def async_send_added_to_project(recipient_email, project, role='provider'):
+    """
+    Send email when a user is added to a project.
+    
+    Args:
+        recipient_email (str): Email address of the user being added
+        project: Project instance
+        role (str): 'leader' or 'provider'
+    """
+    from django.utils.dateformat import format as date_format
+    
+    role_display = 'Project Leader' if role == 'leader' else 'Project Provider'
+    start_date = date_format(project.start_date, 'F d, Y')
+    end_date = date_format(project.estimated_end_date, 'F d, Y')
+    
+    subject = f'You have been added to project: {project.title}'
+    message = f'You have been added to the project "{project.title}" as {role_display}.\n\nProject Period: {start_date} - {end_date}'
+    
+    html_message = f'''
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 20px;">
+            <tr>
+                <td align="center">
+                    <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <tr>
+                            <td style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 30px 40px; text-align: center;">
+                                <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: bold;">
+                                    🎉 Added to Project
+                                </h1>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 40px;">
+                                <h2 style="margin: 0 0 20px 0; color: #1f2937; font-size: 20px;">
+                                    You've been added to a project
+                                </h2>
+                                <p style="margin: 0 0 20px 0; color: #4b5563; font-size: 16px; line-height: 1.6;">
+                                    You have been assigned to the following project as <strong>{role_display}</strong>:
+                                </p>
+                                <table width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0; border: 2px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
+                                    <tr>
+                                        <td style="padding: 20px; background-color: #f9fafb;">
+                                            <h3 style="margin: 0 0 15px 0; color: #1f2937; font-size: 18px;">
+                                                {project.title}
+                                            </h3>
+                                            <p style="margin: 0 0 10px 0; color: #4b5563; font-size: 14px;">
+                                                <strong>📋 Type:</strong> {project.get_project_type_display()}
+                                            </p>
+                                            <p style="margin: 0 0 10px 0; color: #4b5563; font-size: 14px;">
+                                                <strong>📅 Start Date:</strong> {start_date}
+                                            </p>
+                                            <p style="margin: 0 0 10px 0; color: #4b5563; font-size: 14px;">
+                                                <strong>📅 End Date:</strong> {end_date}
+                                            </p>
+                                            <p style="margin: 0 0 10px 0; color: #4b5563; font-size: 14px;">
+                                                <strong>📍 Location:</strong> {project.primary_location}
+                                            </p>
+                                            <p style="margin: 0 0 10px 0; color: #4b5563; font-size: 14px;">
+                                                <strong>👥 Beneficiary:</strong> {project.primary_beneficiary}
+                                            </p>
+                                            <p style="margin: 0; color: #4b5563; font-size: 14px;">
+                                                <strong>🎯 Events:</strong> {project.estimated_events} planned event(s)
+                                            </p>
+                                        </td>
+                                    </tr>
+                                </table>
+                                <p style="margin: 20px 0 0 0; padding: 15px; background-color: #f0fdf4; border-left: 4px solid #10b981; color: #065f46; font-size: 14px; line-height: 1.5;">
+                                    <strong>✓ Welcome to the Team!</strong><br>
+                                    You can now access this project in your dashboard and collaborate with other team members.
+                                </p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="background-color: #f9fafb; padding: 20px 40px; text-align: center; border-top: 1px solid #e5e7eb;">
+                                <p style="margin: 0; color: #6b7280; font-size: 12px;">
+                                    This is an automated notification from UESOPMIS<br>
+                                    Please do not reply to this email
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </body>
+    </html>
+    '''
+    
+    async_send_mail(
+        subject=subject,
+        message=message,
+        recipient_list=[recipient_email],
+        html_message=html_message
+    )
+
+
+def async_send_new_submission(recipient_emails, submission):
+    """
+    Send email when a project receives a new submission.
+    
+    Args:
+        recipient_emails (list): List of project team member email addresses
+        submission: Submission instance
+    """
+    from django.utils.dateformat import format as date_format
+    
+    deadline = date_format(submission.deadline, 'F d, Y \a\t g:i A')
+    submitted_at = date_format(submission.submitted_at, 'F d, Y \a\t g:i A') if submission.submitted_at else 'Not yet submitted'
+    submitted_by_name = submission.submitted_by.get_full_name() if submission.submitted_by else 'Unknown'
+    
+    subject = f'New submission for {submission.project.title}'
+    message = f'A new submission has been made for the project "{submission.project.title}".\n\nForm: {submission.downloadable.name}\nSubmitted by: {submitted_by_name}\nDeadline: {deadline}'
+    
+    html_message = f'''
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 20px;">
+            <tr>
+                <td align="center">
+                    <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <tr>
+                            <td style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); padding: 30px 40px; text-align: center;">
+                                <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: bold;">
+                                    📄 New Submission
+                                </h1>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 40px;">
+                                <h2 style="margin: 0 0 20px 0; color: #1f2937; font-size: 20px;">
+                                    Project submission update
+                                </h2>
+                                <p style="margin: 0 0 20px 0; color: #4b5563; font-size: 16px; line-height: 1.6;">
+                                    A new submission has been made for your project:
+                                </p>
+                                <table width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0; border: 2px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
+                                    <tr>
+                                        <td style="padding: 20px; background-color: #f9fafb;">
+                                            <p style="margin: 0 0 10px 0; color: #6b7280; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                                <strong>Project</strong>
+                                            </p>
+                                            <h3 style="margin: 0 0 20px 0; color: #1f2937; font-size: 18px;">
+                                                {submission.project.title}
+                                            </h3>
+                                            <p style="margin: 0 0 10px 0; color: #4b5563; font-size: 14px;">
+                                                <strong>📋 Form:</strong> {submission.downloadable.name}
+                                            </p>
+                                            <p style="margin: 0 0 10px 0; color: #4b5563; font-size: 14px;">
+                                                <strong>👤 Submitted by:</strong> {submitted_by_name}
+                                            </p>
+                                            <p style="margin: 0 0 10px 0; color: #4b5563; font-size: 14px;">
+                                                <strong>📅 Deadline:</strong> {deadline}
+                                            </p>
+                                            <p style="margin: 0 0 10px 0; color: #4b5563; font-size: 14px;">
+                                                <strong>📊 Status:</strong> {submission.get_status_display()}
+                                            </p>
+                                            {f'<p style="margin: 0; color: #4b5563; font-size: 14px;"><strong>✓ Submitted:</strong> {submitted_at}</p>' if submission.submitted_at else ''}
+                                        </td>
+                                    </tr>
+                                </table>
+                                <p style="margin: 20px 0 0 0; padding: 15px; background-color: #dbeafe; border-left: 4px solid #3b82f6; color: #1e40af; font-size: 14px; line-height: 1.5;">
+                                    <strong>ℹ️ Action Required</strong><br>
+                                    Please review this submission in the system and take appropriate action if needed.
+                                </p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="background-color: #f9fafb; padding: 20px 40px; text-align: center; border-top: 1px solid #e5e7eb;">
+                                <p style="margin: 0; color: #6b7280; font-size: 12px;">
+                                    This is an automated notification from UESOPMIS<br>
+                                    Please do not reply to this email
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </body>
+    </html>
+    '''
+    
+    async_send_mail(
+        subject=subject,
+        message=message,
+        recipient_list=recipient_emails,
+        html_message=html_message
+    )
