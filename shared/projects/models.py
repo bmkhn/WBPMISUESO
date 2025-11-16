@@ -307,6 +307,7 @@ def log_project_provider_added(sender, instance, action, pk_set, **kwargs):
 	if action == 'post_add' and pk_set:
 		from system.users.models import User
 		from system.notifications.models import Notification
+		from system.utils.email_utils import async_send_added_to_project
 		url = reverse('project_profile', args=[instance.pk])
 		actor = instance.updated_by or instance.created_by or None
 		
@@ -325,12 +326,20 @@ def log_project_provider_added(sender, instance, action, pk_set, **kwargs):
 					model='Project',
 					object_id=instance.id,
 					object_repr=str(instance),
-					details=f"You have been added as a provider to this project",
-					url=url,
-				)
+				details=f"You have been added as a provider to this project",
+				url=url,
+			)
+			
+			# Send email to newly added provider
+			# COMMENTED OUT: Causing 500 errors due to email issues
+			# if added_user.email:
+			# 	async_send_added_to_project(
+			# 		recipient_email=added_user.email,
+			# 		project=instance,
+			# 		role='provider'
+			# 	)
 			except User.DoesNotExist:
 				pass
-
 
 #############################################################################################################################################################################################################
 
@@ -468,7 +477,7 @@ class ProjectEvent(models.Model):
 		"""Return the event image URL or default image"""
 		if self.image and hasattr(self.image, 'url'):
 			return self.image.url
-		return '/static/image.png'
+		return static('image.png')
 
 	def __str__(self):
 		return f"{self.title} ({self.project.title})"
@@ -524,76 +533,34 @@ class ProjectUpdate(models.Model):
 # NOTE: Imports are at the top
 @receiver(post_save, sender=Project)
 def create_project_alerts(sender, instance, created, **kwargs):
-    """Create project alerts when project status changes and send email to leader when created"""
-    from system.utils.email_utils import async_send_added_to_project
+	"""Create project alerts when project status changes and send email to leader when created"""
+	# COMMENTED OUT: Causing 500 errors due to email issues
+	# from system.utils.email_utils import async_send_added_to_project
     
     # Send email to project leader when project is created
-    if created and instance.project_leader and instance.project_leader.email:
-        async_send_added_to_project(
-            recipient_email=instance.project_leader.email,
-            project=instance,
-            role='leader'
-        )
-    
-    # Handle status change notifications
-    if not created and hasattr(instance, '_old_status') and instance._old_status != instance.status:
-        # Notify project leader and providers about status changes
-        users_to_notify = [instance.project_leader]
-        if instance.providers.exists():
-            users_to_notify.extend(instance.providers.all())
-        
-        for user in users_to_notify:
-            if user:
-                ProjectUpdate.objects.update_or_create(
-                    user=user,
-                    project=instance,
-                    submission=None,  # No submission for project status changes
-                    status=instance.status,
-                    defaults={
-                        'viewed': False,
-                        'updated_at': timezone.now(),
-                    }
-                )
+	# if created and instance.project_leader and instance.project_leader.email:
+	# 	async_send_added_to_project(
+	# 		recipient_email=instance.project_leader.email,
+	# 		project=instance,
+	# 		role='leader'
+	# 	)
 
-
-@receiver(post_save, sender=ProjectEvent)
-def send_project_event_email(sender, instance, created, **kwargs):
-    """Send email to project team when a new project event is created"""
-    from system.utils.email_utils import async_send_project_event_added
-    
-    if created and not instance.placeholder and instance.datetime:
-        # Get project team members
-        team_emails = []
-        if instance.project.project_leader and instance.project.project_leader.email:
-            team_emails.append(instance.project.project_leader.email)
-        for provider in instance.project.providers.all():
-            if provider.email:
-                team_emails.append(provider.email)
-        
-        team_emails = list(set(team_emails))  # Remove duplicates
-        
-        if team_emails:
-            async_send_project_event_added(
-                recipient_emails=team_emails,
-                project_event=instance
-            )
-
-
-@receiver(m2m_changed, sender=Project.providers.through)
-def send_email_on_provider_added(sender, instance, action, pk_set, **kwargs):
-    """Send email when new providers are added to a project"""
-    from system.utils.email_utils import async_send_added_to_project
-    
-    if action == "post_add" and pk_set:
-        # Get the newly added providers
-        from django.contrib.auth import get_user_model
-        User = get_user_model()
-        new_providers = User.objects.filter(pk__in=pk_set)
-        
-        for provider in new_providers:
-            if provider.email:
-                async_send_added_to_project(
-                    recipient_email=provider.email,
-                    project=instance,
-                    role='provider'
-                )
+	# Handle status change notifications
+	if not created and hasattr(instance, '_old_status') and instance._old_status != instance.status:
+		# Notify project leader and providers about status changes
+		users_to_notify = [instance.project_leader]
+		if instance.providers.exists():
+			users_to_notify.extend(instance.providers.all())
+		
+		for user in users_to_notify:
+			if user:
+				ProjectUpdate.objects.update_or_create(
+					user=user,
+					project=instance,
+					submission=None,  # No submission for project status changes
+					status=instance.status,
+					defaults={
+						'viewed': False,
+						'updated_at': timezone.now(),
+					}
+				)

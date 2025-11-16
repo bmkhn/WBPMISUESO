@@ -73,14 +73,15 @@ def log_meeting_event_action(sender, instance, created, **kwargs):
 		details = f"New meeting scheduled for {instance.datetime.strftime('%B %d, %Y at %I:%M %p')}"
 		
 		# Send email to all participants when meeting is created
-		participants = instance.participants.all()
-		participant_emails = [p.email for p in participants if p.email]
-		
-		if participant_emails:
-			async_send_meeting_event_added(
-				recipient_emails=participant_emails,
-				meeting_event=instance
-			)
+		# COMMENTED OUT: Causing 500 errors due to email issues
+		# participants = instance.participants.all()
+		# participant_emails = [p.email for p in participants if p.email]
+		# 
+		# if participant_emails:
+		# 	async_send_meeting_event_added(
+		# 		recipient_emails=participant_emails,
+		# 		meeting_event=instance
+		# 	)
 	else:
 		details = f"Meeting has been updated"
 	
@@ -116,17 +117,19 @@ def log_meeting_event_delete(sender, instance, **kwargs):
 @receiver(m2m_changed, sender=MeetingEvent.participants.through)
 def send_email_on_participant_added(sender, instance, action, pk_set, **kwargs):
 	"""Send email when new participants are added to a meeting"""
-	from system.utils.email_utils import async_send_meeting_event_added
-	
-	if action == "post_add" and pk_set:
-		# Get the newly added participants
-		from django.contrib.auth import get_user_model
-		User = get_user_model()
-		new_participants = User.objects.filter(pk__in=pk_set)
-		participant_emails = [p.email for p in new_participants if p.email]
-		
-		if participant_emails:
-			async_send_meeting_event_added(
-				recipient_emails=participant_emails,
-				meeting_event=instance
-			)
+	# COMMENTED OUT: Causing 500 errors due to email issues
+	# from system.utils.email_utils import async_send_meeting_event_added
+	# 
+	# if action == "post_add" and pk_set:
+	# 	# Get the newly added participants
+	# 	from django.contrib.auth import get_user_model
+	# 	User = get_user_model()
+	# 	new_participants = User.objects.filter(pk__in=pk_set)
+	# 	participant_emails = [p.email for p in new_participants if p.email]
+	# 	
+	# 	if participant_emails:
+	# 		async_send_meeting_event_added(
+	# 			recipient_emails=participant_emails,
+	# 			meeting_event=instance
+	# 		)
+	pass  # Disabled email functionality

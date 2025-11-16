@@ -162,22 +162,23 @@ def log_submission_action(sender, instance, created, **kwargs):
 	# Only log creation if created
 	if created:
 		"""Send email to project team when a new submission is added to their project"""
-		from system.utils.email_utils import async_send_new_submission
+		# COMMENTED OUT: Causing 500 errors due to email issues
+		# from system.utils.email_utils import async_send_new_submission
 
-		# Collect all team member emails (leader + providers)
-		team_emails = []
-		if instance.project.project_leader and instance.project.project_leader.email:
-			team_emails.append(instance.project.project_leader.email)
-		for provider in instance.project.providers.all():
-			if provider.email:
-				team_emails.append(provider.email)
-		
-		# Send email to all team members if there are any
-		if team_emails:
-			async_send_new_submission(
-				recipient_emails=team_emails,
-				submission=instance
-			)
+		# # Collect all team member emails (leader + providers)
+		# team_emails = []
+		# if instance.project.project_leader and instance.project.project_leader.email:
+		# 	team_emails.append(instance.project.project_leader.email)
+		# for provider in instance.project.providers.all():
+		# 	if provider.email:
+		# 		team_emails.append(provider.email)
+		# 
+		# # Send email to all team members if there are any
+		# if team_emails:
+		# 	async_send_new_submission(
+		# 		recipient_emails=team_emails,
+		# 		submission=instance
+		# 	)
 
 		LogEntry.objects.create(
 			user=user,
