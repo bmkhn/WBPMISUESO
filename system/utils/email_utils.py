@@ -774,3 +774,293 @@ def async_send_password_change_verification(user_email, verification_code):
     </html>
     '''
     async_send_mail(subject=subject, message=message, recipient_list=[user_email], html_message=html_message)
+
+
+def async_send_meeting_event_added(recipient_emails, meeting_event):
+    """
+    Send email when a user is added to a meeting event.
+    
+    Args:
+        recipient_emails (list): List of participant email addresses
+        meeting_event: MeetingEvent instance
+    """
+    from django.utils.dateformat import format as date_format
+    
+    event_datetime = date_format(meeting_event.datetime, 'F d, Y \a\t g:i A')
+    
+    subject = f'You have been added to: {meeting_event.title}'
+    message = f'You have been added as a participant to the meeting "{meeting_event.title}" scheduled for {event_datetime}.'
+    
+    html_message = f'''
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 20px;">
+            <tr>
+                <td align="center">
+                    <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <tr>
+                            <td style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); padding: 30px 40px; text-align: center;">
+                                <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: bold;">
+                                    📅 New Meeting Invitation
+                                </h1>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 40px;">
+                                <h2 style="margin: 0 0 20px 0; color: #1f2937; font-size: 20px;">
+                                    You've been added to a meeting
+                                </h2>
+                                <p style="margin: 0 0 20px 0; color: #4b5563; font-size: 16px; line-height: 1.6;">
+                                    You have been added as a participant to the following meeting:
+                                </p>
+                                <table width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0; border: 2px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
+                                    <tr>
+                                        <td style="padding: 20px; background-color: #f9fafb;">
+                                            <h3 style="margin: 0 0 15px 0; color: #1f2937; font-size: 18px;">
+                                                {meeting_event.title}
+                                            </h3>
+                                            <p style="margin: 0 0 10px 0; color: #4b5563; font-size: 14px;">
+                                                <strong>📅 Date & Time:</strong> {event_datetime}
+                                            </p>
+                                            {f'<p style="margin: 0 0 10px 0; color: #4b5563; font-size: 14px;"><strong>📍 Location:</strong> {meeting_event.location}</p>' if meeting_event.location else ''}
+                                            {f'<p style="margin: 0; color: #4b5563; font-size: 14px;"><strong>📝 Description:</strong> {meeting_event.description}</p>' if meeting_event.description else ''}
+                                        </td>
+                                    </tr>
+                                </table>
+                                <p style="margin: 20px 0 0 0; padding: 15px; background-color: #dbeafe; border-left: 4px solid #3b82f6; color: #1e40af; font-size: 14px; line-height: 1.5;">
+                                    <strong>ℹ️ Save the Date</strong><br>
+                                    Please mark your calendar for this meeting. You will receive reminder emails as the date approaches.
+                                </p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="background-color: #f9fafb; padding: 20px 40px; text-align: center; border-top: 1px solid #e5e7eb;">
+                                <p style="margin: 0; color: #6b7280; font-size: 12px;">
+                                    This is an automated notification from UESOPMIS<br>
+                                    Please do not reply to this email
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </body>
+    </html>
+    '''
+    
+    async_send_mail(
+        subject=subject,
+        message=message,
+        recipient_list=recipient_emails,
+        html_message=html_message
+    )
+
+
+def async_send_project_event_added(recipient_emails, project_event):
+    """
+    Send email when a project event (activity) is created for project members.
+    
+    Args:
+        recipient_emails (list): List of project team member email addresses
+        project_event: ProjectEvent instance
+    """
+    from django.utils.dateformat import format as date_format
+    
+    event_datetime = date_format(project_event.datetime, 'F d, Y \a\t g:i A') if project_event.datetime else 'TBD'
+    
+    subject = f'New Activity Added: {project_event.title}'
+    message = f'A new activity "{project_event.title}" has been added to the project "{project_event.project.title}" scheduled for {event_datetime}.'
+    
+    html_message = f'''
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 20px;">
+            <tr>
+                <td align="center">
+                    <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <tr>
+                            <td style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); padding: 30px 40px; text-align: center;">
+                                <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: bold;">
+                                    🎯 New Project Activity
+                                </h1>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 40px;">
+                                <h2 style="margin: 0 0 20px 0; color: #1f2937; font-size: 20px;">
+                                    New activity scheduled for your project
+                                </h2>
+                                <p style="margin: 0 0 20px 0; color: #4b5563; font-size: 16px; line-height: 1.6;">
+                                    A new activity has been added to your project:
+                                </p>
+                                <table width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0; border: 2px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
+                                    <tr>
+                                        <td style="padding: 20px; background-color: #f9fafb;">
+                                            <p style="margin: 0 0 10px 0; color: #6b7280; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                                <strong>Project</strong>
+                                            </p>
+                                            <h3 style="margin: 0 0 20px 0; color: #1f2937; font-size: 16px;">
+                                                {project_event.project.title}
+                                            </h3>
+                                            <p style="margin: 0 0 10px 0; color: #6b7280; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                                <strong>Activity</strong>
+                                            </p>
+                                            <h3 style="margin: 0 0 15px 0; color: #1f2937; font-size: 18px;">
+                                                {project_event.title}
+                                            </h3>
+                                            <p style="margin: 0 0 10px 0; color: #4b5563; font-size: 14px;">
+                                                <strong>📅 Date & Time:</strong> {event_datetime}
+                                            </p>
+                                            {f'<p style="margin: 0 0 10px 0; color: #4b5563; font-size: 14px;"><strong>📍 Location:</strong> {project_event.location}</p>' if project_event.location else ''}
+                                            {f'<p style="margin: 0; color: #4b5563; font-size: 14px;"><strong>📝 Description:</strong> {project_event.description}</p>' if project_event.description else ''}
+                                        </td>
+                                    </tr>
+                                </table>
+                                <p style="margin: 20px 0 0 0; padding: 15px; background-color: #f3e8ff; border-left: 4px solid #8b5cf6; color: #5b21b6; font-size: 14px; line-height: 1.5;">
+                                    <strong>ℹ️ Mark Your Calendar</strong><br>
+                                    Please prepare for this activity. You will receive reminder emails as the date approaches.
+                                </p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="background-color: #f9fafb; padding: 20px 40px; text-align: center; border-top: 1px solid #e5e7eb;">
+                                <p style="margin: 0; color: #6b7280; font-size: 12px;">
+                                    This is an automated notification from UESOPMIS<br>
+                                    Please do not reply to this email
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </body>
+    </html>
+    '''
+    
+    async_send_mail(
+        subject=subject,
+        message=message,
+        recipient_list=recipient_emails,
+        html_message=html_message
+    )
+
+
+def async_send_event_reminder(recipient_emails, event_title, event_datetime, event_location, event_description, event_type='meeting', days_before=None):
+    """
+    Send event reminder email to participants.
+    
+    Args:
+        recipient_emails (list): List of participant email addresses
+        event_title (str): Title of the event
+        event_datetime (datetime): Event datetime
+        event_location (str): Event location
+        event_description (str): Event description
+        event_type (str): 'meeting' or 'activity'
+        days_before (int): Number of days before event (None for day-of reminder)
+    """
+    from django.utils.dateformat import format as date_format
+    
+    event_datetime_str = date_format(event_datetime, 'F d, Y \a\t g:i A')
+    
+    if days_before:
+        reminder_type = f'{days_before} Days Before'
+        subject = f'Reminder: {event_title} in {days_before} days'
+        message_intro = f'This is a reminder that you have a {event_type} coming up in {days_before} days.'
+        emoji = '⏰'
+        color = '#f59e0b'
+        bg_color = '#fffbeb'
+        border_color = '#f59e0b'
+        text_color = '#92400e'
+    else:
+        reminder_type = 'Today'
+        subject = f'Today: {event_title}'
+        message_intro = f'This is a reminder that your {event_type} is scheduled for today.'
+        emoji = '🔔'
+        color = '#ef4444'
+        bg_color = '#fef2f2'
+        border_color = '#ef4444'
+        text_color = '#991b1b'
+    
+    message = f'{message_intro}\n\nEvent: {event_title}\nDate & Time: {event_datetime_str}\nLocation: {event_location or "TBD"}'
+    
+    html_message = f'''
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 20px;">
+            <tr>
+                <td align="center">
+                    <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <tr>
+                            <td style="background: linear-gradient(135deg, {color} 0%, {color} 100%); padding: 30px 40px; text-align: center;">
+                                <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: bold;">
+                                    {emoji} Event Reminder
+                                </h1>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 40px;">
+                                <h2 style="margin: 0 0 20px 0; color: #1f2937; font-size: 20px;">
+                                    {reminder_type} Reminder
+                                </h2>
+                                <p style="margin: 0 0 20px 0; color: #4b5563; font-size: 16px; line-height: 1.6;">
+                                    {message_intro}
+                                </p>
+                                <table width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0; border: 2px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
+                                    <tr>
+                                        <td style="padding: 20px; background-color: #f9fafb;">
+                                            <h3 style="margin: 0 0 15px 0; color: #1f2937; font-size: 18px;">
+                                                {event_title}
+                                            </h3>
+                                            <p style="margin: 0 0 10px 0; color: #4b5563; font-size: 14px;">
+                                                <strong>📅 Date & Time:</strong> {event_datetime_str}
+                                            </p>
+                                            {f'<p style="margin: 0 0 10px 0; color: #4b5563; font-size: 14px;"><strong>📍 Location:</strong> {event_location}</p>' if event_location else ''}
+                                            {f'<p style="margin: 0; color: #4b5563; font-size: 14px;"><strong>📝 Description:</strong> {event_description}</p>' if event_description else ''}
+                                        </td>
+                                    </tr>
+                                </table>
+                                <p style="margin: 20px 0 0 0; padding: 15px; background-color: {bg_color}; border-left: 4px solid {border_color}; color: {text_color}; font-size: 14px; line-height: 1.5;">
+                                    <strong>📌 Don't Forget</strong><br>
+                                    Please make sure you're prepared and available for this event.
+                                </p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="background-color: #f9fafb; padding: 20px 40px; text-align: center; border-top: 1px solid #e5e7eb;">
+                                <p style="margin: 0; color: #6b7280; font-size: 12px;">
+                                    This is an automated notification from UESOPMIS<br>
+                                    Please do not reply to this email
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </body>
+    </html>
+    '''
+    
+    async_send_mail(
+        subject=subject,
+        message=message,
+        recipient_list=recipient_emails,
+        html_message=html_message
+    )

@@ -1,6 +1,6 @@
 from django.db import models
 from django.conf import settings
-from django.db.models.signals import post_save, post_delete
+from django.db.models.signals import post_save, post_delete, m2m_changed
 from django.dispatch import receiver
 from system.utils.file_validators import validate_file_size
 
@@ -60,6 +60,7 @@ class MeetingEvent(models.Model):
 def log_meeting_event_action(sender, instance, created, **kwargs):
 	from system.logs.models import LogEntry
 	from django.urls import reverse
+	from system.utils.email_utils import async_send_meeting_event_added
 	
 	if hasattr(instance, '_skip_log'):
 		return
@@ -70,6 +71,16 @@ def log_meeting_event_action(sender, instance, created, **kwargs):
 	
 	if created:
 		details = f"New meeting scheduled for {instance.datetime.strftime('%B %d, %Y at %I:%M %p')}"
+		
+		# Send email to all participants when meeting is created
+		participants = instance.participants.all()
+		participant_emails = [p.email for p in participants if p.email]
+		
+		if participant_emails:
+			async_send_meeting_event_added(
+				recipient_emails=participant_emails,
+				meeting_event=instance
+			)
 	else:
 		details = f"Meeting has been updated"
 	
@@ -100,3 +111,22 @@ def log_meeting_event_delete(sender, instance, **kwargs):
 		details=f"Status: {instance.get_status_display()}",
 		is_notification=True
 	)
+
+
+@receiver(m2m_changed, sender=MeetingEvent.participants.through)
+def send_email_on_participant_added(sender, instance, action, pk_set, **kwargs):
+	"""Send email when new participants are added to a meeting"""
+	from system.utils.email_utils import async_send_meeting_event_added
+	
+	if action == "post_add" and pk_set:
+		# Get the newly added participants
+		from django.contrib.auth import get_user_model
+		User = get_user_model()
+		new_participants = User.objects.filter(pk__in=pk_set)
+		participant_emails = [p.email for p in new_participants if p.email]
+		
+		if participant_emails:
+			async_send_meeting_event_added(
+				recipient_emails=participant_emails,
+				meeting_event=instance
+			)

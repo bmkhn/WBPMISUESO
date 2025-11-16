@@ -543,3 +543,26 @@ def create_project_alerts(sender, instance, created, **kwargs):
                         'updated_at': timezone.now(),
                     }
                 )
+
+
+@receiver(post_save, sender=ProjectEvent)
+def send_project_event_email(sender, instance, created, **kwargs):
+    """Send email to project team when a new project event is created"""
+    from system.utils.email_utils import async_send_project_event_added
+    
+    if created and not instance.placeholder and instance.datetime:
+        # Get project team members
+        team_emails = []
+        if instance.project.project_leader and instance.project.project_leader.email:
+            team_emails.append(instance.project.project_leader.email)
+        for provider in instance.project.providers.all():
+            if provider.email:
+                team_emails.append(provider.email)
+        
+        team_emails = list(set(team_emails))  # Remove duplicates
+        
+        if team_emails:
+            async_send_project_event_added(
+                recipient_emails=team_emails,
+                project_event=instance
+            )

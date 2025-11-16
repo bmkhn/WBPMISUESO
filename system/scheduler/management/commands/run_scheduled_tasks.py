@@ -4,7 +4,8 @@ from system.scheduler.scheduler import (
     clear_expired_sessions,
     update_event_statuses,
     update_project_statuses,
-    update_user_expert_status
+    update_user_expert_status,
+    send_event_reminders
 )
 
 
@@ -15,7 +16,7 @@ class Command(BaseCommand):
         parser.add_argument(
             '--task',
             type=str,
-            help='Specific task to run: announcements, sessions, events, projects, experts, or all (default)',
+            help='Specific task to run: announcements, sessions, events, projects, experts, reminders, or all (default)',
             default='all'
         )
 
@@ -49,9 +50,14 @@ class Command(BaseCommand):
             update_user_expert_status()
             self.stdout.write('')
         
+        if task in ['reminders', 'all']:
+            self.stdout.write('📧 Sending event reminders...')
+            send_event_reminders()
+            self.stdout.write('')
+        
         self.stdout.write(self.style.SUCCESS('\n✅ All scheduled tasks completed!\n'))
         self.stdout.write(self.style.WARNING('💡 Usage examples:'))
         self.stdout.write('   python manage.py run_scheduled_tasks')
         self.stdout.write('   python manage.py run_scheduled_tasks --task=announcements')
-        self.stdout.write('   python manage.py run_scheduled_tasks --task=projects')
+        self.stdout.write('   python manage.py run_scheduled_tasks --task=reminders')
         self.stdout.write('   railway run python manage.py run_scheduled_tasks\n')

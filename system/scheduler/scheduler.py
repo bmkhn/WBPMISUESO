@@ -330,6 +330,144 @@ def notify_project_status_change(project, old_status, new_status):
         print(f"✗ Failed to send notifications for project '{project.title}': {str(e)}")
 
 
+def send_event_reminders():
+    """
+    Send email reminders for upcoming meetings and project events.
+    - 3 days before: Send reminder
+    - Day of (12:00 AM): Send day-of reminder
+    
+    Runs daily at midnight.
+    """
+    from shared.event_calendar.models import MeetingEvent
+    from shared.projects.models import ProjectEvent
+    from system.utils.email_utils import async_send_event_reminder
+    
+    now = timezone.now()
+    today = now.date()
+    three_days_later = today + timedelta(days=3)
+    
+    reminder_count = 0
+    
+    try:
+        # --- Meeting Event Reminders ---
+        
+        # 3 days before reminders for meetings
+        meetings_3_days = MeetingEvent.objects.filter(
+            status='SCHEDULED',
+            datetime__date=three_days_later
+        ).prefetch_related('participants')
+        
+        for meeting in meetings_3_days:
+            participants = meeting.participants.all()
+            participant_emails = [p.email for p in participants if p.email]
+            
+            if participant_emails:
+                async_send_event_reminder(
+                    recipient_emails=participant_emails,
+                    event_title=meeting.title,
+                    event_datetime=meeting.datetime,
+                    event_location=meeting.location,
+                    event_description=meeting.description,
+                    event_type='meeting',
+                    days_before=3
+                )
+                reminder_count += 1
+                print(f"✓ Sent 3-day reminder for meeting: {meeting.title}")
+        
+        # Day-of reminders for meetings
+        meetings_today = MeetingEvent.objects.filter(
+            status__in=['SCHEDULED', 'ONGOING'],
+            datetime__date=today
+        ).prefetch_related('participants')
+        
+        for meeting in meetings_today:
+            participants = meeting.participants.all()
+            participant_emails = [p.email for p in participants if p.email]
+            
+            if participant_emails:
+                async_send_event_reminder(
+                    recipient_emails=participant_emails,
+                    event_title=meeting.title,
+                    event_datetime=meeting.datetime,
+                    event_location=meeting.location,
+                    event_description=meeting.description,
+                    event_type='meeting',
+                    days_before=None
+                )
+                reminder_count += 1
+                print(f"✓ Sent day-of reminder for meeting: {meeting.title}")
+        
+        # --- Project Event Reminders ---
+        
+        # 3 days before reminders for project events
+        project_events_3_days = ProjectEvent.objects.filter(
+            status='SCHEDULED',
+            datetime__date=three_days_later,
+            placeholder=False
+        ).select_related('project__project_leader').prefetch_related('project__providers')
+        
+        for event in project_events_3_days:
+            # Get project team members
+            team_emails = []
+            if event.project.project_leader and event.project.project_leader.email:
+                team_emails.append(event.project.project_leader.email)
+            for provider in event.project.providers.all():
+                if provider.email:
+                    team_emails.append(provider.email)
+            
+            team_emails = list(set(team_emails))  # Remove duplicates
+            
+            if team_emails:
+                async_send_event_reminder(
+                    recipient_emails=team_emails,
+                    event_title=event.title,
+                    event_datetime=event.datetime,
+                    event_location=event.location,
+                    event_description=event.description,
+                    event_type='activity',
+                    days_before=3
+                )
+                reminder_count += 1
+                print(f"✓ Sent 3-day reminder for project event: {event.title}")
+        
+        # Day-of reminders for project events
+        project_events_today = ProjectEvent.objects.filter(
+            status__in=['SCHEDULED', 'ONGOING'],
+            datetime__date=today,
+            placeholder=False
+        ).select_related('project__project_leader').prefetch_related('project__providers')
+        
+        for event in project_events_today:
+            # Get project team members
+            team_emails = []
+            if event.project.project_leader and event.project.project_leader.email:
+                team_emails.append(event.project.project_leader.email)
+            for provider in event.project.providers.all():
+                if provider.email:
+                    team_emails.append(provider.email)
+            
+            team_emails = list(set(team_emails))  # Remove duplicates
+            
+            if team_emails:
+                async_send_event_reminder(
+                    recipient_emails=team_emails,
+                    event_title=event.title,
+                    event_datetime=event.datetime,
+                    event_location=event.location,
+                    event_description=event.description,
+                    event_type='activity',
+                    days_before=None
+                )
+                reminder_count += 1
+                print(f"✓ Sent day-of reminder for project event: {event.title}")
+        
+        if reminder_count > 0:
+            print(f"✓ Sent {reminder_count} event reminder(s) at {now.strftime('%Y-%m-%d %H:%M:%S')}")
+    
+    except Exception as e:
+        print(f"✗ Failed to send event reminders: {str(e)}")
+
+
 def start_scheduler():
     """
     Start centralized background scheduler for all automated tasks.
@@ -401,6 +539,17 @@ def start_scheduler():
         misfire_grace_time=3600
     )
 
+    # Send event reminders daily at midnight
+    scheduler.add_job(
+        send_event_reminders,
+        'cron',
+        hour=0,
+        minute=0,
+        id='send_event_reminders',
+        replace_existing=True,
+        misfire_grace_time=3600
+    )
+
     # -------------------
     # Immediate Startup Triggers
     # -------------------
@@ -447,4 +596,5 @@ def start_scheduler():
     print("  - Session cleanup: 3:00 AM")
     print("  - Event & project status updates: midnight")
     print("  - Expert status updates: 12:01 AM")
+    print("  - Event reminders: midnight (3 days before & day of)")
     print("  - Immediate startup triggers active")
