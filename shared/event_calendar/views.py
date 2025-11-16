@@ -129,13 +129,6 @@ def meeting_event_detail(request, event_id):
                     'remove_attachment': post_data.get('remove_attachment') == 'true'
                 }
                 
-                # Debug logging
-                print("=== PUT REQUEST DEBUG ===")
-                print(f"Content-Type: {content_type}")
-                print(f"POST data: {dict(post_data)}")
-                print(f"FILES data: {dict(files)}")
-                print(f"Parsed data: {data}")
-                print("========================")
             else:
                 # Regular JSON
                 data = json.loads(request.body)

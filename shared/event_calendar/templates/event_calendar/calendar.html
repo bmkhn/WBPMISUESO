@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
 <link href="{% static 'shared/calendar/styles.css' %}" rel="stylesheet">
 
+<!-- Style -->
 <style>
     .custom-dropdown-container {
         display: none;
@@ -45,9 +46,12 @@
         background-color: #f0f0f0;
     }
 </style>
+
 </head>
+
 <body>
 
+<!-- Calendar Wrapper -->
 <div id="calendar-wrapper">
     <div id="calendar-sidebar-left">
         <h2>My Calendar</h2>
@@ -76,6 +80,7 @@
     </div>
 </div>
 
+<!-- Add Event Modal -->
 <div id="add-event-modal" class="event-modal" style="display:none;align-items:center;justify-content:center;">
     <div class="event-modal-content" style="display:flex;flex-direction:column;max-height:90vh;">
         <span class="close" id="close-add-event-modal">&times;</span>
@@ -85,25 +90,25 @@
             <div style="flex:1;overflow-y:auto;padding-right:8px;">
                 <div class="form-group">
                     <label class="user-details-label">Title <span class="required">*</span></label>
-                    <input class="user-details-value" type="text" name="title" id="add_event_title" required style="flex:1;">
+                    <input class="user-details-value" type="text" name="title" id="add_event_title"  style="flex:1;">
                 </div>
                 <div class="form-group">
                     <label class="user-details-label">Description <span class="required">*</span></label>
-                    <textarea class="user-details-value" name="description" id="add_event_description" rows="2" required></textarea>
+                    <textarea class="user-details-value" name="description" id="add_event_description" rows="2" ></textarea>
                 </div>
                 <div class="one">
                     <div class="two">
                         <label class="user-details-label">Date <span class="required">*</span></label>
-                        <input class="user-details-value" type="date" name="date" id="add_event_date" required style="flex:1; color: #888; pointer-events: none;" readonly tabindex="-1">
+                        <input class="user-details-value" type="date" name="date" id="add_event_date"  style="flex:1; color: #888; pointer-events: none;" readonly tabindex="-1">
                     </div>
                     <div class="two">
                         <label class="user-details-label">Time <span class="required">*</span></label>
-                    <input class="user-details-value" type="time" name="time" id="add_event_time" required style="flex:1;">
+                    <input class="user-details-value" type="time" name="time" id="add_event_time"  style="flex:1;">
                     </div>
                 </div>
                 <div class="form-group">
                     <label class="user-details-label">Location <span class="required">*</span></label>
-                    <input class="user-details-value" type="text" name="location" id="add_event_location" required style="flex:1;">
+                    <input class="user-details-value" type="text" name="location" id="add_event_location"  style="flex:1;">
                 </div>
                 <div class="form-group" style="flex-direction: column; gap:0.5rem;">
                     <label class="user-details-label">Add to Other's Calendar</label>
@@ -148,6 +153,7 @@
     </div>
 </div>
 
+<!-- Edit Event Modal -->
 <div id="edit-event-modal" class="event-modal" style="display:none;align-items:center;justify-content:center;">
     <div class="event-modal-content" style="display:flex;flex-direction:column;max-height:90vh;">
         <span class="close" id="close-edit-event-modal">&times;</span>
@@ -158,40 +164,36 @@
             <div style="flex:1;overflow-y:auto;padding-right:8px;">
                 <div class="form-group">
                     <label class="form-label user-details-label">Title <span class="required">*</span></label>
-                    <input class="user-details-value" type="text" name="title" id="edit_event_title" required style="flex:1;">
+                    <input class="user-details-value" type="text" name="title" id="edit_event_title" style="flex:1;">
                 </div>
                 <div class="form-group">
                     <label class="form-label user-details-label">Description <span class="required">*</span></label>
-                    <textarea class="user-details-value" name="description" id="edit_event_description" rows="2" required></textarea>
+                    <textarea class="user-details-value" name="description" id="edit_event_description" rows="2" ></textarea>
                 </div>
                 <div class="one">
                     <div class="two">
                         <label class="user-details-label">Date <span class="required">*</span></label>
-                        <input class="user-details-value" type="date" name="date" id="edit_event_date" required style="flex:1; color: #888;">
+                        <input class="user-details-value" type="date" name="date" id="edit_event_date"  style="flex:1; color: #888;">
                     </div>
                     <div class="two">
                         <label class="user-details-label">Time <span class="required">*</span></label>
-                    <input class="user-details-value" type="time" name="time" id="edit_event_time" required style="flex:1;">
+                        <input class="user-details-value" type="time" name="time" id="edit_event_time"  style="flex:1;">
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="form-label user-details-label">Location <span class="required">*</span></label>
-                    <input class="user-details-value" type="text" name="location" id="edit_event_location" required style="flex:1;">
+                    <label class="user-details-label">Location <span class="required">*</span></label>
+                    <input class="user-details-value" type="text" name="location" id="edit_event_location"  style="flex:1;">
                 </div>
-                <div id="edit-event-modal" class="event-modal" style="display:none;align-items:center;justify-content:center;">
-                    <div style="flex:1;overflow-y:auto;padding-right:8px;">
-                        <div class="form-group" style="flex-direction: column; gap:0.5rem;">
-                            <label class="form-label user-details-label">Participants</label>
-                            <div id="edit-participants-tag-row" class="tag-row"></div>
-                            <select id="edit-participants-options-template" style="display:none;" multiple>
-                                {% for user in users %}
-                                    <option value="{{ user.id }}">{{ user.get_full_name|default:user.username }}</option>
-                                {% endfor %}
-                            </select>
-                            <script id="edit-participants-data" type="application/json"></script> 
-                        </div>
-                        </div>
-                    </div>
+                <div class="form-group" style="flex-direction: column; gap:0.5rem;">
+                    <label class="form-label user-details-label">Participants</label>
+                    <div id="edit-participants-tag-row" class="tag-row"></div>
+                    <select id="edit-participants-options-template" style="display:none;" multiple>
+                        {% for user in users %}
+                            <option value="{{ user.id }}">{{ user.get_full_name|default:user.username }}</option>
+                        {% endfor %}
+                    </select>
+                    <script id="edit-participants-data" type="application/json"></script> 
+                </div>
                 <div class="form-group">
                     <label class="form-label user-details-label">Notes (Optional)</label>
                     <textarea class="user-details-value" name="notes" id="edit_event_notes" rows="2"></textarea>
@@ -223,7 +225,7 @@
     </div>
 </div>
 
-
+<!-- Event Details Modal -->
 <div id="event-details-modal" class="event-modal" style="display:none;align-items:center;justify-content:center;">
     <div class="event-modal-content" style="max-width:600px;position:relative;">
         <span class="close" id="close-event-details-modal">&times;</span>
@@ -233,6 +235,7 @@
     </div>
 </div>
 
+<!-- Delete Confirm Modal -->
 <div id="delete-confirm-modal" class="event-modal" style="display:none;align-items:center;justify-content:center;">
     <div style="background:white;padding:2rem 2.5rem;border-radius:16px;box-shadow:0 4px 32px rgba(0,0,0,0.18);max-width:350px;margin:auto;display:flex;flex-direction:column;align-items:center;">
         <div style="font-size:1.25rem;font-weight:600;color:#E53E3E;margin-bottom:1rem;">Confirm Deletion</div>
@@ -244,12 +247,14 @@
     </div>
 </div>
 
+<!-- Custom Dropdown -->
 <div id="custom-dropdown-container" class="custom-dropdown-container">
     <input type="text" id="custom-dropdown-filter" placeholder="Search..." autocomplete="off">
     <div id="custom-dropdown-options">
     </div>
 </div>
 
+<!-- SVG Sprite Section -->
 <svg style="display: none;">
     <symbol id="icon-add" viewBox="0 0 16 16">
         <path d="M6.80039 14.4004C6.80039 14.7187 6.92682 15.0239 7.15186 15.2489C7.37691 15.474 7.68213 15.6004 8.00039 15.6004C8.31865 15.6004 8.62388 15.474 8.84892 15.2489C9.07396 15.0239 9.20039 14.7187 9.20039 14.4004V9.20039H14.4004C14.7187 9.20039 15.0239 9.07396 15.2489 8.84892C15.474 8.62388 15.6004 8.31865 15.6004 8.00039C15.6004 7.68213 15.474 7.37691 15.2489 7.15186C15.0239 6.92682 14.7187 6.80039 14.4004 6.80039H9.20039V1.60039C9.20039 1.28213 9.07396 0.976906 8.84892 0.751863C8.62388 0.526819 8.31865 0.400391 8.00039 0.400391C7.68213 0.400391 7.37691 0.526819 7.15186 0.751863C6.92682 0.976906 6.80039 1.28213 6.80039 1.60039V6.80039H1.60039C1.28213 6.80039 0.976906 6.92682 0.751863 7.15186C0.526819 7.37691 0.400391 7.68213 0.400391 8.00039C0.400391 8.31865 0.526819 8.62388 0.751863 8.84892C0.976906 9.07396 1.28213 9.20039 1.60039 9.20039H6.80039V14.4004Z" fill="black"/>
@@ -264,6 +269,8 @@
     <path d="M2 16H3.425L13.2 6.225L11.775 4.8L2 14.575V16ZM1 18C0.716667 18 0.479333 17.904 0.288 17.712C0.0966668 17.52 0.000666667 17.2827 0 17V14.575C0 14.3083 0.0500001 14.054 0.15 13.812C0.25 13.57 0.391667 13.3577 0.575 13.175L13.2 0.575C13.4 0.391667 13.621 0.25 13.863 0.15C14.105 0.0500001 14.359 0 14.625 0C14.891 0 15.1493 0.0500001 15.4 0.15C15.6507 0.25 15.8673 0.4 16.05 0.6L17.425 2C17.625 2.18333 17.7707 2.4 17.862 2.65C17.9533 2.9 17.9993 3.15 18 3.4C18 3.66667 17.954 3.921 17.862 4.163C17.77 4.405 17.6243 4.62567 17.425 4.825L4.825 17.425C4.64167 17.6083 4.429 17.75 4.187 17.85C3.945 17.95 3.691 18 3.425 18H1ZM12.475 5.525L11.775 4.8L13.2 6.225L12.475 5.525Z" fill="black"/>
     </symbol>
 </svg>
+
+<!-- Custom Dropdown JS -->
 <script>
     // Global references to the custom dropdown elements
     const dropdownContainer = document.getElementById('custom-dropdown-container');
@@ -304,7 +311,10 @@
             }
         });
     });
+</script>
 
+<!-- Toast -->
+<script>
     // Toast Notification Function (omitted body for brevity)
     function showToast(message, title) {
         const toast = document.createElement('div');
@@ -330,7 +340,9 @@
             }, 300);
         }, 4000);
     }
+</script>
 
+<script>
     // Function to display the selected file name and show the preview div (omitted body for brevity)
     function displayFileName(input, previewId, nameId) {
         const previewDiv = document.getElementById(previewId);
@@ -392,10 +404,6 @@
             // Ensure participants are passed as an array of strings
             const participantIds = (eventObj.participants || []).map(String);
             tagController.setSelected(participantIds);
-        } else {
-            // Fallback for debugging if controller isn't ready
-            document.getElementById('edit-participants-data').textContent = JSON.stringify(eventObj.participants || []);
-            // renderParticipantTags(); // Do not call old render func
         }
 
         document.getElementById('edit-event-modal').style.display = 'flex';
@@ -420,6 +428,7 @@
     const editEventForm = document.getElementById('edit-event-form');
     editEventForm.onsubmit = function(e) {
         e.preventDefault();
+        if (!validateEditEventForm()) return;
         const event_id = document.getElementById('edit_event_id').value;
         const title = document.getElementById('edit_event_title').value.trim();
         const description = document.getElementById('edit_event_description').value.trim();
@@ -899,9 +908,109 @@
         }
     });
 
+    // Unified custom validation for Add Event modal
+    function validateAddEventForm() {
+        let valid = true;
+        let firstError = null;
+        // Remove previous error states
+        const allFields = Array.from(addEventForm.querySelectorAll('input, textarea'));
+        allFields.forEach(field => {
+            field.classList.remove('error-input');
+            const existingError = field.parentNode.querySelector('.field-validation-error');
+            if (existingError) existingError.remove();
+        });
+        // Validate required fields
+        const title = document.getElementById('add_event_title');
+        const description = document.getElementById('add_event_description');
+        const time = document.getElementById('add_event_time');
+        const location = document.getElementById('add_event_location');
+        const participants = Array.from(document.querySelectorAll('#participants-tag-row input[name="participants[]"]'));
+        function showError(field, message) {
+            field.classList.add('error-input');
+            const err = document.createElement('div');
+            err.className = 'field-validation-error';
+            err.textContent = message;
+            err.style.color = '#E53E3E';
+            err.style.fontSize = '0.95rem';
+            err.style.marginTop = '0.25rem';
+            field.parentNode.appendChild(err);
+            if (!firstError) firstError = field;
+        }
+        if (!title.value.trim()) { valid = false; showError(title, 'Title is required.'); }
+        if (!description.value.trim()) { valid = false; showError(description, 'Description is required.'); }
+        if (!time.value.trim()) { valid = false; showError(time, 'Time is required.'); }
+        if (!location.value.trim()) { valid = false; showError(location, 'Location is required.'); }
+        if (participants.length < 1) {
+            valid = false;
+            const tagRow = document.getElementById('participants-tag-row');
+            const err = document.createElement('div');
+            err.className = 'field-validation-error';
+            err.textContent = 'At least 1 participant is required.';
+            err.style.color = '#E53E3E';
+            err.style.fontSize = '0.95rem';
+            err.style.marginTop = '0.25rem';
+            tagRow.appendChild(err);
+            if (!firstError) firstError = tagRow;
+        }
+        if (!valid && firstError && typeof firstError.focus === 'function') firstError.focus();
+        return valid;
+    }
+
+    // Unified custom validation for Edit Event modal
+    function validateEditEventForm() {
+        let valid = true;
+        let firstError = null;
+
+        // Remove previous error states
+        const editEventForm = document.getElementById('edit-event-form');
+        const allFields = Array.from(editEventForm.querySelectorAll('input, textarea'));
+        allFields.forEach(field => {
+            field.classList.remove('error-input');
+            const existingError = field.parentNode.querySelector('.field-validation-error');
+            if (existingError) existingError.remove();
+        });
+
+        // Validate required fields
+        const title = document.getElementById('edit_event_title');
+        const description = document.getElementById('edit_event_description');
+        const time = document.getElementById('edit_event_time');
+        const location = document.getElementById('edit_event_location');
+        const participants = Array.from(document.querySelectorAll('#edit-participants-tag-row input[name="participants[]"]'));
+        function showError(field, message) {
+            field.classList.add('error-input');
+            const err = document.createElement('div');
+            err.className = 'field-validation-error';
+            err.textContent = message;
+            err.style.color = '#E53E3E';
+            err.style.fontSize = '0.95rem';
+            err.style.marginTop = '0.25rem';
+            field.parentNode.appendChild(err);
+            if (!firstError) firstError = field;
+        }
+        if (!title.value.trim()) { valid = false; showError(title, 'Title is required.'); }
+        if (!description.value.trim()) { valid = false; showError(description, 'Description is required.'); }
+        if (!time.value.trim()) { valid = false; showError(time, 'Time is required.'); }
+        if (!location.value.trim()) { valid = false; showError(location, 'Location is required.'); }
+        if (participants.length < 1) {
+            valid = false;
+            const tagRow = document.getElementById('edit-participants-tag-row');
+            const err = document.createElement('div');
+            err.className = 'field-validation-error';
+            err.textContent = 'At least 1 participant is required.';
+            err.style.color = '#E53E3E';
+            err.style.fontSize = '0.95rem';
+            err.style.marginTop = '0.25rem';
+            tagRow.appendChild(err);
+            if (!firstError) firstError = tagRow;
+        }
+        if (!valid && firstError && typeof firstError.focus === 'function') firstError.focus();
+        return valid;
+    }
+
     // Intercept form submit for AJAX (omitted body for brevity)
     addEventForm.onsubmit = function(e) {
         e.preventDefault();
+        if (!validateAddEventForm()) return;
         
         const title = document.getElementById('add_event_title').value.trim();
         const description = document.getElementById('add_event_description').value.trim();
@@ -912,11 +1021,6 @@
         const participants = Array.from(document.querySelectorAll('#participants-tag-row input[name="participants[]"]')).map(input => input.value);
         const notes = document.getElementById('add_event_notes').value.trim();
         const attachmentFile = document.getElementById('add_event_attachment').files[0];
-        
-        if (!title || !description || !date || !time || !location) {
-            alert('Please fill in all required fields.');
-            return;
-        }
         
         // Show loading state
         const submitBtn = addEventForm.querySelector('button[type="submit"]');
@@ -1018,130 +1122,12 @@
             alert('Network error: ' + err.message);
         });
     };
+</script>
 
-    // Hook up calendar day click to open modal (omitted body for brevity)
-    function renderCalendar(year, month) {
-        const monthNames=["January","February","March","April","May","June","July","August","September","October","November","December"];
-        document.getElementById('month-name').textContent=monthNames[month];
-        calendar.innerHTML='';
-        const firstDay=new Date(year,month,1).getDay();
-        const daysInMonth=new Date(year,month+1,0).getDate();
-        for(let i=0;i<firstDay;i++){ calendar.appendChild(document.createElement('div')); }
-        
-        // Get today's date once for comparison
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        
-        for(let d=1;d<=daysInMonth;d++){
-            const cell=document.createElement('div');
-            const dateStr=`${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-            cell.className='calendar-day';
-            cell.dataset.date=dateStr;
-            
-            // Calculate if this date is in the past
-            const cellDate = new Date(year, month, d);
-            cellDate.setHours(0, 0, 0, 0);
-            const isPast = cellDate < today;
-            const isToday = (year === today.getFullYear() && month === today.getMonth() && d === today.getDate());
-            
-            if(events[dateStr]){
-                // Count events by type
-                let activityCount = events[dateStr].filter(ev => ev.type === 'project').length;
-                let meetingCount = events[dateStr].filter(ev => ev.type === 'meeting').length;
-                let totalCount = events[dateStr].length;
-                
-                // Set green background for dates with events
-                cell.style.backgroundColor = '#245F3E'; // Green
-                cell.style.color = 'white';
-                cell.style.position = 'relative';
-                cell.style.cursor = 'pointer';
-                
-                // Gray out past dates with events
-                if (isPast) {
-                    cell.style.opacity = '0.5';
-                }
-                
-                // Create day number
-                const dayNumber = document.createElement('div');
-                dayNumber.textContent = d;
-                dayNumber.style.textAlign = 'center';
-                dayNumber.style.paddingTop = '8px';
-                cell.appendChild(dayNumber);
-                
-                // Create badge container in bottom corners
-                const badgeContainer = document.createElement('div');
-                badgeContainer.style.position = 'absolute';
-                badgeContainer.style.bottom = '4px';
-                badgeContainer.style.left = '4px';
-                badgeContainer.style.right = '4px';
-                badgeContainer.style.display = 'flex';
-                badgeContainer.style.justifyContent = 'space-between';
-                badgeContainer.style.fontSize = '10px';
-                badgeContainer.style.fontWeight = 'bold';
-                
-                // Add activity badge (blue) on left if there are activities
-                if (activityCount > 0) {
-                    const activityBadge = document.createElement('span');
-                    activityBadge.textContent = activityCount;
-                    activityBadge.style.backgroundColor = '#007bff'; 
-                    activityBadge.style.color = 'white';
-                    activityBadge.style.borderRadius = '50%';
-                    activityBadge.style.width = '18px';
-                    activityBadge.style.height = '18px';
-                    activityBadge.style.display = 'flex';
-                    activityBadge.style.alignItems = 'center';
-                    activityBadge.style.justifyContent = 'center';
-                    activityBadge.style.boxShadow = '0 1px 3px rgba(0,0,0,0.3)';
-                    badgeContainer.appendChild(activityBadge);
-                } else {
-                    badgeContainer.appendChild(document.createElement('span')); 
-                }
-                
-                // Add meeting badge (orange) on right if there are meetings
-                if (meetingCount > 0) {
-                    const meetingBadge = document.createElement('span');
-                    meetingBadge.textContent = meetingCount;
-                    meetingBadge.style.backgroundColor = '#fd7e14';
-                    meetingBadge.style.color = 'white';
-                    meetingBadge.style.borderRadius = '50%';
-                    meetingBadge.style.width = '18px';
-                    meetingBadge.style.height = '18px';
-                    meetingBadge.style.display = 'flex';
-                    meetingBadge.style.alignItems = 'center';
-                    meetingBadge.style.justifyContent = 'center';
-                    meetingBadge.style.boxShadow = '0 1px 3px rgba(0,0,0,0.3)';
-                    badgeContainer.appendChild(meetingBadge);
-                }
-                
-                cell.appendChild(badgeContainer);
-                
-                cell.onclick = function() {
-                    showEventDetails(events[dateStr], dateStr);
-                };
-            } else {
-                // No events on this date
-                cell.textContent = d;
-                if (isPast) {
-                    // Past date with no events - add past-date class and no onclick
-                    cell.classList.add('past-date');
-                } else {
-                    // Future/today date with no events - allow adding new events
-                    cell.onclick = function() {
-                        openAddEventModal(dateStr);
-                    };
-                }
-            }
-            
-            // Highlight current day
-            if (isToday) {
-                cell.style.border = '2px solid #FFE066';
-                cell.style.boxShadow = '0 0 0 2px #FFE066';
-            }
-            
-            calendar.appendChild(cell);
-        }
-    }
 
+
+
+<script>
     // Event Details Modal Logic (omitted body for brevity)
     const eventDetailsModal = document.getElementById('event-details-modal');
     const closeEventDetailsModal = document.getElementById('close-event-details-modal');
@@ -1431,13 +1417,14 @@
     const eventList = document.getElementById('event-list');
     
     // Check if there's an initial date from query parameter
+    let currentYear, currentMonth;
     {% if initial_date %}
     const initialDate = new Date('{{ initial_date }}');
-    let currentYear = initialDate.getFullYear();
-    let currentMonth = initialDate.getMonth();
+    currentYear = initialDate.getFullYear();
+    currentMonth = initialDate.getMonth();
     {% else %}
-    let currentYear = new Date().getFullYear();
-    let currentMonth = new Date().getMonth();
+    currentYear = new Date().getFullYear();
+    currentMonth = new Date().getMonth();
     {% endif %}
     
     let selectedDate = null;
