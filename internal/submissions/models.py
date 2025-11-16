@@ -161,6 +161,24 @@ def log_submission_action(sender, instance, created, **kwargs):
 	
 	# Only log creation if created
 	if created:
+		"""Send email to project team when a new submission is added to their project"""
+		from system.utils.email_utils import async_send_new_submission
+
+		# Collect all team member emails (leader + providers)
+		team_emails = []
+		if instance.project.project_leader and instance.project.project_leader.email:
+			team_emails.append(instance.project.project_leader.email)
+		for provider in instance.project.providers.all():
+			if provider.email:
+				team_emails.append(provider.email)
+		
+		# Send email to all team members if there are any
+		if team_emails:
+			async_send_new_submission(
+				recipient_emails=team_emails,
+				submission=instance
+			)
+
 		LogEntry.objects.create(
 			user=user,
 			action='CREATE',
@@ -184,29 +202,6 @@ def log_submission_action(sender, instance, created, **kwargs):
 			is_notification=True
 		)
 
-
-@receiver(post_save, sender=Submission)
-def send_submission_email(sender, instance, created, **kwargs):
-	"""Send email to project team when a submission is created or submitted"""
-	from system.utils.email_utils import async_send_new_submission
-	
-	# Send email when submission is submitted (status changes to SUBMITTED)
-	if not created and instance.status == 'SUBMITTED' and instance.submitted_at:
-		# Get project team members
-		team_emails = []
-		if instance.project.project_leader and instance.project.project_leader.email:
-			team_emails.append(instance.project.project_leader.email)
-		for provider in instance.project.providers.all():
-			if provider.email:
-				team_emails.append(provider.email)
-		
-		team_emails = list(set(team_emails))  # Remove duplicates
-		
-		if team_emails:
-			async_send_new_submission(
-				recipient_emails=team_emails,
-				submission=instance
-			)
 
 
 @receiver(post_save, sender=Submission)

@@ -132,6 +132,18 @@ def add_submission_requirement(request, project_id=None):
         except Project.DoesNotExist:
             preselected_project = None
     
+    # Utility to safely format dates
+    from datetime import datetime
+    def safe_strftime(dt, fmt):
+        if isinstance(dt, str):
+            try:
+                dt = datetime.fromisoformat(dt)
+            except Exception:
+                return dt  # fallback: just return the string
+        if dt:
+            return dt.strftime(fmt)
+        return None
+
     # Get event availability and progress for each project
     project_event_availability = {}
     for project in projects:
@@ -140,26 +152,26 @@ def add_submission_requirement(request, project_id=None):
             placeholder=False, 
             has_submission=False
         ).order_by('-created_at')
-        
+
         events_list = []
         for event in available_events:
             events_list.append({
                 'id': event.id,
                 'title': event.title,
-                'datetime': event.datetime.strftime('%Y-%m-%d %H:%M') if event.datetime else 'No date set'
+                'datetime': safe_strftime(event.datetime, '%Y-%m-%d %H:%M') if event.datetime else 'No date set'
             })
-        
+
         # Check if all events are completed (event_progress == estimated_events)
         all_events_completed = (project.event_progress == project.estimated_events) if project.estimated_events > 0 else False
         all_events_completed = (project.event_progress == project.estimated_events) if project.estimated_events > 0 else False
-        
+
         project_event_availability[project.id] = {
             'has_available_events': available_events.exists(),
             'available_events': events_list,
             'all_events_completed': all_events_completed,
             'event_progress': project.event_progress,
             'estimated_events': project.estimated_events,
-            'start_date': project.start_date.strftime('%Y-%m-%d') if project.start_date else None
+            'start_date': safe_strftime(project.start_date, '%Y-%m-%d') if project.start_date else None
         }
     
     # Convert to JSON for template
@@ -169,6 +181,26 @@ def add_submission_requirement(request, project_id=None):
         project_id = request.POST.get('project')
         downloadable_ids = request.POST.getlist('downloadables')
         deadline = request.POST.get('deadline')
+        # Ensure deadline is a datetime object
+        from datetime import datetime
+        from django.utils import timezone
+        if deadline:
+            if isinstance(deadline, str):
+                try:
+                    # Try parsing as local datetime (from input type="datetime-local")
+                    deadline_dt = datetime.strptime(deadline, '%Y-%m-%dT%H:%M')
+                except Exception:
+                    try:
+                        deadline_dt = datetime.fromisoformat(deadline)
+                    except Exception:
+                        deadline_dt = None
+                if deadline_dt:
+                    # Make timezone-aware if using Django timezone support
+                    if timezone.is_aware(deadline_dt):
+                        deadline = deadline_dt
+                    else:
+                        deadline = timezone.make_aware(deadline_dt)
+        # ...existing code...
         notes = request.POST.get('notes')
         selected_event_id = request.POST.get('selected_event')  # Get selected event for event submissions
         
