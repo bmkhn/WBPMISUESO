@@ -287,7 +287,7 @@ CSRF_COOKIE_NAME = 'csrftoken'
 # CACHE CONFIGURATION
 # ============================================================
 
-CACHE_MIDDLEWARE_SECONDS = 3600  # Cache duration in seconds (1 hour)
+CACHE_MIDDLEWARE_SECONDS = 300  # Cache duration in seconds (5 minutes)
 CACHE_MIDDLEWARE_KEY_PREFIX = ''
 
 CACHES = {

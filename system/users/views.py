@@ -284,6 +284,12 @@ def send_verification_code_view(request):
         if User.objects.filter(email=email).exists():
             return JsonResponse({'success': False, 'error': 'This email is already registered.'})
 
+        # Store all form data in session for later use
+        registration_data = {}
+        for key in request.POST:
+            if key not in ['csrfmiddlewaretoken', 'verification_code']:
+                registration_data[key] = request.POST.get(key)
+        
         # Always generate the code
         code = str(random.randint(100000, 999999))
 
@@ -313,6 +319,7 @@ def send_verification_code_view(request):
             request.session['2fa_code'] = code
             request.session['pending_email'] = email
             request.session['registration_role'] = role
+            request.session['registration_data'] = registration_data
             return JsonResponse({'success': True, 'code': code})
         else:
             return JsonResponse({'success': False, 'error': 'Failed to send verification code.'})
