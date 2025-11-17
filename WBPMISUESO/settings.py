@@ -74,6 +74,7 @@ INSTALLED_APPS = [
     'system.notifications',
     'system.settings',
     'system.scheduler',
+    'system.utils',
 
     # Third-party Apps
     'rest_framework',
@@ -287,7 +288,7 @@ CSRF_COOKIE_NAME = 'csrftoken'
 # CACHE CONFIGURATION
 # ============================================================
 
-CACHE_MIDDLEWARE_SECONDS = 300  # Cache duration in seconds (5 minutes)
+CACHE_MIDDLEWARE_SECONDS = 86400  # Cache duration in seconds (24 hours) --- VERY LONG BECAUSE OF SIGNALS
 CACHE_MIDDLEWARE_KEY_PREFIX = ''
 
 CACHES = {
