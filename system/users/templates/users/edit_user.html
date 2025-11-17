@@ -14,20 +14,14 @@
 
 </head>
 <body>
-<form method="post" enctype="multipart/form-data">
+<form method="post" enctype="multipart/form-data" novalidate>
     {% csrf_token %}
     <div class="user-details-container">
         <div class="user-details-title" style="display:flex;flex-direction:column;gap:8px;">
             <div style="display:flex;justify-content:space-between;align-items:center;">
-                <h2>
-                    Edit Users
-                </h2> 
+                <h2>Edit User</h2> 
             </div>
         </div>
-
-        {% if success %}
-        <div id="add-success-msg" style="color:#16a34a;font-size:1.1rem;font-weight:500;">User edited successfully.</div>
-        {% endif %} 
 
         {% if can_edit_role_and_verify and not is_editing_self %}
         <div style="position: absolute; top: 140px; right: 60px;">
@@ -103,7 +97,7 @@
             <div class="user-details-row cols-3">
                 <div>
                     <div class="user-details-label">Sex <span class="required">*</span></div>
-                    <select name="sex" class="user-details-value" style="transition: none;">
+                    <select name="sex" class="user-details-value" style="transition: none;" required>
                         <option value="Male" {% if user.sex == 'Male' %}selected{% endif %}>Male</option>
                         <option value="Female" {% if user.sex == 'Female' %}selected{% endif %}>Female</option>
                     </select>
@@ -144,7 +138,7 @@
                 <div>
                     <div class="user-details-label">Role <span class="required">*</span></div>
                     {% if can_edit_role_and_verify %}
-                    <select name="role" class="user-details-value" style="transition: none;">
+                    <select name="role" class="user-details-value" style="transition: none;" required>
                         <option value="" disabled>Select Role</option>
                         {% for r in roles %}
                         <option value="{{ r.0 }}" {% if user.role == r.0 %}selected{% endif %}>{{ r.1 }}</option>
@@ -540,6 +534,7 @@
         err.style.color = '#E53E3E';
         err.style.fontSize = '0.95rem';
         err.style.marginTop = '0.25rem';
+        err.style.alignSelf = 'center';
         
         const inputGroup = field.closest('.input-group');
 
@@ -624,11 +619,12 @@
             emailInput.addEventListener('input', checkEmailAjax);
         }
 
-        // --- Form validation on submit ---
+        // --- Unified Form validation on submit ---
         document.querySelector('form').addEventListener('submit', function(e) {
             // Check if email or password changed and not yet verified
             if ((emailChanged || passwordChanged) && !emailVerified) {
                 e.preventDefault();
+                e.stopPropagation();
                 // Update modal message based on what changed
                 const modalMessage = document.getElementById('modal-message');
                 if (emailChanged && passwordChanged) {
@@ -643,77 +639,68 @@
             }
             
             let valid = true;
-            let firstInvalidField = null;
+            let firstError = null;
+            let errorQueue = [];
 
-            // 2. Clear all previous errors
+            // Clear all previous errors
             document.querySelectorAll('.field-error').forEach(el => el.remove());
             document.querySelectorAll('[class*="error-input"]').forEach(el => el.classList.remove('error-input'));
 
-            // 3. Validate all required fields
+            // Validate all required fields and selects
             const fields = Array.from(document.querySelector('form').querySelectorAll('input, select, textarea'));
             
             fields.forEach(field => {
-                // Skip optional fields unless they have a value (e.g., password field)
-                if (field.hasAttribute('data-optional') && !field.value.trim()) return;
-
-                let isFieldInvalid = false;
-                let errorMessage = 'This field is required.';
-                
-                // Check if field is required (either static or value-based check)
-                const isRequired = field.hasAttribute('required') || (field.name === 'password' && field.value.trim());
-
-                if (isRequired) {
-                    
-                    // Standard emptiness check (for required fields)
-                    if (field.tagName === 'SELECT' && (!field.value || field.value === field.querySelector('option[disabled]')?.value)) {
-                        isFieldInvalid = true;
-                    } else if ((field.tagName === 'INPUT' || field.tagName === 'TEXTAREA') && field.type !== 'file' && !field.value.trim()) {
-                        isFieldInvalid = true;
-                    }
-
-                    // Specific Format Checks
-                    if (!isFieldInvalid && field.name === 'contact_no' && field.value.trim()) {
-                        if (!/^\+?[\d\s-]{7,}$/.test(field.value.trim())) {
-                            isFieldInvalid = true;
-                            errorMessage = 'Please enter a valid contact number.';
+                // Only validate if field is visible
+                const row = field.closest('.user-details-row');
+                const isVisible = (!row || window.getComputedStyle(row).display !== 'none') && field.offsetParent !== null;
+                const isRequired = field.hasAttribute('required');
+                if (isRequired && isVisible) {
+                    if (!field.value || (field.tagName === 'INPUT' && field.type !== 'file' && !field.value.trim())) {
+                        valid = false;
+                        field.classList.add(field.tagName === 'SELECT' ? 'error-select' : 'error-input');
+                        // Find the label text
+                        let labelText = field.parentNode.querySelector('.user-details-label');
+                        if (!labelText) {
+                            labelText = field.parentNode.previousElementSibling && field.parentNode.previousElementSibling.classList.contains('user-details-label')
+                                ? field.parentNode.previousElementSibling
+                                : null;
                         }
-                    }
-                    
-                    if (!isFieldInvalid && field.name === 'password' && field.value.trim()) {
-                        let password = field.value.trim();
-                        let score = 0;
-                        if (password.length >= 8) score += 25;
-                        if (/[A-Z]/.test(password)) score += 25;
-                        if (/[a-z]/.test(password)) score += 25;
-                        if (/[0-9!@#$%^&*()]/.test(password)) score += 25;
-
-                        if (score < 100) {
-                            isFieldInvalid = true;
-                            errorMessage = 'Password is too weak. Must meet strength requirements.';
+                        let prettyName = labelText ? labelText.textContent.replace(/\s*\*/g, '').trim() : (field.name || field.id || 'Field');
+                        const err = document.createElement('div');
+                        err.className = 'field-error';
+                        err.textContent = `${prettyName} is required.`;
+                        err.style.color = '#E53E3E';
+                        err.style.fontSize = '0.95rem';
+                        err.style.marginTop = '0.25rem';
+                        err.style.alignSelf = 'center';
+                        if (field.closest('.input-group')) {
+                            field.closest('.input-group').parentNode.insertBefore(err, field.closest('.input-group').nextSibling);
+                        } else {
+                            field.parentNode.appendChild(err);
                         }
+                        if (!firstError) firstError = field;
                     }
-                }
-
-                if (isFieldInvalid) {
-                    valid = false;
-                    if (!firstInvalidField) firstInvalidField = field;
-                    showFieldError(field, errorMessage);
-                    field.classList.add('error-input');
                 }
             });
             
-            // 4. Email uniqueness error check
+            // Email uniqueness error check
             if (emailInput && emailInput.value.trim() && emailErrorContainer && emailErrorContainer.textContent.includes('already registered')) {
                 valid = false;
-                if (!firstInvalidField) firstInvalidField = emailInput;
+                if (!firstError) firstError = emailInput;
+                errorQueue.push({field: emailInput, message: 'This email is already registered.'});
                 emailInput.classList.add('error-input');
             }
 
+            // Render all errors
+            errorQueue.forEach(errObj => {
+                showFieldError(errObj.field, errObj.message);
+            });
+
             if (!valid) {
                 e.preventDefault();
-                if (firstInvalidField) {
-                    firstInvalidField.focus();
-                }
+                e.stopPropagation();
+                if (firstError && typeof firstError.focus === 'function') firstError.focus();
+                return false;
             }
         });
         
