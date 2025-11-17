@@ -56,7 +56,7 @@
                         </button>
                         {% endif %}
                     </div>
-                    <p>{{ event.description|default:'No description.' }}</p>
+                    <p>{{ event.description|default:'' }}</p>
                     <p>{{ event.datetime|date:'F d, Y' }} at {{ event.datetime|date:'g:i A' }}</p>
                     {% if event.location %}<p><strong>Location:</strong> {{ event.location }}</p>{% endif %}
                 </div>

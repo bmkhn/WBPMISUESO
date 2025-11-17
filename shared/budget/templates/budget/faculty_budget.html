@@ -126,16 +126,17 @@
         </div>
 
         {# BOTTOM div: LOGS (Full Width) #}
+        
         <div class="list" style="margin-top: 1rem;">
             <h2 class="headerr">Charts</h2>
-                
+            {% if request.user.role == "FACULTY" %}        
             <div class="chart-box">
                 <h3 class="chart-box-title">College Budget Remaining Over Time</h3>
                 <div class="chart-container-large">
                     <canvas id="collegeTimeChart" data-chart-data="{{ college_remaining_data_json }}"></canvas>
                 </div>
             </div>
-                
+            {% endif %}        
             <div class="chart-box">
                 <h3 class="chart-box-title">Total Project Funding Over Time</h3>
                 <div class="chart-container-large">
@@ -143,6 +144,7 @@
                 </div>
             </div>
         </div>
+        
 
         {# SVG Icons #}
         <svg style="display: none;">
