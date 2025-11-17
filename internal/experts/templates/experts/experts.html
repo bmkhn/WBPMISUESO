@@ -792,12 +792,7 @@
 						<span class="detail-value">${member.ongoing_projects}</span>
 					</div>
 				</div>
-				<div class="detail-item">
-					<span class="detail-label">Average Evaluation Score</span>
-					<span class="detail-value">${member.avg_rating % 1 === 0 ? member.avg_rating.toFixed(0) : member.avg_rating.toFixed(1)}/5</span>
-				</div>
 			</div>
-		
 		`;
 	}
 
@@ -805,6 +800,10 @@
 
 				// <div class="panel-score">Final Score: ${member.final_score.toFixed(3)}</div>
 
+				// <div class="detail-item">
+				// 	<span class="detail-label">Average Evaluation Score</span>
+				// 	<span class="detail-value">${member.avg_rating % 1 === 0 ? member.avg_rating.toFixed(0) : member.avg_rating.toFixed(1)}/5</span>
+				// </div>
 
 
 			// <div class="scores-section">

@@ -384,13 +384,152 @@
             const editForm = editStartDateInput.closest('form');
             if (editForm) {
                 editForm.addEventListener('submit', function(e) {
-                    const startDate = new Date(editStartDateInput.value);
-                    const endDate = new Date(editEndDateInput.value);
+                    let valid = true;
+                    let firstError = null;
                     
-                    if (endDate <= startDate) {
+                    // Remove previous errors
+                    document.querySelectorAll('.field-validation-error').forEach(err => err.remove());
+                    document.querySelectorAll('.error-input').forEach(field => field.classList.remove('error-input'));
+                    
+                    // Helper to show field error
+                    function showError(field, message) {
+                        const err = document.createElement('div');
+                        err.className = 'field-validation-error';
+                        err.textContent = message;
+                        err.style.color = '#E53E3E';
+                        err.style.fontSize = '0.95rem';
+                        err.style.marginTop = '0.25rem';
+                        err.style.marginLeft = '1rem';
+                        err.style.alignSelf = 'center';
+                        field.parentNode.appendChild(err);
+                    }
+                    
+                    // Validate Title
+                    const titleInput = document.getElementById('edit_project_title');
+                    if (!titleInput || !titleInput.value.trim()) {
+                        valid = false;
+                        if (titleInput) {
+                            titleInput.classList.add('error-input');
+                            showError(titleInput, 'Title is required.');
+                            if (!firstError) firstError = titleInput;
+                        }
+                    }
+                    
+                    // Validate Agenda
+                    const agendaSelect = document.getElementById('edit_project_agenda');
+                    if (!agendaSelect || !agendaSelect.value) {
+                        valid = false;
+                        if (agendaSelect) {
+                            agendaSelect.classList.add('error-input');
+                            showError(agendaSelect, 'Agenda is required.');
+                            if (!firstError) firstError = agendaSelect;
+                        }
+                    }
+                    
+                    // Validate Project Type
+                    const typeSelect = document.getElementById('edit_project_type');
+                    if (!typeSelect || !typeSelect.value) {
+                        valid = false;
+                        if (typeSelect) {
+                            typeSelect.classList.add('error-input');
+                            showError(typeSelect, 'Project Type is required.');
+                            if (!firstError) firstError = typeSelect;
+                        }
+                    }
+                    
+                    // Validate SDG tag row
+                    const sdgTagRow = document.getElementById('edit-sdgs-tag-row');
+                    const sdgTags = sdgTagRow ? sdgTagRow.querySelectorAll('input[type="hidden"]') : [];
+                    if (sdgTags.length === 0) {
+                        valid = false;
+                        if (sdgTagRow) {
+                            showError(sdgTagRow, 'At least one SDG is required.');
+                            if (!firstError) firstError = sdgTagRow;
+                        }
+                    }
+                    
+                    // Validate Primary Beneficiary
+                    const beneficiaryInput = document.getElementById('edit_project_beneficiary');
+                    if (!beneficiaryInput || !beneficiaryInput.value.trim()) {
+                        valid = false;
+                        if (beneficiaryInput) {
+                            beneficiaryInput.classList.add('error-input');
+                            showError(beneficiaryInput, 'Primary Beneficiary is required.');
+                            if (!firstError) firstError = beneficiaryInput;
+                        }
+                    }
+                    
+                    // Validate Estimated Events
+                    const eventsInput = document.getElementById('edit_project_events');
+                    if (!eventsInput || !eventsInput.value || eventsInput.value <= 0) {
+                        valid = false;
+                        if (eventsInput) {
+                            eventsInput.classList.add('error-input');
+                            showError(eventsInput, 'Expected Activities is required.');
+                            if (!firstError) firstError = eventsInput;
+                        }
+                    }
+                    
+                    // Validate Primary Location
+                    const locationInput = document.getElementById('edit_project_location');
+                    if (!locationInput || !locationInput.value.trim()) {
+                        valid = false;
+                        if (locationInput) {
+                            locationInput.classList.add('error-input');
+                            showError(locationInput, 'Location is required.');
+                            if (!firstError) firstError = locationInput;
+                        }
+                    }
+                    
+                    // Validate Estimated Trainees
+                    const traineesInput = document.getElementById('edit_project_trainees');
+                    if (!traineesInput || !traineesInput.value || traineesInput.value <= 0) {
+                        valid = false;
+                        if (traineesInput) {
+                            traineesInput.classList.add('error-input');
+                            showError(traineesInput, 'Expected Trained Individuals is required.');
+                            if (!firstError) firstError = traineesInput;
+                        }
+                    }
+                    
+                    // Validate Start Date
+                    if (!editStartDateInput || !editStartDateInput.value) {
+                        valid = false;
+                        if (editStartDateInput) {
+                            editStartDateInput.classList.add('error-input');
+                            showError(editStartDateInput, 'Start Date is required.');
+                            if (!firstError) firstError = editStartDateInput;
+                        }
+                    }
+                    
+                    // Validate Estimated End Date
+                    if (!editEndDateInput || !editEndDateInput.value) {
+                        valid = false;
+                        if (editEndDateInput) {
+                            editEndDateInput.classList.add('error-input');
+                            showError(editEndDateInput, 'Estimated End Date is required.');
+                            if (!firstError) firstError = editEndDateInput;
+                        }
+                    } else if (editStartDateInput && editStartDateInput.value) {
+                        const startDate = new Date(editStartDateInput.value);
+                        const endDate = new Date(editEndDateInput.value);
+                        if (endDate <= startDate) {
+                            valid = false;
+                            editEndDateInput.classList.add('error-input');
+                            showError(editEndDateInput, 'Estimated end date must be after the start date.');
+                            if (!firstError) firstError = editEndDateInput;
+                        }
+                    }
+                    
+                    if (!valid) {
                         e.preventDefault();
-                        alert('Estimated end date must be after the start date.');
-                        editEndDateInput.focus();
+                        if (firstError) {
+                            if (typeof firstError.focus === 'function') {
+                                firstError.focus();
+                            } else {
+                                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }
+                        }
                         return false;
                     }
                 });

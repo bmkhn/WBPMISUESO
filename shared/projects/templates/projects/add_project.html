@@ -66,7 +66,7 @@
             <div class="user-details-row cols-1">
                 <div>
                     <div class="user-details-label">Title <span class="required">*</span></div>
-                    <input type="text" name="title" class="user-details-value">
+                    <input type="text" name="title" class="user-details-value" required>
                 </div>
             </div>
 
@@ -96,7 +96,7 @@
             <div class="user-details-row cols-2">
                 <div>
                     <div class="user-details-label">Agenda <span class="required">*</span></div>
-                    <select name="agenda" class="user-details-value" style="transition: none;">
+                    <select name="agenda" class="user-details-value" style="transition: none;"  required>
                         <option value="" selected disabled>Select Agenda</option>
                         {% for agenda in agendas %}
                         <option value="{{ agenda.id }}">{{ agenda.name }}</option>
@@ -105,7 +105,7 @@
                 </div>
                 <div>
                     <div class="user-details-label">Project Type <span class="required">*</span></div>
-                    <select name="project_type" class="user-details-value" style="transition: none;">
+                    <select name="project_type" class="user-details-value" style="transition: none;"  required>
                         <option value="" selected disabled>Select Type</option>
                         <option value="NEEDS_BASED">Needs Based</option>
                         <option value="RESEARCH_BASED">Research Based</option>
@@ -128,29 +128,26 @@
         </div>
 
         <div class="user-details-section">
-            <div class="user-details-category">
-                <i class="fa-solid fa-gears"></i>
-                Beneficiary
-            </div>
+            <div class="user-details-category"><i class="fa-solid fa-gears"></i>Beneficiary</div>
             <div class="user-details-row cols-2">
                 <div>
                     <div class="user-details-label">Primary Beneficiary <span class="required">*</span></div>
-                    <input type="text" name="primary_beneficiary" class="user-details-value">
+                    <input type="text" name="primary_beneficiary" class="user-details-value" required>
                 </div>
                 <div>
                     <div class="user-details-label">No. of Estimated Events <span class="required">*</span></div>
-                    <input type="number" name="estimated_events" class="user-details-value" min="0">
+                    <input type="number" name="estimated_events" class="user-details-value" min="0" step="1" required>
                 </div>
             </div>
 
             <div class="user-details-row cols-2">
                 <div>
                     <div class="user-details-label">Primary Location <span class="required">*</span></div>
-                    <input type="text" name="primary_location" class="user-details-value">
+                    <input type="text" name="primary_location" class="user-details-value" required>
                 </div>
                 <div>
                     <div class="user-details-label">No. of Estimated Trainees <span class="required">*</span></div>
-                    <input type="number" name="estimated_trainees" class="user-details-value" min="0">
+                    <input type="number" name="estimated_trainees" class="user-details-value" min="0" step="1" required>
                 </div>
             </div>
         </div>
@@ -182,12 +179,12 @@
                 <div class="user-details-row cols-2">
                     <div>
                         <div class="user-details-label">Internal Budget Assigned <span class="required">*</span></div>
-                        <input type="number" name="internal_budget" id="internal-budget-both" class="user-details-value internal-budget-input" min="0" step="0.01" data-logistics-required>
+                        <input type="number" name="internal_budget" id="internal-budget-both" class="user-details-value internal-budget-input" min="0" step="1" data-logistics-required>
                         <div id="budget-status-both" style="margin-top:0.5rem;font-size:0.9rem;min-height:20px;"></div>
                     </div>
                     <div>
                         <div class="user-details-label">External Budget Assigned <span class="required">*</span></div>
-                        <input type="number" name="external_budget" class="user-details-value" min="0" step="0.01" data-logistics-required>
+                        <input type="number" name="external_budget" class="user-details-value" min="0" step="1" data-logistics-required>
                     </div>
                 </div>
 
@@ -226,12 +223,12 @@
             <div class="user-details-row cols-2">
                 <div>
                     <div class="user-details-label">Start Date <span class="required">*</span></div>
-                    <input type="date" name="start_date" id="id_start_date" class="user-details-value">
+                    <input type="date" name="start_date" id="id_start_date" class="user-details-value" required>
                     <small style="color:#666;font-size:0.875rem;margin-top:0.25rem;display:block;">Cannot be in the past</small>
                 </div>
                 <div>
                     <div class="user-details-label">Estimated End Date <span class="required">*</span></div>
-                    <input type="date" name="estimated_end_date" id="id_estimated_end_date" class="user-details-value">
+                    <input type="date" name="estimated_end_date" id="id_estimated_end_date" class="user-details-value" required>
                     <small style="color:#666;font-size:0.875rem;margin-top:0.25rem;display:block;">Must be after start date</small>
                 </div>
             </div>
@@ -445,6 +442,7 @@
             // Run initial check in case leader is already selected
             checkBudget();
         }, 500);
+    
 
         // Unified error catcher for form submission
         var form = document.getElementById('addProjectForm');
@@ -452,79 +450,110 @@
             form.addEventListener('submit', function(e) {
                 let valid = true;
                 let firstError = null;
-                // Remove previous error states
-                const allFields = Array.from(form.querySelectorAll('input, select, textarea'));
-                allFields.forEach(field => {
-                    field.classList.remove('error-input');
-                    const existingError = field.parentNode.querySelector('.field-validation-error');
-                    if (existingError) existingError.remove();
-                });
-                document.querySelectorAll('.tag-error').forEach(err => err.remove());
-
-                // Gather all required fields (including logistics, text, file, select, textarea)
-                let requiredFields = [];
-                // Standard required fields
-                // Gather all visible/active required fields (input, select, textarea)
-                requiredFields = Array.from(form.querySelectorAll('input, select, textarea')).filter(field => {
-                    // Only validate visible and enabled fields
-                    const style = window.getComputedStyle(field);
-                    return !field.disabled && style.display !== 'none' && style.visibility !== 'hidden' && field.type !== 'hidden';
-                });
-
-                // Validate all required fields synchronously
                 let errorQueue = [];
-                requiredFields.forEach(field => {
-                    let errorMsg = '';
-                    // Try to get the field label
-                    let label = '';
-                    if (field.id) {
-                        const labelEl = document.querySelector(`label[for="${field.id}"]`);
-                        if (labelEl) label = labelEl.textContent.replace(/\*/g, '').trim();
-                    }
-                    if (!label && field.closest('.form-group')) {
-                        const labelEl = field.closest('.form-group').querySelector('label');
-                        if (labelEl) label = labelEl.textContent.replace(/\*/g, '').trim();
-                    }
-                    if (!label) label = field.name || field.id || 'Field';
+                // Remove previous error states
+                document.querySelectorAll('.field-validation-error').forEach(el => el.remove());
+                document.querySelectorAll('.error-input').forEach(el => el.classList.remove('error-input'));
 
-                    if (!field.value || field.value.trim() === '') {
-                        errorMsg = `${label} is required.`;
-                    } else if (field.tagName === 'INPUT') {
-                        if (field.type === 'email' && !/^\S+@\S+\.\S+$/.test(field.value)) {
-                            errorMsg = `Please enter a valid email address for ${label}.`;
-                        } else if (field.type === 'number' && isNaN(field.value)) {
-                            errorMsg = `Please enter a valid number for ${label}.`;
-                        }
-                    } else if (field.tagName === 'SELECT') {
-                        if (field.selectedIndex === 0 || !field.value) {
-                            errorMsg = `Please select a value for ${label}.`;
-                        }
-                    }
-                    if (errorMsg) {
+                // Validate all required fields (only if visible)
+                document.querySelectorAll('#addProjectForm .user-details-value[required]').forEach(field => {
+                    // Only validate if field is visible
+                    const isVisible = field.offsetParent !== null;
+                    if (isVisible && !field.value) {
                         valid = false;
                         field.classList.add('error-input');
-                        errorQueue.push({field, message: errorMsg});
+                        const err = document.createElement('div');
+                        err.className = 'field-validation-error';
+                        // Find the label text
+                        let labelText = field.parentNode.querySelector('.user-details-label');
+                        if (!labelText) {
+                            // Try previous sibling if not found
+                            labelText = field.parentNode.previousElementSibling && field.parentNode.previousElementSibling.classList.contains('user-details-label')
+                                ? field.parentNode.previousElementSibling
+                                : null;
+                        }
+                        let prettyName = labelText ? labelText.textContent.replace(/\s*\*/g, '').trim() : field.name;
+                        err.textContent = `${prettyName} is required.`;
+                        err.style.color = '#E53E3E';
+                        err.style.fontSize = '0.95rem';
+                        err.style.marginTop = '0.25rem';
+                        field.parentNode.appendChild(err);
                         if (!firstError) firstError = field;
+                    } else {
+                        field.classList.remove('error-input');
                     }
                 });
 
                 // Validate Project Leader (tag UI)
                 const leaderTagRow = document.getElementById('project-leader-tag-row');
                 const leaderInput = leaderTagRow ? leaderTagRow.querySelector('input[name="project_leader"]') : null;
+                // Remove previous tag errors for leaderTagRow
+                if (leaderTagRow) {
+                    Array.from(leaderTagRow.querySelectorAll('.tag-error')).forEach(el => el.remove());
+                }
                 if (!leaderInput || !leaderInput.value) {
                     valid = false;
-                    errorQueue.push({field: leaderTagRow, message: 'Project Leader is required.', tag: true});
+                    // Only add one error per submission
+                    const err = document.createElement('div');
+                    err.className = 'tag-error';
+                    err.textContent = 'Project Leader is required.';
+                    err.style.color = '#E53E3E';
+                    err.style.fontSize = '0.95rem';
+                    err.style.marginTop = '0.25rem';
+                    leaderTagRow.appendChild(err);
                     if (!firstError) firstError = leaderTagRow;
                 }
 
                 // Validate SDGs (tag UI)
                 const sdgsTagRow = document.getElementById('sdgs-tag-row');
                 const sdgsInputs = sdgsTagRow ? sdgsTagRow.querySelectorAll('input[name="sdgs[]"]') : [];
+                // Remove previous tag errors for sdgsTagRow
+                if (sdgsTagRow) {
+                    Array.from(sdgsTagRow.querySelectorAll('.tag-error')).forEach(el => el.remove());
+                }
                 if (sdgsInputs.length === 0) {
                     valid = false;
-                    errorQueue.push({field: sdgsTagRow, message: 'At least one SDG must be selected.', tag: true});
+                    // Only add one error per submission
+                    const err = document.createElement('div');
+                    err.className = 'tag-error';
+                    err.textContent = 'At least one SDG must be selected.';
+                    err.style.color = '#E53E3E';
+                    err.style.fontSize = '0.95rem';
+                    err.style.marginTop = '0.25rem';
+                    sdgsTagRow.appendChild(err);
                     if (!firstError) firstError = sdgsTagRow;
                 }
+
+                // Get logistics-related inputs
+                document.querySelectorAll('#addProjectForm .user-details-value[data-logistics-required]').forEach(input => {
+                    // Remove previous error states
+                    input.classList.remove('error-input');
+                    Array.from(input.parentNode.querySelectorAll('.field-validation-error')).forEach(errEl => errEl.remove());
+
+                    // Only validate if field is visible
+                    const isVisible = input.offsetParent !== null;
+                    if (isVisible && !input.value) {
+                        valid = false;
+                        input.classList.add('error-input');
+                        const err = document.createElement('div');
+                        err.className = 'field-validation-error';
+                        // Find the label text
+                        let labelText = input.parentNode.querySelector('.user-details-label');
+                        if (!labelText) {
+                            // Try previous sibling if not found
+                            labelText = input.parentNode.previousElementSibling && input.parentNode.previousElementSibling.classList.contains('user-details-label')
+                                ? input.parentNode.previousElementSibling
+                                : null;
+                        }
+                        let prettyName = labelText ? labelText.textContent.replace(/\s*\*/g, '').trim() : input.name;
+                        err.textContent = `${prettyName} is required.`;
+                        err.style.color = '#E53E3E';
+                        err.style.fontSize = '0.95rem';
+                        err.style.marginTop = '0.25rem';
+                        input.parentNode.appendChild(err);
+                        if (!firstError) firstError = input;
+                    }
+                });
 
                 // Validate Proposal Document
                 const proposalInput = document.getElementById('id_proposal_document');
@@ -607,7 +636,7 @@
         }
     });
 
-    // File Input Change Handler (omitted body for brevity, logic remains the same)
+    // File Input Change Handler
     const proposalInput = document.getElementById('id_proposal_document');
     const proposalPreview = document.getElementById('proposal-file-preview');
     const proposalNameSpan = document.getElementById('proposal-file-name');
