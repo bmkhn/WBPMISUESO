@@ -60,7 +60,7 @@
             <div class="profile-picture-container">
                 <label for="profile_picture_input" class="profile-picture-upload-area">
                     <img id="profile-picture-preview-img" class="profile-picture-preview-img" 
-                         src="{% if user.profile_picture and user.profile_picture.name %}{{ user.profile_picture.url }}{% else %}{% static 'default_avatar.png' %}{% endif %}" 
+                         src="{% if user.profile_picture and user.profile_picture.name %}{{ user.profile_picture.url }}{% else %}{{ user.profile_picture_or_initial }}{% endif %}" 
                          alt="Profile Preview"
                          style="{% if not user.profile_picture or not user.profile_picture.name %}display: none;{% else %}display: block;{% endif %}">
                     <i id="profile-picture-icon" class="fa-solid fa-camera profile-picture-icon" 

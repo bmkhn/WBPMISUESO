@@ -659,6 +659,33 @@ def edit_user(request, id):
     email_changed = False
     if request.method == 'POST':
         data = request.POST
+        
+        # Check if email or password is being changed
+        new_email = data.get('email')
+        old_email = user.email
+        password = data.get('password', '').strip()
+        
+        email_is_changing = (new_email != old_email)
+        password_is_changing = bool(password)
+        
+        # If email or password is changing, verify code
+        if email_is_changing or password_is_changing:
+            code_verified = request.session.get('code_verified', False)
+            if not code_verified:
+                error = "Email or password change requires verification. Please verify your code."
+                return render(request, 'users/edit_user.html', {
+                    'user': user,
+                    'error': error,
+                    'success': False,
+                    'email_changed': False,
+                    'colleges': colleges,
+                    'campus_choices': campus_choices,
+                    'roles': roles,
+                    'base_template': base_template,
+                    'can_edit_role_and_verify': can_edit_role_and_verify,
+                    'is_editing_self': request.user.id == user.id,
+                })
+        
         if User.objects.filter(email=data.get('email')).exclude(id=user.id).exists():
             error = "Email already exists."
         else:
@@ -673,8 +700,6 @@ def edit_user(request, id):
                 user.sex = data.get('sex')
                 user.contact_no = data.get('contact_no')
                 
-                new_email = data.get('email')
-                old_email = user.email
                 if user.email != new_email:
                     changes.append('email')
                     email_changed = True
@@ -776,6 +801,14 @@ def edit_user(request, id):
                     details=details,
                     is_notification=True
                 )
+                
+                # Clear verification session after successful save
+                if 'code_verified' in request.session:
+                    del request.session['code_verified']
+                if 'password_reset_code' in request.session:
+                    del request.session['password_reset_code']
+                if 'password_reset_email' in request.session:
+                    del request.session['password_reset_email']
                 
                 referrer = request.META.get('HTTP_REFERER', '')
                 user_full_name = quote(user.get_full_name())
