@@ -186,7 +186,7 @@
     <div class="event-modal-content">
         <span class="close" id="close-submit-request-modal">&times;</span>
         <h2 id="submit-request-modal-title" style="margin-bottom:1rem;">Submit Request</h2>
-        <form id="submit-request-form" method="post" enctype="multipart/form-data" action="/requests/submit/">
+        <form id="submit-request-form" method="post" enctype="multipart/form-data" action="/requests/submit/" novalidate>
             {% csrf_token %}
 			<div class="grid">
 				<section style="flex-grow: 1;">
@@ -346,6 +346,62 @@
 					window.history.replaceState({}, document.title, window.location.pathname);
 				}, 300);
 			}, 4000);
+		}
+	});
+	
+	// Unified validation for Submit Request Modal
+	document.getElementById('submit-request-form').addEventListener('submit', function(e) {
+		let valid = true;
+		let firstError = null;
+		let errorQueue = [];
+		
+		// Remove previous errors
+		this.querySelectorAll('.field-validation-error').forEach(el => el.remove());
+		this.querySelectorAll('.error-input').forEach(el => el.classList.remove('error-input'));
+		
+		// Get all required fields
+		const fields = Array.from(this.querySelectorAll('input[required], select[required], textarea[required]'));
+		
+		fields.forEach(field => {
+			let label = '';
+			const labelEl = field.closest('.form-group')?.querySelector('label');
+			if (labelEl) label = labelEl.textContent.replace(/\*/g, '').replace(/:/g, '').trim();
+			if (!label) label = field.name || field.id || 'Field';
+			
+			let errorMsg = '';
+			
+			if (field.tagName === 'SELECT' && (!field.value || field.value === '')) {
+				errorMsg = `${label} is required.`;
+			} else if (field.type === 'file' && !field.files.length) {
+				errorMsg = `${label} is required.`;
+			} else if ((field.tagName === 'INPUT' || field.tagName === 'TEXTAREA') && field.type !== 'file' && !field.value.trim()) {
+				errorMsg = `${label} is required.`;
+			}
+			
+			if (errorMsg) {
+				valid = false;
+				field.classList.add('error-input');
+				errorQueue.push({field, message: errorMsg});
+				if (!firstError) firstError = field;
+			}
+		});
+		
+		// Render errors
+		errorQueue.forEach(errObj => {
+			const err = document.createElement('div');
+			err.className = 'field-validation-error';
+			err.textContent = errObj.message;
+			err.style.color = '#E53E3E';
+			err.style.fontSize = '0.9rem';
+			err.style.marginTop = '0.25rem';
+			errObj.field.closest('.form-group').appendChild(err);
+		});
+		
+		if (!valid) {
+			e.preventDefault();
+			e.stopPropagation();
+			if (firstError && typeof firstError.focus === 'function') firstError.focus();
+			return false;
 		}
 	});
 	

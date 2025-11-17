@@ -159,7 +159,7 @@
         <div class="modal-content">
             <span class="close-modal">&times;</span>
             <h2>Final Submission</h2>
-            <form method="post" enctype="multipart/form-data" class="submission-form">
+            <form method="post" enctype="multipart/form-data" class="submission-form" novalidate>
                 {% csrf_token %}
                 <input type="hidden" name="submission_id" value="{{ submission.id }}" />
                 <input type="hidden" name="action" value="submit" />
@@ -204,7 +204,7 @@
         <div class="modal-content">
             <span class="close-modal">&times;</span>
             <h2>Event Submission</h2>
-            <form method="post" enctype="multipart/form-data" class="submission-form">
+            <form method="post" enctype="multipart/form-data" class="submission-form" novalidate>
                 {% csrf_token %}
                 <input type="hidden" name="submission_id" value="{{ submission.id }}" />
                 <input type="hidden" name="action" value="submit" />
@@ -240,7 +240,7 @@
         <div class="modal-content">
             <span class="close-modal">&times;</span>
             <h2>File Submission</h2>
-            <form method="post" enctype="multipart/form-data" class="submission-form">
+            <form method="post" enctype="multipart/form-data" class="submission-form" novalidate>
                 {% csrf_token %}
                 <input type="hidden" name="submission_id" value="{{ submission.id }}" />
                 <input type="hidden" name="action" value="submit" />
@@ -268,7 +268,7 @@
         <div class="modal" id="modal-reject" style="display:none;">
             <div class="modal-title">Reject Submission</div>
             <div class="modal-content">Please provide a reason for rejection:</div>
-            <form method="post" action="{% url 'admin_submission_action' project.id submission.id %}" style="width:100%;">
+            <form method="post" action="{% url 'admin_submission_action' project.id submission.id %}" style="width:100%;" novalidate>
                 {% csrf_token %}
                 <input type="hidden" name="action" value="reject" />
                 <textarea name="reason" rows="3" required placeholder="Enter reason..." style="resize:vertical; min-height: 10rem;"></textarea>
@@ -288,7 +288,7 @@
         <div class="modal" id="modal-request-revision" style="display:none;">
             <div class="modal-title">Request Revision</div>
             <div class="modal-content">Please provide a reason for revision:</div>
-            <form method="post" action="{% url 'admin_submission_action' project.id submission.id %}" style="width:100%;">
+            <form method="post" action="{% url 'admin_submission_action' project.id submission.id %}" style="width:100%;" novalidate>
                 {% csrf_token %}
                 <input type="hidden" name="action" value="request_revision" />
                 <textarea name="reason" rows="3" required placeholder="Enter reason..." style="resize:vertical;"></textarea>
@@ -308,7 +308,7 @@
         <div class="modal" id="modal-delete" style="display:none;">
             <div class="modal-title">Delete Submission</div>
             <div class="modal-content">Are you sure you want to delete this submission? This action cannot be undone.</div>
-            <form method="post" action="{% url 'admin_submission_action' project.id submission.id %}" style="width:100%;">
+            <form method="post" action="{% url 'admin_submission_action' project.id submission.id %}" style="width:100%;" novalidate>
                 {% csrf_token %}
                 <input type="hidden" name="action" value="delete" />
                 <div class="modal-actions">
@@ -419,9 +419,122 @@
             });
         });
 
-        // Use native form submission
+        // Use native form submission with unified validation
         document.querySelectorAll('.submission-form').forEach(form => {
-            form.addEventListener('submit', handleSubmission);
+            form.addEventListener('submit', function(e) {
+                let valid = true;
+                let firstError = null;
+                let errorQueue = [];
+                
+                // Remove previous errors
+                this.querySelectorAll('.field-validation-error').forEach(el => el.remove());
+                this.querySelectorAll('.error-input').forEach(el => el.classList.remove('error-input'));
+                
+                // Get all required fields
+                const fields = Array.from(this.querySelectorAll('input[required], select[required], textarea[required]'));
+                
+                fields.forEach(field => {
+                    let label = '';
+                    const labelEl = field.closest('.form-group')?.querySelector('label');
+                    if (labelEl) label = labelEl.textContent.replace(/\*/g, '').replace(/:/g, '').trim();
+                    if (!label) label = field.name || field.id || 'Field';
+                    
+                    let errorMsg = '';
+                    
+                    if (field.type === 'file' && !field.files.length) {
+                        errorMsg = `${label} is required.`;
+                    } else if (field.tagName === 'SELECT' && (!field.value || field.value === '')) {
+                        errorMsg = `${label} is required.`;
+                    } else if (field.type === 'number' && !field.value) {
+                        errorMsg = `${label} is required.`;
+                    } else if ((field.tagName === 'INPUT' || field.tagName === 'TEXTAREA') && field.type !== 'file' && field.type !== 'number' && !field.value.trim()) {
+                        errorMsg = `${label} is required.`;
+                    }
+                    
+                    if (errorMsg) {
+                        valid = false;
+                        field.classList.add('error-input');
+                        errorQueue.push({field, message: errorMsg});
+                        if (!firstError) firstError = field;
+                    }
+                });
+                
+                // Validate checkboxes for Final Submission (at least one must be checked)
+                if (this.closest('#modal-final')) {
+                    const checkboxes = this.querySelectorAll('input[type="checkbox"]');
+                    const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
+                    if (!anyChecked) {
+                        valid = false;
+                        const checklistGroup = this.querySelector('.chcklist');
+                        if (checklistGroup) {
+                            const err = document.createElement('div');
+                            err.className = 'field-validation-error';
+                            err.textContent = 'At least one action must be selected.';
+                            err.style.color = '#E53E3E';
+                            err.style.fontSize = '0.9rem';
+                            err.style.marginTop = '0.25rem';
+                            err.style.alignSelf = 'center';
+                            checklistGroup.appendChild(err);
+                            if (!firstError) firstError = checkboxes[0];
+                        }
+                    }
+                }
+                
+                // Render errors
+                errorQueue.forEach(errObj => {
+                    const err = document.createElement('div');
+                    err.className = 'field-validation-error';
+                    err.textContent = errObj.message;
+                    err.style.color = '#E53E3E';
+                    err.style.fontSize = '0.9rem';
+                    err.style.marginTop = '0.25rem';
+                    err.style.alignSelf = 'center';
+                    errObj.field.closest('.form-group').appendChild(err);
+                });
+                
+                if (!valid) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (firstError && typeof firstError.focus === 'function') firstError.focus();
+                    return false;
+                }
+                
+                handleSubmission(e);
+            });
+        });
+        
+        // Validation for Reject and Revision modals
+        document.querySelectorAll('#modal-reject form, #modal-request-revision form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                let valid = true;
+                let firstError = null;
+                
+                // Remove previous errors
+                this.querySelectorAll('.field-validation-error').forEach(el => el.remove());
+                this.querySelectorAll('.error-input').forEach(el => el.classList.remove('error-input'));
+                
+                const reasonField = this.querySelector('textarea[name="reason"]');
+                if (reasonField && !reasonField.value.trim()) {
+                    valid = false;
+                    reasonField.classList.add('error-input');
+                    const err = document.createElement('div');
+                    err.className = 'field-validation-error';
+                    err.textContent = 'Reason is required.';
+                    err.style.color = '#E53E3E';
+                    err.style.fontSize = '0.9rem';
+                    err.style.marginTop = '0.25rem';
+                    err.style.alignSelf = 'center';
+                    reasonField.parentNode.appendChild(err);
+                    firstError = reasonField;
+                }
+                
+                if (!valid) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (firstError && typeof firstError.focus === 'function') firstError.focus();
+                    return false;
+                }
+            });
         });
         
         var submitBtn = document.getElementById('submit-btn');

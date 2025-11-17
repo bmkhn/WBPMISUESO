@@ -48,7 +48,7 @@
 </head>
 
 <body>
-<form method="post" enctype="multipart/form-data" id="addProjectForm">
+<form method="post" enctype="multipart/form-data" id="addProjectForm" novalidate>
     {% csrf_token %}
     <div class="user-details-container">
         <div class="user-details-title">
@@ -57,18 +57,6 @@
             </h2> 
             <p>Input all fields correctly and launch new project.</p>
         </div>
-
-        {% if form and form.errors %}
-        <div class="error-message">
-            <ul>
-            {% for field, errors in form.errors.items %}
-                {% for err in errors %}
-                    <li><strong>{{ field|capfirst }}:</strong> {{ err }}</li>
-                {% endfor %}
-            {% endfor %}
-            </ul>
-        </div>
-        {% endif %}
 
         <div class="user-details-section">
             <div class="user-details-category">  
@@ -194,19 +182,19 @@
                 <div class="user-details-row cols-2">
                     <div>
                         <div class="user-details-label">Internal Budget Assigned <span class="required">*</span></div>
-                        <input type="number" name="internal_budget" id="internal-budget-both" class="user-details-value internal-budget-input" min="0" step="0.01">
+                        <input type="number" name="internal_budget" id="internal-budget-both" class="user-details-value internal-budget-input" min="0" step="0.01" data-logistics-required>
                         <div id="budget-status-both" style="margin-top:0.5rem;font-size:0.9rem;min-height:20px;"></div>
                     </div>
                     <div>
                         <div class="user-details-label">External Budget Assigned <span class="required">*</span></div>
-                        <input type="number" name="external_budget" class="user-details-value" min="0" step="0.01">
+                        <input type="number" name="external_budget" class="user-details-value" min="0" step="0.01" data-logistics-required>
                     </div>
                 </div>
 
                 <div class="user-details-row cols-1">
                     <div>
                         <div class="user-details-label">Sponsor Name <span class="required">*</span></div>
-                        <input type="text" name="sponsor_name" class="user-details-value">
+                        <input type="text" name="sponsor_name" class="user-details-value" data-logistics-required>
                     </div>
                 </div>
             </div>
@@ -215,7 +203,7 @@
                 <div class="user-details-row cols-2">
                     <div>
                         <div class="user-details-label">Internal Budget Assigned <span class="required">*</span></div>
-                        <input type="number" name="internal_budget" id="internal-budget-internal" class="user-details-value internal-budget-input" min="0" step="0.01">
+                        <input type="number" name="internal_budget" id="internal-budget-internal" class="user-details-value internal-budget-input" min="0" step="0.01" data-logistics-required>
                         <div id="budget-status-internal" style="margin-top:0.5rem;font-size:0.9rem;min-height:20px;"></div>
                     </div>
                     <div></div>
@@ -226,11 +214,11 @@
                 <div class="user-details-row cols-2">
                     <div>
                         <div class="user-details-label">External Budget Assigned <span class="required">*</span></div>
-                        <input type="number" name="external_budget" class="user-details-value" min="0" step="0.01">
+                        <input type="number" name="external_budget" class="user-details-value" min="0" step="0.01" data-logistics-required>
                     </div>
                     <div>
                         <div class="user-details-label">Sponsor Name <span class="required">*</span></div>
-                        <input type="text" name="sponsor_name" class="user-details-value">
+                        <input type="text" name="sponsor_name" class="user-details-value" data-logistics-required>
                     </div>
                 </div>
             </div>
@@ -238,12 +226,12 @@
             <div class="user-details-row cols-2">
                 <div>
                     <div class="user-details-label">Start Date <span class="required">*</span></div>
-                    <input type="date" name="start_date" id="id_start_date" class="user-details-value" required>
+                    <input type="date" name="start_date" id="id_start_date" class="user-details-value">
                     <small style="color:#666;font-size:0.875rem;margin-top:0.25rem;display:block;">Cannot be in the past</small>
                 </div>
                 <div>
                     <div class="user-details-label">Estimated End Date <span class="required">*</span></div>
-                    <input type="date" name="estimated_end_date" id="id_estimated_end_date" class="user-details-value" required>
+                    <input type="date" name="estimated_end_date" id="id_estimated_end_date" class="user-details-value">
                     <small style="color:#666;font-size:0.875rem;margin-top:0.25rem;display:block;">Must be after start date</small>
                 </div>
             </div>
@@ -458,11 +446,163 @@
             checkBudget();
         }, 500);
 
-        // Global error catcher for form submission (omitted body for brevity, logic remains the same)
+        // Unified error catcher for form submission
         var form = document.getElementById('addProjectForm');
         if (form) {
             form.addEventListener('submit', function(e) {
-                // ... (Validation logic remains the same) ...
+                let valid = true;
+                let firstError = null;
+                // Remove previous error states
+                const allFields = Array.from(form.querySelectorAll('input, select, textarea'));
+                allFields.forEach(field => {
+                    field.classList.remove('error-input');
+                    const existingError = field.parentNode.querySelector('.field-validation-error');
+                    if (existingError) existingError.remove();
+                });
+                document.querySelectorAll('.tag-error').forEach(err => err.remove());
+
+                // Gather all required fields (including logistics, text, file, select, textarea)
+                let requiredFields = [];
+                // Standard required fields
+                // Gather all visible/active required fields (input, select, textarea)
+                requiredFields = Array.from(form.querySelectorAll('input, select, textarea')).filter(field => {
+                    // Only validate visible and enabled fields
+                    const style = window.getComputedStyle(field);
+                    return !field.disabled && style.display !== 'none' && style.visibility !== 'hidden' && field.type !== 'hidden';
+                });
+
+                // Validate all required fields synchronously
+                let errorQueue = [];
+                requiredFields.forEach(field => {
+                    let errorMsg = '';
+                    // Try to get the field label
+                    let label = '';
+                    if (field.id) {
+                        const labelEl = document.querySelector(`label[for="${field.id}"]`);
+                        if (labelEl) label = labelEl.textContent.replace(/\*/g, '').trim();
+                    }
+                    if (!label && field.closest('.form-group')) {
+                        const labelEl = field.closest('.form-group').querySelector('label');
+                        if (labelEl) label = labelEl.textContent.replace(/\*/g, '').trim();
+                    }
+                    if (!label) label = field.name || field.id || 'Field';
+
+                    if (!field.value || field.value.trim() === '') {
+                        errorMsg = `${label} is required.`;
+                    } else if (field.tagName === 'INPUT') {
+                        if (field.type === 'email' && !/^\S+@\S+\.\S+$/.test(field.value)) {
+                            errorMsg = `Please enter a valid email address for ${label}.`;
+                        } else if (field.type === 'number' && isNaN(field.value)) {
+                            errorMsg = `Please enter a valid number for ${label}.`;
+                        }
+                    } else if (field.tagName === 'SELECT') {
+                        if (field.selectedIndex === 0 || !field.value) {
+                            errorMsg = `Please select a value for ${label}.`;
+                        }
+                    }
+                    if (errorMsg) {
+                        valid = false;
+                        field.classList.add('error-input');
+                        errorQueue.push({field, message: errorMsg});
+                        if (!firstError) firstError = field;
+                    }
+                });
+
+                // Validate Project Leader (tag UI)
+                const leaderTagRow = document.getElementById('project-leader-tag-row');
+                const leaderInput = leaderTagRow ? leaderTagRow.querySelector('input[name="project_leader"]') : null;
+                if (!leaderInput || !leaderInput.value) {
+                    valid = false;
+                    errorQueue.push({field: leaderTagRow, message: 'Project Leader is required.', tag: true});
+                    if (!firstError) firstError = leaderTagRow;
+                }
+
+                // Validate SDGs (tag UI)
+                const sdgsTagRow = document.getElementById('sdgs-tag-row');
+                const sdgsInputs = sdgsTagRow ? sdgsTagRow.querySelectorAll('input[name="sdgs[]"]') : [];
+                if (sdgsInputs.length === 0) {
+                    valid = false;
+                    errorQueue.push({field: sdgsTagRow, message: 'At least one SDG must be selected.', tag: true});
+                    if (!firstError) firstError = sdgsTagRow;
+                }
+
+                // Validate Proposal Document
+                const proposalInput = document.getElementById('id_proposal_document');
+                if (proposalInput && !proposalInput.files.length) {
+                    valid = false;
+                    proposalInput.classList.add('error-input');
+                    errorQueue.push({field: proposalInput, message: 'Proposal document is required.', file: true});
+                    if (!firstError) firstError = proposalInput;
+                }
+
+                // Validate Additional Documents
+                const additionalInput = document.getElementById('id_additional_documents');
+                if (additionalInput && !additionalInput.files.length) {
+                    valid = false;
+                    additionalInput.classList.add('error-input');
+                    errorQueue.push({field: additionalInput, message: 'At least one additional document is required.', file: true});
+                    if (!firstError) firstError = additionalInput;
+                }
+
+                // Budget validation state (do not block other errors)
+                const logisticsSelect = document.querySelector('select[name="logistics_type"]');
+                const logisticsType = logisticsSelect ? logisticsSelect.value : null;
+                if (!budgetValid) {
+                    valid = false;
+                    let statusDiv = null;
+                    if (logisticsType === 'BOTH') statusDiv = document.getElementById('budget-status-both');
+                    else if (logisticsType === 'INTERNAL') statusDiv = document.getElementById('budget-status-internal');
+                    if (statusDiv) {
+                        errorQueue.push({field: statusDiv, message: 'Please fix the budget allocation issue.'});
+                        if (!firstError) firstError = statusDiv;
+                    }
+                }
+
+                // Date validation
+                const startDateInput = document.getElementById('id_start_date');
+                const endDateInput = document.getElementById('id_estimated_end_date');
+                if (startDateInput && startDateInput.value) {
+                    const todayDate = new Date(new Date().toISOString().split('T')[0]);
+                    const startDate = new Date(startDateInput.value);
+                    if (startDate < todayDate) {
+                        valid = false;
+                        startDateInput.classList.add('error-input');
+                        errorQueue.push({field: startDateInput, message: 'Start date cannot be in the past.'});
+                        if (!firstError) firstError = startDateInput;
+                    }
+                }
+                if (startDateInput && endDateInput && startDateInput.value && endDateInput.value) {
+                    const startDate = new Date(startDateInput.value);
+                    const endDate = new Date(endDateInput.value);
+                    if (endDate <= startDate) {
+                        valid = false;
+                        endDateInput.classList.add('error-input');
+                        errorQueue.push({field: endDateInput, message: 'Estimated end date must be after the start date.'});
+                        if (!firstError) firstError = endDateInput;
+                    }
+                }
+
+                // Render all errors synchronously
+                errorQueue.forEach(errObj => {
+                    const err = document.createElement('div');
+                    err.className = errObj.tag ? 'tag-error' : 'field-validation-error';
+                    err.textContent = errObj.message;
+                    err.style.color = '#E53E3E';
+                    err.style.fontSize = '0.95rem';
+                    err.style.marginTop = '0.25rem';
+                    if (errObj.file && errObj.field.closest('.form-group')) {
+                        errObj.field.closest('.form-group').appendChild(err);
+                    } else {
+                        errObj.field.appendChild(err);
+                    }
+                });
+
+                if (!valid) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (firstError && typeof firstError.focus === 'function') firstError.focus();
+                    return false;
+                }
             });
         }
     });
@@ -784,18 +924,16 @@
                 if (!block) return;
 
                 if (logistics_type === selected) {
+                    block.style.display = 'block';
                     Array.from(block.querySelectorAll('input,select,textarea')).forEach(function(el) {
                         el.disabled = false;
-                        if (el.hasAttribute('data-logistics-required')) {
-                            el.required = true;
-                        }
+                        // No more data-logistics-required or required attributes
                     });
                 } else {
+                    block.style.display = 'none';
                     Array.from(block.querySelectorAll('input,select,textarea')).forEach(function(el) {
                         el.disabled = true;
-                        if (el.hasAttribute('data-logistics-required')) {
-                            el.required = false;
-                        }
+                        // No more data-logistics-required or required attributes
                     });
                 }
             });
@@ -822,25 +960,7 @@
                 }
             });
             
-            document.querySelector('form').addEventListener('submit', function(e) {
-                const startDate = new Date(startDateInput.value);
-                const endDate = new Date(endDateInput.value);
-                const todayDate = new Date(today);
-                
-                if (startDate < todayDate) {
-                    e.preventDefault();
-                    alert('Start date cannot be in the past.');
-                    startDateInput.focus();
-                    return false;
-                }
-                
-                if (endDate <= startDate) {
-                    e.preventDefault();
-                    alert('Estimated end date must be after the start date.');
-                    endDateInput.focus();
-                    return false;
-                }
-            });
+            // Date validation is now handled in the unified submit handler above
         }
     });
 </script>

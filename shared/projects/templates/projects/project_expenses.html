@@ -48,17 +48,6 @@
 <div class="submission-modal" id="overlay">
   <div class="modal-content">
     <h2>Add Expense</h2>
-    
-    {% if messages %}
-        {% for message in messages %}
-            {% if message.tags == 'error' %}
-                <div class="form-error-message active" id="budgetErrorMessage">
-                    <p>{{ message }}</p>
-                </div>
-            {% endif %}
-        {% endfor %}
-    {% endif %}
-    {# -------------------------------------------------------------------------------- #}
 
     <form class="expenseForm" id="expenseForm" method="post" enctype="multipart/form-data">
       {% csrf_token %}

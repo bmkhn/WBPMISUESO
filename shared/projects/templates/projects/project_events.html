@@ -71,7 +71,7 @@
                 <div class="event-modal-content">
                     <span class="close" onclick="document.getElementById('edit-event-modal-{{ event.id }}').style.display='none'">&times;</span>
                     <h2>Edit Activity</h2>
-                    <form method="post" enctype="multipart/form-data">
+                    <form method="post" enctype="multipart/form-data" novalidate>
                         {% csrf_token %}
                         <input type="hidden" name="event_id" value="{{ event.id }}">
                         <div class="form-group">
@@ -116,7 +116,7 @@
     <div class="event-modal-content">
         <span class="close" id="close-add-event-modal">&times;</span>
         <h2 style="margin-top:0;">Add New Activity</h2>
-        <form method="post">
+        <form method="post" novalidate>
             {% csrf_token %}
             <input type="hidden" name="add_event" value="1">
             <div class="form-group">
@@ -178,20 +178,75 @@
         input.setAttribute('max', maxDateTime);
     });
     
-    // Validate on form submit
+    // Validate on form submit with unified error handling
     document.querySelectorAll('form').forEach(function(form) {
         form.addEventListener('submit', function(e) {
+            let valid = true;
+            let firstError = null;
+            let errorQueue = [];
+            
+            // Remove previous errors
+            form.querySelectorAll('.field-validation-error').forEach(el => el.remove());
+            form.querySelectorAll('.error-input').forEach(el => el.classList.remove('error-input'));
+            
+            // Validate datetime within project range
             const datetimeInputs = form.querySelectorAll('input[type="datetime-local"]');
             datetimeInputs.forEach(function(input) {
                 if (input.value) {
                     const selectedDate = new Date(input.value);
                     if (selectedDate < projectStartDate || selectedDate > projectEndDate) {
-                        e.preventDefault();
-                        alert('Activity date must be within project dates ({{ project.start_date|date:"M d, Y" }} - {{ project.estimated_end_date|date:"M d, Y" }})');
-                        input.focus();
+                        valid = false;
+                        input.classList.add('error-input');
+                        errorQueue.push({
+                            field: input,
+                            message: `Activity date must be within project dates ({{ project.start_date|date:"M d, Y" }} - {{ project.estimated_end_date|date:"M d, Y" }})`
+                        });
+                        if (!firstError) firstError = input;
                     }
                 }
             });
+            
+            // Validate all required fields and selects
+            const requiredFields = form.querySelectorAll('input[required], select[required], textarea[required], select');
+            requiredFields.forEach(function(field) {
+                let label = '';
+                const labelEl = field.closest('.form-group')?.querySelector('label');
+                if (labelEl) label = labelEl.textContent.replace(/\*/g, '').replace(/:/g, '').trim();
+                if (!label) label = field.name || field.id || 'Field';
+                
+                let errorMsg = '';
+                if (field.tagName === 'SELECT' && (!field.value || field.value === '')) {
+                    errorMsg = `${label} is required.`;
+                } else if ((field.tagName === 'INPUT' || field.tagName === 'TEXTAREA') && field.hasAttribute('required') && !field.value.trim()) {
+                    errorMsg = `${label} is required.`;
+                }
+                
+                if (errorMsg) {
+                    valid = false;
+                    field.classList.add('error-input');
+                    errorQueue.push({field, message: errorMsg});
+                    if (!firstError) firstError = field;
+                }
+            });
+            
+            // Render errors
+            errorQueue.forEach(errObj => {
+                const err = document.createElement('div');
+                err.className = 'field-validation-error';
+                err.textContent = errObj.message;
+                err.style.color = '#E53E3E';
+                err.style.fontSize = '0.9rem';
+                err.style.marginTop = '0.25rem';
+                err.style.alignSelf = 'center';
+                errObj.field.closest('.form-group').appendChild(err);
+            });
+            
+            if (!valid) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (firstError && typeof firstError.focus === 'function') firstError.focus();
+                return false;
+            }
         });
     });
 </script>
