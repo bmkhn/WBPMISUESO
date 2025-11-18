@@ -1011,6 +1011,8 @@ def quick_login(request, role):
     user = authenticate(request, username=username, password=password)
     if user:
         login(request, user)
+        # Mark session as modified to ensure it's saved before redirect
+        request.session.modified = True
         return redirect("role_redirect")
     else:
         return redirect("login") 
