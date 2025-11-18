@@ -10,6 +10,7 @@ class ClientRequestViewSet(viewsets.ModelViewSet):
     A ViewSet for viewing and editing ClientRequest instances.
     Provides standard CRUD operations for client requests.
     """
+    queryset = ClientRequest.objects.all()
     serializer_class = ClientRequestSerializer
     permission_classes = [IsAuthenticated] # Ensures only logged-in users can interact
 

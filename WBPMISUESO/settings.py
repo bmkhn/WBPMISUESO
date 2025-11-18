@@ -80,6 +80,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_api_key',
     'rest_framework.authtoken',
+    'drf_spectacular',
 
     # Bootstrap
     'widget_tweaks',
@@ -107,9 +108,18 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
-    ]
+    ],
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
+# API Documentation Metadata
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'UESO-PMIS',
+    'DESCRIPTION': 'UESO-PMIS, the project monitorinf and management system of Palawan State University, University Extension Services Office.',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'COMPONENT_SPLIT_REQUEST': True,
+}
 ROOT_URLCONF = 'WBPMISUESO.urls'
 
 TEMPLATES = [

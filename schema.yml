@@ -1,0 +1,1539 @@
+openapi: 3.0.3
+info:
+  title: UESO-PMIS
+  version: 1.0.0
+  description: UESO-PMIS, the project monitorinf and management system of Palawan
+    State University, University Extension Services Office.
+paths:
+  /analytics/api/all-project-data/:
+    get:
+      operationId: analytics_api_all_project_data_list
+      description: |-
+        A read-only API endpoint that returns ALL data for all projects,
+        including nested events, documents, and evaluations.
+      tags:
+      - analytics
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProjectReadOnly'
+          description: ''
+  /api/calendar/meeting-events/:
+    get:
+      operationId: api_calendar_meeting_events_list
+      description: |-
+        API endpoint that allows calendar events to be viewed or edited.
+
+        - Provides full CRUD (POST, GET, PUT, PATCH, DELETE).
+        - Users can see all events they created OR are a participant in.
+        - Users can ONLY edit/delete events they created.
+      tags:
+      - api
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MeetingEvent'
+          description: ''
+    post:
+      operationId: api_calendar_meeting_events_create
+      description: |-
+        API endpoint that allows calendar events to be viewed or edited.
+
+        - Provides full CRUD (POST, GET, PUT, PATCH, DELETE).
+        - Users can see all events they created OR are a participant in.
+        - Users can ONLY edit/delete events they created.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MeetingEventRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MeetingEventRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MeetingEventRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeetingEvent'
+          description: ''
+  /api/calendar/meeting-events/{id}/:
+    get:
+      operationId: api_calendar_meeting_events_retrieve
+      description: |-
+        API endpoint that allows calendar events to be viewed or edited.
+
+        - Provides full CRUD (POST, GET, PUT, PATCH, DELETE).
+        - Users can see all events they created OR are a participant in.
+        - Users can ONLY edit/delete events they created.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Meeting Event.
+        required: true
+      tags:
+      - api
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeetingEvent'
+          description: ''
+    put:
+      operationId: api_calendar_meeting_events_update
+      description: |-
+        API endpoint that allows calendar events to be viewed or edited.
+
+        - Provides full CRUD (POST, GET, PUT, PATCH, DELETE).
+        - Users can see all events they created OR are a participant in.
+        - Users can ONLY edit/delete events they created.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Meeting Event.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MeetingEventRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MeetingEventRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MeetingEventRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeetingEvent'
+          description: ''
+    patch:
+      operationId: api_calendar_meeting_events_partial_update
+      description: |-
+        API endpoint that allows calendar events to be viewed or edited.
+
+        - Provides full CRUD (POST, GET, PUT, PATCH, DELETE).
+        - Users can see all events they created OR are a participant in.
+        - Users can ONLY edit/delete events they created.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Meeting Event.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedMeetingEventRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedMeetingEventRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedMeetingEventRequest'
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeetingEvent'
+          description: ''
+    delete:
+      operationId: api_calendar_meeting_events_destroy
+      description: |-
+        API endpoint that allows calendar events to be viewed or edited.
+
+        - Provides full CRUD (POST, GET, PUT, PATCH, DELETE).
+        - Users can see all events they created OR are a participant in.
+        - Users can ONLY edit/delete events they created.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Meeting Event.
+        required: true
+      tags:
+      - api
+      security:
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/get-token/:
+    post:
+      operationId: api_get_token_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AuthTokenRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AuthTokenRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthTokenRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthToken'
+          description: ''
+  /api/projects/{project_pk}/expenses/:
+    get:
+      operationId: api_projects_expenses_list
+      description: |-
+        A ViewSet for managing ProjectExpense instances, scoped by the parent Project.
+        Only project leaders, providers, or staff/superusers can manage expenses.
+      parameters:
+      - in: path
+        name: project_pk
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProjectExpense'
+          description: ''
+    post:
+      operationId: api_projects_expenses_create
+      description: |-
+        A ViewSet for managing ProjectExpense instances, scoped by the parent Project.
+        Only project leaders, providers, or staff/superusers can manage expenses.
+      parameters:
+      - in: path
+        name: project_pk
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectExpenseRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProjectExpenseRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProjectExpenseRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectExpense'
+          description: ''
+  /api/projects/{project_pk}/expenses/{id}/:
+    get:
+      operationId: api_projects_expenses_retrieve
+      description: |-
+        A ViewSet for managing ProjectExpense instances, scoped by the parent Project.
+        Only project leaders, providers, or staff/superusers can manage expenses.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: project_pk
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectExpense'
+          description: ''
+    put:
+      operationId: api_projects_expenses_update
+      description: |-
+        A ViewSet for managing ProjectExpense instances, scoped by the parent Project.
+        Only project leaders, providers, or staff/superusers can manage expenses.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: project_pk
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectExpenseRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProjectExpenseRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProjectExpenseRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectExpense'
+          description: ''
+    patch:
+      operationId: api_projects_expenses_partial_update
+      description: |-
+        A ViewSet for managing ProjectExpense instances, scoped by the parent Project.
+        Only project leaders, providers, or staff/superusers can manage expenses.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: project_pk
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedProjectExpenseRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedProjectExpenseRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedProjectExpenseRequest'
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectExpense'
+          description: ''
+    delete:
+      operationId: api_projects_expenses_destroy
+      description: |-
+        A ViewSet for managing ProjectExpense instances, scoped by the parent Project.
+        Only project leaders, providers, or staff/superusers can manage expenses.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: project_pk
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/requests/client-requests/:
+    get:
+      operationId: api_requests_client_requests_list
+      description: |-
+        A ViewSet for viewing and editing ClientRequest instances.
+        Provides standard CRUD operations for client requests.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ClientRequest'
+          description: ''
+    post:
+      operationId: api_requests_client_requests_create
+      description: |-
+        A ViewSet for viewing and editing ClientRequest instances.
+        Provides standard CRUD operations for client requests.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClientRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ClientRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ClientRequestRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientRequest'
+          description: ''
+  /api/requests/client-requests/{id}/:
+    get:
+      operationId: api_requests_client_requests_retrieve
+      description: |-
+        A ViewSet for viewing and editing ClientRequest instances.
+        Provides standard CRUD operations for client requests.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Client Request.
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientRequest'
+          description: ''
+    put:
+      operationId: api_requests_client_requests_update
+      description: |-
+        A ViewSet for viewing and editing ClientRequest instances.
+        Provides standard CRUD operations for client requests.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Client Request.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClientRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ClientRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ClientRequestRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientRequest'
+          description: ''
+    patch:
+      operationId: api_requests_client_requests_partial_update
+      description: |-
+        A ViewSet for viewing and editing ClientRequest instances.
+        Provides standard CRUD operations for client requests.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Client Request.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedClientRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedClientRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedClientRequestRequest'
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientRequest'
+          description: ''
+    delete:
+      operationId: api_requests_client_requests_destroy
+      description: |-
+        A ViewSet for viewing and editing ClientRequest instances.
+        Provides standard CRUD operations for client requests.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Client Request.
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+  /archives/api/aggregate/{category}/:
+    get:
+      operationId: archives_api_aggregate_retrieve
+      description: Calls the service layer for project aggregation data (for cards).
+      parameters:
+      - in: path
+        name: category
+        schema:
+          type: string
+        required: true
+      tags:
+      - archives
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectAggregation'
+          description: ''
+  /archives/api/projects/{category}/{filter_value}/:
+    get:
+      operationId: archives_api_projects_list
+      description: Calls the service layer for detailed project lists (for tables).
+      parameters:
+      - in: path
+        name: category
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: filter_value
+        schema:
+          type: string
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      tags:
+      - archives
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedProjectList'
+          description: ''
+components:
+  schemas:
+    Agenda:
+      type: object
+      description: Serializer for the Agenda model.
+      properties:
+        name:
+          type: string
+          maxLength: 255
+      required:
+      - name
+    AgendaSimple:
+      type: object
+      description: Simple read-only serializer for the linked Agenda.
+      properties:
+        name:
+          type: string
+          readOnly: true
+      required:
+      - name
+    AuthToken:
+      type: object
+      properties:
+        token:
+          type: string
+          readOnly: true
+      required:
+      - token
+    AuthTokenRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          writeOnly: true
+          minLength: 1
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - password
+      - username
+    ClientRequest:
+      type: object
+      description: |-
+        Serializes all fields on the ClientRequest model.
+        The user-related fields and timestamps are set to read-only
+        as they are typically managed by the system or view logic.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 200
+        organization:
+          type: string
+          maxLength: 200
+        primary_location:
+          type: string
+          maxLength: 200
+        primary_beneficiary:
+          type: string
+          maxLength: 200
+        summary:
+          type: string
+        letter_of_intent:
+          type: string
+          format: uri
+          nullable: true
+        submitted_at:
+          type: string
+          format: date-time
+          readOnly: true
+        review_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        reason:
+          type: string
+          readOnly: true
+        endorsed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        status:
+          $ref: '#/components/schemas/Status62fEnum'
+        submitted_by:
+          type: integer
+          readOnly: true
+          nullable: true
+        reviewed_by:
+          type: integer
+          readOnly: true
+          nullable: true
+        endorsed_by:
+          type: integer
+          readOnly: true
+          nullable: true
+        updated_by:
+          type: integer
+          readOnly: true
+          nullable: true
+      required:
+      - endorsed_at
+      - endorsed_by
+      - id
+      - organization
+      - primary_beneficiary
+      - primary_location
+      - reason
+      - review_at
+      - reviewed_by
+      - status
+      - submitted_at
+      - submitted_by
+      - summary
+      - title
+      - updated_at
+      - updated_by
+    ClientRequestRequest:
+      type: object
+      description: |-
+        Serializes all fields on the ClientRequest model.
+        The user-related fields and timestamps are set to read-only
+        as they are typically managed by the system or view logic.
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        organization:
+          type: string
+          minLength: 1
+          maxLength: 200
+        primary_location:
+          type: string
+          minLength: 1
+          maxLength: 200
+        primary_beneficiary:
+          type: string
+          minLength: 1
+          maxLength: 200
+        summary:
+          type: string
+          minLength: 1
+        letter_of_intent:
+          type: string
+          format: binary
+          nullable: true
+        status:
+          $ref: '#/components/schemas/Status62fEnum'
+      required:
+      - organization
+      - primary_beneficiary
+      - primary_location
+      - status
+      - summary
+      - title
+    College:
+      type: object
+      description: Serializer for the College model.
+      properties:
+        name:
+          type: string
+          maxLength: 255
+      required:
+      - name
+    DocumentTypeEnum:
+      enum:
+      - PROPOSAL
+      - ADDITIONAL
+      type: string
+      description: |-
+        * `PROPOSAL` - Proposal
+        * `ADDITIONAL` - Additional
+    LogisticsTypeEnum:
+      enum:
+      - BOTH
+      - EXTERNAL
+      - INTERNAL
+      type: string
+      description: |-
+        * `BOTH` - Both
+        * `EXTERNAL` - External
+        * `INTERNAL` - Internal
+    MeetingEvent:
+      type: object
+      description: |-
+        Serializes all fields on the MeetingEvent model.
+
+        'created_by' and 'updated_by' are set to read-only because
+        they will be automatically populated by the request user.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        participants:
+          type: array
+          items:
+            type: integer
+        notes_attachment:
+          type: string
+          format: uri
+          nullable: true
+        title:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+        datetime:
+          type: string
+          format: date-time
+        location:
+          type: string
+          maxLength: 255
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        notes:
+          type: string
+          nullable: true
+        status:
+          $ref: '#/components/schemas/Status8fbEnum'
+        created_by:
+          type: integer
+          readOnly: true
+          nullable: true
+        updated_by:
+          type: integer
+          readOnly: true
+          nullable: true
+      required:
+      - created_at
+      - created_by
+      - datetime
+      - id
+      - participants
+      - title
+      - updated_at
+      - updated_by
+    MeetingEventRequest:
+      type: object
+      description: |-
+        Serializes all fields on the MeetingEvent model.
+
+        'created_by' and 'updated_by' are set to read-only because
+        they will be automatically populated by the request user.
+      properties:
+        participants:
+          type: array
+          items:
+            type: integer
+        notes_attachment:
+          type: string
+          format: binary
+          nullable: true
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+        description:
+          type: string
+        datetime:
+          type: string
+          format: date-time
+        location:
+          type: string
+          maxLength: 255
+        notes:
+          type: string
+          nullable: true
+        status:
+          $ref: '#/components/schemas/Status8fbEnum'
+      required:
+      - datetime
+      - participants
+      - title
+    PaginatedProjectList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Project'
+    PatchedClientRequestRequest:
+      type: object
+      description: |-
+        Serializes all fields on the ClientRequest model.
+        The user-related fields and timestamps are set to read-only
+        as they are typically managed by the system or view logic.
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        organization:
+          type: string
+          minLength: 1
+          maxLength: 200
+        primary_location:
+          type: string
+          minLength: 1
+          maxLength: 200
+        primary_beneficiary:
+          type: string
+          minLength: 1
+          maxLength: 200
+        summary:
+          type: string
+          minLength: 1
+        letter_of_intent:
+          type: string
+          format: binary
+          nullable: true
+        status:
+          $ref: '#/components/schemas/Status62fEnum'
+    PatchedMeetingEventRequest:
+      type: object
+      description: |-
+        Serializes all fields on the MeetingEvent model.
+
+        'created_by' and 'updated_by' are set to read-only because
+        they will be automatically populated by the request user.
+      properties:
+        participants:
+          type: array
+          items:
+            type: integer
+        notes_attachment:
+          type: string
+          format: binary
+          nullable: true
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+        description:
+          type: string
+        datetime:
+          type: string
+          format: date-time
+        location:
+          type: string
+          maxLength: 255
+        notes:
+          type: string
+          nullable: true
+        status:
+          $ref: '#/components/schemas/Status8fbEnum'
+    PatchedProjectExpenseRequest:
+      type: object
+      properties:
+        project:
+          type: integer
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+        reason:
+          type: string
+          nullable: true
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        date_incurred:
+          type: string
+          format: date
+        receipt:
+          type: string
+          format: binary
+          nullable: true
+    Project:
+      type: object
+      description: Full serializer for the Project model used in the final list/table
+        view.
+      properties:
+        title:
+          type: string
+          maxLength: 255
+        project_leader:
+          allOf:
+          - $ref: '#/components/schemas/ProjectLeader'
+          readOnly: true
+        agenda:
+          allOf:
+          - $ref: '#/components/schemas/Agenda'
+          readOnly: true
+        start_date:
+          type: string
+          format: date
+        estimated_end_date:
+          type: string
+          format: date
+        progress_display:
+          type: string
+          readOnly: true
+        duration:
+          type: string
+          description: Calculates duration in years/days.
+          readOnly: true
+        estimated_trainees:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        status:
+          type: string
+          readOnly: true
+        further_action:
+          type: array
+          items:
+            type: string
+          nullable: true
+          description: Get further action from final submission type if project is
+            completed.
+          readOnly: true
+      required:
+      - agenda
+      - duration
+      - estimated_end_date
+      - estimated_trainees
+      - further_action
+      - progress_display
+      - project_leader
+      - start_date
+      - status
+      - title
+    ProjectAggregation:
+      type: object
+      description: Defines the expected aggregated output for the ProjectAggregationAPIView.
+      properties:
+        total_projects:
+          type: integer
+          description: The total number of projects.
+        completed_projects:
+          type: integer
+          description: The count of projects with a 'Completed' status.
+        projects_by_status:
+          description: Counts of projects grouped by status.
+        total_budget_requested:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+          description: Sum of requested budgets.
+      required:
+      - completed_projects
+      - projects_by_status
+      - total_budget_requested
+      - total_projects
+    ProjectDocument:
+      type: object
+      properties:
+        file:
+          type: string
+          format: uri
+          readOnly: true
+        document_type:
+          allOf:
+          - $ref: '#/components/schemas/DocumentTypeEnum'
+          readOnly: true
+        uploaded_at:
+          type: string
+          format: date-time
+          readOnly: true
+        description:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+        size:
+          type: integer
+          readOnly: true
+        extension:
+          type: string
+          readOnly: true
+      required:
+      - description
+      - document_type
+      - extension
+      - file
+      - name
+      - size
+      - uploaded_at
+    ProjectEvaluation:
+      type: object
+      properties:
+        evaluated_by:
+          allOf:
+          - $ref: '#/components/schemas/UserSimple'
+          readOnly: true
+        created_at:
+          type: string
+          format: date
+          readOnly: true
+        comment:
+          type: string
+          readOnly: true
+        rating:
+          type: integer
+          readOnly: true
+      required:
+      - comment
+      - created_at
+      - evaluated_by
+      - rating
+    ProjectEvent:
+      type: object
+      properties:
+        title:
+          type: string
+          readOnly: true
+        description:
+          type: string
+          readOnly: true
+        datetime:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        location:
+          type: string
+          readOnly: true
+          nullable: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/Status8fbEnum'
+          readOnly: true
+        get_image_url:
+          type: string
+          readOnly: true
+      required:
+      - datetime
+      - description
+      - get_image_url
+      - location
+      - status
+      - title
+    ProjectExpense:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        project:
+          type: integer
+        title:
+          type: string
+          maxLength: 255
+        reason:
+          type: string
+          nullable: true
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        date_incurred:
+          type: string
+          format: date
+        receipt:
+          type: string
+          format: uri
+          nullable: true
+        created_by:
+          type: integer
+          readOnly: true
+          nullable: true
+        created_by_username:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - amount
+      - created_at
+      - created_by
+      - created_by_username
+      - id
+      - project
+      - title
+    ProjectExpenseRequest:
+      type: object
+      properties:
+        project:
+          type: integer
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+        reason:
+          type: string
+          nullable: true
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        date_incurred:
+          type: string
+          format: date
+        receipt:
+          type: string
+          format: binary
+          nullable: true
+      required:
+      - amount
+      - project
+      - title
+    ProjectLeader:
+      type: object
+      description: Serializer for the Project Leader to display full name/username.
+      properties:
+        full_name:
+          type: string
+          description: Tries to get full name, falls back to username.
+          readOnly: true
+        college:
+          allOf:
+          - $ref: '#/components/schemas/College'
+          readOnly: true
+      required:
+      - college
+      - full_name
+    ProjectReadOnly:
+      type: object
+      description: This serializer id for READ-ONLY display. Additional for spectacular
+        yml added
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        duration:
+          type: string
+          readOnly: true
+        status:
+          type: string
+          readOnly: true
+        further_action:
+          type: string
+          readOnly: true
+        documents:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectDocument'
+          readOnly: true
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectEvent'
+          readOnly: true
+        evaluations:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectEvaluation'
+          readOnly: true
+        project_leader:
+          allOf:
+          - $ref: '#/components/schemas/UserSimple'
+          readOnly: true
+        providers:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserSimple'
+          readOnly: true
+        agenda:
+          allOf:
+          - $ref: '#/components/schemas/AgendaSimple'
+          readOnly: true
+        sdgs:
+          type: array
+          items:
+            $ref: '#/components/schemas/SustainableDevelopmentGoal'
+          readOnly: true
+        title:
+          type: string
+          maxLength: 255
+        project_type:
+          $ref: '#/components/schemas/ProjectTypeEnum'
+        estimated_events:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        event_progress:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        estimated_trainees:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        total_trained_individuals:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        primary_beneficiary:
+          type: string
+          maxLength: 255
+        primary_location:
+          type: string
+          maxLength: 255
+        logistics_type:
+          $ref: '#/components/schemas/LogisticsTypeEnum'
+        internal_budget:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+        external_budget:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+        sponsor_name:
+          type: string
+          nullable: true
+          maxLength: 255
+        start_date:
+          type: string
+          format: date
+        estimated_end_date:
+          type: string
+          format: date
+        used_budget:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          description: Amount of the budget that has been spent.
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        has_final_submission:
+          type: boolean
+          description: True when a final submission type has been approved
+        proposal_document:
+          type: integer
+          nullable: true
+        created_by:
+          type: integer
+          nullable: true
+        updated_by:
+          type: integer
+          nullable: true
+        additional_documents:
+          type: array
+          items:
+            type: integer
+      required:
+      - agenda
+      - created_at
+      - documents
+      - duration
+      - estimated_end_date
+      - estimated_events
+      - estimated_trainees
+      - evaluations
+      - events
+      - further_action
+      - id
+      - logistics_type
+      - primary_beneficiary
+      - primary_location
+      - project_leader
+      - project_type
+      - providers
+      - sdgs
+      - start_date
+      - status
+      - title
+      - updated_at
+    ProjectTypeEnum:
+      enum:
+      - NEEDS_BASED
+      - RESEARCH_BASED
+      type: string
+      description: |-
+        * `NEEDS_BASED` - Needs Based
+        * `RESEARCH_BASED` - Research Based
+    Status62fEnum:
+      enum:
+      - RECEIVED
+      - UNDER_REVIEW
+      - APPROVED
+      - REJECTED
+      - ENDORSED
+      - DENIED
+      type: string
+      description: |-
+        * `RECEIVED` - Received
+        * `UNDER_REVIEW` - Under Review
+        * `APPROVED` - Approved
+        * `REJECTED` - Rejected
+        * `ENDORSED` - Endorsed
+        * `DENIED` - Denied
+    Status8fbEnum:
+      enum:
+      - SCHEDULED
+      - ONGOING
+      - COMPLETED
+      - CANCELLED
+      type: string
+      description: |-
+        * `SCHEDULED` - Scheduled
+        * `ONGOING` - Ongoing
+        * `COMPLETED` - Completed
+        * `CANCELLED` - Cancelled
+    SustainableDevelopmentGoal:
+      type: object
+      properties:
+        name:
+          type: string
+          readOnly: true
+      required:
+      - name
+    UserSimple:
+      type: object
+      description: Simple read-only serializer for user info.
+      properties:
+        username:
+          type: string
+          readOnly: true
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+        first_name:
+          type: string
+          readOnly: true
+        last_name:
+          type: string
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+      required:
+      - email
+      - first_name
+      - last_name
+      - username
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: wbpmisueso_sessionid
+    tokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: Token-based authentication with required prefix "Token"

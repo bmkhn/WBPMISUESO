@@ -40,8 +40,6 @@ def parse_dates_from_request(request, default_days=300): # Added default_days
              # Reset to default range if dates are illogical
              start_date = default_start_date
              end_date = default_end_date
-             # Optionally return an error instead:
-             # return None, None, JsonResponse({'error': 'Start date cannot be after end date.'}, status=400)
 
     except ValueError:
         return None, None, JsonResponse({'error': 'Invalid date format. Use YYYY-MM-DD.'}, status=400)
@@ -224,8 +222,12 @@ from rest_framework import status
 from rest_framework_api_key.permissions import HasAPIKey
 
 from shared.projects.models import Project 
-from .serializers import ProjectReadOnlySerializer  # <-- ADD THIS IMPORT
+from .serializers import ProjectReadOnlySerializer, ProjectPublicSerializer
+from drf_spectacular.utils import extend_schema
 
+@extend_schema(
+    responses={200: ProjectPublicSerializer(many=True)}
+)
 @api_view(['GET'])
 @permission_classes([HasAPIKey]) 
 def get_public_projects(request):
@@ -255,7 +257,9 @@ def get_public_projects(request):
 #
 # ----------------- ADD THE NEW VIEW BELOW -----------------
 #
-
+@extend_schema(
+    responses={200: ProjectReadOnlySerializer(many=True)}
+) 
 @api_view(['GET'])
 @permission_classes([HasAPIKey]) 
 def get_all_project_data(request):

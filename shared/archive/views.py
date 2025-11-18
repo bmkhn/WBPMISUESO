@@ -12,7 +12,10 @@ from system.users.models import User
 from rest_framework.permissions import AllowAny
 
 from .serializers import ProjectSerializer
-
+from .serializers import ProjectAggregationSerializer
+#YML
+from rest_framework.decorators import permission_classes
+from drf_spectacular.utils import extend_schema
 
 class CustomPagination(PageNumberPagination):
     """Standard pagination class for API list views."""
@@ -82,7 +85,9 @@ class ArchiveView(View):
 # --- API Aggregation View ---
 class ProjectAggregationAPIView(APIView):
     """Calls the service layer for project aggregation data (for cards)."""
-    permission_classes = [AllowAny]
+    
+    @permission_classes([AllowAny])
+    @extend_schema(responses={200: ProjectAggregationSerializer})
     def get(self, request, category):
         try:
             base_queryset = _get_role_based_archive_queryset(request)
@@ -135,8 +140,8 @@ class ProjectListAPIView(ListAPIView):
     """Calls the service layer for detailed project lists (for tables)."""
     serializer_class = ProjectSerializer
     pagination_class = CustomPagination
-    permission_classes = [AllowAny]
 
+    @permission_classes([AllowAny])
     def get_queryset(self):
         category = self.kwargs.get('category')
         filter_value = self.kwargs.get('filter_value')

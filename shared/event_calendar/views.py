@@ -156,12 +156,10 @@ def meeting_event_detail(request, event_id):
         except Exception as e:
             return JsonResponse({"status": "error", "errors": str(e)}, status=500)
         
-# ... keep existing imports (if any)
 from rest_framework import viewsets, permissions
-from rest_framework.authentication import TokenAuthentication # Use Token auth for users
+from rest_framework.authentication import TokenAuthentication 
 from django.db.models import Q
 
-from .models import MeetingEvent
 from .serializers import MeetingEventSerializer
 from .permissions import IsEventOwner
 
@@ -173,12 +171,12 @@ class MeetingEventViewSet(viewsets.ModelViewSet):
     - Users can see all events they created OR are a participant in.
     - Users can ONLY edit/delete events they created.
     """
+    
+    queryset = MeetingEvent.objects.all()
     serializer_class = MeetingEventSerializer
     
     # Use TokenAuthentication to identify which user is making the request
     authentication_classes = [TokenAuthentication] 
-    
-    # Users must be authenticated, and can only edit/delete their own events
     permission_classes = [permissions.IsAuthenticated, IsEventOwner]
 
     def get_queryset(self):
