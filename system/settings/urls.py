@@ -14,6 +14,7 @@ urlpatterns = [
     path('colleges/edit/<int:pk>/', views.edit_college, name='edit_college'),
     path('colleges/delete/<int:pk>/', views.delete_college, name='delete_college'),
 
+    # CAMPUS CRUD
     path('campus/', views.manage_campus, name='manage_campus'),
     path('campus/add/', views.add_campus, name='add_campus'),
     path('campus/edit/<int:pk>/', views.edit_campus, name='edit_campus'),
@@ -21,10 +22,7 @@ urlpatterns = [
     
     # SDG CRUD
     path('sdgs/', views.manage_sdgs, name='manage_sdgs'),
-    #
-    # THIS IS THE CORRECTED LINE:
     path('sdgs/add/', views.add_sdg, name='add_sdg'),
-    #
     path('sdgs/edit/<int:pk>/', views.edit_sdg, name='edit_sdg'),
     path('sdgs/delete/<int:pk>/', views.delete_sdg, name='delete_sdg'),
     
@@ -35,7 +33,8 @@ urlpatterns = [
     path('account/delete/', views.delete_account, name='delete_account'),
 
     # API Key Management
-    path('api-keys/', views.manage_api_keys, name='manage_api_keys'),
-    path('api-keys/add/', views.add_api_key, name='add_api_key'),
-    path('api-keys/revoke/<str:pk>/', views.revoke_api_key, name='revoke_api_key'),
+    path('api/request/', views.request_api_access, name='request_api_access'),
+    path('api/approve/<int:pk>/', views.approve_api_access, name='approve_api_access'),
+    path('api/disconnect/<int:pk>/', views.disconnect_api_access, name='disconnect_api_access'),
+    path('api/delete/<int:pk>/', views.delete_api_connection, name='delete_api_connection'),
 ]

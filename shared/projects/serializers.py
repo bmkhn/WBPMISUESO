@@ -8,7 +8,6 @@ class ProjectExpenseSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectExpense
         fields = [
-            'id', 
             'project', 
             'title', 
             'reason', 

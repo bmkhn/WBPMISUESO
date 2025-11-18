@@ -13,14 +13,15 @@ from shared.budget.forms import AnnualBudgetForm
 from system.users.models import College, User, Campus
 from shared.projects.models import SustainableDevelopmentGoal
 from rest_framework_api_key.models import APIKey
-from .models import SystemSetting
+from .models import SystemSetting, APIConnection
 from .forms import (
     CollegeForm, 
     SDGForm, 
     SystemSettingForm, 
     DeleteAccountForm, 
     APIKeyForm, 
-    CampusForm
+    CampusForm,
+    APIConnectionRequestForm
 )
 
 ADMIN_ROLES = ["UESO", "VP", "DIRECTOR"]
@@ -29,6 +30,16 @@ INTERNAL_ACCESS_ROLES = [
     "VP", 
     "DIRECTOR", 
     "UESO", 
+    "PROGRAM_HEAD", 
+    "DEAN", 
+    "COORDINATOR",
+    "FACULTY",
+    "IMPLEMENTER",
+    "CLIENT",
+]
+
+# Roles allowed to REQUEST keys (Excludes Admins)
+API_ACCESS_ROLES = [
     "PROGRAM_HEAD", 
     "DEAN", 
     "COORDINATOR",
@@ -54,6 +65,7 @@ def settings_view(request):
     user = request.user
     user_role = getattr(user, 'role', None)
     is_admin = user_role in ADMIN_ROLES
+    is_api_user = user_role in API_ACCESS_ROLES
     
     if user_role in ["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
         base_template = "base_internal.html"
@@ -63,24 +75,21 @@ def settings_view(request):
     api_unlocked = request.session.get('api_unlocked', False)
     current_fiscal_year = str(datetime.now().year)
     
+    # --- Budget Logic ---
     budget_pool_instance, created = BudgetPool.objects.get_or_create(
         fiscal_year=current_fiscal_year,
         defaults={'total_available': Decimal('0.00')}
     )
-   
     current_pool_total = budget_pool_instance.total_available
-    
     total_assigned_aggregate = CollegeBudget.objects.filter(
         fiscal_year=current_fiscal_year,
         status='ACTIVE'
     ).aggregate(total=Coalesce(Sum('total_assigned'), Value(Decimal('0.00'))))
-
     total_assigned_budget = total_assigned_aggregate['total']
-
     initial_unallocated_remaining = budget_pool_instance.total_available - total_assigned_budget
     is_save_disabled = initial_unallocated_remaining < 0
 
-
+    # --- General Settings Logic ---
     defaults = {
         'site_name': ('WBPMIS UESO', 'The public name of the website.'),
         'maintenance_mode': ('False', 'Set to "True" to show a maintenance page to non-admins.'),
@@ -90,6 +99,7 @@ def settings_view(request):
     
     settings_objects = SystemSetting.objects.all()
 
+    # --- POST Handling ---
     if request.method == 'POST':
         if 'unlock_api' in request.POST:
             password = request.POST.get('api_password')
@@ -116,9 +126,7 @@ def settings_view(request):
             budget_form = AnnualBudgetForm(request.POST) 
             if budget_form.is_valid():
                 new_total_str = budget_form.cleaned_data['annual_total']
-                
                 new_total = Decimal(new_total_str)
-                
                 is_changed = new_total != current_pool_total
                 
                 if new_total < total_assigned_budget:
@@ -128,17 +136,13 @@ def settings_view(request):
                     )
                 else:
                     is_creation = current_pool_total == Decimal('0.00')
-                    
                     if is_changed or is_creation:
                         budget_pool_instance.total_available = new_total
                         budget_pool_instance.save(update_fields=['total_available'])
-                        
                         _log_budget_pool_history(request.user, budget_pool_instance, new_total, is_creation)
-                        
                         messages.success(request, f'Annual Budget Pool for {budget_pool_instance.fiscal_year} updated successfully to ₱{new_total:,.2f}.')
                     else:
                         messages.info(request, "Annual Budget Pool value did not change.")
-
             else:
                 messages.error(request, 'Failed to update Annual Budget. Please check the form for errors.')
             return redirect('system_settings:settings')
@@ -155,9 +159,17 @@ def settings_view(request):
     campuses = Campus.objects.all().order_by('name')
     sdgs = SustainableDevelopmentGoal.objects.all().order_by('goal_number')
     
-    keys = []
-    if api_unlocked:
-        keys = APIKey.objects.all().order_by('-created')
+    # --- API Connection Logic ---
+    api_connections = []
+    
+    # Admins see ALL connections (if unlocked)
+    if is_admin:
+        if api_unlocked:
+            api_connections = APIConnection.objects.all().order_by('-created_at')
+    
+    # Regular API Users see ONLY THEIR OWN connections
+    elif is_api_user:
+        api_connections = APIConnection.objects.filter(requested_by=user).order_by('-created_at')
 
     context = {
         'base_template': base_template,
@@ -165,7 +177,7 @@ def settings_view(request):
         'colleges': colleges,
         'campuses': campuses,
         'sdgs': sdgs,
-        'keys': keys,
+        'api_connections': api_connections,
         'api_unlocked': api_unlocked,
         'settings_with_forms': settings_with_forms,
         'budget_pool': budget_pool_instance, 
@@ -178,6 +190,7 @@ def settings_view(request):
     return render(request, 'settings/settings.html', context)
 
 
+# ... [Existing College/Campus/SDG Views remain unchanged] ...
 @role_required(allowed_roles=ADMIN_ROLES, require_confirmed=True)
 def manage_colleges(request):
     return redirect('system_settings:settings')
@@ -192,12 +205,7 @@ def add_college(request):
             return redirect('system_settings:settings')
     else:
         form = CollegeForm()
-    
-    context = {
-        'base_template': 'base_internal.html',
-        'form': form,
-        'form_title': 'Add New College'
-    }
+    context = {'base_template': 'base_internal.html', 'form': form, 'form_title': 'Add New College'}
     return render(request, 'settings/form_template.html', context)
 
 @role_required(allowed_roles=ADMIN_ROLES, require_confirmed=True)
@@ -211,12 +219,7 @@ def edit_college(request, pk):
             return redirect('system_settings:settings')
     else:
         form = CollegeForm(instance=college)
-    
-    context = {
-        'base_template': 'base_internal.html',
-        'form': form,
-        'form_title': f'Edit College: {college.name}'
-    } 
+    context = {'base_template': 'base_internal.html', 'form': form, 'form_title': f'Edit College: {college.name}'} 
     return render(request, 'settings/form_template.html', context)
 
 @role_required(allowed_roles=ADMIN_ROLES, require_confirmed=True)
@@ -227,7 +230,6 @@ def delete_college(request, pk):
         college.delete()
         messages.success(request, f'College "{college_name}" deleted successfully.')
         return redirect('system_settings:settings')
-    
     context = {
         'base_template': 'base_internal.html',
         'object_to_delete': college,
@@ -250,12 +252,7 @@ def add_campus(request):
             return redirect('system_settings:settings')
     else:
         form = CampusForm()
-
-    context = {
-        'base_template': 'base_internal.html',
-        'form': form,
-        'form_title': 'Add New Campus'
-    }
+    context = {'base_template': 'base_internal.html', 'form': form, 'form_title': 'Add New Campus'}
     return render(request, 'settings/form_template.html', context)
 
 @role_required(allowed_roles=ADMIN_ROLES, require_confirmed=True)
@@ -269,12 +266,7 @@ def edit_campus(request, pk):
             return redirect('system_settings:settings')
     else:
         form = CampusForm(instance=campus)
-
-    context = {
-        'base_template': 'base_internal.html',
-        'form': form,
-        'form_title': f'Edit Campus: {campus.name}'
-    }
+    context = {'base_template': 'base_internal.html', 'form': form, 'form_title': f'Edit Campus: {campus.name}'}
     return render(request, 'settings/form_template.html', context)
 
 @role_required(allowed_roles=ADMIN_ROLES, require_confirmed=True)
@@ -285,7 +277,6 @@ def delete_campus(request, pk):
         campus.delete()
         messages.success(request, f'Campus "{campus_name}" deleted successfully.')
         return redirect('system_settings:settings')
-
     context = {
         'base_template': 'base_internal.html',
         'object_to_delete': campus,
@@ -308,12 +299,7 @@ def add_sdg(request):
             return redirect('system_settings:settings')
     else:
         form = SDGForm()
-    
-    context = {
-        'base_template': 'base_internal.html',
-        'form': form,
-        'form_title': 'Add New SDG'
-    }
+    context = {'base_template': 'base_internal.html', 'form': form, 'form_title': 'Add New SDG'}
     return render(request, 'settings/form_template.html', context)
 
 @role_required(allowed_roles=ADMIN_ROLES, require_confirmed=True)
@@ -327,12 +313,7 @@ def edit_sdg(request, pk):
             return redirect('system_settings:settings')
     else:
         form = SDGForm(instance=sdg)
-    
-    context = {
-        'base_template': 'base_internal.html',
-        'form': form,
-        'form_title': f'Edit SDG: {sdg.name}'
-    }
+    context = {'base_template': 'base_internal.html', 'form': form, 'form_title': f'Edit SDG: {sdg.name}'}
     return render(request, 'settings/form_template.html', context)
 
 @role_required(allowed_roles=ADMIN_ROLES, require_confirmed=True)
@@ -343,7 +324,6 @@ def delete_sdg(request, pk):
         sdg.delete()
         messages.success(request, f'SDG "{sdg_name}" deleted successfully.')
         return redirect('system_settings:settings')
-    
     context = {
         'base_template': 'base_internal.html',
         'object_to_delete': sdg,
@@ -368,62 +348,111 @@ def delete_account(request):
                 user.delete()
                 logout(request)
                 messages.success(request, f'Your account ({user_email}) has been permanently deleted.')
-              
                 return redirect('home') 
             else:
                 messages.error(request, 'Incorrect password. Account deletion failed.')
     else:
         form = DeleteAccountForm()
-        
-    context = {
-        'base_template': 'base_internal.html',
-        'form': form,
-    }
+    context = {'base_template': 'base_internal.html', 'form': form}
     return render(request, 'settings/delete_account.html', context)
 
-@role_required(allowed_roles=ADMIN_ROLES, require_confirmed=True)
-def manage_api_keys(request):
-    return redirect('system_settings:settings') 
+# ==========================================
+# New API Management Views
+# ==========================================
 
-@role_required(allowed_roles=ADMIN_ROLES, require_confirmed=True)
-def add_api_key(request):
+# Updated to ONLY allow API_ACCESS_ROLES (No Admins)
+@role_required(allowed_roles=API_ACCESS_ROLES, require_confirmed=True)
+def request_api_access(request):
+    """Allows a user to request a new API connection."""
     if request.method == 'POST':
-        form = APIKeyForm(request.POST)
+        form = APIConnectionRequestForm(request.POST)
         if form.is_valid():
-            name = form.cleaned_data['name']
-            api_key, key_string = APIKey.objects.create_key(name=name)
-            
-            context = {
-                'base_template': 'base_internal.html',
-                'api_key_name': api_key.name,
-                'api_key_string': key_string,
-            }
-            return render(request, 'settings/show_api_key.html', context)
+            connection = form.save(commit=False)
+            connection.requested_by = request.user
+            connection.status = 'PENDING'
+            connection.save()
+            messages.success(request, 'API Connection request submitted. Please wait for administrator approval.')
+            return redirect('system_settings:settings')
     else:
-        form = APIKeyForm()
+        form = APIConnectionRequestForm()
     
     context = {
         'base_template': 'base_internal.html',
         'form': form,
-        'form_title': 'Generate New API Key'
+        'form_title': 'Request API Access'
     }
     return render(request, 'settings/form_template.html', context)
 
 @role_required(allowed_roles=ADMIN_ROLES, require_confirmed=True)
-def revoke_api_key(request, pk):
-    api_key = get_object_or_404(APIKey, pk=pk)
+def approve_api_access(request, pk):
+    """Approves a pending request and generates the key."""
+    connection = get_object_or_404(APIConnection, pk=pk)
+    
     if request.method == 'POST':
-        api_key_name = api_key.name
-        api_key.revoked = True
-        api_key.save()
-        messages.success(request, f'The API key "{api_key_name}" has been revoked and can no longer be used.')
+        # Create the actual API Key
+        api_key, key_string = APIKey.objects.create_key(name=connection.name)
+        
+        # Link to connection and update status
+        connection.api_key = api_key
+        connection.status = 'ACTIVE'
+        connection.save()
+        
+        context = {
+            'base_template': 'base_internal.html',
+            'api_key_name': connection.name,
+            'api_key_string': key_string,
+        }
+        return render(request, 'settings/show_api_key.html', context)
+        
+    context = {
+        'base_template': 'base_internal.html',
+        'object_to_delete': connection, 
+        'confirm_message': f'Approve access for "{connection.name}"? This will generate a secure key.',
+        'confirm_button_text': 'Yes, Approve & Generate Key',
+        'cancel_url': reverse('system_settings:settings')
+    }
+    return render(request, 'settings/confirm_delete.html', context)
+
+@role_required(allowed_roles=ADMIN_ROLES, require_confirmed=True)
+def disconnect_api_access(request, pk):
+    """Pauses/Revokes access without deleting the connection record."""
+    connection = get_object_or_404(APIConnection, pk=pk)
+    
+    if request.method == 'POST':
+        if connection.api_key:
+            connection.api_key.revoked = True
+            connection.api_key.save()
+        
+        connection.status = 'DISCONNECTED'
+        connection.save()
+        messages.success(request, f'Connection "{connection.name}" has been disconnected.')
         return redirect('system_settings:settings')
 
     context = {
         'base_template': 'base_internal.html',
-        'object_to_delete': api_key,
-        'confirm_message': f'Are you sure you want to revoke this API key? It will immediately stop working.',
-        'confirm_button_text': 'Yes, Revoke Key',
+        'object_to_delete': connection,
+        'confirm_message': f'Are you sure you want to disconnect "{connection.name}"? The key will stop working immediately.',
+        'confirm_button_text': 'Yes, Disconnect',
+        'cancel_url': reverse('system_settings:settings')
+    }
+    return render(request, 'settings/confirm_delete.html', context)
+
+@role_required(allowed_roles=ADMIN_ROLES, require_confirmed=True)
+def delete_api_connection(request, pk):
+    """Permanently deletes the connection record."""
+    connection = get_object_or_404(APIConnection, pk=pk)
+    if request.method == 'POST':
+        name = connection.name
+        if connection.api_key:
+            connection.api_key.delete()
+        connection.delete()
+        messages.success(request, f'Connection "{name}" deleted permanently.')
+        return redirect('system_settings:settings')
+        
+    context = {
+        'base_template': 'base_internal.html',
+        'object_to_delete': connection,
+        'confirm_message': f'Are you sure you want to permanently delete the record for "{connection.name}"?',
         'cancel_url': reverse('system_settings:settings')
     }
     return render(request, 'settings/confirm_delete.html', context)
