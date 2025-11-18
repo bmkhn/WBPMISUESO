@@ -62,7 +62,6 @@ def create_user_log(user, action, target_user, details, is_notification=False):
 ####################################################################################################
 
 def login_view(request):
-    logout(request)
     if request.method == 'POST':
         form = LoginForm(request, data=request.POST)
         if form.is_valid():
@@ -97,32 +96,30 @@ def verify_login_2fa_view(request):
         user_id = request.session.get('pending_login_user_id')
         backend = request.session.get('pending_login_backend')
         remember_me = request.session.get('remember_me', False)
-        
+
         print(f"DEBUG - Code entered: {code_entered}, Code sent: {code_sent}, User ID: {user_id}, Remember: {remember_me}")
         
         if code_entered == code_sent and user_id:
             User = get_user_model()
             try:
                 user = User.objects.get(id=user_id)
-                
                 user.backend = backend
-                
-                request.session.pop('login_2fa_code', None)
-                request.session.pop('pending_login_user_id', None)
-                request.session.pop('pending_login_backend', None)
-                request.session.pop('remember_me', None)
-                
+
+                # IMPORTANT: Flush the temporary session BEFORE final login
+                request.session.flush()
+
+                # Log the user in (creates a new session)
                 login(request, user)
-                
+
+                # Ensure Django 5.x is satisfied (avoid SessionInterrupted)
+                request.session.cycle_key()
+
+                # Set session expiry on the NEW session
                 if remember_me:
-                    request.session.set_expiry(1209600)
-                    print("DEBUG - Session set to 2 weeks")
+                    request.session.set_expiry(1209600)  # 14 days
                 else:
-                    request.session.set_expiry(0)
-                    print("DEBUG - Session set to browser close")
-                
-                request.session.modified = True
-                
+                    request.session.set_expiry(0)  # browser session
+
                 return JsonResponse({'success': True})
             except User.DoesNotExist:
                 return JsonResponse({'success': False, 'error': 'User not found.'})
@@ -130,6 +127,7 @@ def verify_login_2fa_view(request):
             return JsonResponse({'success': False, 'error': 'Invalid verification code.'})
     
     return JsonResponse({'success': False, 'error': 'Invalid request method.'})
+
 
 
 def logout_view(request):
@@ -325,6 +323,8 @@ def send_verification_code_view(request):
             return JsonResponse({'success': False, 'error': 'Failed to send verification code.'})
 
     return JsonResponse({'success': False, 'error': 'Invalid request method.'})
+
+
 
 def registration_unified_view(request, role):
     role_upper = role.upper()
@@ -1002,17 +1002,22 @@ def update_profile_picture(request):
 User = get_user_model()
 
 def quick_login(request, role):
-    from django.contrib.auth import login
-    from django.contrib.auth import authenticate
+    from django.contrib.auth import login, logout, authenticate
 
+    # Build test credentials
     username = f"{role.lower()}@example.com"
     password = "test1234"
 
+    # Flush any existing session (avoids SessionInterrupted)
+    request.session.flush()
+
     user = authenticate(request, username=username, password=password)
-    if user:
-        login(request, user)
-        # Mark session as modified to ensure it's saved before redirect
-        request.session.modified = True
-        return redirect("role_redirect")
-    else:
-        return redirect("login") 
+    if not user:
+        return redirect("login")
+
+    login(request, user)
+
+    # Ensure Django creates a clean session key for this login
+    request.session.cycle_key()
+
+    return redirect("role_redirect")

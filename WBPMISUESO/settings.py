@@ -95,8 +95,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'system.users.middleware.SessionSecurityMiddleware',
-    'system.users.middleware.RoleBasedSessionMiddleware',
     'django.middleware.cache.FetchFromCacheMiddleware',
 ]
 
@@ -252,10 +250,10 @@ else:
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-SESSION_COOKIE_AGE = 86400
-SESSION_SAVE_EVERY_REQUEST = True
+SESSION_COOKIE_AGE = 86400          # 24 hours in seconds
+SESSION_SAVE_EVERY_REQUEST = False
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
-SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 SESSION_CACHE_ALIAS = 'default'
 
 
@@ -305,6 +303,7 @@ CACHES = {
         'LOCATION': f"{REDIS_URL}/1",
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            'KEY_PREFIX': 'session:',
         }
     }
 }
