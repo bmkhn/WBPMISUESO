@@ -86,16 +86,24 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'django.middleware.cache.UpdateCacheMiddleware',
+    # Security and Static Files
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
+
+    # Sessions, Common Middleware, CSRF
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
+
+    # Authentication and Messages
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+
+    # Custom Cache Middleware
+    'system.users.middleware.SmartCacheMiddleware',
+
+    # Clickjacking Protection
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'django.middleware.cache.FetchFromCacheMiddleware',
 ]
 
 REST_FRAMEWORK = {
@@ -244,20 +252,6 @@ else:
 
 
 # ============================================================
-# SITE CONFIGURATION
-# ============================================================
-
-
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-SESSION_COOKIE_AGE = 86400          # 24 hours in seconds
-SESSION_SAVE_EVERY_REQUEST = False
-SESSION_EXPIRE_AT_BROWSER_CLOSE = False
-SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
-SESSION_CACHE_ALIAS = 'default'
-
-
-# ============================================================
 # SECURITY SETTINGS
 # ============================================================
 
@@ -288,8 +282,8 @@ CSRF_COOKIE_NAME = 'csrftoken'
 # CACHE CONFIGURATION
 # ============================================================
 
-
-CACHE_MIDDLEWARE_SECONDS = 86400  # Cache duration in seconds (24 hours) --- VERY LONG BECAUSE OF SIGNALS
+USER_CACHE_SECONDS = 600            # 10 minutes for logged-in pages
+CACHE_MIDDLEWARE_SECONDS = 86400    # 24 hours for anonymous pages
 CACHE_MIDDLEWARE_KEY_PREFIX = ''
 
 if os.environ.get('DEPLOYED', 'False') == 'True':  
@@ -300,13 +294,30 @@ else:
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': f"{REDIS_URL}/1",
+        'LOCATION': f"{REDIS_URL}/1",  # General cache (for anonymous pages)
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        }
+    },
+    'sessions': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': f"{REDIS_URL}/2",  # Sessions only
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
             'KEY_PREFIX': 'session:',
         }
     }
 }
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+SESSION_CACHE_ALIAS = 'sessions'
+
+SESSION_COOKIE_AGE = 86400          # 24 hours
+SESSION_SAVE_EVERY_REQUEST = False
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+
 
 # ============================================================
 # CELERY CONFIGURATION
