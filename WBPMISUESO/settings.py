@@ -295,14 +295,14 @@ CACHE_MIDDLEWARE_SECONDS = 86400  # Cache duration in seconds (24 hours) --- VER
 CACHE_MIDDLEWARE_KEY_PREFIX = ''
 
 if os.environ.get('DEPLOYED', 'False') == 'True':  
-    REDIS_URL = os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379/')
+    REDIS_URL = os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379')
 else:
     REDIS_URL = 'redis://127.0.0.1:6379'
 
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': f"{REDIS_URL}/1",
+        'LOCATION': f"{REDIS_URL}1",
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         }
