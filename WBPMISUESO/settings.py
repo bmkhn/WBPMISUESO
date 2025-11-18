@@ -237,11 +237,13 @@ if os.environ.get('DEPLOYED', 'False') == 'True':
 # EMAIL CONFIGURATION
 # ============================================================
 
+
 if os.environ.get('DEPLOYED', 'False') == 'True':
     SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY', '')
     SENDGRID_FROM_EMAIL = os.environ.get('SENDGRID_FROM_EMAIL', 'noreply@example.com')
 else:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
 
 # ============================================================
 # SITE CONFIGURATION
@@ -253,7 +255,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 SESSION_COOKIE_AGE = 86400
 SESSION_SAVE_EVERY_REQUEST = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
-SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+SESSION_CACHE_ALIAS = 'default'
 
 
 # ============================================================
@@ -283,21 +286,61 @@ CSRF_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_NAME = 'csrftoken'
 
 
-
 # ============================================================
 # CACHE CONFIGURATION
 # ============================================================
 
+
 CACHE_MIDDLEWARE_SECONDS = 86400  # Cache duration in seconds (24 hours) --- VERY LONG BECAUSE OF SIGNALS
 CACHE_MIDDLEWARE_KEY_PREFIX = ''
 
+if os.environ.get('DEPLOYED', 'False') == 'True':  
+    REDIS_URL = os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379/')
+else:
+    REDIS_URL = 'redis://127.0.0.1:6379'
+
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'unique-snowflake',
-        'TIMEOUT': 300,
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': f"{REDIS_URL}/1",
         'OPTIONS': {
-            'MAX_ENTRIES': 1000
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         }
     }
+}
+
+# ============================================================
+# CELERY CONFIGURATION
+# ============================================================
+
+
+CELERY_BROKER_URL = f"{REDIS_URL}/0"
+CELERY_RESULT_BACKEND = f"{REDIS_URL}/0"
+
+
+CELERY_BEAT_SCHEDULE = {
+    'publish_announcements_every_minute': {
+        'task': 'system.scheduler.tasks.celery_publish_scheduled_announcements',
+        'schedule': 60.0,  # every minute
+    },
+    'clear_sessions_daily': {
+        'task': 'system.scheduler.tasks.celery_clear_expired_sessions',
+        'schedule': 24 * 60 * 60,  # every 24 hours
+    },
+    'update_event_statuses_daily': {
+        'task': 'system.scheduler.tasks.celery_update_event_statuses',
+        'schedule': 24 * 60 * 60,  # every 24 hours
+    },
+    'update_project_statuses_daily': {
+        'task': 'system.scheduler.tasks.celery_update_project_statuses',
+        'schedule': 24 * 60 * 60,  # every 24 hours
+    },
+    'update_user_expert_status_daily': {
+        'task': 'system.scheduler.tasks.celery_update_user_expert_status',
+        'schedule': 24 * 60 * 60,  # every 24 hours
+    },
+    'send_event_reminders_daily': {
+        'task': 'system.scheduler.tasks.celery_send_event_reminders',
+        'schedule': 24 * 60 * 60,  # every 24 hours
+    },
 }
