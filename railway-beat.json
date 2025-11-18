@@ -1,0 +1,6 @@
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "deploy": {
+    "startCommand": "celery -A WBPMISUESO beat --loglevel=info"
+  }
+}
