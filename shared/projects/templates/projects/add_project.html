@@ -272,6 +272,23 @@
     </div>
 </form>
 
+<!-- Confirmation Modal -->
+<div id="add-confirm-modal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0, 0, 0, 0.18);z-index:2000;align-items:center;justify-content:center;font-family:'Inter',sans-serif;">
+    <div style="background:#fff;padding:2.25rem 2.5rem 2rem 2.5rem;border-radius:16px;box-shadow:0 8px 32px rgba(49,130,206,0.13),0 2px 8px rgba(0,0,0,0.07);max-width:410px;width:95%;text-align:center;position:relative;">
+        <h3 style="margin-bottom:1.1rem;font-size:1.35rem;font-weight:600;color:#2B4360;letter-spacing:-0.5px;margin-top:0;">Confirm Project Creation</h3>
+        <div style="background:#FFF5F5;border-radius:8px;padding:0.75rem 1rem 0.75rem 1rem;color:#C53030;font-weight:500;margin-bottom:1.3rem;display:flex;align-items:center;justify-content:center;font-size:1rem;">
+            <i class="fa-solid fa-triangle-exclamation" style="margin-right:10px;font-size:1.2rem;color:#C53030;"></i>
+            <span style="text-align:center;"><strong>Warning:</strong> Adding a project will immediately reserve budget, notify relevant users, and cannot be undone.<br>Double-check all details before continuing.</span>
+        </div>
+        <div style="display:flex;gap:12px;justify-content:center;">
+            <button id="add-confirm-no" style="background:#EDF2F7;color:#2B4360;padding:0.6rem 1.5rem;border:none;border-radius:7px;box-shadow:0 1px 4px rgba(0,0,0,0.04);font-weight:500;font-size:1rem;cursor:pointer;transition:background 0.15s;">Cancel</button>
+            <button id="add-confirm-yes" style="background:#3182CE;color:#fff;padding:0.6rem 1.5rem;border:none;border-radius:7px;box-shadow:0 1px 4px rgba(49,130,206,0.09);font-weight:500;font-size:1rem;cursor:pointer;transition:background 0.15s;">Continue & Add Project</button>
+        </div>
+    </div>
+</div>
+
+
+
 <div id="custom-dropdown-container" class="custom-dropdown-container">
     <input type="text" id="custom-dropdown-filter" placeholder="Search..." autocomplete="off">
     <div id="custom-dropdown-options">
@@ -279,6 +296,9 @@
 </div>
 
 
+
+
+<!-- SVG Referencing Section  -->
 <svg style="display:none;" xmlns="http://www.w3.org/2000/svg">
 
     <symbol id="icon-add" viewBox="0 0 16 16" fill="currentColor">
@@ -293,7 +313,6 @@
         <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
         <path d="M12,11L8,15H16L12,11Z" />
     </symbol>
-
 </svg>
 
 
@@ -446,6 +465,11 @@
 
         // Unified error catcher for form submission
         var form = document.getElementById('addProjectForm');
+        var confirmModal = document.getElementById('add-confirm-modal');
+        var confirmYes = document.getElementById('add-confirm-yes');
+        var confirmNo = document.getElementById('add-confirm-no');
+        var pendingSubmitEvent = null;
+
         if (form) {
             form.addEventListener('submit', function(e) {
                 let valid = true;
@@ -632,6 +656,24 @@
                     if (firstError && typeof firstError.focus === 'function') firstError.focus();
                     return false;
                 }
+                // If valid, show confirmation modal instead of submitting
+                e.preventDefault();
+                confirmModal.style.display = 'flex';
+                pendingSubmitEvent = e;
+            });
+        }
+        if (confirmYes) {
+            confirmYes.addEventListener('click', function() {
+                confirmModal.style.display = 'none';
+                if (form) {
+                    form.submit();
+                }
+            });
+        }
+        if (confirmNo) {
+            confirmNo.addEventListener('click', function() {
+                confirmModal.style.display = 'none';
+                pendingSubmitEvent = null;
             });
         }
     });

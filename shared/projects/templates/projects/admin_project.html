@@ -147,7 +147,7 @@
                     <th>Start Date</th>
                     <th>Progress</th>
                     <th>Status</th>
-                    <th>Settings</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -488,24 +488,20 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <!-- Add Events Modal -->
-<div id="addEventsModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;">
-    <div style="background:white;padding:2rem 2.5rem;border-radius:16px;box-shadow:0 4px 32px rgba(0,0,0,0.25);max-width:500px;margin:auto;display:flex;flex-direction:column;">
-        <div style="font-size:1.5rem;font-weight:600;color:#00538E;margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem;">
-            <i class="fa-solid fa-calendar-days"></i>
+<div id="addEventsModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0, 0, 0, 0.18);z-index:9999;align-items:center;justify-content:center;font-family:'Inter',sans-serif;">
+    <div style="background:#fff;padding:2.25rem 2.5rem 2rem 2.5rem;border-radius:16px;box-shadow:0 8px 32px rgba(49,130,206,0.13),0 2px 8px rgba(0,0,0,0.07);max-width:410px;width:95%;text-align:center;display:flex;flex-direction:column;">
+        <div style="font-size:1.35rem;font-weight:600;color:#00538E;margin-bottom:1.1rem;display:flex;align-items:center;gap:0.7rem;letter-spacing:-0.5px;">
+            <i class="fa-solid fa-calendar-days" style="font-size:1.2rem;color:#3182CE;"></i>
             Set Up Project Events
         </div>
-        <div style="font-size:1rem;color:#444;margin-bottom:2rem;line-height:1.6;text-align:center;">
+        <div style="font-size:1rem;color:#444;margin-bottom:1.7rem;line-height:1.6;text-align:center;">
             You can now create activities for <span id="modalProjectTitle" style="font-weight:600;color:#00538E;"></span> to organize activities and schedule related submissions.<br>
-            You can always add activities later from the Project Details page, submissions are managed in the Submissions page.
+            You can always add activities later from the Project Details page; submissions are managed in the Submissions page.
         </div>
-        <div style="display:flex;gap:1rem;justify-content:center;">
-            <button id="skipEventsBtn" style="background:#e5e7eb;color:#374151;padding:0.75rem 1.5rem;border-radius:8px;font-size:1rem;font-weight:500;border:none;cursor:pointer;transition:all 0.2s;" 
-                onmouseover="this.style.background='#d1d5db'" onmouseout="this.style.background='#e5e7eb'">
-                Maybe Later
-            </button>
-            <button id="addEventsBtn" style="background:#00538E;color:white;padding:0.75rem 1.5rem;border-radius:8px;font-size:1rem;font-weight:500;border:none;cursor:pointer;transition:all 0.2s;"
-                onmouseover="this.style.background='#004070'" onmouseout="this.style.background='#00538E'">
-                <i class="fa-solid fa-plus"></i> Add Events
+        <div style="display:flex;gap:12px;justify-content:center;">
+            <button id="skipEventsBtn" style="background:#EDF2F7;color:#2B4360;padding:0.6rem 1.5rem;border:none;border-radius:7px;box-shadow:0 1px 4px rgba(0,0,0,0.04);font-weight:500;font-size:1rem;cursor:pointer;transition:background 0.15s;">Maybe Later</button>
+            <button id="addEventsBtn" style="background:#3182CE;color:#fff;padding:0.6rem 1.5rem;border:none;border-radius:7px;box-shadow:0 1px 4px rgba(49,130,206,0.09);font-weight:500;font-size:1rem;cursor:pointer;transition:background 0.15s;">
+                <i class="fa-solid fa-plus" style="margin-right:6px;"></i> Add Events
             </button>
         </div>
     </div>
