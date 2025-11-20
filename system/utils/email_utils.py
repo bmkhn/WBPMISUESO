@@ -42,12 +42,30 @@ def async_send_mail(subject, message, from_email=None, recipient_list=None,
         )
     """
     if from_email is None:
-        from_email = settings.SENDGRID_FROM_EMAIL
-    
+        from_email = getattr(settings, 'SENDGRID_FROM_EMAIL', 'noreply@example.com')
+
     if recipient_list is None:
         logger.error("async_send_mail called without recipient_list")
         return
-    
+
+    sendgrid_api_key = getattr(settings, 'SENDGRID_API_KEY', None)
+    use_sendgrid = sendgrid_api_key and from_email and hasattr(settings, 'SENDGRID_FROM_EMAIL')
+
+    if not use_sendgrid:
+        # Use Django's send_mail (console backend)
+        from django.core.mail import send_mail
+        send_mail(
+            subject,
+            message,
+            from_email,
+            recipient_list,
+            fail_silently=fail_silently,
+            html_message=html_message,
+            **kwargs
+        )
+        logger.info(f"Email sent via Django console backend to {recipient_list}: {subject}")
+        return
+
     def send_email():
         """Inner function to send email via SendGrid API in background thread."""
         try:
@@ -58,26 +76,19 @@ def async_send_mail(subject, message, from_email=None, recipient_list=None,
                 subject=subject,
                 plain_text_content=Content("text/plain", message)
             )
-            
             # Add HTML content if provided
             if html_message:
                 sg_message.add_content(Content("text/html", html_message))
-            
             # Send via SendGrid API
-            sg = SendGridAPIClient(settings.SENDGRID_API_KEY)
+            sg = SendGridAPIClient(sendgrid_api_key)
             response = sg.send(sg_message)
-            
             logger.info(f"Email sent successfully via SendGrid to {recipient_list}: {subject} (status: {response.status_code})")
         except Exception as e:
             logger.error(f"Failed to send email via SendGrid to {recipient_list}: {str(e)}")
             if not fail_silently:
-                # Re-raise in background thread (will be logged but won't crash request)
                 raise
-    
-    # Start background thread (daemon=True means thread dies when main program exits)
     thread = threading.Thread(target=send_email, daemon=True)
     thread.start()
-    
     logger.debug(f"Email queued for async SendGrid delivery to {recipient_list}: {subject}")
 
 

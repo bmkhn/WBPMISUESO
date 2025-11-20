@@ -1,101 +1,99 @@
-"""
-Custom middleware for session and security management
-"""
-from django.utils import timezone
-from django.contrib.auth import logout
-from django.shortcuts import redirect
-from datetime import timedelta
+from django.utils.cache import patch_cache_control
+from django.utils.deprecation import MiddlewareMixin
+from django.conf import settings
+from django.core.cache import caches
+from django.db.models.signals import post_save, post_delete
+from django.apps import apps
+from django.http import StreamingHttpResponse, FileResponse
+
+class SmartCacheMiddleware(MiddlewareMixin):
+    """
+    SmartCacheMiddleware
+
+    - Caches GET page responses for all users:
+        * Anonymous users: 24h cache (configurable)
+        * Logged-in users: per-user cache (configurable duration)
+    - Automatically invalidates all cached pages on any model change (post_save/post_delete).
+    - Skips caching for streaming and file responses (e.g., media/static files, BufferedReader/FileResponse), preventing serialization errors.
+    - Does not cache non-GET requests.
+    - For large systems, selective cache invalidation can be implemented for efficiency.
+    """
+
+    def __init__(self, get_response=None):
+        """
+        Initialize SmartCacheMiddleware, set cache, timeouts, and connect model signals for cache invalidation.
+        """
+        super().__init__(get_response)
+        self.cache = caches['default']
+        self.anonymous_timeout = getattr(settings, 'CACHE_MIDDLEWARE_SECONDS', 86400)
+        self.logged_in_timeout = getattr(settings, 'USER_CACHE_SECONDS', 600)
+        self._connect_signals()
 
 
-class SessionSecurityMiddleware:
-    """
-    Enhanced session security middleware
-    - Tracks last activity time
-    - Enforces absolute session timeout
-    - Detects suspicious session changes
-    """
-    
-    def __init__(self, get_response):
-        self.get_response = get_response
-        
-    def __call__(self, request):
-        # Skip processing for unauthenticated users
-        if not request.user.is_authenticated:
-            return self.get_response(request)
-        
-        # Get current time
-        now = timezone.now()
-        
-        # Check absolute session timeout (max 24 hours regardless of activity)
-        session_start = request.session.get('session_start_time')
-        if session_start:
-            session_start_dt = timezone.datetime.fromisoformat(session_start)
-            session_age = (now - session_start_dt).total_seconds()
-            
-            # Absolute timeout: 24 hours (86400 seconds)
-            if session_age > 86400:
-                logout(request)
-                return redirect('/login/?timeout=absolute')
-        else:
-            # First request in this session, record start time
-            request.session['session_start_time'] = now.isoformat()
-        
-        # Update last activity time
-        request.session['last_activity'] = now.isoformat()
-        
-        # Security: Detect if user's role or status changed
-        # (e.g., account was deactivated or role was modified by admin)
-        if request.user.is_authenticated:
-            cached_role = request.session.get('user_role')
-            cached_confirmed = request.session.get('user_confirmed')
-            
-            if cached_role is None:
-                # First time, cache the values
-                request.session['user_role'] = request.user.role
-                request.session['user_confirmed'] = request.user.is_confirmed
-            else:
-                # Check if user's permissions changed
-                if (cached_role != request.user.role or 
-                    cached_confirmed != request.user.is_confirmed or
-                    not request.user.is_active):
-                    # User's status changed - force re-login
-                    logout(request)
-                    return redirect('/login/?message=permissions_changed')
-        
-        response = self.get_response(request)
+    def _connect_signals(self):
+        """
+        Connect post_save and post_delete signals for all models to cache invalidation handler.
+        """
+        for model in apps.get_models():
+            post_save.connect(self._invalidate_cache, sender=model, dispatch_uid=f'invalidate_{model._meta.label}_save')
+            post_delete.connect(self._invalidate_cache, sender=model, dispatch_uid=f'invalidate_{model._meta.label}_delete')
+
+
+    def _invalidate_cache(self, sender, **kwargs):
+        """
+        Clears all cached pages for both anonymous and logged-in users.
+        For large systems, consider selective invalidation for efficiency.
+        """
+        keys = [key for key in self.cache.keys("anon:*")] + [key for key in self.cache.keys("user:*")]
+        for key in keys:
+            self.cache.delete(key)
+
+
+    def process_request(self, request):
+        """
+        Handles caching for GET requests only. Skips caching for non-GET requests.
+        Returns cached response if available, otherwise allows view to process.
+        """
+        if request.method != "GET":
+            request._cache_update_cache = False
+            return None
+
+        key = self._generate_cache_key(request)
+        response = self.cache.get(key)
+        if response:
+            timeout = self.anonymous_timeout if not request.user.is_authenticated else self.logged_in_timeout
+            patch_cache_control(response, max_age=timeout)
+            return response
+
+        request._cache_update_cache = True
+        return None
+
+
+    def process_response(self, request, response):
+        """
+        Caches GET responses unless they are streaming/file responses. 
+        Skips caching for media/static files and handles serialization errors gracefully.
+        """
+        if getattr(request, '_cache_update_cache', True) and request.method == "GET":
+            if isinstance(response, (StreamingHttpResponse, FileResponse)):
+                return response
+
+            key = self._generate_cache_key(request)
+            timeout = self.anonymous_timeout if not request.user.is_authenticated else self.logged_in_timeout
+            try:
+                self.cache.set(key, response, timeout=timeout)
+            except Exception:
+                pass
+
         return response
 
 
-class RoleBasedSessionMiddleware:
-    """
-    Adjust session timeout based on user role
-    - Higher privilege roles (VP, DIRECTOR) get longer sessions
-    - Regular users get standard timeouts
-    """
-    
-    def __init__(self, get_response):
-        self.get_response = get_response
-        
-    def __call__(self, request):
+    def _generate_cache_key(self, request):
+        """
+        Generate cache key for request:
+        - Anonymous: anon:<full_path>
+        - Logged-in: user:<user_id>:<full_path>
+        """
         if request.user.is_authenticated:
-            # Define role-based session timeouts (in seconds)
-            # All roles now have 24 hours (86400 seconds)
-            role_timeouts = {
-                'VP': 86400,        # 24 hours
-                'DIRECTOR': 86400,  # 24 hours
-                'UESO': 86400,      # 24 hours
-                'DEAN': 86400,      # 24 hours
-                'PROGRAM_HEAD': 86400,  # 24 hours
-                'COORDINATOR': 86400,   # 24 hours
-                'FACULTY': 86400,       # 24 hours
-                'IMPLEMENTER': 86400,   # 24 hours
-                'CLIENT': 86400,        # 24 hours
-            }
-            
-            user_role = getattr(request.user, 'role', None)
-            if user_role in role_timeouts:
-                # Set session age based on role
-                request.session.set_expiry(role_timeouts[user_role])
-        
-        response = self.get_response(request)
-        return response
+            return f"user:{request.user.id}:{request.get_full_path()}"
+        return f"anon:{request.get_full_path()}"

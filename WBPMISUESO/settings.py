@@ -87,18 +87,24 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'django.middleware.cache.UpdateCacheMiddleware',
+    # Security and Static Files
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
+
+    # Sessions, Common Middleware, CSRF
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
+
+    # Authentication and Messages
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+
+    # Custom Cache Middleware
+    'system.users.middleware.SmartCacheMiddleware',
+
+    # Clickjacking Protection
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'system.users.middleware.SessionSecurityMiddleware',
-    'system.users.middleware.RoleBasedSessionMiddleware',
-    'django.middleware.cache.FetchFromCacheMiddleware',
 ]
 
 REST_FRAMEWORK = {
@@ -247,23 +253,12 @@ if os.environ.get('DEPLOYED', 'False') == 'True':
 # EMAIL CONFIGURATION
 # ============================================================
 
+
 if os.environ.get('DEPLOYED', 'False') == 'True':
     SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY', '')
     SENDGRID_FROM_EMAIL = os.environ.get('SENDGRID_FROM_EMAIL', 'noreply@example.com')
 else:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-
-# ============================================================
-# SITE CONFIGURATION
-# ============================================================
-
-
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-SESSION_COOKIE_AGE = 86400
-SESSION_SAVE_EVERY_REQUEST = True
-SESSION_EXPIRE_AT_BROWSER_CLOSE = False
-SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
 
 # ============================================================
@@ -293,21 +288,79 @@ CSRF_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_NAME = 'csrftoken'
 
 
-
 # ============================================================
 # CACHE CONFIGURATION
 # ============================================================
 
-CACHE_MIDDLEWARE_SECONDS = 86400  # Cache duration in seconds (24 hours) --- VERY LONG BECAUSE OF SIGNALS
+USER_CACHE_SECONDS = 600            # 10 minutes for logged-in pages
+CACHE_MIDDLEWARE_SECONDS = 86400    # 24 hours for anonymous pages
 CACHE_MIDDLEWARE_KEY_PREFIX = ''
+
+if os.environ.get('DEPLOYED', 'False') == 'True':  
+    REDIS_URL = os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379')
+else:
+    REDIS_URL = 'redis://127.0.0.1:6379'
 
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'unique-snowflake',
-        'TIMEOUT': 300,
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': f"{REDIS_URL}/1",  # General cache (for anonymous pages)
         'OPTIONS': {
-            'MAX_ENTRIES': 1000
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        }
+    },
+    'sessions': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': f"{REDIS_URL}/2",  # Sessions only
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            'KEY_PREFIX': 'session:',
         }
     }
+}
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+SESSION_CACHE_ALIAS = 'sessions'
+
+SESSION_COOKIE_AGE = 86400          # 24 hours
+SESSION_SAVE_EVERY_REQUEST = False
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+
+
+# ============================================================
+# CELERY CONFIGURATION
+# ============================================================
+
+
+CELERY_BROKER_URL = f"{REDIS_URL}/0"
+CELERY_RESULT_BACKEND = f"{REDIS_URL}/0"
+
+
+CELERY_BEAT_SCHEDULE = {
+    'publish_announcements_every_minute': {
+        'task': 'system.scheduler.tasks.celery_publish_scheduled_announcements',
+        'schedule': 60.0,  # every minute
+    },
+    'clear_sessions_daily': {
+        'task': 'system.scheduler.tasks.celery_clear_expired_sessions',
+        'schedule': 24 * 60 * 60,  # every 24 hours
+    },
+    'update_event_statuses_daily': {
+        'task': 'system.scheduler.tasks.celery_update_event_statuses',
+        'schedule': 24 * 60 * 60,  # every 24 hours
+    },
+    'update_project_statuses_daily': {
+        'task': 'system.scheduler.tasks.celery_update_project_statuses',
+        'schedule': 24 * 60 * 60,  # every 24 hours
+    },
+    'update_user_expert_status_daily': {
+        'task': 'system.scheduler.tasks.celery_update_user_expert_status',
+        'schedule': 24 * 60 * 60,  # every 24 hours
+    },
+    'send_event_reminders_daily': {
+        'task': 'system.scheduler.tasks.celery_send_event_reminders',
+        'schedule': 24 * 60 * 60,  # every 24 hours
+    },
 }

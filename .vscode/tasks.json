@@ -1,0 +1,76 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Start Redis Server",
+      "type": "shell",
+      "command": "redis-server",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "presentation": {
+        "panel": "dedicated",
+        "group": "redis"
+      },
+      "problemMatcher": []
+    },
+
+    {
+      "label": "Start Celery Worker",
+      "type": "shell",
+      "command": "D:/WBPMISUESO/venv/Scripts/Activate.ps1; celery -A WBPMISUESO worker --pool=solo",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "presentation": {
+        "panel": "dedicated",
+        "group": "celery"
+      },
+      "problemMatcher": []
+    },
+
+    {
+      "label": "Start Celery Beat",
+      "type": "shell",
+      "command": "D:/WBPMISUESO/venv/Scripts/Activate.ps1; celery -A WBPMISUESO beat",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "presentation": {
+        "panel": "dedicated",
+        "group": "celery"
+      },
+      "problemMatcher": []
+    },
+    
+    {
+      "label": "Start Django Server",
+      "type": "shell",
+      "command": "D:/WBPMISUESO/venv/Scripts/Activate.ps1; python manage.py runserver",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "presentation": {
+        "panel": "dedicated",
+        "group": "django"
+      },
+      "problemMatcher": []
+    }
+    ,
+    {
+      "label": "Start All Services",
+      "dependsOn": [
+        "Start Redis Server",
+        "Start Celery Worker",
+        "Start Celery Beat",
+        "Start Django Server"
+      ],
+      "dependsOrder": "parallel",
+      "type": "shell",
+      "presentation": {
+        "panel": "dedicated"
+      },
+      "problemMatcher": []
+    }
+  ]
+}
