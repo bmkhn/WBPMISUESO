@@ -1,222 +1,241 @@
 import numpy as np
 import os
 from django.conf import settings
-from django.db.models import Avg, Count, Q
+from django.db.models import Q
 from sentence_transformers import SentenceTransformer, util
 from system.users.models import User
-from shared.projects.models import Project, ProjectEvaluation
+from shared.projects.models import Project
 
 
 class AITeamGenerator:
     """
-    AI-powered team generation using semantic similarity and user metrics.
+    AI-powered team generation using semantic similarity between:
+    - Degree
+    - Expertise
+    - Project Titles (softmax-based multi-title scoring)
     """
-    
-    # Weights for scoring - balanced approach with semantic priority
-    SEMANTIC_WEIGHT = 0.70  # Combined degree + expertise matching
-    RATING_WEIGHT = 0.15    # Past performance quality
-    AVAILABILITY_WEIGHT = 0.15  # Current workload
-    
-    # Minimum semantic similarity threshold (0-1 scale)
-    MIN_SEMANTIC_SCORE = 0.30  # Reject matches below 30% similarity
-    
-    # Model path
+
+    # Scoring Weights
+    DEGREE_WEIGHT = 0.25
+    EXPERTISE_WEIGHT = 0.35
+    PROJECT_WEIGHT = 0.40
+
+    # Minimum semantic similarity (0–1)
+    MIN_SEMANTIC_SCORE = 0.20
+
     MODEL_NAME = 'all-MiniLM-L6-v2'
     MODEL_CACHE_DIR = os.path.join(settings.BASE_DIR, 'internal', 'experts', 'ai_model')
-    
+
+
     def __init__(self):
-        """Initialize the sentence transformer model."""
         self.model = None
-    
+
+
+    # Load or get cached model
     def _load_model(self):
-        """Lazy load the model only when needed."""
         if self.model is None:
-            # Ensure cache directory exists
             os.makedirs(self.MODEL_CACHE_DIR, exist_ok=True)
             self.model = SentenceTransformer(self.MODEL_NAME, cache_folder=self.MODEL_CACHE_DIR)
         return self.model
     
-    def _normalize(self, values):
+
+    # Softmax function for multi-title scoring
+    def _softmax(self, x):
+        x = np.array(x)
+        exp = np.exp(x - np.max(x))
+        return exp / exp.sum()
+
+
+    # Cosine similarity between two embeddings
+    def _sim(self, emb1, emb2):
+        """Cosine similarity returning float."""
+        return float(util.cos_sim(emb1, emb2)[0][0])
+
+
+    # Score project titles with softmax-weighted similarity
+    def _score_project_titles(self, keyword_emb, project_titles, model):
         """
-        Normalize a list of values to 0-1 range.
-        If all values are the same, returns 0.5 for all (neutral).
+        Softmax-weighted similarity over multiple project titles.
         """
-        values = np.array(values, dtype=float)
-        min_val = np.min(values)
-        max_val = np.max(values)
-        
-        if max_val != min_val:
-            return (values - min_val) / (max_val - min_val)
-        # If all values are the same, return neutral score instead of 0
-        return np.full_like(values, 0.5)
-    
-    def _normalize_rating(self, avg_rating):
+        if not project_titles:
+            return 0.0
+
+        # Encode each title individually
+        title_embs = model.encode(project_titles, convert_to_tensor=True)
+
+        # Compute similarity for each title
+        sims = [
+            float(util.cos_sim(keyword_emb, t_emb)[0][0])
+            for t_emb in title_embs
+        ]
+
+        # Softmax weights
+        weights = self._softmax(sims)
+
+        # Weighted score
+        final_score = float(np.sum(np.array(sims) * weights))
+
+        return final_score
+
+
+    # Generate team method
+    def generate_team(self, keywords, include_in_progress=False, campus_filter=None, college_filter=None, num_participants=5):
         """
-        Convert average rating to 0-1 scale.
-        Rating is 1-5, so: (rating - 1) / 4
-        5.0 rating = 1.0 (best)
-        3.0 rating = 0.5 (neutral)
-        1.0 rating = 0.0 (worst)
+        Generate team based on degree, expertise, and project titles.
         """
-        return (avg_rating - 1.0) / 4.0
-    
-    def _calculate_availability_score(self, total_projects, ongoing_projects):
-        """
-        Calculate availability score based on workload.
-        
-        Logic:
-        - If user has 0 projects: 1.0 (fully available, but might lack experience)
-        - If user has projects but none ongoing: 0.9 (good availability)
-        - For each ongoing project, reduce availability
-        
-        Formula: max(0, 1.0 - (ongoing / max(total, 1)) * 0.5)
-        
-        Examples:
-        - 0 ongoing out of 5 total: 1.0 (fully available)
-        - 1 ongoing out of 5 total: 0.9 (very available)
-        - 3 ongoing out of 5 total: 0.7 (moderately available)
-        - 5 ongoing out of 5 total: 0.5 (busy, but still available)
-        """
-        if total_projects == 0:
-            return 1.0
-        
-        # Calculate workload ratio
-        workload_ratio = ongoing_projects / max(total_projects, 1)
-        
-        # Reduce availability based on workload (max reduction is 0.5, so min score is 0.5)
-        availability = max(0.5, 1.0 - (workload_ratio * 0.5))
-        
-        return availability
-    
-    def generate_team(self, keywords, campus_filter=None, college_filter=None, num_participants=5):
-        """
-        Generate optimal team based on keywords and filters.
-        
-        Args:
-            keywords (str): Keywords to match against degree and expertise
-            campus_filter (str): Campus code to filter by (optional)
-            college_filter (int): College ID to filter by (optional)
-            num_participants (int): Number of team members to return
-            
-        Returns:
-            list: List of dictionaries containing user data and scores
-        """
-        # Load model
         model = self._load_model()
-        
-        # Fetch expert users - must be is_expert=True, have at least 1 completed project,
-        # and have an eligible role (FACULTY, PROGRAM_HEAD, DEAN, COORDINATOR, DIRECTOR, VP)
+        keyword_emb = model.encode(keywords, convert_to_tensor=True)
+
+        # ============================================================================
+        # 1. Fetch Expert Users - must be is_expert=True and have an eligible role
+        # ============================================================================
+
         eligible_roles = ['FACULTY', 'PROGRAM_HEAD', 'DEAN', 'COORDINATOR', 'DIRECTOR', 'VP']
+
         users = User.objects.filter(
             is_expert=True,
             role__in=eligible_roles
         )
-        
-        # Apply filters (filter by college's campus since user.campus is derived)
+
         if campus_filter:
             try:
                 campus_id = int(campus_filter)
                 users = users.filter(college__campus_id=campus_id)
-            except (ValueError, TypeError):
-                pass  # Invalid campus filter, ignore it
+            except Exception:
+                pass
+
         if college_filter:
             users = users.filter(college_id=college_filter)
-        
-        if not users.exists():
-            return []
-        
-        # Prepare data
-        user_data = []
+
+
+        # ============================================================================
+        # 2. Pre-fetch Projects for Users
+        # ============================================================================
+
+        project_map = {}
+
+        all_projects = Project.objects.filter(
+            Q(project_leader__in=users) | Q(providers__in=users)
+        ).distinct()
+
+
+        for p in all_projects.select_related("project_leader").prefetch_related("providers"):
+            # Leader
+            if p.project_leader_id:
+                project_map.setdefault(p.project_leader_id, []).append(p)
+
+            # Providers
+            for provider in p.providers.all():
+                project_map.setdefault(provider.id, []).append(p)
+
+
+        # ============================================================================
+        # 3. Process Each User
+        # ============================================================================
+
+        results = []
+
         for user in users:
-            # Get projects where user is leader or provider
-            user_projects = Project.objects.filter(
-                Q(project_leader=user) | Q(providers=user)
-            ).distinct()
+            user_projects = project_map.get(user.id, [])
+
+            # Filter: include users with ongoing projects?
+            if not include_in_progress:
+                # Strictly exclude users with any in-progress projects
+                if any(p.status == "IN_PROGRESS" or p.status == "NOT_STARTED" for p in user_projects):
+                    continue
+                user_projects = [p for p in user_projects if p.status == "COMPLETED"]
+
+            # User must still have at least 1 project
+            if len(user_projects) == 0:
+                continue
+
+            # Gather data
+            degree_text = user.degree or ""
+            expertise_text = user.expertise or ""
+            project_titles = [p.title for p in user_projects if p.title]
+
+            # Encode main fields
+            degree_emb = model.encode(degree_text, convert_to_tensor=True)
+            expertise_emb = model.encode(expertise_text, convert_to_tensor=True)
+
+            # ========================================================================
+            # 4. Similarity Scoring
+            # ========================================================================
+
+            degree_score = self._sim(keyword_emb, degree_emb)
+            expertise_score = self._sim(keyword_emb, expertise_emb)
+            project_score = self._score_project_titles(keyword_emb, project_titles, model)
+
+            # Reject if ALL signals are too weak
+            if max(degree_score, expertise_score, project_score) < self.MIN_SEMANTIC_SCORE:
+                continue
+
+            final_score = (
+                degree_score * self.DEGREE_WEIGHT +
+                expertise_score * self.EXPERTISE_WEIGHT +
+                project_score * self.PROJECT_WEIGHT
+            )
+
+            # Calculate per-project relevance scores
+            project_details = []
+            for p in user_projects:
+                if not p.title:
+                    continue
+                p_emb = model.encode(p.title, convert_to_tensor=True)
+                p_score = self._sim(keyword_emb, p_emb)
+                project_details.append({
+                    "id": p.id,
+                    "title": p.title,
+                    "status": p.status,
+                    "start_date": p.start_date.strftime("%Y-%m-%d") if p.start_date else None,
+                    "relevance_score": p_score,
+                    "is_relevant": p_score >= self.MIN_SEMANTIC_SCORE
+                })
             
-            # Count completed projects - user must have at least 1
-            completed_projects = user_projects.filter(status='COMPLETED').count()
-            if completed_projects == 0:
-                continue  # Skip users without any completed projects
-            
-            # Count total projects and ongoing projects
-            total_projects = user_projects.count()
-            ongoing_projects = user_projects.filter(
-                status__in=['NOT_STARTED', 'IN_PROGRESS']
-            ).count()
-            
-            # Get average rating from project evaluations
-            # Get all projects this user is involved in
-            project_ids = user_projects.values_list('id', flat=True)
-            avg_rating = ProjectEvaluation.objects.filter(
-                project_id__in=project_ids
-            ).aggregate(Avg('rating'))['rating__avg'] or 0
-            
-            user_data.append({
-                'id': user.id,
-                'user': user,
-                'name': user.get_full_name(),
-                'campus': user.get_campus_display() if user.campus else '',
-                'college': user.college.name if user.college else '',
-                'degree': user.degree or '',
-                'expertise': user.expertise or '',
-                'total_projects': total_projects,
-                'ongoing_projects': ongoing_projects,
-                'avg_rating': avg_rating,
+            # Sort projects by relevance score (highest first)
+            project_details.sort(key=lambda x: x["relevance_score"], reverse=True)
+
+            results.append({
+                "id": user.id,
+                "name": user.get_full_name(),
+                "user": user,
+                "degree": user.degree,
+                "expertise": user.expertise,
+                "project_titles": project_titles,
+                "degree_score": degree_score,
+                "expertise_score": expertise_score,
+                "project_title_score": project_score,
+                "final_score": final_score,
+
+                # Additional Information
+                "campus": user.college.campus.name if getattr(user, 'college', None) and getattr(user.college, 'campus', None) and getattr(user.college.campus, 'name', None) else None,
+                "college": user.college.name if getattr(user, 'college', None) and getattr(user.college, 'name', None) else None,
+                "total_projects": len(user_projects),
+                "ongoing_projects": len([p for p in user_projects if p.status == "IN_PROGRESS"]),
+                "projects": project_details,
+                # DEBUG: Weighted scores for inspection
+                "_debug_weighted_scores": {
+                    "degree_score": degree_score,
+                    "expertise_score": expertise_score,
+                    "project_title_score": project_score,
+                    "final_score": final_score,
+                    "weights": {
+                        "degree": self.DEGREE_WEIGHT,
+                        "expertise": self.EXPERTISE_WEIGHT,
+                        "project": self.PROJECT_WEIGHT
+                    }
+                },
             })
-        
-        if not user_data:
-            return []
-        
-        # Compute semantic similarity
-        keyword_embedding = model.encode(keywords, convert_to_tensor=True)
-        
-        # Combine degree and expertise for better semantic matching
-        combined_texts = [
-            f"{u['degree']} {u['expertise']}" for u in user_data
-        ]
-        
-        combined_embeddings = model.encode(combined_texts, convert_to_tensor=True)
-        semantic_scores = util.cos_sim(keyword_embedding, combined_embeddings)[0].cpu().numpy()
-        
-        # Filter out users below minimum semantic threshold
-        filtered_data = []
-        for i, user in enumerate(user_data):
-            if semantic_scores[i] >= self.MIN_SEMANTIC_SCORE:
-                user['semantic_score'] = float(semantic_scores[i])
-                filtered_data.append(user)
-        
-        if not filtered_data:
-            return []
-        
-        user_data = filtered_data
-        
-        # Calculate rating scores (0-1 scale where 1 is best)
-        for user in user_data:
-            user['normalized_rating'] = self._normalize_rating(user['avg_rating'])
-            user['availability_score'] = self._calculate_availability_score(
-                user['total_projects'], 
-                user['ongoing_projects']
-            )
-        
-        # Compute final scores
-        for user in user_data:
-            user['final_score'] = (
-                user['semantic_score'] * self.SEMANTIC_WEIGHT +
-                user['normalized_rating'] * self.RATING_WEIGHT +
-                user['availability_score'] * self.AVAILABILITY_WEIGHT
-            )
-        
-        # Sort by final score and return top N
-        user_data.sort(key=lambda x: x['final_score'], reverse=True)
-        
-        return user_data[:num_participants]
+
+        # Sort and return top N
+        results.sort(key=lambda x: x["final_score"], reverse=True)
+        return results[:num_participants]
 
 
-# Singleton instance
+# Singleton Instance
 _generator = None
 
 def get_team_generator():
-    """Get or create the team generator singleton."""
     global _generator
     if _generator is None:
         _generator = AITeamGenerator()

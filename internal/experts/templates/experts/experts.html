@@ -11,10 +11,9 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
 <link href="{% static 'internal/experts/styles.css' %}" rel="stylesheet">
 </head> 
+
 <body>
 	<div class="main-container">
-
-		<!-- Search + Form Controls -->
 
         <!-- Search Bar & Filter (3x2 Grid) -->
         <div class="search-container" style="box-shadow: none;">
@@ -98,15 +97,19 @@
 			<div class="college-logo" style="background:none;"></div>
 			{% endif %}
 
-		<img src="{{ expert.profile_picture_or_initial }}" class="profile-icon" alt="{{ expert.get_full_name }}">
-		<div class="expert-name">{{ expert.last_name }}, {{ expert.given_name }}{% if expert.middle_initial %} {{ expert.middle_initial }}.{% endif %}{% if expert.suffix %} {{ expert.suffix }}{% endif %}</div>
-		<div class="expert-degree">{{ expert.degree|default:"No Degree Listed" }}</div>
-		<div class="expert-projects">Projects: {{ expert.total_completed }}</div>
-	</a>
-	{% empty %}
-	<div style="grid-column: 1 / -1; text-align:center; padding:40px; color:#666;">No experts found.</div>
-	{% endfor %}
-	</div>		<!-- Pagination for Grid View -->
+			<img src="{{ expert.profile_picture_or_initial }}" class="profile-icon" alt="{{ expert.get_full_name }}">
+			<div class="expert-name">{{ expert.last_name }}, {{ expert.given_name }}{% if expert.middle_initial %} {{ expert.middle_initial }}.{% endif %}{% if expert.suffix %} {{ expert.suffix }}{% endif %}</div>
+			<div class="expert-degree">{{ expert.degree|default:"No Degree Listed" }}</div>
+			<div class="expert-projects">Projects: {{ expert.total_completed }}</div>
+		</a>
+
+		{% empty %}
+		<div style="grid-column: 1 / -1; text-align:center; padding:40px; color:#666;">No experts found.</div>
+		{% endfor %}
+
+		</div>
+		
+		<!-- Pagination for Grid View -->
 		<div class="pagination-container" id="gridPagination">
 			{% if page_obj.has_previous %}
 				<a class="pagination-button" href="?{% if querystring %}{{ querystring }}&{% endif %}page=1">First</a>
@@ -186,13 +189,6 @@
 			{% endif %}
 		</div>
 
-		<!-- Pagination -->
-		<div class="pagination hidden">
-			<button>1</button>
-			<button>2</button>
-			<button>3</button>
-		</div>
-
 	</div>
 
 	<!-- Modal Overlay -->
@@ -235,12 +231,73 @@
 					</div>
 				</div>
 
-				<div class="form-group">
-					<label for="num_participants">Number of Participants <span class="required">*</span></label>
-					<input type="number" id="num_participants" name="num_participants" min="1" max="20" value="5" required>
-				</div>
+			<div class="form-group">
+				<label for="num_participants">Number of Participants <span class="required">*</span></label>
+				<input type="number" id="num_participants" name="num_participants" min="1" max="20" value="5" required>
+			</div>
 
-				<button type="submit" class="generate-team-btn" id="submitBtn">Generate Team</button>
+			<div class="form-group" style="display:flex;align-items:center;justify-content:space-between;margin-top:1.5rem;">
+				<div style="flex:1;text-align:right;margin-right:10px;display:flex;align-items:center;justify-content:flex-end;gap:8px;">
+					<label for="include_in_progress" style="cursor:pointer;">Include experts with in-progress projects</label>
+					<span class="info-tooltip" style="position:relative;display:inline-block;margin-bottom:8px;">
+						<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-info-circle" viewBox="0 0 16 16" style="vertical-align:middle;cursor:pointer;">
+							<path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+							<path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
+						</svg>
+						<span class="tooltip-text" style="visibility:hidden;opacity:0;transition:opacity 0.2s;position:absolute;bottom:125%;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:8px 12px;border-radius:6px;font-size:0.95rem;white-space:nowrap;z-index:10;box-shadow:0 2px 8px rgba(0,0,0,0.12);">
+							When enabled, experts with in-progress projects will be included and their in-progress projects will affect the results.
+						</span>
+					</span>
+				</div>
+				<label class="toggle-switch">
+					<input type="checkbox" id="include_in_progress" name="include_in_progress">
+					<span class="toggle-slider"></span>
+				</label>
+			</div>
+
+			<style>
+				.toggle-switch {
+					position: relative;
+					display: inline-block;
+					width: 48px;
+					height: 26px;
+				}
+				.toggle-switch input {
+					opacity: 0;
+					width: 0;
+					height: 0;
+				}
+				.toggle-slider {
+					position: absolute;
+					cursor: pointer;
+					top: 0;
+					left: 0;
+					right: 0;
+					bottom: 0;
+					background-color: #ccc;
+					transition: 0.3s;
+					border-radius: 26px;
+				}
+				.toggle-slider:before {
+					position: absolute;
+					content: "";
+					height: 20px;
+					width: 20px;
+					left: 3px;
+					bottom: 3px;
+					background-color: white;
+					transition: 0.3s;
+					border-radius: 50%;
+				}
+				.toggle-switch input:checked + .toggle-slider {
+					background-color: #245F3E;
+				}
+				.toggle-switch input:checked + .toggle-slider:before {
+					transform: translateX(22px);
+				}
+			</style>
+
+			<button type="submit" class="generate-team-btn" id="submitBtn">Generate Team</button>
 			</form>
 
 			<div class="loading-spinner" id="loadingSpinner">
@@ -271,7 +328,7 @@
 				<div class="team-members-list" id="teamMembersList"></div>
 				
 				<div class="details-panel-placeholder" id="detailsPlaceholder">
-					<i class="fa-solid fa-arrow-left"></i> Select a team member to view details
+					Select a team member to view details
 				</div>
 				
 				<div class="details-panel" id="detailsPanel"></div>
@@ -279,8 +336,8 @@
 		</div>
 	</div>
 
-<!-- SVG Sprite Section -->
 
+<!-- SVG Sprite Section -->
 <svg style="display:none;">
 
 	<!-- Search -->
@@ -328,8 +385,30 @@
 	 
 </svg>
 
-<script>
 
+<script>
+	// Info tooltip logic
+	document.addEventListener('DOMContentLoaded', function() {
+		document.querySelectorAll('.info-tooltip').forEach(function(tooltip) {
+			const tip = tooltip.querySelector('.tooltip-text');
+			tooltip.addEventListener('mouseenter', function() {
+				tip.style.visibility = 'visible';
+				tip.style.opacity = '1';
+			});
+			tooltip.addEventListener('mouseleave', function() {
+				tip.style.visibility = 'hidden';
+				tip.style.opacity = '0';
+			});
+			tooltip.addEventListener('focusin', function() {
+				tip.style.visibility = 'visible';
+				tip.style.opacity = '1';
+			});
+			tooltip.addEventListener('focusout', function() {
+				tip.style.visibility = 'hidden';
+				tip.style.opacity = '0';
+			});
+		});
+	});
     // Filter dropdown logic
     const filterBtn = document.getElementById('filterBtn');
     const filterDropdown = document.getElementById('filterDropdown');
@@ -403,7 +482,6 @@
             listIconUse.setAttribute('href', '#icon-list-active');
         }
     }
-
 
 	function reloadWithView(viewType) {
 		const url = new URL(window.location);
@@ -541,11 +619,13 @@
 
 		// Get form data
 		const keywords = document.getElementById('keywords').value;
+		const includeInProgress = document.getElementById('include_in_progress').checked;
 		const formData = {
 			keywords: keywords,
 			campus: document.getElementById('campus').value,
 			college: document.getElementById('college').value,
-			num_participants: document.getElementById('num_participants').value
+			num_participants: parseInt(document.getElementById('num_participants').value),
+			include_in_progress: includeInProgress
 		};
 
 		// Show loading
@@ -631,14 +711,16 @@
 				</div>
 				<div class="member-info">
 					<div class="member-name">${member.name}</div>
-
+					<div class="member-score" style="font-size:0.95rem;color:#245F3E;margin-top:2px;">Match: ${(member.final_score * 100).toFixed(1)}%</div>
+					<div class="debug-scores" style="font-size:0.85rem;color:#888;margin-top:2px;">
+						<li style="margin-left:25px;">Degree: ${(member.degree_score * 100).toFixed(1)}%</li>
+						<li style="margin-left:25px;">Expertise: ${(member.expertise_score * 100).toFixed(1)}%</li>
+						<li style="margin-left:25px;">Projects: ${(member.project_title_score * 100).toFixed(1)}%</li>
+					</div>
 				</div>
 				<span class="leader-badge">👑 Leader</span>
 			`;
 
-			// THIS IS COMMENTED OUT FOR NOW - CAN BE ADDED BACK LATER IF DETAILED SCORES ARE NEEDED
-					// <div class="member-score">Match: ${(member.final_score * 100).toFixed(1)}%</div>
-			
 			// Checkbox click handler (only if checkbox exists)
 			if (canCreateProjects) {
 				const checkbox = memberItem.querySelector('.member-checkbox');
@@ -745,23 +827,60 @@
 		// Get initials for avatar
 		const initials = member.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
 		
-		// Calculate weighted scores (capped at 0 minimum for display)
-		const semanticWeighted = Math.max(0, member.semantic_score * 0.70);
-		const ratingWeighted = Math.max(0, member.normalized_rating * 0.15);
-		const availabilityWeighted = Math.max(0, member.availability_score * 0.15);
+		// Separate relevant and irrelevant projects
+		const projects = member.projects || [];
+		const relevantProjects = projects.filter(p => p.is_relevant);
+		const irrelevantProjects = projects.filter(p => !p.is_relevant);
 		
-		// Calculate bar widths (0-100%, but never below 0)
-		const semanticBarWidth = Math.max(0, Math.min(100, member.semantic_score * 100));
-		const ratingBarWidth = Math.max(0, Math.min(100, member.normalized_rating * 100));
-		const availabilityBarWidth = Math.max(0, Math.min(100, member.availability_score * 100));
-		const finalBarWidth = Math.max(0, Math.min(100, member.final_score * 100));
+		// Build project list HTML
+		let projectsHTML = '';
+		if (projects.length > 0) {
+			projectsHTML = `
+				<div class="projects-section" style="margin-top:1.5rem;">
+					<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+						<div style="font-weight:600;font-size:1rem;color:#2B4360;">Projects</div>
+						${irrelevantProjects.length > 0 ? `
+							<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.9rem;color:#666;">
+								<input type="checkbox" id="showIrrelevantProjects" style="width:16px;height:16px;cursor:pointer;">
+								Show less relevant projects (${irrelevantProjects.length})
+							</label>
+						` : ''}
+					</div>
+					<div id="relevantProjectsList" style="display:flex;flex-direction:column;gap:10px;max-height:300px;overflow-y:auto;">
+						${relevantProjects.length > 0 ?
+							relevantProjects.map(p => `
+								<div class="project-item" style="padding:10px;background:#F7FAFC;border-radius:6px;border-left:3px solid #245F3E;">
+									<a href="/projects/${p.id}/overview/" class="project-link" style="font-weight:500;font-size:0.95rem;color:#245F3E;margin-bottom:4px;cursor:pointer;">${p.title}</a>
+									<div style="display:flex;gap:12px;font-size:0.85rem;color:#666;">
+										<span><i class="fa-solid fa-calendar"></i> ${p.start_date || 'N/A'}</span>
+										<span style="padding:2px 8px;background:#E6F4EA;color:#245F3E;border-radius:4px;font-size:0.8rem;">${p.status.replace(/_/g, ' ')}</span>
+									</div>
+								</div>
+							`).join('')
+							: `<div id='noRelevantProjectsMsg' style='color:#888;font-size:0.95rem;padding:10px 0;text-align:center;'>No relevant projects found.</div>`
+						}
+					</div>
+					<div id="irrelevantProjectsList" style="display:none;flex-direction:column;gap:10px;margin-top:10px;max-height:200px;overflow-y:auto;">
+						${irrelevantProjects.map(p => `
+							<div class="project-item" style="padding:10px;background:#F7F7F7;border-radius:6px;border-left:3px solid #ccc;">
+								<a href="/projects/${p.id}/overview/" class="project-link" style="font-weight:500;font-size:0.95rem;color:#666;margin-bottom:4px;cursor:pointer;">${p.title}</a>
+								<div style="display:flex;gap:12px;font-size:0.85rem;color:#999;">
+									<span><i class="fa-solid fa-calendar"></i> ${p.start_date || 'N/A'}</span>
+									<span style="padding:2px 8px;background:#F0F0F0;color:#666;border-radius:4px;font-size:0.8rem;">${p.status.replace(/_/g, ' ')}</span>
+								</div>
+							</div>
+						`).join('')}
+					</div>
+				</div>
+			`;
+		}
 		
 		detailsPanel.innerHTML = `
 			<div class="panel-header">
-				<div class="panel-name">${member.name}</div>
-
+				<a href="/experts/profile/${member.id}/" class="expert-profile-link" style="font-size:1.2rem;font-weight:600;color:#245F3E;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">
+					<i class="fa-solid fa-user" style="font-size:1rem;"></i> ${member.name}
+				</a>
 			</div>
-			
 			<div class="details-grid">
 				<div style="display: flex;">
 					<div class="detail-item" style="flex:1;">
@@ -773,94 +892,38 @@
 						<span class="detail-value">${member.college || 'N/A'}</span>
 					</div>
 				</div>
-
-				<div class="detail-item">
-					<span class="detail-label">Degree</span>
-					<span class="detail-value">${member.degree || 'N/A'}</span>
-				</div>
-				<div class="detail-item">
-					<span class="detail-label">Expertise</span>
-					<span class="detail-value">${member.expertise || 'N/A'}</span>
-				</div>
 				<div style="display: flex;">
 					<div class="detail-item" style="flex:1;">
-						<span class="detail-label">Total Projects</span>
-						<span class="detail-value">${member.total_projects}</span>
+						<span class="detail-label">Degree</span>
+						<span class="detail-value">${member.degree || 'N/A'}</span>
 					</div>
 					<div class="detail-item" style="flex:1;">
-						<span class="detail-label">Ongoing Projects</span>
-						<span class="detail-value">${member.ongoing_projects}</span>
+						<span class="detail-label">Expertise</span>
+						<span class="detail-value">${member.expertise || 'N/A'}</span>
 					</div>
 				</div>
+				<div class="detail-item">
+					<span class="detail-label">Total Projects</span>
+					<span class="detail-value">${member.total_projects}</span>
+				</div>
 			</div>
+			${projectsHTML}
 		`;
+		
+		// Add event listener for show irrelevant projects checkbox
+		const showIrrelevantCheckbox = document.getElementById('showIrrelevantProjects');
+		const irrelevantProjectsList = document.getElementById('irrelevantProjectsList');
+		const noRelevantProjectsMsg = document.getElementById('noRelevantProjectsMsg');
+		if (showIrrelevantCheckbox && irrelevantProjectsList) {
+			showIrrelevantCheckbox.addEventListener('change', function() {
+				irrelevantProjectsList.style.display = this.checked ? 'flex' : 'none';
+				// Hide 'No relevant projects found.' if showing irrelevant projects and there are none
+				if (noRelevantProjectsMsg) {
+					noRelevantProjectsMsg.style.display = (this.checked && irrelevantProjectsList.children.length > 0) ? 'none' : '';
+				}
+			});
+		}
 	}
-
-	// THIS IS IN COMMENTED OUT FOR NOW - CAN BE ADDED BACK LATER IF DETAILED SCORES ARE NEEDED
-
-				// <div class="panel-score">Final Score: ${member.final_score.toFixed(3)}</div>
-
-				// <div class="detail-item">
-				// 	<span class="detail-label">Average Evaluation Score</span>
-				// 	<span class="detail-value">${member.avg_rating % 1 === 0 ? member.avg_rating.toFixed(0) : member.avg_rating.toFixed(1)}/5</span>
-				// </div>
-
-
-			// <div class="scores-section">
-			// 	<div class="scores-title">Scoring Breakdown</div>
-				
-			// 	<div class="score-item">
-			// 		<div class="score-header">
-			// 			<span class="score-label">Semantic Match (70%)</span>
-			// 			<div class="score-values">
-			// 				<span class="score-raw">${member.semantic_score.toFixed(3)}</span> <i class="fa-solid fa-arrow-right"></i>
-							 
-			// 				<span class="score-weighted">${semanticWeighted.toFixed(3)}</span>
-			// 			</div>
-			// 		</div>
-			// 		<div class="score-bar-bg">
-			// 			<div class="score-bar-fill score-bar-semantic" style="width: ${semanticBarWidth}%"></div>
-			// 		</div>
-			// 	</div>
-				
-			// 	<div class="score-item">
-			// 		<div class="score-header">
-			// 			<span class="score-label">Rating Score (15%)</span>
-			// 			<div class="score-values">
-			// 				<span class="score-raw">${member.normalized_rating.toFixed(3)}</span> <i class="fa-solid fa-arrow-right"></i>
-			// 				<span class="score-weighted">${ratingWeighted.toFixed(3)}</span>
-			// 			</div>
-			// 		</div>
-			// 		<div class="score-bar-bg">
-			// 			<div class="score-bar-fill score-bar-rating" style="width: ${ratingBarWidth}%"></div>
-			// 		</div>
-			// 	</div>
-				
-			// 	<div class="score-item">
-			// 		<div class="score-header">
-			// 			<span class="score-label">Availability (15%)</span>
-			// 			<div class="score-values">
-			// 				<span class="score-raw">${member.availability_score.toFixed(3)}</span> <i class="fa-solid fa-arrow-right"></i>
-			// 				<span class="score-weighted">${availabilityWeighted.toFixed(3)}</span>
-			// 			</div>
-			// 		</div>
-			// 		<div class="score-bar-bg">
-			// 			<div class="score-bar-fill score-bar-availability" style="width: ${availabilityBarWidth}%"></div>
-			// 		</div>
-			// 	</div>
-				
-			// 	<div class="score-item final-score-item">
-			// 		<div class="score-header">
-			// 			<span class="score-label"><strong>Final Score</strong></span>
-			// 			<div class="score-values">
-			// 				<span class="score-weighted" style="font-size: 16px;">${member.final_score.toFixed(3)}</span>
-			// 			</div>
-			// 		</div>
-			// 		<div class="score-bar-bg">
-			// 			<div class="score-bar-fill score-bar-final" style="width: ${finalBarWidth}%"></div>
-			// 		</div>
-			// 	</div>
-			// </div>
 
 	// Get CSRF token from cookie
 	function getCookie(name) {
