@@ -1450,14 +1450,13 @@ def admin_project(request):
     search = request.GET.get('search', '')
 
     if request.user.role in ADMIN_ROLES:
-        projects = Project.objects.all()
+        projects = Project.objects.all().prefetch_related('providers')
     elif request.user.role in SUPERUSER_ROLES:
-        # For PROGRAM_HEAD, DEAN, COORDINATOR: limit to their college if applicable
         user_college = getattr(request.user, 'college', None)
         if user_college:
-            projects = Project.objects.filter(project_leader__college=user_college)
+            projects = Project.objects.filter(project_leader__college=user_college).prefetch_related('providers')
         else:
-            projects = Project.objects.all()
+            projects = Project.objects.all().prefetch_related('providers')
 
     # Apply filters
     if college:
@@ -1493,7 +1492,19 @@ def admin_project(request):
     if date_to:
         projects = projects.filter(start_date__lte=date_to)
     if search:
-        projects = projects.filter(title__icontains=search)
+        # Search by title, leader name, or provider names
+        title_q = Q(title__icontains=search)
+        leader_q = (
+            Q(project_leader__given_name__icontains=search) | 
+            Q(project_leader__last_name__icontains=search) | 
+            Q(project_leader__username__icontains=search)
+        )
+        provider_q = (
+            Q(providers__given_name__icontains=search) | 
+            Q(providers__last_name__icontains=search) | 
+            Q(providers__username__icontains=search)
+        )
+        projects = projects.filter(title_q | leader_q | provider_q).distinct()
 
     # Sorting
     if sort_by == 'progress':

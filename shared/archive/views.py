@@ -35,8 +35,12 @@ def _get_role_based_archive_queryset(request):
        PLUS all IN_PROGRESS projects from their own college.
     3. All others (Guest, Client, Implementer): See ONLY COMPLETED projects.
     """
-    user = request.user
-    user_role = getattr(user, 'role', None)
+    user = getattr(request, 'user', None)
+    user_role = getattr(user, 'role', None) if user and hasattr(user, 'role') else None
+
+    # If not authenticated or no role, treat as public/guest
+    if not user or not getattr(user, 'is_authenticated', False) or not user_role:
+        return Project.objects.filter(status="COMPLETED")
 
     # 1. UESO, Director, VP: See everything
     if user_role in [User.Role.UESO, User.Role.DIRECTOR, User.Role.VP]:
@@ -45,7 +49,7 @@ def _get_role_based_archive_queryset(request):
     # 2. Faculty, Program Head, Coordinator, Dean:
     if user_role in [User.Role.FACULTY, User.Role.PROGRAM_HEAD, User.Role.COORDINATOR, User.Role.DEAN]:
         college_query = Q()
-        if user.college:
+        if getattr(user, 'college', None):
             college_query = Q(status="IN_PROGRESS") & Q(project_leader__college=user.college)
 
         return Project.objects.filter(
@@ -86,11 +90,25 @@ class ArchiveView(View):
 class ProjectAggregationAPIView(APIView):
     """Calls the service layer for project aggregation data (for cards)."""
     
-    @permission_classes([AllowAny])
+    permission_classes = [AllowAny]
     @extend_schema(responses={200: ProjectAggregationSerializer})
     def get(self, request, category):
         try:
             base_queryset = _get_role_based_archive_queryset(request)
+            
+            # Apply search query if present
+            search_query = request.query_params.get('search', None)
+            if search_query:
+                base_queryset = base_queryset.filter(
+                    Q(title__icontains=search_query)
+                    | Q(project_leader__given_name__icontains=search_query)
+                    | Q(project_leader__last_name__icontains=search_query)
+                    | Q(project_leader__username__icontains=search_query)
+                    | Q(providers__given_name__icontains=search_query)
+                    | Q(providers__last_name__icontains=search_query)
+                    | Q(providers__username__icontains=search_query)
+                    | Q(primary_location__icontains=search_query)
+                ).distinct()
 
             field_map = {
                 'start_year': 'start_year',
@@ -111,7 +129,7 @@ class ProjectAggregationAPIView(APIView):
                 base_queryset = base_queryset.annotate(end_year=ExtractYear('estimated_end_date'))
 
             results = base_queryset.values(group_by_field).annotate(
-                count=Count('id')
+                count=Count('id', distinct=True)
             ).order_by(f'-{group_by_field}').values(
                 'count', label=F(group_by_field)
             )
@@ -141,7 +159,7 @@ class ProjectListAPIView(ListAPIView):
     serializer_class = ProjectSerializer
     pagination_class = CustomPagination
 
-    @permission_classes([AllowAny])
+    permission_classes = [AllowAny]
     def get_queryset(self):
         category = self.kwargs.get('category')
         filter_value = self.kwargs.get('filter_value')
@@ -182,10 +200,14 @@ class ProjectListAPIView(ListAPIView):
         # Apply search query
         if search_query:
             queryset = queryset.filter(
-                Q(title__icontains=search_query) |
-                Q(project_leader__given_name__icontains=search_query) |
-                Q(project_leader__last_name__icontains=search_query) |
-                Q(primary_location__icontains=search_query)
+                Q(title__icontains=search_query)
+                | Q(project_leader__given_name__icontains=search_query)
+                | Q(project_leader__last_name__icontains=search_query)
+                | Q(project_leader__username__icontains=search_query)
+                | Q(providers__given_name__icontains=search_query)
+                | Q(providers__last_name__icontains=search_query)
+                | Q(providers__username__icontains=search_query)
+                | Q(primary_location__icontains=search_query)
             )
 
         # Apply sorting

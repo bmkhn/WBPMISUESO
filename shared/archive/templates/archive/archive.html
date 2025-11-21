@@ -18,7 +18,7 @@
         <div class="search-container">
             <form class="search-bar" id="searchForm" method="get" action="#">
                 <svg width="16" height="16" style="margin-right:10px;"> <use href="#icon-search"></use> </svg>
-                <input type="text" name="search" placeholder="Search project title or leader name" />
+                <input type="text" name="search" placeholder="Search" />
                 <button type="button" id="filterBtn" style="background:none;border:none;padding:0;margin-right:5px;cursor:pointer; display: none;">
                     <svg width="16" height="16"> <use href="#icon-filter"></use> </svg>
                 </button>
@@ -400,7 +400,7 @@
             const leaderName = project.project_leader ? project.project_leader.full_name : 'N/A';
             const collegeName = (project.project_leader && project.project_leader.college) ? ` (${project.project_leader.college.name})` : '';
             const progressDisplay = project.progress_display || '0/0 (0%)';
-            const projectDetailUrl = `/projects/${project.id}/`;
+            const projectDetailUrl = `/projects/${project.id}/overview/`;
             
             // Format further action
             let furtherActionHTML = '';
@@ -431,7 +431,9 @@
         switchView('cards');
         showLoading();
         try {
-            const apiURL = `/archives/api/aggregate/${categorySlug}/`;
+            const formData = new FormData(document.getElementById('searchForm'));
+            const searchParams = new URLSearchParams(formData).toString();
+            const apiURL = `/archives/api/aggregate/${categorySlug}/?${searchParams}`;
             const response = await fetch(apiURL);
             if (!response.ok) {
                 const errorText = await response.text();
