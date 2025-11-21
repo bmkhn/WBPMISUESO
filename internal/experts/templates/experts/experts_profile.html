@@ -179,7 +179,6 @@
 	.lower {
 		background-color: transparent;
 		box-shadow: none;
-		padding: 0 2rem 2rem 2rem;
 		align-items: flex-start
 	}
 
@@ -938,15 +937,35 @@
 				<div class="lower-header">
 					<div>
 						<h1>
-							{% if profile_user.role in "FACULTY,IMPLEMENTER" %}
+							{% if profile_user.role in "FACULTY,IMPLEMENTER,PROGRAM_HEAD,DEAN,COORDINATOR" %}
 							{% if can_edit %}My Projects{% else %}Projects{% endif %} ({{ content_items_count }})
-							{% elif profile_user.role in "PROGRAM_HEAD,DEAN,COORDINATOR" %}
-							College Projects ({{ content_items_count }})
+
 							{% elif profile_user.role == "CLIENT" %}
 							{% if can_edit %}My Requests{% else %}Requests{% endif %} ({{ content_items_count }})
+							
 							{% else %}
 							Projects ({{ content_items_count }})
 							{% endif %}
+							<span style="margin-left:8px; position:relative;">
+								<i class="fa fa-info-circle" style="cursor:pointer;" tabindex="0" onmouseover="showTooltip(this)" onfocus="showTooltip(this)" onmouseout="hideTooltip(this)" onblur="hideTooltip(this)"></i>
+								<div class="project-tooltip" style="display:none; position:absolute; left:24px; top:-8px; background:#fff; color:#222; border:1px solid #e9ecef; border-radius:6px; box-shadow:0 2px 8px rgba(0,0,0,0.12); padding:1rem; min-width:260px; z-index:10; font-size:0.95rem;">
+									{% if request.user.role in "UESO,VP,DIRECTOR" %}
+										<strong>Project Visibility Rules:</strong><br>
+										<ul style="margin:0 0 0 1em; padding:0;">
+											<li><b>Public:</b> Only completed projects are visible.</li>
+											<li><b>Project Members:</b> Can see all their projects.</li>
+											<li><b>Dean, Coordinator, Program Head:</b> Can see all projects from their college.</li>
+											<li><b>UESO, VP, Director:</b> Can see all projects.</li>
+										</ul>
+									{% elif request.user.role in "DEAN,COORDINATOR,PROGRAM_HEAD" %}
+										<strong>Project Visibility:</strong> You can see all projects from your college.<br>Other users only see completed projects or their own projects.
+									{% elif request.user.role in "FACULTY,IMPLEMENTER" %}
+										<strong>Project Visibility:</strong> You can see all projects where you are a member.<br>Other users only see completed projects.
+									{% else %}
+										<strong>Project Visibility:</strong> Only completed projects are visible to you.
+									{% endif %}
+								</div>
+							</span>
 						</h1>
 					</div>
 					<div class="sort-controls">
@@ -1030,7 +1049,7 @@ const contentData = [
 			date: "{{ project.start_date|date:'Y-m-d' }}",
 			dateDisplay: "{{ project.start_date|date:'F j, Y' }}",
 			status: "{{ project.status }}",
-			statusDisplay: "{% if project.status == 'COMPLETED' %}Completed{% elif project.status == 'IN_PROGRESS' %}Ongoing{% elif project.status == 'NOT_STARTED' %}Not Started{% elif project.status == 'ON_HOLD' %}On Hold{% elif project.status == 'CANCELLED' %}Cancelled{% endif %}",
+			statusDisplay: "{% if project.status == 'COMPLETED' %}Completed{% elif project.status == 'IN_PROGRESS' %}In Progress{% elif project.status == 'NOT_STARTED' %}Not Started{% elif project.status == 'ON_HOLD' %}On Hold{% elif project.status == 'CANCELLED' %}Cancelled{% endif %}",
 			leaderCampus: "{{ project.project_leader.get_campus_display|default:'N/A'|escapejs }}",
 			agenda: "{{ project.agenda.name|default:''|escapejs }}",
 			leader: {
@@ -1077,7 +1096,7 @@ function renderContent(items) {
 					<h5>${item.dateDisplay}</h5>
 					<a href="/requests/details/${item.id}/" class="title">${item.title}</a>
 					<section class="project-tags">
-						<button class="status" style="color: #007bff; border-color: #007bff;">${item.status}</button>
+						<button class="status" style="color: #007bff; border-color: #007bff;">${item.status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</button>
 					</section>
 					<a href="/requests/details/${item.id}/" class="view">View</a>
 				</div>
@@ -1088,7 +1107,7 @@ function renderContent(items) {
 			if (item.status === 'COMPLETED') {
 				statusTag = '<button class="status" style="color: #1CB889; border-color: #1CB889;">Completed</button>';
 			} else if (item.status === 'IN_PROGRESS') {
-				statusTag = '<button class="status" style="color: #007bff; border-color: #007bff;">Ongoing</button>';
+				statusTag = '<button class="status" style="color: #007bff; border-color: #007bff;">In Progress</button>';
 			} else if (item.status === 'NOT_STARTED') {
 				statusTag = '<button class="status" style="color: #6c757d; border-color: #6c757d;">Not Started</button>';
 			} else if (item.status === 'ON_HOLD') {
@@ -1096,7 +1115,7 @@ function renderContent(items) {
 			} else if (item.status === 'CANCELLED') {
 				statusTag = '<button class="status" style="color: #dc3545; border-color: #dc3545;">Cancelled</button>';
 			} else {
-				statusTag = `<button class="status" style="color: #6c757d; border-color: #6c757d;">${item.status}</button>`;
+				statusTag = `<button class="status" style="color: #6c757d; border-color: #6c757d;">${item.status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</button>`;
 			}
 
 			// Authors/Providers Logic (Show leader + 2 providers)
@@ -1117,10 +1136,25 @@ function renderContent(items) {
 				</content>`
 			).join('');
 			authorsHTML += providersList;
-			
-			const moreProviders = item.providersCount > 2 ? 
-				`<content style="align-items: center;"><a href="/projects/${item.id}/">+${item.providersCount - 2} more</a></content>` : '';
-			authorsHTML += moreProviders;
+
+			if (item.providersCount > 2) {
+				const dropdownId = `dropdown-menu-${item.id}`;
+				authorsHTML += `
+					<div class="dropdown" style="display:inline-block; position:relative;">
+						<button class="dropdown-btn" id="dropdown-btn-${item.id}" style="font-size:0.95rem; color:#007bff; background:none; border:none; cursor:pointer; margin-left:0 !important; padding:0 !important; width:100% !important; border-radius:0 !important;">
+							+${item.providersCount - 2} more ▾
+						</button>
+						<div class="dropdown-menu" id="${dropdownId}" style="display:none; position:absolute; right:0; top:30px; min-width:220px; background:#fff; border:1px solid #ccc; border-radius:4px; box-shadow:0 2px 8px rgba(0,0,0,0.1); z-index:10;">
+							${item.providers.slice(2).map(p => `
+								<div style="display:flex; align-items:center; gap:0.75rem; padding:8px 12px; border-bottom:1px solid #eee;">
+									<img src="${p.profilePicture}" alt="${p.name}" style="width:2rem; height:2rem; border-radius:50%; object-fit:cover; border:0.08rem solid #ccc;">
+									<a href="/profile/${p.id}/" class="dropdown-provider" style="font-size:0.9rem; color:#000; text-decoration:none;">${p.name}</a>
+								</div>
+							`).join('')}
+						</div>
+					</div>
+				`;
+			}
 
 			return `
 				<div>
@@ -1169,6 +1203,36 @@ document.getElementById('sortContent').addEventListener('change', function(e) {
 
 // Initial render
 renderContent(contentData);
+
+// Author dropdown JS for all project cards
+document.addEventListener('DOMContentLoaded', function() {
+	contentData.forEach(function(item) {
+		if (item.type === 'project' && item.providersCount > 2) {
+			var btn = document.getElementById('dropdown-btn-' + item.id);
+			var menu = document.getElementById('dropdown-menu-' + item.id);
+			if (btn && menu) {
+				btn.addEventListener('click', function(e) {
+					e.preventDefault();
+					menu.style.display = menu.style.display === 'none' || menu.style.display === '' ? 'block' : 'none';
+				});
+				document.addEventListener('click', function(e) {
+					if (!menu.contains(e.target) && e.target !== btn) {
+						menu.style.display = 'none';
+					}
+				});
+			}
+		}
+	});
+});
+
+function showTooltip(el) {
+  var tooltip = el.nextElementSibling;
+  if (tooltip) tooltip.style.display = 'block';
+}
+function hideTooltip(el) {
+  var tooltip = el.nextElementSibling;
+  if (tooltip) tooltip.style.display = 'none';
+}
 </script>
 
 </body>

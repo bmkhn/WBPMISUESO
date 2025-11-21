@@ -448,7 +448,7 @@ def thank_you_view(request):
 ####################################################################################################
 
 def not_authenticated_view(request):
-    return render(request, 'users/403_not_authenticated.html', status=403)
+    return render(request, 'users/403_session_expired.html', status=403)
 
 def no_permission_view(request):
     return render(request, 'users/403_no_permission.html', status=403)
@@ -936,9 +936,9 @@ def profile_view(request, id=None):
 
     base_template = get_templates(request)
 
-    campus_display = user.campus.name if user.campus else "N/A"
+    campus_display = user.campus.name if user.campus else ""
 
-    college_name = user.college.name if user.college else "N/A"
+    college_name = user.college.name if user.college else ""
     college_logo = user.college.logo.url if user.college and user.college.logo else None
 
     content_items = []

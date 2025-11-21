@@ -74,7 +74,7 @@
     {% endif %}
 </div>
 <div class="providers">
-    {% for provider in page_obj %}
+    {% for provider in paginated_providers %}
     <div class="tiles clickable-tile" onclick="window.location.href='{% url 'user_profile' provider.id %}'">
         <section class="prov-seg-sec">
             {% if provider.role == 'IMPLEMENTER' %}

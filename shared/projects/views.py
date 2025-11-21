@@ -104,6 +104,9 @@ def project_overview(request, pk):
         sdg_ids = request.POST.getlist('sdgs[]')
         if sdg_ids is not None:
             project.sdgs.set(sdg_ids)
+
+        project.updated_at = timezone.now()
+        project.updated_by = request.user
         project.save()
         # Optionally redirect to avoid resubmission
         return redirect(request.path)
@@ -138,7 +141,26 @@ def project_providers(request, pk):
         else:
             project = get_object_or_404(Project, pk=pk)
     
+    # Use queryset for exclusions and candidate logic
     providers_qs = project.providers.all()
+    # For display/pagination, prepend leader if not present
+    providers_list = list(providers_qs)
+    if project.project_leader and project.project_leader not in providers_list:
+        providers_list = [project.project_leader] + providers_list
+
+    # Candidates: all confirmed users except CLIENT, not already providers and not the project leader
+    from system.users.models import User
+    exclude_ids = list(providers_qs.values_list('id', flat=True))
+    if project.project_leader:
+        exclude_ids.append(project.project_leader.id)
+    provider_candidates = User.objects.filter(
+        is_confirmed=True
+    ).exclude(role=User.Role.CLIENT).exclude(id__in=exclude_ids)
+
+    # For display/pagination, prepend leader if not present
+    providers_list = list(providers_qs)
+    if project.project_leader and project.project_leader not in providers_list:
+        providers_list = [project.project_leader] + providers_list
 
     # Handle add provider POST
     if request.method == 'POST' and user_role in ADMIN_ROLES:
@@ -176,10 +198,11 @@ def project_providers(request, pk):
         is_confirmed=True
     ).exclude(role=User.Role.CLIENT).exclude(id__in=exclude_ids)
 
-    # Pagination
-    paginator = Paginator(providers_qs, 3)
+    # Pagination (use providers_list, which includes leader)
+    paginator = Paginator(providers_list, 3)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
+    paginated_providers = page_obj.object_list
 
     current = page_obj.number
     total = paginator.num_pages
@@ -199,6 +222,7 @@ def project_providers(request, pk):
         "SUPERUSER_ROLES": SUPERUSER_ROLES,
         "FACULTY_ROLE": FACULTY_ROLE,
         'providers': page_obj,
+        'paginated_providers': paginated_providers,
         'paginator': paginator,
         'page_number': page_number,
         'page_obj': page_obj,

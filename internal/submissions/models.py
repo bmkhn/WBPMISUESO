@@ -207,42 +207,46 @@ def log_submission_action(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=Submission)
 def update_project_event_progress(sender, instance, **kwargs):
-    """
-    Update project event_progress and has_final_submission fields.
-    Also auto-complete projects when conditions are met.
-    """
-    project = instance.project
-    
-    # Handle APPROVED event submissions
-    if instance.downloadable.submission_type == 'event' and instance.status == 'APPROVED':
-        # Count all APPROVED event submissions for this project
-        approved_count = Submission.objects.filter(
-            project=project,
-            downloadable__submission_type='event',
-            status='APPROVED'
-        ).count()
-        project.event_progress = approved_count
-        
-        # Auto-complete project if all events are done
-        if project.estimated_events > 0 and project.event_progress >= project.estimated_events:
-            if project.status == 'IN_PROGRESS':
-                project.status = 'COMPLETED'
-                project.save(update_fields=['event_progress', 'status'])
-            else:
-                project.save(update_fields=['event_progress'])
-        else:
-            project.save(update_fields=['event_progress'])
-    
-    # Handle APPROVED final submissions
-    elif instance.downloadable.submission_type == 'final' and instance.status == 'APPROVED':
-        project.has_final_submission = True
-        
-        # Auto-complete project when final submission is approved
-        if project.status == 'IN_PROGRESS':
-            project.status = 'COMPLETED'
-            project.save(update_fields=['has_final_submission', 'status'])
-        else:
-            project.save(update_fields=['has_final_submission'])
+	"""
+	Update project event_progress and has_final_submission fields.
+	Also auto-complete projects when conditions are met.
+	"""
+	
+	project = instance.project
+	project.updated_at = instance.updated_at
+	project.updated_by = instance.updated_by
+	project.save(update_fields=['updated_at', 'updated_by'])
+
+	# Handle APPROVED event submissions
+	if instance.downloadable.submission_type == 'event' and instance.status == 'APPROVED':
+		# Count all APPROVED event submissions for this project
+		approved_count = Submission.objects.filter(
+			project=project,
+			downloadable__submission_type='event',
+			status='APPROVED'
+		).count()
+		project.event_progress = approved_count
+		
+		# Auto-complete project if all events are done
+		if project.estimated_events > 0 and project.event_progress >= project.estimated_events:
+			if project.status == 'IN_PROGRESS':
+				project.status = 'COMPLETED'
+				project.save(update_fields=['event_progress', 'status'])
+			else:
+				project.save(update_fields=['event_progress'])
+		else:
+			project.save(update_fields=['event_progress'])
+
+	# Handle APPROVED final submissions
+	elif instance.downloadable.submission_type == 'final' and instance.status == 'APPROVED':
+		project.has_final_submission = True
+		
+		# Auto-complete project when final submission is approved
+		if project.status == 'IN_PROGRESS':
+			project.status = 'COMPLETED'
+			project.save(update_fields=['has_final_submission', 'status'])
+		else:
+			project.save(update_fields=['has_final_submission'])
 
 
 class SubmissionUpdate(models.Model):

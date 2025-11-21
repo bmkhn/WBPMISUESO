@@ -1,4 +1,4 @@
-from django.shortcuts import redirect, get_object_or_404
+from django.shortcuts import redirect, get_object_or_404, render
 from django.http import HttpResponseForbidden
 
 def role_required(allowed_roles, require_confirmed=False):
@@ -57,7 +57,8 @@ def project_visibility_required(view_func):
                 can_view = True
             
             if not can_view:
-                return HttpResponseForbidden("You do not have permission to view this project.")
+                from django.shortcuts import render
+                return render(request, 'users/403_project_visibility.html', status=403)
         
         return view_func(request, *args, **kwargs)
     return wrapper

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>403 Forbidden - Not Authenticated</title>
+    <title>403 Forbidden - Project Visibility</title>
     <meta charset="UTF-8">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
@@ -11,12 +11,16 @@
         p { font-size: 16px; color: #333; }
         a { color: #007bff; text-decoration: none; }
         a:hover { color: purple; }
+        .icon { font-size: 48px; color: #c00; margin-bottom: 16px; }
     </style>
 </head>
 <body>
     <div class="card">
+        <div class="icon">&#128274;</div>
         <h2>403 Forbidden</h2>
-        <p>You are not authenticated. Please <a href="/login/">log in</a> to continue.</p>
+        <p>You do not have permission to view this project.</p>
+        <p>This project is not visible to you due to privacy or role-based restrictions.</p>
+        <p><a href="javascript:history.back()">Go Back</a></p>
     </div>
 </body>
 </html>
