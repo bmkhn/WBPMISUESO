@@ -23,8 +23,9 @@ class APIConnection(models.Model):
         ('REJECTED', 'Rejected'),
     ]
 
+    # Tiers for access control
     TIER_CHOICES = [
-        ('TIER_1', 'Tier 1: Read Projects Only'),
+        ('TIER_1', 'Tier 1: Projects Read-Only'),
         ('TIER_2', 'Tier 2: Read All APIs'),
         ('TIER_3', 'Tier 3: Full Access (No Project CRUD)'),
     ]
@@ -33,12 +34,14 @@ class APIConnection(models.Model):
     description = models.TextField(blank=True, help_text="Reason for connection or system details.")
     requested_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='api_connections')
     
+    # Link to the secure (hashed) API Key
     api_key = models.OneToOneField(APIKey, on_delete=models.SET_NULL, null=True, blank=True)
     
+    # Store the visible string so the user can see it at all times
     full_api_key_string = models.CharField(max_length=255, blank=True, null=True, help_text="The visible API key string for the user.")
 
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
-    tier = models.CharField(max_length=20, choices=TIER_CHOICES, default='TIER_1', help_text="Determines access level.")
+    tier = models.CharField(max_length=20, choices=TIER_CHOICES, default='TIER_1')
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

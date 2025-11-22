@@ -96,7 +96,6 @@ class ProjectAggregationAPIView(APIView):
                 'start_year': 'start_year',
                 'estimated_end_date': 'end_year',
                 'agenda': 'agenda__name',
-                # FIX 1: Group by Name, not ID
                 'project_type': 'project_type__name',
                 'college': 'project_leader__college__name',
             }

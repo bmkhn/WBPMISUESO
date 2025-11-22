@@ -47,7 +47,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = [
-            'title', 'project_leader', 'agenda', 'start_date', 
+            'id', 'title', 'project_leader', 'agenda', 'start_date', 
             'estimated_end_date', 'progress_display', 'duration',
             'estimated_trainees', 'status', 'further_action'
         ]
