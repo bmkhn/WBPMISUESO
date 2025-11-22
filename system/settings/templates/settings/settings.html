@@ -74,81 +74,133 @@
                             </div>
                         </form>
                     {% else %}
-                        <div class="table-responsive">
-                            <table class="table" width="100%" cellspacing="0">
-                                <thead>
-                                    <tr>
-                                        <th>System / User</th>
-                                        <th>Status</th>
-                                        <th>Created</th>
-                                        {% if admin %}<th class="cell-actions">Actions</th>{% endif %}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for conn in api_connections %}
-                                    <tr {% if conn.status == 'DISCONNECTED' %}class="table-danger-row"{% elif conn.status == 'PENDING' %}class="table-warning-row"{% endif %}>
-                                        <td>
-                                            <strong>{{ conn.name }}</strong><br>
-                                            <small class="text-muted">{{ conn.description|truncatechars:40 }}</small>
-                                            {% if admin %}
-                                            <br><small class="text-primary">By: {{ conn.requested_by.get_full_name|default:conn.requested_by.email }}</small>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            {% if conn.status == 'ACTIVE' %}
-                                                <span class="badge badge-success">CONNECTED</span>
-                                            {% elif conn.status == 'PENDING' %}
-                                                <span class="badge badge-warning">PENDING</span>
-                                            {% elif conn.status == 'DISCONNECTED' %}
-                                                <span class="badge badge-danger">DISCONNECTED</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>{{ conn.created_at|naturaltime }}</td>
-                                        
+
+                    <div class="table-responsive">
+                        <table class="table" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>System / User</th>
+                                    <th>Status</th>
+                                    <th>Tier</th>
+                                    <th>API Key</th>
+                                    <th>Created</th>
+                                    {% if admin %}<th class="cell-actions">Actions</th>{% endif %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if admin and not api_unlocked %}
+                                <tr>
+                                    <td colspan="{% if admin %}6{% else %}5{% endif %}"
+                                        style="padding: 2rem; text-align: center; background-color: #f9fafb;">
+                                        <div style="max-width: 400px; margin: 0 auto;">
+                                            <i class="fas fa-lock fa-2x text-muted mb-3"></i>
+                                            <p>This section is locked. Enter password to view details.</p>
+                                            <form method="POST" action="{% url 'system_settings:settings' %}" class="api-password-form">
+                                                {% csrf_token %}
+                                                <div class="input-group">
+                                                    <input type="password" name="api_password" class="form-control"
+                                                        placeholder="Admin Password" required>
+                                                    <div class="input-group-append">
+                                                        <button type="submit" name="unlock_api" class="btn btn-primary">Unlock</button>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                {% for conn in api_connections %}
+                                <tr {% if conn.status=='DISCONNECTED' %}class="table-danger-row" {% elif conn.status=='PENDING'
+                                    %}class="table-warning-row" {% endif %}>
+                                    <td>
+                                        <strong>{{ conn.name }}</strong><br>
+                                        <small class="text-muted">{{ conn.description|truncatechars:40 }}</small>
                                         {% if admin %}
-                                        <td class="cell-actions">
-                                            {% if conn.status == 'PENDING' %}
-                                                <a href="{% url 'system_settings:approve_api_access' conn.pk %}" class="btn btn-outline-warning btn-sm" title="Approve & Generate Key">
-                                                    <i class="fas fa-check"></i>
-                                                </a>
-                                                <a href="{% url 'system_settings:delete_api_connection' conn.pk %}" class="btn btn-outline-danger btn-sm" title="Reject">
-                                                    <i class="fas fa-times"></i>
-                                                </a>
-                                            {% elif conn.status == 'ACTIVE' %}
-                                                <a href="{% url 'system_settings:disconnect_api_access' conn.pk %}" class="btn btn-outline-danger btn-sm" title="Disconnect">
-                                                    <i class="fas fa-power-off"></i>
-                                                </a>
-                                            {% elif conn.status == 'DISCONNECTED' %}
-                                                <a href="{% url 'system_settings:delete_api_connection' conn.pk %}" class="btn btn-outline-danger btn-sm" title="Delete">
-                                                    <i class="fas fa-trash"></i>
-                                                </a>
-                                            {% endif %}
-                                        </td>
+                                        <br><small class="text-primary">By: {{
+                                            conn.requested_by.get_full_name|default:conn.requested_by.email }}</small>
                                         {% endif %}
-                                    </tr>
-                                    {% empty %}
-                                    <tr>
-                                        <td colspan="{% if admin %}4{% else %}3{% endif %}" class="text-center">
-                                            {% if admin %}
-                                                No connection requests found.
-                                            {% else %}
-                                                You haven't requested any API connections yet.
-                                            {% endif %}
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                        
-                        {% if not admin %}
-                        <div class="table-controls" style="margin-bottom: 0.5rem; margin-top: 1rem;">
-                            <a href="{% url 'system_settings:request_api_access' %}" class="btn btn-primary">
-                                <i class="fas fa-plus"></i> Request New Connection
-                            </a>
-                        </div>
-                        {% endif %}
-                        
+                                    </td>
+                                    <td>
+                                        {% if conn.status == 'ACTIVE' %}
+                                        <span class="badge badge-success">CONNECTED</span>
+                                        {% elif conn.status == 'PENDING' %}
+                                        <span class="badge badge-warning">PENDING</span>
+                                        {% elif conn.status == 'DISCONNECTED' %}
+                                        <span class="badge badge-danger">DISCONNECTED</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-info">{{ conn.get_tier_display }}</span>
+                                    </td>
+                                    <td>
+                                        {% if conn.status == 'ACTIVE' and conn.full_api_key_string %}
+                                        {% if request.user == conn.requested_by or admin %}
+                                        <div class="input-group input-group-sm" style="width: 180px;">
+                                            <input type="password" value="{{ conn.full_api_key_string }}" class="form-control api-key-field"
+                                                id="key-{{ conn.id }}" readonly>
+                                            <div class="input-group-append">
+                                                <button class="btn btn-outline-secondary" type="button"
+                                                    onclick="toggleKey('key-{{ conn.id }}')">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                <button class="btn btn-outline-secondary" type="button"
+                                                    onclick="copyToClipboard('{{ conn.full_api_key_string }}')">
+                                                    <i class="fas fa-copy"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        {% else %}
+                                        <span class="text-muted">Hidden</span>
+                                        {% endif %}
+                                        {% else %}
+                                        <span class="text-muted">--</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ conn.created_at|naturaltime }}</td>
+                    
+                                    {% if admin %}
+                                    <td class="cell-actions">
+                                        {% if conn.status == 'PENDING' %}
+                                        <a href="{% url 'system_settings:approve_api_access' conn.pk %}"
+                                            class="btn btn-outline-warning btn-sm" title="Approve">
+                                            <i class="fas fa-check"></i>
+                                        </a>
+                                        <a href="{% url 'system_settings:delete_api_connection' conn.pk %}"
+                                            class="btn btn-outline-danger btn-sm" title="Reject">
+                                            <i class="fas fa-times"></i>
+                                        </a>
+                                        {% elif conn.status == 'ACTIVE' %}
+                                        <a href="{% url 'system_settings:disconnect_api_access' conn.pk %}"
+                                            class="btn btn-outline-danger btn-sm" title="Disconnect">
+                                            <i class="fas fa-power-off"></i>
+                                        </a>
+                                        {% elif conn.status == 'DISCONNECTED' %}
+                                        <a href="{% url 'system_settings:delete_api_connection' conn.pk %}"
+                                            class="btn btn-outline-danger btn-sm" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                        {% endif %}
+                                    </td>
+                                    {% endif %}
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="{% if admin %}6{% else %}5{% endif %}" class="text-center">
+                                        {% if admin %}No requests found.{% else %}You haven't requested any API connections.{% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    {% if not admin %}
+                    <div class="table-controls" style="margin-bottom: 0.5rem; margin-top: 1rem;">
+                        <a href="{% url 'system_settings:request_api_access' %}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Request New Connection
+                        </a>
+                    </div>
                     {% endif %}
                 </div>
             </div>
@@ -378,6 +430,23 @@
 </div>
 
 <script>
+    
+function toggleKey(id) {
+    var x = document.getElementById(id);
+    if (x.type === "password") {
+        x.type = "text";
+    } else {
+        x.type = "password";
+    }
+}
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function () {
+        alert('API Key copied to clipboard');
+    }, function (err) {
+        console.error('Could not copy text: ', err);
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Accordion Logic
     const toggles = document.querySelectorAll('.accordion-toggle');

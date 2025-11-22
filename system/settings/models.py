@@ -3,10 +3,6 @@ from django.conf import settings
 from rest_framework_api_key.models import APIKey
 
 class SystemSetting(models.Model):
-    """
-    A key-value store for simple, site-wide settings.
-    e.g., ('site_name', 'WBPMIS UESO'), ('maintenance_mode', 'False')
-    """
     key = models.CharField(max_length=100, primary_key=True, unique=True, help_text="The unique identifier for the setting (e.g., 'site_name')")
     value = models.TextField(blank=True, help_text="The value of the setting.")
     description = models.CharField(max_length=255, blank=True, null=True, help_text="A brief description of what this setting does.")
@@ -20,11 +16,6 @@ class SystemSetting(models.Model):
         ordering = ['key']
 
 class APIConnection(models.Model):
-    """
-    Represents a persistent connection for a system or user accessing the API.
-    This wrapper allows us to manage status (Pending/Active/Disconnected) 
-    and keep the record even if the underlying key is revoked.
-    """
     STATUS_CHOICES = [
         ('PENDING', 'Pending Approval'),
         ('ACTIVE', 'Active'),
@@ -32,17 +23,28 @@ class APIConnection(models.Model):
         ('REJECTED', 'Rejected'),
     ]
 
+    TIER_CHOICES = [
+        ('TIER_1', 'Tier 1: Read Projects Only'),
+        ('TIER_2', 'Tier 2: Read All APIs'),
+        ('TIER_3', 'Tier 3: Full Access (No Project CRUD)'),
+    ]
+
     name = models.CharField(max_length=255, help_text="Name of the system or user connecting.")
     description = models.TextField(blank=True, help_text="Reason for connection or system details.")
     requested_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='api_connections')
+    
     api_key = models.OneToOneField(APIKey, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    full_api_key_string = models.CharField(max_length=255, blank=True, null=True, help_text="The visible API key string for the user.")
+
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    tier = models.CharField(max_length=20, choices=TIER_CHOICES, default='TIER_1', help_text="Determines access level.")
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"{self.name} ({self.get_status_display()})"
 
-    #asc order
     class Meta:
         ordering = ['-created_at']

@@ -4,6 +4,8 @@ from rest_framework.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
 from .models import Project, ProjectExpense
 from .serializers import ProjectExpenseSerializer
+from system.api.authentication import APIKeyUserAuthentication
+from system.api.permissions import TieredAPIPermission
 
 
 class ProjectExpenseViewSet(viewsets.ModelViewSet):
@@ -12,7 +14,8 @@ class ProjectExpenseViewSet(viewsets.ModelViewSet):
     Only project leaders, providers, or staff/superusers can manage expenses.
     """
     serializer_class = ProjectExpenseSerializer
-    permission_classes = [IsAuthenticated]
+    authentication_classes = [APIKeyUserAuthentication] 
+    permission_classes = [TieredAPIPermission]
     
     def get_project(self):
         """Helper to retrieve and validate the project from URL kwargs."""

@@ -392,16 +392,18 @@ def request_api_access(request):
 
 @role_required(allowed_roles=ADMIN_ROLES, require_confirmed=True)
 def approve_api_access(request, pk):
-    """Approves a pending request and generates the key."""
+    """Approves a pending request, generates the key, and stores it."""
     connection = get_object_or_404(APIConnection, pk=pk)
     
     if request.method == 'POST':
-        # Create the actual API Key
         api_key, key_string = APIKey.objects.create_key(name=connection.name)
         
-        # Link to connection and update status
+        selected_tier = request.POST.get('tier', 'TIER_1')
+
         connection.api_key = api_key
+        connection.full_api_key_string = key_string 
         connection.status = 'ACTIVE'
+        connection.tier = selected_tier
         connection.save()
         
         context = {
@@ -414,9 +416,11 @@ def approve_api_access(request, pk):
     context = {
         'base_template': 'base_internal.html',
         'object_to_delete': connection, 
-        'confirm_message': f'Approve access for "{connection.name}"? This will generate a secure key.',
+        'confirm_message': f'Approve access for "{connection.name}"?',
         'confirm_button_text': 'Yes, Approve & Generate Key',
-        'cancel_url': reverse('system_settings:settings')
+        'cancel_url': reverse('system_settings:settings'),
+        'show_tier_select': True, 
+        'tier_choices': APIConnection.TIER_CHOICES,
     }
     return render(request, 'settings/confirm_delete.html', context)
 
