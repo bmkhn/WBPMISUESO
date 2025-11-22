@@ -130,6 +130,12 @@ class ProjectDocument(models.Model):
 
 ####################################################################################################################################################################
 
+# New Model for Project type for CRUD in settings
+class ProjectType(models.Model):
+    name = models.CharField(max_length=255, unique=True)
+
+    def __str__(self):
+        return self.name
 
 class Project(models.Model):
 	def delete(self, *args, **kwargs):
@@ -142,11 +148,6 @@ class Project(models.Model):
 			doc.delete()
 		super().delete(*args, **kwargs)
 
-	PROJECT_TYPE_CHOICES = [
-		('NEEDS_BASED', 'Needs Based'),
-		('RESEARCH_BASED', 'Research Based'),
-	]
-
 	LOGISTICS_TYPE_CHOICES = [
 		('BOTH', 'Both'),
 		('EXTERNAL', 'External'),
@@ -157,7 +158,7 @@ class Project(models.Model):
 	project_leader = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='led_projects')
 	providers = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='member_projects')
 	agenda = models.ForeignKey(Agenda, on_delete=models.SET_NULL, null=True, blank=True, related_name='projects')
-	project_type = models.CharField(max_length=20, choices=PROJECT_TYPE_CHOICES)
+	project_type = models.ForeignKey(ProjectType, on_delete=models.SET_NULL, null=True, related_name='projects')
 	sdgs = models.ManyToManyField(SustainableDevelopmentGoal, related_name='projects')
 	estimated_events = models.PositiveIntegerField()
 	event_progress = models.PositiveIntegerField(default=0)

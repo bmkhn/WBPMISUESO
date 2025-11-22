@@ -7,7 +7,7 @@ from rest_framework.pagination import PageNumberPagination
 
 from django.db.models import Q, Count, F
 from django.db.models.functions import ExtractYear
-from shared.projects.models import Project
+from shared.projects.models import Project, ProjectType
 from system.users.models import User
 from rest_framework.permissions import AllowAny
 
@@ -174,8 +174,7 @@ class ProjectListAPIView(ListAPIView):
                 elif category == 'agenda':
                     queryset = queryset.filter(agenda__name=filter_value)
                 elif category == 'project_type':
-                    filter_db_value = filter_value.replace(' ', '_').upper()
-                    queryset = queryset.filter(project_type=filter_db_value)
+                    queryset = queryset.filter(project_type__name=filter_value)
                 elif category == 'college':
                     queryset = queryset.filter(project_leader__college__name=filter_value)
 

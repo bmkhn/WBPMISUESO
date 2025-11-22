@@ -13,6 +13,8 @@ from shared.budget.forms import AnnualBudgetForm
 from system.users.models import College, User, Campus
 from shared.projects.models import SustainableDevelopmentGoal
 from rest_framework_api_key.models import APIKey
+from shared.projects.models import ProjectType 
+from shared.projects.forms import ProjectTypeForm
 from .models import SystemSetting, APIConnection
 from .forms import (
     CollegeForm, 
@@ -158,6 +160,7 @@ def settings_view(request):
     colleges = College.objects.all().order_by('name')
     campuses = Campus.objects.all().order_by('name')
     sdgs = SustainableDevelopmentGoal.objects.all().order_by('goal_number')
+    project_types = ProjectType.objects.all().order_by('name')
     
     # --- API Connection Logic ---
     api_connections = []
@@ -185,6 +188,7 @@ def settings_view(request):
         'total_assigned_budget': total_assigned_budget,
         'initial_unallocated_remaining': initial_unallocated_remaining,
         'is_save_disabled': is_save_disabled,
+        'project_types': project_types,
     }
     
     return render(request, 'settings/settings.html', context)
@@ -453,6 +457,54 @@ def delete_api_connection(request, pk):
         'base_template': 'base_internal.html',
         'object_to_delete': connection,
         'confirm_message': f'Are you sure you want to permanently delete the record for "{connection.name}"?',
+        'cancel_url': reverse('system_settings:settings')
+    }
+    return render(request, 'settings/confirm_delete.html', context)
+
+# Project Type New CRUD
+@role_required(allowed_roles=ADMIN_ROLES, require_confirmed=True)
+def manage_project_types(request):
+    return redirect('system_settings:settings') 
+
+@role_required(allowed_roles=ADMIN_ROLES, require_confirmed=True)
+def add_project_type(request):
+    if request.method == 'POST':
+        form = ProjectTypeForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Project Type added successfully.')
+            return redirect('system_settings:settings')
+    else:
+        form = ProjectTypeForm()
+    context = {'base_template': 'base_internal.html', 'form': form, 'form_title': 'Add New Project Type'}
+    return render(request, 'settings/form_template.html', context)
+
+@role_required(allowed_roles=ADMIN_ROLES, require_confirmed=True)
+def edit_project_type(request, pk):
+    pt = get_object_or_404(ProjectType, pk=pk)
+    if request.method == 'POST':
+        form = ProjectTypeForm(request.POST, instance=pt)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Project Type updated successfully.')
+            return redirect('system_settings:settings')
+    else:
+        form = ProjectTypeForm(instance=pt)
+    context = {'base_template': 'base_internal.html', 'form': form, 'form_title': f'Edit Project Type: {pt.name}'}
+    return render(request, 'settings/form_template.html', context)
+
+@role_required(allowed_roles=ADMIN_ROLES, require_confirmed=True)
+def delete_project_type(request, pk):
+    pt = get_object_or_404(ProjectType, pk=pk)
+    if request.method == 'POST':
+        name = pt.name
+        pt.delete()
+        messages.success(request, f'Project Type "{name}" deleted successfully.')
+        return redirect('system_settings:settings')
+    context = {
+        'base_template': 'base_internal.html',
+        'object_to_delete': pt,
+        'confirm_message': f'Are you sure you want to delete the project type "{pt.name}"?',
         'cancel_url': reverse('system_settings:settings')
     }
     return render(request, 'settings/confirm_delete.html', context)

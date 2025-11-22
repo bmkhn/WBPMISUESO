@@ -2,7 +2,7 @@ from django.db.models import Count
 from django.db.models.functions import ExtractYear
 from django.db.models import Q
 
-from shared.projects.models import Project
+from shared.projects.models import Project, ProjectType
 from system.users.models import College
 from internal.agenda.models import Agenda
 
@@ -15,11 +15,11 @@ class ArchiveService:
 
     # Map: category_slug -> (field_path, type_of_grouping, source_model/choices)
     CATEGORY_MAP = {
-        'start_year':     ('start_date', 'year', None),
+        'start_year': ('start_date', 'year', None),
         'estimated_end_date': ('estimated_end_date', 'year', None),
-        'agenda':         ('agenda', 'fk', Agenda),
-        'project_type':   ('project_type', 'choice', Project.PROJECT_TYPE_CHOICES),
-        'college':        ('project_leader__college', 'fk', College),
+        'agenda': ('agenda', 'fk', Agenda),
+        'project_type': ('project_type', 'fk', ProjectType),
+        'college': ('project_leader__college', 'fk', College),
     }
 
     @staticmethod

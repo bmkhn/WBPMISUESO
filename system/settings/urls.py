@@ -25,6 +25,12 @@ urlpatterns = [
     path('sdgs/add/', views.add_sdg, name='add_sdg'),
     path('sdgs/edit/<int:pk>/', views.edit_sdg, name='edit_sdg'),
     path('sdgs/delete/<int:pk>/', views.delete_sdg, name='delete_sdg'),
+
+    # Project Type CRUD
+    path('project-types/', views.manage_project_types, name='manage_project_types'),
+    path('project-types/add/', views.add_project_type, name='add_project_type'),
+    path('project-types/edit/<int:pk>/', views.edit_project_type, name='edit_project_type'),
+    path('project-types/delete/<int:pk>/', views.delete_project_type, name='delete_project_type'),
     
     # System Settings (Key-Value)
     path('system/', views.manage_system_settings, name='manage_system_settings'),
