@@ -40,7 +40,7 @@ INTERNAL_ACCESS_ROLES = [
     "CLIENT",
 ]
 
-# Roles allowed to REQUEST keys (Excludes Admins)
+# Roles allowed to REQUEST keys 
 API_ACCESS_ROLES = [
     "PROGRAM_HEAD", 
     "DEAN", 
@@ -193,8 +193,6 @@ def settings_view(request):
     
     return render(request, 'settings/settings.html', context)
 
-
-# ... [Existing College/Campus/SDG Views remain unchanged] ...
 @role_required(allowed_roles=ADMIN_ROLES, require_confirmed=True)
 def manage_colleges(request):
     return redirect('system_settings:settings')
@@ -364,7 +362,7 @@ def delete_account(request):
 # New API Management Views
 # ==========================================
 
-# Updated to ONLY allow API_ACCESS_ROLES (No Admins)
+# Updated to ONLY allow API_ACCESS_ROLES 
 @role_required(allowed_roles=API_ACCESS_ROLES, require_confirmed=True)
 def request_api_access(request):
     """Allows a user to request a new API connection."""
@@ -380,8 +378,13 @@ def request_api_access(request):
     else:
         form = APIConnectionRequestForm()
     
+    if request.user.role in ['FACULTY', 'CLIENT', 'IMPLEMENTER']:
+        base_template = 'base_public.html'
+    else:
+        base_template = 'base_internal.html'
+
     context = {
-        'base_template': 'base_internal.html',
+        'base_template': base_template,
         'form': form,
         'form_title': 'Request API Access'
     }
