@@ -119,7 +119,7 @@ def project_overview(request, pk):
         "FACULTY_ROLE": FACULTY_ROLE,
         'all_sdgs': all_sdgs,
         'agendas': agendas,
-        'project_type': project_types,
+        'project_types': project_types,
     })
 
 
@@ -1709,7 +1709,7 @@ def add_project_view(request):
         'colleges': colleges,
         'campus_choices': campus_choices,
         'logistics_type': logistics_type,
-        'project_type': project_types,
+        'project_types': project_types,
     })
 
 

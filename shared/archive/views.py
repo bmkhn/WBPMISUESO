@@ -96,7 +96,8 @@ class ProjectAggregationAPIView(APIView):
                 'start_year': 'start_year',
                 'estimated_end_date': 'end_year',
                 'agenda': 'agenda__name',
-                'project_type': 'project_type',
+                # FIX 1: Group by Name, not ID
+                'project_type': 'project_type__name',
                 'college': 'project_leader__college__name',
             }
 
@@ -123,15 +124,15 @@ class ProjectAggregationAPIView(APIView):
                 if not label:
                     label = 'N/A'
  
-                if category == 'project_type' and label != 'N/A':
-                    label = label.replace('_', ' ').title()
-
+                # FIX 2: Removed the .replace() logic because label is now already a clean name string
+                
                 formatted_results.append({'label': label, 'count': item['count']})
             
             return Response(formatted_results)
         except ValueError as e:
             return Response({"error": str(e)}, status=400)
         except Exception as e:
+            print(f"Aggregation Error: {e}") # Helpful for debugging
             return Response({"error": "A server error occurred during aggregation."}, status=500)
 
 
@@ -174,6 +175,7 @@ class ProjectListAPIView(ListAPIView):
                 elif category == 'agenda':
                     queryset = queryset.filter(agenda__name=filter_value)
                 elif category == 'project_type':
+                    # Filter by Name matches the Aggregation label
                     queryset = queryset.filter(project_type__name=filter_value)
                 elif category == 'college':
                     queryset = queryset.filter(project_leader__college__name=filter_value)
@@ -192,6 +194,9 @@ class ProjectListAPIView(ListAPIView):
             'title': 'title',
             'start_date': 'start_date',
             'end_date': 'estimated_end_date',
+            'project_type': 'project_type__name',
+            'project_leader__last_name': 'project_leader__last_name',
+            'status': 'status',
         }
         sort_field = sort_field_map.get(sort_by, 'title') 
         

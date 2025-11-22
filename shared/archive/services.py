@@ -73,7 +73,7 @@ class ArchiveService:
                 })
         
         elif group_type == 'fk':
-            # Grouping for Foreign Keys (Agenda, College)
+            # Grouping for Foreign Keys (Agenda, College, ProjectType)
             
             if source == Agenda:
                 source_qs = Agenda.objects.annotate(
@@ -88,6 +88,21 @@ class ArchiveService:
                         'filter_key': str(item.id)
                     })
             
+            elif source == ProjectType:
+                # FIX: Added block to handle ProjectType aggregation
+                source_qs = ProjectType.objects.annotate(
+                    count=Count('projects')
+                ).filter(count__gt=0).order_by('name')
+
+                for item in source_qs:
+                    results.append({
+                        'id': str(item.id),
+                        'name': item.name,
+                        'count': item.count,
+                        # Use name as filter key to match the API View logic
+                        'filter_key': item.name 
+                    })
+
             elif source == College:
                 # Groups projects by the College of the Project Leader
                 source_qs = College.objects.annotate(
