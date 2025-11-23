@@ -284,9 +284,23 @@ def _get_college_dashboard_data(user, fiscal_year):
     total_committed_internal = Decimal('0.0')
     total_committed_external = Decimal('0.0')
 
+    # Pre-fetch expenses for all projects to avoid N+1 queries
+    project_ids = list(projects_current_year.values_list('id', flat=True))
+    expenses_by_project = ProjectExpense.objects.filter(
+        project_id__in=project_ids
+    ).values('project_id').annotate(
+        total_expenses=Sum('amount')
+    )
+    
+    # Create a dictionary for quick lookup
+    expenses_dict = {item['project_id']: item['total_expenses'] or Decimal('0') 
+                     for item in expenses_by_project}
+
     for project in projects_current_year:
         assigned = project.internal_budget or Decimal('0')
         external = project.external_budget or Decimal('0')
+        # Calculate used_budget directly from expenses to ensure accuracy
+        used = expenses_dict.get(project.id, Decimal('0'))
 
         total_committed_internal += assigned
         total_committed_external += external
@@ -297,6 +311,8 @@ def _get_college_dashboard_data(user, fiscal_year):
             'status': project.get_status_display(),
             'internal_funding_committed': assigned,
             'external_funding_committed': external,
+            'used_budget': used,
+            'remaining_budget': max(Decimal('0'), assigned - used),
         })
     
     uncommitted_remaining = total_assigned - total_committed_internal
@@ -389,6 +405,45 @@ def _get_college_dashboard_data(user, fiscal_year):
 
     college_remaining_data_json = json.dumps(remaining_cumulative_data)
 
+    # Calculate total spent (used budget) from projects
+    total_spent = college_budget.total_spent_by_projects
+    
+    # Calculate percentages
+    percent_used = (total_spent / total_assigned * 100) if total_assigned > 0 else Decimal('0')
+    percent_unused = (100 - percent_used) if total_assigned > 0 else Decimal('0')
+    percent_committed = (total_committed_internal / total_assigned * 100) if total_assigned > 0 else Decimal('0')
+    
+    # Calculate final remaining (after spending)
+    final_remaining = college_budget.final_remaining
+
+    # Get projects that have actually spent budget (used_budget > 0)
+    # Since used_budget is now calculated directly from expenses, this will include all projects with expenses
+    projects_with_spending = []
+    for p in project_list:
+        # Include projects with any expenses (used_budget > 0)
+        if p['used_budget'] and p['used_budget'] > Decimal('0'):
+            usage_percent = (p['used_budget'] / p['internal_funding_committed'] * 100) if p['internal_funding_committed'] > 0 else Decimal('0')
+            # Determine color based on usage percentage
+            if usage_percent > 100:
+                usage_color = '#dc2626'  # Red for over budget
+            elif usage_percent > 80:
+                usage_color = '#f59e0b'  # Orange for high usage
+            else:
+                usage_color = '#10b981'  # Green for normal usage
+            
+            projects_with_spending.append({
+                'id': p['id'],
+                'title': p['title'],
+                'status': p['status'],
+                'used_budget': p['used_budget'],
+                'internal_funding_committed': p['internal_funding_committed'],
+                'remaining_budget': p['remaining_budget'],
+                'usage_percent': usage_percent,
+                'usage_color': usage_color,
+            })
+    # Sort by used_budget descending (highest spending first)
+    projects_with_spending.sort(key=lambda x: x['used_budget'], reverse=True)
+
 
     return {
         'is_setup': True,
@@ -397,8 +452,14 @@ def _get_college_dashboard_data(user, fiscal_year):
         'total_assigned_original_cut': total_assigned,
         'total_committed_to_projects': total_committed_internal,
         'total_external_to_projects': total_committed_external,
+        'total_spent_by_projects': total_spent,
         'uncommitted_remaining': uncommitted_remaining,
+        'final_remaining': final_remaining,
+        'percent_used': percent_used,
+        'percent_unused': percent_unused,
+        'percent_committed': percent_committed,
         'dashboard_data': project_list,
+        'projects_with_spending': projects_with_spending,
         
         'college_committed_data_json': college_committed_data_json, 
         'college_external_data_json': college_external_data_json,
@@ -824,8 +885,15 @@ def budget_view(request):
     context["base_template"] = get_templates(request)
     context["title"] = f"Budget Dashboard ({current_year})"
     context["user_role"] = user_role
-    context["is_admin"] = user_role in ["VP", "DIRECTOR", "UESO"]
-    context["is_college_admin"] = user_role in ["PROGRAM_HEAD", "DEAN", "COORDINATOR"]
+    context["is_admin"] = user_role in ["VP", "DIRECTOR", "UESO"] if user_role else False
+    context["is_college_admin"] = user_role in ["PROGRAM_HEAD", "DEAN", "COORDINATOR"] if user_role else False
+    context["is_faculty_or_implementer"] = user_role in ["FACULTY", "IMPLEMENTER"] if user_role else False
+    context["is_admin_json"] = json.dumps(user_role in ["VP", "DIRECTOR", "UESO"] if user_role else False)
+    context["is_college_admin_json"] = json.dumps(user_role in ["PROGRAM_HEAD", "DEAN", "COORDINATOR"] if user_role else False)
+    
+    # Ensure projects_with_spending is always defined
+    if 'projects_with_spending' not in context:
+        context['projects_with_spending'] = []
 
     if not context.get('is_setup', True):
         if context.get('user_role') in ["VP", "DIRECTOR", "UESO"]:

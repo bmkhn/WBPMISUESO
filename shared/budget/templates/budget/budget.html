@@ -15,7 +15,18 @@
 <link href="https://fonts.googleapis.com/css?family=Inter:400,500,700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
 <link href="{% static 'shared/budget/styles.css' %}" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script> 
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+<style>
+    .usage-bar-fill {
+        height: 100%;
+        transition: width 0.3s;
+    }
+    .usage-percent-text {
+        font-weight: 600;
+        min-width: 45px;
+        text-align: right;
+    }
+</style>
 </head>
 <body>
 <div class="main-container">
@@ -34,7 +45,7 @@
         </div>
     </div>
 
-    {% if user_role in "VP,DIRECTOR,UESO" %}
+    {% if is_admin %}
     <div class="another-header">
         <h2>Overview</h2>
     </div>
@@ -202,7 +213,90 @@
         </div>
     </div>
 
-    <div class="another-header" style="justify-content: space-between; align-items: center;">
+    <div class="goal-card-container" style="margin-top: 20px;">
+        <div class="goal-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <div class="card-content-wrapper" style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
+                <div style="flex: 1;">
+                    <h3 style="color: white; margin-bottom: 10px;">Budget Usage</h3>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="color: rgba(255,255,255,0.9); font-size: 14px;">Used:</span>
+                            <span style="color: white; font-weight: 600; font-size: 18px;">₱{{ total_spent_by_projects|floatformat:0|intcomma }}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="color: rgba(255,255,255,0.9); font-size: 14px;">Remaining:</span>
+                            <span style="color: white; font-weight: 600; font-size: 18px;">₱{{ final_remaining|floatformat:0|intcomma }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div style="flex: 1; display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 10px;">
+                    <div style="text-align: right;">
+                        <div style="color: rgba(255,255,255,0.9); font-size: 12px; margin-bottom: 4px;">Used</div>
+                        <div style="color: white; font-size: 32px; font-weight: 700;">{{ percent_used|floatformat:1 }}%</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="color: rgba(255,255,255,0.9); font-size: 12px; margin-bottom: 4px;">Unused</div>
+                        <div style="color: white; font-size: 32px; font-weight: 700;">{{ percent_unused|floatformat:1 }}%</div>
+                    </div>
+                </div>
+            </div>
+            <span class="card-figure-subtext" style="color: rgba(255,255,255,0.8);">Budget utilization: {{ percent_committed|floatformat:1 }}% committed, {{ percent_used|floatformat:1 }}% spent</span>
+        </div>
+    </div>
+
+    {% if projects_with_spending %}
+    <div class="another-header" style="justify-content: space-between; align-items: center; margin-top: 30px;">
+        <h2 style="margin: 0;">Projects with Budget Usage</h2>
+        <span style="color: #6b7280; font-size: 14px;">{{ projects_with_spending|length }} project{{ projects_with_spending|length|pluralize }} with expenses</span>
+    </div>
+    <div class="table-container" style="margin-top: 15px;">
+        <div class="table-wrapper">
+            <table class="user-table">
+                <thead>
+                    <tr>
+                        <th>Project Title</th>
+                        <th>Status</th>
+                        <th>Budget Allocated</th>
+                        <th>Amount Used</th>
+                        <th>Remaining</th>
+                        <th>Usage %</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for project in projects_with_spending %}
+                    <tr class="project-clickable-row" data-project-id="{{ project.id }}" style="cursor: pointer;">
+                        <td class="font-bold">{{ project.title }}</td>
+                        <td>{{ project.status }}</td>
+                        <td>₱{{ project.internal_funding_committed|floatformat:0|intcomma }}</td>
+                        <td class="font-bold" style="color: #dc2626;">₱{{ project.used_budget|floatformat:0|intcomma }}</td>
+                        <td class="{% if project.remaining_budget < 0 %}text-red{% else %}text-green{% endif %}">
+                            ₱{{ project.remaining_budget|floatformat:0|intcomma }}
+                        </td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="flex: 1; background: #e5e7eb; height: 8px; border-radius: 4px; overflow: hidden;">
+                                    <div class="usage-bar-fill" data-color="{{ project.usage_color }}" data-width="{{ project.usage_percent|floatformat:0 }}"></div>
+                                </div>
+                                <span class="usage-percent-text" data-color="{{ project.usage_color }}">
+                                    {{ project.usage_percent|floatformat:1 }}%
+                                </span>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <div class="table-container" style="margin-top: 30px;">
+        <div style="text-align: center; padding: 40px; color: #6b7280;">
+            <p style="font-size: 16px; margin: 0;">No projects have recorded expenses yet.</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="another-header" style="justify-content: space-between; align-items: center; margin-top: 30px;">
         <h2 style="margin: 0;">College Project Budget Allocations</h2>
         <div class="dropdown-button">
                 <select id="collegeProjectSortSelect">
@@ -245,7 +339,7 @@
     </div>
     {% endif %}
 
-    {% if user_role in "FACULTY,IMPLEMENTER" %}
+    {% if is_faculty_or_implementer %}
     <div class="another-header">
         <h2>Overview</h2>
     </div>
@@ -334,7 +428,7 @@
     {% endif %}
 
 
-    {% if is_admin %}   
+    {% if is_admin %}
     <div class="another-header">
         <h2>Snippets</h2>
     </div>
@@ -358,7 +452,6 @@
                 {% endfor %}
             </div>
         </div>
-        {% endif%}
 
         <div class="table-container"> 
             <div class="list-card-header">
@@ -384,9 +477,24 @@
             </div>
         </div>
     </div>
+    {% endif %}
 </div>
 
 <script>
+    // @ts-nocheck
+    /* eslint-disable */
+    /* jshint ignore:start */
+    /* jslint ignore:start */
+    /* 
+     * WARNING: This file contains Django template tags (like "if" and "endif") that are 
+     * processed server-side by Django before the JavaScript is executed. JavaScript linters 
+     * will show false positive errors for these template tags because they try to parse 
+     * them as JavaScript syntax. These errors can be safely ignored - the code works correctly.
+     * 
+     * To suppress these warnings in your IDE:
+     * - VS Code: Add to settings.json: "javascript.validate.enable": false for this file
+     * - Or configure your linter to ignore Django template syntax
+     */
     const unallocRaw = '{{ unallocated_data_raw_json|safe }}';
     const unalloc = '{{ unallocated_data_json|safe }}';
     const assignedData = '{{ assigned_data_json|safe }}';
@@ -411,6 +519,12 @@
     let ADMIN_DATA = [];
     let COLLEGE_PROJECT_DATA = [];
     let FACULTY_PROJECT_DATA = [];
+    
+    // User role and permission flags (set by Django template)
+    const userRole = '{{ user_role|default:"" }}';
+    // Parse boolean values from JSON strings to avoid VS Code syntax errors
+    const isCollegeAdmin = JSON.parse({{ is_college_admin_json|safe }});
+    const isAdmin = JSON.parse({{ is_admin_json|safe }});
 
     const mainCardChartOptions = {
         responsive: true,
@@ -719,31 +833,37 @@
     document.addEventListener('DOMContentLoaded', () => {
         const currentMonths = months.slice(0, currentMonth + 1);
         
-        {% if user_role in "VP,DIRECTOR,UESO" %}
-        try {
-            ADMIN_DATA = JSON.parse(cleanPythonData(rawAdminData));
-            
-            renderAdminTable(); 
+        // Admin/VP/Director/UESO view
+        if (userRole && ['VP', 'DIRECTOR', 'UESO'].includes(userRole)) {
+            try {
+                ADMIN_DATA = JSON.parse(cleanPythonData(rawAdminData));
+                
+                renderAdminTable(); 
 
-            initSparkline('unallocatedChart', unalloc, false, true, currentMonths, unallocRaw, true);
-            initSparkline('assignedChart', assignedData);
-            initSparkline('internalCommittedChart', internalCommittedData);
-            initSparkline('externalCommittedChart', externalCommittedData, true);
+                initSparkline('unallocatedChart', unalloc, false, true, currentMonths, unallocRaw, true);
+                initSparkline('assignedChart', assignedData);
+                initSparkline('internalCommittedChart', internalCommittedData);
+                initSparkline('externalCommittedChart', externalCommittedData, true);
 
-            document.getElementById('adminSortSelect')?.addEventListener('change', e => {
-                sortAdminTable(e.target.value);
-            });
+                document.getElementById('adminSortSelect')?.addEventListener('change', e => {
+                    sortAdminTable(e.target.value);
+                });
 
-        } catch (err) { 
-            console.error("Admin Dashboard Initialization Failed:", err); 
+            } catch (err) { 
+                console.error("Admin Dashboard Initialization Failed:", err); 
+            }
         }
-        {% endif %}
 
-        {% if is_college_admin %}
-        try {
-            COLLEGE_PROJECT_DATA = JSON.parse(cleanPythonData(rawCollegeData));
+        // College admin view
+        if (isCollegeAdmin) {
+            try {
+                COLLEGE_PROJECT_DATA = JSON.parse(cleanPythonData(rawCollegeData));
+                
+                initSparkline('collegeAssignedChart', collegeAssignedNorm); 
+            } catch (err) { 
+                console.error("College init failed:", err); 
+            }
             
-            initSparkline('collegeAssignedChart', collegeAssignedNorm); 
             initSparkline('collegeCommittedChart', collegeCommittedData);
             initSparkline('collegeRemainingChart', collegeRemainingData, true); 
             
@@ -753,25 +873,51 @@
                 sortProjectTable('college', e.target.value);
             });
 
-        } catch (err) { console.error("College init failed:", err); }
-        {% endif %}
-        
-        {% if user_role in "FACULTY,IMPLEMENTER" %}
-        try {
-            FACULTY_PROJECT_DATA = JSON.parse(cleanPythonData(rawFacultyData));
-            
-            initSparkline('facultyTotalChart', faculty_total_data_json);
-            initSparkline('facultyInternalChart', facultyInternalData);
-            initSparkline('facultyExternalChart', facultyExternalData, true);
-            
-            renderProjectTable('faculty');
-
-            document.getElementById('facultyProjectSortSelect')?.addEventListener('change', e => {
-                sortProjectTable('faculty', e.target.value);
+            // Add click handlers for "Projects Using Budget" table
+            document.querySelectorAll('.project-clickable-row[data-project-id]').forEach(row => {
+                if (!row.dataset.hasClickListener) {
+                    row.addEventListener('click', () => {
+                        const projectId = row.dataset.projectId;
+                        if (projectId) {
+                            window.location.href = `/projects/${projectId}/`;
+                        }
+                    });
+                    row.dataset.hasClickListener = 'true';
+                }
             });
-        } catch (err) { console.error("Faculty init failed:", err); }
-        {% endif %}
+
+            // Set dynamic styles for usage bars and text from data attributes
+            document.querySelectorAll('.usage-bar-fill').forEach(bar => {
+                const color = bar.dataset.color;
+                const width = bar.dataset.width;
+                if (color) bar.style.backgroundColor = color;
+                if (width) bar.style.width = width + '%';
+            });
+            document.querySelectorAll('.usage-percent-text').forEach(text => {
+                const color = text.dataset.color;
+                if (color) text.style.color = color;
+            });
+        }
+        
+        // Faculty/Implementer view
+        if (userRole && ['FACULTY', 'IMPLEMENTER'].includes(userRole)) {
+            try {
+                FACULTY_PROJECT_DATA = JSON.parse(cleanPythonData(rawFacultyData));
+                
+                initSparkline('facultyTotalChart', faculty_total_data_json);
+                initSparkline('facultyInternalChart', facultyInternalData);
+                initSparkline('facultyExternalChart', facultyExternalData, true);
+                
+                renderProjectTable('faculty');
+
+                document.getElementById('facultyProjectSortSelect')?.addEventListener('change', e => {
+                    sortProjectTable('faculty', e.target.value);
+                });
+            } catch (err) { console.error("Faculty init failed:", err); }
+        }
     });
+    /* eslint-enable */
+    /* jshint ignore:end */
 </script>
 
 </body>
