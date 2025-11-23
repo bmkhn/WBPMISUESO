@@ -523,8 +523,10 @@
     // User role and permission flags (set by Django template)
     const userRole = '{{ user_role|default:"" }}';
     // Parse boolean values from JSON strings to avoid VS Code syntax errors
-    const isCollegeAdmin = JSON.parse({{ is_college_admin_json|safe }});
-    const isAdmin = JSON.parse({{ is_admin_json|safe }});
+    // eslint-disable-next-line
+    const isCollegeAdmin = JSON.parse('{{ is_college_admin_json|safe }}');
+    // eslint-disable-next-line
+    const isAdmin = JSON.parse('{{ is_admin_json|safe }}');
 
     const mainCardChartOptions = {
         responsive: true,
