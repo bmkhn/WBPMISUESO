@@ -1,1654 +1,4051 @@
 {% extends base_template %}
+
 {% block content %}
+
 {% load static %}
+
 <!DOCTYPE html>
+
 <html lang="en">
+
 <head>
+
 <meta charset="UTF-8">
+
 <title>Calendar</title>
 
+
+
 <link href="https://fonts.googleapis.com/css?family=Inter:400,500,700&display=swap" rel="stylesheet">
+
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
+
 <link href="{% static 'shared/calendar/styles.css' %}" rel="stylesheet">
 
+
+
 <!-- Style -->
+
 <style>
+
     .custom-dropdown-container {
+
         display: none;
+
         position: fixed; 
+
         background: white;
+
         border: 1px solid #ccc;
+
         border-radius: 6px;
+
         box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+
         z-index: 3000; /* Increased to ensure dropdown is above modals */
+
         min-width: 250px;
+
         max-height: 350px;
+
         overflow-y: auto;
+
         padding: 8px;
+
     }
+
     .custom-dropdown-container input[type="text"] {
+
         width: 100%;
+
         padding: 8px 10px;
+
         margin-bottom: 8px;
+
         box-sizing: border-box;
+
         border: 1px solid #ddd;
+
         border-radius: 4px;
+
         font-family: inherit;
+
         font-size: 14px;
+
     }
+
     .custom-dropdown-option {
+
         padding: 8px 10px;
+
         cursor: pointer;
+
         font-size: 13px;
+
         border-radius: 4px;
+
     }
+
     .custom-dropdown-option:hover {
+
         background-color: #f0f0f0;
+
     }
+
 </style>
+
+
 
 </head>
 
+
+
 <body>
 
+
+
 <!-- Calendar Wrapper -->
+
 <div id="calendar-wrapper">
+
     <div id="calendar-sidebar-left">
+
         <h2>My Calendar</h2>
+
         <select id="year-selector"></select>
+
         <ul id="month-selector">
+
             <li data-month="0">January</li><li data-month="1">February</li>
+
             <li data-month="2">March</li><li data-month="3">April</li>
+
             <li data-month="4">May</li><li data-month="5">June</li>
+
             <li data-month="6">July</li><li data-month="7">August</li>
+
             <li data-month="8">September</li><li data-month="9">October</li>
+
             <li data-month="10">November</li><li data-month="11">December</li>
+
         </ul>
+
     </div>
+
+
 
     <div id="calendar-container">
+
         <h2 id="month-name"></h2>
+
         <div class="weekdays">
+
             <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+
         </div>
+
         <div id="calendar" class="calendar-grid"></div>
+
     </div>
+
+
 
     <div id="calendar-sidebar-right">
+
     <div style="height:8px;"></div>
+
     <ul id="event-list"></ul>
+
     </div>
+
 </div>
+
+
 
 <!-- Add Event Modal -->
+
 <div id="add-event-modal" class="event-modal" style="display:none;align-items:center;justify-content:center;">
+
     <div class="event-modal-content" style="display:flex;flex-direction:column;max-height:90vh;">
+
         <span class="close" id="close-add-event-modal">&times;</span>
+
         <h2 id="add-event-modal-title">Add Meeting</h2>
+
         <form id="add-event-form" method="post" enctype="multipart/form-data" action="/calendar/events/" style="display:flex;flex-direction:column;height:100%;overflow:hidden;">
+
             {% csrf_token %}
+
             <div style="flex:1;overflow-y:auto;padding-right:8px;">
+
                 <div class="form-group">
+
                     <label class="user-details-label">Title <span class="required">*</span></label>
+
                     <input class="user-details-value" type="text" name="title" id="add_event_title"  style="flex:1;">
-                </div>
-                <div class="form-group">
-                    <label class="user-details-label">Description <span class="required">*</span></label>
-                    <textarea class="user-details-value" name="description" id="add_event_description" rows="2" ></textarea>
-                </div>
-                <div class="one">
-                    <div class="two">
-                        <label class="user-details-label">Date <span class="required">*</span></label>
-                        <input class="user-details-value" type="date" name="date" id="add_event_date"  style="flex:1; color: #888; pointer-events: none;" readonly tabindex="-1">
-                    </div>
-                    <div class="two">
-                        <label class="user-details-label">Time <span class="required">*</span></label>
-                    <input class="user-details-value" type="time" name="time" id="add_event_time"  style="flex:1;">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="user-details-label">Location <span class="required">*</span></label>
-                    <input class="user-details-value" type="text" name="location" id="add_event_location"  style="flex:1;">
-                </div>
-                <div class="form-group" style="flex-direction: column; gap:0.5rem;">
-                    <label class="user-details-label">Add to Other's Calendar</label>
-                    <div id="participants-tag-row" class="tag-row"></div>
-                    <select id="participants-options-template" style="display:none;" multiple>
-                        <option value="">Select Participant</option>
-                        {% for user in users %}
-                            <option value="{{ user.id }}">{{ user.get_full_name|default:user.username }}</option>
-                        {% endfor %}
-                    </select>
+
                 </div>
 
                 <div class="form-group">
-                    <label class="user-details-label">Notes (Optional)</label>
-                    <textarea class="user-details-value" name="notes" id="add_event_notes" rows="2"></textarea>
+
+                    <label class="user-details-label">Description <span class="required">*</span></label>
+
+                    <textarea class="user-details-value" name="description" id="add_event_description" rows="2" ></textarea>
+
                 </div>
+
+                <div class="one">
+
+                    <div class="two">
+
+                        <label class="user-details-label">Date <span class="required">*</span></label>
+
+                        <input class="user-details-value" type="date" name="date" id="add_event_date"  style="flex:1; color: #888; pointer-events: none;" readonly tabindex="-1">
+
+                    </div>
+
+                </div>
+
+                <div class="one">
+
+                    <div class="two">
+
+                        <label class="user-details-label">Start Time <span class="required">*</span></label>
+
+                        <input class="user-details-value" type="time" name="time" id="add_event_time" step="60" style="flex:1;">
+
+                    </div>
+
+                    <div class="two">
+
+                        <label class="user-details-label">End Time <span class="required">*</span></label>
+
+                        <input class="user-details-value" type="time" name="end_time" id="add_event_end_time" step="60" style="flex:1;">
+
+                    </div>
+
+                </div>
+
+                <!-- Available Time Slots Display -->
+                <div id="available-slots-container" style="display:none;margin-top:8px;padding:12px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                        <i class="fa-solid fa-clock" style="color:#0284c7;"></i>
+                        <label class="user-details-label" style="margin:0;font-weight:600;color:#0284c7;">Available Time Slots</label>
+                    </div>
+                    <div id="available-slots-list" style="font-size:0.9rem;color:#0c4a6e;line-height:1.8;">
+                        <!-- Available slots will be populated here -->
+                    </div>
+                    <div style="margin-top:8px;font-size:0.85rem;color:#64748b;font-style:italic;">
+                        <i class="fa-solid fa-info-circle" style="margin-right:4px;"></i>
+                        Click on a time slot to auto-fill the form
+                    </div>
+                    <div style="margin-top:6px;font-size:0.8rem;color:#f59e0b;padding:6px 8px;background:#fef3c7;border-radius:4px;border-left:3px solid #f59e0b;">
+                        <i class="fa-solid fa-exclamation-triangle" style="margin-right:4px;"></i>
+                        <strong>Note:</strong> Available slots are based on meetings visible to you. Other meetings may exist that you cannot see.
+                    </div>
+                </div>
+                <div class="form-group">
+
+                    <label class="user-details-label">Location <span class="required">*</span></label>
+
+                    <input class="user-details-value" type="text" name="location" id="add_event_location"  style="flex:1;">
+
+                </div>
+
+                <div class="form-group" style="flex-direction: column; gap:0.5rem;">
+
+                    <label class="user-details-label">Add to Other's Calendar</label>
+
+                    <div id="participants-tag-row" class="tag-row"></div>
+
+                    <select id="participants-options-template" style="display:none;" multiple>
+
+                        <option value="">Select Participant</option>
+
+                        {% for user in users %}
+
+                            <option value="{{ user.id }}">{{ user.get_full_name|default:user.username }}</option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+
+                <div class="form-group">
+
+                    <label class="user-details-label">Notes (Optional)</label>
+
+                    <textarea class="user-details-value" name="notes" id="add_event_notes" rows="2"></textarea>
+
+                </div>
+
+                
                 
                 <div class="form-group">
+
                     <label class="user-details-label">Attachment (Optional)</label>
+
                     <div style="width: 100%;">
 
+
+
                         <label for="add_event_attachment" class="upload-area" id="add-upload-area">
+
                             <svg class="icon-upload" width="24" height="24"><use href="#icon-upload"></use></svg>
+
                             <span class="upload-text" id="add-upload-text">Click to upload</span>
+
                             <input 
+
                                 type="file" 
+
                                 name="notes_attachment" 
+
                                 id="add_event_attachment" 
+
                                 accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.zip"
+
                                 class="hidden"
+
                                 style="display: none;"> 
+
                         </label>
 
+
+
                     </div>
+
                 </div>
+
             </div>
+
             <div class="form-actions" style="justify-content:flex-end;position:sticky;bottom:0;background:white;padding-top:16px;margin-top:16px;border-top:1px solid #e5e7eb;">
+
                 <button type="button" class="back" id="cancel-add-event-modal">Cancel</button>
+
                 <button type="submit" class="save">Add Meeting</button>
+
             </div>
+
         </form>
+
     </div>
+
 </div>
+
+
 
 <!-- Edit Event Modal -->
+
 <div id="edit-event-modal" class="event-modal" style="display:none;align-items:center;justify-content:center;">
+
     <div class="event-modal-content" style="display:flex;flex-direction:column;max-height:90vh;">
+
         <span class="close" id="close-edit-event-modal">&times;</span>
+
         <h2 id="edit-event-modal-title">Edit Event</h2>
+
         <form id="edit-event-form" method="post" enctype="multipart/form-data" action="/calendar/edit_event/" style="display:flex;flex-direction:column;height:100%;overflow:hidden;">
+
             {% csrf_token %}
+
             <input type="hidden" name="event_id" id="edit_event_id">
+
             <div style="flex:1;overflow-y:auto;padding-right:8px;">
+
                 <div class="form-group">
+
                     <label class="form-label user-details-label">Title <span class="required">*</span></label>
+
                     <input class="user-details-value" type="text" name="title" id="edit_event_title" style="flex:1;">
+
                 </div>
+
                 <div class="form-group">
+
                     <label class="form-label user-details-label">Description <span class="required">*</span></label>
+
                     <textarea class="user-details-value" name="description" id="edit_event_description" rows="2" ></textarea>
+
                 </div>
+
                 <div class="one">
+
                     <div class="two">
+
                         <label class="user-details-label">Date <span class="required">*</span></label>
+
                         <input class="user-details-value" type="date" name="date" id="edit_event_date"  style="flex:1; color: #888;">
+
                     </div>
+
+                </div>
+
+                <div class="one">
+
                     <div class="two">
-                        <label class="user-details-label">Time <span class="required">*</span></label>
-                        <input class="user-details-value" type="time" name="time" id="edit_event_time"  style="flex:1;">
+
+                        <label class="user-details-label">Start Time <span class="required">*</span></label>
+
+                        <input class="user-details-value" type="time" name="time" id="edit_event_time" step="60" style="flex:1;">
+
                     </div>
+
+                    <div class="two">
+
+                        <label class="user-details-label">End Time <span class="required">*</span></label>
+
+                        <input class="user-details-value" type="time" name="end_time" id="edit_event_end_time" step="60" style="flex:1;">
+
+                    </div>
+
                 </div>
+
                 <div class="form-group">
+
                     <label class="user-details-label">Location <span class="required">*</span></label>
+
                     <input class="user-details-value" type="text" name="location" id="edit_event_location"  style="flex:1;">
+
                 </div>
+
                 <div class="form-group" style="flex-direction: column; gap:0.5rem;">
+
                     <label class="form-label user-details-label">Participants</label>
+
                     <div id="edit-participants-tag-row" class="tag-row"></div>
+
                     <select id="edit-participants-options-template" style="display:none;" multiple>
+
                         {% for user in users %}
+
                             <option value="{{ user.id }}">{{ user.get_full_name|default:user.username }}</option>
+
                         {% endfor %}
+
                     </select>
+
                     <script id="edit-participants-data" type="application/json"></script> 
+
                 </div>
+
                 <div class="form-group">
+
                     <label class="form-label user-details-label">Notes (Optional)</label>
+
                     <textarea class="user-details-value" name="notes" id="edit_event_notes" rows="2"></textarea>
+
                 </div>
+
+                
                 
                 <div class="form-group" style="flex-direction:column;">
+
                     <label class="form-label user-details-label">Attachment (Optional)</label>
+
+                    
                     
                     <label for="edit_event_attachment" class="upload-area" style="margin-top: 8px;">
+
                         <svg class="icon-upload" width="24" height="24"><use href="#icon-upload"></use></svg>
+
                         <span class="upload-text">Click to upload new file</span>
+
                         <input 
+
                             class="hidden" 
+
                             type="file" 
+
                             name="notes_attachment" 
+
                             id="edit_event_attachment" 
+
                             accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.zip" 
+
                             onchange="this.parentElement.querySelector('.upload-text').textContent = this.files[0].name">
+
                     </label>
+
+                    
                     
                     <input type="hidden" id="edit_remove_attachment_flag" name="remove_attachment" value="false">
+
                 </div>
+
             </div>
+
             <div class="form-actions" style="justify-content:flex-end;position:sticky;bottom:0;background:white;padding-top:16px;margin-top:16px;border-top:1px solid #e5e7eb;">
+
                 <button type="button" class="back" id="cancel-edit-event-modal">Cancel</button>
+
                 <button type="submit" class="save">Save Changes</button>
+
             </div>
+
         </form>
+
     </div>
+
 </div>
+
+
 
 <!-- Event Details Modal -->
+
 <div id="event-details-modal" class="event-modal" style="display:none;align-items:center;justify-content:center;">
+
     <div class="event-modal-content" style="max-width:600px;position:relative;">
+
         <span class="close" id="close-event-details-modal">&times;</span>
+
         <h2 id="event-details-title" style="margin-bottom:10px;"></h2>
+
         <div id="event-details-info">
+
             </div>
+
     </div>
+
 </div>
+
+
 
 <!-- Delete Confirm Modal -->
+
 <div id="delete-confirm-modal" class="event-modal" style="display:none;align-items:center;justify-content:center;">
+
     <div style="background:white;padding:2rem 2.5rem;border-radius:16px;box-shadow:0 4px 32px rgba(0,0,0,0.18);max-width:350px;margin:auto;display:flex;flex-direction:column;align-items:center;">
+
         <div style="font-size:1.25rem;font-weight:600;color:#E53E3E;margin-bottom:1rem;">Confirm Deletion</div>
+
         <div id="delete-confirm-message" style="font-size:1rem;color:#444;margin-bottom:2rem;text-align:center;">Are you sure you want to delete this event? This action cannot be undone.</div>
+
         <div style="display:flex;gap:1rem;">
+
             <button id="cancel-delete-modal" style="background:#e5e7eb;color:#374151;padding:0.75rem 1.5rem;border-radius:8px;font-size:1rem;font-weight:500;border:none;cursor:pointer;">Cancel</button>
+
             <button id="confirm-delete-btn" style="background:#E53E3E;color:white;padding:0.75rem 1.5rem;border-radius:8px;font-size:1rem;font-weight:500;border:none;cursor:pointer;">Delete</button>
+
         </div>
+
     </div>
+
 </div>
+
+
 
 <!-- Custom Dropdown -->
+
 <div id="custom-dropdown-container" class="custom-dropdown-container">
+
     <input type="text" id="custom-dropdown-filter" placeholder="Search..." autocomplete="off">
+
     <div id="custom-dropdown-options">
+
     </div>
+
 </div>
 
+
+
 <!-- SVG Sprite Section -->
+
 <svg style="display: none;">
+
     <symbol id="icon-add" viewBox="0 0 16 16">
+
         <path d="M6.80039 14.4004C6.80039 14.7187 6.92682 15.0239 7.15186 15.2489C7.37691 15.474 7.68213 15.6004 8.00039 15.6004C8.31865 15.6004 8.62388 15.474 8.84892 15.2489C9.07396 15.0239 9.20039 14.7187 9.20039 14.4004V9.20039H14.4004C14.7187 9.20039 15.0239 9.07396 15.2489 8.84892C15.474 8.62388 15.6004 8.31865 15.6004 8.00039C15.6004 7.68213 15.474 7.37691 15.2489 7.15186C15.0239 6.92682 14.7187 6.80039 14.4004 6.80039H9.20039V1.60039C9.20039 1.28213 9.07396 0.976906 8.84892 0.751863C8.62388 0.526819 8.31865 0.400391 8.00039 0.400391C7.68213 0.400391 7.37691 0.526819 7.15186 0.751863C6.92682 0.976906 6.80039 1.28213 6.80039 1.60039V6.80039H1.60039C1.28213 6.80039 0.976906 6.92682 0.751863 7.15186C0.526819 7.37691 0.400391 7.68213 0.400391 8.00039C0.400391 8.31865 0.526819 8.62388 0.751863 8.84892C0.976906 9.07396 1.28213 9.20039 1.60039 9.20039H6.80039V14.4004Z" fill="black"/>
+
     </symbol>
+
+
 
 	<symbol id="icon-upload" viewBox="0 0 24 24" fill="currentColor">
+
 		<path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+
 		<path d="M12,11L8,15H16L12,11Z" />
+
 	</symbol>
 
+
+
     <symbol id="icon-edit" viewBox="0 0 18 18" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+
     <path d="M2 16H3.425L13.2 6.225L11.775 4.8L2 14.575V16ZM1 18C0.716667 18 0.479333 17.904 0.288 17.712C0.0966668 17.52 0.000666667 17.2827 0 17V14.575C0 14.3083 0.0500001 14.054 0.15 13.812C0.25 13.57 0.391667 13.3577 0.575 13.175L13.2 0.575C13.4 0.391667 13.621 0.25 13.863 0.15C14.105 0.0500001 14.359 0 14.625 0C14.891 0 15.1493 0.0500001 15.4 0.15C15.6507 0.25 15.8673 0.4 16.05 0.6L17.425 2C17.625 2.18333 17.7707 2.4 17.862 2.65C17.9533 2.9 17.9993 3.15 18 3.4C18 3.66667 17.954 3.921 17.862 4.163C17.77 4.405 17.6243 4.62567 17.425 4.825L4.825 17.425C4.64167 17.6083 4.429 17.75 4.187 17.85C3.945 17.95 3.691 18 3.425 18H1ZM12.475 5.525L11.775 4.8L13.2 6.225L12.475 5.525Z" fill="black"/>
+
     </symbol>
+
 </svg>
 
+
+
 <!-- Custom Dropdown JS -->
+
 <script>
+
     // Global references to the custom dropdown elements
+
     const dropdownContainer = document.getElementById('custom-dropdown-container');
+
     const dropdownFilter = document.getElementById('custom-dropdown-filter');
+
     const dropdownOptionsDiv = document.getElementById('custom-dropdown-options');
+
+    
     
     // Function to hide the custom dropdown
+
     function hideDropdown() {
+
         if (dropdownContainer) {
+
             dropdownContainer.style.display = 'none';
+
         }
+
     }
+
+
 
     // Function to filter options when user types (called when dropdown is shown)
+
     function filterDropdownOptions() {
+
         const filterText = dropdownFilter.value.toLowerCase();
+
         Array.from(dropdownOptionsDiv.children).forEach(optionEl => {
+
             const text = optionEl.textContent.toLowerCase();
+
             if (text.includes(filterText)) {
+
                 optionEl.style.display = 'block';
+
             } else {
+
                 optionEl.style.display = 'none';
+
             }
+
         });
+
     }
 
+
+
     // Attach filter event listener only once
+
     document.addEventListener('DOMContentLoaded', function() {
+
         if (dropdownFilter) {
+
             dropdownFilter.addEventListener('keyup', filterDropdownOptions);
+
         }
+
         // Hide dropdown when clicking outside
+
         document.addEventListener('mousedown', function(e) {
+
             // Use .tag-row to check if the click target or its parent is the tag row
+
             if (dropdownContainer && dropdownContainer.style.display === 'block' && 
+
                 !dropdownContainer.contains(e.target) && !e.target.closest('.tag-add-btn') && !e.target.closest('.tag-row')) {
+
                 hideDropdown();
+
             }
+
         });
+
     });
+
 </script>
 
+
+
 <!-- Toast -->
+
 <script>
-    // Toast Notification Function (omitted body for brevity)
+
+    // Success Toast Notification Function
+
     function showToast(message, title) {
+
         const toast = document.createElement('div');
+
         toast.id = 'successToast';
+
         toast.style.cssText = 'display:block;position:fixed;top:20px;right:20px;background:#10b981;color:white;padding:1rem 1.5rem;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:10000;font-size:1rem;font-weight:500;min-width:300px;';
+
+        toast.innerHTML = `
+
+            <div style="display:flex;align-items:center;gap:0.75rem;">
+
+                <i class="fa-solid fa-check-circle" style="font-size:1.5rem;"></i>
+
+                <div>
+
+                    <div style="font-weight:600;margin-bottom:0.25rem;">${message}</div>
+
+                    ${title ? `<div style="font-size:0.875rem;opacity:0.9;">${title}</div>` : ''}
+
+                </div>
+
+            </div>
+
+        `;
+
+        document.body.appendChild(toast);
+
+
+
+        // Auto-hide after 4 seconds
+
+        setTimeout(function() {
+
+            toast.style.opacity = '0';
+
+            toast.style.transition = 'opacity 0.3s';
+
+            setTimeout(function() {
+
+                toast.remove();
+
+            }, 300);
+
+        }, 4000);
+
+    }
+
+    
+    
+    // Error Toast Notification Function
+
+    function showErrorToast(message, title) {
+
+        // Convert any 24-hour time formats in the message to 12-hour format
+        const convertedMessage = convertTimeInMessage(message);
+        
+        const toast = document.createElement('div');
+
+        toast.id = 'errorToast';
+
+        toast.style.cssText = 'display:block;position:fixed;top:20px;right:20px;background:#E53E3E;color:white;padding:1rem 1.5rem;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:10000;font-size:1rem;font-weight:500;min-width:300px;';
+
+        toast.innerHTML = `
+
+            <div style="display:flex;align-items:center;gap:0.75rem;">
+
+                <i class="fa-solid fa-exclamation-triangle" style="font-size:1.5rem;"></i>
+
+                <div>
+
+                    <div style="font-weight:600;margin-bottom:0.25rem;">${convertedMessage}</div>
+                    ${title ? `<div style="font-size:0.875rem;opacity:0.9;">${title}</div>` : ''}
+
+                </div>
+
+            </div>
+
+        `;
+
+        document.body.appendChild(toast);
+
+
+
+        // Auto-hide after 5 seconds (longer for errors)
+
+        setTimeout(function() {
+
+            toast.style.opacity = '0';
+
+            toast.style.transition = 'opacity 0.3s';
+
+            setTimeout(function() {
+
+                toast.remove();
+
+            }, 300);
+
+        }, 5000);
+
+    }
+
+    // Warning Toast Notification Function (for informational messages)
+    function showWarningToast(message, title) {
+        // Convert any 24-hour time formats in the message to 12-hour format
+        const convertedMessage = convertTimeInMessage(message);
+        
+        const toast = document.createElement('div');
+        toast.id = 'warningToast';
+        toast.style.cssText = 'display:block;position:fixed;top:20px;right:20px;background:#f59e0b;color:white;padding:1rem 1.5rem;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:10000;font-size:1rem;font-weight:500;min-width:300px;';
         toast.innerHTML = `
             <div style="display:flex;align-items:center;gap:0.75rem;">
-                <i class="fa-solid fa-check-circle" style="font-size:1.5rem;"></i>
+                <i class="fa-solid fa-exclamation-triangle" style="font-size:1.5rem;"></i>
                 <div>
-                    <div style="font-weight:600;margin-bottom:0.25rem;">${message}</div>
+                    <div style="font-weight:600;margin-bottom:0.25rem;">${convertedMessage}</div>
                     ${title ? `<div style="font-size:0.875rem;opacity:0.9;">${title}</div>` : ''}
                 </div>
             </div>
         `;
         document.body.appendChild(toast);
 
-        // Auto-hide after 4 seconds
+        // Auto-hide after 5 seconds
         setTimeout(function() {
             toast.style.opacity = '0';
             toast.style.transition = 'opacity 0.3s';
             setTimeout(function() {
                 toast.remove();
             }, 300);
-        }, 4000);
+        }, 5000);
     }
+
 </script>
 
+
+
 <script>
+
     // Function to display the selected file name and show the preview div (omitted body for brevity)
+
     function displayFileName(input, previewId, nameId) {
+
         const previewDiv = document.getElementById(previewId);
+
         const nameSpan = document.getElementById(nameId);
+
+        
         
         if (input.files.length > 0) {
+
             nameSpan.textContent = input.files[0].name;
+
             previewDiv.style.display = 'flex';
+
             // Hide the main upload area after selecting a file
+
             input.parentElement.style.display = 'none'; 
+
         } else {
+
             previewDiv.style.display = 'none';
+
             input.parentElement.style.display = 'flex'; // Show upload area if no file
+
         }
+
     }
+
+
 
     // Function to clear the selected file (omitted body for brevity)
+
     function clearFile(inputId, previewId, nameId) {
+
         const input = document.getElementById(inputId);
+
         if (!input) return; // Exit if input doesn't exist
+
+        
         
         const previewDiv = document.getElementById(previewId);
+
+        
         
         input.value = ''; // Clears the file input
+
+        
         
         // Only manipulate preview if it exists
+
         if (previewDiv) {
+
             previewDiv.style.display = 'none';
+
         }
+
+        
         
         // Show the main upload area again
+
         if (input.parentElement) {
+
             input.parentElement.style.display = 'flex';
+
         }
+
     }
+
+
 
     // Edit modal logic (adapted from project_events.html)
+
     window.openEditEventModal = function(eventObj) {
+
         document.getElementById('event-details-modal').style.display = 'none';
+
         document.getElementById('edit-event-modal').style.display = 'flex';
+
         document.getElementById('edit_event_id').value = eventObj.id;
+
         document.getElementById('edit_event_title').value = eventObj.title || '';
+
         document.getElementById('edit_event_description').value = eventObj.description || '';
+
         document.getElementById('edit_event_date').value = eventObj.date || '';
+
         document.getElementById('edit_event_time').value = eventObj.time || '';
+
+        document.getElementById('edit_event_end_time').value = eventObj.end_time || '';
+
         document.getElementById('edit_event_location').value = eventObj.location || '';
+
         document.getElementById('edit_event_notes').value = eventObj.notes || '';
+
+        
         
         const removeFlag = document.getElementById('edit_remove_attachment_flag');
+
         const attachmentInput = document.getElementById('edit_event_attachment');
+
+        
         
         // Reset attachment state
+
         removeFlag.value = 'false';
+
         attachmentInput.value = '';
+
+        
         
         // Participants tag UI
+
         const tagController = window.editParticipantTagUI; // Use the global controller
+
         if (tagController) {
+
             // Ensure participants are passed as an array of strings
+
             const participantIds = (eventObj.participants || []).map(String);
+
             tagController.setSelected(participantIds);
+
         }
+
+        
+        
+        // Clear any previous time conflict errors
+
+        const startTimeInput = document.getElementById('edit_event_time');
+
+        const endTimeInput = document.getElementById('edit_event_end_time');
+
+        const existingError = startTimeInput.parentNode.querySelector('.time-conflict-error');
+
+        if (existingError) existingError.remove();
+
+        startTimeInput.style.borderColor = '';
+
+        endTimeInput.style.borderColor = '';
+
+        
+        
+        // Add event listeners for real-time validation (exclude current event from conflict check)
+
+        const dateStr = eventObj.date;
+
+        startTimeInput.onchange = function() {
+
+            validateTimeSelection(dateStr, 'edit_event_time', 'edit_event_end_time', eventObj.id);
+
+        };
+
+        endTimeInput.onchange = function() {
+
+            validateTimeSelection(dateStr, 'edit_event_time', 'edit_event_end_time', eventObj.id);
+
+        };
+
+
 
         document.getElementById('edit-event-modal').style.display = 'flex';
+
     }
 
+
+
     // The old renderParticipantTags (kept as a reference for old tag UI, but replaced by setupTagUI)
+
     function renderParticipantTags() { /* ... */ }
 
+
+
     document.getElementById('close-edit-event-modal').onclick = function() {
+
         document.getElementById('edit-event-modal').style.display = 'none';
+
     };
+
     document.getElementById('cancel-edit-event-modal').onclick = function() {
+
         document.getElementById('edit-event-modal').style.display = 'none';
+
     };
+
     document.getElementById('edit-event-modal').onclick = function(e) {
+
         if (e.target === this) {
+
             this.style.display = 'none';
+
         }
+
     };
+
+    
     
     // Edit form submission logic (omitted body for brevity)
+
     const editEventForm = document.getElementById('edit-event-form');
+
     editEventForm.onsubmit = function(e) {
+
         e.preventDefault();
+
         if (!validateEditEventForm()) return;
+
         const event_id = document.getElementById('edit_event_id').value;
+
         const title = document.getElementById('edit_event_title').value.trim();
+
         const description = document.getElementById('edit_event_description').value.trim();
+
         const date = document.getElementById('edit_event_date').value;
-        const time = document.getElementById('edit_event_time').value;
+
+        const time = document.getElementById('edit_event_time').value.trim();
+
+        const end_time = document.getElementById('edit_event_end_time').value.trim();
+
         const location = document.getElementById('edit_event_location').value.trim();
+
         const participants = Array.from(document.querySelectorAll('#edit-participants-tag-row input[name="participants[]"]')).map(input => input.value);
+
         const notes = document.getElementById('edit_event_notes').value.trim();
+
         const attachmentFile = document.getElementById('edit_event_attachment').files[0];
+
         const removeAttachment = document.getElementById('edit_remove_attachment_flag').value === 'true';
 
+
+
         if (!event_id || !title || !description || !date || !time || !location) {
-            alert('Please fill in all required fields.');
+
+            showErrorToast('Please fill in all required fields.', 'Validation Error');
+
             return;
+
         }
+
+        
         
         // Show loading state
+
         const submitBtn = editEventForm.querySelector('button[type="submit"]');
+
         const originalBtnText = submitBtn.innerHTML;
+
         submitBtn.disabled = true;
+
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+
         submitBtn.style.opacity = '0.7';
+
         submitBtn.style.cursor = 'not-allowed';
+
+        
         
         // Disable all form inputs
+
         const formInputs = editEventForm.querySelectorAll('input, textarea, button');
+
         formInputs.forEach(input => input.disabled = true);
+
+        
         
         const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
 
+
+
         // Use FormData for file upload support
+
         const formData = new FormData();
+
         formData.append('title', title);
+
         formData.append('description', description);
+
         formData.append('date', date);
+
         formData.append('time', time);
+
+        formData.append('end_time', end_time);
+
         formData.append('location', location);
+
         formData.append('notes', notes);
+
         formData.append('remove_attachment', removeAttachment);
+
         participants.forEach(p => formData.append('participants[]', p));
+
         if (attachmentFile) {
+
             formData.append('notes_attachment', attachmentFile);
+
         }
+
+
 
         // *** CORRECTED URL and METHOD ***
+
         fetch('/calendar/events/' + event_id + '/', { 
+
             method: 'PUT',                            
+
             headers: {
+
                 'X-CSRFToken': csrfToken
+
             },
+
             body: formData
+
         })
+
         .then(response => { 
+
+            // Clone the response so we can read it multiple times if needed
+            const responseClone = response.clone();
+            
+            // Try to parse as JSON first
+            return response.json().then(data => {
+                // Check if response is ok
             if (!response.ok) {
-                return response.text().then(text => {
-                    throw new Error(`Server responded with status ${response.status}: ${text}`);
+
+                    // This is a validation/application error (400, 403, etc.), not a network error
+                    const errorMessage = data.errors || data.error || data.message || `Server error: ${response.status}`;
+                    return { status: 'error', errors: errorMessage, isValidationError: true };
+                }
+                return data;
+            }).catch(function(jsonError) {
+                // If JSON parsing fails, try to get text response from clone
+                return responseClone.text().then(text => {
+                    if (!response.ok) {
+                        // Try to parse as JSON one more time from text
+                        try {
+                            const jsonData = JSON.parse(text);
+                            const errorMessage = jsonData.errors || jsonData.error || jsonData.message || text || `Server error: ${response.status}`;
+                            return { status: 'error', errors: errorMessage, isValidationError: true };
+                        } catch (e) {
+                            // If still can't parse, use the text as error message
+                            return { status: 'error', errors: text || `Server error: ${response.status}`, isValidationError: true };
+                        }
+                    }
+                    // If response was ok but not JSON, this is unexpected
+                    return { status: 'error', errors: 'Invalid response from server', isValidationError: true };
+                }).catch(function(textError) {
+                    // If even text parsing fails, return a generic error
+                    return { status: 'error', errors: `Server error: ${response.status}`, isValidationError: true };
                 });
-            }
-            return response.json();
+            });
         })
+
         .then(resp => {
+
             if (resp.status === 'success') {
+
                 document.getElementById('edit-event-modal').style.display = 'none';
+
+                
                 
                 // Reset loading state
+
                 submitBtn.disabled = false;
+
                 submitBtn.innerHTML = originalBtnText;
+
                 submitBtn.style.opacity = '1';
+
                 submitBtn.style.cursor = 'pointer';
+
                 formInputs.forEach(input => input.disabled = false);
+
+
 
                 // Show toast
+
                 const eventTitle = document.getElementById('edit_event_title').value;
+
                 showToast('Meeting Event Updated Successfully!', eventTitle);
 
+
+
                 // Refresh events list with cache-busting
+
                 const timestamp = new Date().getTime();
+
                 fetch('/calendar/events/?_=' + timestamp) 
+
                 .then(r => {
+
                     if (!r.ok) { throw new Error(`Failed to refresh events: ${r.status}`); }
+
                     return r.json();
+
                 })
+
                 .then(data => {
+
                     events = data;
+
                     renderCalendar(currentYear, currentMonth);
+
                     fetchEvents();
+
                 })
+
                 .catch(err => {
+
                     console.error('Error refreshing events after edit:', err);
-                    alert('Event updated, but could not refresh calendar view: ' + err.message);
+
+                    showErrorToast('Event updated, but could not refresh calendar view: ' + err.message, 'Warning');
+
                 });
+
             } else {
+
                 // Reset loading state on error
+
                 submitBtn.disabled = false;
+
                 submitBtn.innerHTML = originalBtnText;
+
                 submitBtn.style.opacity = '1';
+
                 submitBtn.style.cursor = 'pointer';
+
                 formInputs.forEach(input => input.disabled = false);
                 
-                alert('Error updating event: ' + JSON.stringify(resp.errors || resp));
+                
+
+                // Show error message without "Network error:" prefix for validation errors
+                const errorTitle = resp.isValidationError ? 'Validation Error' : 'Error updating event';
+                showErrorToast(resp.errors || JSON.stringify(resp), errorTitle);
             }
+
         }).catch(err => {
-            // Reset loading state on network error
+
+            // Reset loading state on actual network error (connection failed, etc.)
             submitBtn.disabled = false;
+
             submitBtn.innerHTML = originalBtnText;
+
             submitBtn.style.opacity = '1';
+
             submitBtn.style.cursor = 'pointer';
+
             formInputs.forEach(input => input.disabled = false);
+
+            
             
             console.error('Error during edit event fetch:', err);
-            alert('Could not update event: ' + err.message);
+
+            // Only show "Network error:" for actual network failures
+            showErrorToast('Network error: ' + err.message, 'Network Error');
         });
+
     };
+
+    
     
     // Placeholder for fetchEvents function (omitted body for brevity)
+
     function fetchEvents() {
+
         // Display events for the selected month in the right sidebar with categories
+
         const eventList = document.getElementById('event-list');
+
         eventList.innerHTML = '';
+
         const todayStr = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`;
+
         let todayEvents = [], meetings = [], projects = [], holidays = [], done = [];
+
         const today = new Date();
+
         for (const dateStr in events) {
+
             if (events.hasOwnProperty(dateStr)) {
+
                 const dateObj = new Date(dateStr);
+
                 if (dateObj.getFullYear() === currentYear && dateObj.getMonth() === currentMonth) {
+
                     events[dateStr].forEach(ev => {
+
                         const isPast = dateObj < today;
+
                         if (ev.type === 'holiday') {
+
                             holidays.push({...ev, dateStr});
+
                         } else if (isPast) {
+
                             done.push({...ev, dateStr});
+
                         } else if (dateStr === todayStr) {
+
                             todayEvents.push({...ev, dateStr});
+
                         } else if (ev.type === 'meeting') {
+
                             meetings.push({...ev, dateStr});
+
                         } else if (ev.type === 'project') {
+
                             projects.push({...ev, dateStr});
+
                         }
+
                     });
+
                 }
+
             }
+
         }
+
         // Helper to render items
+
         function renderItems(arr, type) {
+
             arr.forEach(ev => {
+
                 const li = document.createElement('li');
+
                 li.className = 'sidebar-event-item';
+
                 li.style.cursor = 'pointer';
+
                 li.style.color = '#245F3E'; // Green text color
+
+                
                 
                 // Determine tag color and label based on event type and status
+
                 let tagColor = (ev.type === 'meeting') ? '#fd7e14' : '#007bff'; // Orange for meeting, Blue for activity
+
                 let tagLabel = (ev.type === 'meeting') ? 'Meeting' : 'Activity';
+
+                
                 
                 // Add ONGOING badge if status is ONGOING
+
                 let statusBadge = '';
+
                 if (ev.status === 'ONGOING') {
+
                     statusBadge = '<span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:12px;font-size:0.75em;font-weight:600;white-space:nowrap;flex-shrink:0;margin-left:4px;">Ongoing</span>';
+
                 }
+
+                
                 
                 li.innerHTML = `<div style='display:flex;align-items:center;gap:6px;'><span style='font-weight:600;font-size:1.1em;color:#245F3E;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'>${ev.title}</span><span style='background:${tagColor};color:#fff;padding:2px 8px;border-radius:12px;font-size:0.75em;font-weight:600;white-space:nowrap;flex-shrink:0;'>${tagLabel}</span>${statusBadge}</div><span style='font-size:0.95em;color:#bbb;'>${ev.dateStr}</span>`;
+
                 li.onclick = function(e) {
+
                     e.stopPropagation();
+
                     showEventDetails([ev], ev.dateStr);
+
                 };
+
                 eventList.appendChild(li);
+
             });
+
         }
+
+
 
         // Today
+
         if (todayEvents.length) {
+
             const h = document.createElement('h4');
+
             h.textContent = 'Today';
+
             h.style.color = '';
+
             eventList.appendChild(h);
+
             renderItems(todayEvents);
+
         }
+
         // Meetings
+
         if (meetings.length) {
+
             const h = document.createElement('h4');
+
             h.textContent = meetings.length === 1 ? 'Meeting' : 'Meetings';
+
             h.style.color = '';
+
             eventList.appendChild(h);
+
             renderItems(meetings, 'meeting');
+
         }
+
         // Activities
+
         if (projects.length) {
+
             const h = document.createElement('h4');
+
             h.textContent = projects.length === 1 ? 'Activity' : 'Activities';
+
             h.style.color = '';
+
             eventList.appendChild(h);
+
             renderItems(projects, 'project');
+
         }
+
         // Done
+
         if (done.length) {
+
             const h = document.createElement('h4');
+
             h.textContent = 'Done';
+
             h.style.color = '#bbb';
+
             eventList.appendChild(h);
+
             done.forEach(ev => {
+
                 const li = document.createElement('li');
+
                 li.className = 'sidebar-event-item';
+
                 li.style.cursor = 'pointer';
+
                 li.style.opacity = '0.5'; // Grayed out
+
+                
                 
                 // Determine tag color and label based on event type
+
                 let tagColor = (ev.type === 'meeting') ? '#fd7e14' : '#007bff'; // Orange for meeting, Blue for activity
+
                 let tagLabel = (ev.type === 'meeting') ? 'Meeting' : 'Activity';
+
+                
                 
                 // Add ONGOING badge if status is ONGOING (shouldn't appear in Done, but just in case)
+
                 let statusBadge = '';
+
                 if (ev.status === 'ONGOING') {
+
                     statusBadge = '<span style="background:#28a745;color:#fff;padding:2px 8px;border-radius:12px;font-size:0.75em;font-weight:600;white-space:nowrap;flex-shrink:0;margin-left:4px;">Ongoing</span>';
+
                 }
+
+                
                 
                 li.innerHTML = `<div style='display:flex;align-items:center;gap:6px;'><span style='font-weight:600;font-size:1.1em;color:#245F3E;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'>${ev.title}</span><span style='background:${tagColor};color:#fff;padding:2px 8px;border-radius:12px;font-size:0.75em;font-weight:600;white-space:nowrap;flex-shrink:0;'>${tagLabel}</span>${statusBadge}</div><span style='font-size:0.95em;color:#bbb;'>${ev.dateStr}</span>`;
+
                 li.onclick = function(e) {
+
                     e.stopPropagation();
+
                     showEventDetails([ev], ev.dateStr);
+
                 };
+
                 eventList.appendChild(li);
+
             });
+
         }
+
+
 
         // Holidays
+
         if (holidays.length) {
+
             // Sort holidays chronologically by dateStr
+
             holidays.sort(function(a, b) {
+
                 // Compare as dates
+
                 return new Date(a.dateStr) - new Date(b.dateStr);
+
             });
+
             const h = document.createElement('h4');
+
             h.textContent = holidays.length === 1 ? 'Holiday' : 'Holidays';
+
             h.style.color = '';
+
             eventList.appendChild(h);
+
             holidays.forEach(ev => {
+
                 const li = document.createElement('li');
+
                 li.className = 'sidebar-holiday-item'; // Use a specific class for holidays
 
+
+
                 // --- Dynamic Color Assignment ---
+
                 let cardTextColor;
+
                 let labelBgColor;
+
                 let labelTextColor;
+
                 let labelBorderColor;
+
                 let labelBorderRadius = '12px';
 
+
+
                 if (ev.holiday_type === 'regular') {
+
                     // Regular Holiday (Matching Light Red/Pink from calendar day)
+
                     cardTextColor = 'white'; 
+
                     labelBgColor = '#FCD116';
+
                     labelTextColor = 'white';
+
                     labelBorderColor = '#FCD116'; 
+
                 } else {
+
                     // Special Holiday (Matching Medium Red from calendar day)
+
                     cardTextColor = 'white'; 
+
                     labelBgColor = '#FCD116';
+
                     labelTextColor = 'white'; 
+
                     labelBorderColor = '#FCD116'; 
+
                 }
+
+
 
                 // Apply styles
+
                 li.style.color = cardTextColor; // Sets text color for the date string
 
+
+
                 li.style.borderRadius = '8px';
+
                 li.style.marginBottom = '10px';
 
+
+
                 let holidayIcon = ev.holiday_type === 'regular' ? '🇵🇭' : '⭐';
+
                 let holidayTypeLabel = ev.holiday_type === 'regular' ? 'Regular' : 'Special';
 
+
+
                 // Update innerHTML to use the new class and inline styles for dynamic colors
+
                 li.innerHTML = `
+
                     <div style='display:flex;align-items:center;gap:8px;'>
+
                         <span style='font-size:1.2em;'>${holidayIcon}</span>
+
                         <span style='font-weight:700;font-size:1em;color:${cardTextColor};flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'>
+
                             ${ev.title}
+
                         </span>
+
                         <span class='holiday-type-label' 
+
                             style='background:${labelBgColor}; color:${labelTextColor}; border-color:${labelBorderColor}; border-radius:${labelBorderRadius}; padding:2px 8px; font-size:0.75em; font-weight:600; white-space:nowrap; flex-shrink:0; border: 1px solid ${labelBorderColor};'>
+
                             ${holidayTypeLabel}
+
                         </span>
+
                     </div>
+
                     <span style='font-size:0.85em;font-weight:500;margin-top:4px;display:block;color:${cardTextColor};'>
+
                         ${ev.dateStr}
+
                     </span>`;
 
+
+
                 li.onclick = function(e) {
+
                     e.stopPropagation();
+
                     showEventDetails([ev], ev.dateStr);
+
                 };
+
                 eventList.appendChild(li);
+
             });
+
         }
+
+
 
         if (!todayEvents.length && !meetings.length && !projects.length && !done.length && !holidays.length) {
+
             eventList.innerHTML = '<li>No events this month.</li>';
+
         }
+
     }
+
+    
     
     // MODIFIED: Tag UI logic using custom dropdown
+
     function setupTagUI(rowId, optionsTemplateId, inputName, single=false) {
+
         const tagRow = document.getElementById(rowId);
+
         const optionsTemplate = document.getElementById(optionsTemplateId);
 
+
+
         // Get options from the template select element
+
         const options = Array.from(optionsTemplate.options)
+
             .filter(opt => opt.value)
+
             .map(opt => ({id: opt.value, name: opt.text}));
 
+
+
         let selected = [];
+
+        
         
         function renderTags() {
+
             tagRow.innerHTML = '';
+
+            
             
             // 1. Render selected tags
+
             selected.forEach(id => {
+
                 const obj = options.find(o => String(o.id) === String(id));
+
                 if (obj) {
+
                     const tag = document.createElement('span');
+
                     tag.className = 'tag-box'; // Use tag-box class from your styles
+
+                    
                     
                     const tagText = document.createElement('span');
+
                     tagText.textContent = obj.name;
+
                     tag.appendChild(tagText);
+
+                    
                     
                     const removeBtn = document.createElement('button');
+
                     removeBtn.type = 'button';
+
                     removeBtn.className = 'tag-remove';
+
                     removeBtn.innerHTML = '&times;';
+
                     removeBtn.onclick = function() {
+
                         selected = selected.filter(cid => String(cid) !== String(id));
+
                         renderTags();
+
                     };
+
                     tag.appendChild(removeBtn);
+
                     tagRow.appendChild(tag);
+
                 }
+
             });
+
+
 
             // 2. Add button logic (always an Add button for non-single select)
+
             if (!single) {
+
                 const addBtn = document.createElement('button');
+
                 addBtn.type = 'button';
+
                 addBtn.id = rowId + '-add-btn';
+
                 addBtn.className = 'tag-add-btn';
+
                 addBtn.innerHTML = '<svg width="16" height="16"><use href="#icon-add" /></svg>';
+
+                
                 
                 // --- CORRECTED BUTTON CLICK HANDLER (with fixed positioning) ---
+
                 addBtn.onclick = function(e) {
+
                     e.preventDefault();
+
                     hideDropdown(); // Hide any currently open dropdown
+
+                    
                     
                     const button = e.currentTarget;
+
                     const btnRect = button.getBoundingClientRect();
+
+                    
                     
                     // Position dropdown relative to the viewport (FIXED POSITIONING)
+
                     dropdownContainer.style.display = 'block';
+
                     dropdownContainer.style.left = (btnRect.left) + 'px';
+
                     dropdownContainer.style.top = (btnRect.bottom + 4) + 'px'; // No scrollY needed for fixed
+
+                    
                     
                     // Clear and populate dropdown options
+
                     dropdownOptionsDiv.innerHTML = '';
+
                     dropdownFilter.value = '';
+
+                    
                     
                     options.forEach(opt => {
+
                         // Only add options that are NOT already selected
+
                         if (!selected.some(id => String(id) === String(opt.id))) {
+
                             const optionEl = document.createElement('div');
+
                             optionEl.className = 'custom-dropdown-option';
+
                             optionEl.textContent = opt.name;
+
                             optionEl.setAttribute('data-id', opt.id);
+
+                            
                             
                             optionEl.onclick = function() {
+
                                 const selectedId = this.getAttribute('data-id');
+
                                 selected.push(selectedId);
+
                                 renderTags();
+
                                 hideDropdown();
+
                             };
+
                             dropdownOptionsDiv.appendChild(optionEl);
+
                         }
+
                     });
 
+
+
                     filterDropdownOptions(); // Run filter on initial load
+
                     dropdownFilter.focus(); 
+
                 };
+
                 tagRow.appendChild(addBtn);
+
             }
 
+
+
             // 3. Add hidden input fields for form submission
+
             selected.forEach(cid => {
+
                 const hidden = document.createElement('input');
+
                 hidden.type = 'hidden';
+
                 hidden.name = inputName + (single ? '' : '[]');
+
                 hidden.value = cid;
+
                 tagRow.appendChild(hidden);
+
             });
+
         }
+
+        
         
         renderTags();
 
+
+
         return {
+
             getSelected: () => selected.slice(),
+
             setSelected: (ids) => { 
+
                 // Ensure IDs are strings when setting
+
                 selected = Array.isArray(ids) ? ids.map(String).slice() : []; 
+
                 renderTags(); 
+
             },
+
         };
+
     }
+
+
 
     // Declare addTagController in outer scope so openAddEventModal can use it
+
     let addTagController = null;
 
-    // Define openAddEventModal globally so it's available when renderCalendar attaches onclick handlers
-    window.openAddEventModal = function(dateStr) {
-        // Reset all form fields
-        document.getElementById('add_event_title').value = '';
-        document.getElementById('add_event_description').value = '';
-        document.getElementById('add_event_time').value = '';
-        document.getElementById('add_event_location').value = '';
-        document.getElementById('add_event_notes').value = '';
-        document.getElementById('add_event_attachment').value = '';  // Reset file input
-        
-        // Reset file upload text
-        const uploadText = document.getElementById('add-upload-text');
-        if (uploadText) {
-            uploadText.textContent = 'Click to upload';
-        }
-        
-        // Clear file preview/upload area for add modal
-        clearFile('add_event_attachment', 'file-preview', 'file-name');
-
-        // Re-initialize tag UI and pre-select current user if addTagController is initialized
-        if (addTagController) {
-            const currentUserId = "{{ request.user.id|default:'' }}";
-            addTagController.setSelected(currentUserId ? [currentUserId] : []);
-        }
-        
-        document.getElementById('add_event_date').value = dateStr;
-        const addEventModal = document.getElementById('add-event-modal');
-        if (addEventModal) {
-            addEventModal.style.display = 'flex';
-        }
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        // Setup tag UI for the Add Event Modal
-        addTagController = setupTagUI('participants-tag-row', 'participants-options-template', 'participants');
-        
-        // Setup tag UI for the Edit Event Modal
-        window.editParticipantTagUI = setupTagUI('edit-participants-tag-row', 'edit-participants-options-template', 'participants');
-    });
-</script>
-
-<script>
-    // --- Add Event Modal Logic (Re-implemented to use setupTagUI) ---
-    const addEventModal = document.getElementById('add-event-modal');
-    const closeAddEventModal = document.getElementById('close-add-event-modal');
-    const cancelAddEventModal = document.getElementById('cancel-add-event-modal');
-    const addEventForm = document.getElementById('add-event-form');
-    const addEventDateInput = document.getElementById('add_event_date');
-    const currentUserId = "{{ request.user.id|default:'' }}";
-
-    // openAddEventModal is now defined inside DOMContentLoaded block above
-
-    closeAddEventModal.onclick = function() { addEventModal.style.display = 'none'; };
-    cancelAddEventModal.onclick = function() { addEventModal.style.display = 'none'; };
-    addEventModal.onclick = function(e) { if (e.target === addEventModal) addEventModal.style.display = 'none'; };
-
-    // File Upload Preview for Add Event Modal
-    document.getElementById('add_event_attachment').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        const uploadText = document.getElementById('add-upload-text');
-        if (file) {
-            uploadText.textContent = file.name;
-        } else {
-            uploadText.textContent = 'Click to upload';
-        }
-    });
-
-    // Unified custom validation for Add Event modal
-    function validateAddEventForm() {
-        let valid = true;
-        let firstError = null;
-        // Remove previous error states
-        const allFields = Array.from(addEventForm.querySelectorAll('input, textarea'));
-        allFields.forEach(field => {
-            field.classList.remove('error-input');
-            const existingError = field.parentNode.querySelector('.field-validation-error');
-            if (existingError) existingError.remove();
-        });
-        // Validate required fields
-        const title = document.getElementById('add_event_title');
-        const description = document.getElementById('add_event_description');
-        const time = document.getElementById('add_event_time');
-        const location = document.getElementById('add_event_location');
-        const participants = Array.from(document.querySelectorAll('#participants-tag-row input[name="participants[]"]'));
-        function showError(field, message) {
-            field.classList.add('error-input');
-            const err = document.createElement('div');
-            err.className = 'field-validation-error';
-            err.textContent = message;
-            err.style.color = '#E53E3E';
-            err.style.fontSize = '0.95rem';
-            err.style.marginTop = '0.25rem';
-            field.parentNode.appendChild(err);
-            if (!firstError) firstError = field;
-        }
-        if (!title.value.trim()) { valid = false; showError(title, 'Title is required.'); }
-        if (!description.value.trim()) { valid = false; showError(description, 'Description is required.'); }
-        if (!time.value.trim()) { valid = false; showError(time, 'Time is required.'); }
-        if (!location.value.trim()) { valid = false; showError(location, 'Location is required.'); }
-        if (participants.length < 1) {
-            valid = false;
-            const tagRow = document.getElementById('participants-tag-row');
-            const err = document.createElement('div');
-            err.className = 'field-validation-error';
-            err.textContent = 'At least 1 participant is required.';
-            err.style.color = '#E53E3E';
-            err.style.fontSize = '0.95rem';
-            err.style.marginTop = '0.25rem';
-            tagRow.appendChild(err);
-            if (!firstError) firstError = tagRow;
-        }
-        if (!valid && firstError && typeof firstError.focus === 'function') firstError.focus();
-        return valid;
-    }
-
-    // Unified custom validation for Edit Event modal
-    function validateEditEventForm() {
-        let valid = true;
-        let firstError = null;
-
-        // Remove previous error states
-        const editEventForm = document.getElementById('edit-event-form');
-        const allFields = Array.from(editEventForm.querySelectorAll('input, textarea'));
-        allFields.forEach(field => {
-            field.classList.remove('error-input');
-            const existingError = field.parentNode.querySelector('.field-validation-error');
-            if (existingError) existingError.remove();
-        });
-
-        // Validate required fields
-        const title = document.getElementById('edit_event_title');
-        const description = document.getElementById('edit_event_description');
-        const time = document.getElementById('edit_event_time');
-        const location = document.getElementById('edit_event_location');
-        const participants = Array.from(document.querySelectorAll('#edit-participants-tag-row input[name="participants[]"]'));
-        function showError(field, message) {
-            field.classList.add('error-input');
-            const err = document.createElement('div');
-            err.className = 'field-validation-error';
-            err.textContent = message;
-            err.style.color = '#E53E3E';
-            err.style.fontSize = '0.95rem';
-            err.style.marginTop = '0.25rem';
-            field.parentNode.appendChild(err);
-            if (!firstError) firstError = field;
-        }
-        if (!title.value.trim()) { valid = false; showError(title, 'Title is required.'); }
-        if (!description.value.trim()) { valid = false; showError(description, 'Description is required.'); }
-        if (!time.value.trim()) { valid = false; showError(time, 'Time is required.'); }
-        if (!location.value.trim()) { valid = false; showError(location, 'Location is required.'); }
-        if (participants.length < 1) {
-            valid = false;
-            const tagRow = document.getElementById('edit-participants-tag-row');
-            const err = document.createElement('div');
-            err.className = 'field-validation-error';
-            err.textContent = 'At least 1 participant is required.';
-            err.style.color = '#E53E3E';
-            err.style.fontSize = '0.95rem';
-            err.style.marginTop = '0.25rem';
-            tagRow.appendChild(err);
-            if (!firstError) firstError = tagRow;
-        }
-        if (!valid && firstError && typeof firstError.focus === 'function') firstError.focus();
-        return valid;
-    }
-
-    // Intercept form submit for AJAX (omitted body for brevity)
-    addEventForm.onsubmit = function(e) {
-        e.preventDefault();
-        if (!validateAddEventForm()) return;
-        
-        const title = document.getElementById('add_event_title').value.trim();
-        const description = document.getElementById('add_event_description').value.trim();
-        const date = document.getElementById('add_event_date').value;
-        const time = document.getElementById('add_event_time').value;
-        const location = document.getElementById('add_event_location').value.trim();
-        // Get participants from the tag row's hidden inputs
-        const participants = Array.from(document.querySelectorAll('#participants-tag-row input[name="participants[]"]')).map(input => input.value);
-        const notes = document.getElementById('add_event_notes').value.trim();
-        const attachmentFile = document.getElementById('add_event_attachment').files[0];
-        
-        // Show loading state
-        const submitBtn = addEventForm.querySelector('button[type="submit"]');
-        const originalBtnText = submitBtn.innerHTML;
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
-        submitBtn.style.opacity = '0.7';
-        submitBtn.style.cursor = 'not-allowed';
-        
-        // Disable all form inputs
-        const formInputs = addEventForm.querySelectorAll('input, textarea, button');
-        formInputs.forEach(input => input.disabled = true);
-        
-        const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
-        
-        // Use FormData for file upload support
-        const formData = new FormData();
-        formData.append('title', title);
-        formData.append('description', description);
-        formData.append('date', date);
-        formData.append('time', time);
-        formData.append('location', location);
-        formData.append('notes', notes);
-        participants.forEach(p => formData.append('participants[]', p));
-        if (attachmentFile) {
-            formData.append('notes_attachment', attachmentFile);
-        }
-        
-        // MODIFIED: Use FormData instead of JSON
-        fetch('/calendar/events/', {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': csrfToken
-            },
-            body: formData
-        })
-        .then(function(r) { 
-            if (!r.ok) {
-                return r.json().then(data => {
-                    throw new Error(data.errors || `Server error: ${r.status}`);
-                });
-            }
-            return r.json(); 
-        })
-        .then(function(resp) {
-            if (resp.status === 'success') {
-                addEventModal.style.display = 'none';
-                
-                // Reset loading state
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = originalBtnText;
-                submitBtn.style.opacity = '1';
-                submitBtn.style.opacity = '1';
-                submitBtn.style.cursor = 'pointer';
-                formInputs.forEach(input => input.disabled = false);
-                
-                // Show toast
-                const eventTitle = document.getElementById('add_event_title').value;
-                showToast('Meeting Event Created Successfully!', eventTitle);
-
-                // MODIFIED: Fetch from new events endpoint with cache-busting parameter
-                console.log('Fetching updated events...');
-                const timestamp = new Date().getTime();
-                fetch('/calendar/events/?_=' + timestamp)
-                  .then(function(r) { 
-                      console.log('Events fetch response status:', r.status);
-                      return r.json(); 
-                  })
-                  .then(function(data) {
-                      events = data;
-                      renderCalendar(currentYear, currentMonth); // update calendar grid
-                      fetchEvents(); // update sidebar event list
-                  })
-                  .catch(function(err) {
-                      console.error('Error refreshing events:', err);
-                      alert('Could not refresh events: ' + err.message);
-                      renderCalendar(currentYear, currentMonth);
-                      fetchEvents();
-                  });
-            } else {
-                // Reset loading state on error
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = originalBtnText;
-                submitBtn.style.opacity = '1';
-                submitBtn.style.cursor = 'pointer';
-                formInputs.forEach(input => input.disabled = false);
-                
-                alert('Error: ' + JSON.stringify(resp.errors || resp));
-            }
-        })
-        .catch(function(err) {
-            // Reset loading state on network error
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = originalBtnText;
-            submitBtn.style.opacity = '1';
-            submitBtn.style.cursor = 'pointer';
-            formInputs.forEach(input => input.disabled = false);
-            
-            alert('Network error: ' + err.message);
-        });
-    };
-</script>
 
 
+    // Function to check if a time range overlaps with existing meetings
 
-
-<script>
-    // Event Details Modal Logic (omitted body for brevity)
-    const eventDetailsModal = document.getElementById('event-details-modal');
-    const closeEventDetailsModal = document.getElementById('close-event-details-modal');
-    closeEventDetailsModal.onclick = function() { 
-        // Remove floating button when closing modal
-        const floatingBtn = document.getElementById('floating-add-event-btn');
-        if (floatingBtn) floatingBtn.remove();
-        eventDetailsModal.style.display = 'none'; 
-    };
-    eventDetailsModal.onclick = function(e) { 
-        if (e.target === eventDetailsModal) {
-            // Remove floating button when closing modal
-            const floatingBtn = document.getElementById('floating-add-event-btn');
-            if (floatingBtn) floatingBtn.remove();
-            eventDetailsModal.style.display = 'none';
-        }
-    };
-
-    function showEventDetails(eventArr, dateStr) {
-        eventDetailsModal.style.display = 'flex';
-        let html = '';
-        const currentUserId = "{{ request.user.id|default:'' }}";
+    function checkTimeOverlap(dateStr, startTime, endTime, excludeEventId = null) {
+        // Get current user role (defined in template)
         const currentUserRole = "{{ request.user.role|default:''|escapejs }}";
         
-        // Check if date is in the past
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const eventDate = new Date(dateStr);
-        eventDate.setHours(0, 0, 0, 0);
-        const isPast = eventDate < today;
+        // STEP 1: Skip time validation entirely for VP/DIRECTOR/UESO
+        if (["VP", "DIRECTOR", "UESO"].includes(currentUserRole)) {
+            return { conflict: false }; // No time validation for admin roles
+        }
+
+        if (!events[dateStr] || !startTime || !endTime) {
+            return null; // No overlap if no events or times provided
+        }
         
-        // Check if there's a holiday on this date
-        const hasHoliday = eventArr.some(ev => ev.type === 'holiday');
+        const startMinutes = timeToMinutes(startTime);
+        const endMinutes = timeToMinutes(endTime);
         
-        eventArr.forEach(ev => {
-            if (ev.type === 'holiday') {
-                // Holiday event styling - distinctive Philippine holiday theme
-                let holidayIcon = ev.holiday_type === 'regular' ? '🇵🇭' : '⭐';
-                let holidayTypeLabel = ev.holiday_type === 'regular' ? 'Regular Holiday' : 'Special Non-Working Holiday';
-                let borderColor = ev.holiday_type === 'regular' ? '#FCD116' : '#FCD116';
-                let bgGradient = ev.holiday_type === 'regular' 
-                    ? 'linear-gradient(135deg, #FFF9F0 0%, #FFE6E6 100%)' 
-                    : 'linear-gradient(135deg, #FFFEF0 0%, #FFF9E6 100%)';
-                
-                html += `<div style="background:${bgGradient};border-left:6px solid ${borderColor};padding:20px;margin-bottom:12px;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.1);">
-                    <div class="event-details-row" style="display:flex;align-items:center;margin-bottom:12px;">
-                        <div style="font-size:2rem;margin-right:12px;">${holidayIcon}</div>
-                        <div style="flex:1;">
-                            <div style="font-size:1.75rem;font-weight:700;color:${borderColor};line-height:1.2;">${ev.title}</div>
-                            <div style="font-size:0.95rem;font-weight:600;color:#666;margin-top:4px;text-transform:uppercase;letter-spacing:0.5px;">${holidayTypeLabel}</div>
-                        </div>
-                    </div>
-                    <div style="font-size:1.05rem;color:#444;margin-bottom:8px;line-height:1.6;">${ev.description}</div>
-                    <div style="font-size:1rem;color:#666;display:flex;align-items:center;gap:8px;">
-                        <i class="fa-regular fa-calendar" style="color:${borderColor};"></i>
-                        <span style="font-weight:500;">${ev.date}</span>
-                    </div>
-                    <div style="margin-top:16px;padding:12px;background:rgba(255,255,255,0.6);border-radius:8px;border:1px solid ${borderColor};">
-                        <i class="fa-solid fa-info-circle" style="color:${borderColor};margin-right:6px;"></i>
-                        <span style="font-size:0.9rem;color:#555;font-style:italic;">
-                            ${ev.holiday_type === 'regular' 
-                                ? 'Regular holidays are paid rest days for all employees. Meetings and project activities should not be scheduled on this date.' 
-                                : 'Special non-working holidays provide time off for specific observances. Please avoid scheduling meetings or project activities on this date.'}
-                        </span>
-                    </div>
-                </div>`;
-            } else if (ev.type === 'meeting') {
-                let canEdit = false;
-                if (currentUserId !== "" && (ev.created_by == currentUserId || ["DIRECTOR","UESO","VP"].includes(currentUserRole))) {
-                    canEdit = true;
-                }
-                
-                // Status badge
-                let statusBadge = '';
-                let statusColor = '#6c757d'; // default gray
-                if (ev.status === 'ONGOING') {
-                    statusColor = '#28a745'; // green
-                    statusBadge = `<span style="background:${statusColor};color:#fff;padding:4px 12px;border-radius:12px;font-size:0.85rem;font-weight:600;margin-left:8px;">Ongoing</span>`;
-                } else if (ev.status === 'COMPLETED') {
-                    statusColor = '#6c757d'; // gray
-                    statusBadge = `<span style="background:${statusColor};color:#fff;padding:4px 12px;border-radius:12px;font-size:0.85rem;font-weight:600;margin-left:8px;">Completed</span>`;
-                } else if (ev.status === 'CANCELLED') {
-                    statusColor = '#dc3545'; // red
-                    statusBadge = `<span style="background:${statusColor};color:#fff;padding:4px 12px;border-radius:12px;font-size:0.85rem;font-weight:600;margin-left:8px;">Cancelled</span>`;
-                } else if (ev.status === 'SCHEDULED') {
-                    statusColor = '#007bff'; // blue
-                    statusBadge = `<span style="background:${statusColor};color:#fff;padding:4px 12px;border-radius:12px;font-size:0.85rem;font-weight:600;margin-left:8px;">Scheduled</span>`;
-                }
-                
-                html += `<div style="background:#f8f9fa;border-left:4px solid #fd7e14;padding:16px;margin-bottom:12px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.08);">
-                    <div class="event-details-row" style="display:flex;align-items:center;margin-bottom:8px;">
-                        <div style="font-size:1.5rem;font-weight:600;color:#fd7e14;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;flex:1;">${ev.title}${statusBadge}</div>
-                        ${canEdit ? `<i class='fa-solid fa-pen-to-square' style='font-size:1.3rem;color:#fd7e14;cursor:pointer;margin-left:10px;' title='Edit' onclick='(function(){var btn=document.getElementById("floating-add-event-btn");if(btn)btn.remove();window.openEditEventModal(${JSON.stringify(ev)});})()'></i>` : ''}
-                        ${canEdit ? `<i class='fa-solid fa-trash' style='font-size:1.3rem;color:#E53E3E;cursor:pointer;margin-left:10px;' title='Delete' onclick='(function(){var btn=document.getElementById("floating-add-event-btn");if(btn)btn.remove();window.confirmDeleteEvent(${ev.id}, ${JSON.stringify(ev.title)});})()'></i>` : ''}
-                    </div>
-                    <div style="font-size:1.1rem;font-weight:400;color:#222;margin-bottom:6px;">${ev.description}</div>
-                    <div style="font-size:1rem;color:#666;margin-bottom:6px;"><i class="fa-regular fa-clock" style="margin-right:6px;"></i>${ev.date} at ${ev.time}</div>
-                    <div style="font-size:1rem;color:#666;margin-bottom:6px;"><i class="fa-solid fa-location-dot" style="margin-right:6px;"></i>${ev.location}</div>
-                    ${ev.participant_names && ev.participant_names.length ? `<div style='font-size:0.95em;color:#555;margin-bottom:6px;'><i class="fa-solid fa-users" style="margin-right:6px;"></i><b>Participants:</b> ${ev.participant_names.join(", ")}</div>` : ''}
-                    ${ev.notes && ev.notes.trim() ? `<div style="font-size:0.95rem;color:#888;margin-top:8px;font-style:italic;"><i class="fa-regular fa-note-sticky" style="margin-right:6px;"></i>${ev.notes}</div>` : ''}
-                    ${ev.notes_attachment ? `<div style="font-size:0.95rem;color:#2563eb;margin-top:8px;"><a href="${ev.notes_attachment}" target="_blank" style="color:#2563eb;text-decoration:none;display:inline-flex;align-items:center;gap:6px;"><i class="fas fa-paperclip"></i> ${ev.notes_attachment_name || 'View Attachment'}</a></div>` : ''}
-                </div>`;
-            } else if (ev.type === 'project') {
-                // Status badge for project events
-                let statusBadge = '';
-                let statusColor = '#6c757d'; // default gray
-                if (ev.status === 'ONGOING') {
-                    statusColor = '#28a745'; // green
-                    statusBadge = `<span style="background:${statusColor};color:#fff;padding:4px 12px;border-radius:12px;font-size:0.85rem;font-weight:600;margin-left:8px;">Ongoing</span>`;
-                } else if (ev.status === 'COMPLETED') {
-                    statusColor = '#6c757d'; // gray
-                    statusBadge = `<span style="background:${statusColor};color:#fff;padding:4px 12px;border-radius:12px;font-size:0.85rem;font-weight:600;margin-left:8px;">Completed</span>`;
-                } else if (ev.status === 'CANCELLED') {
-                    statusColor = '#dc3545'; // red
-                    statusBadge = `<span style="background:${statusColor};color:#fff;padding:4px 12px;border-radius:12px;font-size:0.85rem;font-weight:600;margin-left:8px;">Cancelled</span>`;
-                } else if (ev.status === 'SCHEDULED') {
-                    statusColor = '#007bff'; // blue
-                    statusBadge = `<span style="background:${statusColor};color:#fff;padding:4px 12px;border-radius:12px;font-size:0.85rem;font-weight:600;margin-left:8px;">Scheduled</span>`;
-                }
-                
-                html += `<div style="background:#f8f9fa;border-left:4px solid #007bff;padding:16px;margin-bottom:12px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.08);">
-                    <div class="event-details-row" style="display:flex;align-items:center;margin-bottom:8px;">
-                        <div style="font-size:1.5rem;font-weight:600;color:#007bff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;flex:1;">${ev.title}${statusBadge}</div>
-                        <span style='font-size:1rem;color:#007bff;cursor:pointer;margin-left:10px;white-space:nowrap;' title='Go to activity' onclick='window.location.href="/projects/${ev.project_id}/"'>Go To Activity <i class="fa-solid fa-arrow-right"></i></span>
-                    </div>
-                    ${ev.project_name ? `<div style='font-size:1.05em;color:#007bff;margin-bottom:6px;'><i class="fa-solid fa-diagram-project" style="margin-right:6px;"></i><b>Activity:</b> ${ev.project_name}</div>` : ''}
-                    <div style="font-size:1.1rem;font-weight:400;color:#222;margin-bottom:6px;">${ev.description}</div>
-                    <div style="font-size:1rem;color:#666;margin-bottom:6px;"><i class="fa-regular fa-clock" style="margin-right:6px;"></i>${ev.date} at ${ev.time}</div>
-                    <div style="font-size:1rem;color:#666;margin-bottom:6px;"><i class="fa-solid fa-location-dot" style="margin-right:6px;"></i>${ev.location}</div>
-                    ${ev.leader ? `<div style='font-size:0.95em;color:#555;margin-bottom:6px;'><i class="fa-solid fa-user-tie" style="margin-right:6px;"></i><b>Leader:</b> ${ev.leader}</div>` : ''}
-                    ${ev.provider_names && ev.provider_names.length ? `<div style='font-size:0.95em;color:#555;margin-bottom:6px;'><i class="fa-solid fa-handshake" style="margin-right:6px;"></i><b>Providers:</b> ${ev.provider_names.join(", ")}</div>` : ''}
-                    ${ev.notes && ev.notes.trim() ? `<div style="font-size:0.95rem;color:#888;margin-top:8px;font-style:italic;"><i class="fa-regular fa-note-sticky" style="margin-right:6px;"></i>${ev.notes}</div>` : ''}
-                </div>`;
+        // STEP 1: For PROGRAM_HEAD/DEAN/COORDINATOR/FACULTY/IMPLEMENTER
+        // Only check visible meetings (events[dateStr] is already role-filtered)
+        // Check all meetings on this date
+        for (const ev of events[dateStr]) {
+            // Skip if this is the event we're editing (excludeEventId)
+            if (excludeEventId && ev.id == excludeEventId) {
+                continue;
             }
-        });
-        
-        document.getElementById('event-details-title').textContent = eventArr.length === 1 ? '' : `Events on ${dateStr}`;
-        document.getElementById('event-details-info').innerHTML = html;
-        
-        // Remove any existing floating button first
-        const existingBtn = document.getElementById('floating-add-event-btn');
-        if (existingBtn) {
-            existingBtn.remove();
-        }
-        
-        // Only show Add Meeting button if:
-        // 1. Date is not in the past
-        // 2. There is NO holiday on this date
-        if (!isPast && !hasHoliday) {
-            // Create floating button and append to modal container (not content)
-            const floatingBtn = document.createElement('button');
-            floatingBtn.id = 'floating-add-event-btn';
-            floatingBtn.title = 'Add Meeting';
-            floatingBtn.innerHTML = '<i class="fa-solid fa-plus" style="margin-right:8px;"></i>Add Meeting';
-            floatingBtn.style.cssText = 'position:fixed;bottom:40px;left:45%;background:#245F3E;color:#fff;border:none;border-radius:28px;padding:14px 24px;font-size:1rem;font-weight:600;box-shadow:0 4px 12px rgba(0,0,0,0.15);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.3s ease;z-index:10000;white-space:nowrap;';
-            floatingBtn.onmouseover = function() {
-                this.style.transform = 'scale(1.05)';
-                this.style.boxShadow = '0 6px 16px rgba(0,0,0,0.2)';
-            };
-            floatingBtn.onmouseout = function() {
-                this.style.transform = 'scale(1)';
-                this.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-            };
-            floatingBtn.onclick = function(e) {
-                e.stopPropagation();
-                eventDetailsModal.style.display = 'none';
-                floatingBtn.remove();
-                openAddEventModal(dateStr);
-            };
-            document.body.appendChild(floatingBtn); // Append to body for fixed positioning
-        }
-    }
-
-    // Delete event logic (omitted body for brevity)
-    window.confirmDeleteEvent = function(eventId, eventTitle) {
-        // Hide all other modals
-        document.getElementById('event-details-modal').style.display = 'none';
-        document.getElementById('edit-event-modal').style.display = 'none';
-        // Show only the delete modal
-        document.getElementById('delete-confirm-modal').style.display = 'flex';
-        document.getElementById('delete-confirm-message').textContent = `Are you sure you want to delete "${eventTitle}"? This action cannot be undone.`;
-        pendingDeleteEventId = eventId;
-        pendingDeleteEventTitle = eventTitle;
-    };
-
-    document.getElementById('cancel-delete-modal').onclick = function() {
-        document.getElementById('delete-confirm-modal').style.display = 'none';
-    };
-    document.getElementById('delete-confirm-modal').onclick = function(e) {
-        if (e.target === this) {
-            this.style.display = 'none';
-        }
-    };
-    document.getElementById('confirm-delete-btn').onclick = function() {
-        if (pendingDeleteEventId) {
-            // Show loading state on delete button
-            const deleteBtn = document.getElementById('confirm-delete-btn');
-            const cancelBtn = document.getElementById('cancel-delete-modal');
-            const originalBtnText = deleteBtn.innerHTML;
-            deleteBtn.disabled = true;
-            deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
-            deleteBtn.style.opacity = '0.7';
-            deleteBtn.style.cursor = 'not-allowed';
-            cancelBtn.disabled = true;
-            cancelBtn.style.opacity = '0.5';
             
-            deleteEvent(pendingDeleteEventId, deleteBtn, cancelBtn, originalBtnText);
-        } else {
-            document.getElementById('delete-confirm-modal').style.display = 'none';
-        }
-    };
-
-    function deleteEvent(eventId, deleteBtn, cancelBtn, originalBtnText) {
-        const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
-        
-        // MODIFIED: Use new RESTful URL and DELETE method
-        fetch('/calendar/events/' + eventId + '/', {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrfToken
-            },
-            body: JSON.stringify({})
-        })
-        .then(function(r) { return r.json(); })
-        .then(function(resp) {
-            if (resp.status === 'success') {
-                // Reset loading state
-                deleteBtn.disabled = false;
-                deleteBtn.innerHTML = originalBtnText;
-                deleteBtn.style.opacity = '1';
-                deleteBtn.style.cursor = 'pointer';
-                cancelBtn.disabled = false;
-                cancelBtn.style.opacity = '1';
+            // Only check meetings (not project events or holidays)
+            if (ev.type === 'meeting' && ev.time && ev.end_time) {
+                const evStartMinutes = timeToMinutes(ev.time);
+                const evEndMinutes = timeToMinutes(ev.end_time);
                 
-                // Show toast
-                const eventTitle = document.getElementById('event-details-title').textContent;
-                showToast('Meeting Event Deleted Successfully!', eventTitle);
-                
-                // Hide modals
-                document.getElementById('delete-confirm-modal').style.display = 'none';
-                document.getElementById('event-details-modal').style.display = 'none';
-                
-                // MODIFIED: Fetch from new events endpoint with cache-busting
-                const timestamp = new Date().getTime();
-                fetch('/calendar/events/?_=' + timestamp)
-                  .then(function(r) { return r.json(); })
-                  .then(function(data) {
-                      events = data;
-                      renderCalendar(currentYear, currentMonth);
-                      fetchEvents();
-                  })
-                  .catch(function(err) {
-                      alert('Could not refresh events: ' + err.message);
-                      renderCalendar(currentYear, currentMonth);
-                      fetchEvents();
-                  });
-            } else {
-                // Reset loading state on error
-                deleteBtn.disabled = false;
-                deleteBtn.innerHTML = originalBtnText;
-                deleteBtn.style.opacity = '1';
-                deleteBtn.style.cursor = 'pointer';
-                cancelBtn.disabled = false;
-                cancelBtn.style.opacity = '1';
-                
-                alert('Error: ' + JSON.stringify(resp.errors || resp));
-            }
-        })
-        .catch(function(err) {
-            // Reset loading state on network error
-            deleteBtn.disabled = false;
-            deleteBtn.innerHTML = originalBtnText;
-            deleteBtn.style.opacity = '1';
-            deleteBtn.style.cursor = 'pointer';
-            cancelBtn.disabled = false;
-            cancelBtn.style.opacity = '1';
-            
-            alert('Network error: ' + err.message);
-        });
-    }
-</script>
-
-<script>
-    let events = {};
-    const calendar = document.getElementById('calendar');
-    const eventList = document.getElementById('event-list');
-    
-    // Check if there's an initial date from query parameter
-    let currentYear, currentMonth;
-    {% if initial_date %}
-    const initialDate = new Date('{{ initial_date }}');
-    currentYear = initialDate.getFullYear();
-    currentMonth = initialDate.getMonth();
-    {% else %}
-    currentYear = new Date().getFullYear();
-    currentMonth = new Date().getMonth();
-    {% endif %}
-    
-    let selectedDate = null;
-
-    // Populate year dropdown (current-10 to current+10)
-    const yearSelector = document.getElementById("year-selector");
-    for(let y=currentYear-10;y<=currentYear+10;y++){
-        const opt=document.createElement("option");
-        opt.value=y; opt.textContent=y;
-        if(y===currentYear) opt.selected=true;
-        yearSelector.appendChild(opt);
-    }
-
-    // Month click
-    document.querySelectorAll('#month-selector li').forEach(li=>{
-        li.onclick=()=>{
-            currentMonth=parseInt(li.dataset.month);
-            renderCalendar(currentYear,currentMonth);
-            fetchEvents();
-            document.querySelectorAll('#month-selector li').forEach(l=>l.classList.remove('active'));
-            li.classList.add('active');
-        };
-    });
-
-    // Set initial active month
-    document.querySelectorAll('#month-selector li')[currentMonth].classList.add('active');
-
-    // Fetch events on initial load to ensure role-restricted view
-    window.addEventListener('DOMContentLoaded', function() {
-        // MODIFIED: Fetch from new events endpoint
-        fetch('/calendar/events/')
-            .then(r => r.json())
-            .then(data => {
-                events = data;
-                renderCalendar(currentYear, currentMonth);
-                fetchEvents();
-                
-                // Highlight date if coming from notification
-                {% if initial_date %}
-                highlightDate('{{ initial_date }}');
-                {% endif %}
-            })
-            .catch(err => {
-                alert('Could not load events: ' + err.message);
-                renderCalendar(currentYear, currentMonth);
-                fetchEvents();
-            });
-    });
-
-    yearSelector.onchange=()=>{currentYear=parseInt(yearSelector.value); renderCalendar(currentYear,currentMonth); fetchEvents();};
-
-    function renderCalendar(year,month){
-        const monthNames=["January","February","March","April","May","June","July","August","September","October","November","December"];
-        document.getElementById('month-name').textContent=monthNames[month];
-        calendar.innerHTML='';
-        const firstDay=new Date(year,month,1).getDay();
-        const daysInMonth=new Date(year,month+1,0).getDate();
-        for(let i=0;i<firstDay;i++){ calendar.appendChild(document.createElement('div')); }
-        
-        // Get today's date once for comparison
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        
-        for(let d=1;d<=daysInMonth;d++){
-            const cell=document.createElement('div');
-            const dateStr=`${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-            cell.className='calendar-day';
-            cell.dataset.date=dateStr;
-            
-            // Calculate if this date is in the past
-            const cellDate = new Date(year, month, d);
-            cellDate.setHours(0, 0, 0, 0);
-            const isPast = cellDate < today;
-            const isToday = (year === today.getFullYear() && month === today.getMonth() && d === today.getDate());
-            
-            if(events[dateStr]){
-                // Count events by type
-                let activityCount = events[dateStr].filter(ev => ev.type === 'project').length;
-                let meetingCount = events[dateStr].filter(ev => ev.type === 'meeting').length;
-                let holidayCount = events[dateStr].filter(ev => ev.type === 'holiday').length;
-                let hasHoliday = holidayCount > 0;
-                let holidayType = hasHoliday ? events[dateStr].find(ev => ev.type === 'holiday').holiday_type : null;
-                
-                // Holiday styling takes priority
-                if (hasHoliday && activityCount === 0 && meetingCount === 0) {
-                    // Pure holiday - no other events
-                    cell.classList.add(holidayType === 'regular' ? 'holiday' : 'holiday-special');
-                } else if (hasHoliday) {
-                    // Holiday with events
-                    cell.classList.add('holiday-with-events');
-                } else {
-                    // Regular events (no holiday)
-                    cell.style.backgroundColor = '#245F3E'; // Green
-                }
-                
-                cell.style.color = 'white';
-                cell.style.position = 'relative';
-                cell.style.cursor = 'pointer';
-                
-                // Gray out past dates with events
-                if (isPast) {
-                    cell.style.opacity = '0.5';
-                }
-                
-                // Create day number
-                const dayNumber = document.createElement('div');
-                dayNumber.textContent = d;
-                dayNumber.style.textAlign = 'center';
-                dayNumber.style.paddingTop = '8px';
-                dayNumber.style.fontWeight = hasHoliday ? '700' : '400';
-                cell.appendChild(dayNumber);
-                
-                // Create badge container in bottom corners
-                const badgeContainer = document.createElement('div');
-                badgeContainer.style.position = 'absolute';
-                badgeContainer.style.bottom = '4px';
-                badgeContainer.style.left = '4px';
-                badgeContainer.style.right = '4px';
-                badgeContainer.style.display = 'flex';
-                badgeContainer.style.justifyContent = 'space-between';
-                badgeContainer.style.fontSize = '10px';
-                badgeContainer.style.fontWeight = 'bold';
-                
-                // Add activity badge (blue) on left if there are activities
-                if (activityCount > 0) {
-                    const activityBadge = document.createElement('span');
-                    activityBadge.textContent = activityCount;
-                    activityBadge.style.backgroundColor = '#007bff'; // Bootstrap primary blue
-                    activityBadge.style.color = 'white';
-                    activityBadge.style.borderRadius = '50%';
-                    activityBadge.style.width = '18px';
-                    activityBadge.style.height = '18px';
-                    activityBadge.style.display = 'flex';
-                    activityBadge.style.alignItems = 'center';
-                    activityBadge.style.justifyContent = 'center';
-                    activityBadge.style.boxShadow = '0 1px 3px rgba(0,0,0,0.3)';
-                    badgeContainer.appendChild(activityBadge);
-                } else {
-                    badgeContainer.appendChild(document.createElement('span')); // Spacer
-                }
-                
-                // Add meeting badge (orange) on right if there are meetings
-                if (meetingCount > 0) {
-                    const meetingBadge = document.createElement('span');
-                    meetingBadge.textContent = meetingCount;
-                    meetingBadge.style.backgroundColor = '#fd7e14'; // Bootstrap orange
-                    meetingBadge.style.color = 'white';
-                    meetingBadge.style.borderRadius = '50%';
-                    meetingBadge.style.width = '18px';
-                    meetingBadge.style.height = '18px';
-                    meetingBadge.style.display = 'flex';
-                    meetingBadge.style.alignItems = 'center';
-                    meetingBadge.style.justifyContent = 'center';
-                    meetingBadge.style.boxShadow = '0 1px 3px rgba(0,0,0,0.3)';
-                    badgeContainer.appendChild(meetingBadge);
-                }
-                
-                // Add holiday indicator badge if there's a holiday
-                if (hasHoliday) {
-                    const holidayBadge = document.createElement('span');
-                    holidayBadge.style.position = 'absolute';
-                    holidayBadge.style.top = '2px';
-                    holidayBadge.style.right = '2px';
-                    holidayBadge.style.fontSize = '12px';
-                    holidayBadge.title = 'Philippine Holiday';
-                    cell.appendChild(holidayBadge);
-                }
-                
-                cell.appendChild(badgeContainer);
-                
-                cell.onclick = function() {
-                    showEventDetails(events[dateStr], dateStr);
-                };
-            } else {
-                // No events on this date
-                cell.textContent = d;
-                if (isPast) {
-                    // Past date with no events - add past-date class and no onclick
-                    cell.classList.add('past-date');
-                } else {
-                    // Future/today date with no events - allow adding new events
-                    cell.onclick = function() {
-                        openAddEventModal(dateStr);
+                // Check for overlap: new meeting starts before existing ends AND new meeting ends after existing starts
+                if (startMinutes < evEndMinutes && endMinutes > evStartMinutes) {
+                    return {
+                        conflict: true,
+                        existingTitle: ev.title,
+                        existingStart: ev.time,
+                        existingEnd: ev.end_time
                     };
                 }
             }
-            
-            // Highlight current day
-            if (isToday) {
-                cell.style.border = '2px solid #00BCD4';
-                cell.style.boxShadow = '0 0 0 2px #00BCD4';
-            }
-            
-            calendar.appendChild(cell);
         }
+        
+        return { conflict: false };
     }
 
-    setTimeout(() => {
-        const cell = document.querySelector(`.calendar-day[data-date="${dateStr}"]`);
-        if (cell) {
-            // Scroll to the calendar if needed
-            cell.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            
-            // Add a prominent highlight
-            cell.style.border = '3px solid rgba(0, 0, 0, 0.2)';
-            cell.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.5)';
-            cell.style.transform = 'scale(1.1)';
-            cell.style.zIndex = '10';
-            cell.style.position = 'relative';
-            
-            // Click the date to show events
-            cell.click();
-            
-            // Remove the extra highlight after 3 seconds (keep the events open)
-            setTimeout(() => {
-                cell.style.transform = '';
-                cell.style.zIndex = '';
-                cell.style.position = '';
-            }, 3000);
+    
+    
+    // Helper function to convert time string (HH:MM) to minutes
+
+    function timeToMinutes(timeStr) {
+
+        if (!timeStr) return 0;
+
+        const [hours, minutes] = timeStr.split(':').map(Number);
+
+        return hours * 60 + minutes;
+
+    }
+
+    
+    // Helper function to convert 24-hour format (HH:MM) to 12-hour format (h:MM AM/PM)
+    function formatTime12Hour(timeStr) {
+        if (!timeStr) return '';
+        const [hours, minutes] = timeStr.split(':').map(Number);
+        if (isNaN(hours) || isNaN(minutes)) return timeStr; // Return original if invalid
+        
+        const period = hours >= 12 ? 'PM' : 'AM';
+        const displayHours = hours === 0 ? 12 : (hours > 12 ? hours - 12 : hours);
+        const displayMinutes = String(minutes).padStart(2, '0');
+        return `${displayHours}:${displayMinutes} ${period}`;
+    }
+    
+    // Helper function to convert minutes back to time string (HH:MM)
+    function minutesToTime(minutes) {
+        const hours = Math.floor(minutes / 60);
+        const mins = minutes % 60;
+        return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+    }
+    
+    // Function to get available time slots for a given date
+    function getAvailableTimeSlots(dateStr, minDurationMinutes = 30) {
+        if (!dateStr || !events[dateStr]) {
+            // No events on this date - entire day is available (8 AM to 6 PM)
+            return [{ start: '08:00', end: '18:00' }];
         }
-    }, 500); // Wait for calendar to render
+        
+        // Get all meetings on this date, sorted by start time
+        const meetings = events[dateStr]
+            .filter(ev => ev.type === 'meeting' && ev.time && ev.end_time)
+            .map(ev => ({
+                start: timeToMinutes(ev.time),
+                end: timeToMinutes(ev.end_time)
+            }))
+            .sort((a, b) => a.start - b.start);
+        
+        if (meetings.length === 0) {
+            // No meetings - entire day is available (8 AM to 6 PM)
+            return [{ start: '08:00', end: '18:00' }];
+        }
+        
+        const availableSlots = [];
+        const workDayStart = 8 * 60; // 8:00 AM
+        const workDayEnd = 18 * 60;   // 6:00 PM
+        
+        // Check time before first meeting
+        if (meetings[0].start > workDayStart + minDurationMinutes) {
+            availableSlots.push({
+                start: minutesToTime(workDayStart),
+                end: minutesToTime(meetings[0].start)
+            });
+        }
+        
+        // Check gaps between meetings
+        for (let i = 0; i < meetings.length - 1; i++) {
+            const gapStart = meetings[i].end;
+            const gapEnd = meetings[i + 1].start;
+            const gapDuration = gapEnd - gapStart;
+            
+            if (gapDuration >= minDurationMinutes) {
+                availableSlots.push({
+                    start: minutesToTime(gapStart),
+                    end: minutesToTime(gapEnd)
+                });
+            }
+        }
+        
+        // Check time after last meeting
+        const lastMeetingEnd = meetings[meetings.length - 1].end;
+        if (workDayEnd - lastMeetingEnd >= minDurationMinutes) {
+            availableSlots.push({
+                start: minutesToTime(lastMeetingEnd),
+                end: minutesToTime(workDayEnd)
+            });
+        }
+        
+        return availableSlots;
+    }
+    
+    // Function to display available time slots in the modal
+    function displayAvailableSlots(dateStr) {
+        const container = document.getElementById('available-slots-container');
+        const list = document.getElementById('available-slots-list');
+        
+        // Hide available slots for VP/DIRECTOR/UESO to avoid confusion (they can schedule freely)
+        const currentUserRole = "{{ request.user.role|default:''|escapejs }}";
+        if (["VP", "DIRECTOR", "UESO"].includes(currentUserRole)) {
+            container.style.display = 'none';
+            return;
+        }
+        
+        if (!dateStr) {
+            container.style.display = 'none';
+            return;
+        }
+        
+        const slots = getAvailableTimeSlots(dateStr, 30); // Minimum 30 minutes
+        
+        if (slots.length === 0) {
+            container.style.display = 'block';
+            list.innerHTML = '<div style="color:#dc2626;"><i class="fa-solid fa-exclamation-triangle" style="margin-right:4px;"></i>No available time slots (minimum 30 minutes required)</div>';
+            return;
+        }
+        
+        container.style.display = 'block';
+        
+        // Group consecutive slots or show individual slots
+        let html = '';
+        slots.forEach((slot, index) => {
+            const start12 = formatTime12Hour(slot.start);
+            const end12 = formatTime12Hour(slot.end);
+            const duration = timeToMinutes(slot.end) - timeToMinutes(slot.start);
+            const durationHours = Math.floor(duration / 60);
+            const durationMins = duration % 60;
+            const durationText = durationHours > 0 
+                ? `${durationHours}h ${durationMins > 0 ? durationMins + 'm' : ''}`.trim()
+                : `${durationMins}m`;
+            
+            html += `
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;margin-bottom:6px;background:white;border-radius:6px;border:1px solid #e2e8f0;cursor:pointer;transition:all 0.2s;" 
+                     onmouseover="this.style.background='#eff6ff';this.style.borderColor='#0284c7';" 
+                     onmouseout="this.style.background='white';this.style.borderColor='#e2e8f0';"
+                     onclick="selectTimeSlot('${slot.start}', '${slot.end}')">
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <i class="fa-regular fa-circle-check" style="color:#10b981;font-size:1.1rem;"></i>
+                        <div>
+                            <div style="font-weight:600;color:#0c4a6e;">${start12} - ${end12}</div>
+                            <div style="font-size:0.85rem;color:#64748b;">Available for ${durationText}</div>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-arrow-right" style="color:#64748b;"></i>
+                </div>
+            `;
+        });
+        
+        list.innerHTML = html;
+    }
+    
+    // Function to auto-fill time inputs when a slot is clicked
+    function selectTimeSlot(startTime, endTime) {
+        document.getElementById('add_event_time').value = startTime;
+        document.getElementById('add_event_end_time').value = endTime;
+        
+        // Show a brief confirmation
+        const container = document.getElementById('available-slots-container');
+        const originalBg = container.style.background;
+        container.style.background = '#dcfce7';
+        container.style.borderColor = '#10b981';
+        setTimeout(() => {
+            container.style.background = originalBg;
+            container.style.borderColor = '#bae6fd';
+        }, 500);
+    }
+    
+    // Helper function to convert time strings in a message from 24-hour to 12-hour format
+    function convertTimeInMessage(message) {
+        if (!message) return message;
+        // First check if message already contains AM/PM - if so, don't convert to avoid double AM/PM
+        if (/\b\d{1,2}:\d{2}\s*(AM|PM)\b/i.test(message)) {
+            return message; // Already has 12-hour format times, don't convert
+        }
+        // Match time patterns like "06:56", "09:56", "14:30", etc. (HH:MM format)
+        return message.replace(/\b(\d{1,2}):(\d{2})\b/g, function(match, hours, minutes) {
+            // Only convert if it looks like a time (hours 0-23, minutes 0-59)
+            const h = parseInt(hours, 10);
+            const m = parseInt(minutes, 10);
+            if (h >= 0 && h <= 23 && m >= 0 && m <= 59) {
+                return formatTime12Hour(match);
+            }
+            return match; // Return original if not a valid time
+        });
+    }
+    
+    
+    // Function to validate time selection and show warnings
+
+    function validateTimeSelection(dateStr, startTimeId, endTimeId, excludeEventId = null) {
+        // Get current user role (defined in template)
+        const currentUserRole = "{{ request.user.role|default:''|escapejs }}";
+        
+        // STEP 1: Skip time validation entirely for VP/DIRECTOR/UESO
+        if (["VP", "DIRECTOR", "UESO"].includes(currentUserRole)) {
+            return true; // No time validation for admin roles
+        }
+
+        const startTimeInput = document.getElementById(startTimeId);
+
+        const endTimeInput = document.getElementById(endTimeId);
+
+        
+        
+        // Remove previous error messages
+
+        const existingError = startTimeInput.parentNode.querySelector('.time-conflict-error');
+
+        if (existingError) existingError.remove();
+
+        
+        
+        const startTime = startTimeInput.value;
+
+        const endTime = endTimeInput.value;
+
+        
+        
+        if (!startTime || !endTime || !dateStr) {
+
+            return true; // Can't validate if fields are empty
+
+        }
+
+        
+
+        // STEP 1: For PROGRAM_HEAD/DEAN/COORDINATOR/FACULTY/IMPLEMENTER
+        // Check for overlap (only checks visible meetings)
+
+        const overlapCheck = checkTimeOverlap(dateStr, startTime, endTime, excludeEventId);
+
+        
+        
+        if (overlapCheck && overlapCheck.conflict) {
+
+            // Show error toast notification with 12-hour format
+            const startTime12 = formatTime12Hour(overlapCheck.existingStart);
+            const endTime12 = formatTime12Hour(overlapCheck.existingEnd);
+            showErrorToast(
+
+                `Time conflict! "${overlapCheck.existingTitle}" is already scheduled from ${startTime12} to ${endTime12}. Check available slots below.`,
+                'Please choose a different time'
+
+            );
+
+            
+            
+            // Add error styling to inputs
+
+            startTimeInput.style.borderColor = '#E53E3E';
+
+            endTimeInput.style.borderColor = '#E53E3E';
+
+            
+            // Ensure available slots are visible
+            if (dateStr) {
+                displayAvailableSlots(dateStr);
+            }
+            
+            
+            return false;
+
+        } else {
+
+            // Remove error styling
+
+            startTimeInput.style.borderColor = '';
+
+            endTimeInput.style.borderColor = '';
+
+            return true;
+
+        }
+
+    }
+
+
+
+    // Define openAddEventModal globally so it's available when renderCalendar attaches onclick handlers
+
+    window.openAddEventModal = function(dateStr) {
+
+        // Reset all form fields
+
+        document.getElementById('add_event_title').value = '';
+
+        document.getElementById('add_event_description').value = '';
+
+        document.getElementById('add_event_time').value = '';
+
+        document.getElementById('add_event_end_time').value = '';
+
+        document.getElementById('add_event_location').value = '';
+
+        document.getElementById('add_event_notes').value = '';
+
+        document.getElementById('add_event_attachment').value = '';  // Reset file input
+
+        
+        
+        // Reset file upload text
+
+        const uploadText = document.getElementById('add-upload-text');
+
+        if (uploadText) {
+
+            uploadText.textContent = 'Click to upload';
+
+        }
+
+        
+        
+        // Clear file preview/upload area for add modal
+
+        clearFile('add_event_attachment', 'file-preview', 'file-name');
+
+
+
+        // Re-initialize tag UI and pre-select current user if addTagController is initialized
+
+        if (addTagController) {
+
+            const currentUserId = "{{ request.user.id|default:'' }}";
+
+            addTagController.setSelected(currentUserId ? [currentUserId] : []);
+
+        }
+
+        
+        
+        document.getElementById('add_event_date').value = dateStr;
+
+        
+        // Display available time slots for this date
+        displayAvailableSlots(dateStr);
+        
+        
+        // Clear any previous time conflict errors
+
+        const startTimeInput = document.getElementById('add_event_time');
+
+        const endTimeInput = document.getElementById('add_event_end_time');
+
+        const existingError = startTimeInput.parentNode.querySelector('.time-conflict-error');
+
+        if (existingError) existingError.remove();
+
+        startTimeInput.style.borderColor = '';
+
+        endTimeInput.style.borderColor = '';
+
+        
+        
+        // Add event listeners for real-time validation
+
+        startTimeInput.onchange = function() {
+
+            validateTimeSelection(dateStr, 'add_event_time', 'add_event_end_time');
+
+        };
+
+        endTimeInput.onchange = function() {
+
+            validateTimeSelection(dateStr, 'add_event_time', 'add_event_end_time');
+
+        };
+
+        
+        
+        const addEventModal = document.getElementById('add-event-modal');
+
+        if (addEventModal) {
+
+            addEventModal.style.display = 'flex';
+
+        }
+
+    }
+
+
+
+    document.addEventListener('DOMContentLoaded', function() {
+
+        // Setup tag UI for the Add Event Modal
+
+        addTagController = setupTagUI('participants-tag-row', 'participants-options-template', 'participants');
+
+        
+        
+        // Setup tag UI for the Edit Event Modal
+
+        window.editParticipantTagUI = setupTagUI('edit-participants-tag-row', 'edit-participants-options-template', 'participants');
+
+    });
 
 </script>
 
+
+
+<script>
+
+    // --- Add Event Modal Logic (Re-implemented to use setupTagUI) ---
+
+    const addEventModal = document.getElementById('add-event-modal');
+
+    const closeAddEventModal = document.getElementById('close-add-event-modal');
+
+    const cancelAddEventModal = document.getElementById('cancel-add-event-modal');
+
+    const addEventForm = document.getElementById('add-event-form');
+
+    const addEventDateInput = document.getElementById('add_event_date');
+
+    const currentUserId = "{{ request.user.id|default:'' }}";
+
+
+
+    // openAddEventModal is now defined inside DOMContentLoaded block above
+
+
+
+    closeAddEventModal.onclick = function() { addEventModal.style.display = 'none'; };
+
+    cancelAddEventModal.onclick = function() { addEventModal.style.display = 'none'; };
+
+    addEventModal.onclick = function(e) { if (e.target === addEventModal) addEventModal.style.display = 'none'; };
+
+
+
+    // File Upload Preview for Add Event Modal
+
+    document.getElementById('add_event_attachment').addEventListener('change', function(e) {
+
+        const file = e.target.files[0];
+
+        const uploadText = document.getElementById('add-upload-text');
+
+        if (file) {
+
+            uploadText.textContent = file.name;
+
+        } else {
+
+            uploadText.textContent = 'Click to upload';
+
+        }
+
+    });
+
+
+
+    // Unified custom validation for Add Event modal
+
+    function validateAddEventForm() {
+
+        let valid = true;
+
+        let firstError = null;
+
+        // Remove previous error states
+
+        const allFields = Array.from(addEventForm.querySelectorAll('input, textarea'));
+
+        allFields.forEach(field => {
+
+            field.classList.remove('error-input');
+
+            const existingError = field.parentNode.querySelector('.field-validation-error');
+
+            if (existingError) existingError.remove();
+
+        });
+
+        // Validate required fields
+
+        const title = document.getElementById('add_event_title');
+
+        const description = document.getElementById('add_event_description');
+
+        const time = document.getElementById('add_event_time');
+
+        const end_time = document.getElementById('add_event_end_time');
+
+        const location = document.getElementById('add_event_location');
+
+        const participants = Array.from(document.querySelectorAll('#participants-tag-row input[name="participants[]"]'));
+
+        function showError(field, message) {
+
+            field.classList.add('error-input');
+
+            const err = document.createElement('div');
+
+            err.className = 'field-validation-error';
+
+            err.textContent = message;
+
+            err.style.color = '#E53E3E';
+
+            err.style.fontSize = '0.95rem';
+
+            err.style.marginTop = '0.25rem';
+
+            field.parentNode.appendChild(err);
+
+            if (!firstError) firstError = field;
+
+        }
+
+        if (!title.value.trim()) { valid = false; showError(title, 'Title is required.'); }
+
+        if (!description.value.trim()) { valid = false; showError(description, 'Description is required.'); }
+
+        if (!time.value.trim()) { valid = false; showError(time, 'Start time is required.'); }
+
+        if (!end_time.value.trim()) { valid = false; showError(end_time, 'End time is required.'); }
+
+        if (time.value.trim() && end_time.value.trim() && time.value >= end_time.value) {
+
+            valid = false;
+
+            showError(end_time, 'End time must be after start time.');
+
+        }
+
+        // STEP 1 & 3: Check for time conflicts with existing meetings
+        const currentUserRole = "{{ request.user.role|default:''|escapejs }}";
+        const skipTimeValidation = ["VP", "DIRECTOR", "UESO"].includes(currentUserRole);
+        
+        if (valid && time.value.trim() && end_time.value.trim()) {
+            const date = document.getElementById('add_event_date').value;
+            if (date) {
+                // For VP/DIRECTOR/UESO: Show informational warning (not blocking)
+                if (skipTimeValidation) {
+                    // Admin roles see all meetings in events object
+                    const dateEvents = events[date] || [];
+                    
+                    const startMinutes = timeToMinutes(time.value);
+                    const endMinutes = timeToMinutes(end_time.value);
+                    
+                    for (const ev of dateEvents) {
+                        if (ev.type === 'meeting' && ev.time && ev.end_time) {
+                            const evStartMinutes = timeToMinutes(ev.time);
+                            const evEndMinutes = timeToMinutes(ev.end_time);
+                            
+                            if (startMinutes < evEndMinutes && endMinutes > evStartMinutes) {
+                                const startTime12 = formatTime12Hour(ev.time);
+                                const endTime12 = formatTime12Hour(ev.end_time);
+                                // Show informational warning (not blocking)
+                                showWarningToast(
+                                    `Note: "${ev.title}" is already scheduled from ${startTime12} to ${endTime12} on this date.`,
+                                    'You can still proceed, but this may cause scheduling conflicts.'
+                                );
+                                break; // Only show one warning
+                            }
+                        }
+                    }
+                } else {
+                    // For PROGRAM_HEAD/DEAN/COORDINATOR/FACULTY/IMPLEMENTER
+                    // Only check visible meetings (checkTimeOverlap already handles role-based filtering)
+                const overlapCheck = checkTimeOverlap(date, time.value, end_time.value);
+
+                if (overlapCheck && overlapCheck.conflict) {
+
+                    valid = false;
+
+                        // Show error toast notification with 12-hour format
+                        const startTime12 = formatTime12Hour(overlapCheck.existingStart);
+                        const endTime12 = formatTime12Hour(overlapCheck.existingEnd);
+                    showErrorToast(
+
+                            `Time conflict! "${overlapCheck.existingTitle}" is already scheduled from ${startTime12} to ${endTime12}`,
+                        'Please choose a different time'
+
+                    );
+
+                    time.style.borderColor = '#E53E3E';
+
+                    end_time.style.borderColor = '#E53E3E';
+
+                }
+            }
+
+        }
+
+        }
+
+        if (!location.value.trim()) { valid = false; showError(location, 'Location is required.'); }
+
+        if (participants.length < 1) {
+
+            valid = false;
+
+            const tagRow = document.getElementById('participants-tag-row');
+
+            const err = document.createElement('div');
+
+            err.className = 'field-validation-error';
+
+            err.textContent = 'At least 1 participant is required.';
+
+            err.style.color = '#E53E3E';
+
+            err.style.fontSize = '0.95rem';
+
+            err.style.marginTop = '0.25rem';
+
+            tagRow.appendChild(err);
+
+            if (!firstError) firstError = tagRow;
+
+        }
+
+        if (!valid && firstError && typeof firstError.focus === 'function') firstError.focus();
+
+        return valid;
+
+    }
+
+
+
+    // Unified custom validation for Edit Event modal
+
+    function validateEditEventForm() {
+
+        let valid = true;
+
+        let firstError = null;
+
+
+
+        // Remove previous error states
+
+        const editEventForm = document.getElementById('edit-event-form');
+
+        const allFields = Array.from(editEventForm.querySelectorAll('input, textarea'));
+
+        allFields.forEach(field => {
+
+            field.classList.remove('error-input');
+
+            const existingError = field.parentNode.querySelector('.field-validation-error');
+
+            if (existingError) existingError.remove();
+
+        });
+
+
+
+        // Validate required fields
+
+        const title = document.getElementById('edit_event_title');
+
+        const description = document.getElementById('edit_event_description');
+
+        const time = document.getElementById('edit_event_time');
+
+        const end_time = document.getElementById('edit_event_end_time');
+
+        const location = document.getElementById('edit_event_location');
+
+        const date = document.getElementById('edit_event_date').value;
+
+        const eventId = document.getElementById('edit_event_id').value;
+
+        const participants = Array.from(document.querySelectorAll('#edit-participants-tag-row input[name="participants[]"]'));
+
+        function showError(field, message) {
+
+            field.classList.add('error-input');
+
+            const err = document.createElement('div');
+
+            err.className = 'field-validation-error';
+
+            err.textContent = message;
+
+            err.style.color = '#E53E3E';
+
+            err.style.fontSize = '0.95rem';
+
+            err.style.marginTop = '0.25rem';
+
+            field.parentNode.appendChild(err);
+
+            if (!firstError) firstError = field;
+
+        }
+
+        if (!title.value.trim()) { valid = false; showError(title, 'Title is required.'); }
+
+        if (!description.value.trim()) { valid = false; showError(description, 'Description is required.'); }
+
+        if (!time.value.trim()) { valid = false; showError(time, 'Start time is required.'); }
+
+        if (!end_time.value.trim()) { valid = false; showError(end_time, 'End time is required.'); }
+
+        if (time.value.trim() && end_time.value.trim() && time.value >= end_time.value) {
+
+            valid = false;
+
+            showError(end_time, 'End time must be after start time.');
+
+        }
+
+        // STEP 1 & 3: Check for time conflicts with existing meetings (exclude current event)
+        const currentUserRole = "{{ request.user.role|default:''|escapejs }}";
+        const skipTimeValidation = ["VP", "DIRECTOR", "UESO"].includes(currentUserRole);
+        
+        if (valid && time.value.trim() && end_time.value.trim() && date) {
+            // For VP/DIRECTOR/UESO: Show informational warning (not blocking)
+            if (skipTimeValidation) {
+                // Admin roles see all meetings in events object
+                const dateEvents = events[date] || [];
+                
+                const startMinutes = timeToMinutes(time.value);
+                const endMinutes = timeToMinutes(end_time.value);
+                
+                for (const ev of dateEvents) {
+                    // Skip the current event being edited
+                    if (ev.id == eventId) continue;
+                    
+                    if (ev.type === 'meeting' && ev.time && ev.end_time) {
+                        const evStartMinutes = timeToMinutes(ev.time);
+                        const evEndMinutes = timeToMinutes(ev.end_time);
+                        
+                        if (startMinutes < evEndMinutes && endMinutes > evStartMinutes) {
+                            const startTime12 = formatTime12Hour(ev.time);
+                            const endTime12 = formatTime12Hour(ev.end_time);
+                            // Show informational warning (not blocking)
+                            showWarningToast(
+                                `Note: "${ev.title}" is already scheduled from ${startTime12} to ${endTime12} on this date.`,
+                                'You can still proceed, but this may cause scheduling conflicts.'
+                            );
+                            break; // Only show one warning
+                        }
+                    }
+                }
+            } else {
+                // For PROGRAM_HEAD/DEAN/COORDINATOR/FACULTY/IMPLEMENTER
+                // Only check visible meetings (checkTimeOverlap already handles role-based filtering)
+            const overlapCheck = checkTimeOverlap(date, time.value, end_time.value, eventId);
+
+            if (overlapCheck && overlapCheck.conflict) {
+
+                valid = false;
+
+                    // Show error toast notification with 12-hour format
+                    const startTime12 = formatTime12Hour(overlapCheck.existingStart);
+                    const endTime12 = formatTime12Hour(overlapCheck.existingEnd);
+                showErrorToast(
+
+                        `Time conflict! "${overlapCheck.existingTitle}" is already scheduled from ${startTime12} to ${endTime12}`,
+                    'Please choose a different time'
+
+                );
+
+                time.style.borderColor = '#E53E3E';
+
+                end_time.style.borderColor = '#E53E3E';
+
+            }
+        }
+
+        }
+
+        if (!location.value.trim()) { valid = false; showError(location, 'Location is required.'); }
+
+        if (participants.length < 1) {
+
+            valid = false;
+
+            const tagRow = document.getElementById('edit-participants-tag-row');
+
+            const err = document.createElement('div');
+
+            err.className = 'field-validation-error';
+
+            err.textContent = 'At least 1 participant is required.';
+
+            err.style.color = '#E53E3E';
+
+            err.style.fontSize = '0.95rem';
+
+            err.style.marginTop = '0.25rem';
+
+            tagRow.appendChild(err);
+
+            if (!firstError) firstError = tagRow;
+
+        }
+
+        if (!valid && firstError && typeof firstError.focus === 'function') firstError.focus();
+
+        return valid;
+
+    }
+
+
+
+    // Intercept form submit for AJAX (omitted body for brevity)
+
+    addEventForm.onsubmit = function(e) {
+
+        e.preventDefault();
+
+        if (!validateAddEventForm()) return;
+
+        
+        
+        const title = document.getElementById('add_event_title').value.trim();
+
+        const description = document.getElementById('add_event_description').value.trim();
+
+        const date = document.getElementById('add_event_date').value;
+
+        const time = document.getElementById('add_event_time').value.trim();
+
+        const end_time = document.getElementById('add_event_end_time').value.trim();
+
+        const location = document.getElementById('add_event_location').value.trim();
+
+        // Get participants from the tag row's hidden inputs
+
+        const participants = Array.from(document.querySelectorAll('#participants-tag-row input[name="participants[]"]')).map(input => input.value);
+
+        const notes = document.getElementById('add_event_notes').value.trim();
+
+        const attachmentFile = document.getElementById('add_event_attachment').files[0];
+
+        
+        
+        // Debug: Log values to console
+
+        console.log('Form values:', { title, description, date, time, end_time, location, participants, notes });
+
+        
+        
+        // Show loading state
+
+        const submitBtn = addEventForm.querySelector('button[type="submit"]');
+
+        const originalBtnText = submitBtn.innerHTML;
+
+        submitBtn.disabled = true;
+
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
+
+        submitBtn.style.opacity = '0.7';
+
+        submitBtn.style.cursor = 'not-allowed';
+
+        
+        
+        // Disable all form inputs
+
+        const formInputs = addEventForm.querySelectorAll('input, textarea, button');
+
+        formInputs.forEach(input => input.disabled = true);
+
+        
+        
+        const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+
+        
+        
+        // Use FormData for file upload support
+
+        const formData = new FormData();
+
+        formData.append('title', title);
+
+        formData.append('description', description);
+
+        formData.append('date', date);
+
+        formData.append('time', time);
+
+        formData.append('end_time', end_time);
+
+        formData.append('location', location);
+
+        formData.append('notes', notes);
+
+        participants.forEach(p => formData.append('participants[]', p));
+
+        if (attachmentFile) {
+
+            formData.append('notes_attachment', attachmentFile);
+
+        }
+
+        
+        
+        // MODIFIED: Use FormData instead of JSON
+
+        fetch('/calendar/events/', {
+
+            method: 'POST',
+
+            headers: {
+
+                'X-CSRFToken': csrfToken
+
+            },
+
+            body: formData
+
+        })
+
+        .then(function(r) { 
+
+            // Clone the response so we can read it multiple times if needed
+            const responseClone = r.clone();
+            
+            // Try to parse as JSON first
+                return r.json().then(data => {
+
+                // Check if response is ok
+                if (!r.ok) {
+                    // This is a validation/application error (400, 403, etc.), not a network error
+                    const errorMessage = data.errors || data.error || data.message || `Server error: ${r.status}`;
+                    return { status: 'error', errors: errorMessage, isValidationError: true };
+                }
+                return data;
+            }).catch(function(jsonError) {
+                // If JSON parsing fails, try to get text response from clone
+                return responseClone.text().then(text => {
+                    if (!r.ok) {
+                        // Try to parse as JSON one more time from text
+                        try {
+                            const jsonData = JSON.parse(text);
+                            const errorMessage = jsonData.errors || jsonData.error || jsonData.message || text || `Server error: ${r.status}`;
+                            return { status: 'error', errors: errorMessage, isValidationError: true };
+                        } catch (e) {
+                            // If still can't parse, use the text as error message
+                            return { status: 'error', errors: text || `Server error: ${r.status}`, isValidationError: true };
+                        }
+                    }
+                    // If response was ok but not JSON, this is unexpected
+                    return { status: 'error', errors: 'Invalid response from server', isValidationError: true };
+                }).catch(function(textError) {
+                    // If even text parsing fails, return a generic error
+                    return { status: 'error', errors: `Server error: ${r.status}`, isValidationError: true };
+                });
+            });
+        })
+
+        .then(function(resp) {
+
+            if (resp.status === 'success') {
+
+                addEventModal.style.display = 'none';
+
+                
+                
+                // Reset loading state
+
+                submitBtn.disabled = false;
+
+                submitBtn.innerHTML = originalBtnText;
+
+                submitBtn.style.opacity = '1';
+
+                submitBtn.style.cursor = 'pointer';
+
+                formInputs.forEach(input => input.disabled = false);
+
+                
+                
+                // Show toast
+
+                const eventTitle = document.getElementById('add_event_title').value;
+
+                showToast('Meeting Event Created Successfully!', eventTitle);
+
+
+
+                // MODIFIED: Fetch from new events endpoint with cache-busting parameter
+
+                console.log('Fetching updated events...');
+
+                const timestamp = new Date().getTime();
+
+                fetch('/calendar/events/?_=' + timestamp)
+
+                  .then(function(r) { 
+
+                      console.log('Events fetch response status:', r.status);
+
+                      return r.json(); 
+
+                  })
+
+                  .then(function(data) {
+
+                      events = data;
+
+                      renderCalendar(currentYear, currentMonth); // update calendar grid
+
+                      fetchEvents(); // update sidebar event list
+
+                  })
+
+                  .catch(function(err) {
+
+                      console.error('Error refreshing events:', err);
+
+                      showErrorToast('Could not refresh events: ' + err.message, 'Warning');
+
+                      renderCalendar(currentYear, currentMonth);
+
+                      fetchEvents();
+
+                  });
+
+            } else {
+
+                // Reset loading state on error
+
+                submitBtn.disabled = false;
+
+                submitBtn.innerHTML = originalBtnText;
+
+                submitBtn.style.opacity = '1';
+
+                submitBtn.style.cursor = 'pointer';
+
+                formInputs.forEach(input => input.disabled = false);
+                
+                
+
+                // Show error message without "Network error:" prefix for validation errors
+                const errorTitle = resp.isValidationError ? 'Validation Error' : 'Error';
+                const errorMessage = resp.errors || resp.error || JSON.stringify(resp);
+                console.log('Error response:', resp);
+                console.log('Error message:', errorMessage);
+                console.log('Is validation error:', resp.isValidationError);
+                showErrorToast(errorMessage, errorTitle);
+            }
+
+        })
+
+        .catch(function(err) {
+
+            // Reset loading state on actual network error (connection failed, etc.)
+            submitBtn.disabled = false;
+
+            submitBtn.innerHTML = originalBtnText;
+
+            submitBtn.style.opacity = '1';
+
+            submitBtn.style.cursor = 'pointer';
+
+            formInputs.forEach(input => input.disabled = false);
+            
+            
+
+            // Check if this is actually a network error or if it's an error object from our code
+            console.error('Caught error in catch block:', err);
+            if (err && err.message && err.message.includes('Time conflict')) {
+                // This shouldn't happen, but if it does, show it as validation error
+                showErrorToast(err.message, 'Validation Error');
+            } else {
+                // Only show "Network error:" for actual network failures
+                showErrorToast('Network error: ' + (err.message || err.toString()), 'Network Error');
+            }
+        });
+
+    };
+
+</script>
+
+
+
+
+
+
+
+
+
+<script>
+
+    // Event Details Modal Logic (omitted body for brevity)
+
+    const eventDetailsModal = document.getElementById('event-details-modal');
+
+    const closeEventDetailsModal = document.getElementById('close-event-details-modal');
+
+    closeEventDetailsModal.onclick = function() { 
+
+        // Remove floating button when closing modal
+
+        const floatingBtn = document.getElementById('floating-add-event-btn');
+
+        if (floatingBtn) floatingBtn.remove();
+
+        eventDetailsModal.style.display = 'none'; 
+
+    };
+
+    eventDetailsModal.onclick = function(e) { 
+
+        if (e.target === eventDetailsModal) {
+
+            // Remove floating button when closing modal
+
+            const floatingBtn = document.getElementById('floating-add-event-btn');
+
+            if (floatingBtn) floatingBtn.remove();
+
+            eventDetailsModal.style.display = 'none';
+
+        }
+
+    };
+
+
+
+    function showEventDetails(eventArr, dateStr) {
+
+        eventDetailsModal.style.display = 'flex';
+
+        let html = '';
+
+        const currentUserId = "{{ request.user.id|default:'' }}";
+
+        const currentUserRole = "{{ request.user.role|default:''|escapejs }}";
+
+        
+        
+        // Check if date is in the past
+
+        const today = new Date();
+
+        today.setHours(0, 0, 0, 0);
+
+        const eventDate = new Date(dateStr);
+
+        eventDate.setHours(0, 0, 0, 0);
+
+        const isPast = eventDate < today;
+
+        
+        
+        // Check if there's a holiday on this date
+
+        const hasHoliday = eventArr.some(ev => ev.type === 'holiday');
+
+        
+        
+        eventArr.forEach(ev => {
+
+            if (ev.type === 'holiday') {
+
+                // Holiday event styling - distinctive Philippine holiday theme
+
+                let holidayIcon = ev.holiday_type === 'regular' ? '🇵🇭' : '⭐';
+
+                let holidayTypeLabel = ev.holiday_type === 'regular' ? 'Regular Holiday' : 'Special Non-Working Holiday';
+
+                let borderColor = ev.holiday_type === 'regular' ? '#FCD116' : '#FCD116';
+
+                let bgGradient = ev.holiday_type === 'regular' 
+
+                    ? 'linear-gradient(135deg, #FFF9F0 0%, #FFE6E6 100%)' 
+
+                    : 'linear-gradient(135deg, #FFFEF0 0%, #FFF9E6 100%)';
+                
+                
+
+                html += `<div style="background:${bgGradient};border-left:6px solid ${borderColor};padding:20px;margin-bottom:12px;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+
+                    <div class="event-details-row" style="display:flex;align-items:center;margin-bottom:12px;">
+
+                        <div style="font-size:2rem;margin-right:12px;">${holidayIcon}</div>
+
+                        <div style="flex:1;">
+
+                            <div style="font-size:1.75rem;font-weight:700;color:${borderColor};line-height:1.2;">${ev.title}</div>
+
+                            <div style="font-size:0.95rem;font-weight:600;color:#666;margin-top:4px;text-transform:uppercase;letter-spacing:0.5px;">${holidayTypeLabel}</div>
+
+                        </div>
+
+                    </div>
+
+                    <div style="font-size:1.05rem;color:#444;margin-bottom:8px;line-height:1.6;">${ev.description}</div>
+
+                    <div style="font-size:1rem;color:#666;display:flex;align-items:center;gap:8px;">
+
+                        <i class="fa-regular fa-calendar" style="color:${borderColor};"></i>
+
+                        <span style="font-weight:500;">${ev.date}</span>
+
+                    </div>
+
+                    <div style="margin-top:16px;padding:12px;background:rgba(255,255,255,0.6);border-radius:8px;border:1px solid ${borderColor};">
+
+                        <i class="fa-solid fa-info-circle" style="color:${borderColor};margin-right:6px;"></i>
+
+                        <span style="font-size:0.9rem;color:#555;font-style:italic;">
+
+                            ${ev.holiday_type === 'regular' 
+
+                                ? 'Regular holidays are paid rest days for all employees. Meetings and project activities should not be scheduled on this date.' 
+
+                                : 'Special non-working holidays provide time off for specific observances. Please avoid scheduling meetings or project activities on this date.'}
+
+                        </span>
+
+                    </div>
+
+                </div>`;
+
+            } else if (ev.type === 'meeting') {
+
+                let canEdit = false;
+
+                if (currentUserId !== "" && (ev.created_by == currentUserId || ["DIRECTOR","UESO","VP"].includes(currentUserRole))) {
+
+                    canEdit = true;
+
+                }
+
+                
+                
+                // Status badge
+
+                let statusBadge = '';
+
+                let statusColor = '#6c757d'; // default gray
+
+                if (ev.status === 'ONGOING') {
+
+                    statusColor = '#28a745'; // green
+
+                    statusBadge = `<span style="background:${statusColor};color:#fff;padding:4px 12px;border-radius:12px;font-size:0.85rem;font-weight:600;margin-left:8px;">Ongoing</span>`;
+
+                } else if (ev.status === 'COMPLETED') {
+
+                    statusColor = '#6c757d'; // gray
+
+                    statusBadge = `<span style="background:${statusColor};color:#fff;padding:4px 12px;border-radius:12px;font-size:0.85rem;font-weight:600;margin-left:8px;">Completed</span>`;
+
+                } else if (ev.status === 'CANCELLED') {
+
+                    statusColor = '#dc3545'; // red
+
+                    statusBadge = `<span style="background:${statusColor};color:#fff;padding:4px 12px;border-radius:12px;font-size:0.85rem;font-weight:600;margin-left:8px;">Cancelled</span>`;
+
+                } else if (ev.status === 'SCHEDULED') {
+
+                    statusColor = '#007bff'; // blue
+
+                    statusBadge = `<span style="background:${statusColor};color:#fff;padding:4px 12px;border-radius:12px;font-size:0.85rem;font-weight:600;margin-left:8px;">Scheduled</span>`;
+
+                }
+
+                
+                
+                html += `<div style="background:#f8f9fa;border-left:4px solid #fd7e14;padding:16px;margin-bottom:12px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.08);">
+
+                    <div class="event-details-row" style="display:flex;align-items:center;margin-bottom:8px;">
+
+                        <div style="font-size:1.5rem;font-weight:600;color:#fd7e14;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;flex:1;">${ev.title}${statusBadge}</div>
+
+                        ${canEdit ? `<i class='fa-solid fa-pen-to-square' style='font-size:1.3rem;color:#fd7e14;cursor:pointer;margin-left:10px;' title='Edit' onclick='(function(){var btn=document.getElementById("floating-add-event-btn");if(btn)btn.remove();window.openEditEventModal(${JSON.stringify(ev)});})()'></i>` : ''}
+
+                        ${canEdit ? `<i class='fa-solid fa-trash' style='font-size:1.3rem;color:#E53E3E;cursor:pointer;margin-left:10px;' title='Delete' onclick='(function(){var btn=document.getElementById("floating-add-event-btn");if(btn)btn.remove();window.confirmDeleteEvent(${ev.id}, ${JSON.stringify(ev.title)});})()'></i>` : ''}
+
+                    </div>
+
+                    <div style="font-size:1.1rem;font-weight:400;color:#222;margin-bottom:6px;">${ev.description}</div>
+
+                    <div style="font-size:1rem;color:#666;margin-bottom:6px;"><i class="fa-regular fa-clock" style="margin-right:6px;"></i>${ev.date} from ${formatTime12Hour(ev.time)}${ev.end_time ? ' to ' + formatTime12Hour(ev.end_time) : ''}</div>
+
+                    <div style="font-size:1rem;color:#666;margin-bottom:6px;"><i class="fa-solid fa-location-dot" style="margin-right:6px;"></i>${ev.location}</div>
+
+                    ${ev.participant_names && ev.participant_names.length ? `<div style='font-size:0.95em;color:#555;margin-bottom:6px;'><i class="fa-solid fa-users" style="margin-right:6px;"></i><b>Participants:</b> ${ev.participant_names.join(", ")}</div>` : ''}
+
+                    ${ev.notes && ev.notes.trim() ? `<div style="font-size:0.95rem;color:#888;margin-top:8px;font-style:italic;"><i class="fa-regular fa-note-sticky" style="margin-right:6px;"></i>${ev.notes}</div>` : ''}
+
+                    ${ev.notes_attachment ? `<div style="font-size:0.95rem;color:#2563eb;margin-top:8px;"><a href="${ev.notes_attachment}" target="_blank" style="color:#2563eb;text-decoration:none;display:inline-flex;align-items:center;gap:6px;"><i class="fas fa-paperclip"></i> ${ev.notes_attachment_name || 'View Attachment'}</a></div>` : ''}
+
+                </div>`;
+
+            } else if (ev.type === 'project') {
+
+                // Status badge for project events
+
+                let statusBadge = '';
+
+                let statusColor = '#6c757d'; // default gray
+
+                if (ev.status === 'ONGOING') {
+
+                    statusColor = '#28a745'; // green
+
+                    statusBadge = `<span style="background:${statusColor};color:#fff;padding:4px 12px;border-radius:12px;font-size:0.85rem;font-weight:600;margin-left:8px;">Ongoing</span>`;
+
+                } else if (ev.status === 'COMPLETED') {
+
+                    statusColor = '#6c757d'; // gray
+
+                    statusBadge = `<span style="background:${statusColor};color:#fff;padding:4px 12px;border-radius:12px;font-size:0.85rem;font-weight:600;margin-left:8px;">Completed</span>`;
+
+                } else if (ev.status === 'CANCELLED') {
+
+                    statusColor = '#dc3545'; // red
+
+                    statusBadge = `<span style="background:${statusColor};color:#fff;padding:4px 12px;border-radius:12px;font-size:0.85rem;font-weight:600;margin-left:8px;">Cancelled</span>`;
+
+                } else if (ev.status === 'SCHEDULED') {
+
+                    statusColor = '#007bff'; // blue
+
+                    statusBadge = `<span style="background:${statusColor};color:#fff;padding:4px 12px;border-radius:12px;font-size:0.85rem;font-weight:600;margin-left:8px;">Scheduled</span>`;
+
+                }
+
+                
+                
+                html += `<div style="background:#f8f9fa;border-left:4px solid #007bff;padding:16px;margin-bottom:12px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.08);">
+
+                    <div class="event-details-row" style="display:flex;align-items:center;margin-bottom:8px;">
+
+                        <div style="font-size:1.5rem;font-weight:600;color:#007bff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;flex:1;">${ev.title}${statusBadge}</div>
+
+                        <span style='font-size:1rem;color:#007bff;cursor:pointer;margin-left:10px;white-space:nowrap;' title='Go to activity' onclick='window.location.href="/projects/${ev.project_id}/"'>Go To Activity <i class="fa-solid fa-arrow-right"></i></span>
+
+                    </div>
+
+                    ${ev.project_name ? `<div style='font-size:1.05em;color:#007bff;margin-bottom:6px;'><i class="fa-solid fa-diagram-project" style="margin-right:6px;"></i><b>Activity:</b> ${ev.project_name}</div>` : ''}
+
+                    <div style="font-size:1.1rem;font-weight:400;color:#222;margin-bottom:6px;">${ev.description}</div>
+
+                    <div style="font-size:1rem;color:#666;margin-bottom:6px;"><i class="fa-regular fa-clock" style="margin-right:6px;"></i>${ev.date} at ${formatTime12Hour(ev.time)}</div>
+
+                    <div style="font-size:1rem;color:#666;margin-bottom:6px;"><i class="fa-solid fa-location-dot" style="margin-right:6px;"></i>${ev.location}</div>
+
+                    ${ev.leader ? `<div style='font-size:0.95em;color:#555;margin-bottom:6px;'><i class="fa-solid fa-user-tie" style="margin-right:6px;"></i><b>Leader:</b> ${ev.leader}</div>` : ''}
+
+                    ${ev.provider_names && ev.provider_names.length ? `<div style='font-size:0.95em;color:#555;margin-bottom:6px;'><i class="fa-solid fa-handshake" style="margin-right:6px;"></i><b>Providers:</b> ${ev.provider_names.join(", ")}</div>` : ''}
+
+                    ${ev.notes && ev.notes.trim() ? `<div style="font-size:0.95rem;color:#888;margin-top:8px;font-style:italic;"><i class="fa-regular fa-note-sticky" style="margin-right:6px;"></i>${ev.notes}</div>` : ''}
+
+                </div>`;
+
+            }
+
+        });
+
+        
+        
+        document.getElementById('event-details-title').textContent = eventArr.length === 1 ? '' : `Events on ${dateStr}`;
+
+        document.getElementById('event-details-info').innerHTML = html;
+
+        
+        
+        // Remove any existing floating button first
+
+        const existingBtn = document.getElementById('floating-add-event-btn');
+
+        if (existingBtn) {
+
+            existingBtn.remove();
+
+        }
+
+        
+        
+        // Only show Add Meeting button if:
+
+        // 1. Date is not in the past
+
+        // 2. There is NO holiday on this date
+
+        if (!isPast && !hasHoliday) {
+
+            // Create floating button and append to modal container (not content)
+
+            const floatingBtn = document.createElement('button');
+
+            floatingBtn.id = 'floating-add-event-btn';
+
+            floatingBtn.title = 'Add Meeting';
+
+            floatingBtn.innerHTML = '<i class="fa-solid fa-plus" style="margin-right:8px;"></i>Add Meeting';
+
+            floatingBtn.style.cssText = 'position:fixed;bottom:40px;left:45%;background:#245F3E;color:#fff;border:none;border-radius:28px;padding:14px 24px;font-size:1rem;font-weight:600;box-shadow:0 4px 12px rgba(0,0,0,0.15);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.3s ease;z-index:10000;white-space:nowrap;';
+
+            floatingBtn.onmouseover = function() {
+
+                this.style.transform = 'scale(1.05)';
+
+                this.style.boxShadow = '0 6px 16px rgba(0,0,0,0.2)';
+
+            };
+
+            floatingBtn.onmouseout = function() {
+
+                this.style.transform = 'scale(1)';
+
+                this.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+
+            };
+
+            floatingBtn.onclick = function(e) {
+
+                e.stopPropagation();
+
+                eventDetailsModal.style.display = 'none';
+
+                floatingBtn.remove();
+
+                openAddEventModal(dateStr);
+
+            };
+
+            document.body.appendChild(floatingBtn); // Append to body for fixed positioning
+
+        }
+
+    }
+
+
+
+    // Delete event logic (omitted body for brevity)
+
+    window.confirmDeleteEvent = function(eventId, eventTitle) {
+
+        // Hide all other modals
+
+        document.getElementById('event-details-modal').style.display = 'none';
+
+        document.getElementById('edit-event-modal').style.display = 'none';
+
+        // Show only the delete modal
+
+        document.getElementById('delete-confirm-modal').style.display = 'flex';
+
+        document.getElementById('delete-confirm-message').textContent = `Are you sure you want to delete "${eventTitle}"? This action cannot be undone.`;
+
+        pendingDeleteEventId = eventId;
+
+        pendingDeleteEventTitle = eventTitle;
+
+    };
+
+
+
+    document.getElementById('cancel-delete-modal').onclick = function() {
+
+        document.getElementById('delete-confirm-modal').style.display = 'none';
+
+    };
+
+    document.getElementById('delete-confirm-modal').onclick = function(e) {
+
+        if (e.target === this) {
+
+            this.style.display = 'none';
+
+        }
+
+    };
+
+    document.getElementById('confirm-delete-btn').onclick = function() {
+
+        if (pendingDeleteEventId) {
+
+            // Show loading state on delete button
+
+            const deleteBtn = document.getElementById('confirm-delete-btn');
+
+            const cancelBtn = document.getElementById('cancel-delete-modal');
+
+            const originalBtnText = deleteBtn.innerHTML;
+
+            deleteBtn.disabled = true;
+
+            deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+
+            deleteBtn.style.opacity = '0.7';
+
+            deleteBtn.style.cursor = 'not-allowed';
+
+            cancelBtn.disabled = true;
+
+            cancelBtn.style.opacity = '0.5';
+
+            
+            
+            deleteEvent(pendingDeleteEventId, deleteBtn, cancelBtn, originalBtnText);
+
+        } else {
+
+            document.getElementById('delete-confirm-modal').style.display = 'none';
+
+        }
+
+    };
+
+
+
+    function deleteEvent(eventId, deleteBtn, cancelBtn, originalBtnText) {
+
+        const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+
+        
+        
+        // MODIFIED: Use new RESTful URL and DELETE method
+
+        fetch('/calendar/events/' + eventId + '/', {
+
+            method: 'DELETE',
+
+            headers: {
+
+                'Content-Type': 'application/json',
+
+                'X-CSRFToken': csrfToken
+
+            },
+
+            body: JSON.stringify({})
+
+        })
+
+        .then(function(r) { return r.json(); })
+
+        .then(function(resp) {
+
+            if (resp.status === 'success') {
+
+                // Reset loading state
+
+                deleteBtn.disabled = false;
+
+                deleteBtn.innerHTML = originalBtnText;
+
+                deleteBtn.style.opacity = '1';
+
+                deleteBtn.style.cursor = 'pointer';
+
+                cancelBtn.disabled = false;
+
+                cancelBtn.style.opacity = '1';
+
+                
+                
+                // Show toast
+
+                const eventTitle = document.getElementById('event-details-title').textContent;
+
+                showToast('Meeting Event Deleted Successfully!', eventTitle);
+
+                
+                
+                // Hide modals
+
+                document.getElementById('delete-confirm-modal').style.display = 'none';
+
+                document.getElementById('event-details-modal').style.display = 'none';
+
+                
+                
+                // MODIFIED: Fetch from new events endpoint with cache-busting
+
+                const timestamp = new Date().getTime();
+
+                fetch('/calendar/events/?_=' + timestamp)
+
+                  .then(function(r) { return r.json(); })
+
+                  .then(function(data) {
+
+                      events = data;
+
+                      renderCalendar(currentYear, currentMonth);
+
+                      fetchEvents();
+
+                  })
+
+                  .catch(function(err) {
+
+                      showErrorToast('Could not refresh events: ' + err.message, 'Warning');
+
+                      renderCalendar(currentYear, currentMonth);
+
+                      fetchEvents();
+
+                  });
+
+            } else {
+
+                // Reset loading state on error
+
+                deleteBtn.disabled = false;
+
+                deleteBtn.innerHTML = originalBtnText;
+
+                deleteBtn.style.opacity = '1';
+
+                deleteBtn.style.cursor = 'pointer';
+
+                cancelBtn.disabled = false;
+
+                cancelBtn.style.opacity = '1';
+
+                
+                
+                showErrorToast(resp.errors || JSON.stringify(resp), 'Error');
+
+            }
+
+        })
+
+        .catch(function(err) {
+
+            // Reset loading state on network error
+
+            deleteBtn.disabled = false;
+
+            deleteBtn.innerHTML = originalBtnText;
+
+            deleteBtn.style.opacity = '1';
+
+            deleteBtn.style.cursor = 'pointer';
+
+            cancelBtn.disabled = false;
+
+            cancelBtn.style.opacity = '1';
+
+            
+            
+            showErrorToast('Network error: ' + err.message, 'Network Error');
+
+        });
+
+    }
+
+</script>
+
+
+
+<script>
+
+    let events = {};
+
+    const calendar = document.getElementById('calendar');
+
+    const eventList = document.getElementById('event-list');
+
+    
+    
+    // Check if there's an initial date from query parameter
+
+    let currentYear, currentMonth;
+
+    {% if initial_date %}
+
+    const initialDate = new Date('{{ initial_date }}');
+
+    currentYear = initialDate.getFullYear();
+
+    currentMonth = initialDate.getMonth();
+
+    {% else %}
+
+    currentYear = new Date().getFullYear();
+
+    currentMonth = new Date().getMonth();
+
+    {% endif %}
+
+    
+    
+    let selectedDate = null;
+
+
+
+    // Populate year dropdown (current-10 to current+10)
+
+    const yearSelector = document.getElementById("year-selector");
+
+    for(let y=currentYear-10;y<=currentYear+10;y++){
+
+        const opt=document.createElement("option");
+
+        opt.value=y; opt.textContent=y;
+
+        if(y===currentYear) opt.selected=true;
+
+        yearSelector.appendChild(opt);
+
+    }
+
+
+
+    // Month click
+
+    document.querySelectorAll('#month-selector li').forEach(li=>{
+
+        li.onclick=()=>{
+
+            currentMonth=parseInt(li.dataset.month);
+
+            renderCalendar(currentYear,currentMonth);
+
+            fetchEvents();
+
+            document.querySelectorAll('#month-selector li').forEach(l=>l.classList.remove('active'));
+
+            li.classList.add('active');
+
+        };
+
+    });
+
+
+
+    // Set initial active month
+
+    document.querySelectorAll('#month-selector li')[currentMonth].classList.add('active');
+
+
+
+    // Fetch events on initial load to ensure role-restricted view
+
+    window.addEventListener('DOMContentLoaded', function() {
+
+        // MODIFIED: Fetch from new events endpoint
+
+        fetch('/calendar/events/')
+
+            .then(r => r.json())
+
+            .then(data => {
+
+                events = data;
+
+                renderCalendar(currentYear, currentMonth);
+
+                fetchEvents();
+
+                
+                
+                // Highlight date if coming from notification
+
+                {% if initial_date %}
+
+                highlightDate('{{ initial_date }}');
+
+                {% endif %}
+
+            })
+
+            .catch(err => {
+
+                showErrorToast('Could not load events: ' + err.message, 'Error');
+
+                renderCalendar(currentYear, currentMonth);
+
+                fetchEvents();
+
+            });
+
+    });
+
+
+
+    yearSelector.onchange=()=>{currentYear=parseInt(yearSelector.value); renderCalendar(currentYear,currentMonth); fetchEvents();};
+
+
+
+    function renderCalendar(year,month){
+
+        const monthNames=["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+        document.getElementById('month-name').textContent=monthNames[month];
+
+        calendar.innerHTML='';
+
+        const firstDay=new Date(year,month,1).getDay();
+
+        const daysInMonth=new Date(year,month+1,0).getDate();
+
+        for(let i=0;i<firstDay;i++){ calendar.appendChild(document.createElement('div')); }
+
+        
+        
+        // Get today's date once for comparison
+
+        const today = new Date();
+
+        today.setHours(0, 0, 0, 0);
+
+        
+        
+        for(let d=1;d<=daysInMonth;d++){
+
+            const cell=document.createElement('div');
+
+            const dateStr=`${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+
+            cell.className='calendar-day';
+
+            cell.dataset.date=dateStr;
+
+            
+            
+            // Calculate if this date is in the past
+
+            const cellDate = new Date(year, month, d);
+
+            cellDate.setHours(0, 0, 0, 0);
+
+            const isPast = cellDate < today;
+
+            const isToday = (year === today.getFullYear() && month === today.getMonth() && d === today.getDate());
+
+            
+            
+            if(events[dateStr]){
+
+                // Count events by type
+
+                let activityCount = events[dateStr].filter(ev => ev.type === 'project').length;
+
+                let meetingCount = events[dateStr].filter(ev => ev.type === 'meeting').length;
+
+                let holidayCount = events[dateStr].filter(ev => ev.type === 'holiday').length;
+
+                let hasHoliday = holidayCount > 0;
+
+                let holidayType = hasHoliday ? events[dateStr].find(ev => ev.type === 'holiday').holiday_type : null;
+
+                
+                
+                // Holiday styling takes priority
+
+                if (hasHoliday && activityCount === 0 && meetingCount === 0) {
+
+                    // Pure holiday - no other events
+
+                    cell.classList.add(holidayType === 'regular' ? 'holiday' : 'holiday-special');
+
+                } else if (hasHoliday) {
+
+                    // Holiday with events
+
+                    cell.classList.add('holiday-with-events');
+
+                } else {
+
+                    // Regular events (no holiday)
+
+                    cell.style.backgroundColor = '#245F3E'; // Green
+
+                }
+
+                
+                
+                cell.style.color = 'white';
+
+                cell.style.position = 'relative';
+
+                cell.style.cursor = 'pointer';
+
+                
+                
+                // Gray out past dates with events
+
+                if (isPast) {
+
+                    cell.style.opacity = '0.5';
+
+                }
+
+                
+                
+                // Create day number
+
+                const dayNumber = document.createElement('div');
+
+                dayNumber.textContent = d;
+
+                dayNumber.style.textAlign = 'center';
+
+                dayNumber.style.paddingTop = '8px';
+
+                dayNumber.style.fontWeight = hasHoliday ? '700' : '400';
+
+                cell.appendChild(dayNumber);
+
+                
+                
+                // Create badge container in bottom corners
+
+                const badgeContainer = document.createElement('div');
+
+                badgeContainer.style.position = 'absolute';
+
+                badgeContainer.style.bottom = '4px';
+
+                badgeContainer.style.left = '4px';
+
+                badgeContainer.style.right = '4px';
+
+                badgeContainer.style.display = 'flex';
+
+                badgeContainer.style.justifyContent = 'space-between';
+
+                badgeContainer.style.fontSize = '10px';
+
+                badgeContainer.style.fontWeight = 'bold';
+
+                
+                
+                // Add activity badge (blue) on left if there are activities
+
+                if (activityCount > 0) {
+
+                    const activityBadge = document.createElement('span');
+
+                    activityBadge.textContent = activityCount;
+
+                    activityBadge.style.backgroundColor = '#007bff'; // Bootstrap primary blue
+
+                    activityBadge.style.color = 'white';
+
+                    activityBadge.style.borderRadius = '50%';
+
+                    activityBadge.style.width = '18px';
+
+                    activityBadge.style.height = '18px';
+
+                    activityBadge.style.display = 'flex';
+
+                    activityBadge.style.alignItems = 'center';
+
+                    activityBadge.style.justifyContent = 'center';
+
+                    activityBadge.style.boxShadow = '0 1px 3px rgba(0,0,0,0.3)';
+
+                    badgeContainer.appendChild(activityBadge);
+
+                } else {
+
+                    badgeContainer.appendChild(document.createElement('span')); // Spacer
+
+                }
+
+                
+                
+                // Add meeting badge (orange) on right if there are meetings
+
+                if (meetingCount > 0) {
+
+                    const meetingBadge = document.createElement('span');
+
+                    meetingBadge.textContent = meetingCount;
+
+                    meetingBadge.style.backgroundColor = '#fd7e14'; // Bootstrap orange
+
+                    meetingBadge.style.color = 'white';
+
+                    meetingBadge.style.borderRadius = '50%';
+
+                    meetingBadge.style.width = '18px';
+
+                    meetingBadge.style.height = '18px';
+
+                    meetingBadge.style.display = 'flex';
+
+                    meetingBadge.style.alignItems = 'center';
+
+                    meetingBadge.style.justifyContent = 'center';
+
+                    meetingBadge.style.boxShadow = '0 1px 3px rgba(0,0,0,0.3)';
+
+                    badgeContainer.appendChild(meetingBadge);
+
+                }
+
+                
+                
+                // Add holiday indicator badge if there's a holiday
+
+                if (hasHoliday) {
+
+                    const holidayBadge = document.createElement('span');
+
+                    holidayBadge.style.position = 'absolute';
+
+                    holidayBadge.style.top = '2px';
+
+                    holidayBadge.style.right = '2px';
+
+                    holidayBadge.style.fontSize = '12px';
+
+                    holidayBadge.title = 'Philippine Holiday';
+
+                    cell.appendChild(holidayBadge);
+
+                }
+
+                
+                
+                cell.appendChild(badgeContainer);
+
+                
+                
+                cell.onclick = function() {
+
+                    showEventDetails(events[dateStr], dateStr);
+
+                };
+
+            } else {
+
+                // No events on this date
+
+                cell.textContent = d;
+
+                if (isPast) {
+
+                    // Past date with no events - add past-date class and no onclick
+
+                    cell.classList.add('past-date');
+
+                } else {
+
+                    // Future/today date with no events - allow adding new events
+
+                    cell.onclick = function() {
+
+                        openAddEventModal(dateStr);
+
+                    };
+
+                }
+
+            }
+
+            
+            
+            // Highlight current day
+
+            if (isToday) {
+
+                cell.style.border = '2px solid #00BCD4';
+
+                cell.style.boxShadow = '0 0 0 2px #00BCD4';
+
+            }
+
+            
+            
+            calendar.appendChild(cell);
+
+        }
+
+    }
+
+
+
+    setTimeout(() => {
+
+        const cell = document.querySelector(`.calendar-day[data-date="${dateStr}"]`);
+
+        if (cell) {
+
+            // Scroll to the calendar if needed
+
+            cell.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            
+            
+            // Add a prominent highlight
+
+            cell.style.border = '3px solid rgba(0, 0, 0, 0.2)';
+
+            cell.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.5)';
+
+            cell.style.transform = 'scale(1.1)';
+
+            cell.style.zIndex = '10';
+
+            cell.style.position = 'relative';
+
+            
+            
+            // Click the date to show events
+
+            cell.click();
+
+            
+            
+            // Remove the extra highlight after 3 seconds (keep the events open)
+
+            setTimeout(() => {
+
+                cell.style.transform = '';
+
+                cell.style.zIndex = '';
+
+                cell.style.position = '';
+
+            }, 3000);
+
+        }
+
+    }, 500); // Wait for calendar to render
+
+
+
+</script>
+
+
+
 </body>
+
 </html>
+
 {% endblock %}

@@ -26,12 +26,11 @@ def calendar_view(request):
     # Optimize users query - only need id, name, college for dropdown
     users = User.objects.exclude(role='CLIENT').select_related('college').only('id', 'given_name', 'last_name', 'college')
     initial_date = request.GET.get('date', None)
-    events_by_date = services.get_events_by_date(request.user, for_main_calendar_view=True)
-    events_json = json.dumps(events_by_date)
+    # Note: Template fetches events dynamically via /calendar/events/ endpoint
+    # which applies role-based filtering. No need to load events here.
     
     context = {
         'users': users,
-        'events_json': events_json,
         'base_template': base_template,
     }
     
@@ -60,6 +59,7 @@ def meeting_event_list(request):
                     'description': request.POST.get('description', ''),
                     'date': request.POST.get('date', ''),
                     'time': request.POST.get('time', ''),
+                    'end_time': request.POST.get('end_time', ''),
                     'location': request.POST.get('location', ''),
                     'notes': request.POST.get('notes', ''),
                     'participants': request.POST.getlist('participants[]', []),
@@ -73,6 +73,7 @@ def meeting_event_list(request):
                         'description': request.POST.get('description', ''),
                         'date': request.POST.get('date', ''),
                         'time': request.POST.get('time', ''),
+                        'end_time': request.POST.get('end_time', ''),
                         'location': request.POST.get('location', ''),
                         'notes': request.POST.get('notes', ''),
                         'participants': request.POST.getlist('participants[]', []),
@@ -81,6 +82,12 @@ def meeting_event_list(request):
                 else:
                     # Regular JSON
                     data = json.loads(request.body)
+            
+            # Debug: Log received data
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.debug(f"Received data for meeting creation: {data}")
+            logger.debug(f"end_time value: '{data.get('end_time', 'NOT_FOUND')}'")
                 
             meeting, errors = services.create_meeting_event(data, request.user)
             if errors:
@@ -122,6 +129,7 @@ def meeting_event_detail(request, event_id):
                     'description': post_data.get('description', ''),
                     'date': post_data.get('date', ''),
                     'time': post_data.get('time', ''),
+                    'end_time': post_data.get('end_time', ''),
                     'location': post_data.get('location', ''),
                     'notes': post_data.get('notes', ''),
                     'participants': post_data.getlist('participants[]', []),
