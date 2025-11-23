@@ -9,6 +9,7 @@ class MeetingEvent(models.Model):
 	title = models.CharField(max_length=255)
 	description = models.TextField(blank=True)
 	datetime = models.DateTimeField()
+	end_datetime = models.DateTimeField(null=True, blank=True, help_text="End time of the meeting")
 	location = models.CharField(max_length=255, blank=True)
 	created_at = models.DateTimeField(auto_now_add=True)
 	created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='created_meeting_events')
