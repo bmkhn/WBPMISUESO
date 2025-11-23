@@ -60,7 +60,7 @@
     {% endif %}
     {# -------------------------------------------------------------------------------- #}
 
-    <form class="expenseForm" id="expenseForm" method="post" enctype="multipart/form-data">
+    <form class="expenseForm" id="expenseForm" method="post" action="{% url 'project_expenses' project.id %}" enctype="multipart/form-data">
       {% csrf_token %}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.7rem">
         <div class="form-field-col">
