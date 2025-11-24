@@ -41,6 +41,7 @@ urlpatterns = [
     # API Key Management
     path('api/request/', views.request_api_access, name='request_api_access'),
     path('api/approve/<int:pk>/', views.approve_api_access, name='approve_api_access'),
+    path('api/reject/<int:pk>/', views.reject_api_access, name='reject_api_access'),
     path('api/disconnect/<int:pk>/', views.disconnect_api_access, name='disconnect_api_access'),
     path('api/delete/<int:pk>/', views.delete_api_connection, name='delete_api_connection'),
 ]

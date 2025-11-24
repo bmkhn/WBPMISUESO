@@ -40,6 +40,8 @@ class APIConnection(models.Model):
     # Store the visible string so the user can see it at all times
     full_api_key_string = models.CharField(max_length=255, blank=True, null=True, help_text="The visible API key string for the user.")
 
+    rejection_reason = models.TextField(blank=True, null=True, help_text="Reason for rejection.")
+
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
     tier = models.CharField(max_length=20, choices=TIER_CHOICES, default='TIER_1')
     

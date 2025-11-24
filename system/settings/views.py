@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.db.models import Sum, Value, DecimalField
 from django.db.models.functions import Coalesce 
 from decimal import Decimal 
+from django.core.paginator import Paginator
 from system.users.decorators import role_required
 from datetime import datetime
 from shared.budget.models import BudgetPool, BudgetHistory, CollegeBudget
@@ -23,7 +24,8 @@ from .forms import (
     DeleteAccountForm, 
     APIKeyForm, 
     CampusForm,
-    APIConnectionRequestForm
+    APIConnectionRequestForm,
+    APIRejectionForm
 )
 
 ADMIN_ROLES = ["UESO", "VP", "DIRECTOR"]
@@ -73,8 +75,6 @@ def settings_view(request):
     else:
         base_template = "base_public.html"
         
-    # Get session state, defaults to False
-    api_unlocked = request.session.get('api_unlocked', False)
     current_fiscal_year = str(datetime.now().year)
     
     # --- Budget Logic ---
@@ -103,18 +103,7 @@ def settings_view(request):
 
     # --- POST Handling ---
     if request.method == 'POST':
-        if 'unlock_api' in request.POST:
-            password = request.POST.get('api_password')
-            if request.user.check_password(password):
-                request.session['api_unlocked'] = True
-                api_unlocked = True
-                messages.success(request, 'API Management section unlocked.')
-            else:
-                request.session['api_unlocked'] = False
-                messages.error(request, 'Incorrect password. API Management remains locked.')
-            return redirect('system_settings:settings')
-
-        elif 'save_general_settings' in request.POST:
+        if 'save_general_settings' in request.POST:
             forms = [SystemSettingForm(request.POST, instance=s, prefix=s.key) for s in settings_objects]
             if all(f.is_valid() for f in forms):
                 for f in forms:
@@ -163,14 +152,15 @@ def settings_view(request):
     project_types = ProjectType.objects.all().order_by('name')
     
     # --- API Connection Logic ---
-    api_connections = []
-    
+    all_connections = []
     if is_admin:
-        # Fetch ALL connections for admin (Frontend handles hiding if locked)
-        api_connections = APIConnection.objects.all().order_by('-created_at')
+        all_connections = APIConnection.objects.all().order_by('-created_at')
     elif is_api_user:
-        # Regular Users see ONLY THEIR OWN connections
-        api_connections = APIConnection.objects.filter(requested_by=user).order_by('-created_at')
+        all_connections = APIConnection.objects.filter(requested_by=user).order_by('-created_at')
+
+    paginator = Paginator(all_connections, 6) 
+    page_number = request.GET.get('page')
+    api_connections_page = paginator.get_page(page_number)
 
     context = {
         'base_template': base_template,
@@ -178,8 +168,7 @@ def settings_view(request):
         'colleges': colleges,
         'campuses': campuses,
         'sdgs': sdgs,
-        'api_connections': api_connections,
-        'api_unlocked': api_unlocked,
+        'api_connections': api_connections_page,
         'settings_with_forms': settings_with_forms,
         'budget_pool': budget_pool_instance, 
         'budget_form': budget_form,   
@@ -358,7 +347,6 @@ def delete_account(request):
 
 @role_required(allowed_roles=API_ACCESS_ROLES, require_confirmed=True)
 def request_api_access(request):
-    """Allows a user to request a new API connection."""
     if request.method == 'POST':
         form = APIConnectionRequestForm(request.POST)
         if form.is_valid():
@@ -391,12 +379,10 @@ def approve_api_access(request, pk):
     if request.method == 'POST':
         api_key, key_string = APIKey.objects.create_key(name=connection.name)
         
-        selected_tier = request.POST.get('tier', 'TIER_1')
-
+        # We use the tier the user requested (already in connection.tier)
         connection.api_key = api_key
         connection.full_api_key_string = key_string 
         connection.status = 'ACTIVE'
-        connection.tier = selected_tier
         connection.save()
         
         context = {
@@ -412,10 +398,35 @@ def approve_api_access(request, pk):
         'confirm_message': f'Approve access for "{connection.name}"?',
         'confirm_button_text': 'Yes, Approve & Generate Key',
         'cancel_url': reverse('system_settings:settings'),
-        'show_tier_select': True, 
-        'tier_choices': APIConnection.TIER_CHOICES,
     }
     return render(request, 'settings/confirm_delete.html', context)
+
+@role_required(allowed_roles=ADMIN_ROLES, require_confirmed=True)
+def reject_api_access(request, pk):
+    """Rejects a pending request with a reason."""
+    connection = get_object_or_404(APIConnection, pk=pk)
+    
+    if request.method == 'POST':
+        form = APIRejectionForm(request.POST, instance=connection)
+        if form.is_valid():
+            connection = form.save(commit=False)
+            connection.status = 'REJECTED'
+            connection.save()
+            messages.success(request, f'Connection "{connection.name}" has been rejected.')
+            return redirect('system_settings:settings')
+    else:
+        form = APIRejectionForm(instance=connection)
+
+    context = {
+        'base_template': 'base_internal.html',
+        'form': form,
+        'form_title': f'Reject Request: {connection.name}',
+        'submit_btn_text': 'Reject Request',
+        'submit_btn_class': 'btn-danger',
+        'submit_icon_class': 'fas fa-times',
+        'cancel_url': reverse('system_settings:settings'),
+    }
+    return render(request, 'settings/form_template.html', context)
 
 @role_required(allowed_roles=ADMIN_ROLES, require_confirmed=True)
 def disconnect_api_access(request, pk):

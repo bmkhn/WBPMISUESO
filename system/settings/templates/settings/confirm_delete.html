@@ -20,29 +20,24 @@
                     {% if object_to_delete %}
                     <div class="alert alert-secondary">
                         <strong>{{ object_to_delete }}</strong>
+
+                        {% if object_to_delete.description %}
+                        <hr style="border-top: 1px solid #c8c8c8; margin: 10px 0;">
+                        <small class="d-block text-muted mb-1" style="font-weight: 600;">Reason:</small>
+                        <div style="font-weight: normal; font-size: 0.95rem; white-space: pre-wrap;">{{ object_to_delete.description }}</div>
+                        {% endif %}
+
+                        {% if object_to_delete.get_tier_display %}
+                        <hr style="border-top: 1px solid #c8c8c8; margin: 10px 0;">
+                        <small class="d-block text-muted mb-1" style="font-weight: 600;">Requested Tier:</small>
+                        <div style="font-weight: bold; font-size: 0.95rem;">{{ object_to_delete.get_tier_display }}
+                        </div>
+                        {% endif %}
                     </div>
                     {% endif %}
 
                     <form method="POST">
                         {% csrf_token %}
-
-                        {% if show_tier_select %}
-                        <div class="form-group mb-4" style="text-align: left;">
-                            <label for="tier_select" style="font-weight: 600; color: #374151;">Select Access
-                                Tier:</label>
-                            <select name="tier" id="tier_select" class="form-control">
-                                {% for code, label in tier_choices %}
-                                <option value="{{ code }}">{{ label }}</option>
-                                {% endfor %}
-                            </select>
-                            <small class="text-muted">
-                                Tier 1: Read Projects Only<br>
-                                Tier 2: Read All APIs<br>
-                                Tier 3: Full Access (No Project CRUD)
-                            </small>
-                        </div>
-                        {% endif %}
-
                         <div class="d-flex justify-content-end fortwo">
                             <button type="submit" class="btn btn-danger">
                                 <i class="fas fa-check" style="margin-right: 0.5rem;"></i>

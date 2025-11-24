@@ -62,6 +62,24 @@ class APIConnectionRequestForm(forms.ModelForm):
             'tier': 'Select the level of access you require.'
         }
 
+class APIRejectionForm(forms.ModelForm):
+    """
+    Form for entering a rejection reason.
+    """
+    class Meta:
+        model = APIConnection
+        fields = ['rejection_reason']
+        widgets = {
+            'rejection_reason': forms.Textarea(attrs={
+                'class': 'form-control', 
+                'rows': 4, 
+                'placeholder': 'Please provide a reason for rejecting this request.'
+            }),
+        }
+        labels = {
+            'rejection_reason': 'Reason for Rejection'
+        }
+
 class APIKeyForm(forms.ModelForm):
     class Meta:
         model = APIKey
