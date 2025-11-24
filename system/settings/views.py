@@ -40,7 +40,6 @@ INTERNAL_ACCESS_ROLES = [
     "CLIENT",
 ]
 
-# Roles allowed to REQUEST keys 
 API_ACCESS_ROLES = [
     "PROGRAM_HEAD", 
     "DEAN", 
@@ -74,6 +73,7 @@ def settings_view(request):
     else:
         base_template = "base_public.html"
         
+    # Get session state, defaults to False
     api_unlocked = request.session.get('api_unlocked', False)
     current_fiscal_year = str(datetime.now().year)
     
@@ -165,13 +165,11 @@ def settings_view(request):
     # --- API Connection Logic ---
     api_connections = []
     
-    # Admins see ALL connections (if unlocked)
     if is_admin:
-        if api_unlocked:
-            api_connections = APIConnection.objects.all().order_by('-created_at')
-    
-    # Regular API Users see ONLY THEIR OWN connections
+        # Fetch ALL connections for admin (Frontend handles hiding if locked)
+        api_connections = APIConnection.objects.all().order_by('-created_at')
     elif is_api_user:
+        # Regular Users see ONLY THEIR OWN connections
         api_connections = APIConnection.objects.filter(requested_by=user).order_by('-created_at')
 
     context = {
@@ -358,11 +356,6 @@ def delete_account(request):
     context = {'base_template': 'base_internal.html', 'form': form}
     return render(request, 'settings/delete_account.html', context)
 
-# ==========================================
-# New API Management Views
-# ==========================================
-
-# Updated to ONLY allow API_ACCESS_ROLES 
 @role_required(allowed_roles=API_ACCESS_ROLES, require_confirmed=True)
 def request_api_access(request):
     """Allows a user to request a new API connection."""
@@ -426,14 +419,11 @@ def approve_api_access(request, pk):
 
 @role_required(allowed_roles=ADMIN_ROLES, require_confirmed=True)
 def disconnect_api_access(request, pk):
-    """Pauses/Revokes access without deleting the connection record."""
     connection = get_object_or_404(APIConnection, pk=pk)
-    
     if request.method == 'POST':
         if connection.api_key:
             connection.api_key.revoked = True
             connection.api_key.save()
-        
         connection.status = 'DISCONNECTED'
         connection.save()
         messages.success(request, f'Connection "{connection.name}" has been disconnected.')
@@ -450,7 +440,6 @@ def disconnect_api_access(request, pk):
 
 @role_required(allowed_roles=ADMIN_ROLES, require_confirmed=True)
 def delete_api_connection(request, pk):
-    """Permanently deletes the connection record."""
     connection = get_object_or_404(APIConnection, pk=pk)
     if request.method == 'POST':
         name = connection.name
@@ -468,7 +457,6 @@ def delete_api_connection(request, pk):
     }
     return render(request, 'settings/confirm_delete.html', context)
 
-# Project Type New CRUD
 @role_required(allowed_roles=ADMIN_ROLES, require_confirmed=True)
 def manage_project_types(request):
     return redirect('system_settings:settings') 

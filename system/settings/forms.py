@@ -1,9 +1,8 @@
 from django import forms
-from system.users.models import College
+from system.users.models import College, Campus 
 from shared.projects.models import SustainableDevelopmentGoal
 from .models import SystemSetting, APIConnection
 from rest_framework_api_key.models import APIKey
-from system.users.models import College, Campus 
 
 class CampusForm(forms.ModelForm):
     class Meta:
@@ -19,14 +18,13 @@ class CollegeForm(forms.ModelForm):
         fields = ['name', 'campus', 'logo']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
-            'campus': forms.Select(attrs={'class': 'form-select'}), # This will now be a dropdown of Campus objects
+            'campus': forms.Select(attrs={'class': 'form-select'}),
             'logo': forms.ClearableFileInput(attrs={'class': 'form-control'}),
         }
 
 class SDGForm(forms.ModelForm):
     class Meta:
         model = SustainableDevelopmentGoal
-        # Corrected fields based on your models.py
         fields = ['goal_number', 'name']
         widgets = {
             'goal_number': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'e.g., 1'}),
@@ -50,17 +48,21 @@ class DeleteAccountForm(forms.Form):
 class APIConnectionRequestForm(forms.ModelForm):
     """
     Form for users/admins to request a new API connection.
+    Includes a Tier selection checklist.
     """
     class Meta:
         model = APIConnection
-        fields = ['name', 'description']
+        fields = ['name', 'description', 'tier']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., Library System'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Describe the purpose of this connection...'}),
+            'tier': forms.RadioSelect(attrs={'class': 'list-unstyled', 'style': 'list-style-type: none; padding-left: 0;'}),
+        }
+        help_texts = {
+            'tier': 'Select the level of access you require.'
         }
 
 class APIKeyForm(forms.ModelForm):
-    # Kept for legacy or direct admin creation
     class Meta:
         model = APIKey
         fields = ['name']

@@ -74,32 +74,36 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {% if admin and not api_unlocked %}
-                                <tr>
-                                    <td colspan="{% if admin %}6{% else %}5{% endif %}"
-                                        style="padding: 2rem; background-color: #f8f9fa; text-align: center;">
+                                {# --- 1. THE LOCK SCREEN ROW (Shown by default for Admin) --- #}
+                                {% if admin %}
+                                <tr id="api-lock-row">
+                                    <td colspan="6" style="padding: 1.5rem; text-align: center;">
                                         <div style="max-width: 400px; margin: 0 auto;">
-                                            <i class="fas fa-lock fa-2x text-muted mb-3"></i>
-                                            <p class="text-muted">Enter password to manage API keys</p>
                                             <form method="POST" action="{% url 'system_settings:settings' %}"
-                                                class="api-password-form">
+                                                id="api-unlock-form">
                                                 {% csrf_token %}
                                                 <div class="input-group">
                                                     <input type="password" name="api_password" class="form-control"
-                                                        placeholder="Admin Password" required>
+                                                        placeholder="Enter Admin Password" required
+                                                        style="border-top-right-radius: 0; border-bottom-right-radius: 0;">
                                                     <div class="input-group-append">
-                                                        <button type="submit" name="unlock_api"
-                                                            class="btn btn-primary">Unlock</button>
+                                                        <button type="submit" name="unlock_api" class="btn btn-primary"
+                                                            style="border-top-left-radius: 0; border-bottom-left-radius: 0;">
+                                                            <i class="fas fa-unlock"></i> Unlock
+                                                        </button>
                                                     </div>
                                                 </div>
                                             </form>
                                         </div>
                                     </td>
                                 </tr>
-                                {% else %}
+                                {% endif %}
+
+                                {# --- 2. THE DATA ROWS (Hidden by default using 'd-none') --- #}
+                                {% if admin or not admin %}
                                 {% for conn in api_connections %}
-                                <tr {% if conn.status=='DISCONNECTED' %}class="table-danger-row" {% elif
-                                    conn.status=='PENDING' %}class="table-warning-row" {% endif %}>
+                                <tr
+                                    class="api-data-row {% if admin %}d-none{% endif %} {% if conn.status == 'DISCONNECTED' %}table-danger-row{% elif conn.status == 'PENDING' %}table-warning-row{% endif %}">
                                     <td>
                                         <strong>{{ conn.name }}</strong><br>
                                         <small class="text-muted">{{ conn.description|truncatechars:40 }}</small>
@@ -173,7 +177,7 @@
                                     {% endif %}
                                 </tr>
                                 {% empty %}
-                                <tr>
+                                <tr class="api-data-row {% if admin %}d-none{% endif %}">
                                     <td colspan="{% if admin %}6{% else %}5{% endif %}" class="text-center">
                                         {% if admin %}
                                         No connection requests found.
@@ -199,6 +203,271 @@
             </div>
 
             {% if admin %}
+
+            <div class="card">
+                <div class="section-header accordion-toggle">
+                    <div class="section-header-content">
+                        <h5 class="accordion-title mb-0">
+                            <i class="fas fa-hand-holding-usd fa-fw mr-2"></i>
+                            Annual Budget Pool
+                        </h5>
+                        <p class="accordion-desc">Set the total available budget for the current fiscal year.</p>
+                        <p class="accordion-intro">
+                            This defines the <strong>total available budget pool</strong>
+                            for the current <strong>Fiscal Year {{ budget_pool.fiscal_year }}</strong>.
+                        </p>
+                    </div>
+                    <i class="accordion-chevron fas fa-chevron-down"></i>
+                </div>
+                <div class="accordion-content" style="display: none; position: relative;">
+                    <form method="POST" action="{% url 'system_settings:settings' %}"
+                        style="display: flex; flex-direction: column; gap: 0.8rem;">
+                        {% csrf_token %}
+                        <div class="form-group row mb-3">
+                            <div class="col-sm-4">
+                                <label for="{{ budget_form.fiscal_year.id_for_label }}" class="form-row-label">Fiscal
+                                    Year</label>
+                            </div>
+                            <div class="col-sm-8">
+                                <input type="text" class="form-control" name="{{ budget_form.fiscal_year.name }}"
+                                    id="{{ budget_form.fiscal_year.id_for_label }}"
+                                    value="{{ budget_form.fiscal_year.value|default_if_none:'' }}" readonly>
+                            </div>
+                        </div>
+                        <div class="form-group row mb-3">
+                            <div class="col-sm-4">
+                                <label for="{{ budget_form.annual_total.id_for_label }}" class="form-row-label">Total
+                                    Annual
+                                    Budget</label>
+                            </div>
+                            <div class="col-sm-8">
+                                <input type="number" step="0.01" min="0" class="form-control"
+                                    name="{{ budget_form.annual_total.name }}" id="id_annual_total"
+                                    value="{{ budget_form.annual_total.value|default_if_none:'0.00' }}" required
+                                    oninput="calculateUnallocated()">
+                                <div id="unallocated-display" style="margin-top: 0.5rem; font-size: 0.9rem;">
+
+                                    Current Assigned to Colleges:
+                                    <strong id="assigned-budget-display"
+                                        data-value="{{ total_assigned_budget|stringformat:'f' }}">
+                                        ₱{{ total_assigned_budget|floatformat:2|intcomma }}
+                                    </strong>
+
+                                    <br>
+                                    Remaining Unallocated:
+                                    <strong id="remaining-unallocated-value"
+                                        class="{% if is_save_disabled %}text-danger{% else %}text-success{% endif %}">
+                                        ₱{{ initial_unallocated_remaining|floatformat:2|intcomma }}
+                                    </strong>
+
+                                    <span id="unallocated-warning" class="text-danger"
+                                        style="display: none; margin-left: 10px;">Warning: Cannot set budget lower than
+                                        assigned!</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" name="save_annual_budget" id="save_annual_budget_btn"
+                                class="btn btn-primary" {% if is_save_disabled %}disabled{% endif %}>
+                                <i class="fas fa-save"></i> Save Annual Budget
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="section-header accordion-toggle">
+                    <div class="section-header-content">
+                        <h5 class="accordion-title mb-0"><i class="fas fa-school fa-fw mr-2"></i>Manage Colleges</h5>
+                        <p class="accordion-desc">Add, edit, or remove university colleges and their details.</p>
+                    </div>
+                    <i class="accordion-chevron fas fa-chevron-down"></i>
+                </div>
+                <div class="accordion-content" style="display: none;">
+                    <div class="table-responsive">
+                        <table class="table" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Logo</th>
+                                    <th>Name</th>
+                                    <th>Campus</th>
+                                    <th class="cell-actions">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for college in colleges %}
+                                <tr>
+                                    <td class="cell-logo">
+                                        {% if college.logo %}
+                                        <img src="{{ college.logo.url }}">
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ college.name }}</td>
+                                    <td>{{ college.get_campus_display }}</td>
+                                    <td class="cell-actions">
+                                        <a href="{% url 'system_settings:edit_college' college.pk %}" class="btn btn-outline-warning btn-sm"><i
+                                                class="fas fa-pen"></i></a>
+                                        <a href="{% url 'system_settings:delete_college' college.pk %}" class="btn btn-outline-danger btn-sm"><i
+                                                class="fas fa-trash"></i></a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="table-controls"><a href="{% url 'system_settings:add_college' %}"
+                            class="btn btn-primary"><i class="fas fa-plus"></i>Add New College</a></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="section-header accordion-toggle">
+                    <div class="section-header-content">
+                        <h5 class="accordion-title mb-0"><i class="fas fa-building fa-fw mr-2"></i>Manage Campuses</h5>
+                        <p class="accordion-desc">Define the different university campuses.</p>
+                    </div>
+                    <i class="accordion-chevron fas fa-chevron-down"></i>
+                </div>
+                <div class="accordion-content" style="display: none;">
+                    <div class="table-responsive">
+                        <table class="table" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th class="cell-actions">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for campus in campuses %}
+                                <tr>
+                                    <td>{{ campus.name }}</td>
+                                    <td class="cell-actions">
+                                        <a href="{% url 'system_settings:edit_campus' campus.pk %}"
+                                            class="btn btn-outline-warning btn-sm"><i class="fas fa-pen"></i></a>
+                                        <a href="{% url 'system_settings:delete_campus' campus.pk %}"
+                                            class="btn btn-outline-danger btn-sm"><i class="fas fa-trash"></i></a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="table-controls"><a href="{% url 'system_settings:add_campus' %}"
+                            class="btn btn-primary"><i class="fas fa-plus"></i>Add New Campus</a></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="section-header accordion-toggle">
+                    <div class="section-header-content">
+                        <h5 class="accordion-title mb-0"><i class="fas fa-leaf fa-fw mr-2"></i>Manage SDGs</h5>
+                        <p class="accordion-desc">Configure the Sustainable Development Goals for project tagging.</p>
+                    </div>
+                    <i class="accordion-chevron fas fa-chevron-down"></i>
+                </div>
+                <div class="accordion-content" style="display: none;">
+                    <div class="table-responsive">
+                        <table class="table" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Goal Number</th>
+                                    <th>Name</th>
+                                    <th class="cell-actions">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sdg in sdgs %}
+                                <tr>
+                                    <td>SDG {{ sdg.goal_number }}</td>
+                                    <td>{{ sdg.name }}</td>
+                                    <td class="cell-actions">
+                                        <a href="{% url 'system_settings:edit_sdg' sdg.pk %}"
+                                            class="btn btn-outline-warning btn-sm"><i class="fas fa-pen"></i></a>
+                                        <a href="{% url 'system_settings:delete_sdg' sdg.pk %}"
+                                            class="btn btn-outline-danger btn-sm"><i class="fas fa-trash"></i></a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="table-controls"><a href="{% url 'system_settings:add_sdg' %}" class="btn btn-primary"><i
+                                class="fas fa-plus"></i>Add New SDG</a></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="section-header accordion-toggle">
+                    <div class="section-header-content">
+                        <h5 class="accordion-title mb-0"><i class="fas fa-cog fa-fw mr-2"></i>General System Settings
+                        </h5>
+                        <p class="accordion-desc">Manage site-wide settings like the website name and maintenance mode.
+                        </p>
+                    </div>
+                    <i class="accordion-chevron fas fa-chevron-down"></i>
+                </div>
+                <div class="accordion-content" style="display: none; position: relative;">
+                    <form method="POST" action="{% url 'system_settings:settings' %}"
+                        style="display: flex; flex-direction: column; gap: 0.8rem;">
+                        {% csrf_token %}
+                        {% for setting, form in settings_with_forms %}
+                        <div class="form-group row mb-3">
+                            <div class="col-sm-4"><label class="form-row-label">{{ setting.description }}</label></div>
+                            <div class="col-sm-8">
+                                <input type="text" class="form-control" name="{{ form.prefix }}-value"
+                                    value="{{ form.value.value|default_if_none:'' }}">
+                            </div>
+                        </div>
+                        {% endfor %}
+                        <div class="d-flex justify-content-end"><button type="submit" name="save_general_settings"
+                                class="btn btn-primary"><i class="fas fa-save"></i> Save All Settings</button></div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="section-header accordion-toggle">
+                    <div class="section-header-content">
+                        <h5 class="accordion-title mb-0"><i class="fas fa-list-ul fa-fw mr-2"></i>Manage Project Types
+                        </h5>
+                        <p class="accordion-desc">Configure the available classification types for projects.</p>
+                    </div>
+                    <i class="accordion-chevron fas fa-chevron-down"></i>
+                </div>
+                <div class="accordion-content" style="display: none;">
+                    <div class="table-responsive">
+                        <table class="table" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th class="cell-actions">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pt in project_types %}
+                                <tr>
+                                    <td>{{ pt.name }}</td>
+                                    <td class="cell-actions">
+                                        <a href="{% url 'system_settings:edit_project_type' pt.pk %}"
+                                            class="btn btn-outline-warning btn-sm"><i class="fas fa-pen"></i></a>
+                                        <a href="{% url 'system_settings:delete_project_type' pt.pk %}"
+                                            class="btn btn-outline-danger btn-sm"><i class="fas fa-trash"></i></a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="2" class="text-center">No Project Types found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="table-controls"><a href="{% url 'system_settings:add_project_type' %}"
+                            class="btn btn-primary"><i class="fas fa-plus"></i>Add New Project Type</a></div>
+                </div>
+            </div>
+
             {% endif %}
 
             <div class="card" id="danger-zone">
@@ -214,13 +483,13 @@
                         Account</a>
                 </div>
             </div>
-
         </div>
     </div>
 </div>
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        // --- 1. Accordion Functionality ---
         const toggles = document.querySelectorAll('.accordion-toggle');
         toggles.forEach(function (toggle) {
             toggle.addEventListener('click', function () {
@@ -232,7 +501,104 @@
                 }
             });
         });
+
+        // --- 2. Budget Calculation (Admin Only) ---
+        if (document.getElementById('id_annual_total')) {
+            calculateUnallocated();
+        }
+
+        // --- 3. API Unlock Logic ---
+        handleApiLockState();
     });
+
+    function handleApiLockState() {
+        const lockRow = document.getElementById('api-lock-row');
+        const dataRows = document.querySelectorAll('.api-data-row');
+
+        // 1. Sync with Server State
+        // This ensures if the backend just approved it (e.g. POST success), we store it.
+        const serverUnlocked = "{{ api_unlocked|yesno:'true,false' }}" === "true";
+        if (serverUnlocked) {
+            sessionStorage.setItem('apiUnlocked', 'true');
+        }
+
+        // 2. Check for success message (fallback)
+        const successAlerts = document.querySelectorAll('.alert-success');
+        successAlerts.forEach(alert => {
+            if (alert.innerText.toLowerCase().includes('unlock')) {
+                sessionStorage.setItem('apiUnlocked', 'true');
+            }
+        });
+
+        // 3. Apply State
+        const isUnlocked = sessionStorage.getItem('apiUnlocked') === 'true';
+
+        if (isUnlocked) {
+            // Remove the lock screen entirely
+            if (lockRow) lockRow.style.display = 'none';
+            // Show the table rows
+            dataRows.forEach(row => {
+                row.classList.remove('d-none');
+            });
+        } else {
+            // Show lock screen
+            if (lockRow) lockRow.style.display = 'table-row';
+            // Ensure table rows are hidden
+            dataRows.forEach(row => {
+                row.classList.add('d-none');
+            });
+        }
+    }
+
+    function calculateUnallocated() {
+        const totalInput = document.getElementById('id_annual_total');
+        const assignedElement = document.getElementById('assigned-budget-display');
+        const remainingDisplay = document.getElementById('remaining-unallocated-value');
+        const warningMsg = document.getElementById('unallocated-warning');
+        const saveBtn = document.getElementById('save_annual_budget_btn');
+
+        if (!totalInput) return;
+
+        // Parse values
+        const totalBudget = parseFloat(totalInput.value) || 0;
+        const assignedBudget = parseFloat(assignedElement.getAttribute('data-value')) || 0;
+        const remaining = totalBudget - assignedBudget;
+
+        // Format for display
+        const formatter = new Intl.NumberFormat('en-PH', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+        const formattedRemaining = '₱' + formatter.format(remaining);
+
+        // Update display
+        if (remainingDisplay) remainingDisplay.innerText = formattedRemaining;
+
+        // Validation Logic
+        if (remaining < 0) {
+            if (remainingDisplay) {
+                remainingDisplay.className = 'text-danger';
+                remainingDisplay.style.fontWeight = 'bold';
+            }
+            if (warningMsg) warningMsg.style.display = 'inline';
+            if (saveBtn) {
+                saveBtn.disabled = true;
+                saveBtn.classList.remove('btn-primary');
+                saveBtn.classList.add('btn-secondary');
+            }
+        } else {
+            if (remainingDisplay) {
+                remainingDisplay.className = 'text-success';
+                remainingDisplay.style.fontWeight = 'bold';
+            }
+            if (warningMsg) warningMsg.style.display = 'none';
+            if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.classList.add('btn-primary');
+                saveBtn.classList.remove('btn-secondary');
+            }
+        }
+    }
 
     function toggleKey(id) {
         var x = document.getElementById(id);
