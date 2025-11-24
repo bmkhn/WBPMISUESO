@@ -12,8 +12,14 @@
 <link href="{% static 'system/settings/styles.css' %}" rel="stylesheet">
 
 <div class="main-container">
+    <div style="justify-content: space-between; display: flex; flex-direction: row;">
+        <h1 class="project-text">System Settings</h1> 
 
-    <h1 class="project-text">System Settings</h1>
+        <a href="{% url 'system_settings:api_docs' %}" class="btn btn-primary"
+            style="background-color: black; border-color: black;">
+            <i class="fas fa-book-open mr-2" style="margin-right: 0.35rem;"></i>Learn About API
+        </a>
+    </div>
 
     {% if messages %}
     {% for message in messages %}
@@ -47,8 +53,10 @@
                 <div class="section-header non-collapsible">
                     <div class="section-header-content">
                         <h5 class="accordion-title mb-0">
-                            <i class="fas fa-network-wired fa-fw mr-2"></i>
-                            {% if admin %}API Key Management{% else %}My API Connections{% endif %}
+                            <div>
+                                <i class="fas fa-network-wired fa-fw mr-2"></i>
+                                {% if admin %}API Key Management{% else %}My API Connections{% endif %}
+                            </div>
                         </h5>
                         <p class="accordion-desc">
                             {% if admin %}

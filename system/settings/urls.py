@@ -7,6 +7,7 @@ app_name = 'system_settings'
 urlpatterns = [
     # Main settings page
     path('', views.settings_view, name='settings'),
+    path('api/docs/', views.api_docs, name='api_docs'),
     
     # College CRUD
     path('colleges/', views.manage_colleges, name='manage_colleges'),

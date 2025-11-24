@@ -514,3 +514,16 @@ def delete_project_type(request, pk):
         'cancel_url': reverse('system_settings:settings')
     }
     return render(request, 'settings/confirm_delete.html', context)
+
+def api_docs(request):
+    """Renders the API documentation page."""
+    user = request.user
+    if getattr(user, 'role', None) in ["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
+        base_template = "base_internal.html"
+    else:
+        base_template = "base_public.html"
+
+    context = {
+        'base_template': base_template,
+    }
+    return render(request, 'settings/api_docs.html', context)

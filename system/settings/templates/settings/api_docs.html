@@ -1,0 +1,110 @@
+{% extends base_template %}
+{% load static %}
+
+{% block title %}API Documentation{% endblock %}
+
+{% block content %}
+<link href="https://fonts.googleapis.com/css?family=Inter:400,500,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link href="{% static 'system/settings/styles.css' %}" rel="stylesheet">
+
+<div class="main-container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h1 class="project-text" style="margin-bottom: 0;">API Capabilities</h1>
+
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="accordion-title m-0">UESO-PMIS API Overview</h6>
+                </div>
+                <div class="card-body">
+                    <p>
+                        The UESO-PMIS API provides programmatic access to project data, calendar events, and
+                        administrative records.
+                        It allows external systems (such as university dashboards or partner portals) to integrate
+                        directly with our platform.
+                    </p>
+                    <div class="alert alert-info">
+                        <strong>Authentication:</strong> Access requires a valid <code>API Key</code> or
+                        <code>Token</code>.
+                        Include your key in the HTTP header: <br>
+                        <code>Authorization: Token &lt;your_api_key&gt;</code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="accordion-title m-0"><i class="fas fa-chart-line mr-2"></i>Analytics & Project Data</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h5><span class="badge badge-primary">GET</span> All Project Data</h5>
+                        <code>/analytics/api/all-project-data/</code>
+                        <p class="text-muted mt-1">
+                            A read-only endpoint that returns <strong>ALL</strong> data for projects, including nested
+                            events, documents, and evaluations.
+                            Ideal for generating external reports or data visualization.
+                        </p>
+                    </div>
+                    <hr>
+                    <div class="mb-3">
+                        <h5><span class="badge badge-primary">GET</span> Archive Aggregates</h5>
+                        <code>/archives/api/aggregate/{category}/</code>
+                        <p class="text-muted mt-1">
+                            Retrieves aggregated project statistics (e.g., counts by status, total budget) grouped by
+                            specific categories.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="accordion-title m-0"><i class="fas fa-calendar-alt mr-2"></i>Calendar Management</h6>
+                </div>
+                <div class="card-body">
+                    <h5><span class="badge badge-success">CRUD</span> Meeting Events</h5>
+                    <code>/api/calendar/meeting-events/</code>
+                    <p class="text-muted mt-1">
+                        Full management of calendar events.
+                    <ul>
+                        <li>Users can see events they created or are participating in.</li>
+                        <li>Users can create, update, or delete their own events.</li>
+                    </ul>
+                    </p>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="accordion-title m-0"><i class="fas fa-tasks mr-2"></i>Project Management</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h5><span class="badge badge-success">CRUD</span> Project Expenses</h5>
+                        <code>/api/projects/{project_pk}/expenses/</code>
+                        <p class="text-muted mt-1">
+                            Manage financial records for specific projects. Accessible to project leaders and staff.
+                            Supports attaching receipts and tracking expenditure.
+                        </p>
+                    </div>
+                    <hr>
+                    <div class="mb-3">
+                        <h5><span class="badge badge-success">CRUD</span> Client Requests</h5>
+                        <code>/api/requests/client-requests/</code>
+                        <p class="text-muted mt-1">
+                            Standard operations for viewing and editing client request instances (e.g., Letters of
+                            Intent, Service Requests).
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
