@@ -27,7 +27,7 @@ class APIConnection(models.Model):
     TIER_CHOICES = [
         ('TIER_1', 'Tier 1: Projects Read-Only'),
         ('TIER_2', 'Tier 2: Read All APIs'),
-        ('TIER_3', 'Tier 3: Full Access (No Project CRUD)'),
+        ('TIER_3', 'Tier 3: Full Access'),
     ]
 
     name = models.CharField(max_length=255, help_text="Name of the system or user connecting.")

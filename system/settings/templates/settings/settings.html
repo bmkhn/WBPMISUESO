@@ -110,12 +110,12 @@
                                         <div class="input-group input-group-sm" style="width: 220px;">
                                             <input type="password" value="{{ conn.full_api_key_string }}"
                                                 class="form-control api-key-field" id="key-{{ conn.id }}" readonly>
-                                            <div class="input-group-append">
-                                                <button class="btn btn-outline-secondary" type="button"
+                                            <div class="input-group-append" style="margin-top: 0.2rem; color: #444;">
+                                                <button class="btn-outline-secondary see" type="button"
                                                     onclick="toggleKey('key-{{ conn.id }}')" title="Show/Hide">
                                                     <i class="fas fa-eye"></i>
                                                 </button>
-                                                <button class="btn btn-outline-secondary" type="button"
+                                                <button class="btn-outline-secondary see" type="button"
                                                     onclick="copyToClipboard('{{ conn.full_api_key_string }}')"
                                                     title="Copy">
                                                     <i class="fas fa-copy"></i>
