@@ -301,7 +301,7 @@
             .then(data => {
                 console.log('Response data:', data);
                 if (data.success) {
-                    window.location.href = '/redirector/';
+                    window.location.href = '/redirector/?showNotifications=true';
                 } else {
                     // Reset button state on error
                     verifyBtn.disabled = false;

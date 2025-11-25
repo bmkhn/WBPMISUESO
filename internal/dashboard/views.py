@@ -53,6 +53,28 @@ def dashboard_view(request):
     
     show_admin_content = user_role in ["VP", "DIRECTOR", "UESO"]
     show_events_card = show_admin_content or user_role in ["COORDINATOR", "DEAN", "PROGRAM_HEAD"]
+    
+    # Notification counts for popup
+    notifications = {}
+    if user_role in ["VP", "DIRECTOR", "UESO"]:
+        from system.exports.models import ExportRequest
+        notifications['forwarded_submissions'] = Submission.objects.filter(status='FORWARDED').count()
+        notifications['received_requests'] = ClientRequest.objects.filter(status='RECEIVED').count()
+        notifications['unconfirmed_users'] = User.objects.filter(is_confirmed=False).count()
+        notifications['pending_exports'] = ExportRequest.objects.filter(status='PENDING').count()
+    elif user_role == "COORDINATOR":
+        if user_college:
+            # Get submissions for projects in coordinator's college
+            college_projects = Project.objects.filter(
+                Q(project_leader__college=user_college) |
+                Q(providers__college=user_college)
+            ).distinct()
+            notifications['submitted_submissions'] = Submission.objects.filter(
+                project__in=college_projects,
+                status='SUBMITTED'
+            ).count()
+        else:
+            notifications['submitted_submissions'] = 0
 
     pending_requests = ClientRequest.objects.filter(status__in=['RECEIVED', 'UNDER_REVIEW'])
     inprogress_projects = Project.objects.filter(status='IN_PROGRESS')
@@ -128,6 +150,10 @@ def dashboard_view(request):
     events_by_date = services.get_events_by_date(request.user, for_main_calendar_view=False)
     events_json = json.dumps(events_by_date)
 
+    from django.contrib.messages import get_messages
+    storage = get_messages(request)
+    show_notifications = any(str(msg) == "SHOW_REMINDERS" for msg in storage)
+    
     context = {
         'user_role': user_role,
         'vpde_content': show_admin_content,
@@ -140,6 +166,8 @@ def dashboard_view(request):
         'events_json': events_json,
         'dashboard_goals': dashboard_goals,
         'show_events_card': show_events_card,
+        'notifications': notifications,
+        'show_notifications': show_notifications,
     }
 
     return render(request, 'dashboard/dashboard.html', context)

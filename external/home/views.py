@@ -45,6 +45,9 @@ def home_view(request):
     my_alerts = []
     events_json = '[]'
     
+    # Notification counts for popup
+    notifications = {}
+    
     if request.user.is_authenticated and getattr(request.user, 'role', None) in FACULTY_ROLES:
         from internal.submissions.models import Submission
         from shared.event_calendar.models import MeetingEvent
@@ -55,6 +58,27 @@ def home_view(request):
         faculty_projects = Project.objects.filter(
             models.Q(project_leader=request.user) | models.Q(providers=request.user)
         ).distinct().order_by('-updated_at')
+        
+        # Notification counts for faculty/implementer
+        notifications['pending_submissions'] = Submission.objects.filter(
+            project__in=faculty_projects,
+            status='PENDING'
+        ).count()
+        notifications['revision_submissions'] = Submission.objects.filter(
+            project__in=faculty_projects,
+            status='REVISION_REQUESTED'
+        ).count()
+        notifications['rejected_submissions'] = Submission.objects.filter(
+            project__in=faculty_projects,
+            status='REJECTED'
+        ).count()
+        # Overdue submissions
+        now = timezone.now()
+        overdue_count = 0
+        for submission in Submission.objects.filter(project__in=faculty_projects, status__in=['PENDING', 'REVISION_REQUESTED']):
+            if submission.deadline and submission.deadline < now:
+                overdue_count += 1
+        notifications['overdue_submissions'] = overdue_count
         
         faculty_projects_image = get_project_card_data(faculty_projects.filter(status='COMPLETED')[:3])
         
@@ -81,6 +105,11 @@ def home_view(request):
         context = {'is_user': True, 'user_role': getattr(request.user, 'role', None)}
     else:
         context = {'is_user': False}
+
+    from django.contrib.messages import get_messages
+    storage = get_messages(request)
+    show_notifications = any(str(msg) == "SHOW_REMINDERS" for msg in storage)
+    
     render_context = {
         'context': context,
         'latest_announcements': latest_announcements,
@@ -95,6 +124,8 @@ def home_view(request):
         'upcoming_meetings_count': upcoming_meetings_count,
         'my_alerts': my_alerts,
         'events_json': events_json,
+        'notifications': notifications,
+        'show_notifications': show_notifications,
     }
 
     return render(request, 'home/home.html', render_context)

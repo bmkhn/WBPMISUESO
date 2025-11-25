@@ -1,7 +1,9 @@
+from django.contrib import messages
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout, authenticate, get_user_model
 from django.contrib.auth.decorators import login_required
+from django.contrib.messages import get_messages
 from django.core.mail import send_mail
 from django.db.models import Q
 from django.views.decorators.csrf import csrf_exempt
@@ -61,6 +63,7 @@ def create_user_log(user, action, target_user, details, is_notification=False):
 
 ####################################################################################################
 
+
 def login_view(request):
     if request.method == 'POST':
         form = LoginForm(request, data=request.POST)
@@ -69,7 +72,7 @@ def login_view(request):
             if user:
                 code = str(random.randint(100000, 999999))
                 
-                # Send 2FA code via email ASYNCHRONOUSLY (no 2-minute block!)
+                # Send 2FA code via email ASYNCHRONOUSLY
                 try:
                     async_send_verification_code(user.email, code)
                     print(f"Login 2FA code queued for {user.email}: {code}")  # Debug
@@ -113,6 +116,9 @@ def verify_login_2fa_view(request):
 
                 # Ensure Django 5.x is satisfied (avoid SessionInterrupted)
                 request.session.cycle_key()
+
+                # Set a message to show reminders on redirect
+                messages.info(request, "SHOW_REMINDERS")
 
                 # Set session expiry on the NEW session
                 if remember_me:
@@ -239,12 +245,24 @@ def reset_password_view(request):
 def role_redirect(request):
     role = getattr(request.user, 'role', None)
 
+    # Check for one-time reminder flag from login
+    storage = get_messages(request)
+    show_reminders = any(str(msg) == "SHOW_REMINDERS" for msg in storage)
+
+    # Determine target URL based on role
     if role in ["IMPLEMENTER", "CLIENT", "FACULTY"]:
-        return redirect("home")
+        target = "home"
     elif role in ["VP", "DIRECTOR", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD"]:
-        return redirect("dashboard")
+        target = "dashboard"
     else:
-        return redirect("home")
+        target = "home"
+
+    # If reminders requested, append a one-time URL flag
+    if show_reminders:
+        return redirect(f"{reverse(target)}?reminders=1")
+
+    # Otherwise simple redirect
+    return redirect(target)
 
 def home(request):
     return render(request, 'base_public.html')
@@ -254,6 +272,7 @@ def dashboard(request):
 
 ####################################################################################################
 
+
 def check_email_view(request):
     email = request.GET.get('email', '').strip()
     exists = False
@@ -261,6 +280,7 @@ def check_email_view(request):
         User = get_user_model()
         exists = User.objects.filter(email=email).exists()
     return JsonResponse({'exists': exists})
+
 
 def register_view(request):
     logout(request)
@@ -323,7 +343,6 @@ def send_verification_code_view(request):
             return JsonResponse({'success': False, 'error': 'Failed to send verification code.'})
 
     return JsonResponse({'success': False, 'error': 'Invalid request method.'})
-
 
 
 def registration_unified_view(request, role):
@@ -445,18 +464,24 @@ def verify_unified_view(request):
 def thank_you_view(request):
     return render(request, 'users/thank_you.html')
 
+
 ####################################################################################################
+
 
 def not_authenticated_view(request):
     return render(request, 'users/403_session_expired.html', status=403)
 
+
 def no_permission_view(request):
     return render(request, 'users/403_no_permission.html', status=403)
+
 
 def not_confirmed_view(request):
     return render(request, 'users/403_not_confirmed.html', status=403)
 
+
 ####################################################################################################
+
 
 @role_required(allowed_roles=["VP", "DIRECTOR"], require_confirmed=True)
 def manage_user(request):
@@ -866,6 +891,7 @@ def verify_user(request, id):
     
     return redirect(f'/users/?success=true&action=confirmed&title={quote(user.get_full_name())}')
 
+
 @role_required(allowed_roles=["VP", "DIRECTOR"], require_confirmed=True)
 def unverify_user(request, id):
     User = get_user_model()
@@ -898,7 +924,9 @@ def delete_user(request, id):
     user.delete()
     return HttpResponseRedirect(reverse('manage_user'))
 
+
 ####################################################################################################
+
 
 def profile_role_constants():
     HAS_COLLEGE_CAMPUS = ["FACULTY", "PROGRAM_HEAD", "DEAN", "COORDINATOR"]
@@ -999,6 +1027,7 @@ def update_profile_picture(request):
 
 ####################################################################################################
 
+
 User = get_user_model()
 
 def quick_login(request, role):
@@ -1019,5 +1048,8 @@ def quick_login(request, role):
 
     # Ensure Django creates a clean session key for this login
     request.session.cycle_key()
+    
+    # Set a message to show reminders on redirect
+    messages.info(request, "SHOW_REMINDERS")
 
     return redirect("role_redirect")

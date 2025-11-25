@@ -13,7 +13,449 @@
 <link href="{% static 'templates/dashboard.css' %}" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
+<style>
+/* --- Dashboard Goal Card Styling (Modified) --- */
+
+.goal-card-container {
+    display: flex;
+    /* Allow cards to wrap if screen is narrow, but they are generally expected to fit 4 */
+    flex-wrap: nowrap; 
+    gap: 20px;
+    margin-top: 0px; /* Adjusted to rely on the summary-text margin */
+    margin-bottom: 30px;
+}
+
+.goal-card-simple-dashboard {
+    position: relative;
+    /* Adjusted width to allow 4 cards to fit well in standard dashboard layout */
+    width: calc(25% - 15px); 
+    min-width: 200px;
+    height: 180px; 
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+    /* MODIFIED: Added gradient background using CSS variables from goals.html */
+    background-color: var(--card-bg, #ffffff);
+    background-image: linear-gradient(135deg, var(--card-start-bg, #f0f0f0) 0%, var(--card-bg) 100%);
+    
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.goal-card-simple-dashboard:hover {
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px) !important;
+    /* Set to background-color only on hover to remove gradient */
+    background-image: none !important; 
+}
+
+.goal-card-title-simple {
+    /* MODIFIED: Matched Title Styling from goals.html */
+    font-family: 'Inter', Arial, sans-serif;
+    font-weight: 500;
+    font-size: 1.25rem; /* Increased size */
+    color: #1A1A1A; /* Darker color */
+    line-height: 1.2;
+    white-space: nowrap; /* Prevent wrapping (truncate) */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+    padding-right: 40px; 
+    margin-top: 0;
+    /* margin-bottom is set inline in the template */
+}
+
+.goal-card-data-wrapper {
+    /* Ensures the progress bar is positioned relative to the numbers */
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1; /* Pushes content down if title is short */
+    justify-content: flex-end; /* Aligns content to the bottom */
+}
+
+.goal-card-percent-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.goal-card-number {
+    /* MODIFIED: Matched Nominator Styling from goals.html */
+    font-family: 'Inter', Arial, sans-serif;
+    font-size: 5.5rem;
+    font-weight: 900;
+    color: #ffffff;
+    line-height: 1;
+    margin-top: 0;
+    
+    /* Apply text-shadow for contrast */
+    text-shadow:
+        1px 1px 0 #555555,
+        -1px -1px 0 #cccccc,
+        0px 0px 10px rgba(0, 0, 0, 0.4);
+}
+
+.goal-card-denominator {
+    /* MODIFIED: Matched Denominator Wrapper Styling from goals.html */
+    font-weight: 700;
+    color: #555555;
+    text-shadow: none;
+    font-size: 1em; /* Base size for relative children */
+    line-height: 1.2;
+    margin-top: 8px;
+
+    /* Ensure the wrapper is a column to stack label and word-number */
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.goal-card-denominator .label {
+    /* MODIFIED: Matched Label/OUT OF Styling from goals.html */
+    font-size: 0.8em;
+    font-weight: 500;
+    color: #777;
+    display: block;
+    line-height: 1;
+}
+
+.goal-card-denominator .word-number {
+    /* MODIFIED: Matched Word Number Styling from goals.html */
+    font-size: 1em; 
+    font-weight: 700;
+    color: #555555;
+    text-shadow: none;
+    line-height: 1;
+}
+
+/* @media for responsiveness to ensure 4 cards fit */
+@media (max-width: 1400px) {
+    .goal-card-simple-dashboard {
+        width: calc(33.333% - 13.333px); /* 3 cards per row */
+    }
+}
+@media (max-width: 1000px) {
+    .goal-card-simple-dashboard {
+        width: calc(50% - 10px); /* 2 cards per row */
+    }
+}
+</style>
+
+<style>
+/* Notification Popup Styles */
+.notification-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+.notification-popup {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow: hidden;
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.notification-header {
+    padding: 24px;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.notification-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.notification-close {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.notification-close:hover {
+    background: #f3f4f6;
+    color: #1f2937;
+}
+
+.notification-body {
+    padding: 16px 24px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.notification-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid #e5e7eb;
+}
+
+.notification-item:hover {
+    background: #e8f5e9;
+    border-color: #063A1C;
+    transform: translateX(4px);
+}
+
+.notification-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #063A1C 0%, #042a14 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.notification-content {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.notification-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.notification-count {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #063A1C;
+    background: #c8e6c9;
+    padding: 4px 12px;
+    border-radius: 8px;
+    min-width: 40px;
+    text-align: center;
+}
+
+.notification-footer {
+    padding: 16px 24px;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: flex-end;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.notification-btn {
+    padding: 10px 24px;
+    background: #063A1C;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.notification-btn:hover {
+    background: #042a14;
+    transform: translateY(-1px);
+}
+
+.notification-note {
+    font-size: 12px;
+    color: #6b7280;
+    font-style: italic;
+    padding: 0 0 0 0;
+    text-align: center;
+}
+
+/* Floating Pill Buttons */
+.floating-pill-btn {
+    position: fixed;
+    bottom: 40px;
+    right: 40px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: #00681a;
+    color: white;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 999;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.floating-pill-btn:hover {
+    background: #042a14;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+.floating-pill-btn.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.floating-pill-btn.back-to-top {
+    padding: 12px 16px;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    justify-content: center;
+}
+</style>
+
+
 <body>
+    {% if user_role == "COORDINATOR" %}
+        {% if notifications.submitted_submissions|default:0 > 0 %}
+            <button id="viewRemindersBtn" class="floating-pill-btn">
+                <i class="fa-solid fa-bell"></i> View Reminders
+            </button>
+            <div id="notificationPopup" class="notification-popup-overlay" style="display:none;">
+                <div class="notification-popup">
+                    <div class="notification-header">
+                        <h2>Pending Items</h2>
+                        <button class="notification-close" onclick="closeNotificationPopup()">&times;</button>
+                    </div>
+                    <div class="notification-body">
+                        <div class="notification-item" onclick="window.location.href='/submissions/'">
+                            <div class="notification-icon"><i class="fa-solid fa-file-import"></i></div>
+                            <div class="notification-content">
+                                <div class="notification-title">Submitted Submissions</div>
+                                <div class="notification-count">{{ notifications.submitted_submissions }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    {% elif user_role in "VP,DIRECTOR,UESO" %}
+        {% with total1=notifications.forwarded_submissions|default:0|add:notifications.received_requests|default:0 %}
+        {% with total2=total1|add:notifications.unconfirmed_users|default:0 %}
+        {% with total_reminders=total2|add:notifications.pending_exports|default:0 %}
+        {% if total_reminders|add:0 > 0 %}
+            <button id="viewRemindersBtn" class="floating-pill-btn">
+                <i class="fa-solid fa-bell"></i> View Reminders
+            </button>
+            <div id="notificationPopup" class="notification-popup-overlay" style="display:none;">
+                <div class="notification-popup">
+                    <div class="notification-header">
+                        <h2>Pending Items</h2>
+                        <button class="notification-close" onclick="closeNotificationPopup()">&times;</button>
+                    </div>
+                    <div class="notification-body">
+                        {% if notifications.forwarded_submissions > 0 %}
+                        <div class="notification-item" onclick="window.location.href='/submissions/'">
+                            <div class="notification-icon"><i class="fa-solid fa-file-arrow-up"></i></div>
+                            <div class="notification-content">
+                                <div class="notification-title">Forwarded Submissions</div>
+                                <div class="notification-count">{{ notifications.forwarded_submissions }}</div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if notifications.received_requests > 0 %}
+                        <div class="notification-item" onclick="window.location.href='/requests/'">
+                            <div class="notification-icon"><i class="fa-solid fa-envelope"></i></div>
+                            <div class="notification-content">
+                                <div class="notification-title">Client Requests</div>
+                                <div class="notification-count">{{ notifications.received_requests }}</div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if notifications.unconfirmed_users > 0 %}
+                        <div class="notification-item" onclick="window.location.href='/users/'">
+                            <div class="notification-icon"><i class="fa-solid fa-user-clock"></i></div>
+                            <div class="notification-content">
+                                <div class="notification-title">Pending Users</div>
+                                <div class="notification-count">{{ notifications.unconfirmed_users }}</div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if notifications.pending_exports > 0 %}
+                        <div class="notification-item" onclick="window.location.href='/exports/'">
+                            <div class="notification-icon"><i class="fa-solid fa-download"></i></div>
+                            <div class="notification-content">
+                                <div class="notification-title">Export Requests</div>
+                                <div class="notification-count">{{ notifications.pending_exports }}</div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+        {% endwith %}
+        {% endwith %}
+        {% endwith %}
+    {% endif %}
+    <!-- Back to Top Button -->
+    <button id="backToTopBtn" class="floating-pill-btn back-to-top">
+        <i class="fa-solid fa-arrow-up"></i>
+    </button>
+    
     <div class="main-container">
         <div class="container-1">
             <div class="container-1A" style="flex-direction: row;">
@@ -207,139 +649,109 @@
     </symbol>
 </svg>
 
-<style>
-/* --- Dashboard Goal Card Styling (Modified) --- */
-
-.goal-card-container {
-    display: flex;
-    /* Allow cards to wrap if screen is narrow, but they are generally expected to fit 4 */
-    flex-wrap: nowrap; 
-    gap: 20px;
-    margin-top: 0px; /* Adjusted to rely on the summary-text margin */
-    margin-bottom: 30px;
-}
-
-.goal-card-simple-dashboard {
-    position: relative;
-    /* Adjusted width to allow 4 cards to fit well in standard dashboard layout */
-    width: calc(25% - 15px); 
-    min-width: 200px;
-    height: 180px; 
-    padding: 20px;
-    border-radius: 12px;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
-    /* MODIFIED: Added gradient background using CSS variables from goals.html */
-    background-color: var(--card-bg, #ffffff);
-    background-image: linear-gradient(135deg, var(--card-start-bg, #f0f0f0) 0%, var(--card-bg) 100%);
-    
-    transition: all 0.3s ease;
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-}
-
-.goal-card-simple-dashboard:hover {
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
-    transform: translateY(-2px) !important;
-    /* Set to background-color only on hover to remove gradient */
-    background-image: none !important; 
-}
-
-.goal-card-title-simple {
-    /* MODIFIED: Matched Title Styling from goals.html */
-    font-family: 'Inter', Arial, sans-serif;
-    font-weight: 500;
-    font-size: 1.25rem; /* Increased size */
-    color: #1A1A1A; /* Darker color */
-    line-height: 1.2;
-    white-space: nowrap; /* Prevent wrapping (truncate) */
-    overflow: hidden;
-    text-overflow: ellipsis;
-    width: 100%;
-    padding-right: 40px; 
-    margin-top: 0;
-    /* margin-bottom is set inline in the template */
-}
-
-.goal-card-data-wrapper {
-    /* Ensures the progress bar is positioned relative to the numbers */
-    display: flex;
-    flex-direction: column;
-    flex-grow: 1; /* Pushes content down if title is short */
-    justify-content: flex-end; /* Aligns content to the bottom */
-}
-
-.goal-card-percent-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-}
-
-.goal-card-number {
-    /* MODIFIED: Matched Nominator Styling from goals.html */
-    font-family: 'Inter', Arial, sans-serif;
-    font-size: 5.5rem;
-    font-weight: 900;
-    color: #ffffff;
-    line-height: 1;
-    margin-top: 0;
-    
-    /* Apply text-shadow for contrast */
-    text-shadow:
-        1px 1px 0 #555555,
-        -1px -1px 0 #cccccc,
-        0px 0px 10px rgba(0, 0, 0, 0.4);
-}
-
-.goal-card-denominator {
-    /* MODIFIED: Matched Denominator Wrapper Styling from goals.html */
-    font-weight: 700;
-    color: #555555;
-    text-shadow: none;
-    font-size: 1em; /* Base size for relative children */
-    line-height: 1.2;
-    margin-top: 8px;
-
-    /* Ensure the wrapper is a column to stack label and word-number */
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-}
-
-.goal-card-denominator .label {
-    /* MODIFIED: Matched Label/OUT OF Styling from goals.html */
-    font-size: 0.8em;
-    font-weight: 500;
-    color: #777;
-    display: block;
-    line-height: 1;
-}
-
-.goal-card-denominator .word-number {
-    /* MODIFIED: Matched Word Number Styling from goals.html */
-    font-size: 1em; 
-    font-weight: 700;
-    color: #555555;
-    text-shadow: none;
-    line-height: 1;
-}
-
-/* @media for responsiveness to ensure 4 cards fit */
-@media (max-width: 1400px) {
-    .goal-card-simple-dashboard {
-        width: calc(33.333% - 13.333px); /* 3 cards per row */
-    }
-}
-@media (max-width: 1000px) {
-    .goal-card-simple-dashboard {
-        width: calc(50% - 10px); /* 2 cards per row */
-    }
-}
-</style>
 
 <script>
+    // Notification Popup Logic
+    function closeNotificationPopup() {
+        const popup = document.getElementById('notificationPopup');
+        if (popup) {
+            popup.style.animation = 'fadeOut 0.3s ease';
+            setTimeout(() => {
+                popup.style.display = 'none';
+            }, 300);
+        }
+    }
+    
+    function openNotificationPopup() {
+        const popup = document.getElementById('notificationPopup');
+        if (popup) {
+            popup.style.display = 'flex';
+            popup.style.animation = 'fadeIn 0.3s ease';
+        }
+    }
+    
+    // Show popup only when coming from login (flag) or when View Reminders is clicked
+    document.addEventListener('DOMContentLoaded', function() {
+        const popup = document.getElementById('notificationPopup');
+        const viewRemindersBtn = document.getElementById('viewRemindersBtn');
+        const backToTopBtn = document.getElementById('backToTopBtn');
+
+        // Helper: check if there are any notification items
+        function hasReminders() {
+            return popup && popup.querySelector('.notification-item') !== null;
+        }
+
+        // Only show popup automatically ONCE if flag is set (from login/quick-login)
+        let popupAutoShown = false;
+        if (popup && hasReminders()) {
+            const showFromContext = "{{ show_notifications|yesno:'true,false' }}" === "true";
+            const urlParams = new URLSearchParams(window.location.search);
+            const showFromUrl = urlParams.get('reminders') === '1';
+            
+            if (showFromContext || showFromUrl) {
+                popup.style.display = 'flex';
+                popupAutoShown = true;
+                // Click outside to close (on overlay)
+                popup.addEventListener('mousedown', function(e) {
+                    if (e.target === popup) {
+                        closeNotificationPopup();
+                    }
+                });
+                // Remove the URL parameter to avoid showing again on refresh
+                if (showFromUrl) {
+                    const newUrl = window.location.pathname + window.location.hash;
+                    window.history.replaceState({}, document.title, newUrl);
+                }
+            } else {
+                popup.style.display = 'none';
+            }
+        }
+
+        // Always allow clicking overlay to close popup
+        if (popup) {
+            popup.addEventListener('mousedown', function(e) {
+                if (e.target === popup) {
+                    closeNotificationPopup();
+                }
+            });
+        }
+
+        // View Reminders pill logic
+        if (viewRemindersBtn) {
+            viewRemindersBtn.addEventListener('click', function() {
+                if (popup && hasReminders()) {
+                    popup.style.display = 'flex';
+                    popup.style.animation = 'fadeIn 0.3s ease';
+                }
+            });
+            function toggleViewReminders() {
+                const reminders = hasReminders();
+                const scrolled = window.scrollY > 300;
+                if (reminders) {
+                    if (scrolled) {
+                        viewRemindersBtn.classList.remove('show');
+                        if (backToTopBtn) backToTopBtn.classList.add('show');
+                    } else {
+                        viewRemindersBtn.classList.add('show');
+                        if (backToTopBtn) backToTopBtn.classList.remove('show');
+                    }
+                } else {
+                    viewRemindersBtn.classList.remove('show');
+                }
+            }
+            window.addEventListener('scroll', toggleViewReminders);
+            toggleViewReminders();
+        }
+        if (backToTopBtn) {
+            backToTopBtn.addEventListener('click', function() {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+        }
+    });
+
     const CARD_BACKGROUND_COLORS = [
         '#E0F7FA', // Very Light Cyan/Blue (Similar to your lightest)
         '#B3E5FC', // Pale Sky Blue
@@ -390,7 +802,7 @@
         });
     }
 
-    const EVENTS_DATA = {{ events_json|safe }}; 
+    const EVENTS_DATA = JSON.parse(`{{ events_json|default:'{}'|escapejs }}`); 
     
     // The rest of the calendar script goes here:
     
@@ -805,6 +1217,8 @@ document.addEventListener('DOMContentLoaded', () => {
         openBtn.textContent = 'Last 300 Days ▾';
     }
 </script> 
+
+
 
 </body>
 </html>

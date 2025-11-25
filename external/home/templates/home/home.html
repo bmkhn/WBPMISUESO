@@ -11,10 +11,295 @@
 <link href="https://fonts.googleapis.com/css?family=Inter:400,700,800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
 <link href="{% static 'user/dash.css' %}" rel="stylesheet">
+
+<style>
+/* Notification Popup Styles */
+.notification-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+.notification-popup {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow: hidden;
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.notification-header {
+    padding: 24px;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.notification-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.notification-close {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.notification-close:hover {
+    background: #f3f4f6;
+    color: #1f2937;
+}
+
+.notification-body {
+    padding: 16px 24px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.notification-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid #e5e7eb;
+}
+
+.notification-item:hover {
+    background: #e8f5e9;
+    border-color: #063A1C;
+    transform: translateX(4px);
+}
+
+.notification-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #063A1C 0%, #063A1C 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.notification-content {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.notification-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.notification-count {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #063A1C;
+    background: #c8e6c9;
+    padding: 4px 12px;
+    border-radius: 8px;
+    min-width: 40px;
+    text-align: center;
+}
+
+.notification-footer {
+    padding: 16px 24px;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: flex-end;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.notification-btn {
+    padding: 10px 24px;
+    background: #063A1C;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.notification-btn:hover {
+    background: #042a14;
+    transform: translateY(-1px);
+}
+
+.notification-note {
+    font-size: 12px;
+    color: #6b7280;
+    font-style: italic;
+    padding: 0 0 0 0;
+    text-align: center;
+}
+
+/* Floating Pill Buttons */
+.floating-pill-btn {
+    position: fixed;
+    bottom: 40px;
+    right: 40px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: #00681a;
+    color: white;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 999;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.floating-pill-btn:hover {
+    background: #042a14;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+.floating-pill-btn.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.floating-pill-btn.back-to-top {
+    padding: 12px 16px;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    justify-content: center;
+}
+</style>
 </head>
 
 </head>
 <body>
+    <!-- View Reminders Pill and Notification Popup: Only show if there are actual reminders -->
+    {% with total1=notifications.pending_submissions|default:0|add:notifications.revision_submissions|default:0 %}
+    {% with total2=total1|add:notifications.rejected_submissions|default:0 %}
+    {% with total_reminders=total2|add:notifications.overdue_submissions|default:0 %}
+    {% if total_reminders|add:0 > 0 and user.is_authenticated and user.role in FACULTY_ROLES %}
+        <button id="viewRemindersBtn" class="floating-pill-btn">
+            <i class="fa-solid fa-bell"></i> View Reminders
+        </button>
+        <!-- Notification Popup (hidden by default, only shown by flag or pill) -->
+        <div id="notificationPopup" class="notification-popup-overlay" style="display:none;">
+            <div class="notification-popup">
+                <div class="notification-header">
+                    <h2>Pending Items</h2>
+                    <button class="notification-close" onclick="closeNotificationPopup()">&times;</button>
+                </div>
+                <div class="notification-body">
+                    {% if notifications.pending_submissions > 0 %}
+                    <div class="notification-item" onclick="window.location.href='/projects/'">
+                        <div class="notification-icon"><i class="fa-solid fa-hourglass-half"></i></div>
+                        <div class="notification-content">
+                            <div class="notification-title">Pending Submissions</div>
+                            <div class="notification-count">{{ notifications.pending_submissions }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if notifications.revision_submissions > 0 %}
+                    <div class="notification-item" onclick="window.location.href='/projects/'">
+                        <div class="notification-icon"><i class="fa-solid fa-file-pen"></i></div>
+                        <div class="notification-content">
+                            <div class="notification-title">Revision Requested</div>
+                            <div class="notification-count">{{ notifications.revision_submissions }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if notifications.rejected_submissions > 0 %}
+                    <div class="notification-item" onclick="window.location.href='/projects/'">
+                        <div class="notification-icon"><i class="fa-solid fa-circle-xmark"></i></div>
+                        <div class="notification-content">
+                            <div class="notification-title">Rejected Submissions</div>
+                            <div class="notification-count">{{ notifications.rejected_submissions }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if notifications.overdue_submissions > 0 %}
+                    <div class="notification-item" onclick="window.location.href='/projects/'">
+                        <div class="notification-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                        <div class="notification-content">
+                            <div class="notification-title">Overdue Submissions</div>
+                            <div class="notification-count">{{ notifications.overdue_submissions }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+    {% endwith %}
+    {% endwith %}
+    {% endwith %}
+    <!-- Back to Top Button -->
+    <button id="backToTopBtn" class="floating-pill-btn back-to-top">
+        <i class="fa-solid fa-arrow-up"></i>
+    </button>
+    
     <div class="home-container">
         <!-- Left Container (Public & Client) -->
         
@@ -192,7 +477,108 @@
 {% endif %}
     
 <script>
-    const EVENTS_DATA = {{ events_json|safe }};
+    // Notification Popup Logic
+    function closeNotificationPopup() {
+        const popup = document.getElementById('notificationPopup');
+        if (popup) {
+            popup.style.animation = 'fadeOut 0.3s ease';
+            setTimeout(() => {
+                popup.style.display = 'none';
+            }, 300);
+        }
+    }
+    
+    function openNotificationPopup() {
+        const popup = document.getElementById('notificationPopup');
+        if (popup) {
+            popup.style.display = 'flex';
+            popup.style.animation = 'fadeIn 0.3s ease';
+        }
+    }
+    
+    // Show popup only when coming from login (flag) or when View Reminders is clicked
+    document.addEventListener('DOMContentLoaded', function() {
+        const popup = document.getElementById('notificationPopup');
+        const viewRemindersBtn = document.getElementById('viewRemindersBtn');
+        const backToTopBtn = document.getElementById('backToTopBtn');
+
+        // Helper: check if there are any notification items
+        function hasReminders() {
+            return popup && popup.querySelector('.notification-item') !== null;
+        }
+
+        // Only show popup automatically ONCE if flag is set (from login/quick-login)
+        let popupAutoShown = false;
+        if (popup && hasReminders()) {
+            const showFromContext = "{{ show_notifications|yesno:'true,false' }}" === "true";
+            const urlParams = new URLSearchParams(window.location.search);
+            const showFromUrl = urlParams.get('reminders') === '1';
+            
+            if (showFromContext || showFromUrl) {
+                popup.style.display = 'flex';
+                popupAutoShown = true;
+                // Click outside to close (on overlay)
+                popup.addEventListener('mousedown', function(e) {
+                    if (e.target === popup) {
+                        closeNotificationPopup();
+                    }
+                });
+                // Remove the URL parameter to avoid showing again on refresh
+                if (showFromUrl) {
+                    const newUrl = window.location.pathname + window.location.hash;
+                    window.history.replaceState({}, document.title, newUrl);
+                }
+            } else {
+                popup.style.display = 'none';
+            }
+        }
+
+        // Always allow clicking overlay to close popup
+        if (popup) {
+            popup.addEventListener('mousedown', function(e) {
+                if (e.target === popup) {
+                    closeNotificationPopup();
+                }
+            });
+        }
+
+        // View Reminders pill logic
+        if (viewRemindersBtn) {
+            viewRemindersBtn.addEventListener('click', function() {
+                if (popup && hasReminders()) {
+                    popup.style.display = 'flex';
+                    popup.style.animation = 'fadeIn 0.3s ease';
+                }
+            });
+            function toggleViewReminders() {
+                const reminders = hasReminders();
+                const scrolled = window.scrollY > 300;
+                if (reminders) {
+                    if (scrolled) {
+                        viewRemindersBtn.classList.remove('show');
+                        if (backToTopBtn) backToTopBtn.classList.add('show');
+                    } else {
+                        viewRemindersBtn.classList.add('show');
+                        if (backToTopBtn) backToTopBtn.classList.remove('show');
+                    }
+                } else {
+                    viewRemindersBtn.classList.remove('show');
+                }
+            }
+            window.addEventListener('scroll', toggleViewReminders);
+            toggleViewReminders();
+        }
+        if (backToTopBtn) {
+            backToTopBtn.addEventListener('click', function() {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+        }
+    });
+    
+    const EVENTS_DATA = JSON.parse(`{{ events_json|default:'{}'|escapejs }}`);
     
     // The rest of the calendar script goes here:
     
@@ -278,6 +664,7 @@
     })();
 
 </script>
+
 
 </body>
 </html>
