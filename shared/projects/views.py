@@ -1,4 +1,5 @@
 from django.shortcuts import get_object_or_404, render, redirect
+from django.views.decorators.csrf import csrf_protect
 from internal.submissions.views import delete_submission
 from shared import request
 from system.logs.models import LogEntry
@@ -967,6 +968,7 @@ def admin_submission_action(request, pk, submission_id):
     return redirect(f'/projects/{pk}/submission/?success=true&action={action}&title={quote(submission_title)}')
 
 
+@csrf_protect
 @project_visibility_required
 def project_expenses(request, pk):
     # messages is imported at the top
