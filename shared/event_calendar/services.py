@@ -36,16 +36,17 @@ def get_events_by_date(user, for_main_calendar_view=False, include_holidays=True
 
     # Apply role-based filtering for all requests to ensure consistent security
     # All user types see events filtered by their role permissions
-    if user.role in ['UESO', 'VP', 'DIRECTOR']:
+    user_role = getattr(user, 'role', None)
+    if user_role in ['UESO', 'VP', 'DIRECTOR']:
         events_qs = MeetingEvent.objects.all()
         project_events_qs = ProjectEvent.objects.select_related('project').filter(placeholder=False)
-    elif user.role in ['PROGRAM_HEAD', 'DEAN', 'COORDINATOR']:
+    elif user_role in ['PROGRAM_HEAD', 'DEAN', 'COORDINATOR']:
         events_qs = MeetingEvent.objects.filter(participants=user)
         project_events_qs = ProjectEvent.objects.select_related('project').filter(
             project__project_leader__college=user.college,
             placeholder=False
         )
-    elif user.role in ['FACULTY', 'IMPLEMENTER']:
+    elif user_role in ['FACULTY', 'IMPLEMENTER']:
         events_qs = MeetingEvent.objects.filter(participants=user)
         project_events_qs = ProjectEvent.objects.select_related('project').filter(
             (models.Q(project__project_leader=user) |
@@ -179,7 +180,8 @@ def create_meeting_event(data, user):
         
         # STEP 2: Time validation - Skip for VP/DIRECTOR/UESO, only check visible meetings for others
         # VP/DIRECTOR/UESO can schedule freely (they see all meetings anyway)
-        if user.role not in ['VP', 'DIRECTOR', 'UESO']:
+        user_role = getattr(user, 'role', None)
+        if user_role not in ['VP', 'DIRECTOR', 'UESO']:
             # For PROGRAM_HEAD/DEAN/COORDINATOR/FACULTY/IMPLEMENTER
             # Only check meetings they can see (meetings where they are participants)
             overlapping_meetings = MeetingEvent.objects.filter(
@@ -265,7 +267,8 @@ def update_meeting_event(event, data, user):
     """
     # Permission check
     allowed_roles = ["DIRECTOR", "UESO", "VP"]
-    if not (user == event.created_by or user.role in allowed_roles):
+    user_role = getattr(user, 'role', None)
+    if not (user == event.created_by or user_role in allowed_roles):
         return None, {"errors": "Permission denied."}
 
     title = data.get("title", "").strip()
@@ -294,7 +297,8 @@ def update_meeting_event(event, data, user):
         
         # STEP 2: Time validation - Skip for VP/DIRECTOR/UESO, only check visible meetings for others
         # VP/DIRECTOR/UESO can schedule freely (they see all meetings anyway)
-        if user.role not in ['VP', 'DIRECTOR', 'UESO']:
+        user_role = getattr(user, 'role', None)
+        if user_role not in ['VP', 'DIRECTOR', 'UESO']:
             # For PROGRAM_HEAD/DEAN/COORDINATOR/FACULTY/IMPLEMENTER
             # Only check meetings they can see (meetings where they are participants)
             overlapping_meetings = MeetingEvent.objects.filter(
@@ -386,7 +390,8 @@ def delete_meeting_event(event, user):
     """
     # Permission check
     allowed_roles = ["DIRECTOR", "UESO", "VP"]
-    if not (user == event.created_by or user.role in allowed_roles):
+    user_role = getattr(user, 'role', None)
+    if not (user == event.created_by or user_role in allowed_roles):
         return None, {"errors": "Permission denied."}
         
     try:
