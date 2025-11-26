@@ -84,11 +84,21 @@
 </head>
 <body>
     <div class="main-container">
-        <div class="user-details-title">
-            <h2>Add Submission</h2> 
-            <p>Input all fields correctly and assign new submission.</p>
+        <div class="user-details-title" style="display: flex; gap: 12px; flex-direction: column;">
+            <h2 style="margin-bottom:0;">Add Submission Requirement
+                <span style="position:relative; display:inline-block;">
+                    <i class="fa-solid fa-circle-info" tabindex="0" style="cursor:pointer; margin-left:6px; font-size:1.1em;"
+                       onmouseover="document.getElementById('submission-tooltip').style.display='block'" 
+                       onfocus="document.getElementById('submission-tooltip').style.display='block'" 
+                       onmouseout="document.getElementById('submission-tooltip').style.display='none'" 
+                       onblur="document.getElementById('submission-tooltip').style.display='none'"></i>
+                    <span id="submission-tooltip" style="display:none; position:absolute; top:50%; transform:translateY(15%); background:#fff; color:#222; border:1px solid #d1d5db; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.08); padding:12px 16px; font-size:12px; width:320px; z-index:1000; text-align:left;">
+                        Add a new submission requirement for a project. Select the project, choose the required forms, set a deadline, and provide any notes.<br><br>Activity-based forms require an activity selection.<br><br>Final forms are only available when all activities are completed.<br><br>The requirement will later be submitted by a member of the project.
+                    </span>
+                </span>
+            </h2>
+            <p style="margin-bottom:0;">Input all fields correctly and assign new submission.</p>
         </div>
-
         <form class="submission-form" method="post" enctype="multipart/form-data">
             {% csrf_token %}
 
@@ -129,9 +139,9 @@
             </div>
 
             <div class="form-group" id="event-selection-group" style="display:none;">
-                <label class="user-details-label" for="id_selected_event">Select Event: <span class="required">*</span></label>
+                <label class="user-details-label" for="id_selected_event">Select Activity: <span class="required">*</span></label>
                 <select class="form-input user-details-value" name="selected_event" id="id_selected_event">
-                    <option value="">Choose an event</option>
+                    <option value="">Choose an activity</option>
                 </select>
             </div>
 
