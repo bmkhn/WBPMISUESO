@@ -2,7 +2,7 @@ from django.db.models import Count
 from django.db.models.functions import ExtractYear
 from django.db.models import Q
 
-from shared.projects.models import Project
+from shared.projects.models import Project, ProjectType
 from system.users.models import College
 from internal.agenda.models import Agenda
 
@@ -15,11 +15,11 @@ class ArchiveService:
 
     # Map: category_slug -> (field_path, type_of_grouping, source_model/choices)
     CATEGORY_MAP = {
-        'start_year':     ('start_date', 'year', None),
+        'start_year': ('start_date', 'year', None),
         'estimated_end_date': ('estimated_end_date', 'year', None),
-        'agenda':         ('agenda', 'fk', Agenda),
-        'project_type':   ('project_type', 'choice', Project.PROJECT_TYPE_CHOICES),
-        'college':        ('project_leader__college', 'fk', College),
+        'agenda': ('agenda', 'fk', Agenda),
+        'project_type': ('project_type', 'fk', ProjectType),
+        'college': ('project_leader__college', 'fk', College),
     }
 
     @staticmethod
@@ -73,7 +73,7 @@ class ArchiveService:
                 })
         
         elif group_type == 'fk':
-            # Grouping for Foreign Keys (Agenda, College)
+            # Grouping for Foreign Keys (Agenda, College, ProjectType)
             
             if source == Agenda:
                 source_qs = Agenda.objects.annotate(
@@ -88,6 +88,21 @@ class ArchiveService:
                         'filter_key': str(item.id)
                     })
             
+            elif source == ProjectType:
+                # FIX: Added block to handle ProjectType aggregation
+                source_qs = ProjectType.objects.annotate(
+                    count=Count('projects')
+                ).filter(count__gt=0).order_by('name')
+
+                for item in source_qs:
+                    results.append({
+                        'id': str(item.id),
+                        'name': item.name,
+                        'count': item.count,
+                        # Use name as filter key to match the API View logic
+                        'filter_key': item.name 
+                    })
+
             elif source == College:
                 # Groups projects by the College of the Project Leader
                 source_qs = College.objects.annotate(

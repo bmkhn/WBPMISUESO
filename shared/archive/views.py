@@ -7,9 +7,12 @@ from rest_framework.pagination import PageNumberPagination
 
 from django.db.models import Q, Count, F
 from django.db.models.functions import ExtractYear
-from shared.projects.models import Project
+from shared.projects.models import Project, ProjectType
 from system.users.models import User
 from rest_framework.permissions import AllowAny
+from rest_framework.authentication import TokenAuthentication, SessionAuthentication
+from rest_framework.permissions import IsAuthenticated
+from system.api.permissions import TieredAPIPermission
 
 from .serializers import ProjectSerializer
 from .serializers import ProjectAggregationSerializer
@@ -89,8 +92,9 @@ class ArchiveView(View):
 # --- API Aggregation View ---
 class ProjectAggregationAPIView(APIView):
     """Calls the service layer for project aggregation data (for cards)."""
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
+    permission_classes = [IsAuthenticated, TieredAPIPermission]
     
-    permission_classes = [AllowAny]
     @extend_schema(responses={200: ProjectAggregationSerializer})
     def get(self, request, category):
         try:
@@ -114,7 +118,7 @@ class ProjectAggregationAPIView(APIView):
                 'start_year': 'start_year',
                 'estimated_end_date': 'end_year',
                 'agenda': 'agenda__name',
-                'project_type': 'project_type',
+                'project_type': 'project_type__name',
                 'college': 'project_leader__college__name',
             }
 
@@ -141,25 +145,27 @@ class ProjectAggregationAPIView(APIView):
                 if not label:
                     label = 'N/A'
  
-                if category == 'project_type' and label != 'N/A':
-                    label = label.replace('_', ' ').title()
-
+                # FIX 2: Removed the .replace() logic because label is now already a clean name string
+                
                 formatted_results.append({'label': label, 'count': item['count']})
             
             return Response(formatted_results)
         except ValueError as e:
             return Response({"error": str(e)}, status=400)
         except Exception as e:
+            print(f"Aggregation Error: {e}") # Helpful for debugging
             return Response({"error": "A server error occurred during aggregation."}, status=500)
 
 
 # --- API Project List View ---
 class ProjectListAPIView(ListAPIView):
     """Calls the service layer for detailed project lists (for tables)."""
+
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
+    permission_classes = [IsAuthenticated, TieredAPIPermission]
     serializer_class = ProjectSerializer
     pagination_class = CustomPagination
 
-    permission_classes = [AllowAny]
     def get_queryset(self):
         category = self.kwargs.get('category')
         filter_value = self.kwargs.get('filter_value')
@@ -192,8 +198,8 @@ class ProjectListAPIView(ListAPIView):
                 elif category == 'agenda':
                     queryset = queryset.filter(agenda__name=filter_value)
                 elif category == 'project_type':
-                    filter_db_value = filter_value.replace(' ', '_').upper()
-                    queryset = queryset.filter(project_type=filter_db_value)
+                    # Filter by Name matches the Aggregation label
+                    queryset = queryset.filter(project_type__name=filter_value)
                 elif category == 'college':
                     queryset = queryset.filter(project_leader__college__name=filter_value)
 
@@ -215,6 +221,9 @@ class ProjectListAPIView(ListAPIView):
             'title': 'title',
             'start_date': 'start_date',
             'end_date': 'estimated_end_date',
+            'project_type': 'project_type__name',
+            'project_leader__last_name': 'project_leader__last_name',
+            'status': 'status',
         }
         sort_field = sort_field_map.get(sort_by, 'title') 
         

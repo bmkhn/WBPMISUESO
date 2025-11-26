@@ -2,6 +2,16 @@ from django.http import JsonResponse
 from datetime import datetime, timedelta # Make sure timedelta is imported
 from django.utils import timezone # Import timezone for aware datetimes
 from . import services 
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.authentication import TokenAuthentication, SessionAuthentication
+from rest_framework.permissions import IsAuthenticated
+
+from shared.projects.models import Project 
+from .serializers import ProjectReadOnlySerializer, ProjectPublicSerializer
+from drf_spectacular.utils import extend_schema
+from system.api.permissions import TieredAPIPermission
 
 # --- Updated Utility Function ---
 def parse_dates_from_request(request, default_days=300): # Added default_days
@@ -229,14 +239,10 @@ from drf_spectacular.utils import extend_schema
     responses={200: ProjectPublicSerializer(many=True)}
 )
 @api_view(['GET'])
-@permission_classes([HasAPIKey]) 
+@authentication_classes([TokenAuthentication, SessionAuthentication])
+@permission_classes([IsAuthenticated, TieredAPIPermission]) 
 def get_public_projects(request):
-    """
-    An example API endpoint that is protected by an API Key.
-    It returns a list of all completed projects.
-    """
     try:
-        
         projects = Project.objects.all()
 
         data = [
@@ -254,21 +260,14 @@ def get_public_projects(request):
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-#
-# ----------------- ADD THE NEW VIEW BELOW -----------------
-#
 @extend_schema(
     responses={200: ProjectReadOnlySerializer(many=True)}
 ) 
 @api_view(['GET'])
-@permission_classes([HasAPIKey]) 
+@authentication_classes([TokenAuthentication, SessionAuthentication])
+@permission_classes([IsAuthenticated, TieredAPIPermission]) 
 def get_all_project_data(request):
-    """
-    A read-only API endpoint that returns ALL data for all projects,
-    including nested events, documents, and evaluations.
-    """
     try:
-        # Get all projects, prefetching related data for efficiency
         projects = Project.objects.prefetch_related(
             'documents', 
             'events', 
@@ -279,7 +278,6 @@ def get_all_project_data(request):
             'sdgs'
         ).all()
 
-        # Use the new serializer to package all data
         serializer = ProjectReadOnlySerializer(projects, many=True)
         
         return Response(serializer.data, status=status.HTTP_200_OK)

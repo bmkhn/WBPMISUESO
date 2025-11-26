@@ -5,55 +5,55 @@
 
 {% block content %}
 <link href="https://fonts.googleapis.com/css?family=Inter:400,500,700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+    crossorigin="anonymous" referrerpolicy="no-referrer">
 <link href="{% static 'system/settings/styles.css' %}" rel="stylesheet">
 
 <div class="main-container">
 
-    <!-- FIX: Changed h3 to h1.project-text -->
     <h1 class="project-text">{{ form_title|default:"Form" }}</h1>
 
     <div class="row">
         <div class="col-lg-8">
-            <!-- FIX: Removed shadow, added persistent border -->
             <div class="card input">
                 <div class="card-body">
                     <form method="POST" enctype="multipart/form-data">
                         {% csrf_token %}
-                        
+
                         {% if form.non_field_errors %}
-                            <div class="alert alert-danger">
-                                {% for error in form.non_field_errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
                         {% endif %}
 
                         {% for field in form %}
                         <div class="form-group mb-3">
-                            <!-- FIX: Removed font-weight-bold, CSS handles it -->
                             <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                            
+
                             {{ field }}
 
                             {% if field.help_text %}
-                                <small class="form-text text-muted">{{ field.help_text|safe }}</small>
+                            <small class="form-text text-muted">{{ field.help_text|safe }}</small>
                             {% endif %}
                             {% if field.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {% for error in field.errors %}
-                                        {{ error }}
-                                    {% endfor %}
-                                </div>
+                            <div class="invalid-feedback d-block">
+                                {% for error in field.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
                             {% endif %}
                         </div>
                         {% endfor %}
-                        
+
                         <div class="d-flex justify-content-end fortwo">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save"></i> Save
+                            <button type="submit" class="btn {{ submit_btn_class|default:'btn-primary' }}">
+                                <i class="{{ submit_icon_class|default:'fas fa-save' }}"></i>Save
                             </button>
-                            <a href="{% if cancel_url %}{{ cancel_url }}{% else %}javascript:history.back(){% endif %}" class="btn gray">Cancel</a>
+                            <a href="{% if cancel_url %}{{ cancel_url }}{% else %}javascript:history.back(){% endif %}"
+                                class="btn gray">Cancel</a>
                         </div>
                     </form>
                 </div>

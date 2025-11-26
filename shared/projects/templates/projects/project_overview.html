@@ -181,8 +181,10 @@
                 <div class="form-group">
                     <label class="form-label">Project Type <span class="required">*</span></label>
                     <select class="user-details-value" name="project_type" id="edit_project_type" required style="flex:1;">
-                        {% for val, label in project.PROJECT_TYPE_CHOICES %}
-                            <option value="{{ val }}" {% if project.project_type == val %}selected{% endif %}>{{ label }}</option>
+                        {% for pt in project_types %}
+                        <option value="{{ pt.id }}" {% if project.project_type and project.project_type.id == pt.id %}selected{% endif %}>
+                            {{ pt.name }}
+                        </option>
                         {% endfor %}
                     </select>
                 </div>

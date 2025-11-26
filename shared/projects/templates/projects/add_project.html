@@ -105,10 +105,11 @@
                 </div>
                 <div>
                     <div class="user-details-label">Project Type <span class="required">*</span></div>
-                    <select name="project_type" class="user-details-value" style="transition: none;"  required>
+                    <select name="project_type" class="user-details-value" required>
                         <option value="" selected disabled>Select Type</option>
-                        <option value="NEEDS_BASED">Needs Based</option>
-                        <option value="RESEARCH_BASED">Research Based</option>
+                        {% for pt in project_types %}
+                        <option value="{{ pt.id }}">{{ pt.name }}</option>
+                        {% endfor %}
                     </select>
                 </div>
             </div>

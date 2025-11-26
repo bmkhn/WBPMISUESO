@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 import faker 
 from faker import Faker
 from system.users.models import College, Campus
-from shared.projects.models import SustainableDevelopmentGoal
+from shared.projects.models import SustainableDevelopmentGoal, ProjectType
 from django.conf import settings
 import os
 
@@ -70,7 +70,7 @@ SDG_DATA = [
 
 
 class Command(BaseCommand):
-    help = "Populate test users, colleges, campuses, SDGs, agendas, and downloadables (idempotent)."
+    help = "Populate test users, colleges, campuses, SDGs, project types, agendas, and downloadables (idempotent)."
 
     def handle(self, *args, **kwargs):
         User = get_user_model()
@@ -180,6 +180,16 @@ class Command(BaseCommand):
                     defaults={"name": sdg["name"]}
                 )
             self.stdout.write(self.style.SUCCESS(f"Created {len(SDG_DATA)} SDGs.\n"))
+
+        # --- PROJECT TYPES (NEW) ---
+        if ProjectType.objects.exists():
+            self.stdout.write(self.style.WARNING("Project Types already populated — skipping.\n"))
+        else:
+            self.stdout.write("Populating Project Types...")
+            project_types = ["Needs Based", "Research Based"]
+            for pt_name in project_types:
+                ProjectType.objects.get_or_create(name=pt_name)
+            self.stdout.write(self.style.SUCCESS(f"Created {len(project_types)} project types.\n"))
 
         # --- AGENDAS ---
         from internal.agenda.models import Agenda

@@ -4,51 +4,52 @@
 {% block title %}Confirm Action{% endblock %}
 
 {% block content %}
-<link href="https://fonts.googleapis.com/css?family=Inter:400,500,700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
 <link href="{% static 'system/settings/styles.css' %}" rel="stylesheet">
 
 <div class="main-container">
-
-    <!-- FIX: Changed h3 to h1.project-text -->
     <h1 class="project-text">Confirm Action</h1>
-
     <div class="row">
         <div class="col-lg-8">
-            <!-- 
-              FIX: Replaced old card classes with the new id="danger-zone"
-              to match the settings page style.
-            -->
             <div class="card" id="danger-zone">
                 <div class="card-header">
                     <h6 class="m-0 text-danger accordion-title">Warning</h6>
                 </div>
                 <div class="card-body">
                     <p><strong>{{ confirm_message|default:"Are you sure you want to do this?" }}</strong></p>
-                    
+
                     {% if object_to_delete %}
-                    <p class="mb-4">You are about to modify the following object:</p>
                     <div class="alert alert-secondary">
                         <strong>{{ object_to_delete }}</strong>
+
+                        {% if object_to_delete.description %}
+                        <hr style="border-top: 1px solid #c8c8c8; margin: 10px 0;">
+                        <small class="d-block text-muted mb-1" style="font-weight: 600;">Description:</small>
+                        <div style="font-weight: normal; font-size: 0.95rem; white-space: pre-wrap;">{{ object_to_delete.description }}</div>
+                        {% endif %}
+
+                        {% if object_to_delete.get_tier_display %}
+                        <hr style="border-top: 1px solid #c8c8c8; margin: 10px 0;">
+                        <small class="d-block text-muted mb-1" style="font-weight: 600;">Requested Tier:</small>
+                        <div style="font-weight: bold; font-size: 0.95rem;">{{ object_to_delete.get_tier_display }}
+                        </div>
+                        {% endif %}
                     </div>
                     {% endif %}
 
-                    <p class="text-danger">This action cannot be undone.</p>
-                    
                     <form method="POST">
                         {% csrf_token %}
                         <div class="d-flex justify-content-end fortwo">
                             <button type="submit" class="btn btn-danger">
-                                <i class="fas fa-exclamation-triangle" style="margin-right: 0.5rem;"></i>
-                                {{ confirm_button_text|default:"Yes, Confirm Delete" }}
+                                <i class="fas fa-check" style="margin-right: 0.5rem;"></i>
+                                {{ confirm_button_text|default:"Yes, Confirm" }}
                             </button>
-                            <a href="{% if cancel_url %}{{ cancel_url }}{% else %}javascript:history.back(){% endif %}" class="btn gray">Cancel</a>
+                            <a href="{% if cancel_url %}{{ cancel_url }}{% else %}javascript:history.back(){% endif %}"
+                                class="btn gray">Cancel</a>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
     </div>
-
 </div>
 {% endblock %}

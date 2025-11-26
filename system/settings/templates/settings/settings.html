@@ -6,26 +6,35 @@
 
 {% block content %}
 <link href="https://fonts.googleapis.com/css?family=Inter:400,500,700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+    crossorigin="anonymous" referrerpolicy="no-referrer">
 <link href="{% static 'system/settings/styles.css' %}" rel="stylesheet">
 
 <div class="main-container">
+    <div style="justify-content: space-between; display: flex; flex-direction: row;">
+        <h1 class="project-text">System Settings</h1> 
 
-    <h1 class="project-text">System Settings</h1>
+        <a href="{% url 'system_settings:api_docs' %}" class="btn btn-primary"
+            style="background-color: black; border-color: black;">
+            <i class="fas fa-book-open mr-2" style="margin-right: 0.35rem;"></i>Learn About API
+        </a>
+    </div>
 
     {% if messages %}
-        {% for message in messages %}
-            <div class="alert {% if message.tags == 'error' %}alert-danger{% elif message.tags == 'warning' %}alert-warning{% else %}alert-success{% endif %}" role="alert">
-                {{ message|safe }}
-                <button type="button" class="close" onclick="this.parentElement.style.display='none'" style="background:none; border:none; float:right; font-size: 1.5rem; line-height: 1; opacity: 0.7;">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-        {% endfor %}
+    {% for message in messages %}
+    <div class="alert {% if message.tags == 'error' %}alert-danger{% elif message.tags == 'warning' %}alert-warning{% else %}alert-success{% endif %}"
+        role="alert">
+        {{ message|safe }}
+        <button type="button" class="close" onclick="this.parentElement.style.display='none'"
+            style="background:none; border:none; float:right; font-size: 1.5rem; line-height: 1; opacity: 0.7;">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    {% endfor %}
     {% endif %}
 
     <div class="row">
-
         <div class="col-lg-4">
             <div class="card" id="account-settings">
                 <div class="card-header">
@@ -33,19 +42,21 @@
                 </div>
                 <div class="card-body">
                     <p>Manage your personal account details and security.</p>
-                    <a href="{% url 'profile' %}" class="btn btn-secondary btn-block mb-2" style="align-self: flex-end;">Edit Profile</a>
+                    <a href="{% url 'profile' %}" class="btn btn-secondary btn-block mb-2"
+                        style="align-self: flex-end;">Edit Profile</a>
                 </div>
             </div>
         </div>
 
         <div class="col-lg-8">
-            
             <div class="card" id="api-settings">
                 <div class="section-header non-collapsible">
                     <div class="section-header-content">
                         <h5 class="accordion-title mb-0">
-                            <i class="fas fa-network-wired fa-fw mr-2"></i>
-                            {% if admin %}API Key Management{% else %}My API Connections{% endif %}
+                            <div>
+                                <i class="fas fa-network-wired fa-fw mr-2"></i>
+                                {% if admin %}API Key Management{% else %}My API Connections{% endif %}
+                            </div>
                         </h5>
                         <p class="accordion-desc">
                             {% if admin %}
@@ -54,101 +65,174 @@
                             View the status of your requested API connections.
                             {% endif %}
                         </p>
-                        
-                        {% if admin and not api_unlocked %}
-                        <p>This section is restricted. Please enter your administrator password to manage API keys.</p>
-                        {% endif %}
                     </div>
                 </div>
                 <div class="accordion-content" style="border-top: 1px solid #EAEAEA;">
-                    
-                    {% if admin and not api_unlocked %}
-                        <form method="POST" action="{% url 'system_settings:settings' %}" class="api-password-form">
-                            {% csrf_token %}
-                            <div class="form-group">
-                                <label for="api_password" class="form-label">Your Password</label>
-                                <div class="formone">
-                                    <input type="password" name="api_password" class="form-control" id="api_password" required>
-                                    <button type="submit" name="unlock_api" class="btn btn-primary">Unlock API Section</button>
-                                </div>
-                            </div>
-                        </form>
-                    {% else %}
-                        <div class="table-responsive">
-                            <table class="table" width="100%" cellspacing="0">
-                                <thead>
-                                    <tr>
-                                        <th>System / User</th>
-                                        <th>Status</th>
-                                        <th>Created</th>
-                                        {% if admin %}<th class="cell-actions">Actions</th>{% endif %}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for conn in api_connections %}
-                                    <tr {% if conn.status == 'DISCONNECTED' %}class="table-danger-row"{% elif conn.status == 'PENDING' %}class="table-warning-row"{% endif %}>
-                                        <td>
-                                            <strong>{{ conn.name }}</strong><br>
-                                            <small class="text-muted">{{ conn.description|truncatechars:40 }}</small>
-                                            {% if admin %}
-                                            <br><small class="text-primary">By: {{ conn.requested_by.get_full_name|default:conn.requested_by.email }}</small>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            {% if conn.status == 'ACTIVE' %}
-                                                <span class="badge badge-success">CONNECTED</span>
-                                            {% elif conn.status == 'PENDING' %}
-                                                <span class="badge badge-warning">PENDING</span>
-                                            {% elif conn.status == 'DISCONNECTED' %}
-                                                <span class="badge badge-danger">DISCONNECTED</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>{{ conn.created_at|naturaltime }}</td>
-                                        
+
+                    <div class="table-responsive">
+                        <table class="table" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>System / User</th>
+                                    <th>Status</th>
+                                    <th>Tier</th>
+                                    <th>API Key</th>
+                                    <th>Created</th>
+                                    {% if admin %}<th class="cell-actions">Actions</th>{% endif %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {# --- DATA ROWS (Displayed Directly) --- #}
+                                {% if admin or not admin %}
+                                {% for conn in api_connections %}
+                                <tr
+                                    class="{% if conn.status == 'DISCONNECTED' %}table-danger-row{% elif conn.status == 'PENDING' %}table-warning-row{% endif %}">
+                                    <td>
+                                        <strong>{{ conn.name }}</strong><br>
+                                        <small class="text-muted">{{ conn.description|truncatechars:40 }}</small>
                                         {% if admin %}
-                                        <td class="cell-actions">
-                                            {% if conn.status == 'PENDING' %}
-                                                <a href="{% url 'system_settings:approve_api_access' conn.pk %}" class="btn btn-outline-warning btn-sm" title="Approve & Generate Key">
-                                                    <i class="fas fa-check"></i>
-                                                </a>
-                                                <a href="{% url 'system_settings:delete_api_connection' conn.pk %}" class="btn btn-outline-danger btn-sm" title="Reject">
-                                                    <i class="fas fa-times"></i>
-                                                </a>
-                                            {% elif conn.status == 'ACTIVE' %}
-                                                <a href="{% url 'system_settings:disconnect_api_access' conn.pk %}" class="btn btn-outline-danger btn-sm" title="Disconnect">
-                                                    <i class="fas fa-power-off"></i>
-                                                </a>
-                                            {% elif conn.status == 'DISCONNECTED' %}
-                                                <a href="{% url 'system_settings:delete_api_connection' conn.pk %}" class="btn btn-outline-danger btn-sm" title="Delete">
-                                                    <i class="fas fa-trash"></i>
-                                                </a>
-                                            {% endif %}
-                                        </td>
+                                        <br>
+                                        <small class="text-primary">
+                                            By: {{conn.requested_by.get_full_name|default:conn.requested_by.email }}
+                                        </small>
                                         {% endif %}
-                                    </tr>
-                                    {% empty %}
-                                    <tr>
-                                        <td colspan="{% if admin %}4{% else %}3{% endif %}" class="text-center">
-                                            {% if admin %}
-                                                No connection requests found.
-                                            {% else %}
-                                                You haven't requested any API connections yet.
-                                            {% endif %}
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                        
-                        {% if not admin %}
-                        <div class="table-controls" style="margin-bottom: 0.5rem; margin-top: 1rem;">
-                            <a href="{% url 'system_settings:request_api_access' %}" class="btn btn-primary">
-                                <i class="fas fa-plus"></i> Request New Connection
-                            </a>
-                        </div>
-                        {% endif %}
-                        
+                                    </td>
+                                    <td>
+                                        {% if conn.status == 'ACTIVE' %}
+                                        <span class="badge badge-success">CONNECTED</span>
+                                        {% elif conn.status == 'PENDING' %}
+                                        <span class="badge badge-warning">PENDING</span>
+                                        {% elif conn.status == 'DISCONNECTED' %}
+                                        <span class="badge badge-danger">DISCONNECTED</span>
+                                        {% elif conn.status == 'REJECTED' %}
+                                        <span class="badge badge-danger"
+                                            title="{{ conn.rejection_reason }}">REJECTED</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-info">{{ conn.get_tier_display }}</span>
+                                    </td>
+                                    <td>
+                                        {% if conn.status == 'ACTIVE' and conn.full_api_key_string %}
+                                        {% if request.user == conn.requested_by or admin %}
+                                        <div class="input-group input-group-sm" style="width: 220px;">
+                                            <input type="password" value="{{ conn.full_api_key_string }}"
+                                                class="form-control api-key-field" id="key-{{ conn.id }}" readonly>
+                                            <div class="input-group-append" style="margin-top: 0.2rem; color: #444;">
+                                                <button class="btn-outline-secondary see" type="button"
+                                                    onclick="toggleKey('key-{{ conn.id }}')" title="Show/Hide">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                <button class="btn-outline-secondary see" type="button"
+                                                    onclick="copyToClipboard('{{ conn.full_api_key_string }}')"
+                                                    title="Copy">
+                                                    <i class="fas fa-copy"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        {% else %}
+                                        <span class="text-muted">Hidden</span>
+                                        {% endif %}
+                                        {% else %}
+                                        <span class="text-muted">--</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ conn.created_at|naturaltime }}</td>
+
+                                    {% if admin %}
+                                    <td class="cell-actions">
+                                        {% if conn.status == 'PENDING' %}
+                                        <a href="{% url 'system_settings:approve_api_access' conn.pk %}"
+                                            class="btn btn-outline-warning btn-sm" title="Approve & Generate Key">
+                                            <i class="fas fa-check"></i>
+                                        </a>
+                                        <a href="{% url 'system_settings:reject_api_access' conn.pk %}"
+                                            class="btn btn-outline-danger btn-sm" title="Reject">
+                                            <i class="fas fa-times"></i>
+                                        </a>
+                                        {% elif conn.status == 'ACTIVE' %}
+                                        <a href="{% url 'system_settings:disconnect_api_access' conn.pk %}"
+                                            class="btn btn-outline-danger btn-sm" title="Disconnect">
+                                            <i class="fas fa-power-off"></i>
+                                        </a>
+                                        {% elif conn.status == 'DISCONNECTED' %}
+                                        <a href="{% url 'system_settings:delete_api_connection' conn.pk %}"
+                                            class="btn btn-outline-danger btn-sm" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                        {% elif conn.status == 'REJECTED' %}
+                                        <a href="{% url 'system_settings:delete_api_connection' conn.pk %}"
+                                            class="btn btn-outline-danger btn-sm" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                        {% endif %}
+                                    </td>
+                                    {% endif %}
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="{% if admin %}6{% else %}5{% endif %}" class="text-center">
+                                        {% if admin %}
+                                        No connection requests found.
+                                        {% else %}
+                                        You haven't requested any API connections yet.
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {# --- PAGINATION CONTROLS --- #}
+                    {% if api_connections.has_other_pages %}
+                    <nav aria-label="API connections pagination" class="mt-3" style="padding: 0 1rem 1rem;">
+                        <ul class="pagination justify-content-center mb-0">
+                            {% if api_connections.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link"
+                                    href="?page={{ api_connections.previous_page_number }}">Previous</a>
+                            </li>
+                            {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">Previous</span>
+                            </li>
+                            {% endif %}
+
+                            {% for i in api_connections.paginator.page_range %}
+                            {% if api_connections.number == i %}
+                            <li class="page-item active">
+                                <span class="page-link">
+                                    {{ i }} <span class="sr-only">(current)</span>
+                                </span>
+                            </li>
+                            {% else %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                            </li>
+                            {% endif %}
+                            {% endfor %}
+
+                            {% if api_connections.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ api_connections.next_page_number }}">Next</a>
+                            </li>
+                            {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">Next</span>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+
+                    {% if not admin %}
+                    <div class="table-controls" style="margin-bottom: 0.5rem; margin-top: 1rem;">
+                        <a href="{% url 'system_settings:request_api_access' %}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Request New Connection
+                        </a>
+                    </div>
                     {% endif %}
                 </div>
             </div>
@@ -164,38 +248,62 @@
                         </h5>
                         <p class="accordion-desc">Set the total available budget for the current fiscal year.</p>
                         <p class="accordion-intro">
-                            This defines the <strong>total available budget pool</strong> (₱{{ budget_pool.total_available|floatformat:2|intcomma }}) for the current <strong>Fiscal Year {{ budget_pool.fiscal_year }}</strong>.
+                            This defines the <strong>total available budget pool</strong>
+                            for the current <strong>Fiscal Year {{ budget_pool.fiscal_year }}</strong>.
                         </p>
                     </div>
                     <i class="accordion-chevron fas fa-chevron-down"></i>
                 </div>
                 <div class="accordion-content" style="display: none; position: relative;">
-                    <form method="POST" action="{% url 'system_settings:settings' %}" style="display: flex; flex-direction: column; gap: 0.8rem;">
+                    <form method="POST" action="{% url 'system_settings:settings' %}"
+                        style="display: flex; flex-direction: column; gap: 0.8rem;">
                         {% csrf_token %}
                         <div class="form-group row mb-3">
                             <div class="col-sm-4">
-                                <label for="{{ budget_form.fiscal_year.id_for_label }}" class="form-row-label">Fiscal Year</label>
+                                <label for="{{ budget_form.fiscal_year.id_for_label }}" class="form-row-label">Fiscal
+                                    Year</label>
                             </div>
                             <div class="col-sm-8">
-                                <input type="text" class="form-control" name="{{ budget_form.fiscal_year.name }}" id="{{ budget_form.fiscal_year.id_for_label }}" value="{{ budget_form.fiscal_year.value|default_if_none:'' }}" readonly>
+                                <input type="text" class="form-control" name="{{ budget_form.fiscal_year.name }}"
+                                    id="{{ budget_form.fiscal_year.id_for_label }}"
+                                    value="{{ budget_form.fiscal_year.value|default_if_none:'' }}" readonly>
                             </div>
                         </div>
                         <div class="form-group row mb-3">
                             <div class="col-sm-4">
-                                <label for="{{ budget_form.annual_total.id_for_label }}" class="form-row-label">Total Annual Budget</label>
+                                <label for="{{ budget_form.annual_total.id_for_label }}" class="form-row-label">Total
+                                    Annual
+                                    Budget</label>
                             </div>
                             <div class="col-sm-8">
-                                <input type="number" step="0.01" min="0" class="form-control" name="{{ budget_form.annual_total.name }}" id="id_annual_total" value="{{ budget_form.annual_total.value|default_if_none:'0.00' }}" required oninput="calculateUnallocated()">
+                                <input type="number" step="0.01" min="0" class="form-control"
+                                    name="{{ budget_form.annual_total.name }}" id="id_annual_total"
+                                    value="{{ budget_form.annual_total.value|default_if_none:'0.00' }}" required
+                                    oninput="calculateUnallocated()">
                                 <div id="unallocated-display" style="margin-top: 0.5rem; font-size: 0.9rem;">
-                                    Current Assigned to Colleges: <strong>₱{{ total_assigned_budget|floatformat:2|intcomma }}</strong>
+
+                                    Current Assigned to Colleges:
+                                    <strong id="assigned-budget-display"
+                                        data-value="{{ total_assigned_budget|stringformat:'f' }}">
+                                        ₱{{ total_assigned_budget|floatformat:2|intcomma }}
+                                    </strong>
+
                                     <br>
-                                    Remaining Unallocated: <strong id="remaining-unallocated-value" class="{% if is_save_disabled %}text-danger{% else %}text-success{% endif %}">₱{{ initial_unallocated_remaining|floatformat:2|intcomma }}</strong>
-                                    <span id="unallocated-warning" class="text-danger" style="display: none; margin-left: 10px;">Warning: Cannot set budget lower than assigned!</span>
+                                    Remaining Unallocated:
+                                    <strong id="remaining-unallocated-value"
+                                        class="{% if is_save_disabled %}text-danger{% else %}text-success{% endif %}">
+                                        ₱{{ initial_unallocated_remaining|floatformat:2|intcomma }}
+                                    </strong>
+
+                                    <span id="unallocated-warning" class="text-danger"
+                                        style="display: none; margin-left: 10px;">Warning: Cannot set budget lower than
+                                        assigned!</span>
                                 </div>
                             </div>
                         </div>
                         <div class="d-flex justify-content-end">
-                            <button type="submit" name="save_annual_budget" id="save_annual_budget_btn" class="btn btn-primary" {% if is_save_disabled %}disabled{% endif %}>
+                            <button type="submit" name="save_annual_budget" id="save_annual_budget_btn"
+                                class="btn btn-primary" {% if is_save_disabled %}disabled{% endif %}>
                                 <i class="fas fa-save"></i> Save Annual Budget
                             </button>
                         </div>
@@ -214,173 +322,293 @@
                 <div class="accordion-content" style="display: none;">
                     <div class="table-responsive">
                         <table class="table" width="100%" cellspacing="0">
-                            <thead><tr><th>Logo</th><th>Name</th><th>Campus</th><th class="cell-actions">Actions</th></tr></thead>
+                            <thead>
+                                <tr>
+                                    <th>Logo</th>
+                                    <th>Name</th>
+                                    <th>Campus</th>
+                                    <th class="cell-actions">Actions</th>
+                                </tr>
+                            </thead>
                             <tbody>
                                 {% for college in colleges %}
                                 <tr>
-                                    <td class="cell-logo">{% if college.logo %}<img src="{{ college.logo.url }}">{% else %}No Logo{% endif %}</td>
+                                    <td class="cell-logo">
+                                        {% if college.logo %}
+                                        <img src="{{ college.logo.url }}">
+                                        {% endif %}
+                                    </td>
                                     <td>{{ college.name }}</td>
                                     <td>{{ college.get_campus_display }}</td>
                                     <td class="cell-actions">
-                                        <a href="{% url 'system_settings:edit_college' college.pk %}" class="btn btn-outline-warning btn-sm"><i class="fas fa-pen"></i></a>
-                                        <a href="{% url 'system_settings:delete_college' college.pk %}" class="btn btn-outline-danger btn-sm"><i class="fas fa-trash"></i></a>
+                                        <a href="{% url 'system_settings:edit_college' college.pk %}"
+                                            class="btn btn-outline-warning btn-sm"><i class="fas fa-pen"></i></a>
+                                        <a href="{% url 'system_settings:delete_college' college.pk %}"
+                                            class="btn btn-outline-danger btn-sm"><i class="fas fa-trash"></i></a>
                                     </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
                     </div>
-                    <div class="table-controls"><a href="{% url 'system_settings:add_college' %}" class="btn btn-primary"><i class="fas fa-plus"></i>Add New College</a></div>
+                    <div class="table-controls"><a href="{% url 'system_settings:add_college' %}"
+                            class="btn btn-primary"><i class="fas fa-plus"></i>Add New College</a></div>
                 </div>
             </div>
 
             <div class="card">
-                 <div class="section-header accordion-toggle">
+                <div class="section-header accordion-toggle">
                     <div class="section-header-content">
                         <h5 class="accordion-title mb-0"><i class="fas fa-building fa-fw mr-2"></i>Manage Campuses</h5>
                         <p class="accordion-desc">Define the different university campuses.</p>
                     </div>
                     <i class="accordion-chevron fas fa-chevron-down"></i>
-                 </div>
-                 <div class="accordion-content" style="display: none;">
-                     <div class="table-responsive">
+                </div>
+                <div class="accordion-content" style="display: none;">
+                    <div class="table-responsive">
                         <table class="table" width="100%" cellspacing="0">
-                            <thead><tr><th>Name</th><th class="cell-actions">Actions</th></tr></thead>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th class="cell-actions">Actions</th>
+                                </tr>
+                            </thead>
                             <tbody>
                                 {% for campus in campuses %}
                                 <tr>
                                     <td>{{ campus.name }}</td>
                                     <td class="cell-actions">
-                                        <a href="{% url 'system_settings:edit_campus' campus.pk %}" class="btn btn-outline-warning btn-sm"><i class="fas fa-pen"></i></a>
-                                        <a href="{% url 'system_settings:delete_campus' campus.pk %}" class="btn btn-outline-danger btn-sm"><i class="fas fa-trash"></i></a>
+                                        <a href="{% url 'system_settings:edit_campus' campus.pk %}"
+                                            class="btn btn-outline-warning btn-sm"><i class="fas fa-pen"></i></a>
+                                        <a href="{% url 'system_settings:delete_campus' campus.pk %}"
+                                            class="btn btn-outline-danger btn-sm"><i class="fas fa-trash"></i></a>
                                     </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
-                     </div>
-                     <div class="table-controls"><a href="{% url 'system_settings:add_campus' %}" class="btn btn-primary"><i class="fas fa-plus"></i>Add New Campus</a></div>
-                 </div>
+                    </div>
+                    <div class="table-controls"><a href="{% url 'system_settings:add_campus' %}"
+                            class="btn btn-primary"><i class="fas fa-plus"></i>Add New Campus</a></div>
+                </div>
             </div>
 
             <div class="card">
-                 <div class="section-header accordion-toggle">
+                <div class="section-header accordion-toggle">
                     <div class="section-header-content">
                         <h5 class="accordion-title mb-0"><i class="fas fa-leaf fa-fw mr-2"></i>Manage SDGs</h5>
                         <p class="accordion-desc">Configure the Sustainable Development Goals for project tagging.</p>
                     </div>
                     <i class="accordion-chevron fas fa-chevron-down"></i>
-                 </div>
-                 <div class="accordion-content" style="display: none;">
-                     <div class="table-responsive">
+                </div>
+                <div class="accordion-content" style="display: none;">
+                    <div class="table-responsive">
                         <table class="table" width="100%" cellspacing="0">
-                            <thead><tr><th>Goal Number</th><th>Name</th><th class="cell-actions">Actions</th></tr></thead>
+                            <thead>
+                                <tr>
+                                    <th>Goal Number</th>
+                                    <th>Name</th>
+                                    <th class="cell-actions">Actions</th>
+                                </tr>
+                            </thead>
                             <tbody>
                                 {% for sdg in sdgs %}
                                 <tr>
                                     <td>SDG {{ sdg.goal_number }}</td>
                                     <td>{{ sdg.name }}</td>
                                     <td class="cell-actions">
-                                        <a href="{% url 'system_settings:edit_sdg' sdg.pk %}" class="btn btn-outline-warning btn-sm"><i class="fas fa-pen"></i></a>
-                                        <a href="{% url 'system_settings:delete_sdg' sdg.pk %}" class="btn btn-outline-danger btn-sm"><i class="fas fa-trash"></i></a>
+                                        <a href="{% url 'system_settings:edit_sdg' sdg.pk %}"
+                                            class="btn btn-outline-warning btn-sm"><i class="fas fa-pen"></i></a>
+                                        <a href="{% url 'system_settings:delete_sdg' sdg.pk %}"
+                                            class="btn btn-outline-danger btn-sm"><i class="fas fa-trash"></i></a>
                                     </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
-                     </div>
-                     <div class="table-controls"><a href="{% url 'system_settings:add_sdg' %}" class="btn btn-primary"><i class="fas fa-plus"></i>Add New SDG</a></div>
-                 </div>
+                    </div>
+                    <div class="table-controls"><a href="{% url 'system_settings:add_sdg' %}" class="btn btn-primary"><i
+                                class="fas fa-plus"></i>Add New SDG</a></div>
+                </div>
             </div>
 
             <div class="card">
-                 <div class="section-header accordion-toggle">
+                <div class="section-header accordion-toggle">
                     <div class="section-header-content">
-                        <h5 class="accordion-title mb-0"><i class="fas fa-cog fa-fw mr-2"></i>General System Settings</h5>
-                        <p class="accordion-desc">Manage site-wide settings like the website name and maintenance mode.</p>
+                        <h5 class="accordion-title mb-0"><i class="fas fa-cog fa-fw mr-2"></i>General System Settings
+                        </h5>
+                        <p class="accordion-desc">Manage site-wide settings like the website name and maintenance mode.
+                        </p>
                     </div>
                     <i class="accordion-chevron fas fa-chevron-down"></i>
-                 </div>
-                 <div class="accordion-content" style="display: none; position: relative;">
-                     <form method="POST" action="{% url 'system_settings:settings' %}" style="display: flex; flex-direction: column; gap: 0.8rem;">
+                </div>
+                <div class="accordion-content" style="display: none; position: relative;">
+                    <form method="POST" action="{% url 'system_settings:settings' %}"
+                        style="display: flex; flex-direction: column; gap: 0.8rem;">
                         {% csrf_token %}
                         {% for setting, form in settings_with_forms %}
                         <div class="form-group row mb-3">
                             <div class="col-sm-4"><label class="form-row-label">{{ setting.description }}</label></div>
                             <div class="col-sm-8">
-                                <input type="text" class="form-control" name="{{ form.prefix }}-value" value="{{ form.value.value|default_if_none:'' }}">
+                                <input type="text" class="form-control" name="{{ form.prefix }}-value"
+                                    value="{{ form.value.value|default_if_none:'' }}">
                             </div>
                         </div>
                         {% endfor %}
-                        <div class="d-flex justify-content-end"><button type="submit" name="save_general_settings" class="btn btn-primary"><i class="fas fa-save"></i> Save All Settings</button></div>
-                     </form>
-                 </div>
+                        <div class="d-flex justify-content-end"><button type="submit" name="save_general_settings"
+                                class="btn btn-primary"><i class="fas fa-save"></i> Save All Settings</button></div>
+                    </form>
+                </div>
             </div>
-            
-            {% endif %} 
+
+            <div class="card">
+                <div class="section-header accordion-toggle">
+                    <div class="section-header-content">
+                        <h5 class="accordion-title mb-0"><i class="fas fa-list-ul fa-fw mr-2"></i>Manage Project Types
+                        </h5>
+                        <p class="accordion-desc">Configure the available classification types for projects.</p>
+                    </div>
+                    <i class="accordion-chevron fas fa-chevron-down"></i>
+                </div>
+                <div class="accordion-content" style="display: none;">
+                    <div class="table-responsive">
+                        <table class="table" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th class="cell-actions">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pt in project_types %}
+                                <tr>
+                                    <td>{{ pt.name }}</td>
+                                    <td class="cell-actions">
+                                        <a href="{% url 'system_settings:edit_project_type' pt.pk %}"
+                                            class="btn btn-outline-warning btn-sm"><i class="fas fa-pen"></i></a>
+                                        <a href="{% url 'system_settings:delete_project_type' pt.pk %}"
+                                            class="btn btn-outline-danger btn-sm"><i class="fas fa-trash"></i></a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="2" class="text-center">No Project Types found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="table-controls"><a href="{% url 'system_settings:add_project_type' %}"
+                            class="btn btn-primary"><i class="fas fa-plus"></i>Add New Project Type</a></div>
+                </div>
+            </div>
+
+            {% endif %}
+
             <div class="card" id="danger-zone">
                 <div class="card-header">
                     <h6 class="accordion-title">
-                        <i class="fa-solid fa-triangle-exclamation" ></i>
+                        <i class="fa-solid fa-triangle-exclamation"></i>
                         Danger Zone
                     </h6>
                 </div>
                 <div class="card-body" style="align-items: flex-start;">
                     <p>Be careful. These actions are permanent and cannot be undone.</p>
-                    <a href="{% url 'system_settings:delete_account' %}" class="btn btn-danger btn-block">Delete My Account</a>
+                    <a href="{% url 'system_settings:delete_account' %}" class="btn btn-danger btn-block">Delete My
+                        Account</a>
                 </div>
             </div>
-
         </div>
-
     </div>
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Accordion Logic
-    const toggles = document.querySelectorAll('.accordion-toggle');
-    toggles.forEach(function(toggle) {
-        toggle.addEventListener('click', function() {
-            const content = this.nextElementSibling;
-            if (content && content.classList.contains('accordion-content')) {
-                const isShown = content.style.display === 'block';
-                this.classList.toggle('active', !isShown);
-                content.style.display = isShown ? 'none' : 'block';
-            }
+    document.addEventListener('DOMContentLoaded', function () {
+        // --- 1. Accordion Functionality ---
+        const toggles = document.querySelectorAll('.accordion-toggle');
+        toggles.forEach(function (toggle) {
+            toggle.addEventListener('click', function () {
+                const content = this.nextElementSibling;
+                if (content && content.classList.contains('accordion-content')) {
+                    const isShown = content.style.display === 'block';
+                    this.classList.toggle('active', !isShown);
+                    content.style.display = isShown ? 'none' : 'block';
+                }
+            });
         });
+
+        // --- 2. Budget Calculation (Admin Only) ---
+        if (document.getElementById('id_annual_total')) {
+            calculateUnallocated();
+        }
     });
 
-    // Budget Logic
-    const totalAssignedBudget = parseFloat("{{ total_assigned_budget|floatformat:2 }}".replace(/,/g, ''));
-    const annualTotalInput = document.getElementById('id_annual_total');
-    const remainingValueSpan = document.getElementById('remaining-unallocated-value');
-    const warningSpan = document.getElementById('unallocated-warning');
-    const saveButton = document.getElementById('save_annual_budget_btn');
+    function calculateUnallocated() {
+        const totalInput = document.getElementById('id_annual_total');
+        const assignedElement = document.getElementById('assigned-budget-display');
+        const remainingDisplay = document.getElementById('remaining-unallocated-value');
+        const warningMsg = document.getElementById('unallocated-warning');
+        const saveBtn = document.getElementById('save_annual_budget_btn');
 
-    if(annualTotalInput) {
-        function formatCurrency(amount) {
-            return new Intl.NumberFormat('en-PH', {style: 'currency', currency: 'PHP'}).format(amount).replace('PHP', '₱');
-        }
+        if (!totalInput) return;
 
-        window.calculateUnallocated = function() {
-            const annualTotal = parseFloat(annualTotalInput.value) || 0.00;
-            const remaining = annualTotal - totalAssignedBudget;
-            remainingValueSpan.textContent = formatCurrency(remaining);
-            if (remaining < 0) {
-                remainingValueSpan.classList.add('text-danger');
-                remainingValueSpan.classList.remove('text-success');
-                warningSpan.style.display = 'inline';
-                saveButton.disabled = true; 
-            } else {
-                remainingValueSpan.classList.remove('text-danger');
-                remainingValueSpan.classList.add('text-success');
-                warningSpan.style.display = 'none';
-                saveButton.disabled = false; 
+        // Parse values
+        const totalBudget = parseFloat(totalInput.value) || 0;
+        const assignedBudget = parseFloat(assignedElement.getAttribute('data-value')) || 0;
+        const remaining = totalBudget - assignedBudget;
+
+        // Format for display
+        const formatter = new Intl.NumberFormat('en-PH', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+        const formattedRemaining = '₱' + formatter.format(remaining);
+
+        // Update display
+        if (remainingDisplay) remainingDisplay.innerText = formattedRemaining;
+
+        // Validation Logic
+        if (remaining < 0) {
+            if (remainingDisplay) {
+                remainingDisplay.className = 'text-danger';
+                remainingDisplay.style.fontWeight = 'bold';
             }
-        };
-        calculateUnallocated();
+            if (warningMsg) warningMsg.style.display = 'inline';
+            if (saveBtn) {
+                saveBtn.disabled = true;
+                saveBtn.classList.remove('btn-primary');
+                saveBtn.classList.add('btn-secondary');
+            }
+        } else {
+            if (remainingDisplay) {
+                remainingDisplay.className = 'text-success';
+                remainingDisplay.style.fontWeight = 'bold';
+            }
+            if (warningMsg) warningMsg.style.display = 'none';
+            if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.classList.add('btn-primary');
+                saveBtn.classList.remove('btn-secondary');
+            }
+        }
     }
-});
+
+    function toggleKey(id) {
+        var x = document.getElementById(id);
+        if (x.type === "password") {
+            x.type = "text";
+        } else {
+            x.type = "password";
+        }
+    }
+
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(function () {
+            alert('API Key copied to clipboard');
+        }, function (err) {
+            console.error('Could not copy text: ', err);
+            alert('Failed to copy key manually.');
+        });
+    }
 </script>
 {% endblock %}

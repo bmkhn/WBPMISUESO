@@ -5,7 +5,7 @@ from shared import request
 from system.logs.models import LogEntry
 from system.notifications.models import Notification
 from system.users.decorators import role_required, project_visibility_required
-from .models import SustainableDevelopmentGoal, Project, ProjectEvaluation, ProjectEvent, ProjectUpdate, ProjectExpense
+from .models import SustainableDevelopmentGoal, Project, ProjectEvaluation, ProjectEvent, ProjectUpdate, ProjectExpense, ProjectType
 from internal.goals.models import Goal
 from internal.submissions.models import Submission
 from system.users.models import College, User, Campus
@@ -84,6 +84,7 @@ def project_overview(request, pk):
 
     all_sdgs = SustainableDevelopmentGoal.objects.all()
     agendas = Agenda.objects.all()
+    project_types = ProjectType.objects.all()
 
     if request.method == 'POST' and user_role in ADMIN_ROLES:
         # Update project fields from form
@@ -96,7 +97,9 @@ def project_overview(request, pk):
                 project.agenda = Agenda.objects.get(pk=agenda_id)
             except Agenda.DoesNotExist:
                 pass
-        project.project_type = request.POST.get('project_type', project.project_type)
+        type_id = request.POST.get('project_type')
+        if type_id:
+            project.project_type_id = type_id
         project.primary_beneficiary = request.POST.get('primary_beneficiary', project.primary_beneficiary)
         project.estimated_events = request.POST.get('estimated_events', project.estimated_events)
         project.primary_location = request.POST.get('primary_location', project.primary_location)
@@ -120,6 +123,7 @@ def project_overview(request, pk):
         "FACULTY_ROLE": FACULTY_ROLE,
         'all_sdgs': all_sdgs,
         'agendas': agendas,
+        'project_types': project_types,
     })
 
 
@@ -1593,6 +1597,7 @@ def add_project_view(request):
     sdgs = SustainableDevelopmentGoal.objects.all()
     colleges = College.objects.all()
     campus_choices = Campus.objects.all()
+    project_types = ProjectType.objects.all()
 
     logistics_type = 'BOTH'
     if request.method == 'POST':
@@ -1741,6 +1746,7 @@ def add_project_view(request):
         'colleges': colleges,
         'campus_choices': campus_choices,
         'logistics_type': logistics_type,
+        'project_types': project_types,
     })
 
 
