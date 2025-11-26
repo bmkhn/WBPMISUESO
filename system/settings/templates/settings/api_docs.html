@@ -1,110 +1,403 @@
-{% extends base_template %}
 {% load static %}
+<!DOCTYPE html>
+<html lang="en">
 
-{% block title %}API Documentation{% endblock %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UESO PMIS API Documentation</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
-{% block content %}
-<link href="https://fonts.googleapis.com/css?family=Inter:400,500,700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<link href="{% static 'system/settings/styles.css' %}" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="shortcut icon" type="ico" href="{% static 'ueso.ico' %}">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Fira+Code:wght@400;500&display=swap"
+        rel="stylesheet">
 
-<div class="main-container">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-        <h1 class="project-text" style="margin-bottom: 0;">API Capabilities</h1>
+    <style>
+        :root {
+            /* Palette */
+            --brand-orange: #ff9900;
+            --brand-green: #00681a;
 
-    </div>
+            /* Light Mode Variables */
+            --bg-body: #f8f8f8;
+            --bg-card: #ffffff;
+            --border-color: #f0f0f0;
+            --text-primary: #1a1a1a;
+            --text-secondary: #555555;
+        }
 
-    <div class="row">
-        <div class="col-lg-8">
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h6 class="accordion-title m-0">UESO-PMIS API Overview</h6>
-                </div>
-                <div class="card-body">
-                    <p>
-                        The UESO-PMIS API provides programmatic access to project data, calendar events, and
-                        administrative records.
-                        It allows external systems (such as university dashboards or partner portals) to integrate
-                        directly with our platform.
-                    </p>
-                    <div class="alert alert-info">
-                        <strong>Authentication:</strong> Access requires a valid <code>API Key</code> or
-                        <code>Token</code>.
-                        Include your key in the HTTP header: <br>
-                        <code>Authorization: Token &lt;your_api_key&gt;</code>
-                    </div>
-                </div>
-            </div>
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
 
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h6 class="accordion-title m-0"><i class="fas fa-chart-line mr-2"></i>Analytics & Project Data</h6>
-                </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <h5><span class="badge badge-primary">GET</span> All Project Data</h5>
-                        <code>/analytics/api/all-project-data/</code>
-                        <p class="text-muted mt-1">
-                            A read-only endpoint that returns <strong>ALL</strong> data for projects, including nested
-                            events, documents, and evaluations.
-                            Ideal for generating external reports or data visualization.
-                        </p>
-                    </div>
-                    <hr>
-                    <div class="mb-3">
-                        <h5><span class="badge badge-primary">GET</span> Archive Aggregates</h5>
-                        <code>/archives/api/aggregate/{category}/</code>
-                        <p class="text-muted mt-1">
-                            Retrieves aggregated project statistics (e.g., counts by status, total budget) grouped by
-                            specific categories.
-                        </p>
-                    </div>
-                </div>
-            </div>
+        /* Navbar */
+        .navbar {
+            background-color: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.2rem 0;
+            z-index: 1000;
+        }
 
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h6 class="accordion-title m-0"><i class="fas fa-calendar-alt mr-2"></i>Calendar Management</h6>
-                </div>
-                <div class="card-body">
-                    <h5><span class="badge badge-success">CRUD</span> Meeting Events</h5>
-                    <code>/api/calendar/meeting-events/</code>
-                    <p class="text-muted mt-1">
-                        Full management of calendar events.
-                    <ul>
-                        <li>Users can see events they created or are participating in.</li>
-                        <li>Users can create, update, or delete their own events.</li>
-                    </ul>
-                    </p>
-                </div>
-            </div>
+        .btn-back {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: color 0.2s;
+        }
 
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h6 class="accordion-title m-0"><i class="fas fa-tasks mr-2"></i>Project Management</h6>
-                </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <h5><span class="badge badge-success">CRUD</span> Project Expenses</h5>
-                        <code>/api/projects/{project_pk}/expenses/</code>
-                        <p class="text-muted mt-1">
-                            Manage financial records for specific projects. Accessible to project leaders and staff.
-                            Supports attaching receipts and tracking expenditure.
-                        </p>
-                    </div>
-                    <hr>
-                    <div class="mb-3">
-                        <h5><span class="badge badge-success">CRUD</span> Client Requests</h5>
-                        <code>/api/requests/client-requests/</code>
-                        <p class="text-muted mt-1">
-                            Standard operations for viewing and editing client request instances (e.g., Letters of
-                            Intent, Service Requests).
-                        </p>
-                    </div>
-                </div>
-            </div>
+        .btn-back:hover {
+            color: var(--brand-green);
+        }
 
+        .btn-join {
+            background: black;
+            color: #fff;
+            border-radius: 50px;
+            padding: 10px 30px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            text-decoration: none;
+            box-shadow: 0 4px 15px rgba(0, 104, 26, 0.2);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-join:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(151, 151, 151, 0.3);
+            color: #fff;
+        }
+
+        /* Main Heading */
+        .hero-title {
+            font-weight: 700;
+            /* Requested Weight */
+            font-size: 3.5rem;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            letter-spacing: -1px;
+
+            /* The Gradient */
+            background: linear-gradient(90deg, var(--brand-green) 0%, var(--brand-orange) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Brochure Sections */
+        .brochure-section {
+            padding: 4rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .brochure-card {
+            background: var(--bg-card);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.04);
+            transition: transform 0.3s ease;
+            height: 100%;
+            border: 1px solid rgba(0, 0, 0, 0.03);
+        }
+
+        .brochure-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-img-top {
+            height: 200px;
+            object-fit: cover;
+            filter: grayscale(20%);
+            transition: filter 0.3s;
+        }
+
+        .brochure-card:hover .card-img-top {
+            filter: grayscale(0%);
+        }
+
+        .card-body {
+            padding: 2rem;
+        }
+
+        .step-timeline {
+            position: relative;
+            padding-left: 2rem;
+            border-left: 6px solid #ff9900; 
+            margin-left: 1rem;
+        }
+
+        .step-item {
+            position: relative;
+            margin-bottom: 3rem;
+        }
+
+        .step-marker {
+            position: absolute;
+            left: -2.6rem;
+            top: 0;
+            width: 40px;
+            height: 40px;
+            background: #fff;
+            border: 3px solid var(--brand-orange);
+            color: var(--brand-green);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            z-index: 2;
+        }
+
+        .step-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--brand-green);
+            margin: 1rem 1rem 1rem 0rem;
+        }
+
+        /* Code Block */
+        .code-window {
+            background: #1e1e1e;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+        }
+
+        .code-text {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+            color: #d4d4d4;
+            line-height: 1.7;
+        }
+
+        .token-highlight {
+            color: var(--brand-orange);
+            font-weight: bold;
+        }
+
+        /* Utility */
+        .text-accent {
+            color: var(--brand-green);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar sticky-top">
+        <div class="container">
+            <a href="javascript:history.back()" class="btn-back" style="margin-left: -2rem;">
+                <i class="fa-solid fa-arrow-left"></i> Back
+            </a>
+            <a href="/register/" class="btn-join">Join Us</a>
         </div>
-    </div>
-</div>
-{% endblock %}
+    </nav>
+
+    <section class="brochure-section pt-5 pb-5">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-8 mx-auto text-center">
+                    <h1 class="hero-title">
+                        UESO-PMIS API Documentation
+                    </h1>
+                    <p class="lead text-secondary mt-4 mb-5 w-75 mx-auto">
+                        A guide to integrating with UESO's Project Monitoring System.
+                        Scalable, secure, and RESTful for university-wide connectivity.
+                    </p>
+                    <img src="https://static.where-e.com/Philippines/Palawan-State-University_0a62495f7f14542804d14ac6f9d2f422.jpg"
+                        alt="University Campus" class="img-fluid rounded-4 shadow-lg"
+                        style="max-height: 400px; width: 100%; object-fit: cover;">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="brochure-section bg-light">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <h2 class="text-center fw-bold mb-5 display-6" style="color: var(--brand-green);">Steps to Access</h2>
+
+                    <div class="bg-white p-5 rounded-4 shadow-sm border border-light">
+                        <div class="step-timeline">
+
+                            <div class="step-item">
+                                <h3 class="step-title">Create Account</h3>
+                                <p class="text-secondary">
+                                    Begin by registering a standard user account on the UESO-PMIS portal. This
+                                    establishes your identity within the university system.
+                                </p>
+                            </div>
+
+                            <div class="step-item">
+                                <h3 class="step-title">Access Settings</h3>
+                                <p class="text-secondary">
+                                    Navigate to your User Profile dashboard. Look for the "Developer Settings" tab to
+                                    manage your external connections.
+                                </p>
+                            </div>
+
+                            <div class="step-item">
+                                <h3 class="step-title">Request Key</h3>
+                                <p class="text-secondary">
+                                    Select the API Tier that matches your needs and submit a request. Our admins will
+                                    review your application shortly.
+                                </p>
+                            </div>
+
+                            <div class="step-item mb-0">
+                                <h3 class="step-title">Connect with your system</h3>
+                                <p class="text-secondary">
+                                    Once approved, use your generated key to authenticate your external applications.
+                                </p>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="brochure-section">
+        <div class="container">
+            <div class="text-center mb-5">
+                <span class="text-accent">Features</span>
+                <h2 class="fw-bold display-6" style="color: var(--brand-green);">System Capabilities</h2>
+            </div>
+
+            <div class="row g-4">
+
+                <div class="col-md-6">
+                    <div class="brochure-card">
+                        <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2940&auto=format&fit=crop"
+                            class="card-img-top" alt="Analytics">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h4 class="fw-bold m-0">Full Analytics</h4>
+                                <span class="badge bg-success bg-opacity-10 text-success">GET</span>
+                            </div>
+                            <p class="text-muted small font-monospace mb-3">/analytics/api/all-project-data/</p>
+                            <p class="text-secondary">
+                                Retrieve a comprehensive snapshot of the extension office. This read-only endpoint nests
+                                events, documents, and evaluation scores into a single JSON response.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="brochure-card">
+                        <img src="https://images.unsplash.com/photo-1506784983877-45594efa4cbe?q=80&w=2936&auto=format&fit=crop"
+                            class="card-img-top" alt="Calendar">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h4 class="fw-bold m-0">Event Management</h4>
+                                <span class="badge bg-warning bg-opacity-10 text-warning">CRUD</span>
+                            </div>
+                            <p class="text-muted small font-monospace mb-3">/api/calendar/meeting-events/</p>
+                            <p class="text-secondary">
+                                A flexible calendar interface. Create new meeting events, invite participants, and
+                                manage schedules. Users can strictly edit only events they own.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="brochure-card">
+                        <img src="https://images.unsplash.com/photo-1554224155-6726b3ff858f?q=80&w=2826&auto=format&fit=crop"
+                            class="card-img-top" alt="Finance">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h4 class="fw-bold m-0">Expense Tracking</h4>
+                                <span class="badge bg-primary bg-opacity-10 text-primary">POST</span>
+                            </div>
+                            <p class="text-muted small font-monospace mb-3">/api/projects/{id}/expenses/</p>
+                            <p class="text-secondary">
+                                Specialized for Project Leaders. Upload receipts, log costs, and track budget
+                                utilization in real-time against the approved proposal.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="brochure-card">
+                        <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2426&auto=format&fit=crop"
+                            class="card-img-top" alt="Dashboard">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h4 class="fw-bold m-0">Data Aggregation</h4>
+                                <span class="badge bg-info bg-opacity-10 text-info">GET</span>
+                            </div>
+                            <p class="text-muted small font-monospace mb-3">/archives/api/aggregate/</p>
+                            <p class="text-secondary">
+                                Optimized for dashboards. Returns high-level statistics, project counts by status, and
+                                financial summaries without the heavy data load.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section class="brochure-section bg-light border-0">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-5 mb-4 mb-lg-0">
+                    <span class="text-accent">Technical Stuff</span>
+                    <h2 class="fw-bold mb-3" style="color: var(--text-primary);">Standardized JSON</h2>
+                    <p class="text-secondary lead fs-6">
+                        The API uses standard HTTP response codes and predictable JSON structures. Keep the API key and Auth token in your request's header.
+                    </p>
+                </div>
+                <div class="col-lg-7">
+                    <div class="code-window">
+                        <pre class="code-text m-0">
+{
+  <span style="color: #9cdcfe">"project_id"</span>: <span style="color: #b5cea8">1042</span>,
+  <span style="color: #9cdcfe">"status"</span>: <span style="color: #ce9178">"ONGOING"</span>,
+  <span style="color: #9cdcfe">"leader"</span>: {
+    <span style="color: #9cdcfe">"name"</span>: <span style="color: #ce9178">"Dr. A. Santos"</span>,
+    <span style="color: #9cdcfe">"college"</span>: <span style="color: #ce9178">"CS"</span>
+  },
+  <span style="color: #9cdcfe">"budget_utilized"</span>: <span style="color: #ce9178">"45.2%"</span>,
+  <span style="color: #9cdcfe">"events"</span>: [
+    { 
+      <span style="color: #9cdcfe">"id"</span>: <span style="color: #b5cea8">22</span>, 
+      <span style="color: #9cdcfe">"type"</span>: <span style="color: #ce9178">"Training"</span> 
+    }
+  ]
+}</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

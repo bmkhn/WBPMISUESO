@@ -7,6 +7,10 @@ from .models import MeetingEvent
 from system.users.decorators import role_required
 from shared.projects.models import ProjectEvent, Project
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
+from rest_framework import viewsets, permissions
+from rest_framework.authentication import TokenAuthentication 
+from django.db.models import Q
+from system.api.permissions import TieredAPIPermission
 
 from . import services
 
@@ -175,9 +179,8 @@ class MeetingEventViewSet(viewsets.ModelViewSet):
     queryset = MeetingEvent.objects.all()
     serializer_class = MeetingEventSerializer
     
-    # Use TokenAuthentication to identify which user is making the request
     authentication_classes = [TokenAuthentication] 
-    permission_classes = [permissions.IsAuthenticated, IsEventOwner]
+    permission_classes = [permissions.IsAuthenticated, IsEventOwner, TieredAPIPermission]
 
     def get_queryset(self):
         """
