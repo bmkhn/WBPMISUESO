@@ -104,13 +104,42 @@ class ProjectReadOnlySerializer(serializers.ModelSerializer):
         read_only = True
     
     def get_duration(self, obj) -> str: 
-        return obj.get_duration() 
+        """Calculates duration in years/days."""
+        if obj.start_date and obj.estimated_end_date:
+            duration = obj.estimated_end_date - obj.start_date
+            years = duration.days // 365
+            days = duration.days % 365
+            return f"{years} years, {days} days"
+        return "N/A"
 
     def get_status(self, obj) -> str: 
         return obj.get_status_display() 
 
-    def get_further_action(self, obj) -> str: 
-        return obj.get_further_action()
+    def get_further_action(self, obj) -> Optional[List[str]]:
+        """Get further action from final submission type if project is completed."""
+        if obj.status != 'COMPLETED':
+            return None
+        
+        # Get final submissions for this project
+        # Using local import to avoid circular dependency
+        from internal.submissions.models import Submission
+        final_submissions = Submission.objects.filter(
+            project=obj,
+            downloadable__submission_type='final'
+        ).first()
+        
+        if not final_submissions:
+            return None
+        
+        actions = []
+        if final_submissions.for_product_production:
+            actions.append('For Product Production')
+        if final_submissions.for_research:
+            actions.append('For Research')
+        if final_submissions.for_extension:
+            actions.append('For Extension')
+        
+        return actions if actions else None
 
 #YML new serializer class for Missing Error
 class ProjectAggregationSerializer(serializers.Serializer):

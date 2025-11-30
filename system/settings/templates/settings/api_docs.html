@@ -208,7 +208,7 @@
             <a href="javascript:history.back()" class="btn-back" style="margin-left: -2rem;">
                 <i class="fa-solid fa-arrow-left"></i> Back
             </a>
-            <a href="/register/" class="btn-join">Join Us</a>
+            <a href="/api/schema/swagger-ui/" class="btn-join">Learn More</a>
         </div>
     </nav>
 
@@ -293,7 +293,7 @@
                             class="card-img-top" alt="Analytics">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h4 class="fw-bold m-0">Full Analytics</h4>
+                                <h4 class="fw-bold m-0">Extension Projects</h4>
                                 <span class="badge bg-success bg-opacity-10 text-success">GET</span>
                             </div>
                             <p class="text-muted small font-monospace mb-3">/analytics/api/all-project-data/</p>
@@ -314,7 +314,7 @@
                                 <h4 class="fw-bold m-0">Event Management</h4>
                                 <span class="badge bg-warning bg-opacity-10 text-warning">CRUD</span>
                             </div>
-                            <p class="text-muted small font-monospace mb-3">/api/calendar/meeting-events/</p>
+                            <p class="text-muted small font-monospace mb-3">/api/calendar/meeting-events/{pk}</p>
                             <p class="text-secondary">
                                 A flexible calendar interface. Create new meeting events, invite participants, and
                                 manage schedules. Users can strictly edit only events they own.
@@ -330,9 +330,9 @@
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <h4 class="fw-bold m-0">Expense Tracking</h4>
-                                <span class="badge bg-primary bg-opacity-10 text-primary">POST</span>
+                                <span class="badge bg-warning bg-opacity-10 text-warning">CRUD</span>
                             </div>
-                            <p class="text-muted small font-monospace mb-3">/api/projects/{id}/expenses/</p>
+                            <p class="text-muted small font-monospace mb-3">/api/projects/{pk}/expenses/{pk}</p>
                             <p class="text-secondary">
                                 Specialized for Project Leaders. Upload receipts, log costs, and track budget
                                 utilization in real-time against the approved proposal.
@@ -347,13 +347,12 @@
                             class="card-img-top" alt="Dashboard">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h4 class="fw-bold m-0">Data Aggregation</h4>
-                                <span class="badge bg-info bg-opacity-10 text-info">GET</span>
+                                <h4 class="fw-bold m-0">Requests</h4>
+                                <span class="badge bg-warning bg-opacity-10 text-warning">CRUD</span>
                             </div>
-                            <p class="text-muted small font-monospace mb-3">/archives/api/aggregate/</p>
+                            <p class="text-muted small font-monospace mb-3">/api/requests/client-requests/{id}</p>
                             <p class="text-secondary">
-                                Optimized for dashboards. Returns high-level statistics, project counts by status, and
-                                financial summaries without the heavy data load.
+                                See the external requests made for Palawan State Univeristy and be a part of the system.
                             </p>
                         </div>
                     </div>

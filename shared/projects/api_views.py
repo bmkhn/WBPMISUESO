@@ -1,5 +1,6 @@
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.authentication import TokenAuthentication, SessionAuthentication 
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from django.shortcuts import get_object_or_404
 from django.db.models import Sum
@@ -7,8 +8,7 @@ from decimal import Decimal
 
 from .models import Project, ProjectExpense
 from .serializers import ProjectExpenseSerializer
-from shared.budget.models import BudgetHistory  # Import BudgetHistory
-from system.api.authentication import APIKeyUserAuthentication
+from shared.budget.models import BudgetHistory 
 from system.api.permissions import TieredAPIPermission
 
 
@@ -18,8 +18,8 @@ class ProjectExpenseViewSet(viewsets.ModelViewSet):
     Only project leaders, providers, or staff/superusers can manage expenses.
     """
     serializer_class = ProjectExpenseSerializer
-    authentication_classes = [APIKeyUserAuthentication] 
-    permission_classes = [TieredAPIPermission]
+    authentication_classes = [TokenAuthentication, SessionAuthentication] 
+    permission_classes = [IsAuthenticated, TieredAPIPermission]
     
     def get_project(self):
         """Helper to retrieve and validate the project from URL kwargs."""

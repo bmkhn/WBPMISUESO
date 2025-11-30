@@ -38,7 +38,6 @@ def _get_validated_dates(request):
 
     # Parse dates if provided
     try:
-        # Parse as naive datetime first
         start_date_naive = datetime.strptime(start_date_str, '%Y-%m-%d')
         end_date_naive = datetime.strptime(end_date_str, '%Y-%m-%d')
         
@@ -53,7 +52,6 @@ def _get_validated_dates(request):
         return start_date, end_date, context_dates
         
     except (ValueError, TypeError):
-        # Fallback to default if parsing fails
         end_date = timezone.now().replace(hour=23, minute=59, second=59, microsecond=999999)
         start_date = end_date - timedelta(days=29)
         start_date = start_date.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -70,10 +68,8 @@ def _get_validated_dates(request):
 
 def analytics_view(request):
     
-    # This call will now work
     start_date, end_date, context_dates = _get_validated_dates(request)
     
-    # Determine if user should see only their college's data
     user_college = None
     is_college_restricted = False
     if hasattr(request.user, 'role') and request.user.role in ['PROGRAM_HEAD', 'DEAN', 'COORDINATOR']:
@@ -88,10 +84,9 @@ def analytics_view(request):
             'total_trained': services.get_total_individuals_trained(start_date, end_date, college=user_college),
         },
         'project_trends': services.get_project_trends(start_date, end_date, college=user_college),
-        'is_college_restricted': is_college_restricted,  # Flag to hide client requests chart
+        'is_college_restricted': is_college_restricted,  
     }
     
-    # Add the selected dates to the context
     context.update(context_dates)
 
     return render(request, 'analytics.html', context)
@@ -102,20 +97,16 @@ def export_analytics_to_excel(request):
     Gathers all analytics data for the given date range and exports it
     as a multi-sheet Excel file, compatible with the new multi-series budget chart.
     """
-    # This call will now work
     start_date, end_date, _ = _get_validated_dates(request)
     
-    # Determine if user should see only their college's data
     user_college = None
     if hasattr(request.user, 'role') and request.user.role in ['PROGRAM_HEAD', 'DEAN', 'COORDINATOR']:
         user_college = request.user.college
     
-    # --- Create Workbook ---
     wb = openpyxl.Workbook()
     header_font = Font(bold=True, size=12)
     title_font = Font(bold=True, size=16)
 
-    # --- 1. Overview Sheet (Card Metrics) ---
     ws_overview = wb.active
     ws_overview.title = "Overview"
     
@@ -141,7 +132,6 @@ def export_analytics_to_excel(request):
     ws_overview.column_dimensions['A'].width = 35
     ws_overview.column_dimensions['B'].width = 15
 
-    # --- 2. Active Projects Sheet ---
     ws_projects = wb.create_sheet(title="Projects Over Time")
     ws_projects['A1'] = "Active Projects Created Over Time"
     ws_projects['A1'].font = header_font
@@ -157,7 +147,6 @@ def export_analytics_to_excel(request):
     ws_projects.column_dimensions['A'].width = 25
     ws_projects.column_dimensions['B'].width = 20
 
-    # --- 3. Trained Individuals Sheet ---
     ws_trained = wb.create_sheet(title="Individuals Trained")
     ws_trained['A1'] = "Individuals Trained Over Time"
     ws_trained['A1'].font = header_font
@@ -173,7 +162,6 @@ def export_analytics_to_excel(request):
     ws_trained.column_dimensions['A'].width = 25
     ws_trained.column_dimensions['B'].width = 20
 
-    # --- 4. Budget Allocation Sheet (UPDATED FOR MULTI-SERIES) ---
     ws_budget = wb.create_sheet(title="Budget Allocation")
     ws_budget['A1'] = "Budget Allocation by College"
     ws_budget['A1'].font = title_font
@@ -183,40 +171,31 @@ def export_analytics_to_excel(request):
     labels = budget_data.get('labels', [])
     datasets = budget_data.get('datasets', [])
     
-    # Define Column Headers
     ws_budget['A4'] = "College"
     ws_budget['A4'].font = header_font
     
     current_col = 2
-    # Write headers from datasets
     for dataset in datasets:
         header_title = dataset['label']
-        # Use row 4 for headers
         cell = ws_budget.cell(row=4, column=current_col, value=f"{header_title} (₱)")
         cell.font = header_font
         current_col += 1
         
-    # Populate data rows
-    for i, label in enumerate(labels, start=5): # Data starts at row 5
+    for i, label in enumerate(labels, start=5):
         ws_budget[f'A{i}'] = label
         
         current_col = 2
         for dataset in datasets:
             data_list = dataset['data']
-            # Index is (current row - start data row) -> (i - 5)
             value = data_list[i-5] 
             cell = ws_budget.cell(row=i, column=current_col, value=value)
             cell.number_format = '₱#,##0.00'
             current_col += 1
 
-    # Adjust Column Widths
     ws_budget.column_dimensions['A'].width = 40
-    # Adjust widths for all created columns (up to current_col - 1)
     for col_idx in range(2, current_col):
         ws_budget.column_dimensions[get_column_letter(col_idx)].width = 25
-    # --- END UPDATED SECTION ---
 
-    # --- 5. Agenda Distribution Sheet ---
     ws_agenda = wb.create_sheet(title="Agenda Distribution")
     ws_agenda['A1'] = "Project Distribution by Agenda"
     ws_agenda['A1'].font = header_font
@@ -232,7 +211,6 @@ def export_analytics_to_excel(request):
     ws_agenda.column_dimensions['A'].width = 40
     ws_agenda.column_dimensions['B'].width = 20
 
-    # --- 6. Request Status Sheet ---
     ws_requests = wb.create_sheet(title="Request Status")
     ws_requests['A1'] = "Client Request Status"
     ws_requests['A1'].font = header_font
@@ -271,7 +249,6 @@ def export_analytics_to_excel(request):
     ws_requests.column_dimensions['B'].width = 15
     ws_requests.column_dimensions['C'].width = 20
         
-    # --- Save to memory and return response ---
     output = io.BytesIO()
     wb.save(output)
     output.seek(0)

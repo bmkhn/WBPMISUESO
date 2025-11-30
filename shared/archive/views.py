@@ -4,20 +4,14 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.generics import ListAPIView
 from rest_framework.pagination import PageNumberPagination
-
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.authentication import TokenAuthentication, SessionAuthentication
 from django.db.models import Q, Count, F
 from django.db.models.functions import ExtractYear
 from shared.projects.models import Project, ProjectType
 from system.users.models import User
-from rest_framework.permissions import AllowAny
-from rest_framework.authentication import TokenAuthentication, SessionAuthentication
-from rest_framework.permissions import IsAuthenticated
 from system.api.permissions import TieredAPIPermission
-
-from .serializers import ProjectSerializer
-from .serializers import ProjectAggregationSerializer
-#YML
-from rest_framework.decorators import permission_classes
+from .serializers import ProjectSerializer, ProjectAggregationSerializer
 from drf_spectacular.utils import extend_schema
 
 class CustomPagination(PageNumberPagination):
@@ -36,7 +30,7 @@ def _get_role_based_archive_queryset(request):
     1. UESO, Director, VP: See EVERYTHING.
     2. Faculty, Program Head, Coordinator, Dean: See ALL COMPLETED projects
        PLUS all IN_PROGRESS projects from their own college.
-    3. All others (Guest, Client, Implementer): See ONLY COMPLETED projects.
+    3. All others (Guest, Client, Implementer, Public): See ONLY COMPLETED projects.
     """
     user = request.user
     user_role = getattr(user, 'role', None)
@@ -49,12 +43,15 @@ def _get_role_based_archive_queryset(request):
     if user_role in [User.Role.FACULTY, User.Role.PROGRAM_HEAD, User.Role.COORDINATOR, User.Role.DEAN]:
         college_query = Q()
         if user.college:
+            # Users can see their college's active projects
             college_query = Q(status="IN_PROGRESS") & Q(project_leader__college=user.college)
 
+        # They can also see ANY completed project
         return Project.objects.filter(
             Q(status="COMPLETED") | college_query
         ).distinct()
 
+    # 3. Public / Guest / Client / Implementer: See only COMPLETED
     return Project.objects.filter(status="COMPLETED")
 
 
@@ -85,15 +82,19 @@ class ArchiveView(View):
         
         return render(request, 'archive/archive.html', context)
 
+
 # --- API Aggregation View ---
 class ProjectAggregationAPIView(APIView):
     """Calls the service layer for project aggregation data (for cards)."""
-    authentication_classes = [TokenAuthentication, SessionAuthentication]
-    permission_classes = [IsAuthenticated, TieredAPIPermission]
     
+    # AllowAny ensures the public can access this endpoint without a token/login
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
+    permission_classes = [AllowAny]
+
     @extend_schema(responses={200: ProjectAggregationSerializer})
     def get(self, request, category):
         try:
+            # This function handles the filtering
             base_queryset = _get_role_based_archive_queryset(request)
 
             field_map = {
@@ -126,8 +127,6 @@ class ProjectAggregationAPIView(APIView):
                 label = item['label']
                 if not label:
                     label = 'N/A'
- 
-                # FIX 2: Removed the .replace() logic because label is now already a clean name string
                 
                 formatted_results.append({'label': label, 'count': item['count']})
             
@@ -135,7 +134,7 @@ class ProjectAggregationAPIView(APIView):
         except ValueError as e:
             return Response({"error": str(e)}, status=400)
         except Exception as e:
-            print(f"Aggregation Error: {e}") # Helpful for debugging
+            print(f"Aggregation Error: {e}") 
             return Response({"error": "A server error occurred during aggregation."}, status=500)
 
 
@@ -143,10 +142,12 @@ class ProjectAggregationAPIView(APIView):
 class ProjectListAPIView(ListAPIView):
     """Calls the service layer for detailed project lists (for tables)."""
 
-    authentication_classes = [TokenAuthentication, SessionAuthentication]
-    permission_classes = [IsAuthenticated, TieredAPIPermission]
     serializer_class = ProjectSerializer
     pagination_class = CustomPagination
+    
+    # AllowAny ensures the public can access this endpoint without a token/login
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
         category = self.kwargs.get('category')
@@ -158,6 +159,7 @@ class ProjectListAPIView(ListAPIView):
         sort_by = search_params.get('sort_by', 'title') 
         order = search_params.get('order', 'asc')
         
+        # This function handles the filtering
         queryset = _get_role_based_archive_queryset(self.request)
 
         if category and filter_value:
@@ -180,7 +182,6 @@ class ProjectListAPIView(ListAPIView):
                 elif category == 'agenda':
                     queryset = queryset.filter(agenda__name=filter_value)
                 elif category == 'project_type':
-                    # Filter by Name matches the Aggregation label
                     queryset = queryset.filter(project_type__name=filter_value)
                 elif category == 'college':
                     queryset = queryset.filter(project_leader__college__name=filter_value)
