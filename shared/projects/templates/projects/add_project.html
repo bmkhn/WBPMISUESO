@@ -191,7 +191,7 @@
                     </div>
                     <div>
                         <div class="user-details-label">External Budget Assigned <span class="required">*</span></div>
-                        <input type="number" name="external_budget" class="user-details-value" min="0" step="1" data-logistics-required>
+                        <input type="number" name="external_budget" id="external-budget-both" class="user-details-value" min="0" step="1" data-logistics-required>
                     </div>
                 </div>
 
@@ -218,7 +218,7 @@
                 <div class="user-details-row cols-2">
                     <div>
                         <div class="user-details-label">External Budget Assigned <span class="required">*</span></div>
-                        <input type="number" name="external_budget" class="user-details-value" min="0" step="0.01" data-logistics-required>
+                        <input type="number" name="external_budget" id="external-budget-external" class="user-details-value" min="0" step="0.01" data-logistics-required>
                     </div>
                     <div>
                         <div class="user-details-label">Sponsor Name <span class="required">*</span></div>
@@ -311,8 +311,16 @@
                 <button type="button" id="add-expense-row-btn" style="background:#3182CE;color:white;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-weight:500;display:flex;align-items:center;gap:6px;font-family:'Inter',sans-serif;">
                     <i class="fa-solid fa-plus"></i> Add Another Expense
                 </button>
-                <div id="expense-total-display" style="font-weight:600;color:#2B4360;font-size:1.1rem;">
-                    Total: ₱<span id="expense-total-amount">0.00</span>
+                <div style="text-align:right;">
+                    <div id="expense-total-display" style="font-weight:600;color:#2B4360;font-size:1.1rem;">
+                        Total: ₱<span id="expense-total-amount">0.00</span>
+                    </div>
+                    <div id="expense-remaining-display" style="font-weight:500;color:#38A169;font-size:0.95rem;margin-top:0.25rem;">
+                        Remaining: ₱<span id="expense-remaining-amount">0.00</span>
+                    </div>
+                    <div id="expense-budget-warning" style="display:none;color:#E53E3E;font-size:0.875rem;margin-top:0.25rem;font-weight:500;">
+                        ⚠ Exceeds budget!
+                    </div>
                 </div>
             </div>
             
@@ -336,8 +344,8 @@
             <span style="text-align:center;"><strong>Warning:</strong> Adding a project will immediately reserve budget, notify relevant users, and cannot be undone.<br>Double-check all details before continuing.</span>
         </div>
         <div style="display:flex;gap:12px;justify-content:center;">
-            <button id="add-confirm-no" style="background:#EDF2F7;color:#2B4360;padding:0.6rem 1.5rem;border:none;border-radius:7px;box-shadow:0 1px 4px rgba(0,0,0,0.04);font-weight:500;font-size:1rem;cursor:pointer;transition:background 0.15s;">Cancel</button>
-            <button id="add-confirm-yes" style="background:#3182CE;color:#fff;padding:0.6rem 1.5rem;border:none;border-radius:7px;box-shadow:0 1px 4px rgba(49,130,206,0.09);font-weight:500;font-size:1rem;cursor:pointer;transition:background 0.15s;">Continue & Add Project</button>
+            <button id="add-confirm-no" style="background:#EDF2F7;color:#2B4360;padding:0.6rem 1.5rem;border:none;border-radius:7px;box-shadow:0 1px 4px rgba(0,0,0,0.04);font-weight:500;font-size:1rem;cursor:pointer;transition:background 0.15s;font-family:'Inter',sans-serif;">Cancel</button>
+            <button id="add-confirm-yes" style="background:#3182CE;color:#fff;padding:0.6rem 1.5rem;border:none;border-radius:7px;box-shadow:0 1px 4px rgba(49,130,206,0.09);font-weight:500;font-size:1rem;cursor:pointer;transition:background 0.15s;font-family:'Inter',sans-serif;">Continue & Add Project</button>
         </div>
     </div>
 </div>
@@ -510,8 +518,16 @@
             if (logisticsSelect) {
                 logisticsSelect.addEventListener('change', function() {
                     setTimeout(checkBudget, 100);
+                    setTimeout(updateExpenseTotal, 150);
                 });
             }
+            
+            // Listen to budget input changes to update remaining expense budget
+            const allBudgetInputs = document.querySelectorAll('input[name="internal_budget"], input[name="external_budget"]');
+            allBudgetInputs.forEach(input => {
+                input.addEventListener('input', updateExpenseTotal);
+                input.addEventListener('change', updateExpenseTotal);
+            });
             
             // Run initial check in case leader is already selected
             checkBudget();
@@ -534,8 +550,13 @@
                 document.querySelectorAll('.field-validation-error').forEach(el => el.remove());
                 document.querySelectorAll('.error-input').forEach(el => el.classList.remove('error-input'));
 
-                // Validate all required fields (only if visible)
+                // Validate all required fields (only if visible) - EXCEPT expense fields which are validated separately
                 document.querySelectorAll('#addProjectForm .user-details-value[required]').forEach(field => {
+                    // Skip expense fields - they have their own validation
+                    if (field.classList.contains('expense-title') || field.classList.contains('expense-reason') || field.classList.contains('expense-amount')) {
+                        return;
+                    }
+                    
                     // Only validate if field is visible
                     const isVisible = field.offsetParent !== null;
                     if (isVisible && !field.value) {
@@ -681,6 +702,34 @@
                     expenseErrorDiv.style.display = 'block';
                     if (!firstError) firstError = document.getElementById('expenses-table');
                 } else {
+                    // First, validate that expenses don't exceed budget
+                    let totalBudget = 0;
+                    if (logisticsType === 'BOTH') {
+                        const internalInput = document.getElementById('internal-budget-both');
+                        const externalInput = document.getElementById('external-budget-both');
+                        totalBudget = (parseFloat(internalInput?.value) || 0) + (parseFloat(externalInput?.value) || 0);
+                    } else if (logisticsType === 'INTERNAL') {
+                        const internalInput = document.getElementById('internal-budget-internal');
+                        totalBudget = parseFloat(internalInput?.value) || 0;
+                    } else if (logisticsType === 'EXTERNAL') {
+                        const externalInput = document.getElementById('external-budget-external');
+                        totalBudget = parseFloat(externalInput?.value) || 0;
+                    }
+                    
+                    let expenseTotal = 0;
+                    document.querySelectorAll('.expense-amount').forEach(input => {
+                        expenseTotal += parseFloat(input.value) || 0;
+                    });
+                    
+                    if (expenseTotal > totalBudget) {
+                        valid = false;
+                        expenseErrorDiv.textContent = `Total expenses (₱${expenseTotal.toFixed(2)}) exceed allocated budget (₱${totalBudget.toFixed(2)}). Please adjust your expenses.`;
+                        expenseErrorDiv.style.display = 'block';
+                        if (!firstError) firstError = document.getElementById('expenses-table');
+                    }
+                    
+                    // Then validate individual expense fields
+                    // Then validate individual expense fields
                     let hasExpenseError = false;
                     expenseRows.forEach((row, index) => {
                         const titleInput = row.querySelector('.expense-title');
@@ -822,6 +871,45 @@
             total += value;
         });
         document.getElementById('expense-total-amount').textContent = total.toFixed(2);
+        
+        // Calculate and display remaining budget
+        const logisticsSelect = document.querySelector('select[name="logistics_type"]');
+        const logisticsType = logisticsSelect ? logisticsSelect.value : null;
+        
+        let totalBudget = 0;
+        
+        if (logisticsType === 'BOTH') {
+            const internalInput = document.getElementById('internal-budget-both');
+            const externalInput = document.getElementById('external-budget-both');
+            totalBudget = (parseFloat(internalInput?.value) || 0) + (parseFloat(externalInput?.value) || 0);
+        } else if (logisticsType === 'INTERNAL') {
+            const internalInput = document.getElementById('internal-budget-internal');
+            totalBudget = parseFloat(internalInput?.value) || 0;
+        } else if (logisticsType === 'EXTERNAL') {
+            const externalInput = document.getElementById('external-budget-external');
+            totalBudget = parseFloat(externalInput?.value) || 0;
+        }
+        
+        const remaining = totalBudget - total;
+        const remainingDisplay = document.getElementById('expense-remaining-amount');
+        const warningDisplay = document.getElementById('expense-budget-warning');
+        const remainingContainer = document.getElementById('expense-remaining-display');
+        
+        if (remainingDisplay) {
+            remainingDisplay.textContent = remaining.toFixed(2);
+            
+            // Update color based on remaining amount
+            if (remaining < 0) {
+                remainingContainer.style.color = '#E53E3E';
+                if (warningDisplay) warningDisplay.style.display = 'block';
+            } else if (remaining < totalBudget * 0.1) {
+                remainingContainer.style.color = '#D69E2E';
+                if (warningDisplay) warningDisplay.style.display = 'none';
+            } else {
+                remainingContainer.style.color = '#38A169';
+                if (warningDisplay) warningDisplay.style.display = 'none';
+            }
+        }
     }
 
     function updateRemoveButtons() {

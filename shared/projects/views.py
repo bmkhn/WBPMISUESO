@@ -1722,6 +1722,9 @@ def add_project_view(request):
 
                 # Handle expense breakdown
                 expense_counter = 0
+                total_expenses = Decimal('0')
+                expenses_to_create = []
+                
                 while True:
                     title_key = f'expense_title_{expense_counter}'
                     reason_key = f'expense_reason_{expense_counter}'
@@ -1751,15 +1754,13 @@ def add_project_view(request):
                         project.delete()  # Rollback project creation
                         raise ValueError(error)
                     
-                    # Create the expense
-                    ProjectExpense.objects.create(
-                        project=project,
-                        title=title,
-                        reason=reason,
-                        amount=amount,
-                        date_incurred=timezone.now().date(),
-                        created_by=request.user
-                    )
+                    # Add to total and store for batch creation
+                    total_expenses += amount
+                    expenses_to_create.append({
+                        'title': title,
+                        'reason': reason,
+                        'amount': amount
+                    })
                     
                     expense_counter += 1
                 
@@ -1768,6 +1769,24 @@ def add_project_view(request):
                     error = "At least one expense item is required."
                     project.delete()  # Rollback project creation
                     raise ValueError(error)
+                
+                # Validate total expenses don't exceed budget
+                total_budget = (project.internal_budget or Decimal('0')) + (project.external_budget or Decimal('0'))
+                if total_expenses > total_budget:
+                    error = f"Total expenses (₱{total_expenses:,.2f}) exceed allocated budget (₱{total_budget:,.2f}). Please adjust your expenses."
+                    project.delete()  # Rollback project creation
+                    raise ValueError(error)
+                
+                # Create all expenses after validation
+                for expense_data in expenses_to_create:
+                    ProjectExpense.objects.create(
+                        project=project,
+                        title=expense_data['title'],
+                        reason=expense_data['reason'],
+                        amount=expense_data['amount'],
+                        date_incurred=timezone.now().date(),
+                        created_by=request.user
+                    )
 
                 # Create alerts for project members about being added to the project
                 from .models import ProjectUpdate
