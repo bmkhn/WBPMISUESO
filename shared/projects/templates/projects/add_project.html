@@ -56,6 +56,12 @@
                 Create New Extension Project
             </h2> 
             <p>Input all fields correctly and launch new project.</p>
+            
+            {% if error %}
+            <div style="background:#FFF5F5;color:#C53030;padding:1rem;border-radius:8px;margin-top:1rem;border-left:4px solid #E53E3E;">
+                <strong>Error:</strong> {{ error }}
+            </div>
+            {% endif %}
         </div>
 
         <div class="user-details-section">
@@ -263,6 +269,54 @@
                     </div>
                     <div id="additional-files-list"></div>
                 </div>
+            </div>
+        </div>
+
+        <div class="user-details-section">
+            <div class="user-details-category">
+                <i class="fa-solid fa-receipt"></i> Expense Breakdown
+            </div>
+            <p style="color:#666;font-size:0.9rem;margin-bottom:1rem;">Add initial expense items for this project. At least one expense is required.</p>
+            
+            <div style="overflow-x:auto;">
+                <table id="expenses-table" style="width:100%;border-collapse:collapse;margin-bottom:1rem;">
+                    <thead>
+                        <tr style="background:#f7f9fc;border-bottom:2px solid #e2e8f0;">
+                            <th style="padding:12px;text-align:left;font-weight:600;color:#2B4360;width:25%;">Title <span class="required">*</span></th>
+                            <th style="padding:12px;text-align:left;font-weight:600;color:#2B4360;width:35%;">Reason <span class="required">*</span></th>
+                            <th style="padding:12px;text-align:left;font-weight:600;color:#2B4360;width:25%;">Amount (₱) <span class="required">*</span></th>
+                            <th style="padding:12px;text-align:center;font-weight:600;color:#2B4360;width:15%;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="expenses-tbody">
+                        <tr class="expense-row" data-row-index="0">
+                            <td style="padding:8px;">
+                                <input type="text" name="expense_title_0" class="expense-title user-details-value" placeholder="e.g., Venue Rental" required style="width:100%;">
+                            </td>
+                            <td style="padding:8px;">
+                                <input type="text" name="expense_reason_0" class="expense-reason user-details-value" placeholder="e.g., For workshop event" required style="width:100%;">
+                            </td>
+                            <td style="padding:8px;">
+                                <input type="number" name="expense_amount_0" class="expense-amount user-details-value" placeholder="0.00" min="0.01" step="0.01" required style="width:100%;">
+                            </td>
+                            <td style="padding:8px;text-align:center;">
+                                <button type="button" class="remove-expense-btn" style="background:#E53E3E;color:white;border:none;padding:6px 12px;border-radius:5px;cursor:pointer;font-size:0.875rem;display:none;">Remove</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:1rem;">
+                <button type="button" id="add-expense-row-btn" style="background:#3182CE;color:white;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-weight:500;display:flex;align-items:center;gap:6px;font-family:'Inter',sans-serif;">
+                    <i class="fa-solid fa-plus"></i> Add Another Expense
+                </button>
+                <div id="expense-total-display" style="font-weight:600;color:#2B4360;font-size:1.1rem;">
+                    Total: ₱<span id="expense-total-amount">0.00</span>
+                </div>
+            </div>
+            
+            <div id="expense-error-message" style="color:#E53E3E;margin-top:1rem;display:none;padding:10px;background:#FFF5F5;border-radius:6px;border-left:4px solid #E53E3E;">
             </div>
         </div>
 
@@ -612,6 +666,84 @@
                     }
                 }
 
+                // Expense breakdown validation
+                const expenseRows = document.querySelectorAll('.expense-row');
+                const expenseErrorDiv = document.getElementById('expense-error-message');
+                expenseErrorDiv.style.display = 'none';
+                expenseErrorDiv.textContent = '';
+                
+                // Remove previous expense field errors
+                document.querySelectorAll('.expense-field-error').forEach(el => el.remove());
+                
+                if (expenseRows.length === 0) {
+                    valid = false;
+                    expenseErrorDiv.textContent = 'At least one expense item is required.';
+                    expenseErrorDiv.style.display = 'block';
+                    if (!firstError) firstError = document.getElementById('expenses-table');
+                } else {
+                    let hasExpenseError = false;
+                    expenseRows.forEach((row, index) => {
+                        const titleInput = row.querySelector('.expense-title');
+                        const reasonInput = row.querySelector('.expense-reason');
+                        const amountInput = row.querySelector('.expense-amount');
+                        
+                        // Remove previous error states
+                        [titleInput, reasonInput, amountInput].forEach(input => {
+                            input.classList.remove('error-input');
+                        });
+                        
+                        // Validate title field
+                        if (!titleInput.value.trim()) {
+                            valid = false;
+                            hasExpenseError = true;
+                            titleInput.classList.add('error-input');
+                            const err = document.createElement('div');
+                            err.className = 'expense-field-error';
+                            err.textContent = 'Expense title is required';
+                            err.style.color = '#E53E3E';
+                            err.style.fontSize = '0.875rem';
+                            err.style.marginTop = '0.25rem';
+                            titleInput.parentElement.appendChild(err);
+                            if (!firstError) firstError = titleInput;
+                        }
+                        
+                        // Validate reason field
+                        if (!reasonInput.value.trim()) {
+                            valid = false;
+                            hasExpenseError = true;
+                            reasonInput.classList.add('error-input');
+                            const err = document.createElement('div');
+                            err.className = 'expense-field-error';
+                            err.textContent = 'Expense reason is required';
+                            err.style.color = '#E53E3E';
+                            err.style.fontSize = '0.875rem';
+                            err.style.marginTop = '0.25rem';
+                            reasonInput.parentElement.appendChild(err);
+                            if (!firstError) firstError = reasonInput;
+                        }
+                        
+                        // Validate amount field
+                        if (!amountInput.value || parseFloat(amountInput.value) <= 0) {
+                            valid = false;
+                            hasExpenseError = true;
+                            amountInput.classList.add('error-input');
+                            const err = document.createElement('div');
+                            err.className = 'expense-field-error';
+                            err.textContent = !amountInput.value ? 'Expense amount is required' : 'Amount must be greater than 0';
+                            err.style.color = '#E53E3E';
+                            err.style.fontSize = '0.875rem';
+                            err.style.marginTop = '0.25rem';
+                            amountInput.parentElement.appendChild(err);
+                            if (!firstError) firstError = amountInput;
+                        }
+                    });
+                    
+                    if (hasExpenseError) {
+                        expenseErrorDiv.textContent = 'Please fix the errors in the expense breakdown above.';
+                        expenseErrorDiv.style.display = 'block';
+                    }
+                }
+
                 // Date validation
                 const startDateInput = document.getElementById('id_start_date');
                 const endDateInput = document.getElementById('id_estimated_end_date');
@@ -678,6 +810,88 @@
             });
         }
     });
+
+    // ========== EXPENSE BREAKDOWN FUNCTIONALITY ==========
+    
+    let expenseRowCounter = 1; // Start from 1 since row 0 already exists
+
+    function updateExpenseTotal() {
+        let total = 0;
+        document.querySelectorAll('.expense-amount').forEach(input => {
+            const value = parseFloat(input.value) || 0;
+            total += value;
+        });
+        document.getElementById('expense-total-amount').textContent = total.toFixed(2);
+    }
+
+    function updateRemoveButtons() {
+        const rows = document.querySelectorAll('.expense-row');
+        rows.forEach((row, index) => {
+            const removeBtn = row.querySelector('.remove-expense-btn');
+            if (rows.length > 1) {
+                removeBtn.style.display = 'inline-block';
+            } else {
+                removeBtn.style.display = 'none';
+            }
+        });
+    }
+
+    function addExpenseRow() {
+        const tbody = document.getElementById('expenses-tbody');
+        const newRow = document.createElement('tr');
+        newRow.className = 'expense-row';
+        newRow.setAttribute('data-row-index', expenseRowCounter);
+        
+        newRow.innerHTML = `
+            <td style="padding:8px;">
+                <input type="text" name="expense_title_${expenseRowCounter}" class="expense-title user-details-value" placeholder="e.g., Venue Rental" required style="width:100%;">
+            </td>
+            <td style="padding:8px;">
+                <input type="text" name="expense_reason_${expenseRowCounter}" class="expense-reason user-details-value" placeholder="e.g., For workshop event" required style="width:100%;">
+            </td>
+            <td style="padding:8px;">
+                <input type="number" name="expense_amount_${expenseRowCounter}" class="expense-amount user-details-value" placeholder="0.00" min="0.01" step="0.01" required style="width:100%;">
+            </td>
+            <td style="padding:8px;text-align:center;">
+                <button type="button" class="remove-expense-btn" style="background:#E53E3E;color:white;border:none;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:0.875rem;font-family:'Inter',sans-serif;">Remove</button>
+            </td>
+        `;
+        
+        tbody.appendChild(newRow);
+        expenseRowCounter++;
+        
+        // Add event listeners to new inputs
+        const amountInput = newRow.querySelector('.expense-amount');
+        amountInput.addEventListener('input', updateExpenseTotal);
+        
+        const removeBtn = newRow.querySelector('.remove-expense-btn');
+        removeBtn.addEventListener('click', function() {
+            newRow.remove();
+            updateRemoveButtons();
+            updateExpenseTotal();
+        });
+        
+        updateRemoveButtons();
+    }
+
+    // Event listeners for expense breakdown
+    document.getElementById('add-expense-row-btn').addEventListener('click', addExpenseRow);
+    
+    // Add listener to initial amount input
+    document.querySelector('.expense-amount').addEventListener('input', updateExpenseTotal);
+    
+    // Add listener to initial remove button
+    document.querySelector('.remove-expense-btn').addEventListener('click', function() {
+        const row = this.closest('.expense-row');
+        row.remove();
+        updateRemoveButtons();
+        updateExpenseTotal();
+    });
+
+    // Initialize
+    updateRemoveButtons();
+
+    // ========== END EXPENSE BREAKDOWN FUNCTIONALITY ==========
 
     // File Input Change Handler
     const proposalInput = document.getElementById('id_proposal_document');

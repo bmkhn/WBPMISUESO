@@ -15,7 +15,7 @@ from django.core.paginator import Paginator
 import os
 from django.db import models
 from django.db.models import Q, BooleanField, ExpressionWrapper, Sum # Added Sum
-from decimal import Decimal # Added Decimal
+from decimal import Decimal, InvalidOperation # Added Decimal and InvalidOperation
 from django.contrib import messages # Added messages
 from django.utils import timezone # Added timezone for use in related functions
 from django.http import HttpResponseRedirect, JsonResponse # Added for related functions
@@ -1602,7 +1602,17 @@ def add_project_view(request):
     logistics_type = 'BOTH'
     if request.method == 'POST':
         form = ProjectForm(request.POST, request.FILES)
-        if form.is_valid():
+        
+        # Print form errors for debugging
+        if not form.is_valid():
+            print("Form validation errors:", form.errors)
+            print("POST data:", request.POST)
+            error = "Form validation failed. Please check all required fields."
+            # Add detailed errors to help debug
+            for field, errors in form.errors.items():
+                print(f"Field '{field}' errors: {errors}")
+            logistics_type = request.POST.get('logistics_type', 'BOTH')
+        else:
             try:
                 # Validate budget before saving
                 # CollegeBudget, datetime, Decimal are imported at the top
@@ -1710,6 +1720,55 @@ def add_project_view(request):
                 now = timezone.now()
                 project.save()
 
+                # Handle expense breakdown
+                expense_counter = 0
+                while True:
+                    title_key = f'expense_title_{expense_counter}'
+                    reason_key = f'expense_reason_{expense_counter}'
+                    amount_key = f'expense_amount_{expense_counter}'
+                    
+                    if title_key not in request.POST:
+                        break
+                    
+                    title = request.POST.get(title_key, '').strip()
+                    reason = request.POST.get(reason_key, '').strip()
+                    amount_str = request.POST.get(amount_key, '').strip()
+                    
+                    # Validate expense data
+                    if not title or not reason or not amount_str:
+                        error = f"Expense row {expense_counter + 1} has missing fields."
+                        project.delete()  # Rollback project creation
+                        raise ValueError(error)
+                    
+                    try:
+                        amount = Decimal(amount_str)
+                        if amount <= 0:
+                            error = f"Expense row {expense_counter + 1} has invalid amount. Amount must be greater than 0."
+                            project.delete()  # Rollback project creation
+                            raise ValueError(error)
+                    except (ValueError, InvalidOperation):
+                        error = f"Expense row {expense_counter + 1} has invalid amount format."
+                        project.delete()  # Rollback project creation
+                        raise ValueError(error)
+                    
+                    # Create the expense
+                    ProjectExpense.objects.create(
+                        project=project,
+                        title=title,
+                        reason=reason,
+                        amount=amount,
+                        date_incurred=timezone.now().date(),
+                        created_by=request.user
+                    )
+                    
+                    expense_counter += 1
+                
+                # Ensure at least one expense was created
+                if expense_counter == 0:
+                    error = "At least one expense item is required."
+                    project.delete()  # Rollback project creation
+                    raise ValueError(error)
+
                 # Create alerts for project members about being added to the project
                 from .models import ProjectUpdate
                 project_members = list(project.providers.all())  # Get all project providers
@@ -1731,9 +1790,7 @@ def add_project_view(request):
                 return redirect(f'/projects/?success=true&new_project_id={project.id}&project_title={quote(project.title)}')
             except Exception as e:
                 error = str(e)
-        else:
-            error = "Please correct the errors below."
-        logistics_type = request.POST.get('logistics_type', 'BOTH')
+                logistics_type = request.POST.get('logistics_type', 'BOTH')
     else:
         form = ProjectForm()
     return render(request, 'projects/add_project.html', {
