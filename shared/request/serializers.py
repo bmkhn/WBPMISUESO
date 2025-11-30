@@ -21,4 +21,5 @@ class ClientRequestSerializer(serializers.ModelSerializer):
             'endorsed_at',
             'updated_at',
             'updated_by',
+            'status'
         )
