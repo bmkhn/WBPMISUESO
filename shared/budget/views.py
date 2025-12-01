@@ -17,7 +17,7 @@ from .models import CollegeBudget, BudgetPool, BudgetHistory, BudgetPool
 
 from .forms import AnnualBudgetForm, CollegeAllocationForm, ProjectInternalBudgetForm, ExternalFundingEditForm
 
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 import csv
 
 
@@ -677,7 +677,7 @@ def _update_project_internal_budget(user, project_id, new_internal_budget):
     return project
 
 
-@role_required(["FACULTY", "IMPLEMENTER"], require_confirmed=True)
+@role_required(["VP", "DIRECTOR", "UESO", "FACULTY", "IMPLEMENTER"], require_confirmed=True)
 def faculty_project_budget_view(request, pk):
     base_template = get_templates(request)
     project = get_object_or_404(Project, pk=pk)
@@ -754,6 +754,39 @@ def budget_view(request):
 
     if user_role in ["VP", "DIRECTOR", "UESO"]:
         context = _get_admin_dashboard_data(current_year)
+        # Flag for template and surface returned balances summary for VP/UESO
+        context["is_admin"] = True
+
+        # Returned balances = BudgetHistory entries created when unspent project funds
+        # are returned to UESO (description contains 'Returned unspent project budget')
+        returned_qs = BudgetHistory.objects.filter(
+            description__icontains="Returned unspent project budget"
+        ).order_by('-timestamp')[:10]
+
+        # Attach related project (parsed from description "(ID X)") so rows can link to project profile
+        from shared.projects.models import Project
+        import re
+
+        enriched = []
+        for entry in returned_qs:
+            project = None
+            project_id = None
+            desc = entry.description or ""
+            m = re.search(r"\(ID\s+(\d+)\)", desc)
+            if m:
+                try:
+                    project_id = int(m.group(1))
+                    project = Project.objects.get(id=project_id)
+                except (ValueError, Project.DoesNotExist):
+                    project = None
+            enriched.append(
+                {
+                    "entry": entry,
+                    "project": project,
+                    "project_id": project_id,
+                }
+            )
+        context["returned_balances"] = enriched
     elif user_role in ["PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
         context = _get_college_dashboard_data(request.user, current_year)
     elif user_role in ["FACULTY", "IMPLEMENTER"]:
@@ -869,8 +902,10 @@ def budget_view(request):
     else:
         context = {"is_setup": False, "error": "Invalid User Role"}
 
+    # Latest history entries for sidebar/timeline
     context["latest_history"] = BudgetHistory.objects.all().order_by('-timestamp')[:5]
 
+    # External projects snapshot (for sidebar/summary)
     external_projects_qs = Project.objects.filter(
         external_budget__gt=0,
         start_date__year=int(current_year)
@@ -879,9 +914,11 @@ def budget_view(request):
     if user_role in ["FACULTY", "IMPLEMENTER"]:
         external_projects_qs = external_projects_qs.filter(
             Q(project_leader=request.user) | Q(providers=request.user)
-        ).distinct() 
+        ).distinct()
 
     context["latest_external_projects"] = external_projects_qs.order_by('-external_budget')[:5]
+
+    # Common context flags used by templates/JS
     context["base_template"] = get_templates(request)
     context["title"] = f"Budget Dashboard ({current_year})"
     context["user_role"] = user_role
@@ -890,11 +927,12 @@ def budget_view(request):
     context["is_faculty_or_implementer"] = user_role in ["FACULTY", "IMPLEMENTER"] if user_role else False
     context["is_admin_json"] = json.dumps(user_role in ["VP", "DIRECTOR", "UESO"] if user_role else False)
     context["is_college_admin_json"] = json.dumps(user_role in ["PROGRAM_HEAD", "DEAN", "COORDINATOR"] if user_role else False)
-    
+
     # Ensure projects_with_spending is always defined
     if 'projects_with_spending' not in context:
         context['projects_with_spending'] = []
 
+    # Handle cases where annual pool / college budget is not yet set up
     if not context.get('is_setup', True):
         if context.get('user_role') in ["VP", "DIRECTOR", "UESO"]:
             messages.info(request, "Annual Budget Pool not initialized. Please set it up.")
@@ -907,9 +945,130 @@ def budget_view(request):
 
         return render(request, 'budget/no_budget_setup.html', context)
 
+    # Finally render role-specific dashboard
     if user_role in ["FACULTY", "IMPLEMENTER"]:
         return render(request, 'budget/faculty_budget.html', context)
-    return render(request, 'budget/budget.html', context)
+    elif user_role in ["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
+        return render(request, 'budget/budget.html', context)
+    else:
+        # Fallback for any unexpected role - show error page
+        return render(request, 'budget/no_budget_setup.html', {
+            "base_template": get_templates(request),
+            "title": "Access Denied",
+            "error": "Invalid user role for budget dashboard access."
+        })
+
+
+@role_required(["VP", "DIRECTOR", "UESO"], require_confirmed=True)
+def budget_reconciliation_detail(request, project_id: int):
+    """
+    Return a JSON payload describing how a returned project balance was computed,
+    for VP/UESO budget reconciliation modal.
+    """
+    project = get_object_or_404(Project, id=project_id)
+
+    # Identity
+    leader = getattr(project.project_leader, "get_full_name", None)
+    if callable(leader):
+        leader_name = project.project_leader.get_full_name() or project.project_leader.username
+    else:
+        leader_name = getattr(project.project_leader, "username", "") or "N/A"
+
+    # Financial math
+    internal = project.internal_budget or Decimal("0")
+    external = project.external_budget or Decimal("0")
+    total_budget = internal + external
+
+    # Use project.used_budget as primary source (this is the authoritative field)
+    # Fall back to aggregated expenses only if used_budget is not set
+    project_used_budget = project.used_budget or Decimal("0")
+    
+    # Also calculate from expenses for transparency/comparison
+    expenses_qs = ProjectExpense.objects.filter(project=project)
+    expenses_total = expenses_qs.aggregate(
+        total=Coalesce(Sum("amount"), Value(Decimal("0.0")), output_field=DecimalField())
+    )["total"] or Decimal("0")
+    
+    # Prefer used_budget if it's set and > 0, otherwise use expenses total
+    if project_used_budget > Decimal("0"):
+        total_spent = project_used_budget
+    else:
+        total_spent = expenses_total
+
+    unutilized = max(Decimal("0"), total_budget - total_spent)
+    utilization_rate = (total_spent / total_budget * 100) if total_budget > 0 else Decimal("0")
+
+    # Reversion logic / budget history entry (if any)
+    marker = f"(ID {project.id})"
+    history_entry = (
+        BudgetHistory.objects.filter(description__icontains="Returned unspent project budget")
+        .filter(description__icontains=marker)
+        .order_by("-timestamp")
+        .first()
+    )
+
+    if history_entry:
+        reversion = {
+            "reversion_type": "Automatic System Reversion",
+            "source_fund": "UESO Annual Budget Pool",
+            "destination": "UESO Realignment Pool",
+            "reason": "Project Completion - Remaining balance swept to UESO.",
+            "college": history_entry.college_budget.college.name
+            if history_entry.college_budget and history_entry.college_budget.college
+            else "N/A",
+            "triggered_by": getattr(history_entry.user, "get_full_name", lambda: None)() or "System",
+            "timestamp": history_entry.timestamp,
+            "returned_amount": history_entry.amount,
+        }
+    else:
+        reversion = {
+            "reversion_type": "Automatic System Reversion",
+            "source_fund": "UESO Annual Budget Pool",
+            "destination": "UESO Realignment Pool",
+            "reason": "Project Completion - Remaining balance swept to UESO.",
+            "college": "N/A",
+            "triggered_by": "System",
+            "timestamp": None,
+            "returned_amount": unutilized,
+        }
+
+    # Simple expense summary (top categories by title)
+    expenses = list(
+        expenses_qs.order_by("-amount")  # type: ignore[attr-defined]
+    )  # safe because amount is defined on ProjectExpense
+
+    top_expenses = []
+    for exp in expenses[:5]:
+        top_expenses.append(
+            {
+                "title": exp.title,
+                "amount": exp.amount,
+                "reason": exp.reason,
+                "date_incurred": exp.date_incurred,
+            }
+        )
+
+    payload = {
+        "project": {
+            "id": project.id,
+            "title": project.title,
+            "status": project.get_status_display(),
+            "leader": leader_name,
+            "start_date": project.start_date,
+            "end_date": project.estimated_end_date,
+        },
+        "financials": {
+            "total_budget": total_budget,
+            "total_spent": total_spent,
+            "unutilized_balance": unutilized,
+            "utilization_rate": utilization_rate,
+        },
+        "reversion": reversion,
+        "expenses": top_expenses,
+    }
+
+    return JsonResponse(payload, safe=False)
+
 
 @role_required(["VP", "DIRECTOR", "UESO"], require_confirmed=True)
 def edit_budget_view(request):

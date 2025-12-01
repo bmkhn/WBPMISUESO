@@ -7,9 +7,6 @@
 
 <div class="card-header">
     <h3>Expenses</h3>
-    {% if request.user.role in ADMIN_ROLES or request.user == project.project_leader or request.user in project.providers.all %}
-      <button type="button" id="openExpense" class="admin-button edit">Add Expense</button>
-    {% endif %}
 </div>
 
 <div class="project-grid">
