@@ -219,6 +219,22 @@ class Project(models.Model):
 			return (self.event_progress, self.estimated_events)
 
 	@property
+	def remaining_budget(self):
+		"""
+		Total unspent project budget (internal + external - used).
+		Used when VP/UESO track funds that must be returned to UESO for realignment.
+		"""
+		internal = self.internal_budget or 0
+		external = self.external_budget or 0
+		used = self.used_budget or 0
+		total_budget = internal + external
+		remaining = total_budget - used
+		from decimal import Decimal
+		if remaining < 0:
+			return Decimal('0')
+		return remaining
+
+	@property
 	def progress_display(self):
 		done, total = self.progress
 		if total:
@@ -272,6 +288,72 @@ def log_project_action(sender, instance, created, **kwargs):
 			'CANCELLED': 'Project has been cancelled',
 		}
 		details = status_messages.get(instance.status, f"Project Status: {instance.get_status_display()}")
+
+	# If a project just moved to COMPLETED and still has remaining budget,
+	# record that the unspent amount is returned to UESO for realignment.
+	if not created and hasattr(instance, '_old_status') and instance._old_status != instance.status:
+		if instance.status == 'COMPLETED':
+			remaining = instance.remaining_budget
+			if remaining and remaining > 0:
+				try:
+					from shared.budget.models import BudgetPool, CollegeBudget, BudgetHistory
+					from decimal import Decimal
+
+					# Determine fiscal year from project start_date
+					fiscal_year = str(instance.start_date.year) if instance.start_date else None
+
+					college_budget = None
+					if getattr(instance.project_leader, 'college', None) and fiscal_year:
+						college_budget = CollegeBudget.objects.filter(
+							college=instance.project_leader.college,
+							fiscal_year=fiscal_year,
+							status='ACTIVE',
+						).first()
+
+					# Adjust college allocation: remove remaining funds from the college "cut"
+					if college_budget:
+						original_total = college_budget.total_assigned or Decimal('0')
+						if original_total >= remaining:
+							college_budget.total_assigned = original_total - remaining
+						else:
+							college_budget.total_assigned = Decimal('0')
+						college_budget.save(update_fields=['total_assigned', 'updated_at'])
+
+						# Log the return in budget history, linked to the college budget
+						BudgetHistory.objects.create(
+							college_budget=college_budget,
+							action='ADJUSTED',
+							amount=remaining,
+							description=(
+								f"Returned unspent project budget to UESO for realignment. "
+								f"Project: {instance.title} (ID {instance.id})."
+							),
+							user=user,
+						)
+					else:
+						# Even without a college budget record, track the return in history
+						BudgetHistory.objects.create(
+							college_budget=None,
+							action='ADJUSTED',
+							amount=remaining,
+							description=(
+								f"Returned unspent project budget to UESO for realignment (no CollegeBudget record). "
+								f"Project: {instance.title} (ID {instance.id})."
+							),
+							user=user,
+						)
+
+					# Optionally, increase the central annual pool so UESO can realign funds
+					if fiscal_year:
+						pool, _ = BudgetPool.objects.get_or_create(
+							fiscal_year=fiscal_year,
+							defaults={'total_available': Decimal('0')},
+						)
+						pool.total_available = (pool.total_available or Decimal('0')) + remaining
+						pool.save(update_fields=['total_available', 'updated_at'])
+				except Exception:
+					# Budget tracking issues must not break project save / logging
+					pass
 
 	# Only log creation if created
 	if created:

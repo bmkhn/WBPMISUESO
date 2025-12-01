@@ -14,9 +14,16 @@ def role_required(allowed_roles, require_confirmed=False):
                 # If it's a non-user, just pass through
                 if hasattr(request.user, 'is_confirmed') and not request.user.is_confirmed:
                     return redirect('not_confirmed')
-            if request.user.role not in allowed_roles:
+            # Safely check role - if user doesn't have role attribute or role is None, deny access
+            user_role = getattr(request.user, 'role', None)
+            if user_role not in allowed_roles:
                 return redirect('no_permission')
-            return view_func(request, *args, **kwargs)
+            # Ensure we always return the view's response
+            response = view_func(request, *args, **kwargs)
+            if response is None:
+                from django.http import HttpResponse
+                return HttpResponse("View did not return a response", status=500)
+            return response
         return wrapper
     return decorator
 
