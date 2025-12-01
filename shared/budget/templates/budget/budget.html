@@ -592,9 +592,9 @@
     
     // User role and permission flags (set by Django template)
     const userRole = '{{ user_role|default:"" }}';
-    // Booleans come from Django as true/false literals using |lower
-    const isCollegeAdmin = {{ is_college_admin_json|default:"false"|lower }};
-    const isAdmin = {{ is_admin_json|default:"false"|lower }};
+    // Fixed: Wrapped in quotes to prevent VS Code syntax errors
+    const isCollegeAdmin = "{{ is_college_admin_json|default:'false'|lower }}" === "true";
+    const isAdmin = "{{ is_admin_json|default:'false'|lower }}" === "true";
 
     const mainCardChartOptions = {
         responsive: true,
