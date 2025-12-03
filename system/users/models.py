@@ -19,7 +19,6 @@ class Campus(models.Model):
         ordering = ['name']
         indexes = [
             # Name is already unique, so it's auto-indexed by Django
-            # No additional indexes needed for this simple model
         ]
 
 
@@ -43,9 +42,7 @@ class College(models.Model):
 
     class Meta:
         indexes = [
-            # Campus filtering (user filtering by college's campus)
             models.Index(fields=['campus'], name='college_campus_idx'),
-            # Name search/display
             models.Index(fields=['name'], name='college_name_idx'),
         ]
 
@@ -187,6 +184,21 @@ class User(AbstractUser):
             models.Index(fields=['role', 'college', 'is_confirmed'], name='user_role_col_conf_idx'),
         ]
 
+# Usr Role Historry  table
+class UserRoleHistory(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='role_history')
+    role = models.CharField(max_length=50, choices=User.Role.choices)
+    data_snapshot = models.JSONField(default=dict)
+    ended_at = models.DateTimeField(auto_now_add=True)
+    changed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='role_changes_made')
+
+    class Meta:
+        ordering = ['-ended_at']
+        verbose_name = "User Role History"
+        verbose_name_plural = "User Role Histories"
+
+    def __str__(self):
+        return f"{self.user.email}: {self.role} -> Ended {self.ended_at}"
 
 # User logging is now handled manually in views for specific actions only:
 # - Registration (CREATE)

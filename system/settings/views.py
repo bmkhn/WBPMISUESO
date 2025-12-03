@@ -17,6 +17,12 @@ from rest_framework_api_key.models import APIKey
 from shared.projects.models import ProjectType 
 from shared.projects.forms import ProjectTypeForm
 from .models import SystemSetting, APIConnection
+from django.http import HttpResponse
+from django.core.serializers.json import DjangoJSONEncoder
+import json
+from system.users.models import UserRoleHistory
+from system.users.services import serialize_user_data
+
 from .forms import (
     CollegeForm, 
     SDGForm, 
@@ -51,17 +57,6 @@ API_ACCESS_ROLES = [
     "CLIENT",
 ]
 
-def _log_budget_pool_history(user, pool_instance, new_total, is_creation):
-    action_type = 'ALLOCATED' if is_creation else 'ADJUSTED'
-    description_str = f'Annual Budget Pool initialized/set for {pool_instance.fiscal_year}: ₱{new_total:,.2f}'
-    
-    BudgetHistory.objects.create(
-        action=action_type,
-        amount=new_total, 
-        description=description_str,
-        user=user
-    )
-
 @role_required(allowed_roles=INTERNAL_ACCESS_ROLES, require_confirmed=True)
 def settings_view(request):
     
@@ -77,7 +72,6 @@ def settings_view(request):
         
     current_fiscal_year = str(datetime.now().year)
     
-    # --- Budget Logic ---
     budget_pool_instance, created = BudgetPool.objects.get_or_create(
         fiscal_year=current_fiscal_year,
         defaults={'total_available': Decimal('0.00')}
@@ -91,7 +85,6 @@ def settings_view(request):
     initial_unallocated_remaining = budget_pool_instance.total_available - total_assigned_budget
     is_save_disabled = initial_unallocated_remaining < 0
 
-    # --- General Settings Logic ---
     defaults = {
         'site_name': ('WBPMIS UESO', 'The public name of the website.'),
         'maintenance_mode': ('False', 'Set to "True" to show a maintenance page to non-admins.'),
@@ -101,7 +94,6 @@ def settings_view(request):
     
     settings_objects = SystemSetting.objects.all()
 
-    # --- POST Handling ---
     if request.method == 'POST':
         if 'save_general_settings' in request.POST:
             forms = [SystemSettingForm(request.POST, instance=s, prefix=s.key) for s in settings_objects]
@@ -151,7 +143,6 @@ def settings_view(request):
     sdgs = SustainableDevelopmentGoal.objects.all().order_by('goal_number')
     project_types = ProjectType.objects.all().order_by('name')
     
-    # --- API Connection Logic ---
     all_connections = []
     if is_admin:
         all_connections = APIConnection.objects.all().order_by('-created_at')
@@ -161,6 +152,7 @@ def settings_view(request):
     paginator = Paginator(all_connections, 6) 
     page_number = request.GET.get('page')
     api_connections_page = paginator.get_page(page_number)
+    user_history = UserRoleHistory.objects.filter(user=request.user).order_by('-ended_at')
 
     context = {
         'base_template': base_template,
@@ -176,9 +168,57 @@ def settings_view(request):
         'initial_unallocated_remaining': initial_unallocated_remaining,
         'is_save_disabled': is_save_disabled,
         'project_types': project_types,
+        'user_history': user_history,
     }
     
     return render(request, 'settings/settings.html', context)
+
+@login_required
+def export_user_data(request):
+    version_id = request.GET.get('version')
+    user = request.user
+    
+    export_payload = {}
+    filename = ""
+
+    if version_id and version_id != 'current':
+        history_entry = get_object_or_404(UserRoleHistory, id=version_id, user=user)
+        
+        export_payload = history_entry.data_snapshot
+        
+        export_payload['_export_info'] = {
+            'type': 'HISTORICAL_SNAPSHOT',
+            'role_at_time': history_entry.role,
+            'snapshot_date': str(history_entry.ended_at),
+            'downloaded_at': str(datetime.now())
+        }
+        
+        date_str = history_entry.ended_at.strftime('%Y%m%d')
+        filename = f"UESO_Data_{user.last_name}_{history_entry.role}_{date_str}.json"
+        
+    else:
+        export_payload = serialize_user_data(user)
+        
+        date_str = datetime.now().strftime('%Y%m%d')
+        filename = f"UESO_Data_{user.last_name}_Current_{date_str}.json"
+
+    response = HttpResponse(
+        json.dumps(export_payload, cls=DjangoJSONEncoder, indent=4),
+        content_type='application/json'
+    )
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
+
+def _log_budget_pool_history(user, pool_instance, new_total, is_creation):
+    action_type = 'ALLOCATED' if is_creation else 'ADJUSTED'
+    description_str = f'Annual Budget Pool initialized/set for {pool_instance.fiscal_year}: ₱{new_total:,.2f}'
+    
+    BudgetHistory.objects.create(
+        action=action_type,
+        amount=new_total, 
+        description=description_str,
+        user=user
+    )
 
 @role_required(allowed_roles=ADMIN_ROLES, require_confirmed=True)
 def manage_colleges(request):
