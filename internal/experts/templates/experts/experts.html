@@ -454,34 +454,49 @@
         }
     });
 
-    // View toggle functionality for experts
-    const gridViewBtn = document.getElementById('gridViewBtn');
-    const listViewBtn = document.getElementById('listViewBtn');
-    const expertGrid = document.getElementById('expertGrid');
-    const expertList = document.getElementById('expertList');
-    const gridPagination = document.getElementById('gridPagination');
-    const listPagination = document.getElementById('listPagination');
+	// View toggle functionality for experts (refactored)
+	const gridViewBtn = document.getElementById('gridViewBtn');
+	const listViewBtn = document.getElementById('listViewBtn');
+	const expertGrid = document.getElementById('expertGrid');
+	const expertList = document.getElementById('expertList');
+	const gridPagination = document.getElementById('gridPagination');
+	const listPagination = document.getElementById('listPagination');
+	const gridIconUse = document.getElementById('gridIconUse');
+	const listIconUse = document.getElementById('listIconUse');
 
-    // Function to update URL with view parameter
-    function updateViewParam(viewType) {
-        const url = new URL(window.location);
-        url.searchParams.set('view', viewType);
-        window.history.replaceState({}, '', url);
-    }
-    
-    // Update icons based on current view
-    const gridIconUse = document.getElementById('gridIconUse');
-    const listIconUse = document.getElementById('listIconUse');
-    
-    function updateIcons(viewType) {
-        if (viewType === 'grid') {
-            gridIconUse.setAttribute('href', '#icon-grid-active');
-            listIconUse.setAttribute('href', '#icon-list');
-        } else {
-            gridIconUse.setAttribute('href', '#icon-grid');
-            listIconUse.setAttribute('href', '#icon-list-active');
-        }
-    }
+	function setExpertView(viewType) {
+		// Hide both views and paginations first
+		// Always remove 'visible' from both containers first
+		expertGrid.classList.remove('visible');
+		expertList.classList.remove('visible');
+		expertGrid.classList.add('hidden');
+		expertList.classList.add('hidden');
+		expertGrid.style.display = 'none';
+		expertList.style.display = 'none';
+		if (gridPagination) gridPagination.classList.add('hidden');
+		if (listPagination) listPagination.classList.add('hidden');
+
+		if (viewType === 'list') {
+			listViewBtn.classList.add('active');
+			gridViewBtn.classList.remove('active');
+			expertList.classList.remove('hidden');
+			expertList.style.display = '';
+			if (listPagination) listPagination.classList.remove('hidden');
+			if (gridPagination) gridPagination.classList.add('hidden');
+			gridIconUse.setAttribute('href', '#icon-grid');
+			listIconUse.setAttribute('href', '#icon-list-active');
+		} else {
+			gridViewBtn.classList.add('active');
+			listViewBtn.classList.remove('active');
+			expertGrid.classList.remove('hidden');
+			expertGrid.classList.add('visible');
+			expertGrid.style.display = 'block';
+			if (gridPagination) gridPagination.classList.remove('hidden');
+			if (listPagination) listPagination.classList.add('hidden');
+			gridIconUse.setAttribute('href', '#icon-grid-active');
+			listIconUse.setAttribute('href', '#icon-list');
+		}
+	}
 
 	function reloadWithView(viewType) {
 		const url = new URL(window.location);
@@ -497,52 +512,9 @@
 		reloadWithView('list');
 	});
 
-    // Set view on page load based on URL parameter
-    document.addEventListener('DOMContentLoaded', function() {
+	document.addEventListener('DOMContentLoaded', function() {
 		const currentView = '{{ view|default:"grid" }}';
-		// Always hide both views and paginations first
-		expertGrid.classList.add('hidden');
-		expertList.classList.add('hidden');
-		expertGrid.style.display = 'none';
-		expertList.style.display = 'none';
-
-		if (currentView === 'list') {
-			listViewBtn.classList.add('active');
-			gridViewBtn.classList.remove('active');
-
-			expertList.classList.remove('hidden');
-			expertList.style.display = '';
-
-			expertGrid.classList.add('hidden');
-			expertGrid.classList.remove('visible');
-			expertGrid.style.display = 'none';
-			
-			if (listPagination) {
-				listPagination.classList.remove('hidden');
-			}
-			if (gridPagination) {
-				gridPagination.classList.add('hidden');
-			}
-		} else {
-			gridViewBtn.classList.add('active');
-			listViewBtn.classList.remove('active');
-			
-			expertGrid.classList.remove('hidden');
-			expertGrid.style.display = 'block';
-			
-			expertList.classList.add('hidden');
-			expertList.classList.remove('visible');
-			expertList.style.display = 'none';
-			
-			if (gridPagination) {
-				gridPagination.classList.remove('hidden');
-			}
-			if (listPagination) {
-				listPagination.classList.add('hidden');
-			}
-		}
-		// Update icons
-		updateIcons(currentView);
+		setExpertView(currentView);
 	});
 
 	// Modal functionality
