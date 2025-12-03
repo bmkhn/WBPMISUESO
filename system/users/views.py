@@ -23,6 +23,9 @@ from django.conf import settings
 from shared.request.models import ClientRequest
 from shared.projects.models import Project
 
+from .models import User, UserRoleHistory
+from .services import serialize_user_data
+
 @never_cache
 @csrf_exempt
 def health_check(request):
@@ -685,7 +688,6 @@ def edit_user(request, id):
     if request.method == 'POST':
         data = request.POST
         
-        # Check if email or password is being changed
         new_email = data.get('email')
         old_email = user.email
         password = data.get('password', '').strip()
@@ -693,7 +695,6 @@ def edit_user(request, id):
         email_is_changing = (new_email != old_email)
         password_is_changing = bool(password)
         
-        # If email or password is changing, verify code
         if email_is_changing or password_is_changing:
             code_verified = request.session.get('code_verified', False)
             if not code_verified:
@@ -731,22 +732,26 @@ def edit_user(request, id):
                     user.email = new_email
                     user.username = new_email
                     
-                    # Send email notification to both old and new email addresses
                     try:
                         from system.utils.email_utils import async_send_email_changed
-                        # Send to old email
                         async_send_email_changed(old_email, user.get_full_name(), old_email, new_email)
-                        # Send to new email
                         async_send_email_changed(new_email, user.get_full_name(), old_email, new_email)
-                        print(f"✓ Email change notifications queued for {old_email} and {new_email}")
                     except Exception as e:
-                        print(f"✗ Failed to queue email change notifications: {str(e)}")
+                        pass
 
                 if can_edit_role_and_verify:
                     new_role = data.get('role')
-                    if user.role != new_role:
+                    
+                    if new_role and old_role != new_role:
+                        snapshot_data = serialize_user_data(user)
+                        UserRoleHistory.objects.create(
+                            user=user,
+                            role=old_role,
+                            data_snapshot=snapshot_data,
+                            changed_by=request.user
+                        )
                         changes.append(f'role from {user.get_role_display()} to {dict(User.Role.choices)[new_role]}')
-                    user.role = new_role
+                        user.role = new_role
 
                 if user.role == "CLIENT":
                     user.college = None
@@ -805,16 +810,13 @@ def edit_user(request, id):
 
                 user.save()
                 
-                # Send password changed confirmation email (if password was changed)
                 if password_changed:
                     try:
                         from system.utils.email_utils import async_send_password_changed
                         async_send_password_changed(user.email, user.get_full_name(), password)
-                        print(f"✓ Password changed notification queued for {user.email}")
                     except Exception as e:
-                        print(f"✗ Failed to queue password changed notification: {str(e)}")
+                        pass
                 
-                # Log the user edit
                 details = f"Edited by {request.user.get_role_display()}"
                 if changes:
                     details += f" - Changed: {', '.join(changes)}"
@@ -827,7 +829,6 @@ def edit_user(request, id):
                     is_notification=True
                 )
                 
-                # Clear verification session after successful save
                 if 'code_verified' in request.session:
                     del request.session['code_verified']
                 if 'password_reset_code' in request.session:
