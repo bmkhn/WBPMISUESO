@@ -44,7 +44,7 @@ def serialize_user_data(user):
             'id': p.id,
             'title': p.title,
             'status': p.status,
-            'type': p.project_type,
+            'type': str(p.project_type),
             'agenda': p.agenda.name if p.agenda else 'N/A',
             'sdgs': [sdg.name for sdg in p.sdgs.all()],
             'beneficiary': p.primary_beneficiary,
@@ -54,8 +54,8 @@ def serialize_user_data(user):
                 'end': str(p.estimated_end_date)
             },
             'financials': {
-                'internal_budget': float(p.internal_budget),
-                'external_budget': float(p.external_budget),
+                'internal_budget': float(p.internal_budget or 0),
+                'external_budget': float(p.external_budget or 0),
                 'sponsor': p.sponsor_name
             }
         } for p in led_projects]
@@ -68,6 +68,17 @@ def serialize_user_data(user):
             'status': p.status,
             'leader': p.project_leader.get_full_name() if p.project_leader else 'N/A'
         } for p in member_projects]
+
+        ProjectExpense = apps.get_model('projects', 'ProjectExpense')
+        expenses = ProjectExpense.objects.filter(created_by=user).select_related('project')
+        
+        data['expenses_logged'] = [{
+            'id': e.id,
+            'project': e.project.title,
+            'amount': float(e.amount),
+            'item': e.title,        
+            'date': str(e.date_incurred),
+        } for e in expenses]
 
     if apps.is_installed('shared.request'):
         ClientRequest = apps.get_model('request', 'ClientRequest')
@@ -110,18 +121,6 @@ def serialize_user_data(user):
         } for a in announcements]
 
     if apps.is_installed('shared.budget'):
-        Expense = apps.get_model('budget', 'Expense')
-        expenses = Expense.objects.filter(created_by=user).select_related('project')
-        
-        data['expenses_logged'] = [{
-            'id': e.id,
-            'project': e.project.title,
-            'amount': float(e.amount),
-            'item': e.item_name,
-            'date': str(e.date_incurred),
-            'status': e.status
-        } for e in expenses]
-
         if user.role in ['DIRECTOR', 'VP']:
             CollegeBudget = apps.get_model('budget', 'CollegeBudget')
             budgets_assigned = CollegeBudget.objects.filter(assigned_by=user).select_related('college')
@@ -133,15 +132,16 @@ def serialize_user_data(user):
             } for b in budgets_assigned]
 
     if apps.is_installed('shared.event_calendar'):
-        Event = apps.get_model('event_calendar', 'Event')
+        MeetingEvent = apps.get_model('event_calendar', 'MeetingEvent')
         
-        events = Event.objects.filter(created_by=user)
+        events = MeetingEvent.objects.filter(created_by=user)
         data['calendar_events_created'] = [{
             'id': e.id,
             'title': e.title,
-            'start': str(e.start_datetime),
-            'end': str(e.end_datetime),
-            'type': e.event_type
+            'start': str(e.datetime),   
+            'end': str(e.datetime),    
+            'type': 'Meeting',          
+            'status': e.status
         } for e in events]
 
     return data
