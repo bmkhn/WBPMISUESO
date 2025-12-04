@@ -215,6 +215,27 @@ class Project(models.Model):
 		return dict(self.STATUS_CHOICES).get(self.status, self.status)
 
 	@property
+	def can_be_deleted(self):
+		"""
+		Only allow deletion for projects that are:
+		- Not implemented (no final submission), AND
+		- Either:
+		  - Past their estimated end date, OR
+		  - Marked as inactive (CANCELLED / ON_HOLD)
+		"""
+		from django.utils import timezone
+
+		# Implemented projects should never be deleted
+		if self.has_final_submission:
+			return False
+
+		today = timezone.now().date()
+		deadline_passed = bool(self.estimated_end_date and self.estimated_end_date < today)
+		is_inactive = self.status in ["CANCELLED", "ON_HOLD"]
+
+		return deadline_passed or is_inactive
+
+	@property
 	def progress(self):
 		if self.estimated_events:
 			return (self.event_progress, self.estimated_events)

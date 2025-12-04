@@ -173,7 +173,7 @@
                                 <a href="{% url 'project_profile' project.id %}" class="settings-dropdown-item" style="color:#00538E;">
                                     <svg width="18" height="19" style="vertical-align:middle;"><use href="#info-icon" /></svg> View Details
                                 </a>
-                                {% if request.user.role in ADMIN_ROLES %}
+                                {% if request.user.role in ADMIN_ROLES and project.can_be_deleted %}
                                 <a href="#" class="settings-dropdown-item delete-project-link" data-delete-url="{% url 'delete_project' project.id %}" data-project-title="{{ project.title }}" style="color:#E53E3E;">
                                     <svg width="18" height="22" style="vertical-align:middle;"><use href="#delete-icon" /></svg> Delete
                                 </a>
