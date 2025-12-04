@@ -1852,7 +1852,7 @@ def check_college_budget(request):
 
 @role_required(allowed_roles=["UESO", "VP", "DIRECTOR"], require_confirmed=True)
 def delete_project(request, pk):
-    """Delete a project"""
+    """Delete a project with safety checks to avoid deleting implemented/active projects."""
     from django.contrib import messages
     from system.logs.models import LogEntry
     from system.notifications.models import Notification
@@ -1861,6 +1861,16 @@ def delete_project(request, pk):
     if request.method == "POST":
         try:
             project = Project.objects.select_related('project_leader__college').prefetch_related('providers').get(pk=pk)
+
+            # Safety check: limit what can be deleted
+            if not project.can_be_deleted:
+                from django.urls import reverse
+                messages.error(
+                    request,
+                    "Projects can only be deleted if they are inactive or past their deadline and have not been implemented (no final submission)."
+                )
+                return redirect(reverse('project_profile', args=[pk]))
+
             project_title = project.title
             project_leader = project.project_leader
             project_college = project_leader.college if project_leader else None
@@ -1926,7 +1936,7 @@ def delete_project(request, pk):
             # Delete the project (this will cascade delete related submissions, events, etc.)
             project.delete()
             
-            messages.success(request, f'Project "{project_title}" has been deleted successfully.')
+            messages.success(request, f'Project \"{project_title}\" has been deleted successfully.')
             
             # Redirect with toast parameters
             from urllib.parse import quote
