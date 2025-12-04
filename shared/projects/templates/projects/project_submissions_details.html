@@ -109,13 +109,13 @@
             <form method="post" action="{% url 'admin_submission_action' project.id submission.id %}" class="action-form">
                 {% csrf_token %}
                 <button type="submit" name="action" value="forward" class="action-btn endorse-btn">Forward to UESO</button>
-                <button type="button" class="action-btn reject-btn" id="reject-btn">Request Revision</button>
+                    <button type="button" class="action-btn reject-btn" id="request-revision-btn">Request Revision</button>
             </form>
             {% elif project_leader_has_no_college and request.user.role in ADMIN_ROLES and user_not_in_project %}
             <form method="post" action="{% url 'admin_submission_action' project.id submission.id %}" class="action-form">
                 {% csrf_token %}
                 <button type="submit" name="action" value="accept" class="action-btn approve-btn">Approve</button>
-                <button type="button" class="action-btn reject-btn" id="reject-btn">Request Revision</button>
+                    <button type="button" class="action-btn reject-btn" id="request-revision-btn">Request Revision</button>
             </form>
             {% endif %}
 
@@ -307,7 +307,7 @@
                     <input type="datetime-local" name="new_deadline" class="user-details-value" id="new-deadline-revision" disabled style="margin-top:0.5rem;width:100%;" value="{{ submission.deadline|date:'Y-m-d\TH:i' }}">
                 </div>
 
-                <div class="modal-actions">
+                <div class="modal-actions" style="margin-top:1.5rem;">
                     <button type="button" class="action-btn cancel-btn" id="cancel-request-revision">Cancel</button>
                     <button type="submit" class="action-btn reject-btn">Request Revision</button>
                 </div>

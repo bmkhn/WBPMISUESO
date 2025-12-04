@@ -154,6 +154,24 @@ def dashboard_view(request):
     storage = get_messages(request)
     show_notifications = any(str(msg) == "SHOW_REMINDERS" for msg in storage)
     
+    # Ensure all variables are present for the template
+    pending_requests = pending_requests if 'pending_requests' in locals() else []
+    inprogress_projects = inprogress_projects if 'inprogress_projects' in locals() else []
+    expert_users = expert_users if 'expert_users' in locals() else []
+    events_in_calendar = events_in_calendar if 'events_in_calendar' in locals() else 0
+    projects = projects if 'projects' in locals() else []
+    agenda_counts = agenda_counts if 'agenda_counts' in locals() else {}
+    events_json = events_json if 'events_json' in locals() else '{}'
+    dashboard_goals = dashboard_goals if 'dashboard_goals' in locals() else []
+    show_events_card = show_events_card if 'show_events_card' in locals() else False
+    notifications = notifications if 'notifications' in locals() else {}
+    for key in ['forwarded_submissions', 'received_requests', 'unconfirmed_users', 'pending_exports', 'submitted_submissions']:
+        if key not in notifications:
+            notifications[key] = 0
+    show_notifications = show_notifications if 'show_notifications' in locals() else False
+    user_role = user_role if 'user_role' in locals() else None
+    show_admin_content = show_admin_content if 'show_admin_content' in locals() else False
+
     context = {
         'user_role': user_role,
         'vpde_content': show_admin_content,

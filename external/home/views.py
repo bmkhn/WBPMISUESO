@@ -101,10 +101,30 @@ def home_view(request):
 
     latest_announcements = Announcement.objects.filter(published_at__isnull=False, archived=False).order_by('-published_at')[:2]
     
+
+    # Always provide all variables used in the template, even if empty/default
     if request.user.is_authenticated:
         context = {'is_user': True, 'user_role': getattr(request.user, 'role', None)}
     else:
-        context = {'is_user': False}
+        context = {'is_user': False, 'user_role': None}
+
+    # Ensure all variables are present for the template
+    latest_announcements = latest_announcements if 'latest_announcements' in locals() else []
+    public_projects = public_projects if 'public_projects' in locals() else []
+    public__project_image = public__project_image if 'public__project_image' in locals() else []
+    faculty_projects = faculty_projects if 'faculty_projects' in locals() else []
+    faculty_projects_image = faculty_projects_image if 'faculty_projects_image' in locals() else []
+    pending_submissions_count = pending_submissions_count if 'pending_submissions_count' in locals() else 0
+    ongoing_projects_count = ongoing_projects_count if 'ongoing_projects_count' in locals() else 0
+    upcoming_meetings_count = upcoming_meetings_count if 'upcoming_meetings_count' in locals() else 0
+    my_alerts = my_alerts if 'my_alerts' in locals() else []
+    events_json = events_json if 'events_json' in locals() else '[]'
+    notifications = notifications if 'notifications' in locals() else {}
+    # Ensure all notification keys are present
+    for key in ['pending_submissions', 'revision_submissions', 'rejected_submissions', 'overdue_submissions']:
+        if key not in notifications:
+            notifications[key] = 0
+    show_notifications = show_notifications if 'show_notifications' in locals() else False
 
     from django.contrib.messages import get_messages
     storage = get_messages(request)
