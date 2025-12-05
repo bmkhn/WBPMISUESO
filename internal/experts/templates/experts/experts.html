@@ -702,13 +702,10 @@
 				});
 			}
 			
-			// Member item click handler (redirect to expert profile)
+			// Member item click handler (for details)
 			memberItem.addEventListener('click', (e) => {
 				if (!e.target.classList.contains('member-checkbox')) {
-					// Redirect to expert profile page
-					const baseUrl = '{% url "expert_profile" 0 %}';
-					const profileUrl = baseUrl.replace('/0/', '/' + member.id + '/');
-					window.location.href = profileUrl;
+					showMemberDetails(member, memberItem);
 				}
 			});
 			

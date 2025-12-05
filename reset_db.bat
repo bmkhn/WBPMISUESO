@@ -1,7 +1,7 @@
 @echo off
 
 REM Delete all migrations
-@REM py delete_all_migrations.py
+py delete_all_migrations.py
 
 REM Delete media files
 py manage.py clean_media
@@ -19,8 +19,8 @@ py manage.py migrate
 REM Create test assets
 py manage.py create_test_assets
 
-REM Create accurate assets
-@REM py manage.py accurate_assets
+REM Create local assets
+py manage.py local_assets
 
 echo Database reset and test assets created.
 

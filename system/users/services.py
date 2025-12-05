@@ -138,10 +138,10 @@ def serialize_user_data(user):
         data['calendar_events_created'] = [{
             'id': e.id,
             'title': e.title,
+            'description': e.description,
+            'location': e.location,
             'start': str(e.datetime),   
-            'end': str(e.datetime),    
-            'type': 'Meeting',          
-            'status': e.status
+            'end': str(e.end_datetime),              
         } for e in events]
 
     return data

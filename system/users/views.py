@@ -739,10 +739,11 @@ def edit_user(request, id):
                     except Exception as e:
                         pass
 
+
                 if can_edit_role_and_verify:
                     new_role = data.get('role')
-                    
                     if new_role and old_role != new_role:
+                        # Save role history BEFORE changing role
                         snapshot_data = serialize_user_data(user)
                         UserRoleHistory.objects.create(
                             user=user,
@@ -753,14 +754,17 @@ def edit_user(request, id):
                         changes.append(f'role from {user.get_role_display()} to {dict(User.Role.choices)[new_role]}')
                         user.role = new_role
 
-                if user.role == "CLIENT":
+                # Ensure role-specific fields are updated AFTER role change
+                current_role = user.role
+
+                if current_role == "CLIENT":
                     user.college = None
                     user.degree = None
                     user.expertise = None
                     user.company = data.get('company') or None
                     user.industry = data.get('industry') or None
 
-                elif user.role == "FACULTY":
+                elif current_role == "FACULTY":
                     college_id = data.get('college')
                     user.college = College.objects.get(id=college_id) if college_id else None
                     user.degree = data.get('degree') or None
@@ -768,7 +772,7 @@ def edit_user(request, id):
                     user.company = None
                     user.industry = None
 
-                elif user.role in ["PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
+                elif current_role in ["PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
                     if can_edit_role_and_verify:
                         college_id = data.get('college')
                         user.college = College.objects.get(id=college_id) if college_id else None
@@ -777,13 +781,13 @@ def edit_user(request, id):
                     user.company = None
                     user.industry = None
 
-                elif user.role == "IMPLEMENTER":
+                elif current_role == "IMPLEMENTER":
                     user.college = None
                     user.degree = data.get('degree') or None
                     user.expertise = data.get('expertise') or None
                     user.company = None
                     user.industry = None
-                
+
                 else:
                     if can_edit_role_and_verify:
                         user.college = None
@@ -791,6 +795,7 @@ def edit_user(request, id):
                     user.expertise = None
                     user.company = None
                     user.industry = None
+
 
                 password = data.get('password', '').strip()
                 password_changed = False

@@ -1,12 +1,15 @@
 from decimal import Decimal
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
-import faker 
 from faker import Faker
-from system.users.models import College, Campus
-from shared.projects.models import SustainableDevelopmentGoal, ProjectType
 from django.conf import settings
 import os
+
+from system.users.models import College, Campus
+from shared.projects.models import SustainableDevelopmentGoal, ProjectType
+from shared.downloadables.models import Downloadable
+
+
 
 
 COLLEGES = [
@@ -366,3 +369,30 @@ class Command(BaseCommand):
                     created_at=timezone.now(),
                 )
             self.stdout.write(self.style.SUCCESS("College Budget created.\n"))
+
+
+        # --- DOWNLOADABLES ---
+        # Add all files in static/downloadables/files as Downloadable objects
+        downloadables_dir = os.path.join(settings.BASE_DIR, 'static', 'downloadables', 'files')
+        if os.path.exists(downloadables_dir):
+            for fname in os.listdir(downloadables_dir):
+                if not os.path.isfile(os.path.join(downloadables_dir, fname)):
+                    continue
+                # Determine submission_type
+                if fname.startswith('Activity Form Placeholder'):
+                    submission_type = 'event'
+                elif fname.startswith('Final Form Placeholder'):
+                    submission_type = 'final'
+                else:
+                    submission_type = 'file'
+                # Create Downloadable if not exists
+                Downloadable.objects.get_or_create(
+                    file=fname,
+                    defaults={
+                        'file': f'downloadables/files/{fname}',
+                        'available_for_non_users': False,
+                        'submission_type': submission_type
+                    }
+                )
+            self.stdout.write(self.style.SUCCESS(f"Downloadables created for all files in static/downloadables/files.\n"))
+        
