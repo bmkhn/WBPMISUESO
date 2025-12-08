@@ -9,6 +9,7 @@ class ProjectExpenseSerializer(serializers.ModelSerializer):
         model = ProjectExpense
         fields = [
             'project', 
+            'event',
             'title', 
             'reason', 
             'amount', 

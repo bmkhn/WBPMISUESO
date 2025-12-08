@@ -15,7 +15,7 @@ class ProjectForm(forms.ModelForm):
 class ProjectEventForm(forms.ModelForm):
     class Meta:
         model = ProjectEvent
-        fields = ['title', 'description']
+        fields = ['title', 'description', 'allocated_budget']
 
 # NEW CRUD
 class ProjectTypeForm(forms.ModelForm):
