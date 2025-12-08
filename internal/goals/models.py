@@ -36,7 +36,8 @@ class Goal(models.Model):
 
     # Optional filters to define what this goal tracks
     agenda = models.ForeignKey(Agenda, on_delete=models.SET_NULL, null=True, blank=True, related_name='goals')
-    sdg = models.ForeignKey(SustainableDevelopmentGoal, on_delete=models.SET_NULL, null=True, blank=True, related_name='goals')
+    sdg = models.ForeignKey(SustainableDevelopmentGoal, on_delete=models.SET_NULL, null=True, blank=True, related_name='goals')  # Kept for backward compatibility
+    sdgs = models.ManyToManyField(SustainableDevelopmentGoal, blank=True, related_name='goal_set')
     project_status = models.CharField(max_length=20, null=True, blank=True)
     
     @property

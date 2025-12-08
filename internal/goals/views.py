@@ -1,5 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
+from django.db.models import Count
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_protect
 from django.utils.dateparse import parse_date
@@ -30,12 +31,18 @@ def _serialize_goal(goal: Goal) -> dict:
     except Exception:
         progress = 0
 
+    # Get SDG IDs - prefer new many-to-many field, fallback to old single field
+    sdg_ids = list(goal.sdgs.values_list('id', flat=True)) if goal.sdgs.exists() else []
+    if not sdg_ids and goal.sdg_id:
+        sdg_ids = [goal.sdg_id]
+    
     return {
         'id': goal.id,
         'title': goal.title,
         # Frontend expects these fields; not in model → return defaults
         'agenda': getattr(goal.agenda, 'id', None),
-        'sdg': getattr(goal.sdg, 'id', None),
+        'sdg': sdg_ids[0] if sdg_ids else None,  # Keep for backward compatibility
+        'sdgs': sdg_ids,  # New field with all SDG IDs
         'status': goal.status,
         'goal_number': goal.target_value or 0,
         'deadline': goal.target_date.isoformat() if goal.target_date else None,
@@ -47,7 +54,10 @@ def _count_matching_projects(goal: Goal) -> int:
     qs = Project.objects.all()
     if goal.agenda_id:
         qs = qs.filter(agenda_id=goal.agenda_id)
-    if goal.sdg_id:
+    # Handle multiple SDGs - if any SDGs are selected, filter by them
+    if goal.sdgs.exists():
+        qs = qs.filter(sdgs__in=goal.sdgs.all()).distinct()
+    elif goal.sdg_id:  # Fallback to old single SDG field for backward compatibility
         qs = qs.filter(sdgs=goal.sdg_id)
     if goal.project_status:
         qs = qs.filter(status=goal.project_status)
@@ -63,7 +73,12 @@ def api_goals(request):
     """
     if request.method == 'GET':
         goals = Goal.objects.all().order_by('-created_at')
-        return JsonResponse({'success': True, 'goals': [_serialize_goal(g) for g in goals]})
+        response = JsonResponse({'success': True, 'goals': [_serialize_goal(g) for g in goals]})
+        # Prevent caching to ensure fresh data
+        response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response['Pragma'] = 'no-cache'
+        response['Expires'] = '0'
+        return response
 
     # POST create
     try:
@@ -174,7 +189,10 @@ def api_goal_qualifiers(request, goal_id: int):
     qs = Project.objects.all()
     if goal.agenda_id:
         qs = qs.filter(agenda_id=goal.agenda_id)
-    if goal.sdg_id:
+    # Handle multiple SDGs - if any SDGs are selected, filter by them
+    if goal.sdgs.exists():
+        qs = qs.filter(sdgs__in=goal.sdgs.all()).distinct()
+    elif goal.sdg_id:  # Fallback to old single SDG field for backward compatibility
         qs = qs.filter(sdgs=goal.sdg_id)
     if goal.project_status:
         qs = qs.filter(status=goal.project_status)
@@ -220,8 +238,61 @@ def api_goal_filters(request):
     })
 
 
+@role_required(allowed_roles=["DIRECTOR", "VP", "UESO"])
+@require_http_methods(["GET"])
+def api_sdg_distribution(request):
+    """
+    Return distribution of projects by SDG as percentages.
+
+    A project can belong to multiple SDGs (many-to-many), so:
+    - Each project is counted once *per SDG* it is linked to
+    - Percent is based on distinct projects that have at least one SDG
+      so multiple-SDG projects still appear in every relevant SDG slice.
+    """
+    # All projects that are linked to at least one SDG
+    base_qs = Project.objects.filter(sdgs__isnull=False).distinct()
+    total_projects = base_qs.count()
+
+    if total_projects == 0:
+        return JsonResponse({
+            "success": True,
+            "labels": [],
+            "percents": [],
+            "counts": [],
+            "total_projects": 0,
+        })
+
+    # Count how many distinct projects are attached to each SDG
+    sdg_counts = (
+        SustainableDevelopmentGoal.objects
+        .filter(projects__in=base_qs)
+        .annotate(project_count=Count("projects", distinct=True))
+        .order_by("goal_number")
+    )
+
+    labels = []
+    percents = []
+    counts = []
+
+    for sdg in sdg_counts:
+        count = sdg.project_count or 0
+        percent = round((count * 100.0) / total_projects, 1) if total_projects > 0 else 0
+        labels.append(f"SDG {sdg.goal_number} – {sdg.name}")
+        percents.append(percent)
+        counts.append(count)
+
+    return JsonResponse({
+        "success": True,
+        "labels": labels,
+        "percents": percents,
+        "counts": counts,
+        "total_projects": total_projects,
+    })
+
+
 # ===== Server-rendered Add/Edit pages (separate HTML like Agenda) =====
 @role_required(allowed_roles=["DIRECTOR", "VP", "UESO"])
+@csrf_protect
 def add_goal_view(request):
     agendas = Agenda.objects.all().order_by('-created_at', '-id')
     sdgs = SustainableDevelopmentGoal.objects.all().order_by('goal_number')
@@ -233,7 +304,7 @@ def add_goal_view(request):
         goal_number = request.POST.get('goal_number') or '0'
         deadline = request.POST.get('deadline') or ''
         agenda_id = request.POST.get('agenda') or ''
-        sdg_id = request.POST.get('sdg') or ''
+        sdg_ids = request.POST.getlist('sdgs')  # Get multiple SDG IDs
         project_status = request.POST.get('project_status') or ''
 
         errors = {}
@@ -261,11 +332,23 @@ def add_goal_view(request):
             )
             if agenda_id.isdigit():
                 g.agenda_id = int(agenda_id)
-            if sdg_id.isdigit():
-                g.sdg_id = int(sdg_id)
             if project_status and project_status != 'all':
                 g.project_status = project_status
             g.save()
+            
+            # Set multiple SDGs
+            if sdg_ids:
+                valid_sdg_ids = [int(sid) for sid in sdg_ids if sid.isdigit()]
+                if valid_sdg_ids:
+                    try:
+                        g.sdgs.set(valid_sdg_ids)
+                    except Exception:
+                        # Fallback if migration hasn't been run yet
+                        if valid_sdg_ids:
+                            g.sdg_id = valid_sdg_ids[0]
+                            g.save()
+            
+            # Redirect with success parameter to trigger page reload
             return redirect('goal')
 
         return render(request, 'goals/add_goal.html', {
@@ -278,7 +361,7 @@ def add_goal_view(request):
                 'goal_number': goal_number,
                 'deadline': deadline,
                 'agenda': agenda_id,
-                'sdg': sdg_id,
+                'sdgs': sdg_ids,
                 'project_status': project_status,
             },
         })
@@ -291,6 +374,7 @@ def add_goal_view(request):
 
 
 @role_required(allowed_roles=["DIRECTOR", "VP", "UESO"])
+@csrf_protect
 def edit_goal_view(request, goal_id: int):
     goal = get_object_or_404(Goal, id=goal_id)
     agendas = Agenda.objects.all().order_by('-created_at', '-id')
@@ -303,7 +387,7 @@ def edit_goal_view(request, goal_id: int):
         goal_number = request.POST.get('goal_number') or '0'
         deadline = request.POST.get('deadline') or ''
         agenda_id = request.POST.get('agenda') or ''
-        sdg_id = request.POST.get('sdg') or ''
+        sdg_ids = request.POST.getlist('sdgs')  # Get multiple SDG IDs
         project_status = request.POST.get('project_status') or ''
 
         errors = {}
@@ -324,9 +408,26 @@ def edit_goal_view(request, goal_id: int):
             goal.target_value = goal_number_int
             goal.target_date = parse_date(deadline)
             goal.agenda_id = int(agenda_id) if agenda_id.isdigit() else None
-            goal.sdg_id = int(sdg_id) if sdg_id.isdigit() else None
             goal.project_status = None if not project_status or project_status == 'all' else project_status
             goal.save()
+            
+            # Set multiple SDGs
+            if sdg_ids:
+                valid_sdg_ids = [int(sid) for sid in sdg_ids if sid.isdigit()]
+                try:
+                    goal.sdgs.set(valid_sdg_ids)
+                except Exception:
+                    # Fallback if migration hasn't been run yet
+                    if valid_sdg_ids:
+                        goal.sdg_id = valid_sdg_ids[0]
+                        goal.save()
+            else:
+                try:
+                    goal.sdgs.clear()
+                except Exception:
+                    goal.sdg_id = None
+                    goal.save()
+            
             return redirect('goal')
 
         return render(request, 'goals/edit_goal.html', {
@@ -340,14 +441,22 @@ def edit_goal_view(request, goal_id: int):
                 'goal_number': goal_number,
                 'deadline': deadline,
                 'agenda': agenda_id,
-                'sdg': sdg_id,
+                'sdgs': sdg_ids,
                 'project_status': project_status,
             },
         })
 
+    # Get selected SDG IDs for the template
+    try:
+        selected_sdg_ids = list(goal.sdgs.values_list('id', flat=True))
+    except Exception:
+        # Fallback if migration hasn't been run yet
+        selected_sdg_ids = [goal.sdg_id] if goal.sdg_id else []
+    
     return render(request, 'goals/edit_goal.html', {
         'goal': goal,
         'agendas': agendas,
         'sdgs': sdgs,
         'statuses': statuses,
+        'selected_sdg_ids': selected_sdg_ids,
     })

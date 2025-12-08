@@ -26,6 +26,7 @@ body {
 
 .content {
     padding: 0;
+    overflow: visible;
 }
 
 main {
@@ -33,6 +34,7 @@ main {
     display: flex;
     flex-direction: column;
     gap: 20px;
+    overflow: visible;
 }
 
 .goals-header {
@@ -90,8 +92,8 @@ main {
 .goals-carousel {
     /* New width: (2 * 320px card) + 4px gap = 644px */
     width: 644px;
-    /* New height: (2 * 240px card) + 4px gap = 484px */
-    height: 484px;
+    /* New height: (2 * 250px card) + 4px gap = 504px */
+    height: 504px;
     overflow: hidden;
     position: relative;
     margin: -2rem auto 0 auto;
@@ -148,7 +150,7 @@ main {
     display: flex;
     flex-wrap: wrap;
     width: 644px;
-    height: 484px;
+    height: 504px;
     flex-shrink: 0;
     gap: 4px;
     align-content: flex-start;
@@ -161,7 +163,7 @@ main {
     pointer-events: auto;
     position: relative;
     width: 320px;
-    height: 240px;
+    height: 250px;
     padding: 0;
     border-radius: 24px;
     border: 1px solid rgba(0, 0, 0, 0.1);
@@ -191,16 +193,17 @@ main {
 
 /* New wrapper for content to allow inverse transform */
 .card-content-wrapper {
-    padding: 20px 25px;
+    padding: 18px 25px 20px 25px;
     width: 100%;
     height: 100%;
+    box-sizing: border-box;
 
     /* DEFAULT STATE: Flexbox Column (Stacked) */
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     justify-content: flex-start;
-    gap: 15px 0px;
+    gap: 10px 0px;
     transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     transform-origin: top left;
 }
@@ -298,7 +301,7 @@ main {
         0px 0px 10px rgba(0, 0, 0, 0.4); /* Stronger, subtle glow */
 
     width: 100%;
-    margin-top: 10px;
+    margin-top: 6px;
     line-height: 1;
     margin-bottom: 0;
 }
@@ -306,7 +309,7 @@ main {
 /* Nominator (Big Number) */
 .goal-card .goal-number .progress-nominator {
     /* FIX: Main number size decreased */
-    font-size: 6.5rem;
+    font-size: 6rem;
     font-weight: 900;
     line-height: 1;
 }
@@ -327,9 +330,9 @@ main {
     align-items: flex-start;
 
     /* Position adjustments relative to the smaller nominator */
-    margin-top: 12px;
-    margin-bottom: 10px;
-    line-height: 1.2;
+    margin-top: 6px;
+    margin-bottom: 0px;
+    line-height: 1.1;
     padding-left: 0px;
 }
 
@@ -748,6 +751,55 @@ main {
 .modal-btn-delete:hover {
     background: #c53030;
 }
+
+/* Ensure Chart.js tooltips are not clipped */
+.chartjs-tooltip {
+    z-index: 10000 !important;
+    pointer-events: none !important;
+}
+
+/* Ensure chart containers allow tooltips to escape */
+#sdgDistributionChart {
+    position: relative;
+    z-index: 1;
+}
+
+/* Hide any Chart.js legend or labels that might appear */
+#sdgDistributionChart + *,
+#sdgDistributionChart ~ * {
+    display: none !important;
+}
+
+/* Hide Chart.js legend if it appears */
+.chartjs-legend,
+.chartjs-legend-item {
+    display: none !important;
+}
+
+/* Hide any text labels on the chart canvas */
+#sdgDistributionChart + svg text,
+#sdgDistributionChart ~ svg text,
+canvas + svg text {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+/* Hide any label elements in the chart container */
+#sdgDistributionChart {
+    position: relative;
+    z-index: 1;
+}
+
+#sdgDistributionChart::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 10;
+}
 </style>
 </head>
 <body>
@@ -764,6 +816,21 @@ main {
                     Add Goal
                 </button></a>
             </div>
+
+            <!-- SDG Distribution Chart Card -->
+            <div class="card" style="margin: 1rem 0 2.5rem 0; padding: 1.25rem 1.5rem; border-radius: 16px; background:#ffffff; box-shadow:0 2px 8px rgba(15,23,42,0.08); border: 1px solid rgba(0,0,0,0.05); display:flex; align-items:center; gap:2rem; position:relative; overflow:visible;">
+                <div style="flex:1; min-width:0;">
+                    <h4 style="margin:0 0 0.5rem 0; font-size:1rem; font-weight:600; color:#111827; font-family:'Inter', Arial, sans-serif;">SDG Usage Overview</h4>
+                    <p style="margin:0 0 0.75rem 0; font-size:0.85rem; color:#6b7280; line-height:1.4;">
+                        Less-used SDGs in projects
+                    </p>
+                    <div id="sdgDistributionLegend" style="font-size:0.8rem; color:#6b7280; font-weight:500;"></div>
+                </div>
+                <div style="width:200px; height:200px; flex-shrink:0; display:flex; align-items:center; justify-content:center; position:relative; overflow:visible;">
+                    <canvas id="sdgDistributionChart"></canvas>
+                </div>
+            </div>
+
             <div class="goals-carousel-wrapper">
                 <button class="carousel-arrow left-arrow" type="button" onclick="scrollGoals(-1)">
                     <svg width="32" height="32" viewBox="0 0 32 32"><path d="M20 8l-8 8 8 8" stroke="#063A1C" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -791,6 +858,7 @@ main {
 <script>
     // Endpoint helpers resolved by Django
     const API_GOALS_URL = "{% url 'api_goals' %}";
+    const API_SDG_DISTRIBUTION_URL = "{% url 'api_sdg_distribution' %}";
     const API_GOAL_DETAIL_URL_TEMPLATE = "{% url 'api_goal_detail' 0 %}";
     const API_GOAL_QUALIFIERS_URL_TEMPLATE = "{% url 'api_goal_qualifiers' 0 %}";
     const EDIT_GOAL_URL_TEMPLATE = "{% url 'edit_goal' 0 %}";
@@ -883,6 +951,308 @@ main {
 
         return `#${r}${g}${b}`;
     }
+
+    // --- SDG Distribution Chart ---
+    let sdgChartInstance = null;
+
+    // External tooltip handler to prevent clipping
+    function externalTooltipHandler(context, customText = null) {
+        // Tooltip element
+        let tooltipEl = document.getElementById('sdg-chartjs-tooltip');
+        
+        // Create element on first render
+        if (!tooltipEl) {
+            tooltipEl = document.createElement('div');
+            tooltipEl.id = 'sdg-chartjs-tooltip';
+            tooltipEl.style.background = 'rgba(0, 0, 0, 0.85)';
+            tooltipEl.style.borderRadius = '8px';
+            tooltipEl.style.color = 'white';
+            tooltipEl.style.opacity = '0';
+            tooltipEl.style.pointerEvents = 'none';
+            tooltipEl.style.position = 'fixed';
+            tooltipEl.style.transition = 'all .1s ease';
+            tooltipEl.style.zIndex = '10000';
+            tooltipEl.style.padding = '12px 16px';
+            tooltipEl.style.fontSize = '13px';
+            tooltipEl.style.fontFamily = 'Inter, Arial, sans-serif';
+            tooltipEl.style.maxWidth = '350px';
+            tooltipEl.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.3)';
+            tooltipEl.style.border = '1px solid rgba(255, 255, 255, 0.2)';
+            document.body.appendChild(tooltipEl);
+        }
+
+        const {chart, tooltip} = context;
+        const tooltipModel = tooltip;
+        
+        // Hide if no tooltip
+        if (tooltipModel.opacity === 0) {
+            tooltipEl.style.opacity = '0';
+            tooltipEl.style.pointerEvents = 'none';
+            return;
+        }
+
+        // Set tooltip content
+        if (customText) {
+            tooltipEl.innerHTML = customText;
+        } else if (tooltipModel.body) {
+            const bodyLines = tooltipModel.body.map(b => b.lines);
+            tooltipEl.innerHTML = bodyLines.join('<br>');
+        }
+
+        // Position tooltip - use fixed positioning to escape container bounds
+        const position = chart.canvas.getBoundingClientRect();
+        const left = position.left + tooltipModel.caretX;
+        const top = position.top + tooltipModel.caretY - 10;
+
+        // Adjust if tooltip would go off screen
+        const tooltipRect = tooltipEl.getBoundingClientRect();
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+        
+        let finalLeft = left;
+        let finalTop = top;
+        
+        // Adjust horizontal position if needed
+        if (finalLeft + tooltipRect.width > windowWidth) {
+            finalLeft = windowWidth - tooltipRect.width - 10;
+        }
+        if (finalLeft < 10) {
+            finalLeft = 10;
+        }
+        
+        // Adjust vertical position if needed
+        if (finalTop < 10) {
+            finalTop = position.top + tooltipModel.caretY + 20;
+        }
+        if (finalTop + tooltipRect.height > windowHeight) {
+            finalTop = windowHeight - tooltipRect.height - 10;
+        }
+
+        tooltipEl.style.left = finalLeft + 'px';
+        tooltipEl.style.top = finalTop + 'px';
+        tooltipEl.style.opacity = '1';
+        tooltipEl.style.pointerEvents = 'none';
+    }
+
+    // Generate distinct colors for pie chart (matching dashboard style)
+    function generatePieColors(count) {
+        // Base colors with rgba 0.7 opacity (matching dashboard style)
+        const baseColors = [
+            'rgba(255, 99, 132, 0.7)',   // Red/Pink
+            'rgba(54, 162, 235, 0.7)',   // Blue
+            'rgba(75, 192, 192, 0.7)',   // Teal
+            'rgba(255, 206, 86, 0.7)',   // Yellow
+            'rgba(153, 102, 255, 0.7)',  // Purple
+            'rgba(255, 159, 64, 0.7)',   // Orange
+            'rgba(16, 185, 129, 0.7)',   // Green
+            'rgba(239, 68, 68, 0.7)',    // Red
+            'rgba(59, 130, 246, 0.7)',   // Light Blue
+            'rgba(139, 92, 246, 0.7)',   // Violet
+            'rgba(236, 72, 153, 0.7)',   // Pink
+            'rgba(245, 158, 11, 0.7)',   // Amber
+            'rgba(34, 197, 94, 0.7)',    // Emerald
+            'rgba(14, 165, 233, 0.7)',   // Sky
+            'rgba(168, 85, 247, 0.7)',   // Purple
+            'rgba(225, 29, 72, 0.7)',    // Rose
+            'rgba(251, 191, 36, 0.7)',   // Yellow
+            'rgba(22, 163, 74, 0.7)',    // Green
+            'rgba(6, 182, 212, 0.7)',    // Cyan
+            'rgba(99, 102, 241, 0.7)'    // Indigo
+        ];
+        // Repeat colors if needed
+        const result = [];
+        for (let i = 0; i < count; i++) {
+            result.push(baseColors[i % baseColors.length]);
+        }
+        return result;
+    }
+
+    // Generate hover colors (full opacity, matching dashboard style)
+    function generatePieHoverColors(count) {
+        const hoverColors = [
+            'rgba(255, 119, 152, 1)',   // Red/Pink
+            'rgba(74, 182, 255, 1)',    // Blue
+            'rgba(95, 212, 212, 1)',    // Teal
+            'rgba(255, 216, 106, 1)',   // Yellow
+            'rgba(173, 122, 255, 1)',   // Purple
+            'rgba(255, 179, 84, 1)',    // Orange
+            'rgba(16, 185, 129, 1)',    // Green
+            'rgba(239, 68, 68, 1)',     // Red
+            'rgba(59, 130, 246, 1)',    // Light Blue
+            'rgba(139, 92, 246, 1)',    // Violet
+            'rgba(236, 72, 153, 1)',    // Pink
+            'rgba(245, 158, 11, 1)',    // Amber
+            'rgba(34, 197, 94, 1)',     // Emerald
+            'rgba(14, 165, 233, 1)',    // Sky
+            'rgba(168, 85, 247, 1)',    // Purple
+            'rgba(225, 29, 72, 1)',     // Rose
+            'rgba(251, 191, 36, 1)',    // Yellow
+            'rgba(22, 163, 74, 1)',     // Green
+            'rgba(6, 182, 212, 1)',     // Cyan
+            'rgba(99, 102, 241, 1)'     // Indigo
+        ];
+        const result = [];
+        for (let i = 0; i < count; i++) {
+            result.push(hoverColors[i % hoverColors.length]);
+        }
+        return result;
+    }
+
+    async function loadSdgDistributionChart() {
+        const canvas = document.getElementById('sdgDistributionChart');
+        if (!canvas) return;
+
+        try {
+            const response = await fetch(API_SDG_DISTRIBUTION_URL, { credentials: 'same-origin' });
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            const data = await response.json();
+            if (!data.success) {
+                throw new Error(data.error || 'Failed to load SDG distribution');
+            }
+
+            let labels = data.labels || [];
+            let percents = data.percents || [];
+            let counts = data.counts || [];
+            const totalProjects = data.total_projects || 0;
+
+            // Sort by count (ascending) to highlight less-used SDGs
+            const combined = labels.map((label, idx) => ({
+                label,
+                percent: percents[idx],
+                count: counts[idx]
+            })).sort((a, b) => a.count - b.count);
+
+            labels = combined.map(item => item.label);
+            percents = combined.map(item => item.percent);
+            counts = combined.map(item => item.count);
+
+            const legendEl = document.getElementById('sdgDistributionLegend');
+            if (legendEl) {
+                if (totalProjects > 0) {
+                    legendEl.textContent = `${totalProjects} total projects`;
+                } else {
+                    legendEl.textContent = 'No projects with SDGs yet';
+                }
+            }
+
+            if (sdgChartInstance) {
+                sdgChartInstance.destroy();
+                sdgChartInstance = null;
+            }
+
+            // Remove any existing legend or label elements
+            const chartContainer = canvas.parentElement;
+            if (chartContainer) {
+                const legends = chartContainer.querySelectorAll('.chartjs-legend, [class*="legend"]');
+                legends.forEach(el => el.remove());
+            }
+
+            const ctx = canvas.getContext('2d');
+            const colors = generatePieColors(labels.length);
+            const hoverColors = generatePieHoverColors(labels.length);
+
+            console.log('Creating pie chart with', labels.length, 'SDGs');
+            console.log('Colors:', colors);
+
+            // Use empty labels to prevent rendering on chart, but keep real labels for tooltip
+            const emptyLabels = labels.map(() => '');
+
+            sdgChartInstance = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: emptyLabels, // Empty labels to prevent rendering on chart
+                    datasets: [{
+                        label: 'SDG Distribution',
+                        data: counts,
+                        backgroundColor: colors,
+                        hoverBackgroundColor: hoverColors,
+                        hoverOffset: 20,
+                        hoverBorderColor: '#fff',
+                        hoverBorderWidth: 5,
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        animateRotate: true,
+                        animateScale: false
+                    },
+                    layout: {
+                        padding: 0
+                    },
+                    plugins: {
+                        legend: {
+                            display: false,
+                        },
+                        datalabels: {
+                            display: false,
+                            anchor: 'center',
+                            align: 'center',
+                            formatter: null
+                        },
+                        tooltip: {
+                            enabled: false,
+                            external: function(context) {
+                                // Use real labels for tooltip
+                                const {chart, tooltip} = context;
+                                const tooltipModel = tooltip;
+                                
+                                if (tooltipModel.opacity === 0) {
+                                    const tooltipEl = document.getElementById('sdg-chartjs-tooltip');
+                                    if (tooltipEl) {
+                                        tooltipEl.style.opacity = '0';
+                                        tooltipEl.style.pointerEvents = 'none';
+                                    }
+                                    return;
+                                }
+                                
+                                // Get the actual label from our labels array
+                                const dataIndex = tooltipModel.dataPoints[0]?.dataIndex;
+                                if (dataIndex !== undefined) {
+                                    const label = labels[dataIndex] || '';
+                                    const pct = percents[dataIndex] ?? 0;
+                                    const cnt = counts[dataIndex] ?? 0;
+                                    const tooltipText = `${label}: ${cnt} project${cnt === 1 ? '' : 's'} (${pct}%)`;
+                                    externalTooltipHandler(context, tooltipText);
+                                }
+                            }
+                        }
+                    },
+                    // Explicitly disable any label rendering
+                    elements: {
+                        arc: {
+                            borderWidth: 0
+                        }
+                    }
+                }
+            });
+
+            // Force remove any labels that might have been rendered
+            setTimeout(() => {
+                const chartContainer = canvas.parentElement;
+                if (chartContainer) {
+                    // Remove any text elements that might be labels
+                    const textElements = chartContainer.querySelectorAll('text, [class*="label"], [class*="datalabel"]');
+                    textElements.forEach(el => {
+                        if (el.textContent && el.textContent.includes('SDG')) {
+                            el.remove();
+                        }
+                    });
+                }
+            }, 100);
+        } catch (err) {
+            console.error('Error loading SDG distribution chart:', err);
+            const legendEl = document.getElementById('sdgDistributionLegend');
+            if (legendEl) {
+                legendEl.textContent = 'Unable to load SDG chart';
+            }
+        }
+    }
+
 
     // --- Sorting Logic: Closest to 100% first, completed goals go last ---
     function sortGoals(goals) {
@@ -1016,6 +1386,7 @@ main {
             }
 
         loadGoals();
+        loadSdgDistributionChart();
         window.addEventListener('resize', updateGoalsCarousel);
     });
 
@@ -1049,7 +1420,15 @@ main {
 
     async function loadGoals() {
         try {
-            const response = await fetch(API_GOALS_URL, { credentials: 'same-origin' });
+            // Add cache-busting parameter to ensure fresh data
+            const url = API_GOALS_URL + (API_GOALS_URL.includes('?') ? '&' : '?') + '_t=' + Date.now();
+            const response = await fetch(url, { 
+                credentials: 'same-origin',
+                cache: 'no-cache',
+                headers: {
+                    'Cache-Control': 'no-cache'
+                }
+            });
             if (!response.ok) {
                 const text = await response.text();
                 throw new Error(`HTTP ${response.status}: ${text.substring(0, 300)}`);
@@ -1514,8 +1893,4 @@ main {
     window.toggleGoalMenu = toggleGoalMenu;
     window.scrollGoals = scrollGoals;
 </script>
-
-</body>
-</html>
-
 {% endblock %}
