@@ -374,10 +374,18 @@ class Command(BaseCommand):
         # --- DOWNLOADABLES ---
         # Add all files in static/downloadables/files as Downloadable objects
         downloadables_dir = os.path.join(settings.BASE_DIR, 'static', 'downloadables', 'files')
+        media_downloadables_dir = os.path.join(settings.MEDIA_ROOT, 'downloadables', 'files')
+        os.makedirs(media_downloadables_dir, exist_ok=True)
+        import shutil
         if os.path.exists(downloadables_dir):
             for fname in os.listdir(downloadables_dir):
-                if not os.path.isfile(os.path.join(downloadables_dir, fname)):
+                src_path = os.path.join(downloadables_dir, fname)
+                dest_path = os.path.join(media_downloadables_dir, fname)
+                if not os.path.isfile(src_path):
                     continue
+                # Copy file to media if not already present
+                if not os.path.exists(dest_path):
+                    shutil.copy2(src_path, dest_path)
                 # Determine submission_type
                 if fname.startswith('Activity Form Placeholder'):
                     submission_type = 'event'
@@ -391,7 +399,8 @@ class Command(BaseCommand):
                     defaults={
                         'file': f'downloadables/files/{fname}',
                         'available_for_non_users': False,
-                        'submission_type': submission_type
+                        'submission_type': submission_type,
+                        'is_submission_template': True                    
                     }
                 )
             self.stdout.write(self.style.SUCCESS(f"Downloadables created for all files in static/downloadables/files.\n"))

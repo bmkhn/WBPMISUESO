@@ -313,8 +313,8 @@ class Command(BaseCommand):
         no_of_c_faculty_projects = 2
 
         # Use static/faker/Placeholder.pdf and static/faker/image.png for all file/image fields
-        PLACEHOLDER_PDF_PATH = "faker/Placeholder.pdf"
-        PLACEHOLDER_IMAGE_PATH = "faker/image.png"
+        PLACEHOLDER_PDF_PATH = "downloadables/files/Placeholder.pdf"
+        PLACEHOLDER_IMAGE_PATH = "downloadables/files/Placeholder.png"
 
         # Fetch required related objects
         colleges = list(College.objects.all())
