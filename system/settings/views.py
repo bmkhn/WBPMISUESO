@@ -147,7 +147,27 @@ def settings_view(request):
     if is_admin:
         all_connections = APIConnection.objects.all().order_by('-created_at')
     elif is_api_user:
-        all_connections = APIConnection.objects.filter(requested_by=user).order_by('-created_at')
+        # Check if requested_by_id column exists before filtering
+        try:
+            from django.db import connection
+            if connection.vendor == 'sqlite':
+                with connection.cursor() as cursor:
+                    cursor.execute("PRAGMA table_info(settings_apiconnection)")
+                    columns = [row[1] for row in cursor.fetchall()]
+                    if 'requested_by_id' in columns:
+                        all_connections = APIConnection.objects.filter(requested_by=user).order_by('-created_at')
+                    else:
+                        # Column doesn't exist, return empty list
+                        all_connections = []
+            else:
+                # For other databases, try the query and catch error
+                try:
+                    all_connections = APIConnection.objects.filter(requested_by=user).order_by('-created_at')
+                except Exception:
+                    all_connections = []
+        except Exception:
+            # If anything fails, return empty list
+            all_connections = []
 
     paginator = Paginator(all_connections, 6) 
     page_number = request.GET.get('page')

@@ -14,7 +14,6 @@ class ProjectExpenseSerializer(serializers.ModelSerializer):
             'reason', 
             'amount', 
             'date_incurred', 
-            'receipt',
             'created_by', 
             'created_by_username', 
             'created_at',

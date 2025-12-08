@@ -7,7 +7,7 @@ from .views import registration_unified_view, verify_unified_view, thank_you_vie
 from .views import not_authenticated_view, no_permission_view, not_confirmed_view
 from .views import manage_user, add_user, user_details_view, edit_user, check_email_view, verify_user, unverify_user, delete_user
 from .views import profile_view, update_bio, update_profile_picture
-from .views import health_check
+from .views import health_check, complete_google_profile_view, select_google_role_view
 
 urlpatterns = [
     path('session-test/', session_test_view, name='session_test'),  # Session Test Page
@@ -53,6 +53,8 @@ urlpatterns = [
     path('profile/<int:id>/', profile_view, name='user_profile'),               # View Any User Profile
     path('profile/update-bio/', update_bio, name='update_bio'),                 # Update Bio
     path('profile/update-picture/', update_profile_picture, name='update_profile_picture'),  # Update Profile Picture
+    path('complete-profile/', complete_google_profile_view, name='complete_google_profile'),  # Complete Google Profile
+    path('select-role/', select_google_role_view, name='select_google_role'),  # Select Role for Google Users
 
     path('', role_redirect, name='role_redirect'),              # Default Redirector
 

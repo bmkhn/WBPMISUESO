@@ -1,0 +1,481 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+<title>Complete Your Profile</title>
+<meta charset="UTF-8">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
+<link href="{% static 'users/regis_style.css' %}" rel="stylesheet">
+<link rel="shortcut icon" type="ico" href="{% static 'ueso.ico' %}">
+</head>
+
+<body>
+    <!-- Cancel button at top of page - Always visible -->
+    <div style="position: fixed; top: 1rem; right: 1rem; z-index: 1000;">
+        <a href="/home/" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; background: white; border: 2px solid #0099FF; border-radius: 8px; color: #0099FF; font-weight: 600; font-size: 0.875rem; text-decoration: none; box-shadow: 0 2px 8px rgba(0,153,255,0.2); transition: all 0.2s;" onmouseover="this.style.background='#0099FF'; this.style.color='white';" onmouseout="this.style.background='white'; this.style.color='#0099FF';">
+            <i class="fa-solid fa-home"></i>
+            <span>Return Home</span>
+        </a>
+    </div>
+    
+    <form id="profile-completion-form" method="POST" enctype="multipart/form-data" autocomplete="off">
+        {% csrf_token %}
+        
+        <div class="card step-content" id="step1" style="display:block;">
+            <h2>Complete Your Profile</h2>
+            <hr>
+            <p class="subtitle">
+                <i class="fa-regular fa-id-card subtitle-icon" aria-hidden="true"></i>
+                Please provide your Contact and Personal Details to continue.
+            </p>
+            <div class="form-grid">
+                <div class="form-group">
+                    <div class="form-label">Given Name:<span class="required"> *</span></div>
+                    <input class="form-input" type="text" name="given_name" id="id_given_name" value="{{ form.given_name.value|default:user.given_name|default:'' }}">
+                </div>
+                <div class="form-group">
+                    <div class="form-label">Email:</div>
+                    <input class="form-input" type="email" name="email" id="id_email" value="{{ user.email }}" readonly style="background:#F7FAFC; cursor:not-allowed;">
+                    <small style="font-size:0.75rem; color:#718096; margin-top:0.25rem;">Email verified by Google</small>
+                </div>
+                <div class="form-group">
+                    <div style="display: flex; flex-direction: row; gap: 12px;">
+                        <div>
+                            <div class="form-label">M.I.:</div>
+                            <input class="form-input" type="text" name="middle_initial" id="id_middle_initial" maxlength="1" value="{{ form.middle_initial.value|default:user.middle_initial|default:'' }}">
+                        </div>
+                        <div>
+                            <div class="form-label">Suffix:</div>
+                            <input class="form-input" type="text" name="suffix" id="id_suffix" value="{{ form.suffix.value|default:user.suffix|default:'' }}">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-label">Contact Number:<span class="required"> *</span></div>
+                    <input class="form-input" type="text" name="contact_no" id="id_contact_no" value="{{ form.contact_no.value|default:user.contact_no|default:'' }}">
+                </div>
+                <div class="form-group">
+                    <div class="form-label">Last Name:<span class="required"> *</span></div>
+                    <input class="form-input" type="text" name="last_name" id="id_last_name" value="{{ form.last_name.value|default:user.last_name|default:'' }}">
+                </div>
+                <div class="form-group">
+                    <div class="form-label">Sex:<span class="required"> *</span></div>
+                    <select class="form-input" name="sex" id="id_sex">
+                        <option value="">Select Sex</option>
+                        <option value="MALE" {% if form.sex.value == "MALE" or user.sex == "MALE" %}selected{% endif %}>Male</option>
+                        <option value="FEMALE" {% if form.sex.value == "FEMALE" or user.sex == "FEMALE" %}selected{% endif %}>Female</option>
+                    </select>
+                </div>
+            </div>
+            <div class="actions">
+                <a href="/home/" class="back-btn" style="display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fa-solid fa-home"></i>
+                    <span class="back-btn-text">Return Home</span>
+                </a>
+                <button class="proceed-btn" type="button" onclick="nextStep(1)">
+                    <span class="back-btn-text">Proceed</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="card step-content" id="step2" style="display:none;">
+            <h2>Complete Your Profile</h2>
+            <hr>
+            <p class="subtitle">
+                <i class="fa-solid fa-briefcase subtitle-icon"></i>
+                Input your Professional Details.
+            </p>
+            <div class="form-grid">
+                {% if role == 'FACULTY' %}
+                    <div class="form-group">
+                        <div class="form-label">College:<span class="required"> *</span></div>
+                        <select class="form-input" name="college" id="id_college">
+                            <option value="">Select College</option>
+                            {% for college in colleges %}
+                                <option value="{{ college.id }}" data-campus-id="{{ college.campus.id }}" {% if form.college.value == college.id or user.college.id == college.id %}selected{% endif %}>{{ college.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group derived-field">
+                        <div class="form-label">Campus:</div>
+                        <select class="form-input" name="campus_display" id="id_campus" disabled>
+                            <option value="">Select Campus</option>
+                            {% for campus in campuses %}
+                                <option value="{{ campus.id }}" {% if user.campus.id == campus.id %}selected{% endif %}>{{ campus.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <input type="hidden" name="campus" id="id_campus_hidden" value="{{ user.campus.id|default:'' }}">
+                    </div>
+                    <div class="form-group">
+                        <div class="form-label">Degree:<span class="required"> *</span></div>
+                        <input class="form-input" type="text" name="degree" id="id_degree" value="{{ form.degree.value|default:user.degree|default:'' }}">
+                    </div>
+                    <div class="form-group">
+                        <div class="form-label">Expertise:<span class="required"> *</span></div>
+                        <input class="form-input" type="text" name="expertise" id="id_expertise" value="{{ form.expertise.value|default:user.expertise|default:'' }}">
+                    </div>
+                {% elif role == 'IMPLEMENTER' %}
+                    <div class="form-group">
+                        <div class="form-label">Degree:<span class="required"> *</span></div>
+                        <input class="form-input" type="text" name="degree" id="id_degree" value="{{ form.degree.value|default:user.degree|default:'' }}">
+                    </div>
+                    <div class="form-group">
+                        <div class="form-label">Expertise:<span class="required"> *</span></div>
+                        <input class="form-input" type="text" name="expertise" id="id_expertise" value="{{ form.expertise.value|default:user.expertise|default:'' }}">
+                    </div>
+                    <div></div><div></div>
+                {% elif role == 'CLIENT' %}
+                    <div class="form-group">
+                        <div class="form-label">Company:<span class="required"> *</span></div>
+                        <input class="form-input" type="text" name="company" id="id_company" value="{{ form.company.value|default:user.company|default:'' }}">
+                    </div>
+                    <div class="form-group">
+                        <div class="form-label">Industry:<span class="required"> *</span></div>
+                        <input class="form-input" type="text" name="industry" id="id_industry" value="{{ form.industry.value|default:user.industry|default:'' }}">
+                    </div>
+                    <div></div><div></div>
+                {% endif %}
+                
+                <div class="form-group full-width">
+                    <label style="display:flex; align-items:flex-start; font-size:0.875rem; cursor:pointer;">
+                        <input type="checkbox" id="terms_checkbox" style="margin-right:0.5rem; margin-top:0.25rem;width:auto;">
+                        <span>I agree to the <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal" style="text-decoration:underline;">Terms and Conditions</a> and <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal" style="text-decoration:underline;">Privacy Policy</a></span>
+                    </label>
+                    <div id="terms-error-container"></div>
+                </div>
+            </div>
+            <div class="actions" style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; gap: 1rem;">
+                    <a class="back-btn" onclick="prevStep(2)">
+                        <i class="fa-solid fa-arrow-left"></i>
+                        <span class="back-btn-text">Back</span>
+                    </a>
+                    <a href="/home/" class="back-btn" style="text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fa-solid fa-home"></i>
+                        <span class="back-btn-text">Return Home</span>
+                    </a>
+                </div>
+                <button class="proceed-btn" type="button" onclick="nextStep(2)">
+                    <span class="back-btn-text">Proceed</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="card step-content" id="step3" style="display:none;">
+            <h2>Complete Your Profile</h2>
+            <hr>
+            <p class="subtitle">
+                <i class="fa-solid fa-id-card subtitle-icon"></i>
+                Upload Valid ID to complete your profile.
+            </p>
+            <div class="form-grid" style="display:flex;flex-direction: column;">
+                <div class="form-group full-width">
+                    <div class="form-label">Preferred ID Type:<span class="required"> *</span></div>
+                    <select class="form-input" name="preferred_id" id="id_preferred_id">
+                        <option value="">Select ID Type</option>
+                        {% for value, label in form.fields.preferred_id.choices %}
+                            {% if value %}
+                                <option value="{{ value }}" {% if form.preferred_id.value == value or user.preferred_id == value %}selected{% endif %}>{{ label }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group full-width">
+                    <div class="form-label">Upload Valid ID:<span class="required"> *</span></div>
+                    <label for="id_valid_id" id="upload-label" class="file-upload-label d-flex flex-column align-items-center justify-content-center p-4 border rounded text-center" 
+                            style="border-style: dashed !important; transition: all 0.2s ease; cursor: pointer; background: #F7FAFC; min-height: 100px;"
+                            ondragover="event.preventDefault(); this.classList.add('bg-light', 'border-primary');"
+                            ondragleave="this.classList.remove('bg-light', 'border-primary');"
+                            ondrop="this.classList.remove('bg-light', 'border-primary');">
+                        <svg class="upload-icon" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+                        </svg>
+                        <span class="upload-text text-muted mt-2">
+                            Drag and drop file here or <span class="text-primary fw-bold">click to upload</span>
+                        </span>
+                    </label>
+                    <input type="file" id="id_valid_id" name="valid_id" accept="image/*,application/pdf" style="display:none;">
+                    <div id="file-preview" class="d-flex align-items-center p-2 mt-2 border rounded" style="display:none !important; background:#EDF2F7; border-color:#BBF7D0 !important;">
+                        <i class="fa-solid fa-file-image me-2" style="color:#0099FF; font-size:1.25rem;"></i> 
+                        <span id="file-name" class="fw-bold" style="font-size: 0.875rem; color:#2D3748;"></span>
+                        <button type="button" class="btn-close ms-auto" aria-label="Remove file" onclick="removeUploadedFile()"></button>
+                    </div>
+                </div>
+            </div>
+            <div class="actions" style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; gap: 1rem;">
+                    <a class="back-btn" onclick="prevStep(3)">
+                        <i class="fa-solid fa-arrow-left"></i>
+                        <span class="back-btn-text">Back</span>
+                    </a>
+                    <a href="/home/" class="back-btn" style="text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fa-solid fa-home"></i>
+                        <span class="back-btn-text">Return Home</span>
+                    </a>
+                </div>
+                <button class="proceed-btn" id="proceed-step3-btn" type="button" onclick="nextStep(3)">
+                    <span class="back-btn-text" id="proceed-step3-text">Complete Profile</span>
+                    <i class="fa-solid fa-arrow-right" id="proceed-step3-arrow"></i>
+                    <i class="fa-solid fa-spinner fa-spin" id="proceed-step3-spinner" style="display:none; margin-left:0.5rem;"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="card step-content" id="step4" style="display: none; text-align: center; padding: 3rem 2rem;">
+            <h2 style="font-size: 2.75rem;font-weight:600;color:#2D3748;margin-bottom: 2rem;text-align:center;">PROFILE COMPLETED</h2>
+            <div style="display:inline-flex; align-items:center; justify-content:center; width:80px; height:80px; background:#E6F7FF; border-radius:50%; margin:0 auto 1.5rem;">
+                <i class="fa-solid fa-check" style="font-size:2.5rem; color:#0099FF;"></i>
+            </div>
+            <p style="font-size:1rem;color:#718096;line-height:1.6;margin:0 auto 2rem;">
+                Your profile has been completed successfully.<br>
+                You can now access all features of the system.
+            </p>
+            <a href="/redirector/" class="proceed-btn" style="display:inline-flex; align-items:center; text-decoration:none; padding:0.75rem 2rem;">
+                <span>Continue</span><i class="fa-solid fa-arrow-right" style="margin-left:0.5rem;"></i>
+            </a>
+        </div>
+    </form>
+
+    <!-- Include the same modals and scripts as registration_unified.html -->
+    <div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="termsModalLabel">Terms and Conditions & Privacy Policy</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <h3 class="fs-5 mb-3 text-dark">1. Acceptance of Terms</h3>
+                    <p class="small text-muted">By completing your profile, you agree to these Terms and Conditions ("T&C") and our Privacy Policy.</p>
+                    <!-- Include rest of terms content from registration_unified.html -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="agreeToTerms()">I have Read and Agree</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script>
+        const ROLE = '{{ role }}';
+        let COLLEGE_CAMPUS_MAP = {};
+        
+        function collectCampusMapping() {
+            const collegeSelect = document.getElementById('id_college');
+            if (!collegeSelect) return;
+            collegeSelect.querySelectorAll('option').forEach(option => {
+                const collegeId = option.value;
+                const campusId = option.dataset.campusId; 
+                if (collegeId && campusId) {
+                    COLLEGE_CAMPUS_MAP[collegeId] = campusId;
+                }
+            });
+        }
+        
+        function synchronizeCampus() {
+            const collegeSelect = document.getElementById('id_college');
+            const campusSelect = document.getElementById('id_campus');
+            const campusHiddenInput = document.getElementById('id_campus_hidden');
+            if (collegeSelect && campusSelect && campusHiddenInput && ROLE === 'FACULTY') {
+                const selectedCollegeId = collegeSelect.value;
+                const correspondingCampusId = COLLEGE_CAMPUS_MAP[selectedCollegeId] || '';
+                campusSelect.value = correspondingCampusId;
+                campusHiddenInput.value = correspondingCampusId;
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileInput = document.getElementById('id_valid_id');
+            if (fileInput && fileInput.files.length > 0) {
+                updateFileUploadUI(fileInput.files[0]);
+            }
+            if (ROLE === 'FACULTY') {
+                collectCampusMapping();
+                synchronizeCampus();
+                const collegeSelect = document.getElementById('id_college');
+                if (collegeSelect) {
+                    collegeSelect.addEventListener('change', synchronizeCampus);
+                }
+            }
+        });
+
+        function nextStep(current) {
+            clearFieldErrors();
+            let valid = true;
+
+            if (current === 1) {
+                const requiredFields = ['id_given_name', 'id_last_name', 'id_contact_no', 'id_sex'];
+                requiredFields.forEach(function(fieldId) {
+                    const field = document.getElementById(fieldId);
+                    if (field && !field.value.trim()) { valid = false; showFieldError(fieldId, 'This field is required.'); }
+                });
+                const contactInput = document.getElementById('id_contact_no');
+                if (contactInput.value.trim() && !/^\+?[\d\s-]{7,}$/.test(contactInput.value.trim())) { 
+                    valid = false; 
+                    showFieldError('id_contact_no', 'Please enter a valid contact number.'); 
+                }
+                if (!valid) { showPopup("Please fill out all required fields."); return; }
+                document.getElementById('step1').style.display = 'none';
+                document.getElementById('step2').style.display = 'block';
+            } else if (current === 2) {
+                const requiredFields = [];
+                if (ROLE === 'FACULTY') {
+                    requiredFields.push('id_degree', 'id_expertise', 'id_college'); 
+                    const campusHiddenInput = document.getElementById('id_campus_hidden');
+                    if (!campusHiddenInput.value) { valid = false; showFieldError('id_college', 'College selection is required.'); }
+                } else if (ROLE === 'IMPLEMENTER') { 
+                    requiredFields.push('id_degree', 'id_expertise');
+                } else if (ROLE === 'CLIENT') { 
+                    requiredFields.push('id_company', 'id_industry'); 
+                }
+                requiredFields.forEach(function(fieldId) {
+                    const field = document.getElementById(fieldId);
+                    if (field && !field.value.trim()) { valid = false; showFieldError(fieldId, 'This field is required.'); }
+                });
+                const termsCheckbox = document.getElementById('terms_checkbox');
+                if (!termsCheckbox.checked) { 
+                    valid = false; 
+                    const errDiv = document.createElement('div');
+                    errDiv.id = 'terms-error';
+                    errDiv.className = 'field-error';
+                    errDiv.textContent = 'You must agree to the Terms and Conditions.';
+                    errDiv.style.color = '#E53E3E';
+                    errDiv.style.fontSize = '0.75rem';
+                    errDiv.style.marginTop = '0.25rem';
+                    document.getElementById('terms-error-container').appendChild(errDiv);
+                }
+                if (!valid) { showPopup("Please fill out all required fields."); return; }
+                document.getElementById('step2').style.display = 'none';
+                document.getElementById('step3').style.display = 'block';
+            } else if (current === 3) {
+                const preferredIdField = document.getElementById('id_preferred_id');
+                if (!preferredIdField.value) { valid = false; showFieldError('id_preferred_id', 'Please select your ID type.'); }
+                const validIdField = document.getElementById('id_valid_id');
+                if (!validIdField.files || validIdField.files.length === 0) { valid = false; showFieldError('id_valid_id', 'Please upload your valid ID.'); }
+                if (!valid) { showPopup("Please correct the errors before proceeding."); return; }
+
+                const proceedBtn = document.getElementById('proceed-step3-btn');
+                const proceedText = document.getElementById('proceed-step3-text');
+                const proceedArrow = document.getElementById('proceed-step3-arrow');
+                const proceedSpinner = document.getElementById('proceed-step3-spinner');
+                
+                proceedBtn.disabled = true;
+                proceedText.textContent = 'Completing...';
+                proceedArrow.style.display = 'none';
+                proceedSpinner.style.display = 'inline-block';
+                
+                const formData = new FormData(document.getElementById('profile-completion-form'));
+                if (ROLE === 'FACULTY') {
+                    formData.set('campus', document.getElementById('id_campus_hidden').value);
+                }
+                formData.set('verification_code', '000000'); // Skip verification for Google users
+
+                fetch(window.location.href, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    },
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('step3').style.display = 'none';
+                        document.getElementById('step4').style.display = 'block';
+                    } else {
+                        proceedBtn.disabled = false;
+                        proceedText.textContent = 'Complete Profile';
+                        proceedArrow.style.display = 'inline-block';
+                        proceedSpinner.style.display = 'none';
+                        if (data.errors) {
+                            for (const field in data.errors) {
+                                showFieldError('id_' + field, data.errors[field][0]);
+                            }
+                        }
+                        showPopup(data.error || 'Failed to complete profile.');
+                    }
+                })
+                .catch(error => {
+                    proceedBtn.disabled = false;
+                    proceedText.textContent = 'Complete Profile';
+                    proceedArrow.style.display = 'inline-block';
+                    proceedSpinner.style.display = 'none';
+                    showPopup('An error occurred. Please try again.');
+                    console.error('Error:', error);
+                });
+            }
+        }
+
+        function prevStep(current) {
+            clearFieldErrors();
+            if (current === 2) {
+                document.getElementById('step2').style.display = 'none';
+                document.getElementById('step1').style.display = 'block';
+            } else if (current === 3) {
+                document.getElementById('step3').style.display = 'none';
+                document.getElementById('step2').style.display = 'block';
+            }
+        }
+
+        // Include helper functions from registration_unified.html
+        function showPopup(message) {
+            alert(message); // Simplified for now
+        }
+        function showFieldError(fieldId, message) {
+            const field = document.getElementById(fieldId);
+            if (!field) return;
+            field.classList.add('error-input');
+            const err = document.createElement('div');
+            err.className = 'field-error';
+            err.textContent = message;
+            err.style.color = '#E53E3E';
+            err.style.fontSize = '0.75rem';
+            err.style.marginTop = '0.25rem';
+            field.parentNode.appendChild(err);
+        }
+        function clearFieldErrors() {
+            document.querySelectorAll('.error-input').forEach(e => e.classList.remove('error-input'));
+            document.querySelectorAll('.field-error').forEach(e => e.remove());
+        }
+        function agreeToTerms() {
+            document.getElementById('terms_checkbox').checked = true;
+            const modal = bootstrap.Modal.getInstance(document.getElementById('termsModal'));
+            if (modal) modal.hide();
+        }
+        function updateFileUploadUI(file) {
+            const fileNameSpan = document.getElementById('file-name');
+            const filePreview = document.getElementById('file-preview');
+            const uploadLabel = document.getElementById('upload-label');
+            if (file) {
+                fileNameSpan.textContent = file.name;
+                filePreview.style.display = 'flex';
+                uploadLabel.style.background = '#EDF2F7';
+                uploadLabel.style.borderColor = '#0099FF';
+            }
+        }
+        function removeUploadedFile() {
+            document.getElementById('id_valid_id').value = '';
+            updateFileUploadUI(null);
+            clearFieldErrors();
+        }
+        document.getElementById('id_valid_id').addEventListener('change', function(e) {
+            updateFileUploadUI(e.target.files[0]);
+        });
+        document.getElementById('upload-label').addEventListener('drop', function(e) {
+            e.preventDefault();
+            const files = e.dataTransfer.files;
+            if (files.length) {
+                document.getElementById('id_valid_id').files = files;
+                updateFileUploadUI(files[0]);
+            }
+        });
+    </script>
+</body>
+</html>
+

@@ -4,20 +4,20 @@ REM Delete all migrations
 @REM py delete_all_migrations.py
 
 REM Delete media files
-py manage.py clean_media
+python manage.py clean_media
 
 REM Delete/Reset Database
 if exist db.sqlite3 del db.sqlite3
-py manage.py reset_database
+python manage.py reset_database
 
 REM Make new migrations
-py manage.py makemigrations
+python manage.py makemigrations
 
 REM Apply migrations
-py manage.py migrate
+python manage.py migrate
 
 REM Create test assets
-py manage.py create_test_assets
+python  manage.py create_test_assets
 
 REM Create accurate assets
 @REM py manage.py accurate_assets

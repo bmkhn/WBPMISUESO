@@ -93,7 +93,7 @@
                                         {% if admin %}
                                         <br>
                                         <small class="text-primary">
-                                            By: {{conn.requested_by.get_full_name|default:conn.requested_by.email }}
+                                            By: {% if conn.requested_by %}{{conn.requested_by.get_full_name|default:conn.requested_by.email }}{% else %}N/A{% endif %}
                                         </small>
                                         {% endif %}
                                     </td>
@@ -114,7 +114,7 @@
                                     </td>
                                     <td>
                                         {% if conn.status == 'ACTIVE' and conn.full_api_key_string %}
-                                        {% if request.user == conn.requested_by or admin %}
+                                        {% if conn.requested_by and request.user == conn.requested_by or admin %}
                                         <div class="input-group input-group-sm" style="width: 220px;">
                                             <input type="password" value="{{ conn.full_api_key_string }}"
                                                 class="form-control api-key-field" id="key-{{ conn.id }}" readonly>
