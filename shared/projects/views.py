@@ -285,6 +285,40 @@ def project_events(request, pk):
             description = request.POST.get('add_event_description', '')  # Optional description field
             datetime_str = request.POST.get('add_event_datetime', None)
             location = request.POST.get('add_event_location', '')
+            allocated_budget_str = request.POST.get('add_event_allocated_budget', '')
+            
+            # Validate and parse allocated budget (required field)
+            if not allocated_budget_str or allocated_budget_str.strip() == '':
+                from django.contrib import messages
+                messages.error(request, "Allocated budget is required for activities.")
+                return redirect(request.path)
+            
+            try:
+                allocated_budget = Decimal(allocated_budget_str)
+                if allocated_budget <= 0:
+                    from django.contrib import messages
+                    messages.error(request, "Allocated budget must be greater than zero.")
+                    return redirect(request.path)
+            except (ValueError, InvalidOperation):
+                from django.contrib import messages
+                messages.error(request, "Invalid budget amount. Please enter a valid number.")
+                return redirect(request.path)
+            
+            # Validate activity budget doesn't exceed project budget
+            total_project_budget = (project.internal_budget or Decimal('0')) + (project.external_budget or Decimal('0'))
+            total_allocated_to_activities = sum(
+                (event.allocated_budget or Decimal('0')) for event in project.events.all()
+            )
+            remaining_project_budget = total_project_budget - total_allocated_to_activities
+            
+            if allocated_budget > remaining_project_budget:
+                from django.contrib import messages
+                messages.error(
+                    request,
+                    f"Cannot allocate ₱{allocated_budget:,.2f} to this activity. "
+                    f"Only ₱{remaining_project_budget:,.2f} remaining in project budget."
+                )
+                return redirect(request.path)
             
             # Determine if this is a placeholder based on whether datetime and location are provided
             is_placeholder = not (datetime_str and location)
@@ -320,6 +354,7 @@ def project_events(request, pk):
                 description=description,
                 datetime=datetime_str if datetime_str else None,
                 location=location,
+                allocated_budget=allocated_budget if allocated_budget > 0 else None,
                 created_at=now,
                 created_by=request.user,
                 updated_at=now,
@@ -376,6 +411,46 @@ def project_events(request, pk):
                 new_datetime = request.POST.get('datetime', event_to_edit.datetime)
                 event_to_edit.location = request.POST.get('location', event_to_edit.location)
                 
+                # Handle allocated budget update (required field)
+                allocated_budget_str = request.POST.get('allocated_budget', '')
+                
+                if not allocated_budget_str or allocated_budget_str.strip() == '':
+                    from django.contrib import messages
+                    messages.error(request, "Allocated budget is required for activities.")
+                    return redirect(request.path)
+                
+                try:
+                    new_allocated_budget = Decimal(allocated_budget_str)
+                    if new_allocated_budget <= 0:
+                        from django.contrib import messages
+                        messages.error(request, "Allocated budget must be greater than zero.")
+                        return redirect(request.path)
+                except (ValueError, InvalidOperation):
+                    from django.contrib import messages
+                    messages.error(request, "Invalid budget amount. Please enter a valid number.")
+                    return redirect(request.path)
+                
+                # Validate activity budget doesn't exceed project budget
+                if new_allocated_budget is not None:
+                    total_project_budget = (project.internal_budget or Decimal('0')) + (project.external_budget or Decimal('0'))
+                    # Calculate total allocated excluding current event's old budget
+                    old_budget = event_to_edit.allocated_budget or Decimal('0')
+                    total_allocated_to_activities = sum(
+                        (event.allocated_budget or Decimal('0')) for event in project.events.exclude(pk=event_to_edit.pk)
+                    )
+                    remaining_project_budget = total_project_budget - total_allocated_to_activities
+                    
+                    if new_allocated_budget > remaining_project_budget:
+                        from django.contrib import messages
+                        messages.error(
+                            request,
+                            f"Cannot allocate ₱{new_allocated_budget:,.2f} to this activity. "
+                            f"Only ₱{remaining_project_budget:,.2f} remaining in project budget."
+                        )
+                        return redirect(request.path)
+                    
+                    event_to_edit.allocated_budget = new_allocated_budget if new_allocated_budget > 0 else None
+                
                 # Validate that the event is not scheduled on a Philippine holiday
                 if new_datetime:
                     from shared.event_calendar.holidays import is_philippine_holiday
@@ -412,16 +487,37 @@ def project_events(request, pk):
                 return redirect(request.path)  # Add redirect to refresh page
     if not event_form:
         event_form = ProjectEventForm()
+    
+    # Calculate remaining budget for activity allocation
+    total_project_budget = (project.internal_budget or Decimal('0')) + (project.external_budget or Decimal('0'))
+    total_allocated_to_activities = sum(
+        (event.allocated_budget or Decimal('0')) for event in project.events.all()
+    )
+    remaining_budget_for_activities = total_project_budget - total_allocated_to_activities
+    
+    # Calculate remaining budget for each event (for edit modals - includes the event's own budget)
+    events_with_remaining = []
+    for event in events:
+        event_old_budget = event.allocated_budget or Decimal('0')
+        # For edit mode, remaining = total - (all allocated - this event's budget) = total - all allocated + this event's budget
+        event_remaining = remaining_budget_for_activities + event_old_budget
+        events_with_remaining.append({
+            'event': event,
+            'remaining_budget': event_remaining
+        })
 
     return render(request, 'projects/project_events.html', {
         'project': project,
         'base_template': base_template,
         'events': events,
+        'events_with_remaining': events_with_remaining,
         'total': total,
         'completed': completed,
         'percent': percent,
         'event_form': event_form,
         'event_to_edit': event_to_edit,
+        'total_project_budget': total_project_budget,
+        'remaining_budget_for_activities': remaining_budget_for_activities,
         "ADMIN_ROLES": ADMIN_ROLES,
         "SUPERUSER_ROLES": SUPERUSER_ROLES,
         "FACULTY_ROLE": FACULTY_ROLE
@@ -1001,6 +1097,7 @@ def project_expenses(request, pk):
         notes = request.POST.get('notes')
         amount_raw = request.POST.get('amount')
         receipt = request.FILES.get('receipt')
+        event_id = request.POST.get('event_id', '').strip()
         
         try:
             # Accept decimals
@@ -1008,6 +1105,29 @@ def project_expenses(request, pk):
         except Exception:
             messages.error(request, "Invalid amount entered. Please use a valid number.")
             return redirect(request.path)
+
+        # Get event if provided
+        event = None
+        if event_id:
+            try:
+                event = project.events.get(pk=event_id)
+            except ProjectEvent.DoesNotExist:
+                messages.error(request, "Selected activity does not exist.")
+                return redirect(request.path)
+
+        # Validate activity budget if event is linked
+        if event and event.allocated_budget:
+            current_event_expenses = event.expenses.aggregate(s=Sum('amount'))['s'] or Decimal('0')
+            remaining_event_budget = (event.allocated_budget or Decimal('0')) - current_event_expenses
+            
+            if amount_val > remaining_event_budget:
+                messages.error(
+                    request,
+                    f"Expense exceeds activity budget. "
+                    f"Activity '{event.title}' has ₱{remaining_event_budget:,.2f} remaining "
+                    f"(₱{event.allocated_budget:,.2f} allocated, ₱{current_event_expenses:,.2f} spent)."
+                )
+                return redirect(request.path)
 
         # Recompute used_budget for current check
         try:
@@ -1036,6 +1156,7 @@ def project_expenses(request, pk):
             # If validation passes, create the expense
             ProjectExpense.objects.create(
                 project=project,
+                event=event,
                 title=title,
                 reason=notes,
                 amount=amount_val,
@@ -1072,10 +1193,16 @@ def project_expenses(request, pk):
 
     # Expenses data
     expenses = ProjectExpense.objects.filter(project=project).order_by('-date_incurred', '-created_at')
+    
+    # Get all activities for the expense form dropdown
+    from .models import ProjectEvent
+    activities = project.events.all().order_by('-datetime', 'title')
+    
     return render(request, 'projects/project_expenses.html', {
         'project': project, 
         'base_template': base_template,
         'expenses': expenses,
+        'activities': activities,
         'remaining_total': remaining_total,
         'percent_remaining': percent_remaining,
         "ADMIN_ROLES": ADMIN_ROLES,
@@ -1105,13 +1232,26 @@ def project_invoices(request, pk):
         notes = request.POST.get('notes')
         amount_raw = request.POST.get('amount')
         receipt = request.FILES.get('receipt')
+        event_id = request.POST.get('event_id', '').strip()
+        
         try:
-            amount_val = float(amount_raw or 0)
+            amount_val = Decimal(amount_raw) if amount_raw else Decimal('0')
         except Exception:
-            amount_val = 0
-        if title and amount_val > 0:
+            amount_val = Decimal('0')
+        
+        # Get event if provided
+        event = None
+        if event_id:
+            try:
+                from .models import ProjectEvent
+                event = project.events.get(pk=event_id)
+            except ProjectEvent.DoesNotExist:
+                pass
+        
+        if title and amount_val > Decimal('0'):
             ProjectExpense.objects.create(
                 project=project,
+                event=event,
                 title=title,
                 reason=notes,
                 amount=amount_val,
@@ -1778,9 +1918,11 @@ def add_project_view(request):
                     raise ValueError(error)
                 
                 # Create all expenses after validation
+                # Note: event is set to None since activities don't exist yet during project creation
                 for expense_data in expenses_to_create:
                     ProjectExpense.objects.create(
                         project=project,
+                        event=None,  # Activities are created after project creation
                         title=expense_data['title'],
                         reason=expense_data['reason'],
                         amount=expense_data['amount'],

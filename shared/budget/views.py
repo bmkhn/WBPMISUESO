@@ -687,14 +687,27 @@ def faculty_project_budget_view(request, pk):
         notes = request.POST.get('notes')
         amount_raw = request.POST.get('amount')
         receipt = request.FILES.get('receipt')
+        event_id = request.POST.get('event_id', '').strip()
+        
         try:
             amount_val = Decimal(str(amount_raw))
         except Exception:
             amount_val = Decimal('0')
+        
+        # Get event if provided
+        event = None
+        if event_id:
+            try:
+                from shared.projects.models import ProjectEvent
+                event = project.events.get(pk=event_id)
+            except ProjectEvent.DoesNotExist:
+                pass
+        
         if title and amount_val > 0:
             try:
                 ProjectExpense.objects.create(
                     project=project,
+                    event=event,
                     title=title,
                     reason=notes,
                     amount=amount_val,

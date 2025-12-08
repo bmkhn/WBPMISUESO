@@ -455,6 +455,14 @@ def project_expense_upload_to(instance, filename):
 
 class ProjectExpense(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='expenses')
+    event = models.ForeignKey(
+        'ProjectEvent',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='expenses',
+        help_text="Optional: Link expense to a specific activity"
+    )
     title = models.CharField(max_length=255)
     reason = models.TextField(blank=True, null=True)
     amount = models.DecimalField(max_digits=12, decimal_places=2)
@@ -548,6 +556,14 @@ class ProjectEvent(models.Model):
 	image = models.ImageField(upload_to=project_event_image_upload_to, blank=True, null=True, validators=[validate_image_size])
 	placeholder = models.BooleanField(default=False)
 	has_submission = models.BooleanField(default=False)
+	allocated_budget = models.DecimalField(
+		max_digits=12, 
+		decimal_places=2, 
+		default=0, 
+		blank=True, 
+		null=True,
+		help_text="Budget allocated for this activity"
+	)
 
 	STATUS_CHOICES = [
 		("SCHEDULED", "Scheduled"),
@@ -582,6 +598,29 @@ class ProjectEvent(models.Model):
 		if self.image and hasattr(self.image, 'url'):
 			return self.image.url
 		return static('image.png')
+
+	@property
+	def total_expenses(self):
+		"""Sum of all expenses linked to this activity"""
+		return self.expenses.aggregate(Sum('amount'))['amount__sum'] or Decimal('0')
+	
+	@property
+	def remaining_budget(self):
+		"""Remaining budget for this activity (allocated - spent)"""
+		allocated = self.allocated_budget or Decimal('0')
+		spent = self.total_expenses
+		remaining = allocated - spent
+		return max(Decimal('0'), remaining)
+	
+	@property
+	def budget_utilization_percent(self):
+		"""Percentage of allocated budget that has been spent"""
+		allocated = self.allocated_budget or Decimal('0')
+		if allocated == 0:
+			return 0
+		spent = self.total_expenses
+		percent = (spent / allocated) * 100
+		return min(100, float(percent))
 
 	def __str__(self):
 		return f"{self.title} ({self.project.title})"

@@ -54,9 +54,9 @@ class ProjectExpenseViewSet(viewsets.ModelViewSet):
         project.used_budget = spent
         project.save(update_fields=['used_budget'])
 
-    def _validate_budget_availability(self, project, new_amount, instance=None):
+    def _validate_budget_availability(self, project, new_amount, instance=None, event=None):
         """
-        Check if adding/updating this expense exceeds the total budget.
+        Check if adding/updating this expense exceeds the total budget and activity budget (if linked).
         """
         total_budget = (project.internal_budget or Decimal('0')) + (project.external_budget or Decimal('0'))
         
@@ -72,6 +72,22 @@ class ProjectExpenseViewSet(viewsets.ModelViewSet):
             raise ValidationError(
                 f"Expense amount ({new_amount}) exceeds remaining project budget ({remaining})."
             )
+        
+        # Validate activity budget if event is linked
+        if event and event.allocated_budget:
+            from .models import ProjectEvent
+            current_event_expenses = event.expenses.aggregate(s=Sum('amount'))['s'] or Decimal('0')
+            if instance and instance.event == event:
+                # Exclude current instance from event expenses if updating
+                current_event_expenses -= (instance.amount or Decimal('0'))
+            
+            remaining_event_budget = (event.allocated_budget or Decimal('0')) - current_event_expenses
+            
+            if new_amount > remaining_event_budget:
+                raise ValidationError(
+                    f"Expense amount ({new_amount}) exceeds remaining activity budget ({remaining_event_budget}) "
+                    f"for activity '{event.title}'."
+                )
 
     def perform_create(self, serializer):
         project = self.get_project()
@@ -79,9 +95,14 @@ class ProjectExpenseViewSet(viewsets.ModelViewSet):
 
         amount = serializer.validated_data.get('amount', Decimal('0'))
         title = serializer.validated_data.get('title', 'Expense')
+        event = serializer.validated_data.get('event', None)
+        
+        # Validate event belongs to project
+        if event and event.project != project:
+            raise ValidationError("Event must belong to the same project.")
 
         # 1. Validate Budget
-        self._validate_budget_availability(project, amount)
+        self._validate_budget_availability(project, amount, event=event)
 
         # 2. Save Expense
         instance = serializer.save(project=project, created_by=self.request.user)
@@ -107,9 +128,14 @@ class ProjectExpenseViewSet(viewsets.ModelViewSet):
         self.check_permissions_and_membership(project)
 
         new_amount = serializer.validated_data.get('amount', instance.amount)
+        event = serializer.validated_data.get('event', instance.event)
+        
+        # Validate event belongs to project
+        if event and event.project != project:
+            raise ValidationError("Event must belong to the same project.")
         
         # 1. Validate Budget (treating it as a modification)
-        self._validate_budget_availability(project, new_amount, instance)
+        self._validate_budget_availability(project, new_amount, instance, event=event)
 
         # 2. Save
         serializer.save()

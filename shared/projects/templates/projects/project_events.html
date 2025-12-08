@@ -86,6 +86,15 @@
                             <label class="form-label">Location<span class="required">*</span></label>
                             <input class="user-details-value" type="text" name="location" value="{{ event.location }}" required>
                         </div>
+                        <div class="form-group">
+                            <label class="form-label">Allocated Budget (₱)<span class="required">*</span></label>
+                            <input class="user-details-value" type="number" name="allocated_budget" id="edit_allocated_budget_{{ event.id }}" step="0.01" min="0" value="{{ event.allocated_budget|default:'' }}" placeholder="0.00" required data-event-id="{{ event.id }}" data-old-budget="{{ event.allocated_budget|default:0 }}">
+                            <div id="remaining-budget-display-{{ event.id }}" style="margin-top:0.5rem;font-size:0.9rem;">
+                                <span style="color:#666;">Remaining Budget: </span>
+                                <span id="remaining-budget-amount-{{ event.id }}" style="font-weight:600;color:#059669;" data-initial-remaining="{{ remaining_budget_for_activities }}">₱{{ remaining_budget_for_activities|floatformat:2|intcomma }}</span>
+                            </div>
+                            <div id="budget-error-message-{{ event.id }}" style="color:#DC2626;font-size:0.85rem;margin-top:0.25rem;display:none;"></div>
+                        </div>
                         <div class="form-actions" style="justify-content:flex-end;">
                             <button type="button" class="back admin-button" onclick="document.getElementById('edit-event-modal-{{ event.id }}').style.display='none'">Cancel</button>
                             <button type="submit" class="save admin-button">Save Changes</button>
@@ -130,6 +139,15 @@
             <div class="form-group">
                 <label class="form-label">Location<span class="required">*</span></label>
                 <input class="user-details-value" type="text" name="add_event_location" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Allocated Budget (₱)<span class="required">*</span></label>
+                <input class="user-details-value" type="number" name="add_event_allocated_budget" id="add_event_allocated_budget" step="0.01" min="0" placeholder="0.00" required>
+                <div id="remaining-budget-display" style="margin-top:0.5rem;font-size:0.9rem;">
+                    <span style="color:#666;">Remaining Budget: </span>
+                    <span id="remaining-budget-amount" style="font-weight:600;color:#059669;">₱{{ remaining_budget_for_activities|floatformat:2|intcomma }}</span>
+                </div>
+                <div id="budget-error-message" style="color:#DC2626;font-size:0.85rem;margin-top:0.25rem;display:none;"></div>
             </div>
             <div class="form-actions" style="justify-content:center;">
                 <button type="button" class="back admin-button" id="cancel-add-event-modal">Cancel</button>
@@ -176,6 +194,76 @@
     document.querySelectorAll('.event-datetime-input').forEach(function(input) {
         input.setAttribute('min', minDateTime);
         input.setAttribute('max', maxDateTime);
+    });
+    
+    // Budget calculation for Add Activity Modal
+    const addBudgetInput = document.getElementById('add_event_allocated_budget');
+    const remainingBudgetDisplay = document.getElementById('remaining-budget-amount');
+    const budgetErrorMessage = document.getElementById('budget-error-message');
+    const initialRemainingBudget = parseFloat('{{ remaining_budget_for_activities|default:0 }}') || 0;
+    
+    function updateRemainingBudget(inputElement, displayElement, errorElement, baseRemaining, oldBudget = 0) {
+        const enteredBudget = parseFloat(inputElement.value) || 0;
+        // For edit mode, add back the old budget since we're replacing it
+        const actualRemaining = baseRemaining + oldBudget;
+        const newRemaining = actualRemaining - enteredBudget;
+        
+        if (enteredBudget > 0) {
+            if (newRemaining < 0) {
+                displayElement.textContent = '₱' + Math.abs(newRemaining).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                displayElement.style.color = '#DC2626';
+                if (errorElement) {
+                    errorElement.textContent = 'Budget exceeds remaining project budget!';
+                    errorElement.style.display = 'block';
+                }
+                inputElement.classList.add('error-input');
+            } else {
+                displayElement.textContent = '₱' + newRemaining.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                displayElement.style.color = '#059669';
+                if (errorElement) {
+                    errorElement.style.display = 'none';
+                }
+                inputElement.classList.remove('error-input');
+            }
+        } else {
+            displayElement.textContent = '₱' + actualRemaining.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            displayElement.style.color = '#059669';
+            if (errorElement) {
+                errorElement.style.display = 'none';
+            }
+            inputElement.classList.remove('error-input');
+        }
+    }
+    
+    if (addBudgetInput && remainingBudgetDisplay) {
+        addBudgetInput.addEventListener('input', function() {
+            updateRemainingBudget(addBudgetInput, remainingBudgetDisplay, budgetErrorMessage, initialRemainingBudget);
+        });
+        addBudgetInput.addEventListener('change', function() {
+            updateRemainingBudget(addBudgetInput, remainingBudgetDisplay, budgetErrorMessage, initialRemainingBudget);
+        });
+    }
+    
+    // Budget calculation for Edit Activity Modals
+    document.querySelectorAll('[id^="edit_allocated_budget_"]').forEach(function(input) {
+        const eventId = input.getAttribute('data-event-id');
+        const oldBudget = parseFloat(input.getAttribute('data-old-budget')) || 0;
+        const displayElement = document.getElementById('remaining-budget-amount-' + eventId);
+        const errorElement = document.getElementById('budget-error-message-' + eventId);
+        
+        if (displayElement) {
+            // For edit mode, initial remaining = base remaining + old budget (since we're replacing it)
+            const editModeRemaining = initialRemainingBudget + oldBudget;
+            // Update initial display
+            displayElement.textContent = '₱' + editModeRemaining.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            
+            input.addEventListener('input', function() {
+                updateRemainingBudget(input, displayElement, errorElement, initialRemainingBudget, oldBudget);
+            });
+            input.addEventListener('change', function() {
+                updateRemainingBudget(input, displayElement, errorElement, initialRemainingBudget, oldBudget);
+            });
+        }
     });
     
     // Validate on form submit with unified error handling
