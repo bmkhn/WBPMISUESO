@@ -258,6 +258,16 @@ a:hover {
     text-decoration: none; 
 }
 
+/* Reset buttons that reuse option-item styling */
+.option-button {
+    border: none;
+    background: transparent;
+    width: 100%;
+    text-align: left;
+    color: inherit;
+    cursor: pointer;
+}
+
 .option-item h3 {
     font-weight: 600;
     font-size: 1.2rem; 

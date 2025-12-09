@@ -26,6 +26,11 @@ from shared.projects.models import Project
 from .models import User, UserRoleHistory
 from .services import serialize_user_data
 
+
+def _is_psu_email(email: str) -> bool:
+    """Normalize email and check PSU domain."""
+    return (email or '').strip().lower().endswith('@psu.palawan.edu.ph')
+
 @never_cache
 @csrf_exempt
 def health_check(request):
@@ -284,39 +289,19 @@ def role_redirect(request):
     # Check if Google user needs role selection (only non-PSU emails)
     if request.user.is_authenticated:
         User = get_user_model()
-        is_psu_email = request.user.email.lower().endswith('@psu.palawan.edu.ph')
+        is_psu_email = _is_psu_email(request.user.email)
         
         # PSU emails are auto-assigned FACULTY, skip role selection
         if is_psu_email:
             # Ensure PSU email users have FACULTY role
-            if request.user.role != User.Role.FACULTY:
+            if request.user.role != User.Role.FACULTY or not request.user.google_role_selected:
                 request.user.role = User.Role.FACULTY
+                request.user.google_role_selected = True
                 request.user.save()
         else:
-            # Non-PSU emails need role selection
-            # Check session flag first (set during Google auth)
-            if request.session.get('google_role_selection_needed', False):
-                # Clear the flag and redirect to role selection
-                request.session.pop('google_role_selection_needed', None)
+            # Non-PSU emails: always require explicit role selection if not yet marked
+            if not request.user.google_role_selected:
                 return redirect('select_google_role')
-            
-            # Check if user still has default CLIENT role and needs role selection
-            # This happens if they're a Google user with CLIENT role but haven't filled any profile fields
-            if (not request.user.has_usable_password() and 
-                request.user.role == User.Role.CLIENT):
-                # Check if they have any profile data filled - if not, they need role selection
-                has_profile_data = (
-                    request.user.contact_no or 
-                    request.user.company or 
-                    request.user.industry or 
-                    request.user.college or 
-                    request.user.degree or 
-                    request.user.expertise or 
-                    request.user.valid_id
-                )
-                # If no profile data and still has placeholder/default values, need role selection
-                if not has_profile_data:
-                    return redirect('select_google_role')
         
         # Check if Google user needs profile completion
         if request.session.get('google_profile_incomplete', False):
@@ -376,41 +361,21 @@ def select_google_role_view(request):
         return redirect('role_redirect')
     
     # PSU emails are automatically assigned FACULTY - redirect them away
-    is_psu_email = request.user.email.lower().endswith('@psu.palawan.edu.ph')
+    is_psu_email = _is_psu_email(request.user.email)
     if is_psu_email:
         # Ensure PSU email users have FACULTY role
         if request.user.role != User.Role.FACULTY:
             request.user.role = User.Role.FACULTY
+            request.user.google_role_selected = True
             request.user.save()
         # Redirect to profile completion
         return redirect('complete_google_profile')
     
-    # Check if user already has a role set (other than default CLIENT) and profile is complete
-    # If they have a non-CLIENT role and profile is complete, they don't need role selection
-    if request.user.role and request.user.role != User.Role.CLIENT:
-        # If profile is complete, redirect to home
-        if not is_google_profile_incomplete(request.user):
-            return redirect('role_redirect')
-        # If profile incomplete, redirect to profile completion
-        return redirect('complete_google_profile')
-    
-    # If user has CLIENT role, check if they've filled any profile data
-    # If they have profile data, they've already selected CLIENT and need profile completion
-    # If they have no profile data, they need role selection
-    if request.user.role == User.Role.CLIENT:
-        has_profile_data = (
-            request.user.contact_no or 
-            request.user.company or 
-            request.user.industry or 
-            request.user.college or 
-            request.user.degree or 
-            request.user.expertise or 
-            request.user.valid_id
-        )
-        if has_profile_data:
-            # They've already selected CLIENT and started filling profile, redirect to completion
+    # If role already set and selection recorded, proceed to completion/redirect
+    if request.user.google_role_selected:
+        if is_google_profile_incomplete(request.user):
             return redirect('complete_google_profile')
-        # No profile data means they haven't selected a role yet, show selection
+        return redirect('role_redirect')
     
     if request.method == 'POST':
         selected_role = request.POST.get('role')
@@ -421,6 +386,7 @@ def select_google_role_view(request):
         if selected_role in valid_roles:
             # Update user role
             request.user.role = selected_role
+            request.user.google_role_selected = True
             request.user.save()
             
             # Log the role selection
@@ -445,6 +411,40 @@ def select_google_role_view(request):
     })
 
 
+@login_required
+def cancel_google_signup(request):
+    """
+    Cancel Google signup: delete the account if role not yet selected and log out.
+    This prevents half-created accounts when the user backs out.
+    """
+    user = request.user
+    is_google = not user.has_usable_password()
+    is_psu = _is_psu_email(user.email) if user.email else False
+
+    if is_google:
+        if not is_psu:
+            # Non-PSU: force role re-selection next login
+            user.role = User.Role.CLIENT
+            user.google_role_selected = False
+            user.contact_no = ''
+            user.company = ''
+            user.industry = ''
+            user.college = None
+            user.degree = ''
+            user.expertise = ''
+            if getattr(user, 'valid_id', None):
+                user.valid_id.delete(save=False)
+            user.save()
+        else:
+            # PSU: keep Faculty assignment
+            user.role = User.Role.FACULTY
+            user.google_role_selected = True
+            user.save()
+
+    logout(request)
+    return redirect('login')
+
+
 def register_view(request):
     logout(request)
     for key in ['pending_user_id', '2fa_code', 'registration_role', 'registration_data']:
@@ -460,6 +460,10 @@ def send_verification_code_view(request):
 
         if not email or not role:
             return JsonResponse({'success': False, 'error': 'Email and role are required.'})
+
+        # Force PSU emails to Faculty role
+        if _is_psu_email(email):
+            role = 'FACULTY'
 
         User = get_user_model()
         if User.objects.filter(email=email).exists():
@@ -501,7 +505,7 @@ def send_verification_code_view(request):
             request.session['pending_email'] = email
             request.session['registration_role'] = role
             request.session['registration_data'] = registration_data
-            return JsonResponse({'success': True, 'code': code})
+            return JsonResponse({'success': True, 'code': code, 'role': role})
         else:
             return JsonResponse({'success': False, 'error': 'Failed to send verification code.'})
 
@@ -649,6 +653,11 @@ def registration_unified_view(request, role):
                 return JsonResponse({'success': False, 'error': 'Session expired or registration data missing. Please start registration over.'})
                 
             data_to_save = registration_data.copy()
+
+            # Force PSU emails to Faculty role even if URL was different
+            reg_email = data_to_save.get('email', '')
+            if _is_psu_email(reg_email):
+                role_upper = 'FACULTY'
             
             form = UnifiedRegistrationForm(data_to_save, request.FILES, role=role_upper)
             

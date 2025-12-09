@@ -189,6 +189,8 @@ class User(AbstractUser):
     company = models.CharField(max_length=255, blank=True, null=True)
     industry = models.CharField(max_length=255, blank=True, null=True)
     is_expert = models.BooleanField(default=False)
+    # Tracks whether a Google-authenticated user has explicitly selected a role
+    google_role_selected = models.BooleanField(default=False)
     profile_picture = models.ImageField(upload_to='users/profile_pictures/', blank=True, null=True, validators=[validate_image_size])
     bio = models.TextField(blank=True, null=True)
     @property

@@ -7,6 +7,7 @@ or logs in the existing user if the email matches.
 """
 
 from django.contrib.auth import get_user_model
+from .views import _is_psu_email, create_user_log
 from social_core.pipeline.user import get_username as social_get_username
 from social_core.exceptions import AuthException
 
@@ -71,13 +72,14 @@ def create_user(strategy, details, backend, user=None, *args, **kwargs):
     contact_no = ''  # Empty, user must add
     
     # Determine role based on email domain
-    # If @psu.palawan.edu.ph → automatically assign FACULTY
-    # Otherwise → needs role selection (will be set to CLIENT temporarily)
-    if email.lower().endswith('@psu.palawan.edu.ph'):
+    # If @psu.palawan.edu.ph → automatically assign FACULTY and mark selection done
+    # Otherwise → needs role selection (set CLIENT temporarily)
+    if _is_psu_email(email):
         role = User.Role.FACULTY
+        google_role_selected = True
     else:
-        # Set to CLIENT as temporary default, user will select during role selection
         role = User.Role.CLIENT
+        google_role_selected = False
     
     # Create the user with minimal required fields
     # Use a temporary password, then set it to unusable
@@ -91,6 +93,7 @@ def create_user(strategy, details, backend, user=None, *args, **kwargs):
         sex=sex,
         contact_no=contact_no,
         role=role,
+        google_role_selected=google_role_selected,
         is_confirmed=True,  # Google-verified emails are considered confirmed
         password=temp_password,  # Temporary password, will be set to unusable
     )
@@ -103,7 +106,6 @@ def create_user(strategy, details, backend, user=None, *args, **kwargs):
     user.save()
     
     # Log the user creation
-    from .views import create_user_log
     create_user_log(
         user=None,
         action='CREATE',

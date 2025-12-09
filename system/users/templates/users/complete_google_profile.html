@@ -14,7 +14,7 @@
 <body>
     <!-- Cancel button at top of page - Always visible -->
     <div style="position: fixed; top: 1rem; right: 1rem; z-index: 1000;">
-        <a href="/home/" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; background: white; border: 2px solid #0099FF; border-radius: 8px; color: #0099FF; font-weight: 600; font-size: 0.875rem; text-decoration: none; box-shadow: 0 2px 8px rgba(0,153,255,0.2); transition: all 0.2s;" onmouseover="this.style.background='#0099FF'; this.style.color='white';" onmouseout="this.style.background='white'; this.style.color='#0099FF';">
+        <a href="{% url 'cancel_google_signup' %}" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; background: white; border: 2px solid #0099FF; border-radius: 8px; color: #0099FF; font-weight: 600; font-size: 0.875rem; text-decoration: none; box-shadow: 0 2px 8px rgba(0,153,255,0.2); transition: all 0.2s;" onmouseover="this.style.background='#0099FF'; this.style.color='white';" onmouseout="this.style.background='white'; this.style.color='#0099FF';" onclick="event.stopPropagation();">
             <i class="fa-solid fa-home"></i>
             <span>Return Home</span>
         </a>
@@ -70,7 +70,7 @@
                 </div>
             </div>
             <div class="actions">
-                <a href="/home/" class="back-btn" style="display: flex; align-items: center; gap: 0.5rem;">
+                <a href="{% url 'cancel_google_signup' %}" class="back-btn" style="display: flex; align-items: center; gap: 0.5rem;" onclick="event.stopPropagation();">
                     <i class="fa-solid fa-home"></i>
                     <span class="back-btn-text">Return Home</span>
                 </a>
@@ -153,7 +153,7 @@
                         <i class="fa-solid fa-arrow-left"></i>
                         <span class="back-btn-text">Back</span>
                     </a>
-                    <a href="/home/" class="back-btn" style="text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
+                    <a href="{% url 'cancel_google_signup' %}" class="back-btn" style="text-decoration: none; display: flex; align-items: center; gap: 0.5rem;" onclick="event.stopPropagation();">
                         <i class="fa-solid fa-home"></i>
                         <span class="back-btn-text">Return Home</span>
                     </a>
@@ -212,7 +212,7 @@
                         <i class="fa-solid fa-arrow-left"></i>
                         <span class="back-btn-text">Back</span>
                     </a>
-                    <a href="/home/" class="back-btn" style="text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
+                    <a href="{% url 'cancel_google_signup' %}" class="back-btn" style="text-decoration: none; display: flex; align-items: center; gap: 0.5rem;" onclick="event.stopPropagation();">
                         <i class="fa-solid fa-home"></i>
                         <span class="back-btn-text">Return Home</span>
                     </a>
