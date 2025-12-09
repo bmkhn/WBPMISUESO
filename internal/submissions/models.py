@@ -264,3 +264,25 @@ class SubmissionUpdate(models.Model):
             # Submission-specific updates
             models.Index(fields=['submission', '-updated_at'], name='subupd_sub_date_idx'),
         ]
+
+
+
+# Ensure ProjectEvent.has_submission is updated when a Submission is created or deleted
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
+
+@receiver(post_save, sender=Submission)
+def update_project_event_has_submission_on_create(sender, instance, created, **kwargs):
+	if created and instance.event:
+		# Only one submission per activity
+		event = instance.event
+		event.has_submission = True
+		event.save(update_fields=['has_submission'])
+
+@receiver(post_delete, sender=Submission)
+def update_project_event_has_submission_on_delete(sender, instance, **kwargs):
+	if instance.event:
+		# When a submission for an event is deleted, mark event as available again
+		event = instance.event
+		event.has_submission = False
+		event.save(update_fields=['has_submission'])

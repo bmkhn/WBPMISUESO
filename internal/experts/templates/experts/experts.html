@@ -238,14 +238,14 @@
 
 			<div class="form-group" style="display:flex;align-items:center;justify-content:space-between;margin-top:1.5rem;">
 				<div style="flex:1;text-align:right;margin-right:10px;display:flex;align-items:center;justify-content:flex-end;gap:8px;">
-					<label for="include_in_progress" style="cursor:pointer;">Include experts with in-progress projects</label>
+					<label for="include_in_progress" style="cursor:pointer;">Include experts with incomplete projects</label>
 					<span class="info-tooltip" style="position:relative;display:inline-block;margin-bottom:8px;">
 						<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-info-circle" viewBox="0 0 16 16" style="vertical-align:middle;cursor:pointer;">
 							<path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
 							<path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
 						</svg>
 						<span class="tooltip-text" style="visibility:hidden;opacity:0;transition:opacity 0.2s;position:absolute;bottom:125%;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:8px 12px;border-radius:6px;font-size:0.95rem;white-space:nowrap;z-index:9999;box-shadow:0 2px 8px rgba(0,0,0,0.12);">
-							When enabled, experts with in-progress projects will be included and their in-progress projects will affect the results.
+							When enabled, experts with incomplete projects will be included and their incomplete projects will affect the results.
 						</span>
 					</span>
 				</div>
@@ -683,15 +683,16 @@
 				</div>
 				<div class="member-info">
 					<div class="member-name">${member.name}</div>
-					<div class="member-score" style="font-size:0.95rem;color:#245F3E;margin-top:2px;">Match: ${(member.final_score * 100).toFixed(1)}%</div>
-					<div class="debug-scores" style="font-size:0.85rem;color:#888;margin-top:2px;">
-						<li style="margin-left:25px;">Degree: ${(member.degree_score * 100).toFixed(1)}%</li>
-						<li style="margin-left:25px;">Expertise: ${(member.expertise_score * 100).toFixed(1)}%</li>
-						<li style="margin-left:25px;">Projects: ${(member.project_title_score * 100).toFixed(1)}%</li>
-					</div>
 				</div>
 				<span class="leader-badge">👑 Leader</span>
 			`;
+
+					// <div class="member-score" style="font-size:0.95rem;color:#245F3E;margin-top:2px;">Match: ${(member.final_score * 100).toFixed(1)}%</div>
+					// <div class="debug-scores" style="font-size:0.85rem;color:#888;margin-top:2px;">
+					// 	<li style="margin-left:25px;">Degree: ${(member.degree_score * 100).toFixed(1)}%</li>
+					// 	<li style="margin-left:25px;">Expertise: ${(member.expertise_score * 100).toFixed(1)}%</li>
+					// 	<li style="margin-left:25px;">Projects: ${(member.project_title_score * 100).toFixed(1)}%</li>
+					// </div>
 
 			// Checkbox click handler (only if checkbox exists)
 			if (canCreateProjects) {
@@ -825,7 +826,7 @@
 						${relevantProjects.length > 0 ?
 							relevantProjects.map(p => `
 								<div class="project-item" style="padding:10px;background:#F7FAFC;border-radius:6px;border-left:3px solid #245F3E;">
-									<a href="/projects/${p.id}/overview/" class="project-link" style="font-weight:500;font-size:0.95rem;color:#245F3E;margin-bottom:4px;cursor:pointer;">${p.title}</a>
+									<a href="/projects/${p.id}/overview/" class="project-link" style="font-weight:500;font-size:0.95rem;color:#245F3E;margin-bottom:4px;cursor:pointer;" target="_blank" rel="noopener noreferrer">${p.title}</a>
 									<div style="display:flex;gap:12px;font-size:0.85rem;color:#666;">
 										<span><i class="fa-solid fa-calendar"></i> ${p.start_date || 'N/A'}</span>
 										<span style="padding:2px 8px;background:#E6F4EA;color:#245F3E;border-radius:4px;font-size:0.8rem;">${p.status.replace(/_/g, ' ')}</span>
@@ -852,7 +853,7 @@
 		
 		detailsPanel.innerHTML = `
 			<div class="panel-header">
-				<a href="/experts/profile/${member.id}/" class="expert-profile-link" style="font-size:1.2rem;font-weight:600;color:#245F3E;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">
+				<a href="/experts/profile/${member.id}/" class="expert-profile-link" style="font-size:1.2rem;font-weight:600;color:#245F3E;cursor:pointer;display:inline-flex;align-items:center;gap:6px;" target="_blank" rel="noopener noreferrer">
 					<i class="fa-solid fa-user" style="font-size:1rem;"></i> ${member.name}
 				</a>
 			</div>
