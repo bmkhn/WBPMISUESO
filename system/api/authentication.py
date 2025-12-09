@@ -35,8 +35,17 @@ class APIKeyUserAuthentication(BaseAuthentication):
             except APIConnection.DoesNotExist:
                 raise AuthenticationFailed("API Connection is not active or does not exist.")
 
-            # Bind User
-            return (conn.requested_by, api_key)
+            # Bind User - check if requested_by column exists
+            try:
+                user = conn.requested_by
+                if user is None:
+                    raise AuthenticationFailed("API Connection has no associated user.")
+                return (user, api_key)
+            except Exception as e:
+                # If requested_by_id column doesn't exist, return None to use next auth method
+                if 'requested_by_id' in str(e) or 'no such column' in str(e).lower():
+                    return None
+                raise AuthenticationFailed(f"Error accessing API Connection user: {str(e)}")
             
         except Exception:
             return None

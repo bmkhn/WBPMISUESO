@@ -10,10 +10,35 @@ def role_required(allowed_roles, require_confirmed=False):
         def wrapper(request, *args, **kwargs):
             if not request.user.is_authenticated:
                 return redirect('not_authenticated')
+            
+            # Check if Google user needs profile completion (for protected features)
+            from .views import is_google_profile_incomplete
+            from .models import User
+            
+            if not request.user.has_usable_password():
+                # Check if needs role selection
+                if (request.user.role == User.Role.CLIENT and 
+                    not request.user.email.lower().endswith('@psu.palawan.edu.ph') and
+                    (request.user.given_name in ['Google', ''] or request.user.last_name in ['User', ''])):
+                    return redirect('select_google_role')
+                
+                # Check if profile is incomplete
+                if is_google_profile_incomplete(request.user):
+                    return redirect('complete_google_profile')
+            
             if require_confirmed:
                 # If it's a non-user, just pass through
                 if hasattr(request.user, 'is_confirmed') and not request.user.is_confirmed:
                     return redirect('not_confirmed')
+            
+            # Allow superusers to bypass role checks
+            if getattr(request.user, 'is_superuser', False):
+                response = view_func(request, *args, **kwargs)
+                if response is None:
+                    from django.http import HttpResponse
+                    return HttpResponse("View did not return a response", status=500)
+                return response
+            
             # Safely check role - if user doesn't have role attribute or role is None, deny access
             user_role = getattr(request.user, 'role', None)
             if user_role not in allowed_roles:

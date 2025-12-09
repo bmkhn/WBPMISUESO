@@ -3,7 +3,7 @@ from shared.event_calendar.models import MeetingEvent
 from shared.projects.models import Project, ProjectEvent
 from system.users.decorators import role_required
 from shared.request.models import ClientRequest
-from system.users.views import User
+from system.users.models import User
 from itertools import chain
 import json
 

@@ -29,7 +29,7 @@ else:
 
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-fallback-key-change-in-production')
 
-ALLOWED_HOSTS = [ 'localhost', '127.0.0.1', 'uesopmis.up.railway.app', 'healthcheck.railway.app', 'uesomis.pythonanywhere.com' ]
+ALLOWED_HOSTS = [ 'localhost', '127.0.0.1', 'testserver', 'uesopmis.up.railway.app', 'healthcheck.railway.app', 'uesomis.pythonanywhere.com' ]
 CSRF_TRUSTED_ORIGINS = [ 'https://uesopmis.up.railway.app' ]
 
 # ============================================================
@@ -81,6 +81,7 @@ INSTALLED_APPS = [
     'rest_framework_api_key',
     'rest_framework.authtoken',
     'drf_spectacular',
+    'social_django',
 
     # Bootstrap
     'widget_tweaks',
@@ -172,6 +173,7 @@ else:
 
 
 AUTHENTICATION_BACKENDS = [
+    'social_core.backends.google.GoogleOAuth2',
     'system.users.backends.EmailBackend',
     'django.contrib.auth.backends.ModelBackend',
 ]
@@ -200,6 +202,28 @@ PASSWORD_RESET_TIMEOUT = 3600
 
 LOGIN_URL = '/login/'
 LOGOUT_REDIRECT_URL = '/login/'
+
+# Social Auth Settings
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.environ.get('SOCIAL_AUTH_GOOGLE_OAUTH2_KEY', '')
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.environ.get('SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET', '')
+
+# Social Auth Pipeline
+SOCIAL_AUTH_PIPELINE = (
+    'social_core.pipeline.social_auth.social_details',
+    'social_core.pipeline.social_auth.social_uid',
+    'social_core.pipeline.social_auth.auth_allowed',
+    'social_core.pipeline.social_auth.social_user',
+    'system.users.pipeline.get_username',
+    'system.users.pipeline.create_user',
+    'social_core.pipeline.social_auth.associate_user',
+    'social_core.pipeline.social_auth.load_extra_data',
+    'system.users.pipeline.user_details',
+)
+
+# Redirect after successful social auth
+SOCIAL_AUTH_LOGIN_REDIRECT_URL = '/redirector/'
+SOCIAL_AUTH_NEW_USER_REDIRECT_URL = '/redirector/'
+SOCIAL_AUTH_LOGIN_ERROR_URL = '/login/?error=social_auth_failed'
 
 
 # ============================================================

@@ -62,8 +62,16 @@ class UnifiedRegistrationForm(forms.ModelForm):
         password = cleaned_data.get("password")
         confirm_password = cleaned_data.get("confirm_password")
         
+        # Only validate password match if both are provided
         if password and confirm_password and password != confirm_password:
             self.add_error('confirm_password', "Passwords Do Not Match.")
+        
+        # If only one password is provided, require both
+        if (password and not confirm_password) or (confirm_password and not password):
+            if password and not confirm_password:
+                self.add_error('confirm_password', "Please confirm your password.")
+            else:
+                self.add_error('password', "Please enter your password.")
         
         return cleaned_data
 

@@ -26,6 +26,11 @@ from shared.projects.models import Project
 from .models import User, UserRoleHistory
 from .services import serialize_user_data
 
+
+def _is_psu_email(email: str) -> bool:
+    """Normalize email and check PSU domain."""
+    return (email or '').strip().lower().endswith('@psu.palawan.edu.ph')
+
 @never_cache
 @csrf_exempt
 def health_check(request):
@@ -245,9 +250,67 @@ def reset_password_view(request):
     
     return JsonResponse({'success': False, 'error': 'Invalid request method.'})
 
+def is_google_profile_incomplete(user):
+    """
+    Check if a Google-authenticated user has incomplete profile information.
+    Returns True if profile needs completion.
+    """
+    if not user:
+        return False
+    
+    # Only check Google users (those with unusable passwords)
+    if user.has_usable_password():
+        return False
+    
+    # Check if user has placeholder names (indicates Google sign-in)
+    if user.given_name in ['Google', ''] or user.last_name in ['User', '']:
+        return True
+    
+    # Check required fields based on role
+    if user.role == User.Role.FACULTY:
+        # Faculty needs: contact_no, college, degree, expertise, valid_id
+        if not user.contact_no or not user.college or not user.degree or not user.expertise or not user.valid_id:
+            return True
+    elif user.role == User.Role.IMPLEMENTER:
+        # Implementer needs: contact_no, degree, expertise, valid_id
+        if not user.contact_no or not user.degree or not user.expertise or not user.valid_id:
+            return True
+    elif user.role == User.Role.CLIENT:
+        # Client needs: contact_no, company, industry, valid_id
+        if not user.contact_no or not user.company or not user.industry or not user.valid_id:
+            return True
+    
+    return False
+
+
 def role_redirect(request):
     role = getattr(request.user, 'role', None)
-
+    
+    # Check if Google user needs role selection (only non-PSU emails)
+    if request.user.is_authenticated:
+        User = get_user_model()
+        is_psu_email = _is_psu_email(request.user.email)
+        
+        # PSU emails are auto-assigned FACULTY, skip role selection
+        if is_psu_email:
+            # Ensure PSU email users have FACULTY role
+            if request.user.role != User.Role.FACULTY or not request.user.google_role_selected:
+                request.user.role = User.Role.FACULTY
+                request.user.google_role_selected = True
+                request.user.save()
+        else:
+            # Non-PSU emails: always require explicit role selection if not yet marked
+            if not request.user.google_role_selected:
+                return redirect('select_google_role')
+        
+        # Check if Google user needs profile completion
+        if request.session.get('google_profile_incomplete', False):
+            request.session.pop('google_profile_incomplete', None)
+            return redirect('complete_google_profile')
+        
+        if is_google_profile_incomplete(request.user):
+            return redirect('complete_google_profile')
+    
     # Check for one-time reminder flag from login
     storage = get_messages(request)
     show_reminders = any(str(msg) == "SHOW_REMINDERS" for msg in storage)
@@ -285,6 +348,103 @@ def check_email_view(request):
     return JsonResponse({'exists': exists})
 
 
+@login_required
+def select_google_role_view(request):
+    """
+    Role selection view for Google-authenticated users with non-PSU emails.
+    Only shows IMPLEMENTER and CLIENT options (FACULTY is auto-assigned for PSU emails).
+    """
+    User = get_user_model()
+    
+    # Only allow Google users (those with unusable passwords)
+    if request.user.has_usable_password():
+        return redirect('role_redirect')
+    
+    # PSU emails are automatically assigned FACULTY - redirect them away
+    is_psu_email = _is_psu_email(request.user.email)
+    if is_psu_email:
+        # Ensure PSU email users have FACULTY role
+        if request.user.role != User.Role.FACULTY:
+            request.user.role = User.Role.FACULTY
+            request.user.google_role_selected = True
+            request.user.save()
+        # Redirect to profile completion
+        return redirect('complete_google_profile')
+    
+    # If role already set and selection recorded, proceed to completion/redirect
+    if request.user.google_role_selected:
+        if is_google_profile_incomplete(request.user):
+            return redirect('complete_google_profile')
+        return redirect('role_redirect')
+    
+    if request.method == 'POST':
+        selected_role = request.POST.get('role')
+        
+        # Only IMPLEMENTER and CLIENT are valid (PSU emails are auto-assigned FACULTY)
+        valid_roles = [User.Role.IMPLEMENTER, User.Role.CLIENT]
+        
+        if selected_role in valid_roles:
+            # Update user role
+            request.user.role = selected_role
+            request.user.google_role_selected = True
+            request.user.save()
+            
+            # Log the role selection
+            create_user_log(
+                user=request.user,
+                action='UPDATE',
+                target_user=request.user,
+                details=f"Selected role via Google Sign-In: {request.user.get_role_display()}",
+                is_notification=False
+            )
+            
+            # Redirect to profile completion
+            return redirect('complete_google_profile')
+        else:
+            return render(request, 'users/select_google_role.html', {
+                'error': 'Please select a valid role.',
+                'user': request.user,
+            })
+    
+    return render(request, 'users/select_google_role.html', {
+        'user': request.user,
+    })
+
+
+@login_required
+def cancel_google_signup(request):
+    """
+    Cancel Google signup: delete the account if role not yet selected and log out.
+    This prevents half-created accounts when the user backs out.
+    """
+    user = request.user
+    is_google = not user.has_usable_password()
+    is_psu = _is_psu_email(user.email) if user.email else False
+
+    if is_google:
+        if not is_psu:
+            # Non-PSU: force role re-selection next login
+            user.role = User.Role.CLIENT
+            user.google_role_selected = False
+            user.contact_no = ''
+            user.company = ''
+            user.industry = ''
+            user.college = None
+            user.degree = ''
+            user.expertise = ''
+            if getattr(user, 'valid_id', None):
+                user.valid_id.delete(save=False)
+            user.save()
+        else:
+            # PSU: keep Faculty assignment
+            user.role = User.Role.FACULTY
+            user.google_role_selected = True
+            user.save()
+
+    logout(request)
+    return redirect('login')
+
+
 def register_view(request):
     logout(request)
     for key in ['pending_user_id', '2fa_code', 'registration_role', 'registration_data']:
@@ -300,6 +460,10 @@ def send_verification_code_view(request):
 
         if not email or not role:
             return JsonResponse({'success': False, 'error': 'Email and role are required.'})
+
+        # Force PSU emails to Faculty role
+        if _is_psu_email(email):
+            role = 'FACULTY'
 
         User = get_user_model()
         if User.objects.filter(email=email).exists():
@@ -341,11 +505,125 @@ def send_verification_code_view(request):
             request.session['pending_email'] = email
             request.session['registration_role'] = role
             request.session['registration_data'] = registration_data
-            return JsonResponse({'success': True, 'code': code})
+            return JsonResponse({'success': True, 'code': code, 'role': role})
         else:
             return JsonResponse({'success': False, 'error': 'Failed to send verification code.'})
 
     return JsonResponse({'success': False, 'error': 'Invalid request method.'})
+
+
+@login_required
+def complete_google_profile_view(request):
+    """
+    Profile completion view for Google-authenticated users.
+    Uses the same registration form but updates existing user instead of creating new one.
+    """
+    User = get_user_model()
+    
+    # Only allow Google users (those with unusable passwords)
+    if request.user.has_usable_password():
+        return redirect('role_redirect')
+    
+    # Check if profile is already complete
+    if not is_google_profile_incomplete(request.user):
+        return redirect('role_redirect')
+    
+    from .forms import UnifiedRegistrationForm
+    user = request.user
+    role_upper = user.role.upper()
+    
+    colleges = None
+    campuses = None
+    if role_upper == 'FACULTY':
+        colleges = College.objects.select_related('campus').all()
+        campuses = Campus.objects.all()
+    
+    if request.method == 'POST':
+        verification_code = request.POST.get('verification_code')
+        
+        if verification_code:
+            # For Google users, accept the verification code (we skip email verification)
+            # The template sends '000000' as a placeholder
+            if verification_code != '000000' and verification_code != request.session.get('2fa_code', ''):
+                return JsonResponse({'success': False, 'error': 'Invalid verification code.'})
+            
+            # Update existing user instead of creating new one
+            form = UnifiedRegistrationForm(request.POST, request.FILES, role=role_upper, instance=user)
+            
+            # Make password optional for Google users
+            form.fields['password'].required = False
+            form.fields['confirm_password'].required = False
+            
+            if form.is_valid():
+                # Update user with form data
+                updated_user = form.save(commit=False)
+                updated_user.role = role_upper
+                updated_user.is_confirmed = True  # Google users are already verified
+                
+                # Google users don't need password - keep it unusable
+                # Only set password if explicitly provided (optional)
+                if request.POST.get('password') and request.POST.get('password').strip():
+                    updated_user.set_password(request.POST.get('password'))
+                else:
+                    updated_user.set_unusable_password()
+                
+                if request.FILES.get('valid_id'):
+                    updated_user.valid_id = request.FILES['valid_id']
+                if request.FILES.get('profile_picture'):
+                    updated_user.profile_picture = request.FILES['profile_picture']
+                
+                updated_user.save()
+                
+                create_user_log(
+                    user=updated_user,
+                    action='UPDATE',
+                    target_user=updated_user,
+                    details=f"Completed profile via Google Sign-In",
+                    is_notification=False
+                )
+                
+                request.session.pop('2fa_code', None)
+                request.session.pop('registration_data', None)
+                
+                return JsonResponse({'success': True})
+            else:
+                return JsonResponse({'success': False, 'errors': form.errors, 'error': 'Invalid form data. Please correct the errors.'})
+        else:
+            # This shouldn't happen with the current flow, but handle it
+            return JsonResponse({'success': False, 'error': 'Verification code required.'})
+    else:
+        # Pre-fill form with existing user data
+        initial_data = {
+            'given_name': user.given_name if user.given_name not in ['Google', ''] else '',
+            'last_name': user.last_name if user.last_name not in ['User', ''] else '',
+            'middle_initial': user.middle_initial or '',
+            'suffix': user.suffix or '',
+            'email': user.email,
+            'contact_no': user.contact_no or '',
+            'sex': user.sex,
+            'college': user.college.id if user.college else '',
+            'degree': user.degree or '',
+            'expertise': user.expertise or '',
+            'company': user.company or '',
+            'industry': user.industry or '',
+            'preferred_id': user.preferred_id or '',
+        }
+        form = UnifiedRegistrationForm(initial=initial_data, role=role_upper, instance=user)
+        
+        # Make password optional for Google users (they don't need it)
+        form.fields['password'].required = False
+        form.fields['confirm_password'].required = False
+    
+    role_display = dict(User.Role.choices).get(role_upper, role_upper)
+    
+    return render(request, 'users/complete_google_profile.html', {
+        'form': form,
+        'role': role_upper,
+        'role_display': role_display,
+        'colleges': colleges,
+        'campuses': campuses,
+        'user': user,
+    })
 
 
 def registration_unified_view(request, role):
@@ -375,6 +653,11 @@ def registration_unified_view(request, role):
                 return JsonResponse({'success': False, 'error': 'Session expired or registration data missing. Please start registration over.'})
                 
             data_to_save = registration_data.copy()
+
+            # Force PSU emails to Faculty role even if URL was different
+            reg_email = data_to_save.get('email', '')
+            if _is_psu_email(reg_email):
+                role_upper = 'FACULTY'
             
             form = UnifiedRegistrationForm(data_to_save, request.FILES, role=role_upper)
             
@@ -927,7 +1210,15 @@ def unverify_user(request, id):
 def delete_user(request, id):
     User = get_user_model()
     user = get_object_or_404(User, id=id)
+    
+    # Prevent self-deletion
+    if request.user.id == user.id:
+        return redirect('no_permission')
+    
+    # Delete the user - Django will handle related objects based on on_delete settings
+    # The APIConnection.requested_by field has on_delete=models.SET_NULL, so it will be set to None automatically
     user.delete()
+    
     return HttpResponseRedirect(reverse('manage_user'))
 
 

@@ -49,11 +49,105 @@ class College(models.Model):
 
 class User(AbstractUser):
     def delete(self, *args, **kwargs):
+        # Delete associated files
         if self.profile_picture and self.profile_picture.storage and self.profile_picture.storage.exists(self.profile_picture.name):
             self.profile_picture.storage.delete(self.profile_picture.name)
         if self.valid_id and self.valid_id.storage and self.valid_id.storage.exists(self.valid_id.name):
             self.valid_id.storage.delete(self.valid_id.name)
-        super().delete(*args, **kwargs)
+        
+        # Try normal deletion first - this is the cleanest approach
+        try:
+            super().delete(*args, **kwargs)
+        except Exception as e:
+            error_str = str(e).lower()
+            # Only use custom deletion if we get the specific error about requested_by_id column
+            if 'requested_by_id' in error_str or 'no such column' in error_str:
+                # Check if requested_by_id column exists
+                from django.db import connection
+                column_exists = False
+                try:
+                    if connection.vendor == 'sqlite':
+                        with connection.cursor() as cursor:
+                            cursor.execute("PRAGMA table_info(settings_apiconnection)")
+                            columns = [row[1] for row in cursor.fetchall()]
+                            column_exists = 'requested_by_id' in columns
+                    else:
+                        # For other databases, try to query the column
+                        with connection.cursor() as cursor:
+                            cursor.execute("SELECT requested_by_id FROM settings_apiconnection LIMIT 1")
+                            column_exists = True
+                except Exception:
+                    # Table or column doesn't exist
+                    column_exists = False
+                
+                # If column doesn't exist, use custom deletion that skips APIConnection
+                if not column_exists:
+                    from django.db.models.deletion import Collector
+                    from django.db import router
+                    
+                    using = kwargs.get('using') or router.db_for_write(self.__class__, instance=self)
+                    collector = Collector(using=using)
+                    collector.collect([self])
+                    
+                    # Find and remove APIConnection model from collector
+                    apiconnection_model = None
+                    for model in list(collector.data.keys()):
+                        try:
+                            if hasattr(model, '_meta') and hasattr(model._meta, 'db_table'):
+                                if model._meta.db_table == 'settings_apiconnection':
+                                    apiconnection_model = model
+                                    break
+                        except:
+                            pass
+                    
+                    # Remove from collector.data
+                    if apiconnection_model and apiconnection_model in collector.data:
+                        del collector.data[apiconnection_model]
+                    
+                    # Remove from field_updates - this is critical!
+                    # field_updates structure: {ModelClass: {field_name: value}}
+                    if hasattr(collector, 'field_updates') and collector.field_updates:
+                        # Try to get the APIConnection model class
+                        try:
+                            from system.settings.models import APIConnection
+                            # Remove APIConnection from field_updates if it exists
+                            if APIConnection in collector.field_updates:
+                                del collector.field_updates[APIConnection]
+                        except (ImportError, KeyError):
+                            # If import fails or key doesn't exist, try to find it by db_table
+                            models_to_remove = []
+                            for model in list(collector.field_updates.keys()):
+                                try:
+                                    if hasattr(model, '_meta') and hasattr(model._meta, 'db_table'):
+                                        if model._meta.db_table == 'settings_apiconnection':
+                                            models_to_remove.append(model)
+                                except:
+                                    pass
+                            
+                            for model in models_to_remove:
+                                if model in collector.field_updates:
+                                    del collector.field_updates[model]
+                    
+                    # Now try to delete using collector
+                    try:
+                        collector.delete()
+                    except Exception as e2:
+                        error_str2 = str(e2).lower()
+                        if 'requested_by_id' in error_str2 or 'no such column' in error_str2:
+                            # Last resort: use raw SQL with proper parameter formatting
+                            user_id = self.id
+                            with connection.cursor() as cursor:
+                                # Django's cursor.execute handles parameterization automatically
+                                # For SQLite, use ? placeholder; Django will handle it
+                                cursor.execute("DELETE FROM users_user WHERE id = ?", (user_id,))
+                        else:
+                            raise
+                else:
+                    # Column exists but still got error, re-raise original exception
+                    raise
+            else:
+                # Different error, re-raise it
+                raise
         
     class Role(models.TextChoices):
         FACULTY = 'FACULTY', 'Faculty'
@@ -95,6 +189,8 @@ class User(AbstractUser):
     company = models.CharField(max_length=255, blank=True, null=True)
     industry = models.CharField(max_length=255, blank=True, null=True)
     is_expert = models.BooleanField(default=False)
+    # Tracks whether a Google-authenticated user has explicitly selected a role
+    google_role_selected = models.BooleanField(default=False)
     profile_picture = models.ImageField(upload_to='users/profile_pictures/', blank=True, null=True, validators=[validate_image_size])
     bio = models.TextField(blank=True, null=True)
     @property

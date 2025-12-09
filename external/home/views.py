@@ -19,6 +19,27 @@ def home_view(request):
     if request.user.is_authenticated and not getattr(request.user, 'is_confirmed', True):
         return redirect('not_confirmed')
     
+    # Check if Google user needs role selection or profile completion
+    # Show banner/notification but don't force redirect
+    from system.users.views import is_google_profile_incomplete
+    from system.users.models import User
+    
+    needs_role_selection = False
+    needs_profile_completion = False
+    
+    if request.user.is_authenticated:
+        # Check if needs role selection (non-PSU email with default CLIENT role)
+        if (not request.user.has_usable_password() and 
+            request.user.role == User.Role.CLIENT and 
+            not request.user.email.lower().endswith('@psu.palawan.edu.ph')):
+            # Check if they still have placeholder data
+            if request.user.given_name in ['Google', ''] or request.user.last_name in ['User', '']:
+                needs_role_selection = True
+        
+        # Check if profile is incomplete
+        if is_google_profile_incomplete(request.user):
+            needs_profile_completion = True
+    
     def get_project_card_data(project_qs):
         projects_data = []
         for project in project_qs:
@@ -128,6 +149,10 @@ def home_view(request):
 
     from django.contrib.messages import get_messages
     storage = get_messages(request)
+    
+    # Add profile completion flags to context
+    context['needs_role_selection'] = needs_role_selection if 'needs_role_selection' in locals() else False
+    context['needs_profile_completion'] = needs_profile_completion if 'needs_profile_completion' in locals() else False
     show_notifications = any(str(msg) == "SHOW_REMINDERS" for msg in storage)
     
     render_context = {
@@ -146,6 +171,8 @@ def home_view(request):
         'events_json': events_json,
         'notifications': notifications,
         'show_notifications': show_notifications,
+        'needs_role_selection': needs_role_selection if 'needs_role_selection' in locals() else False,
+        'needs_profile_completion': needs_profile_completion if 'needs_profile_completion' in locals() else False,
     }
 
     return render(request, 'home/home.html', render_context)

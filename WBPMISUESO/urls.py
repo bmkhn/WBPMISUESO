@@ -51,6 +51,9 @@ urlpatterns = [
     path('notifications/', include('system.notifications.urls')),   # Notifications
     path('settings/', include('system.settings.urls')),             # Settings
     path('', include('system.users.urls')),                         # Users
+    
+    # Social Auth URLs
+    path('oauth/', include('social_django.urls', namespace='social')),
 
     path('api/calendar/', include('shared.event_calendar.api_urls')),
     path('api/requests/', include('shared.request.api_urls')), 

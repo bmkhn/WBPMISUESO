@@ -16,4 +16,4 @@ urlpatterns = [
     # Server-rendered add/edit pages
     path('add/', add_goal_view, name='add_goal'),
     path('edit/<int:goal_id>/', edit_goal_view, name='edit_goal'),
-]
+] 
