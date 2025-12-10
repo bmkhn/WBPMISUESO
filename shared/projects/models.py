@@ -3,7 +3,7 @@ from django.db import models
 from django.conf import settings
 from internal.agenda.models import Agenda
 from django.utils import timezone
-from django.db.models.signals import post_save, post_delete, m2m_changed
+from django.db.models.signals import post_save, post_delete, pre_delete, m2m_changed
 from django.dispatch import receiver
 from django.db.models import Sum
 from decimal import Decimal
@@ -565,6 +565,27 @@ class ProjectEvent(models.Model):
 		help_text="Budget allocated for this activity"
 	)
 
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		# Track old allocated_budget to detect changes
+		# For new instances, this will be None (set in save method)
+		# For existing instances loaded from DB, this will be set in save method
+		self._old_allocated_budget = None
+	
+	def save(self, *args, **kwargs):
+		# Track old allocated_budget before saving
+		if self.pk:
+			try:
+				old_instance = ProjectEvent.objects.get(pk=self.pk)
+				self._old_allocated_budget = old_instance.allocated_budget
+			except ProjectEvent.DoesNotExist:
+				# Instance has pk but doesn't exist in DB (shouldn't happen, but handle it)
+				self._old_allocated_budget = None
+		else:
+			# New instance - no old value
+			self._old_allocated_budget = None
+		super().save(*args, **kwargs)
+
 	STATUS_CHOICES = [
 		("SCHEDULED", "Scheduled"),
 		("ONGOING", "Ongoing"),
@@ -624,6 +645,135 @@ class ProjectEvent(models.Model):
 
 	def __str__(self):
 		return f"{self.title} ({self.project.title})"
+
+
+# --- SIGNAL HANDLERS for ProjectEvent Budget Allocation to Expenses ---
+
+@receiver(post_save, sender=ProjectEvent)
+def handle_project_event_budget_allocation(sender, instance, created, **kwargs):
+	"""
+	Automatically create or update a ProjectExpense when an activity's allocated_budget is set or changed.
+	This ensures that activity budget allocations are reflected in the project's expenses.
+	"""
+	# Get the current allocated_budget value
+	current_budget = instance.allocated_budget or Decimal('0')
+	
+	# Get the old allocated_budget from the tracked value
+	old_budget = getattr(instance, '_old_allocated_budget', None)
+	if old_budget is None:
+		old_budget = Decimal('0')
+	else:
+		old_budget = old_budget or Decimal('0')
+	
+	# Helper function to get date from datetime field (handles both datetime objects and strings)
+	def get_date_from_datetime(dt_value):
+		if not dt_value:
+			return timezone.now().date()
+		if isinstance(dt_value, str):
+			# If it's a string, try to parse it
+			try:
+				from datetime import datetime
+				# Try parsing ISO format
+				if 'T' in dt_value:
+					dt = datetime.fromisoformat(dt_value.replace('Z', '+00:00'))
+				else:
+					dt = datetime.strptime(dt_value, '%Y-%m-%d %H:%M:%S')
+				return dt.date()
+			except (ValueError, AttributeError):
+				return timezone.now().date()
+		# If it's already a datetime object
+		if hasattr(dt_value, 'date'):
+			return dt_value.date()
+		return timezone.now().date()
+	
+	# Only proceed if the budget has changed or this is a new event with budget
+	if created and current_budget > 0:
+		# New event with allocated budget - create expense
+		ProjectExpense.objects.create(
+			project=instance.project,
+			event=instance,
+			title=f"Budget Allocation: {instance.title}",
+			reason=f"Budget allocated for activity: {instance.title}",
+			amount=current_budget,
+			date_incurred=get_date_from_datetime(instance.datetime),
+			created_by=instance.created_by or instance.updated_by,
+		)
+	elif not created and current_budget != old_budget:
+		# Budget was updated - find the allocation expense for this event
+		# Look for expenses linked to this event that start with "Budget Allocation:"
+		try:
+			allocation_expense = ProjectExpense.objects.filter(
+				project=instance.project,
+				event=instance,
+				title__startswith="Budget Allocation:"
+			).first()
+			
+			if current_budget > 0:
+				if allocation_expense:
+					# Update existing allocation expense
+					allocation_expense.amount = current_budget
+					allocation_expense.title = f"Budget Allocation: {instance.title}"
+					allocation_expense.reason = f"Budget allocated for activity: {instance.title}"
+					allocation_expense.save()
+				else:
+					# Create new allocation expense
+					ProjectExpense.objects.create(
+						project=instance.project,
+						event=instance,
+						title=f"Budget Allocation: {instance.title}",
+						reason=f"Budget allocated for activity: {instance.title}",
+						amount=current_budget,
+						date_incurred=get_date_from_datetime(instance.datetime),
+						created_by=instance.updated_by or instance.created_by,
+					)
+			else:
+				# If budget is set to 0 or None, delete the allocation expense
+				if allocation_expense:
+					allocation_expense.delete()
+		except Exception as e:
+			# Fail silently to avoid breaking the save operation
+			import logging
+			logging.error(f"Error handling project event budget allocation: {e}")
+
+
+@receiver(pre_delete, sender=ProjectEvent)
+def handle_project_event_delete(sender, instance, **kwargs):
+	"""
+	When an activity is deleted, delete the allocation expense for that activity.
+	This runs before the delete, so we can still query by event=instance.
+	Other expenses linked to the activity will have their event field set to NULL
+	(due to SET_NULL on the ForeignKey), but allocation expenses should be deleted
+	since they're directly tied to the activity's budget allocation.
+	"""
+	# Delete allocation expense for this activity (before the event is deleted)
+	try:
+		allocation_expense = ProjectExpense.objects.filter(
+			project=instance.project,
+			event=instance,
+			title__startswith="Budget Allocation:"
+		).first()
+		
+		if allocation_expense:
+			allocation_expense.delete()
+	except Exception as e:
+		# Fail silently to avoid breaking the delete operation
+		import logging
+		logging.error(f"Error deleting allocation expense for activity: {e}")
+
+
+@receiver(post_delete, sender=ProjectEvent)
+def handle_project_event_post_delete(sender, instance, **kwargs):
+	"""
+	Update project's used_budget after event deletion.
+	Note: We use the project_id from the instance before it's fully deleted.
+	"""
+	# Update project's used_budget after event deletion
+	try:
+		update_project_used_budget(instance.project_id)
+	except Exception as e:
+		# Fail silently to avoid breaking the delete operation
+		import logging
+		logging.error(f"Error updating project budget after activity deletion: {e}")
 
 
 #############################################################################################################################################################################################################

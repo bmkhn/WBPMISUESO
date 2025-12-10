@@ -91,7 +91,7 @@
                             <input class="user-details-value" type="number" name="allocated_budget" id="edit_allocated_budget_{{ event.id }}" step="0.01" min="0" value="{{ event.allocated_budget|default:'' }}" placeholder="0.00" required data-event-id="{{ event.id }}" data-old-budget="{{ event.allocated_budget|default:0 }}">
                             <div id="remaining-budget-display-{{ event.id }}" style="margin-top:0.5rem;font-size:0.9rem;">
                                 <span style="color:#666;">Remaining Budget: </span>
-                                <span id="remaining-budget-amount-{{ event.id }}" style="font-weight:600;color:#059669;" data-initial-remaining="{{ remaining_budget_for_activities }}">₱{{ remaining_budget_for_activities|floatformat:2|intcomma }}</span>
+                                <span id="remaining-budget-amount-{{ event.id }}" style="font-weight:600;color:#059669;" data-initial-remaining="{{ remaining_budget_for_activities }}">₱{{ remaining_budget_for_activities|floatformat:2 }}</span>
                             </div>
                             <div id="budget-error-message-{{ event.id }}" style="color:#DC2626;font-size:0.85rem;margin-top:0.25rem;display:none;"></div>
                         </div>
@@ -145,7 +145,7 @@
                 <input class="user-details-value" type="number" name="add_event_allocated_budget" id="add_event_allocated_budget" step="0.01" min="0" placeholder="0.00" required>
                 <div id="remaining-budget-display" style="margin-top:0.5rem;font-size:0.9rem;">
                     <span style="color:#666;">Remaining Budget: </span>
-                    <span id="remaining-budget-amount" style="font-weight:600;color:#059669;">₱{{ remaining_budget_for_activities|floatformat:2|intcomma }}</span>
+                    <span id="remaining-budget-amount" style="font-weight:600;color:#059669;">₱{{ remaining_budget_for_activities|floatformat:2 }}</span>
                 </div>
                 <div id="budget-error-message" style="color:#DC2626;font-size:0.85rem;margin-top:0.25rem;display:none;"></div>
             </div>
