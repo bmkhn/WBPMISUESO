@@ -75,9 +75,111 @@ class Command(BaseCommand):
 
         project_type = random.choice(ProjectType.objects.all())
 
-        # Create the project with the determined details
+        # Preset of realistic project titles based on degree/expertise domains
+        preset_titles = [
+            # Computer Science & IT
+            "AI-Powered Learning Platform",
+            "Cybersecurity Awareness Campaign",
+            "Data Science Bootcamp",
+            "Web Development for Beginners",
+            "Machine Learning in Agriculture",
+            "Cloud Infrastructure Training",
+            "Software Engineering Best Practices",
+            "IT Support Skills Enhancement",
+            "Database Systems for Business",
+            "Network Administration Fundamentals",
+            "Digital Transformation in Education",
+            "Business Analytics for Managers",
+            # Engineering
+            "Sustainable Building Design Workshop",
+            "Renewable Energy Community Project",
+            "Water Resource Management Seminar",
+            "Smart Transportation Solutions",
+            "Advanced Materials Research Program",
+            "Structural Engineering Innovations",
+            "Construction Management Training",
+            "Geotechnical Engineering Field Study",
+            "Power Systems and Renewable Energy",
+            "Control Systems in Manufacturing",
+            # Education
+            "Curriculum Innovation Seminar",
+            "Inclusive Education Training",
+            "Teacher Leadership Development",
+            "Digital Literacy for Educators",
+            "Classroom Management Workshop",
+            "Educational Technology Bootcamp",
+            "Assessment and Evaluation Strategies",
+            "Instructional Design for Online Learning",
+            # Business & Management
+            "Entrepreneurship Skills Training",
+            "Strategic Planning Workshop",
+            "Financial Literacy for Communities",
+            "Marketing in the Digital Age",
+            "Operations Management Simulation",
+            "Human Resource Management Essentials",
+            "Business Analytics for Decision Making",
+            "Corporate Governance Seminar",
+            # Health Sciences
+            "Community Health Outreach Program",
+            "Patient Care Skills Enhancement",
+            "Healthcare Management Seminar",
+            "Medical-Surgical Nursing Review",
+            "Public Health and Preventive Medicine",
+            "Clinical Nursing Skills Lab",
+            "Healthcare Quality Improvement",
+            # Environmental & Agricultural Sciences
+            "Climate Change Adaptation Project",
+            "Sustainable Farming Techniques",
+            "Environmental Conservation Campaign",
+            "Agroecology and Precision Farming",
+            "Green Technology for Rural Areas",
+            "Biodiversity Conservation Initiative",
+            "Soil Science and Crop Production",
+            # Social Sciences
+            "Community Development Initiative",
+            "Mental Health Awareness Drive",
+            "Social Welfare Advocacy Program",
+            "Family Counseling and Crisis Intervention",
+            "Organizational Psychology in Practice",
+            "Cultural Studies Symposium",
+            # Public Administration & Law
+            "Public Policy Forum",
+            "Governance and Leadership Training",
+            "Legal Rights Education",
+            "Administrative Law and Public Finance",
+            "Government Relations Workshop",
+            "Policy Analysis and Development",
+            # Sciences
+            "Applied Mathematics Workshop",
+            "Marine Biology Field Study",
+            "Genetics and Biotechnology Seminar",
+            "Analytical Chemistry Techniques",
+            "Physics for Renewable Energy",
+            "Environmental Science Research Camp",
+            # Architecture & Design
+            "Urban Planning and Design Symposium",
+            "Sustainable Architecture Workshop",
+            "Landscape Architecture and Green Spaces",
+            "Interior Design for Wellness",
+            # Tourism & Hospitality
+            "Sustainable Tourism Development",
+            "Hospitality Management Training",
+            "Event Management for Tourism Professionals",
+            "Cultural Tourism Promotion",
+            # Languages & Communication
+            "Technical Writing Bootcamp",
+            "Media and Communication Strategies",
+            "Creative Writing for Social Change",
+            "Digital Communication in the Workplace",
+            # Project Management
+            "Project Planning and Risk Management",
+            "Agile Methodologies for Teams",
+            "Stakeholder Management Essentials",
+            "Program Management for Nonprofits",
+        ]
+        project_title = random.choice(preset_titles)
         project = Project.objects.create(
-            title=f"{fake.catch_phrase()} - {random.choice(['Training Program', 'Workshop Series', 'Community Seminar', 'Extension Service', 'Skills Training', 'Community Workshop', 'Extension Program', 'Outreach Activity', 'Community Development', 'Skills Enhancement', 'Livelihood Program', 'Health Initiative'])}",
+            title=project_title,
             project_leader=leader,
             agenda=random.choice(agendas),
             project_type=project_type,
@@ -304,13 +406,13 @@ class Command(BaseCommand):
         self.stdout.write(self.style.WARNING('Starting Local asset generation...\n'))
 
         faculty_user_count = 25
-        no_of_ns_projects = 5
-        no_of_ip_projects = 5
-        no_of_c_projects = 5
+        no_of_ns_projects = 10
+        no_of_ip_projects = 10
+        no_of_c_projects = 10
 
-        no_of_ns_faculty_projects = 2
-        no_of_ip_faculty_projects = 2
-        no_of_c_faculty_projects = 2
+        no_of_ns_faculty_projects = 5
+        no_of_ip_faculty_projects = 5
+        no_of_c_faculty_projects = 5
 
         # Use static/faker/Placeholder.pdf and static/faker/image.png for all file/image fields
         PLACEHOLDER_PDF_PATH = "downloadables/files/Placeholder.pdf"

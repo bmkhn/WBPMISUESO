@@ -31,6 +31,22 @@ def _is_psu_email(email: str) -> bool:
     """Normalize email and check PSU domain."""
     return (email or '').strip().lower().endswith('@psu.palawan.edu.ph')
 
+
+def is_google_account(user) -> bool:
+    """Return True if this user is linked to Google OAuth via python-social-auth.
+
+    NOTE: Do not use has_usable_password() as the sole signal. Users can have
+    both a usable password and a linked Google login (account linking).
+    """
+    if not user or not getattr(user, 'is_authenticated', False):
+        return False
+    try:
+        # Provided by social_django (UserSocialAuth reverse relation)
+        return user.social_auth.filter(provider='google-oauth2').exists()
+    except Exception:
+        # Fallback for environments without social_auth relation.
+        return not user.has_usable_password()
+
 @never_cache
 @csrf_exempt
 def health_check(request):
@@ -258,8 +274,8 @@ def is_google_profile_incomplete(user):
     if not user:
         return False
     
-    # Only check Google users (those with unusable passwords)
-    if user.has_usable_password():
+    # Only check Google-linked users
+    if not is_google_account(user):
         return False
     
     # Check if user has placeholder names (indicates Google sign-in)
@@ -286,28 +302,28 @@ def is_google_profile_incomplete(user):
 def role_redirect(request):
     role = getattr(request.user, 'role', None)
     
-    # Check if Google user needs role selection (only non-PSU emails)
-    if request.user.is_authenticated:
+    # Google-auth flow guards
+    if request.user.is_authenticated and is_google_account(request.user):
         User = get_user_model()
         is_psu_email = _is_psu_email(request.user.email)
-        
-        # PSU emails are auto-assigned FACULTY, skip role selection
+
+        # PSU emails are auto-assigned FACULTY
         if is_psu_email:
-            # Ensure PSU email users have FACULTY role
             if request.user.role != User.Role.FACULTY or not request.user.google_role_selected:
                 request.user.role = User.Role.FACULTY
                 request.user.google_role_selected = True
                 request.user.save()
         else:
-            # Non-PSU emails: always require explicit role selection if not yet marked
-            if not request.user.google_role_selected:
+            # Only force role selection for Google users who still have the default CLIENT role
+            # and haven't explicitly confirmed a role yet.
+            if request.user.role == User.Role.CLIENT and not request.user.google_role_selected:
                 return redirect('select_google_role')
-        
-        # Check if Google user needs profile completion
+
+        # Profile completion is required for Google-linked users
         if request.session.get('google_profile_incomplete', False):
             request.session.pop('google_profile_incomplete', None)
             return redirect('complete_google_profile')
-        
+
         if is_google_profile_incomplete(request.user):
             return redirect('complete_google_profile')
     
@@ -356,8 +372,8 @@ def select_google_role_view(request):
     """
     User = get_user_model()
     
-    # Only allow Google users (those with unusable passwords)
-    if request.user.has_usable_password():
+    # Only allow Google-linked users
+    if not is_google_account(request.user):
         return redirect('role_redirect')
     
     # PSU emails are automatically assigned FACULTY - redirect them away
@@ -520,8 +536,8 @@ def complete_google_profile_view(request):
     """
     User = get_user_model()
     
-    # Only allow Google users (those with unusable passwords)
-    if request.user.has_usable_password():
+    # Only allow Google-linked users
+    if not is_google_account(request.user):
         return redirect('role_redirect')
     
     # Check if profile is already complete
