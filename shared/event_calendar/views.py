@@ -1,4 +1,3 @@
-from django.views.decorators.csrf import csrf_exempt
 import json
 from django.http import JsonResponse
 from system.users.models import User
@@ -45,7 +44,6 @@ def calendar_view(request):
 
 
 
-@csrf_exempt
 @role_required(allowed_roles=["DIRECTOR", "VP", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD", "FACULTY", "IMPLEMENTER"], require_confirmed=True)
 @require_http_methods(["GET", "POST"])
 def meeting_event_list(request):
@@ -99,11 +97,10 @@ def meeting_event_list(request):
             
             return JsonResponse({"status": "success", "event_id": meeting.id}, status=201) 
         except Exception as e:
-            import traceback
-            traceback.print_exc()
-            return JsonResponse({"status": "error", "errors": str(e)}, status=500)
+            import logging
+            logging.getLogger(__name__).exception("Error creating meeting event")
+            return JsonResponse({"status": "error", "errors": "Internal server error."}, status=500)
 
-@csrf_exempt
 @role_required(allowed_roles=["DIRECTOR", "VP", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD", "FACULTY", "IMPLEMENTER"], require_confirmed=True)
 @require_http_methods(["PUT", "DELETE"]) 
 def meeting_event_detail(request, event_id):
@@ -151,9 +148,9 @@ def meeting_event_detail(request, event_id):
                 return JsonResponse({"status": "error", "errors": errors.get("errors")}, status=status_code)
             return JsonResponse({"status": "success", "event_id": event.id})
         except Exception as e:
-            import traceback
-            traceback.print_exc()
-            return JsonResponse({"status": "error", "errors": str(e)}, status=500)
+            import logging
+            logging.getLogger(__name__).exception("Error updating meeting event")
+            return JsonResponse({"status": "error", "errors": "Internal server error."}, status=500)
             
     elif request.method == "DELETE":
         if event.created_by != request.user:
@@ -166,7 +163,9 @@ def meeting_event_detail(request, event_id):
                 return JsonResponse({"status": "error", "errors": errors.get("errors")}, status=status_code)
             return JsonResponse({"status": "success"})
         except Exception as e:
-            return JsonResponse({"status": "error", "errors": str(e)}, status=500)
+            import logging
+            logging.getLogger(__name__).exception("Error deleting meeting event")
+            return JsonResponse({"status": "error", "errors": "Internal server error."}, status=500)
         
 from rest_framework import viewsets, permissions
 from rest_framework.authentication import TokenAuthentication 

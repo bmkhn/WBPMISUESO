@@ -10,6 +10,7 @@ from .models import Announcement
 from django.db.models import Q, Case, When, DateTimeField
 from urllib.parse import urlencode
 import pytz
+from django.views.decorators.http import require_POST
 
 
 # Role-Based Dispatch View
@@ -31,19 +32,29 @@ def announcement_dispatch_view(request):
 # Announcement Details Dispatch View
 def announcement_details_dispatch_view(request, id):
     user = request.user
-    # Optimize with select_related
-    announcement = get_object_or_404(Announcement.objects.select_related('published_by', 'edited_by'), id=id)
-    if not user.is_authenticated:
-        return render(request, 'announcements/user_announcement_details.html', {'announcement': announcement})
     admin_roles = {"VP", "DIRECTOR", "UESO"}
     superuser_roles = {"PROGRAM_HEAD", "DEAN", "COORDINATOR"}
     role = getattr(user, 'role', None)
+
+    is_privileged = user.is_authenticated and (role in admin_roles or role in superuser_roles)
+    if is_privileged:
+        announcement = get_object_or_404(
+            Announcement.objects.select_related('published_by', 'edited_by', 'scheduled_by'),
+            id=id,
+        )
+    else:
+        announcement = get_object_or_404(
+            Announcement.objects.select_related('published_by'),
+            id=id,
+            published_at__isnull=False,
+            archived=False,
+        )
+
     if role in admin_roles:
         return render(request, 'announcements/admin_announcement_details.html', {'announcement': announcement})
-    elif role in superuser_roles:
+    if role in superuser_roles:
         return render(request, 'announcements/superuser_announcement_details.html', {'announcement': announcement})
-    else:
-        return render(request, 'announcements/user_announcement_details.html', {'announcement': announcement})
+    return render(request, 'announcements/user_announcement_details.html', {'announcement': announcement})
 
 
 # User Announcement View
@@ -435,6 +446,7 @@ def edit_announcement_view(request, id):
 
 # Delete Announcement View
 @role_required(allowed_roles=["VP", "DIRECTOR", "UESO"])
+@require_POST
 def delete_announcement_view(request, id):
     from .models import Announcement
     announcement = get_object_or_404(Announcement, id=id)
@@ -448,31 +460,29 @@ def delete_announcement_view(request, id):
 
 # Archive Announcement View
 @role_required(allowed_roles=["VP", "DIRECTOR", "UESO"])
+@require_POST
 def archive_announcement_view(request, id):
     announcement = get_object_or_404(Announcement, id=id)
-    if request.method == 'POST' or request.method == 'GET':
-        title = announcement.title
-        announcement.archived = True
-        announcement.save()
-        
-        # Redirect with toast parameters
-        from urllib.parse import quote
-        title_encoded = quote(title)
-        return redirect(f"{reverse('announcement_dispatcher')}?success=true&action=archived&title={title_encoded}")
-    return redirect('announcement_dispatcher')
+    title = announcement.title
+    announcement.archived = True
+    announcement.save()
+
+    # Redirect with toast parameters
+    from urllib.parse import quote
+    title_encoded = quote(title)
+    return redirect(f"{reverse('announcement_dispatcher')}?success=true&action=archived&title={title_encoded}")
 
 
 # Unarchive Announcement View
 @role_required(allowed_roles=["VP", "DIRECTOR", "UESO"])
+@require_POST
 def unarchive_announcement_view(request, id):
     announcement = get_object_or_404(Announcement, id=id)
-    if request.method == 'POST' or request.method == 'GET':
-        title = announcement.title
-        announcement.archived = False
-        announcement.save()
-        
-        # Redirect with toast parameters
-        from urllib.parse import quote
-        title_encoded = quote(title)
-        return redirect(f"{reverse('announcement_dispatcher')}?success=true&action=unarchived&title={title_encoded}")
-    return redirect('announcement_dispatcher')
+    title = announcement.title
+    announcement.archived = False
+    announcement.save()
+
+    # Redirect with toast parameters
+    from urllib.parse import quote
+    title_encoded = quote(title)
+    return redirect(f"{reverse('announcement_dispatcher')}?success=true&action=unarchived&title={title_encoded}")

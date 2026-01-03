@@ -171,7 +171,21 @@
     // Delete evaluation
     function deleteEvaluation(evalId) {
         if (confirm('Are you sure you want to delete this evaluation?')) {
-            window.location.href = `/projects/{{ project.id }}/evaluations/${evalId}/delete/`;
+            const csrfInputEl = document.querySelector('input[name=csrfmiddlewaretoken]');
+            const csrfToken = csrfInputEl ? csrfInputEl.value : '';
+
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/projects/{{ project.id }}/evaluations/${evalId}/delete/`;
+
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrfmiddlewaretoken';
+            csrfInput.value = csrfToken;
+            form.appendChild(csrfInput);
+
+            document.body.appendChild(form);
+            form.submit();
         }
     }
 

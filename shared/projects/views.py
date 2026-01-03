@@ -1356,28 +1356,44 @@ def project_evaluations(request, pk):
 def edit_project_evaluation(request, pk, eval_id):
     project = get_object_or_404(Project, pk=pk)
     evaluation = get_object_or_404(ProjectEvaluation, pk=eval_id, project=project)
-    if request.method == 'POST':
-        rating = request.POST.get('rating')
-        comment = request.POST.get('comment', '')
-        if rating is not None and rating != "":
-            try:
-                evaluation.rating = int(rating)
-            except Exception:
-                pass
-        evaluation.comment = comment
-        evaluation.save()
+    if request.method != 'POST':
+        return redirect(f'/projects/{pk}/evaluations/')
+
+    user_role = getattr(request.user, 'role', None)
+    admin_roles = {"VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"}
+    if evaluation.evaluated_by_id != request.user.id and user_role not in admin_roles:
+        from django.http import HttpResponseForbidden
+        return HttpResponseForbidden("You can only edit your own evaluation.")
+
+    rating = request.POST.get('rating')
+    comment = request.POST.get('comment', '')
+    if rating is not None and rating != "":
+        try:
+            evaluation.rating = int(rating)
+        except Exception:
+            pass
+    evaluation.comment = comment
+    evaluation.save()
     return redirect(f'/projects/{pk}/evaluations/')
 
 
-@role_required(allowed_roles=["UESO", "VP", "DIRECTOR", "PROGRAM_HEAD", "DEAN", "COORDINATOR"], require_confirmed=True)
+@role_required(allowed_roles=["UESO", "VP", "DIRECTOR", "PROGRAM_HEAD", "DEAN", "COORDINATOR", "FACULTY", "IMPLEMENTER"], require_confirmed=True)
 def delete_project_evaluation(request, pk, eval_id):
     project = get_object_or_404(Project, pk=pk)
     evaluation = get_object_or_404(ProjectEvaluation, pk=eval_id, project=project)
-    if request.method in ['POST', 'GET']:
-        try:
-            evaluation.delete()
-        except Exception:
-            pass
+    if request.method != 'POST':
+        return redirect(f'/projects/{pk}/evaluations/')
+
+    user_role = getattr(request.user, 'role', None)
+    admin_roles = {"VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"}
+    if evaluation.evaluated_by_id != request.user.id and user_role not in admin_roles:
+        from django.http import HttpResponseForbidden
+        return HttpResponseForbidden("You can only delete your own evaluation.")
+
+    try:
+        evaluation.delete()
+    except Exception:
+        pass
     return redirect(f'/projects/{pk}/evaluations/')
 
 
@@ -1968,12 +1984,13 @@ def add_project_view(request):
     })
 
 
+@role_required(allowed_roles=["UESO", "VP", "DIRECTOR"], require_confirmed=True)
 def check_college_budget(request):
     """AJAX endpoint to validate college budget availability"""
     # JsonResponse, CollegeBudget, datetime, Decimal are imported at the top
     
     if request.method != 'GET':
-        return JsonResponse({'error': 'Invalid request method'}, status=400)
+        return JsonResponse({'error': 'Invalid request method'}, status=405)
     
     project_leader_id = request.GET.get('project_leader_id')
     internal_budget = request.GET.get('internal_budget', '0')
@@ -2065,10 +2082,12 @@ def check_college_budget(request):
             'uncommitted': 0,
             'remaining': 0
         }, status=404)
-    except Exception as e:
+    except Exception:
+        import logging
+        logging.getLogger(__name__).exception("Error checking college budget")
         return JsonResponse({
             'valid': False,
-            'error': f'Error checking budget: {str(e)}',
+            'error': 'Error checking budget.',
             'college_name': None,
             'total_budget': 0,
             'uncommitted': 0,
