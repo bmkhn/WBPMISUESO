@@ -1,3 +1,5 @@
+import logging
+
 from django.http import JsonResponse
 from datetime import datetime, timedelta # Make sure timedelta is imported
 from django.utils import timezone # Import timezone for aware datetimes
@@ -79,10 +81,10 @@ def projects_metric_api(request):
         user_college = get_user_college(request)
         data = services.get_total_projects_count(start_date, end_date, college=user_college)
         return JsonResponse(data)
-    except Exception as e:
+    except Exception:
+        logging.getLogger(__name__).exception("Internal error in projects_metric_api")
         return JsonResponse({
-            'error': 'Internal Server Error while calculating projects metric.', 
-            'detail': str(e)
+            'error': 'Internal Server Error while calculating projects metric.',
         }, status=500)
     # --- END MODIFIED ---
 
@@ -94,10 +96,10 @@ def events_metric_api(request):
         user_college = get_user_college(request)
         data = services.get_total_events_count(start_date, end_date, college=user_college)
         return JsonResponse(data)
-    except Exception as e:
+    except Exception:
+        logging.getLogger(__name__).exception("Internal error in events_metric_api")
         return JsonResponse({
-            'error': 'Internal Server Error while calculating events metric.', 
-            'detail': str(e)
+            'error': 'Internal Server Error while calculating events metric.',
         }, status=500)
     # --- END MODIFIED ---
 
@@ -109,10 +111,10 @@ def providers_metric_api(request):
         user_college = get_user_college(request)
         data = services.get_total_providers_count(start_date, end_date, college=user_college)
         return JsonResponse(data)
-    except Exception as e:
+    except Exception:
+        logging.getLogger(__name__).exception("Internal error in providers_metric_api")
         return JsonResponse({
-            'error': 'Internal Server Error while calculating providers metric.', 
-            'detail': str(e)
+            'error': 'Internal Server Error while calculating providers metric.',
         }, status=500)
     # --- END MODIFIED ---
 
@@ -124,10 +126,10 @@ def individuals_metric_api(request):
         user_college = get_user_college(request)
         data = services.get_total_individuals_trained(start_date, end_date, college=user_college)
         return JsonResponse(data)
-    except Exception as e:
+    except Exception:
+        logging.getLogger(__name__).exception("Internal error in individuals_metric_api")
         return JsonResponse({
-            'error': 'Internal Server Error while calculating trained individuals metric.', 
-            'detail': str(e)
+            'error': 'Internal Server Error while calculating trained individuals metric.',
         }, status=500)
     # --- END MODIFIED ---
 
@@ -143,10 +145,10 @@ def active_projects_chart_api(request):
         user_college = get_user_college(request)
         data = services.get_active_projects_over_time(start_date, end_date, college=user_college) 
         return JsonResponse(data)
-    except Exception as e:
+    except Exception:
+        logging.getLogger(__name__).exception("Internal error in active_projects_chart_api")
         return JsonResponse({
-            'error': 'Internal Server Error while calculating active projects chart data.', 
-            'detail': str(e)
+            'error': 'Internal Server Error while calculating active projects chart data.',
         }, status=500)
     # --- END MODIFIED ---
 
@@ -159,10 +161,10 @@ def budget_allocation_chart_api(request):
         # This now calls the multi-series function in services.py
         data = services.get_budget_allocation_data(start_date, end_date, college=user_college)
         return JsonResponse(data)
-    except Exception as e:
+    except Exception:
+        logging.getLogger(__name__).exception("Internal error in budget_allocation_chart_api")
         return JsonResponse({
-            'error': 'Internal Server Error while calculating budget allocation chart data.', 
-            'detail': str(e)
+            'error': 'Internal Server Error while calculating budget allocation chart data.',
         }, status=500)
     # --- END MODIFIED ---
 
@@ -174,10 +176,10 @@ def agenda_distribution_chart_api(request):
         user_college = get_user_college(request)
         data = services.get_agenda_distribution_data(start_date, end_date, college=user_college)
         return JsonResponse(data)
-    except Exception as e:
+    except Exception:
+        logging.getLogger(__name__).exception("Internal error in agenda_distribution_chart_api")
         return JsonResponse({
-            'error': 'Internal Server Error while calculating agenda distribution chart data.', 
-            'detail': str(e)
+            'error': 'Internal Server Error while calculating agenda distribution chart data.',
         }, status=500)
     # --- END MODIFIED ---
  
@@ -189,10 +191,10 @@ def trained_individuals_chart_api(request):
         user_college = get_user_college(request)
         data = services.get_trained_individuals_data(start_date, end_date, college=user_college)
         return JsonResponse(data)
-    except Exception as e:
+    except Exception:
+        logging.getLogger(__name__).exception("Internal error in trained_individuals_chart_api")
         return JsonResponse({
-            'error': 'Internal Server Error while calculating trained individuals chart data.', 
-            'detail': str(e)
+            'error': 'Internal Server Error while calculating trained individuals chart data.',
         }, status=500)
     # --- END MODIFIED ---
 
@@ -204,10 +206,10 @@ def request_status_chart_api(request):
         user_college = get_user_college(request)
         data = services.get_request_status_distribution(start_date, end_date, college=user_college)
         return JsonResponse(data)
-    except Exception as e:
+    except Exception:
+        logging.getLogger(__name__).exception("Internal error in request_status_chart_api")
         return JsonResponse({
-            'error': 'Internal Server Error while calculating request status chart data.', 
-            'detail': str(e)
+            'error': 'Internal Server Error while calculating request status chart data.',
         }, status=500)
     # --- END MODIFIED ---
     
@@ -219,10 +221,10 @@ def project_trends_api(request):
         user_college = get_user_college(request)
         data = services.get_project_trends(start_date, end_date, college=user_college)
         return JsonResponse(data)
-    except Exception as e:
+    except Exception:
+        logging.getLogger(__name__).exception("Internal error in project_trends_api")
         return JsonResponse({
-            'error': 'Internal Server Error while calculating project trends data.', 
-            'detail': str(e)
+            'error': 'Internal Server Error while calculating project trends data.',
         }, status=500)
     # --- END MODIFIED ---
 
@@ -257,8 +259,9 @@ def get_public_projects(request):
         
         return Response(data, status=status.HTTP_200_OK)
         
-    except Exception as e:
-        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception:
+        logging.getLogger(__name__).exception("Internal error in get_public_projects")
+        return Response({'error': 'Internal server error.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @extend_schema(
     responses={200: ProjectReadOnlySerializer(many=True)}
@@ -282,5 +285,6 @@ def get_all_project_data(request):
         
         return Response(serializer.data, status=status.HTTP_200_OK)
         
-    except Exception as e:
-        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception:
+        logging.getLogger(__name__).exception("Internal error in get_all_project_data")
+        return Response({'error': 'Internal server error.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

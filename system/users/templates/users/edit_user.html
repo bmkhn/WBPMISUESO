@@ -33,9 +33,12 @@
                 </svg>
             <span class="info-tooltip">To deactivate this user's account, click here.</span> 
             </span>
-            <a href="{% url 'unverify_user' user.id %}" class="verification-badge"> 
-                Activated        
-            </a>
+            <form method="post" action="{% url 'unverify_user' user.id %}" style="display:inline;margin:0;">
+                {% csrf_token %}
+                <button type="submit" class="verification-badge" style="border:none;cursor:pointer;"> 
+                    Activated
+                </button>
+            </form>
         {% else %} 
             <span class="info-icon">    
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info-circle" viewBox="0 0 16 16">
@@ -44,9 +47,12 @@
                 </svg>
             <span class="info-tooltip">To activate this user's account, click here.</span> 
             </span>
-            <a href="{% url 'verify_user' user.id %}" class="verification-badge unverified">  
-                Deactivated 
-            </a>
+            <form method="post" action="{% url 'verify_user' user.id %}" style="display:inline;margin:0;">
+                {% csrf_token %}
+                <button type="submit" class="verification-badge unverified" style="border:none;cursor:pointer;">  
+                    Deactivated
+                </button>
+            </form>
         {% endif %}
         </div>
         {% endif %}

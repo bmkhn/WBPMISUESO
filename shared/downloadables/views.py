@@ -8,6 +8,7 @@ from .models import Downloadable
 import mimetypes
 import os
 from urllib.parse import urlencode
+from django.views.decorators.http import require_POST
 
 
 def downloadable_dispatcher(request):
@@ -293,7 +294,9 @@ def add_downloadable(request):
                 from urllib.parse import quote
                 return redirect(f'/downloadables/?success=true&action=created&name={quote(downloadable.name)}')
             except Exception as e:
-                error = str(e)
+                import logging
+                logging.getLogger(__name__).exception("Error adding downloadable")
+                error = 'An unexpected error occurred while saving this file.'
         else:
             error = form.errors.get('file', [''])[0] or 'Please correct the errors below.'
     else:
@@ -306,6 +309,19 @@ def downloadable_download(request, pk):
     from django.contrib import messages
     try:
         downloadable = Downloadable.objects.get(pk=pk)
+
+        user = request.user
+        user_role = getattr(user, 'role', None) if getattr(user, 'is_authenticated', False) else None
+        admin_roles = {"UESO", "DIRECTOR", "VP"}
+
+        # Access control: prevent IDOR via direct download URL
+        if downloadable.status != 'published' and user_role not in admin_roles:
+            raise Http404("Downloadable not found.")
+
+        if not getattr(user, 'is_authenticated', False):
+            if not downloadable.available_for_non_users or downloadable.status != 'published':
+                raise Http404("Downloadable not found.")
+
         file_path = getattr(downloadable.file, 'path', None)
         if not file_path or not os.path.exists(file_path):
             # File missing on disk
@@ -318,8 +334,10 @@ def downloadable_download(request, pk):
                 response = HttpResponse(f.read(), content_type=mime_type or 'application/octet-stream')
                 response['Content-Disposition'] = f'attachment; filename="{file_name}"'
                 return response
-        except Exception as e:
-            messages.error(request, f"Error reading file: {str(e)}")
+        except Exception:
+            import logging
+            logging.getLogger(__name__).exception("Error reading downloadable file")
+            messages.error(request, "Error reading file.")
             return render(request, "downloadables/file_missing.html", {"file_name": file_name})
     except Downloadable.DoesNotExist:
         messages.error(request, "Downloadable file not found.")
@@ -328,6 +346,7 @@ def downloadable_download(request, pk):
 
 # Delete file
 @role_required(allowed_roles=["UESO", "DIRECTOR", "VP"], require_confirmed=True)
+@require_POST
 def downloadable_delete(request, pk):
     try:
         downloadable = Downloadable.objects.get(pk=pk)
@@ -342,6 +361,7 @@ def downloadable_delete(request, pk):
 
 # Archive file
 @role_required(allowed_roles=["UESO", "DIRECTOR", "VP"], require_confirmed=True)
+@require_POST
 def downloadable_archive(request, pk):
     try:
         downloadable = Downloadable.objects.get(pk=pk)
@@ -356,6 +376,7 @@ def downloadable_archive(request, pk):
 
 # Unarchive file
 @role_required(allowed_roles=["UESO", "DIRECTOR", "VP"], require_confirmed=True)
+@require_POST
 def downloadable_unarchive(request, pk):
     try:
         downloadable = Downloadable.objects.get(pk=pk)
@@ -370,6 +391,7 @@ def downloadable_unarchive(request, pk):
 
 # Make file public
 @role_required(allowed_roles=["UESO", "DIRECTOR", "VP"], require_confirmed=True)
+@require_POST
 def downloadable_make_public(request, pk):
     try:
         downloadable = Downloadable.objects.get(pk=pk)
@@ -384,6 +406,7 @@ def downloadable_make_public(request, pk):
 
 # Make file private
 @role_required(allowed_roles=["UESO", "DIRECTOR", "VP"], require_confirmed=True)
+@require_POST
 def downloadable_make_private(request, pk):
     try:
         downloadable = Downloadable.objects.get(pk=pk)

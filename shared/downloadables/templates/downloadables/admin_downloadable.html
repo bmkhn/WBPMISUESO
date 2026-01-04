@@ -133,17 +133,17 @@
                                 <a href="#" class="settings-dropdown-item delete-link" data-delete-url="{% url 'downloadable_delete' downloadable.id %}" style="color:#E53E3E;">
                                     <svg width="18" height="22"><use href="#delete-icon" /></svg>Delete</a>
                                 {% if downloadable.status == 'archived' %}
-                                    <a href="{% url 'downloadable_unarchive' downloadable.id %}" class="settings-dropdown-item" style="color:#F4A261;">
+                                    <a href="#" class="settings-dropdown-item post-action-link" data-post-url="{% url 'downloadable_unarchive' downloadable.id %}" style="color:#F4A261;">
                                         <svg width="20" height="18"><use href="#archive-icon" /></svg>Unarchive</a>
                                 {% else %}
-                                    <a href="{% url 'downloadable_archive' downloadable.id %}" class="settings-dropdown-item" style="color:#F4A261;">
+                                    <a href="#" class="settings-dropdown-item post-action-link" data-post-url="{% url 'downloadable_archive' downloadable.id %}" style="color:#F4A261;">
                                         <svg width="20" height="18"><use href="#archive-icon" /></svg>Archive</a>
                                 {% endif %}
                                 {% if downloadable.available_for_non_users %}
-                                    <a href="{% url 'downloadable_make_private' downloadable.id %}" class="settings-dropdown-item" style="color:#E53E3E;">
+                                    <a href="#" class="settings-dropdown-item post-action-link" data-post-url="{% url 'downloadable_make_private' downloadable.id %}" style="color:#E53E3E;">
                                         <span class="crossmark-icon">&#10007;</span>Make Private</a>
                                 {% else %}
-                                    <a href="{% url 'downloadable_make_public' downloadable.id %}" class="settings-dropdown-item" style="color:#245F3E;">
+                                    <a href="#" class="settings-dropdown-item post-action-link" data-post-url="{% url 'downloadable_make_public' downloadable.id %}" style="color:#245F3E;">
                                         <span class="checkmark-icon">&#10003;</span>Make Public</a>
                                 {% endif %}
                             </div>
@@ -251,6 +251,23 @@
 <script>
     // Delete confirmation modal logic
     let deleteUrl = '';
+    const csrfToken = '{{ csrf_token }}';
+
+    function postTo(url) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = url;
+
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = csrfToken;
+        form.appendChild(csrfInput);
+
+        document.body.appendChild(form);
+        form.submit();
+    }
+
     document.querySelectorAll('.delete-link').forEach(function(link) {
         link.addEventListener('click', function(e) {
             e.preventDefault();
@@ -264,7 +281,7 @@
     };
     document.getElementById('confirmDeleteBtn').onclick = function() {
         if (deleteUrl) {
-            window.location.href = deleteUrl;
+            postTo(deleteUrl);
         }
     };
     // Hide modal when clicking outside
@@ -275,6 +292,16 @@
         }
     });
     document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.post-action-link').forEach(function(link) {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const url = link.getAttribute('data-post-url');
+                if (url) {
+                    postTo(url);
+                }
+            });
+        });
+
         document.querySelectorAll('.settings-dropdown-toggle').forEach(function(btn) {
             btn.addEventListener('click', function(e) {
                 e.stopPropagation();

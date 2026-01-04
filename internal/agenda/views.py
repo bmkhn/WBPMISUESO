@@ -2,8 +2,8 @@
 from .forms import AgendaForm
 from .models import Agenda
 from system.users.decorators import role_required
-from django.http import HttpResponseRedirect
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
+from django.views.decorators.http import require_POST
 from shared.projects.models import Project
 from urllib.parse import quote
 
@@ -62,8 +62,8 @@ def edit_agenda_view(request, agenda_id):
 
 # Delete Agenda View
 @role_required(allowed_roles=["VP", "DIRECTOR"], require_confirmed=True)
+@require_POST
 def delete_agenda_view(request, agenda_id):
-    agenda = Agenda.objects.get(id=agenda_id)
-    agenda_name = agenda.name
+    agenda = get_object_or_404(Agenda, id=agenda_id)
     agenda.delete()
     return redirect(f'/agenda/?success=true&action=deleted&name={quote(agenda.name)}')

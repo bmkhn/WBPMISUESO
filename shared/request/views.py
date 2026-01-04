@@ -21,7 +21,8 @@ def request_details_dispatcher(request, pk):
     # Only allow the submitter or privileged roles to view
     req = get_object_or_404(ClientRequest, pk=pk)
 
-    # If admin/director/VP is viewing a RECEIVED request, change it to UNDER_REVIEW
+    # Intentional Behavior: When an admin views a RECEIVED request,
+    # Transition it to UNDER_REVIEW.
     if request.user.role in ['UESO', 'VP', 'DIRECTOR'] and req.status == 'RECEIVED':
         req.status = 'UNDER_REVIEW'
         req.reviewed_by = request.user

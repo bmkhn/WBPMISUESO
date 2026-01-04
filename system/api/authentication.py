@@ -4,6 +4,8 @@ from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_api_key.models import APIKey
 from system.settings.models import APIConnection
 
+import logging
+
 class APIKeyUserAuthentication(BaseAuthentication):
     """
     Authenticates the request using an API Key, but binds the request.user 
@@ -45,7 +47,8 @@ class APIKeyUserAuthentication(BaseAuthentication):
                 # If requested_by_id column doesn't exist, return None to use next auth method
                 if 'requested_by_id' in str(e) or 'no such column' in str(e).lower():
                     return None
-                raise AuthenticationFailed(f"Error accessing API Connection user: {str(e)}")
+                logging.getLogger(__name__).exception("Error accessing API Connection requested_by user")
+                raise AuthenticationFailed("Error accessing API Connection user.")
             
         except Exception:
             return None
