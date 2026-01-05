@@ -253,41 +253,148 @@
                 </div>
                 <div class="notification-body">
                     {% if notifications.pending_submissions > 0 %}
-                    <div class="notification-item" onclick="window.location.href='/projects/'">
+                    <div class="notification-item" onclick="toggleReminderDropdown('dropdownPendingSubmissions', event)">
                         <div class="notification-icon"><i class="fa-solid fa-hourglass-half"></i></div>
                         <div class="notification-content">
                             <div class="notification-title">Pending Submissions</div>
                             <div class="notification-count">{{ notifications.pending_submissions }}</div>
                         </div>
                     </div>
+                    <div id="dropdownPendingSubmissions" style="display:none; margin-left: 44px;">
+                        {% for sub in pending_submissions_list %}
+                            <a href="{% url 'project_submissions_details' sub.project.id sub.id %}" style="text-decoration:none;color:inherit;display:block;">
+                                <div class="notification-item" style="margin-top: 10px;">
+                                    <div class="notification-content">
+                                        <div class="notification-title">{{ sub.project.title }} — {{ sub.downloadable.name }}</div>
+                                    </div>
+                                </div>
+                            </a>
+                        {% endfor %}
+                    </div>
                     {% endif %}
                     {% if notifications.revision_submissions > 0 %}
-                    <div class="notification-item" onclick="window.location.href='/projects/'">
+                    <div class="notification-item" onclick="toggleReminderDropdown('dropdownRevisionSubmissions', event)">
                         <div class="notification-icon"><i class="fa-solid fa-file-pen"></i></div>
                         <div class="notification-content">
                             <div class="notification-title">Revision Requested</div>
                             <div class="notification-count">{{ notifications.revision_submissions }}</div>
                         </div>
                     </div>
+                    <div id="dropdownRevisionSubmissions" style="display:none; margin-left: 44px;">
+                        {% for sub in revision_submissions_list %}
+                            <a href="{% url 'project_submissions_details' sub.project.id sub.id %}" style="text-decoration:none;color:inherit;display:block;">
+                                <div class="notification-item" style="margin-top: 10px;">
+                                    <div class="notification-content">
+                                        <div class="notification-title">{{ sub.project.title }} — {{ sub.downloadable.name }}</div>
+                                    </div>
+                                </div>
+                            </a>
+                        {% endfor %}
+                    </div>
                     {% endif %}
                     {% if notifications.rejected_submissions > 0 %}
-                    <div class="notification-item" onclick="window.location.href='/projects/'">
+                    <div class="notification-item" onclick="toggleReminderDropdown('dropdownRejectedSubmissions', event)">
                         <div class="notification-icon"><i class="fa-solid fa-circle-xmark"></i></div>
                         <div class="notification-content">
                             <div class="notification-title">Rejected Submissions</div>
                             <div class="notification-count">{{ notifications.rejected_submissions }}</div>
                         </div>
                     </div>
+                    <div id="dropdownRejectedSubmissions" style="display:none; margin-left: 44px;">
+                        {% for sub in rejected_submissions_list %}
+                            <a href="{% url 'project_submissions_details' sub.project.id sub.id %}" style="text-decoration:none;color:inherit;display:block;">
+                                <div class="notification-item" style="margin-top: 10px;">
+                                    <div class="notification-content">
+                                        <div class="notification-title">{{ sub.project.title }} — {{ sub.downloadable.name }}</div>
+                                    </div>
+                                </div>
+                            </a>
+                        {% endfor %}
+                    </div>
                     {% endif %}
                     {% if notifications.overdue_submissions > 0 %}
-                    <div class="notification-item" onclick="window.location.href='/projects/'">
+                    <div class="notification-item" onclick="toggleReminderDropdown('dropdownOverdueSubmissions', event)">
                         <div class="notification-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
                         <div class="notification-content">
                             <div class="notification-title">Overdue Submissions</div>
                             <div class="notification-count">{{ notifications.overdue_submissions }}</div>
                         </div>
                     </div>
+                    <div id="dropdownOverdueSubmissions" style="display:none; margin-left: 44px;">
+                        {% for sub in overdue_submissions_list %}
+                            <a href="{% url 'project_submissions_details' sub.project.id sub.id %}" style="text-decoration:none;color:inherit;display:block;">
+                                <div class="notification-item" style="margin-top: 10px;">
+                                    <div class="notification-content">
+                                        <div class="notification-title">{{ sub.project.title }} — {{ sub.downloadable.name }}</div>
+                                    </div>
+                                </div>
+                            </a>
+                        {% endfor %}
+                    </div>
                     {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Stat Cards Popup (Reminder-style) -->
+        <div id="statPopup" class="notification-popup-overlay" style="display:none;">
+            <div class="notification-popup">
+                <div class="notification-header">
+                    <h2 id="statPopupTitle">Details</h2>
+                    <button class="notification-close" onclick="closeStatPopup()">&times;</button>
+                </div>
+                <div class="notification-body">
+                    <div id="statSectionPendingSubmissions" data-stat-section style="display:none;">
+                        {% for sub in pending_submissions_list %}
+                            <a href="{% url 'project_submissions_details' sub.project.id sub.id %}" style="text-decoration:none;color:inherit;display:block;">
+                                <div class="notification-item" style="margin-top: 10px;">
+                                    <div class="notification-content">
+                                        <div class="notification-title">{{ sub.project.title }} — {{ sub.downloadable.name }}</div>
+                                    </div>
+                                </div>
+                            </a>
+                        {% endfor %}
+                        {% for sub in revision_submissions_list %}
+                            <a href="{% url 'project_submissions_details' sub.project.id sub.id %}" style="text-decoration:none;color:inherit;display:block;">
+                                <div class="notification-item" style="margin-top: 10px;">
+                                    <div class="notification-content">
+                                        <div class="notification-title">{{ sub.project.title }} — {{ sub.downloadable.name }}</div>
+                                    </div>
+                                </div>
+                            </a>
+                        {% endfor %}
+                        {% if not pending_submissions_list and not revision_submissions_list %}
+                            <div class="no-data">No items at this time</div>
+                        {% endif %}
+                    </div>
+
+                    <div id="statSectionOngoingProjects" data-stat-section style="display:none;">
+                        {% for p in ongoing_projects_list %}
+                            <a href="{% url 'project_overview' p.id %}" style="text-decoration:none;color:inherit;display:block;">
+                                <div class="notification-item" style="margin-top: 10px;">
+                                    <div class="notification-content">
+                                        <div class="notification-title">{{ p.title }}</div>
+                                    </div>
+                                </div>
+                            </a>
+                        {% empty %}
+                            <div class="no-data">No items at this time</div>
+                        {% endfor %}
+                    </div>
+
+                    <div id="statSectionUpcomingMeetings" data-stat-section style="display:none;">
+                        {% for m in upcoming_meetings_list %}
+                            <a href="{% url 'calendar' %}" style="text-decoration:none;color:inherit;display:block;">
+                                <div class="notification-item" style="margin-top: 10px;">
+                                    <div class="notification-content">
+                                        <div class="notification-title">{{ m.title|default:'Meeting' }} — {{ m.datetime|date:"M d, Y h:i A" }}</div>
+                                    </div>
+                                </div>
+                            </a>
+                        {% empty %}
+                            <div class="no-data">No items at this time</div>
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
         </div>
@@ -328,15 +435,17 @@
                 {% if public__project_image %}
                 <div class="project-box">
                     {% for project in public__project_image %}
-                    <div class="project-item">
-                        <div class="project-pic">
-                            <img src="{{ project.image_url }}" alt="Project Event Image" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" />
+                    <a href="{% url 'project_overview' project.id %}" style="text-decoration:none;color:inherit;display:block;">
+                        <div class="project-item">
+                            <div class="project-pic">
+                                <img src="{{ project.image_url }}" alt="Project Event Image" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" />
+                            </div>
+                            <div class="project-details">
+                                <div class="project-title">{{ project.title }}</div>
+                                <div class="project-desc">{{ project.agenda }}</div>
+                            </div>
                         </div>
-                        <div class="project-details">
-                            <div class="project-title">{{ project.title }}</div>
-                            <div class="project-desc">{{ project.agenda }}</div>
-                        </div>
-                    </div>
+                    </a>
                     {% endfor %}
                 </div>
                 {% else %}
@@ -349,15 +458,15 @@
             {% if user.role in FACULTY_ROLES %}
             <!-- Stat Cards -->
             <div class="stat-cards-container">
-                <div class="stat-card">
+                <div class="stat-card" id="statCardPendingSubmissions" style="cursor:pointer;">
                     <div class="stat-card-number">{{ pending_submissions_count }}</div>
                     <div class="stat-card-label">Pending Submissions</div>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card" id="statCardOngoingProjects" style="cursor:pointer;">
                     <div class="stat-card-number">{{ ongoing_projects_count }}</div>
                     <div class="stat-card-label">Ongoing Projects</div>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card" id="statCardUpcomingMeetings" style="cursor:pointer;">
                     <div class="stat-card-number">{{ upcoming_meetings_count }}</div>
                     <div class="stat-card-label">Upcoming Meetings</div>
                 </div>
@@ -458,15 +567,17 @@
     {% if faculty_projects_image %}
     <div class="project-box">
         {% for project in faculty_projects_image %}
-        <div class="project-item">
-            <div class="project-pic">
-                <img src="{{ project.image_url }}" alt="Project Event Image" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" />
+        <a href="{% url 'project_overview' project.id %}" style="text-decoration:none;color:inherit;display:block;">
+            <div class="project-item">
+                <div class="project-pic">
+                    <img src="{{ project.image_url }}" alt="Project Event Image" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" />
+                </div>
+                <div class="project-details">
+                    <div class="project-title">{{ project.title }}</div>
+                    <div class="project-desc">{{ project.agenda }}</div>
+                </div>
             </div>
-            <div class="project-details">
-                <div class="project-title">{{ project.title }}</div>
-                <div class="project-desc">{{ project.agenda }}</div>
-            </div>
-        </div>
+        </a>
         {% endfor %}
     </div>
     <a href="{% url 'project_dispatcher' %}" class="project-more" style="text-decoration:none;">View More Projects →</a>
@@ -487,6 +598,39 @@
             }, 300);
         }
     }
+
+    function closeStatPopup() {
+        const popup = document.getElementById('statPopup');
+        if (popup) {
+            popup.style.animation = 'fadeOut 0.3s ease';
+            setTimeout(() => {
+                popup.style.display = 'none';
+            }, 300);
+        }
+    }
+
+    function openStatPopup(title, contentId) {
+        const popup = document.getElementById('statPopup');
+        const titleEl = document.getElementById('statPopupTitle');
+        if (!popup || !titleEl) return;
+
+        titleEl.textContent = title;
+        const sections = popup.querySelectorAll('[data-stat-section]');
+        sections.forEach(sec => { sec.style.display = 'none'; });
+        const target = document.getElementById(contentId);
+        if (target) target.style.display = 'block';
+
+        popup.style.display = 'flex';
+        popup.style.animation = 'fadeIn 0.3s ease';
+    }
+
+    function toggleReminderDropdown(dropdownId, ev) {
+        if (ev) ev.stopPropagation();
+        const dropdown = document.getElementById(dropdownId);
+        if (!dropdown) return;
+        const isOpen = dropdown.style.display === 'block';
+        dropdown.style.display = isOpen ? 'none' : 'block';
+    }
     
     function openNotificationPopup() {
         const popup = document.getElementById('notificationPopup');
@@ -499,8 +643,13 @@
     // Show popup only when coming from login (flag) or when View Reminders is clicked
     document.addEventListener('DOMContentLoaded', function() {
         const popup = document.getElementById('notificationPopup');
+        const statPopup = document.getElementById('statPopup');
         const viewRemindersBtn = document.getElementById('viewRemindersBtn');
         const backToTopBtn = document.getElementById('backToTopBtn');
+
+        const statCardPending = document.getElementById('statCardPendingSubmissions');
+        const statCardOngoing = document.getElementById('statCardOngoingProjects');
+        const statCardMeetings = document.getElementById('statCardUpcomingMeetings');
 
         // Helper: check if there are any notification items
         function hasReminders() {
@@ -539,6 +688,30 @@
                 if (e.target === popup) {
                     closeNotificationPopup();
                 }
+            });
+        }
+
+        if (statPopup) {
+            statPopup.addEventListener('mousedown', function(e) {
+                if (e.target === statPopup) {
+                    closeStatPopup();
+                }
+            });
+        }
+
+        if (statCardPending) {
+            statCardPending.addEventListener('click', function() {
+                openStatPopup('Pending Submissions', 'statSectionPendingSubmissions');
+            });
+        }
+        if (statCardOngoing) {
+            statCardOngoing.addEventListener('click', function() {
+                openStatPopup('Ongoing Projects', 'statSectionOngoingProjects');
+            });
+        }
+        if (statCardMeetings) {
+            statCardMeetings.addEventListener('click', function() {
+                openStatPopup('Upcoming Meetings', 'statSectionUpcomingMeetings');
             });
         }
 

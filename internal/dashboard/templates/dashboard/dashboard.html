@@ -365,6 +365,19 @@
     height: 50px;
     justify-content: center;
 }
+
+.dropdown-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.date-range-chevron {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
 </style>
 
 
@@ -381,12 +394,23 @@
                         <button class="notification-close" onclick="closeNotificationPopup()">&times;</button>
                     </div>
                     <div class="notification-body">
-                        <div class="notification-item" onclick="window.location.href='/submissions/'">
+                        <div class="notification-item" onclick="toggleReminderDropdown('dropdownSubmittedSubmissions', event)">
                             <div class="notification-icon"><i class="fa-solid fa-file-import"></i></div>
                             <div class="notification-content">
                                 <div class="notification-title">Submitted Submissions</div>
                                 <div class="notification-count">{{ notifications.submitted_submissions }}</div>
                             </div>
+                        </div>
+                        <div id="dropdownSubmittedSubmissions" style="display:none; margin-left: 44px;">
+                            {% for sub in submitted_submissions_list %}
+                                <a href="{% url 'project_submissions_details' sub.project.id sub.id %}" style="text-decoration:none;color:inherit;display:block;">
+                                    <div class="notification-item" style="margin-top: 10px;">
+                                        <div class="notification-content">
+                                            <div class="notification-title">{{ sub.project.title }} — {{ sub.downloadable.name }}</div>
+                                        </div>
+                                    </div>
+                                </a>
+                            {% endfor %}
                         </div>
                     </div>
                 </div>
@@ -408,39 +432,83 @@
                     </div>
                     <div class="notification-body">
                         {% if notifications.forwarded_submissions > 0 %}
-                        <div class="notification-item" onclick="window.location.href='/submissions/'">
+                        <div class="notification-item" onclick="toggleReminderDropdown('dropdownForwardedSubmissions', event)">
                             <div class="notification-icon"><i class="fa-solid fa-file-arrow-up"></i></div>
                             <div class="notification-content">
                                 <div class="notification-title">Forwarded Submissions</div>
                                 <div class="notification-count">{{ notifications.forwarded_submissions }}</div>
                             </div>
                         </div>
+                        <div id="dropdownForwardedSubmissions" style="display:none; margin-left: 44px;">
+                            {% for sub in forwarded_submissions_list %}
+                                <a href="{% url 'project_submissions_details' sub.project.id sub.id %}" style="text-decoration:none;color:inherit;display:block;">
+                                    <div class="notification-item" style="margin-top: 10px;">
+                                        <div class="notification-content">
+                                            <div class="notification-title">{{ sub.project.title }} — {{ sub.downloadable.name }}</div>
+                                        </div>
+                                    </div>
+                                </a>
+                            {% endfor %}
+                        </div>
                         {% endif %}
                         {% if notifications.received_requests > 0 %}
-                        <div class="notification-item" onclick="window.location.href='/requests/'">
+                        <div class="notification-item" onclick="toggleReminderDropdown('dropdownReceivedRequests', event)">
                             <div class="notification-icon"><i class="fa-solid fa-envelope"></i></div>
                             <div class="notification-content">
                                 <div class="notification-title">Client Requests</div>
                                 <div class="notification-count">{{ notifications.received_requests }}</div>
                             </div>
                         </div>
+                        <div id="dropdownReceivedRequests" style="display:none; margin-left: 44px;">
+                            {% for req in received_requests_list %}
+                                <a href="{% url 'request_details_dispatcher' req.id %}" style="text-decoration:none;color:inherit;display:block;">
+                                    <div class="notification-item" style="margin-top: 10px;">
+                                        <div class="notification-content">
+                                            <div class="notification-title">{{ req.organization_name|default:'Request' }}</div>
+                                        </div>
+                                    </div>
+                                </a>
+                            {% endfor %}
+                        </div>
                         {% endif %}
                         {% if notifications.unconfirmed_users > 0 %}
-                        <div class="notification-item" onclick="window.location.href='/users/'">
+                        <div class="notification-item" onclick="toggleReminderDropdown('dropdownUnconfirmedUsers', event)">
                             <div class="notification-icon"><i class="fa-solid fa-user-clock"></i></div>
                             <div class="notification-content">
                                 <div class="notification-title">Pending Users</div>
                                 <div class="notification-count">{{ notifications.unconfirmed_users }}</div>
                             </div>
                         </div>
+                        <div id="dropdownUnconfirmedUsers" style="display:none; margin-left: 44px;">
+                            {% for u in unconfirmed_users_list %}
+                                <a href="{% url 'user_details' u.id %}" style="text-decoration:none;color:inherit;display:block;">
+                                    <div class="notification-item" style="margin-top: 10px;">
+                                        <div class="notification-content">
+                                            <div class="notification-title">{{ u.get_full_name }} — {{ u.email }}</div>
+                                        </div>
+                                    </div>
+                                </a>
+                            {% endfor %}
+                        </div>
                         {% endif %}
                         {% if notifications.pending_exports > 0 %}
-                        <div class="notification-item" onclick="window.location.href='/exports/'">
+                        <div class="notification-item" onclick="toggleReminderDropdown('dropdownPendingExports', event)">
                             <div class="notification-icon"><i class="fa-solid fa-download"></i></div>
                             <div class="notification-content">
                                 <div class="notification-title">Export Requests</div>
                                 <div class="notification-count">{{ notifications.pending_exports }}</div>
                             </div>
+                        </div>
+                        <div id="dropdownPendingExports" style="display:none; margin-left: 44px;">
+                            {% for exp in pending_exports_list %}
+                                <a href="{% url 'exports' %}#export-{{ exp.id }}" style="text-decoration:none;color:inherit;display:block;">
+                                    <div class="notification-item" style="margin-top: 10px;">
+                                        <div class="notification-content">
+                                            <div class="notification-title">{{ exp.get_type_display }} — {{ exp.submitted_by.get_full_name }}</div>
+                                        </div>
+                                    </div>
+                                </a>
+                            {% endfor %}
                         </div>
                         {% endif %}
                     </div>
@@ -455,6 +523,73 @@
     <button id="backToTopBtn" class="floating-pill-btn back-to-top">
         <i class="fa-solid fa-arrow-up"></i>
     </button>
+
+    <!-- Dashboard Card Popup (Reminder-style) -->
+    <div id="dashboardCardPopup" class="notification-popup-overlay" style="display:none;">
+        <div class="notification-popup">
+            <div class="notification-header">
+                <h2 id="dashboardCardPopupTitle">Details</h2>
+                <button class="notification-close" onclick="closeDashboardCardPopup()">&times;</button>
+            </div>
+            <div class="notification-body">
+                <div id="dashCardSectionPendingRequests" data-dashboard-card-section style="display:none;">
+                    {% for req in pending_requests_list %}
+                        <a href="{% url 'request_details_dispatcher' req.id %}" style="text-decoration:none;color:inherit;display:block;">
+                            <div class="notification-item" style="margin-top: 10px;">
+                                <div class="notification-content">
+                                    <div class="notification-title">{{ req.organization_name|default:'Request' }}</div>
+                                </div>
+                            </div>
+                        </a>
+                    {% empty %}
+                        <div class="no-data">No items at this time</div>
+                    {% endfor %}
+                </div>
+
+                <div id="dashCardSectionOngoingProjects" data-dashboard-card-section style="display:none;">
+                    {% for p in inprogress_projects_list %}
+                        <a href="{% url 'project_overview' p.id %}" style="text-decoration:none;color:inherit;display:block;">
+                            <div class="notification-item" style="margin-top: 10px;">
+                                <div class="notification-content">
+                                    <div class="notification-title">{{ p.title }}</div>
+                                </div>
+                            </div>
+                        </a>
+                    {% empty %}
+                        <div class="no-data">No items at this time</div>
+                    {% endfor %}
+                </div>
+
+                <div id="dashCardSectionExperts" data-dashboard-card-section style="display:none;">
+                    {% for u in expert_users_list %}
+                        <a href="{% url 'user_profile' u.id %}" style="text-decoration:none;color:inherit;display:block;">
+                            <div class="notification-item" style="margin-top: 10px;">
+                                <div class="notification-content">
+                                    <div class="notification-title">{{ u.get_full_name }}</div>
+                                </div>
+                            </div>
+                        </a>
+                    {% empty %}
+                        <div class="no-data">No items at this time</div>
+                    {% endfor %}
+                </div>
+
+                <div id="dashCardSectionEvents" data-dashboard-card-section style="display:none;">
+                    {% for e in events_list %}
+                        <a href="{% url 'calendar' %}" style="text-decoration:none;color:inherit;display:block;">
+                            <div class="notification-item" style="margin-top: 10px;">
+                                <div class="notification-content">
+                                    <div class="notification-title">{{ e }} — {{ e.datetime|date:"M d, Y h:i A" }}</div>
+                                </div>
+                            </div>
+                        </a>
+                    {% empty %}
+                        <div class="no-data">No items at this time</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
     
     <div class="main-container">
         <div class="container-1">
@@ -465,6 +600,8 @@
             <div class="container-1B">
                 <div class="dropdown" style="margin-left: 1.5rem;">
                     <button id="dateRangeBtn" class="dropdown-btn">
+                        <span id="dateRangeLabel"></span>
+                        <svg class="date-range-chevron" aria-hidden="true"><use href="#icon-dropdown"></use></svg>
                     </button>
                     <div id="popupOverlay" class="popup-overlay">
                         <div id="datePopup" class="date-popup">
@@ -489,7 +626,7 @@
         <div class="overview-section">
             <div class="container-2">
                 {% if request.user.role == "UESO" or request.user.role == "VP" or request.user.role == "DIRECTOR" %}
-                <a class="container-2A" href="{% url 'request_dispatcher' %}?status=PENDING">
+                <a class="container-2A" href="{% url 'request_dispatcher' %}?status=PENDING" onclick="openDashboardCardPopup('Request Pending', 'dashCardSectionPendingRequests', event)">
                     <div class="card-icon-wrapper">
                         <div class="circle">
                             <i class="fas fa-clipboard-list"></i> 
@@ -500,7 +637,7 @@
                 </a>
                 {% endif %}
 
-                <a class="container-2A" href="{% url 'project_dispatcher' %}?status=IN_PROGRESS">
+                <a class="container-2A" href="{% url 'project_dispatcher' %}?status=IN_PROGRESS" onclick="openDashboardCardPopup('Ongoing Projects', 'dashCardSectionOngoingProjects', event)">
                     <div class="card-icon-wrapper">
                         <div class="circle">
                             <i class="fas fa-cogs"></i> 
@@ -509,7 +646,7 @@
                     <div class="container-2A-number">{{ inprogress_projects.count }}</div>
                     <div class="container-2A-name">Ongoing Projects</div>
                 </a>
-                <a class="container-2A" href="{% url 'experts' %}">
+                <a class="container-2A" href="{% url 'experts' %}" onclick="openDashboardCardPopup('Experts Active', 'dashCardSectionExperts', event)">
                     <div class="card-icon-wrapper">
                         <div class="circle">
                             <i class="fas fa-users"></i> 
@@ -519,7 +656,7 @@
                     <div class="container-2A-name">Experts Active</div>
                 </a>
 
-                <a class="container-2A" href="{% url 'calendar' %}">
+                <a class="container-2A" href="{% url 'calendar' %}" onclick="openDashboardCardPopup('Events in Calendar', 'dashCardSectionEvents', event)">
                     <div class="card-icon-wrapper">
                         <div class="circle"><i class="fas fa-calendar-alt"></i></div>
                     </div>
@@ -641,7 +778,7 @@
     </symbol>
 
     <symbol id="icon-dropdown" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <polyline points="4,6 8,10 12,6" fill="none" stroke="#000" stroke-width="2"/>
+        <polyline points="4,6 8,10 12,6" fill="none" stroke="currentColor" stroke-width="2"/>
     </symbol>
 
     <symbol id="kebab-icon" viewBox="0 0 4 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -661,6 +798,40 @@
             }, 300);
         }
     }
+
+    function toggleReminderDropdown(dropdownId, ev) {
+        if (ev) ev.stopPropagation();
+        const dropdown = document.getElementById(dropdownId);
+        if (!dropdown) return;
+        const isOpen = dropdown.style.display === 'block';
+        dropdown.style.display = isOpen ? 'none' : 'block';
+    }
+
+    function closeDashboardCardPopup() {
+        const popup = document.getElementById('dashboardCardPopup');
+        if (popup) {
+            popup.style.animation = 'fadeOut 0.3s ease';
+            setTimeout(() => {
+                popup.style.display = 'none';
+            }, 300);
+        }
+    }
+
+    function openDashboardCardPopup(title, sectionId, ev) {
+        if (ev) ev.preventDefault();
+        const popup = document.getElementById('dashboardCardPopup');
+        const titleEl = document.getElementById('dashboardCardPopupTitle');
+        if (!popup || !titleEl) return;
+
+        titleEl.textContent = title;
+        const sections = popup.querySelectorAll('[data-dashboard-card-section]');
+        sections.forEach(sec => { sec.style.display = 'none'; });
+        const target = document.getElementById(sectionId);
+        if (target) target.style.display = 'block';
+
+        popup.style.display = 'flex';
+        popup.style.animation = 'fadeIn 0.3s ease';
+    }
     
     function openNotificationPopup() {
         const popup = document.getElementById('notificationPopup');
@@ -673,6 +844,7 @@
     // Show popup only when coming from login (flag) or when View Reminders is clicked
     document.addEventListener('DOMContentLoaded', function() {
         const popup = document.getElementById('notificationPopup');
+        const dashboardCardPopup = document.getElementById('dashboardCardPopup');
         const viewRemindersBtn = document.getElementById('viewRemindersBtn');
         const backToTopBtn = document.getElementById('backToTopBtn');
 
@@ -712,6 +884,14 @@
             popup.addEventListener('mousedown', function(e) {
                 if (e.target === popup) {
                     closeNotificationPopup();
+                }
+            });
+        }
+
+        if (dashboardCardPopup) {
+            dashboardCardPopup.addEventListener('mousedown', function(e) {
+                if (e.target === dashboardCardPopup) {
+                    closeDashboardCardPopup();
                 }
             });
         }
@@ -1034,6 +1214,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 4. NEW: Logic for your Custom Popup (with Button Text) ---
     
     const openBtn = document.getElementById('dateRangeBtn');
+    const dateRangeLabel = document.getElementById('dateRangeLabel');
     const overlay = document.getElementById('popupOverlay');
     const popup = document.getElementById('datePopup');
     const confirmBtn = document.getElementById('confirmExport');
@@ -1090,14 +1271,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const formattedStart = formatDate(startStr);
             const formattedEnd = formatDate(endStr);
             
-            if (formattedStart && formattedEnd) {
-                openBtn.textContent = `${formattedStart} - ${formattedEnd} ▾`;
-            } else if (formattedStart) {
-                openBtn.textContent = `From ${formattedStart} ▾`;
-            } else if (formattedEnd) {
-                openBtn.textContent = `Until ${formattedEnd} ▾`;
-            } else {
-                openBtn.textContent = 'All Time (Default) ▾';
+            if (dateRangeLabel) {
+                if (formattedStart && formattedEnd) {
+                    dateRangeLabel.textContent = `${formattedStart} - ${formattedEnd}`;
+                } else if (formattedStart) {
+                    dateRangeLabel.textContent = `From ${formattedStart}`;
+                } else if (formattedEnd) {
+                    dateRangeLabel.textContent = `Until ${formattedEnd}`;
+                } else {
+                    dateRangeLabel.textContent = 'All Time (Default)';
+                }
             }
             
             updateDashboard(startStr, endStr);
@@ -1106,13 +1289,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     updateDashboard('', ''); 
-    openBtn.textContent = 'Last 300 Days ▾';
+    if (dateRangeLabel) dateRangeLabel.textContent = 'Last 300 Days';
     
 });
 </script>
  
 <script> 
     const openBtn = document.getElementById('dateRangeBtn');
+    const dateRangeLabel = document.getElementById('dateRangeLabel');
     const overlay = document.getElementById('popupOverlay');
     const popup = document.getElementById('datePopup');
     const confirmBtn = document.getElementById('confirmExport');
@@ -1192,15 +1376,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const formattedStart = formatDate(startStr);
             const formattedEnd = formatDate(endStr);
             
-            if (formattedStart && formattedEnd) {
-                openBtn.textContent = `${formattedStart} - ${formattedEnd} ▾`;
-            } else if (formattedStart) {
-                openBtn.textContent = `From ${formattedStart} ▾`;
-            } else if (formattedEnd) {
-                openBtn.textContent = `Until ${formattedEnd} ▾`;
-            } else {
-                // Keep the default text if no dates are set
-                openBtn.textContent = 'Last 300 Days ▾';
+            if (dateRangeLabel) {
+                if (formattedStart && formattedEnd) {
+                    dateRangeLabel.textContent = `${formattedStart} - ${formattedEnd}`;
+                } else if (formattedStart) {
+                    dateRangeLabel.textContent = `From ${formattedStart}`;
+                } else if (formattedEnd) {
+                    dateRangeLabel.textContent = `Until ${formattedEnd}`;
+                } else {
+                    // Keep the default text if no dates are set
+                    dateRangeLabel.textContent = 'Last 300 Days';
+                }
             }
             
             // Assuming updateDashboard is defined in the script above
@@ -1214,7 +1400,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // The call to updateDashboard is already in the first script, 
     // but the button text needs to be set if it wasn't done already.
     if (openBtn) {
-        openBtn.textContent = 'Last 300 Days ▾';
+        if (dateRangeLabel) dateRangeLabel.textContent = 'Last 300 Days';
     }
 </script> 
 

@@ -65,6 +65,13 @@ def home_view(request):
     upcoming_meetings_count = 0
     my_alerts = []
     events_json = '[]'
+
+    pending_submissions_list = []
+    revision_submissions_list = []
+    rejected_submissions_list = []
+    overdue_submissions_list = []
+    ongoing_projects_list = []
+    upcoming_meetings_list = []
     
     # Notification counts for popup
     notifications = {}
@@ -80,36 +87,68 @@ def home_view(request):
             models.Q(project_leader=request.user) | models.Q(providers=request.user)
         ).distinct().order_by('-updated_at')
         
-        # Notification counts for faculty/implementer
-        notifications['pending_submissions'] = Submission.objects.filter(
+        now = timezone.now()
+
+        overdue_qs = Submission.objects.filter(
             project__in=faculty_projects,
-            status='PENDING'
-        ).count()
-        notifications['revision_submissions'] = Submission.objects.filter(
+            status__in=['PENDING', 'REVISION_REQUESTED'],
+            deadline__isnull=False,
+            deadline__lt=now,
+        )
+        pending_qs = Submission.objects.filter(
             project__in=faculty_projects,
-            status='REVISION_REQUESTED'
-        ).count()
+            status='PENDING',
+        ).filter(models.Q(deadline__isnull=True) | models.Q(deadline__gte=now))
+        revision_qs = Submission.objects.filter(
+            project__in=faculty_projects,
+            status='REVISION_REQUESTED',
+        ).filter(models.Q(deadline__isnull=True) | models.Q(deadline__gte=now))
+
+        # Notification counts for faculty/implementer (mutually exclusive buckets)
+        notifications['overdue_submissions'] = overdue_qs.count()
+        notifications['pending_submissions'] = pending_qs.count()
+        notifications['revision_submissions'] = revision_qs.count()
         notifications['rejected_submissions'] = Submission.objects.filter(
             project__in=faculty_projects,
             status='REJECTED'
         ).count()
-        # Overdue submissions
-        now = timezone.now()
-        overdue_count = 0
-        for submission in Submission.objects.filter(project__in=faculty_projects, status__in=['PENDING', 'REVISION_REQUESTED']):
-            if submission.deadline and submission.deadline < now:
-                overdue_count += 1
-        notifications['overdue_submissions'] = overdue_count
+
+        pending_submissions_list = list(
+            pending_qs.select_related('project', 'downloadable').order_by('deadline')[:10]
+        )
+        revision_submissions_list = list(
+            revision_qs.select_related('project', 'downloadable').order_by('deadline')[:10]
+        )
+        rejected_submissions_list = list(
+            Submission.objects.filter(project__in=faculty_projects, status='REJECTED')
+            .select_related('project', 'downloadable')
+            .order_by('-updated_at')[:10]
+        )
+        overdue_submissions_list = list(
+            overdue_qs.select_related('project', 'downloadable').order_by('deadline')[:10]
+        )
         
         faculty_projects_image = get_project_card_data(faculty_projects.filter(status='COMPLETED')[:3])
         
         # Get stats
-        pending_submissions_count = Submission.objects.filter(
-            project__in=faculty_projects,
-            status__in=['PENDING', 'REVISION_REQUESTED']
-        ).count()
+        pending_submissions_count = notifications['pending_submissions'] + notifications['revision_submissions']
         
         ongoing_projects_count = faculty_projects.filter(status='IN_PROGRESS').count()
+
+        ongoing_projects_list = list(
+            faculty_projects.filter(status='IN_PROGRESS').order_by('-updated_at')[:10]
+        )
+
+        upcoming_meetings_count = MeetingEvent.objects.filter(
+            datetime__gte=now,
+            participants=request.user,
+        ).count()
+        upcoming_meetings_list = list(
+            MeetingEvent.objects.filter(
+                datetime__gte=now,
+                participants=request.user,
+            ).order_by('datetime')[:10]
+        )
         
         # Get alerts
         my_alerts = ProjectUpdate.objects.filter(
@@ -141,6 +180,12 @@ def home_view(request):
     my_alerts = my_alerts if 'my_alerts' in locals() else []
     events_json = events_json if 'events_json' in locals() else '[]'
     notifications = notifications if 'notifications' in locals() else {}
+    pending_submissions_list = pending_submissions_list if 'pending_submissions_list' in locals() else []
+    revision_submissions_list = revision_submissions_list if 'revision_submissions_list' in locals() else []
+    rejected_submissions_list = rejected_submissions_list if 'rejected_submissions_list' in locals() else []
+    overdue_submissions_list = overdue_submissions_list if 'overdue_submissions_list' in locals() else []
+    ongoing_projects_list = ongoing_projects_list if 'ongoing_projects_list' in locals() else []
+    upcoming_meetings_list = upcoming_meetings_list if 'upcoming_meetings_list' in locals() else []
     # Ensure all notification keys are present
     for key in ['pending_submissions', 'revision_submissions', 'rejected_submissions', 'overdue_submissions']:
         if key not in notifications:
@@ -171,6 +216,12 @@ def home_view(request):
         'events_json': events_json,
         'notifications': notifications,
         'show_notifications': show_notifications,
+        'pending_submissions_list': pending_submissions_list,
+        'revision_submissions_list': revision_submissions_list,
+        'rejected_submissions_list': rejected_submissions_list,
+        'overdue_submissions_list': overdue_submissions_list,
+        'ongoing_projects_list': ongoing_projects_list,
+        'upcoming_meetings_list': upcoming_meetings_list,
         'needs_role_selection': needs_role_selection if 'needs_role_selection' in locals() else False,
         'needs_profile_completion': needs_profile_completion if 'needs_profile_completion' in locals() else False,
     }

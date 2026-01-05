@@ -56,12 +56,39 @@ def dashboard_view(request):
     
     # Notification counts for popup
     notifications = {}
+
+    forwarded_submissions_list = []
+    received_requests_list = []
+    unconfirmed_users_list = []
+    pending_exports_list = []
+    submitted_submissions_list = []
+
     if user_role in ["VP", "DIRECTOR", "UESO"]:
         from system.exports.models import ExportRequest
         notifications['forwarded_submissions'] = Submission.objects.filter(status='FORWARDED').count()
         notifications['received_requests'] = ClientRequest.objects.filter(status='RECEIVED').count()
         notifications['unconfirmed_users'] = User.objects.filter(is_confirmed=False).count()
         notifications['pending_exports'] = ExportRequest.objects.filter(status='PENDING').count()
+
+        forwarded_submissions_list = list(
+            Submission.objects.filter(status='FORWARDED')
+            .select_related('project', 'downloadable', 'submitted_by')
+            .order_by('-updated_at')[:10]
+        )
+        received_requests_list = list(
+            ClientRequest.objects.filter(status='RECEIVED')
+            .select_related('submitted_by')
+            .order_by('-updated_at')[:10]
+        )
+        unconfirmed_users_list = list(
+            User.objects.filter(is_confirmed=False)
+            .order_by('-created_at')[:10]
+        )
+        pending_exports_list = list(
+            ExportRequest.objects.filter(status='PENDING')
+            .select_related('submitted_by')
+            .order_by('-date_submitted')[:10]
+        )
     elif user_role == "COORDINATOR":
         if user_college:
             # Get submissions for projects in coordinator's college
@@ -73,12 +100,26 @@ def dashboard_view(request):
                 project__in=college_projects,
                 status='SUBMITTED'
             ).count()
+
+            submitted_submissions_list = list(
+                Submission.objects.filter(
+                    project__in=college_projects,
+                    status='SUBMITTED',
+                )
+                .select_related('project', 'downloadable', 'submitted_by')
+                .order_by('-submitted_at', '-updated_at')[:10]
+            )
         else:
             notifications['submitted_submissions'] = 0
 
     pending_requests = ClientRequest.objects.filter(status__in=['RECEIVED', 'UNDER_REVIEW'])
     inprogress_projects = Project.objects.filter(status='IN_PROGRESS')
     expert_users = User.objects.filter(is_expert=True)
+
+    pending_requests_list = []
+    inprogress_projects_list = []
+    expert_users_list = []
+    events_list = []
 
     projects = Project.objects.all().order_by('-updated_at')[:5]
 
@@ -119,6 +160,11 @@ def dashboard_view(request):
             all_events = []
             
         events_in_calendar = len(all_events)
+
+        try:
+            events_list = sorted(all_events, key=lambda e: e.datetime)[:10]
+        except Exception:
+            events_list = []
     
     goal_objects = Goal.objects.all() 
     
@@ -158,6 +204,16 @@ def dashboard_view(request):
     pending_requests = pending_requests if 'pending_requests' in locals() else []
     inprogress_projects = inprogress_projects if 'inprogress_projects' in locals() else []
     expert_users = expert_users if 'expert_users' in locals() else []
+    pending_requests_list = list(
+        pending_requests.select_related('submitted_by').order_by('-updated_at')[:10]
+    ) if hasattr(pending_requests, 'select_related') else []
+    inprogress_projects_list = list(
+        inprogress_projects.select_related('project_leader').order_by('-updated_at')[:10]
+    ) if hasattr(inprogress_projects, 'select_related') else []
+    expert_users_list = list(
+        expert_users.order_by('-updated_at')[:10]
+    ) if hasattr(expert_users, 'order_by') else []
+    events_list = events_list if 'events_list' in locals() else []
     events_in_calendar = events_in_calendar if 'events_in_calendar' in locals() else 0
     projects = projects if 'projects' in locals() else []
     agenda_counts = agenda_counts if 'agenda_counts' in locals() else {}
@@ -165,6 +221,11 @@ def dashboard_view(request):
     dashboard_goals = dashboard_goals if 'dashboard_goals' in locals() else []
     show_events_card = show_events_card if 'show_events_card' in locals() else False
     notifications = notifications if 'notifications' in locals() else {}
+    forwarded_submissions_list = forwarded_submissions_list if 'forwarded_submissions_list' in locals() else []
+    received_requests_list = received_requests_list if 'received_requests_list' in locals() else []
+    unconfirmed_users_list = unconfirmed_users_list if 'unconfirmed_users_list' in locals() else []
+    pending_exports_list = pending_exports_list if 'pending_exports_list' in locals() else []
+    submitted_submissions_list = submitted_submissions_list if 'submitted_submissions_list' in locals() else []
     for key in ['forwarded_submissions', 'received_requests', 'unconfirmed_users', 'pending_exports', 'submitted_submissions']:
         if key not in notifications:
             notifications[key] = 0
@@ -178,6 +239,10 @@ def dashboard_view(request):
         'pending_requests': pending_requests,
         'inprogress_projects': inprogress_projects,
         'expert_users': expert_users,
+        'pending_requests_list': pending_requests_list,
+        'inprogress_projects_list': inprogress_projects_list,
+        'expert_users_list': expert_users_list,
+        'events_list': events_list,
         'events_in_calendar': events_in_calendar,
         'projects': projects,
         'agenda_distribution': agenda_counts,
@@ -186,6 +251,11 @@ def dashboard_view(request):
         'show_events_card': show_events_card,
         'notifications': notifications,
         'show_notifications': show_notifications,
+        'forwarded_submissions_list': forwarded_submissions_list,
+        'received_requests_list': received_requests_list,
+        'unconfirmed_users_list': unconfirmed_users_list,
+        'pending_exports_list': pending_exports_list,
+        'submitted_submissions_list': submitted_submissions_list,
     }
 
     return render(request, 'dashboard/dashboard.html', context)
