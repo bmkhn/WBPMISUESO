@@ -59,30 +59,38 @@ def submission_admin_view(request):
     submissions = submissions.distinct()
 
     # Custom ordering for roles
-    if user_role in ["COORDINATOR", "PROGRAM_HEAD", "DEAN"]:
-        submissions = submissions.filter(status__in=["SUBMITTED", "REVISION_REQUESTED", "FORWARDED"])
+    if user_role in ["COORDINATOR"]:
+        submissions = submissions.filter(status__in=["PENDING", "SUBMITTED", "REVISION_REQUESTED", "FORWARDED", "OVERDUE"])
         submissions = submissions.annotate(
             status_priority=Case(
+                When(status="PENDING", then=Value(2)),
                 When(status="SUBMITTED", then=Value(0)),
-                When(status="REVISION_REQUESTED", then=Value(1)),
-                When(status="FORWARDED", then=Value(2)),
-                default=Value(3),
+                When(status="REVISION_REQUESTED", then=Value(3)),
+                When(status="FORWARDED", then=Value(4)),
+                When(status="OVERDUE", then=Value(1)),
+                default=Value(99),
                 output_field=IntegerField(),
             )
         ).order_by('status_priority', '-created_at')
     elif user_role in ["UESO", "VP", "DIRECTOR"]:
+        submissions = submissions.filter(status__in=["PENDING", "FORWARDED", "APPROVED", "REJECTED", "OVERDUE"])
         submissions = submissions.annotate(
             status_priority=Case(
+                When(status="PENDING", then=Value(2)),
                 When(status="FORWARDED", then=Value(0)),
-                default=Value(1),
+                When(status="APPROVED", then=Value(4)),
+                When(status="REJECTED", then=Value(3)),
+                When(status="OVERDUE", then=Value(1)),
+                default=Value(99),
                 output_field=IntegerField(),
             )
         ).order_by('status_priority', '-created_at')
     else:
         submissions = submissions.order_by('-created_at')
 
-    # Filter Options - optimize with only()
-    all_statuses = [status[1] for status in Submission.SUBMISSION_STATUS_CHOICES]
+    # Filter Options - pass (code, display) tuples
+    all_statuses_admin = [(status[0], status[1]) for status in Submission.SUBMISSION_STATUS_CHOICES if status[0] in ["PENDING", "FORWARDED", "APPROVED", "REJECTED", "OVERDUE"]]
+    all_statuses_coordinator = [(status[0], status[1]) for status in Submission.SUBMISSION_STATUS_CHOICES if status[0] in ["PENDING", "SUBMITTED", "REVISION_REQUESTED", "FORWARDED", "OVERDUE"]]
     all_forms = Downloadable.objects.filter(is_submission_template=True).only('id', 'file')
 
     # Pagination
@@ -95,7 +103,8 @@ def submission_admin_view(request):
         'search': search,
         'sort_by': sort_by,
         'order': order,
-        'all_statuses': all_statuses,
+        'all_statuses_admin': all_statuses_admin,
+        'all_statuses_coordinator': all_statuses_coordinator,
         'status': status,
         'all_forms': all_forms,
         'required_form': required_form,

@@ -26,7 +26,10 @@ def add_agenda_view(request):
     if request.method == 'POST':
         form = AgendaForm(request.POST)
         if form.is_valid():
-            agenda = form.save()
+            agenda = form.save(commit=False)
+            agenda.created_by = request.user
+            agenda.save()
+            form.save_m2m()
             return redirect(f'/agenda/?success=true&action=created&name={quote(agenda.name)}')
     else:
         form = AgendaForm()
@@ -45,7 +48,10 @@ def edit_agenda_view(request, agenda_id):
     if request.method == 'POST':
         form = AgendaForm(request.POST, instance=agenda)
         if form.is_valid():
-            form.save()
+            agenda = form.save(commit=False)
+            agenda.updated_by = request.user
+            agenda.save()
+            form.save_m2m()
             selected_college_ids = [str(c.id) for c in form.cleaned_data['concerned_colleges']]
             return redirect(f'/agenda/?success=true&action=updated&name={quote(agenda.name)}')
         else:

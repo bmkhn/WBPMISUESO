@@ -74,7 +74,7 @@ def user_downloadable(request):
 
     querystring = urlencode(query_params)
     # Optimize file_types query - use only published files for filter dropdown
-    file_types = Downloadable.objects.filter(status='published').values_list('file_type', flat=True).distinct()
+    file_types = Downloadable.objects.filter(status='published').values_list('file_type', flat=True).distinct().order_by('file_type')
 
     paginator = Paginator(qs, 2)
     page_number = request.GET.get('page', 1)
@@ -156,7 +156,7 @@ def superuser_downloadable(request):
         query_params['public'] = 'false'
 
     querystring = urlencode(query_params)
-    file_types = Downloadable.objects.values_list('file_type', flat=True).distinct()
+    file_types = Downloadable.objects.values_list('file_type', flat=True).distinct().order_by('file_type')
 
     paginator = Paginator(qs, 4)
     page_number = request.GET.get('page', 1)

@@ -42,9 +42,15 @@
                         <label>Status
                             <select name="status">
                                 <option value="">All</option>
-                                {% for s in all_statuses %}
-                                    <option value="{{ s }}" {% if status == s %}selected{% endif %}>{{ s|capfirst }}</option>
-                                {% endfor %}
+                                {% if request.user.role in COORDINATOR_ROLE %}
+                                    {% for code, display in all_statuses_coordinator %}
+                                        <option value="{{ code }}" {% if status == code %}selected{% endif %}>{{ display }}</option>
+                                    {% endfor %}
+                                {% elif request.user.role in ADMIN_ROLES %}
+                                    {% for code, display in all_statuses_admin %}
+                                        <option value="{{ code }}" {% if status == code %}selected{% endif %}>{{ display }}</option>
+                                    {% endfor %}
+                                {% endif %}
                             </select>
                         </label>
 

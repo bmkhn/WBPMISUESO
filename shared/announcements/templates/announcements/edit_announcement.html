@@ -58,7 +58,7 @@
 					<input type="checkbox" id="publish_now" name="publish_now" {% if not announcement.scheduled_at or announcement.published_at or posted %}checked{% endif %} {% if announcement.published_at or posted %}disabled{% endif %} style="width: auto; cursor: pointer;">
 					<label for="publish_now" style="margin: 0; cursor: pointer; font-weight: normal;">Publish now</label>
 				</div>
-				<input class="user-details-value" type="datetime-local" name="scheduled_at" id="id_scheduled_at" value="{{ form.scheduled_at.value|default:'' }}" {% if not announcement.scheduled_at or announcement.published_at or posted %}style="display: none;"{% endif %} {% if announcement.published_at or posted %}disabled{% endif %}>
+				<input class="user-details-value" type="datetime-local" name="scheduled_at" id="id_scheduled_at" value="{{ announcement.scheduled_at|date:'Y-m-d\TH:i'|default:'' }}" {% if not announcement.scheduled_at or announcement.published_at or posted %}style="display: none;"{% endif %} {% if announcement.published_at or posted %}disabled{% endif %}>
 			</div>
 
 			{% if announcement.scheduled_at %}
