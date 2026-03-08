@@ -196,10 +196,10 @@ button:hover {
     color: #0099FF;
     text-decoration: none;
 } 
-.name-link:hover, a:hover {
+.name-link:hover, .detail-value a:hover, .back-btn-text:hover {
     text-decoration: underline;
 }   
- 
+
 .label h2 {
     font-size: 1.05rem; 
     font-weight: 400; 

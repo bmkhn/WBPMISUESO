@@ -1,11 +1,14 @@
 import pytz
 from datetime import datetime, date as date_class
+import logging
 from django.utils import timezone
 from django.db import models
 from .models import MeetingEvent
 from system.users.models import User
 from shared.projects.models import ProjectEvent, Project
 from .holidays import get_philippine_holidays
+
+logger = logging.getLogger(__name__)
 
 def format_time_12hour(dt):
     """Convert datetime to 12-hour format string (h:MM AM/PM)"""
@@ -115,11 +118,10 @@ def get_events_by_date(user, for_main_calendar_view=False, include_holidays=True
     
     # Add Philippine holidays
     if include_holidays:
-        # Get current year and next year holidays
-        from datetime import datetime
+        # Include a broader year window to match the year selector UX
         current_year = datetime.now().year
-        
-        for year in [current_year, current_year + 1]:
+
+        for year in range(current_year - 10, current_year + 11):
             holidays = get_philippine_holidays(year)
             for holiday_date, holiday_info in holidays.items():
                 date_str = holiday_date.strftime('%Y-%m-%d')
@@ -139,6 +141,11 @@ def get_events_by_date(user, for_main_calendar_view=False, include_holidays=True
                 })
         
     return events_by_date
+
+
+def _get_holiday_info(target_date: date_class):
+    holidays = get_philippine_holidays(target_date.year)
+    return holidays.get(target_date)
 
 def _parse_and_localize_datetime(date_str, time_str):
     """Helper to parse date/time and localize to Asia/Manila."""
@@ -177,9 +184,13 @@ def create_meeting_event(data, user):
         # Validate end time is after start time
         if end_aware_dt and end_aware_dt <= aware_dt:
             return None, {"errors": "End time must be after start time."}
+
+        holiday_info = _get_holiday_info(aware_dt.date())
+        if holiday_info:
+            return None, {"errors": f"Cannot schedule meetings on holidays ({holiday_info['name']})."}
         
         # STEP 2: Time validation - Skip for VP/DIRECTOR/UESO, only check visible meetings for others
-        # VP/DIRECTOR/UESO can schedule freely (they see all meetings anyway)
+        # VP/DIRECTOR/UESO can schedule freely
         user_role = getattr(user, 'role', None)
         if user_role not in ['VP', 'DIRECTOR', 'UESO']:
             # For PROGRAM_HEAD/DEAN/COORDINATOR/FACULTY/IMPLEMENTER
@@ -201,11 +212,14 @@ def create_meeting_event(data, user):
                 conflict_end = format_time_12hour(conflict.end_datetime) if conflict.end_datetime else 'N/A'
                 return None, {"errors": f"Time conflict! \"{conflict.title}\" is already scheduled from {conflict_time} to {conflict_end} on this date."}
 
-        # Check for participant conflicts
-        participant_ids = set(data.get("participants", []))
-        participant_ids.add(str(user.id))
+        # Participants: include creator by default, but allow the creator to remove themselves
+        # by explicitly sending a participants list that excludes them.
+        participant_ids = set(data.get("participants", []) or [])
+        if not participant_ids:
+            participant_ids.add(str(user.id))
         
-        if participant_ids:
+        # Check for participant conflicts (skip for VP/DIRECTOR/UESO override behavior)
+        if participant_ids and user_role not in ['VP', 'DIRECTOR', 'UESO']:
             # Find meetings on the same date that overlap in time and have common participants
             conflicting_meetings = MeetingEvent.objects.filter(
                 datetime__date=aware_dt.date(),
@@ -256,7 +270,8 @@ def create_meeting_event(data, user):
         meeting.save() 
         return meeting, None
     except Exception as e:
-        return None, {"errors": str(e)}
+        logger.exception("Error creating meeting event")
+        return None, {"errors": "Internal server error."}
 
 def update_meeting_event(event, data, user):
     """
@@ -294,6 +309,10 @@ def update_meeting_event(event, data, user):
         # Validate end time is after start time
         if end_aware_dt and end_aware_dt <= aware_dt:
             return None, {"errors": "End time must be after start time."}
+
+        holiday_info = _get_holiday_info(aware_dt.date())
+        if holiday_info:
+            return None, {"errors": f"Cannot schedule meetings on holidays ({holiday_info['name']})."}
         
         # STEP 2: Time validation - Skip for VP/DIRECTOR/UESO, only check visible meetings for others
         # VP/DIRECTOR/UESO can schedule freely (they see all meetings anyway)
@@ -320,41 +339,41 @@ def update_meeting_event(event, data, user):
                 conflict_end = format_time_12hour(conflict.end_datetime) if conflict.end_datetime else 'N/A'
                 return None, {"errors": f"Time conflict! \"{conflict.title}\" is already scheduled from {conflict_time} to {conflict_end} on this date."}
         
-        # Check for participant conflicts (exclude current event)
-        if participants:
-            participant_ids = [str(p) for p in participants]
+            # Check for participant conflicts (exclude current event)
+            if participants:
+                participant_ids = [str(p) for p in participants]
             
             # Find meetings on the same date that overlap in time and have common participants
-            conflicting_meetings = MeetingEvent.objects.filter(
-                datetime__date=aware_dt.date(),
-                participants__id__in=participant_ids
-            ).exclude(
-                id=event.id  # Exclude the current event being edited
-            ).exclude(
-                end_datetime__isnull=True
-            ).exclude(
-                models.Q(datetime__gte=end_aware_dt) |
-                models.Q(end_datetime__lte=aware_dt)
-            ).distinct()
-            
-            if conflicting_meetings.exists():
-                conflict = conflicting_meetings.first()
-                conflict_time = format_time_12hour(conflict.datetime)
-                conflict_end = format_time_12hour(conflict.end_datetime) if conflict.end_datetime else 'N/A'
+                conflicting_meetings = MeetingEvent.objects.filter(
+                    datetime__date=aware_dt.date(),
+                    participants__id__in=participant_ids
+                ).exclude(
+                    id=event.id  # Exclude the current event being edited
+                ).exclude(
+                    end_datetime__isnull=True
+                ).exclude(
+                    models.Q(datetime__gte=end_aware_dt) |
+                    models.Q(end_datetime__lte=aware_dt)
+                ).distinct()
                 
-                # Find which participants are conflicting by checking if they're in the conflict meeting's participants
-                conflict_participant_ids = set(str(p.id) for p in conflict.participants.all())
-                conflicting_ids = set(participant_ids).intersection(conflict_participant_ids)
-                
-                if conflicting_ids:
-                    # Get the actual User objects for the conflicting participants
-                    conflict_participants = User.objects.filter(id__in=conflicting_ids)
-                    participant_names = [p.get_full_name() or p.username for p in conflict_participants]
-                    if len(participant_names) == 1:
-                        return None, {"errors": f"{participant_names[0]} is already scheduled in \"{conflict.title}\" from {conflict_time} to {conflict_end} on this date."}
-                    else:
-                        names_str = ", ".join(participant_names[:-1]) + f" and {participant_names[-1]}"
-                        return None, {"errors": f"{names_str} are already scheduled in \"{conflict.title}\" from {conflict_time} to {conflict_end} on this date."}
+                if conflicting_meetings.exists():
+                    conflict = conflicting_meetings.first()
+                    conflict_time = format_time_12hour(conflict.datetime)
+                    conflict_end = format_time_12hour(conflict.end_datetime) if conflict.end_datetime else 'N/A'
+                    
+                    # Find which participants are conflicting by checking if they're in the conflict meeting's participants
+                    conflict_participant_ids = set(str(p.id) for p in conflict.participants.all())
+                    conflicting_ids = set(participant_ids).intersection(conflict_participant_ids)
+                    
+                    if conflicting_ids:
+                        # Get the actual User objects for the conflicting participants
+                        conflict_participants = User.objects.filter(id__in=conflicting_ids)
+                        participant_names = [p.get_full_name() or p.username for p in conflict_participants]
+                        if len(participant_names) == 1:
+                            return None, {"errors": f"{participant_names[0]} is already scheduled in \"{conflict.title}\" from {conflict_time} to {conflict_end} on this date."}
+                        else:
+                            names_str = ", ".join(participant_names[:-1]) + f" and {participant_names[-1]}"
+                            return None, {"errors": f"{names_str} are already scheduled in \"{conflict.title}\" from {conflict_time} to {conflict_end} on this date."}
         
         event.title = title
         event.description = description
@@ -380,7 +399,8 @@ def update_meeting_event(event, data, user):
             
         return event, None
     except Exception as e:
-        return None, {"errors": str(e)}
+        logger.exception("Error updating meeting event")
+        return None, {"errors": "Internal server error."}
 
 def delete_meeting_event(event, user):
     """
@@ -398,4 +418,5 @@ def delete_meeting_event(event, user):
         event.delete()
         return True, None
     except Exception as e:
-        return False, {"errors": str(e)}
+        logger.exception("Error deleting meeting event")
+        return False, {"errors": "Internal server error."}

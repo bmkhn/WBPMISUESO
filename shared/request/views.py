@@ -228,7 +228,7 @@ def request_admin_view(request):
     query_params = {}
 
     # Filters
-    sort_by = request.GET.get('sort_by', 'updated_at')
+    sort_by = request.GET.get('sort_by', 'submitted_at')
     query_params['sort_by'] = sort_by
     order = request.GET.get('order', 'desc')
     query_params['order'] = order
@@ -253,20 +253,23 @@ def request_admin_view(request):
 
     requests = requests.distinct()
 
-    # Sorting
-    sort_map = {
-        'updated_at': 'updated_at',
-        'submitted_at': 'submitted_at',
-        'status': 'status',
-        'title': 'title',
-    }
-    if sort_by:
-        sort_field = sort_map.get(sort_by, 'updated_at')
-        if order == 'desc':
-            sort_field = '-' + sort_field
-        requests = requests.order_by(sort_field, '-updated_at', '-submitted_at')
-    else:
-        requests = requests.order_by('-updated_at', '-submitted_at')
+    # Custom status order: Under Review, Received, Approved, Rejected, Endorsed, Denied
+    from django.db.models import Case, When, IntegerField
+    status_order = [
+        'UNDER_REVIEW',
+        'RECEIVED',
+        'APPROVED',
+        'REJECTED',
+        'ENDORSED',
+        'DENIED',
+    ]
+    status_priority = Case(
+        *[When(status=code, then=pos) for pos, code in enumerate(status_order)],
+        default=len(status_order),
+        output_field=IntegerField()
+    )
+    requests = requests.annotate(status_priority=status_priority)
+    requests = requests.order_by('status_priority', '-submitted_at')
 
     querystring = urlencode(query_params)
 
@@ -286,8 +289,17 @@ def request_admin_view(request):
     else:
         page_range = range(current - 2, current + 3)
 
-    # Get all possible status choices
-    status_choices = ClientRequest._meta.get_field('status').choices
+    # Custom status order: Under Review, Received, Approved, Rejected, Endorsed, Denied
+    status_order = [
+        'UNDER_REVIEW',
+        'RECEIVED',
+        'APPROVED',
+        'REJECTED',
+        'ENDORSED',
+        'DENIED',
+    ]
+    all_status_choices = dict(ClientRequest._meta.get_field('status').choices)
+    status_choices = [(code, all_status_choices[code]) for code in status_order if code in all_status_choices]
 
     return render(request, 'request/request_admin.html', {
         'requests': page_obj.object_list,

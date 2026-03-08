@@ -464,7 +464,7 @@
                                 <a href="{% url 'request_details_dispatcher' req.id %}" style="text-decoration:none;color:inherit;display:block;">
                                     <div class="notification-item" style="margin-top: 10px;">
                                         <div class="notification-content">
-                                            <div class="notification-title">{{ req.organization_name|default:'Request' }}</div>
+                                            <div class="notification-title">{{ req.title }}</div>
                                         </div>
                                     </div>
                                 </a>
@@ -537,7 +537,7 @@
                         <a href="{% url 'request_details_dispatcher' req.id %}" style="text-decoration:none;color:inherit;display:block;">
                             <div class="notification-item" style="margin-top: 10px;">
                                 <div class="notification-content">
-                                    <div class="notification-title">{{ req.organization_name|default:'Request' }}</div>
+                                    <div class="notification-title">{{ req.organization|default:"Request" }}</div>
                                 </div>
                             </div>
                         </a>
