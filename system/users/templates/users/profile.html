@@ -1177,32 +1177,48 @@ document.getElementById('sortContent').addEventListener('change', function(e) {
 			break;
 	}
 	
+
 	renderContent(sorted);
-});
+		// Re-bind dropdown event listeners after re-render
+		bindDropdownListeners();
+	});
 
-// Initial render
-renderContent(contentData);
-
-// Author dropdown JS for all project cards
-document.addEventListener('DOMContentLoaded', function() {
-	contentData.forEach(function(item) {
-		if (item.type === 'project' && item.providersCount > 2) {
-			var btn = document.getElementById('dropdown-btn-' + item.id);
-			var menu = document.getElementById('dropdown-menu-' + item.id);
-			if (btn && menu) {
-				btn.addEventListener('click', function(e) {
-					e.preventDefault();
-					menu.style.display = menu.style.display === 'none' || menu.style.display === '' ? 'block' : 'none';
-				});
-				document.addEventListener('click', function(e) {
-					if (!menu.contains(e.target) && e.target !== btn) {
-						menu.style.display = 'none';
-					}
-				});
-			}
+	// Initial render: trigger sortContent change event to ensure dropdowns work as after sorting
+	document.addEventListener('DOMContentLoaded', function() {
+		var sortSelect = document.getElementById('sortContent');
+		if (sortSelect) {
+			// Trigger the change event to use the default sort logic and dropdown binding
+			sortSelect.dispatchEvent(new Event('change'));
+		} else {
+			// Fallback: render and bind if sortContent is missing
+			renderContent(contentData);
+			bindDropdownListeners();
 		}
 	});
-});
+
+	// Author dropdown JS for all project cards
+	function bindDropdownListeners() {
+		contentData.forEach(function(item) {
+			if (item.type === 'project' && item.providersCount > 2) {
+				var btn = document.getElementById('dropdown-btn-' + item.id);
+				var menu = document.getElementById('dropdown-menu-' + item.id);
+				if (btn && menu) {
+					// Remove previous listeners by cloning
+					var newBtn = btn.cloneNode(true);
+					btn.parentNode.replaceChild(newBtn, btn);
+					newBtn.addEventListener('click', function(e) {
+						e.preventDefault();
+						menu.style.display = menu.style.display === 'none' || menu.style.display === '' ? 'block' : 'none';
+					});
+					document.addEventListener('click', function docClick(e) {
+						if (!menu.contains(e.target) && e.target !== newBtn) {
+							menu.style.display = 'none';
+						}
+					}, { once: true });
+				}
+			}
+		});
+	}
 
 // Success Toast
 document.addEventListener('DOMContentLoaded', function() {

@@ -17,13 +17,14 @@
 
         <!-- Search Bar & Filter (3x2 Grid) -->
         <div class="search-container" style="box-shadow: none;">
-            <form class="search-bar" style="box-shadow: 0 0 15px rgba(0, 0, 0, 0.08);" method="get" action="">
+			<form class="search-bar" id="searchBarForm" style="box-shadow: 0 0 15px rgba(0, 0, 0, 0.08);" method="get" action="">
                 <svg width="16" height="16" style="margin-right:10px;"> <use href="#icon-search"></use> </svg>
 				<input type="text" name="search" placeholder="Search" value="{{ search_query|default:'' }}"/>
                 <button type="button" id="filterBtn" style="background:none;border:none;padding:0;margin-right:5px;cursor:pointer;">
                     <svg width="16" height="16"> <use href="#icon-filter"></use> </svg>
                 </button>
-                <div id="filterDropdown" class="filter-dropdown" style="top:55px; right:120px;">
+				<input type="hidden" name="view" id="viewInput" value="{{ view|default:'grid' }}">
+				<div id="filterDropdown" class="filter-dropdown" style="top:55px; right:120px;">
                     <div class="filter-grid" style="grid-template-columns: repeat(2, 1fr);">
                         <!-- Sort By -->
                         <label>Sort By
@@ -454,6 +455,8 @@
         }
     });
 
+
+
 	// View toggle functionality for experts (refactored)
 	const gridViewBtn = document.getElementById('gridViewBtn');
 	const listViewBtn = document.getElementById('listViewBtn');
@@ -463,10 +466,17 @@
 	const listPagination = document.getElementById('listPagination');
 	const gridIconUse = document.getElementById('gridIconUse');
 	const listIconUse = document.getElementById('listIconUse');
+	const viewInput = document.getElementById('viewInput');
+	const searchBarForm = document.getElementById('searchBarForm');
+
+	function getCurrentViewType() {
+		// Returns 'grid' or 'list' based on which button is active
+		if (listViewBtn.classList.contains('active')) return 'list';
+		return 'grid';
+	}
 
 	function setExpertView(viewType) {
 		// Hide both views and paginations first
-		// Always remove 'visible' from both containers first
 		expertGrid.classList.remove('visible');
 		expertList.classList.remove('visible');
 		expertGrid.classList.add('hidden');
@@ -496,12 +506,14 @@
 			gridIconUse.setAttribute('href', '#icon-grid-active');
 			listIconUse.setAttribute('href', '#icon-list');
 		}
+		// Update hidden input for view
+		if (viewInput) viewInput.value = viewType;
 	}
 
 	function reloadWithView(viewType) {
-		const url = new URL(window.location);
-		url.searchParams.set('view', viewType);
-		window.location.href = url;
+		// Set the hidden input and submit the form to preserve filters
+		if (viewInput) viewInput.value = viewType;
+		if (searchBarForm) searchBarForm.submit();
 	}
 
 	gridViewBtn.addEventListener('click', function() {
@@ -511,6 +523,14 @@
 	listViewBtn.addEventListener('click', function() {
 		reloadWithView('list');
 	});
+
+	// Ensure the view input is always set to the current view before any form submission
+	if (searchBarForm) {
+		searchBarForm.addEventListener('submit', function(e) {
+			// Always set the view input to the current view before submitting
+			if (viewInput) viewInput.value = getCurrentViewType();
+		});
+	}
 
 	document.addEventListener('DOMContentLoaded', function() {
 		const currentView = '{{ view|default:"grid" }}';
