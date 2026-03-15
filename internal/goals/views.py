@@ -349,7 +349,8 @@ def add_goal_view(request):
                             g.save()
             
             # Redirect with success parameter to trigger page reload
-            return redirect('goal')
+            import time
+            return redirect(f"/goals/?updated=1&t={int(time.time())}")
 
         return render(request, 'goals/add_goal.html', {
             'agendas': agendas,

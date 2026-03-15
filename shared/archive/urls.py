@@ -1,9 +1,10 @@
 from django.urls import path
-from .views import ArchiveView, ProjectAggregationAPIView, ProjectListAPIView
+from .views import ArchiveView, ProjectAggregationAPIView, ProjectListAPIView, export_archive_projects
 
 urlpatterns = [
 
     path('', ArchiveView.as_view(), name='archive'),
     path('api/aggregate/<str:category>/', ProjectAggregationAPIView.as_view(), name='api_archive_aggregate'),
     path('api/projects/<str:category>/<str:filter_value>/', ProjectListAPIView.as_view(), name='api_archive_list'),
+    path('api/export/', export_archive_projects, name='api_archive_export'),
 ]

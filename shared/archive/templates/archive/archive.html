@@ -23,35 +23,56 @@
                     <svg width="16" height="16"> <use href="#icon-filter"></use> </svg>
                 </button>
                 <div id="filterDropdown" class="filter-dropdown" style="display: none;">
-                   <div class="filter-grid" style="grid-template-columns: repeat(2, 1fr); grid-template-rows: 1fr;">
-                        <label>Sort By
-                            <select name="sort_by">
-                                <option value="title">Title</option>
-                                <option value="start_date">Date Started</option>
-                                <option value="project_leader__last_name">Project Leader</option>
-                                <option value="status">Status</option>
-                            </select>
-                        </label>
-                        <label>Order
-                            <select name="order">
-                                <option value="asc">Ascending</option>
-                                <option value="desc">Descending</option>
-                            </select>
-                        </label>
-                        <label>Status
-                            <select name="status">
-                                <option value="">All Statuses</option>
-                                <option value="NOT_STARTED">Not Started</option>
-                                <option value="IN_PROGRESS">In Progress</option>
-                                <option value="COMPLETED">Completed</option>
-                                <option value="ON_HOLD">On Hold</option>
-                                <option value="CANCELLED">Cancelled</option>
-                            </select>
-                        </label>
-                        <label>Date
-                            <input type="date" name="date" style="width: 87%"/>
-                        </label>
-                    </div>
+                {% if user_role in "UESO,VP,DIRECTOR,COORDINATOR,PROGRAM_HEAD,DEAN" %}
+                <div class="filter-grid" style="grid-template-columns: repeat(2, 1fr); grid-template-rows: 1fr;">
+                    <label>Sort By
+                        <select name="sort_by">
+                            <option value="title">Title</option>
+                            <option value="start_date">Date Started</option>
+                            <option value="project_leader__last_name">Project Leader</option>
+                            <option value="status">Status</option>
+                        </select>
+                    </label>
+                    <label>Order
+                        <select name="order">
+                            <option value="asc">Ascending</option>
+                            <option value="desc">Descending</option>
+                        </select>
+                    </label>
+                    <label>Status
+                        <select name="status">
+                            <option value="">All Statuses</option>
+                            <option value="NOT_STARTED">Not Started</option>
+                            <option value="IN_PROGRESS">In Progress</option>
+                            <option value="COMPLETED">Completed</option>
+                            <option value="ON_HOLD">On Hold</option>
+                            <option value="CANCELLED">Cancelled</option>
+                        </select>
+                    </label>
+                    <label>Date
+                        <input type="date" name="date" style="width: 87%"/>
+                    </label>
+                </div>
+                {% else %}
+                <div class="filter-grid" style="grid-template-columns: repeat(3, 1fr); grid-template-rows: 1fr;">
+                    <label>Sort By
+                        <select name="sort_by">
+                            <option value="title">Title</option>
+                            <option value="start_date">Date Started</option>
+                            <option value="project_leader__last_name">Project Leader</option>
+                        </select>
+                    </label>
+                    <label>Order
+                        <select name="order">
+                            <option value="asc">Ascending</option>
+                            <option value="desc">Descending</option>
+                        </select>
+                    </label>
+                    <label>Date
+                        <input type="date" name="date" style="width: 87%"/>
+                    </label>
+                </div>
+                {% endif %}
                     <div class="filter-actions">
                         <button type="submit" class="filter-apply">Apply</button>
                         <button type="button" id="closeFilter" class="filter-close">Clear Filters</button>
@@ -186,6 +207,7 @@
     const breadcrumbNav = document.getElementById('breadcrumbNav');
     const loadingIndicator = document.getElementById('loadingIndicator');
     const filterBtn = document.getElementById('filterBtn');
+    const exportProjectBtn = document.getElementById('exportProjectBtn');
 
     let currentCategorySlug = '{{ default_category }}';
     let currentFilterKey = null;
@@ -577,6 +599,22 @@
                 loadAggregationData(currentCategorySlug);
             }
             if (filterDropdown) filterDropdown.style.display = 'none';
+        });
+    }
+
+    if (exportProjectBtn) {
+        exportProjectBtn.addEventListener('click', function() {
+            if (!currentFilterKey) {
+                alert('Open a group first so the table can be exported.');
+                return;
+            }
+
+            const formData = new FormData(document.getElementById('searchForm'));
+            const params = new URLSearchParams(formData);
+            params.set('category', currentCategorySlug);
+            params.set('filter_value', currentFilterKey);
+
+            window.location.href = `/archives/api/export/?${params.toString()}`;
         });
     }
 </script>

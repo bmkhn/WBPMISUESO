@@ -4,7 +4,7 @@ from django.views.decorators.http import require_POST
 from system.users.decorators import role_required
 from system.users.decorators import role_required
 from system.users.models import Campus, College, User
-# from .ai_team_generator import get_team_generator
+
 import json
 
 
@@ -261,84 +261,85 @@ def generate_team_view(request):
     API endpoint to generate AI-powered team recommendations.
     """ 
     # FOR DEPLOYED VERSION - COMMENTED OUT FOR TEMPORARY DISABLEMENT
-    return JsonResponse({
-        'success': False,
-        'error': 'AI Team Generation is temporarily disabled for deployment.'
-    }, status=503)
+    # return JsonResponse({
+    #     'success': False,
+    #     'error': 'AI Team Generation is temporarily disabled for deployment.'
+    # }, status=503)
 
 
     # ORGIINAL IMPLEMENTATION BELOW - COMMENTED OUT FOR TEMPORARY DISABLEMENT
-    # try:
-    #     data = json.loads(request.body)
+    try:
+        data = json.loads(request.body)
 
-    #     # Load Parameters
-    #     keywords = data.get('keywords', '').strip()
-    #     campus_filter = data.get('campus', '').strip() or None
-    #     college_filter = data.get('college', '').strip() or None
-    #     num_participants = int(data.get('num_participants', 5))
-    #     include_in_progress = bool(data.get('include_in_progress', False))
+        # Load Parameters
+        keywords = data.get('keywords', '').strip()
+        campus_filter = data.get('campus', '').strip() or None
+        college_filter = data.get('college', '').strip() or None
+        num_participants = int(data.get('num_participants', 5))
+        include_in_progress = bool(data.get('include_in_progress', False))
         
-    #     if not keywords:
-    #         return JsonResponse({'success': False, 'error': 'Keywords are required'}, status=400)
+        if not keywords:
+            return JsonResponse({'success': False, 'error': 'Keywords are required'}, status=400)
 
-    #     if not (1 <= num_participants <= 20):
-    #         return JsonResponse({'success': False, 'error': 'Number of participants must be between 1 and 20'}, status=400)
+        if not (1 <= num_participants <= 20):
+            return JsonResponse({'success': False, 'error': 'Number of participants must be between 1 and 20'}, status=400)
 
-    #     if college_filter:
-    #         try:
-    #             college_filter = int(college_filter)
-    #         except ValueError:
-    #             college_filter = None
+        if college_filter:
+            try:
+                college_filter = int(college_filter)
+            except ValueError:
+                college_filter = None
+        
+        from .ai_team_generator import get_team_generator
+
+        # Generate Team
+        generator = get_team_generator()
+        team_members = generator.generate_team(
+            keywords=keywords,
+            campus_filter=campus_filter,
+            college_filter=college_filter,
+            num_participants=num_participants,
+            include_in_progress=include_in_progress
+        )
         
 
-    #     # Generate Team
-    #     generator = get_team_generator()
-    #     team_members = generator.generate_team(
-    #         keywords=keywords,
-    #         campus_filter=campus_filter,
-    #         college_filter=college_filter,
-    #         num_participants=num_participants,
-    #         include_in_progress=include_in_progress
-    #     )
-        
+        # Format Response
+        results = []
+        for member in team_members:
+            profile_pic_url = None
+            if member.get('user') and member['user'].profile_picture:
+                profile_pic_url = member['user'].profile_picture.url
 
-    #     # Format Response
-    #     results = []
-    #     for member in team_members:
-    #         profile_pic_url = None
-    #         if member.get('user') and member['user'].profile_picture:
-    #             profile_pic_url = member['user'].profile_picture.url
+            results.append({
+                'id': member['id'],
+                'name': member['name'],
+                'campus': member['campus'],
+                'college': member['college'],
 
-    #         results.append({
-    #             'id': member['id'],
-    #             'name': member['name'],
-    #             'campus': member['campus'],
-    #             'college': member['college'],
+                'degree': member['degree'],
+                'expertise': member['expertise'],
+                'total_projects': member['total_projects'],
+                'ongoing_projects': member['ongoing_projects'],
 
-    #             'degree': member['degree'],
-    #             'expertise': member['expertise'],
-    #             'total_projects': member['total_projects'],
-    #             'ongoing_projects': member['ongoing_projects'],
+                # NEW SCORES
+                'degree_score': round(member['degree_score'], 3),
+                'expertise_score': round(member['expertise_score'], 3),
+                'project_title_score': round(member['project_title_score'], 3),
 
-    #             # NEW SCORES
-    #             'degree_score': round(member['degree_score'], 3),
-    #             'expertise_score': round(member['expertise_score'], 3),
-    #             'project_title_score': round(member['project_title_score'], 3),
+                'final_score': round(member['final_score'], 3),
 
-    #             'final_score': round(member['final_score'], 3),
+                'profile_picture': profile_pic_url,
+                'projects': member.get('projects', []),
+            })
 
-    #             'profile_picture': profile_pic_url,
-    #             'projects': member.get('projects', []),
-    #         })
-
-    #     return JsonResponse({
-    #         'success': True,
-    #         'team_members': results,
-    #         'count': len(results)
-    #     })
+        return JsonResponse({
+            'success': True,
+            'team_members': results,
+            'count': len(results)
+        })
     
         
-    # except Exception as e:
-    #     import traceback
-    #     traceback.print_exc()
-    #     return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)

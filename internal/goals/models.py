@@ -4,6 +4,10 @@ from internal.agenda.models import Agenda
 from shared.projects.models import SustainableDevelopmentGoal
 from django.utils import timezone
 
+
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
+from django.urls import reverse
 User = get_user_model()
 
 class Goal(models.Model):
@@ -55,6 +59,59 @@ class Goal(models.Model):
     
     class Meta:
         ordering = ['-created_at']
+
+
+# Logging signals for Goal actions
+@receiver(post_save, sender=Goal)
+def log_goal_action(sender, instance, created, **kwargs):
+    from system.logs.models import LogEntry
+    # Skip logging if this is being called from within a signal to avoid duplicates
+    if hasattr(instance, '_skip_log'):
+        return
+    action = 'CREATE' if created else 'UPDATE'
+    user = instance.created_by if created else instance.assigned_to or instance.created_by
+
+    # Only create notification for active/completed goals
+    is_notification = instance.status in ['ACTIVE', 'COMPLETED']
+
+
+    # Use the main goals page as the URL
+    try:
+        url = reverse('goal')
+    except Exception:
+        url = ''
+
+    # Create better detail messages
+    if created and is_notification:
+        details = f"A new goal has been created: {instance.title}"
+    elif not created:
+        details = f"Goal updated: {instance.title}"
+    else:
+        details = f"A new goal draft has been created: {instance.title}"
+
+    LogEntry.objects.create(
+        user=user,
+        action=action,
+        model='Goal',
+        object_id=instance.id,
+        object_repr=instance.title,
+        details=details,
+        url=url,
+        is_notification=is_notification
+    )
+
+
+@receiver(post_delete, sender=Goal)
+def log_goal_delete(sender, instance, **kwargs):
+    from system.logs.models import LogEntry
+    LogEntry.objects.create(
+        user=instance.assigned_to or instance.created_by,
+        action='DELETE',
+        model='Goal',
+        object_id=instance.id,
+        object_repr=str(instance),
+        details=f"Title: {instance.title}"
+    )
 
 class GoalQualifier(models.Model):
     goal = models.ForeignKey(Goal, on_delete=models.CASCADE, related_name='qualifiers')
