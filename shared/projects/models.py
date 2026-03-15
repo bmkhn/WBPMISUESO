@@ -1,4 +1,5 @@
 import os
+import uuid
 from django.db import models
 from django.conf import settings
 from internal.agenda.models import Agenda
@@ -540,6 +541,77 @@ def project_event_image_upload_to(instance, filename):
 		return f"projects/{project_id}/events/{filename}"
 	return f"projects/unknown/events/{filename}"
 
+class ActivityEvaluation(models.Model):
+	"""
+	Detailed evaluation for a specific activity (ProjectEvent) based on PSU-ESO 004 form
+	"""
+	# Basic Information
+	activity = models.ForeignKey('ProjectEvent', on_delete=models.CASCADE, related_name='evaluations')
+	evaluated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='activity_evaluations')
+	evaluator_name = models.CharField(max_length=255, blank=True, null=True, help_text="Optional name if evaluator is not a system user")
+	venue = models.CharField(max_length=255, blank=True, null=True)
+	evaluation_date = models.DateField(auto_now_add=True)
+	created_at = models.DateTimeField(auto_now_add=True)
+	edited_at = models.DateTimeField(null=True, blank=True)
+	
+	# Trainings/Seminars Section (A)
+	# Sub-items a-g (each rated 1-5)
+	attainment_of_objectives = models.PositiveSmallIntegerField(choices=[(i, i) for i in range(1, 6)], null=True, blank=True)
+	time_management = models.PositiveSmallIntegerField(choices=[(i, i) for i in range(1, 6)], null=True, blank=True)
+	resource_persons_facilitators = models.PositiveSmallIntegerField(choices=[(i, i) for i in range(1, 6)], null=True, blank=True)
+	topics = models.PositiveSmallIntegerField(choices=[(i, i) for i in range(1, 6)], null=True, blank=True)
+	training_venue = models.PositiveSmallIntegerField(choices=[(i, i) for i in range(1, 6)], null=True, blank=True)
+	food = models.PositiveSmallIntegerField(choices=[(i, i) for i in range(1, 6)], null=True, blank=True)
+	materials_handouts = models.PositiveSmallIntegerField(choices=[(i, i) for i in range(1, 6)], null=True, blank=True)
+	trainings_seminars_overall = models.PositiveSmallIntegerField(choices=[(i, i) for i in range(1, 6)], null=True, blank=True)
+	
+	# Timeliness Section
+	held_as_scheduled = models.PositiveSmallIntegerField(choices=[(i, i) for i in range(1, 6)], null=True, blank=True)
+	answers_present_need = models.PositiveSmallIntegerField(choices=[(i, i) for i in range(1, 6)], null=True, blank=True)
+	timeliness_overall = models.PositiveSmallIntegerField(choices=[(i, i) for i in range(1, 6)], null=True, blank=True)
+	
+	# Additional Comments
+	comments = models.TextField(blank=True, null=True)
+	
+	class Meta:
+		indexes = [
+			models.Index(fields=['activity', '-evaluation_date'], name='act_eval_act_date_idx'),
+			models.Index(fields=['evaluated_by', '-evaluation_date'], name='act_eval_user_idx'),
+		]
+	
+	def __str__(self):
+		evaluator = self.evaluated_by.username if self.evaluated_by else (self.evaluator_name or 'Anonymous')
+		return f"Evaluation of {self.activity.title} by {evaluator} on {self.evaluation_date}"
+	
+	@property
+	def trainings_seminars_average(self):
+		"""Calculate average rating for Trainings/Seminars section"""
+		ratings = [
+			self.attainment_of_objectives,
+			self.time_management,
+			self.resource_persons_facilitators,
+			self.topics,
+			self.training_venue,
+			self.food,
+			self.materials_handouts
+		]
+		valid_ratings = [r for r in ratings if r is not None]
+		return sum(valid_ratings) / len(valid_ratings) if valid_ratings else None
+	
+	@property
+	def timeliness_average(self):
+		"""Calculate average rating for Timeliness section"""
+		ratings = [self.held_as_scheduled, self.answers_present_need]
+		valid_ratings = [r for r in ratings if r is not None]
+		return sum(valid_ratings) / len(valid_ratings) if valid_ratings else None
+
+
+def project_event_image_upload_to(instance, filename):
+	project_id = getattr(instance.project, 'id', None)
+	if project_id:
+		return f"projects/{project_id}/events/{filename}"
+	return f"projects/unknown/events/{filename}"
+
 class ProjectEvent(models.Model):
 	def delete(self, using=None, keep_parents=False):
 		return super().delete(using=using, keep_parents=keep_parents)
@@ -564,6 +636,18 @@ class ProjectEvent(models.Model):
 		null=True,
 		help_text="Budget allocated for this activity"
 	)
+	evaluation_token = models.UUIDField(
+		default=uuid.uuid4, 
+		unique=True, 
+		editable=False,
+		help_text="Unique token for public evaluation access",
+		null=True,
+		blank=True
+	)
+	evaluation_enabled = models.BooleanField(
+		default=True,
+		help_text="Allow public evaluations for this activity"
+	)
 
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
@@ -573,6 +657,10 @@ class ProjectEvent(models.Model):
 		self._old_allocated_budget = None
 	
 	def save(self, *args, **kwargs):
+		# Generate evaluation_token if not set
+		if not self.evaluation_token:
+			self.evaluation_token = uuid.uuid4()
+		
 		# Track old allocated_budget before saving
 		if self.pk:
 			try:
@@ -643,9 +731,158 @@ class ProjectEvent(models.Model):
 		percent = (spent / allocated) * 100
 		return min(100, float(percent))
 
+	def get_evaluation_url(self):
+		"""Generate public evaluation URL"""
+		# Ensure evaluation_token exists
+		if not self.evaluation_token:
+			self.evaluation_token = uuid.uuid4()
+			self.save(update_fields=['evaluation_token'])
+		
+		try:
+			return reverse('public_activity_evaluation', kwargs={'token': str(self.evaluation_token)})
+		except:
+			return f"/evaluate/{self.evaluation_token}/"
+	
+	def _get_local_network_ip(self):
+		"""Get the local network IP address for QR code testing"""
+		import socket
+		try:
+			# Connect to a remote address to determine local network IP
+			# This doesn't actually send data, just determines the route
+			s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+			s.connect(("8.8.8.8", 80))  # Google DNS
+			ip = s.getsockname()[0]
+			s.close()
+			return ip
+		except Exception:
+			# Fallback: try to get IP from hostname
+			try:
+				hostname = socket.gethostname()
+				ip = socket.gethostbyname(hostname)
+				# Only return if it's not localhost
+				if ip != '127.0.0.1':
+					return ip
+			except Exception:
+				pass
+		return None
+	
+	def get_full_evaluation_url(self, request=None):
+		"""Get full URL with domain"""
+		from django.conf import settings
+		import os
+		import requests
+		
+		# Check if we're in production/deployed mode
+		is_deployed = os.environ.get('DEPLOYED', 'False') == 'True'
+		
+		# Try to get BASE_URL from settings first (most reliable)
+		base_url = getattr(settings, 'BASE_URL', None)
+		
+		# If not set, try environment variable
+		if not base_url:
+			base_url = os.environ.get('BASE_URL', None)
+		
+		# If still not set and in development, try to detect ngrok automatically
+		if not base_url and not is_deployed:
+			try:
+				# Check if ngrok is running
+				import requests
+				response = requests.get("http://localhost:4040/api/tunnels", timeout=1)
+				tunnels = response.json().get('tunnels', [])
+				if tunnels:
+					# Get HTTPS URL from ngrok
+					https_url = next((t.get('public_url') for t in tunnels if t.get('proto') == 'https'), None)
+					if https_url:
+						base_url = https_url
+			except (requests.exceptions.RequestException, KeyError, ValueError):
+				# ngrok not running or not accessible - continue with other methods
+				pass
+		
+		# If in production and BASE_URL is not set, use production domain from ALLOWED_HOSTS
+		if not base_url and is_deployed:
+			allowed_hosts = getattr(settings, 'ALLOWED_HOSTS', [])
+			# Filter out localhost, testserver, wildcard, and healthcheck
+			production_hosts = [h for h in allowed_hosts if h not in ['localhost', '127.0.0.1', 'testserver', 'healthcheck.railway.app', '*']]
+			if production_hosts:
+				# Use the first production host with https (assuming production uses https)
+				base_url = f"https://{production_hosts[0]}"
+		
+		# If still not set and request is available, build from request
+		if not base_url and request:
+			scheme = 'https' if request.is_secure() else 'http'
+			host = request.get_host()
+			
+			# Handle localhost/127.0.0.1 for local testing
+			if 'localhost' in host or '127.0.0.1' in host:
+				# In development mode, try to get local network IP for QR code testing
+				if not is_deployed:
+					local_ip = self._get_local_network_ip()
+					if local_ip:
+						# Use local network IP so phones on same network can access
+						# Extract port from host if present (e.g., "127.0.0.1:8000" -> ":8000")
+						# Always include port for local network access
+						if ':' in host:
+							port = ':' + host.split(':')[1]
+						else:
+							# Default Django dev server port - always include it
+							port = ':8000'
+						base_url = f"http://{local_ip}{port}"
+					else:
+						# Can't determine local IP, use localhost (won't work for QR codes)
+						base_url = f"{scheme}://{host}"
+				else:
+					# In production, use production domain instead of localhost
+					allowed_hosts = getattr(settings, 'ALLOWED_HOSTS', [])
+					production_hosts = [h for h in allowed_hosts if h not in ['localhost', '127.0.0.1', 'testserver', 'healthcheck.railway.app', '*']]
+					if production_hosts:
+						# Use production domain with https
+						base_url = f"https://{production_hosts[0]}"
+					else:
+						# Fallback to localhost (shouldn't happen in production)
+						base_url = f"{scheme}://{host}"
+			else:
+				# Valid host (not localhost) - use request host
+				# Check if it's a tunneling service (ngrok, localtunnel, etc.)
+				if 'ngrok' in host or 'localtunnel' in host or 'loca.lt' in host:
+					# Use https for tunneling services
+					if 'http://' not in host and 'https://' not in host:
+						base_url = f"https://{host}"
+					else:
+						base_url = f"{scheme}://{host}"
+				else:
+					# Regular host - preserve port for local network IPs
+					# Don't remove port for local IPs (192.168.x.x, 10.x.x.x) as they need it
+					host_without_port = host.split(':')[0] if ':' in host else host
+					if '192.168.' in host_without_port or host_without_port.startswith('10.'):
+						# Local network IP - keep port if present, add :8000 if missing
+						if ':' not in host:
+							host = f"{host}:8000"
+						base_url = f"{scheme}://{host}"
+					else:
+						# Public domain - remove port if it's the default port (80 for http, 443 for https)
+						if (scheme == 'http' and ':8000' in host) or (scheme == 'https' and ':443' in host):
+							host = host.split(':')[0]
+						base_url = f"{scheme}://{host}"
+		
+		# Final fallback: use production domain from ALLOWED_HOSTS if still not set
+		if not base_url:
+			allowed_hosts = getattr(settings, 'ALLOWED_HOSTS', [])
+			# Filter out localhost, testserver, wildcard, and healthcheck
+			production_hosts = [h for h in allowed_hosts if h not in ['localhost', '127.0.0.1', 'testserver', 'healthcheck.railway.app', '*']]
+			if production_hosts:
+				# Use the first production host with https (assuming production uses https)
+				base_url = f"https://{production_hosts[0]}"
+			else:
+				# Fallback to localhost for development only
+				base_url = 'http://localhost:8000'
+		
+		return f"{base_url}{self.get_evaluation_url()}"
+	
 	def __str__(self):
 		return f"{self.title} ({self.project.title})"
 
+
+#############################################################################################################################################################################################################
 
 # --- SIGNAL HANDLERS for ProjectEvent Budget Allocation to Expenses ---
 

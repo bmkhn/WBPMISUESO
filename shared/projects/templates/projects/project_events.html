@@ -59,6 +59,26 @@
                     <p>{{ event.description|default:'' }}</p>
                     <p>{{ event.datetime|date:'F d, Y' }} at {{ event.datetime|date:'g:i A' }}</p>
                     {% if event.location %}<p><strong>Location:</strong> {{ event.location }}</p>{% endif %}
+                    
+                    <!-- Evaluation Actions -->
+                    <div style="margin-top:1rem;display:flex;gap:0.5rem;flex-wrap:wrap;">
+                        <button type="button" 
+                                class="admin-button edit" 
+                                style="padding:0.5rem 1rem;font-size:0.875rem;"
+                                onclick="showEvaluationLink({{ event.id }}, '{{ event.evaluation_token }}', '{{ event.evaluation_full_url }}')">
+                            <i class="fa-solid fa-link"></i> Get Evaluation Link
+                        </button>
+                        <a href="{% url 'activity_evaluations' project.id event.id %}" 
+                           class="admin-button edit" 
+                           style="padding:0.5rem 1rem;font-size:0.875rem;text-decoration:none;display:inline-block;">
+                            <i class="fa-solid fa-clipboard-check"></i> View Evaluations 
+                            {% if event.evaluations.count > 0 %}
+                            <span style="background:white;color:#0A6C44;padding:0.15rem 0.4rem;border-radius:10px;margin-left:0.25rem;font-weight:600;">
+                                {{ event.evaluations.count }}
+                            </span>
+                            {% endif %}
+                        </a>
+                    </div>
                 </div>
                 <div style="height:15rem;display:flex; text-align: center; align-items: center; justify-content: center;">
                 <img src="{{ event.get_image_url }}" alt="Activity Photo" style="width:100%;height:100%;object-fit:cover;border-radius:0.75rem;border:0.08rem solid #525252;">
@@ -71,7 +91,7 @@
                 <div class="event-modal-content">
                     <span class="close" onclick="document.getElementById('edit-event-modal-{{ event.id }}').style.display='none'">&times;</span>
                     <h2>Edit Activity</h2>
-                    <form method="post" enctype="multipart/form-data" novalidate>
+                    <form method="post" action="{% url 'project_events' project.id %}" enctype="multipart/form-data" novalidate>
                         {% csrf_token %}
                         <input type="hidden" name="event_id" value="{{ event.id }}">
                         <div class="form-group">
@@ -110,6 +130,66 @@
                     }
                 };
             </script>
+            
+            <!-- Evaluation Link Modal for this activity -->
+            <div id="eval-link-modal-{{ event.id }}" class="event-modal modal" style="display:none;">
+                <div class="event-modal-content" style="max-width:600px;">
+                    <span class="close" onclick="closeEvalLinkModal({{ event.id }})">&times;</span>
+                    <h2 style="margin-top:0;">Evaluation Link</h2>
+                    <p style="color:#666;margin-bottom:1.5rem;">Share this link or QR code with participants to collect evaluations for:</p>
+                    <p style="font-weight:600;color:#0A6C44;margin-bottom:1.5rem;">{{ event.title }}</p>
+                    
+                    <!-- QR Code -->
+                    <div style="text-align:center;margin:2rem 0;padding:1.5rem;background:#f9f9f9;border-radius:8px;">
+                        <p style="margin-bottom:1rem;font-weight:600;font-size:1rem;">QR Code</p>
+                        <div style="display:inline-block;padding:1.5rem;background:white;border:2px solid #ddd;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);">
+                            <img src="{% url 'activity_evaluation_qr' project.id event.id %}" 
+                                 alt="QR Code" 
+                                 style="width:300px;height:300px;max-width:100%;display:block;object-fit:contain;"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                            <div style="display:none;padding:1rem;background:#fff3cd;border:1px solid #ffc107;border-radius:4px;color:#856404;">
+                                <p style="margin:0;font-size:0.9rem;">
+                                    <i class="fa-solid fa-exclamation-triangle"></i> 
+                                    QR code generation requires qrcode library. Install with: <code>pip install qrcode[pil]</code>
+                                </p>
+                            </div>
+                        </div>
+                        <p style="margin-top:1rem;font-size:0.9rem;color:#666;">Scan with your phone camera</p>
+                    </div>
+                    
+                    <!-- Shareable Link -->
+                    <div style="margin:1.5rem 0;">
+                        <label style="display:block;margin-bottom:0.5rem;font-weight:600;">Shareable Link:</label>
+                        <div style="display:flex;gap:0.5rem;">
+                            <input type="text" 
+                                   id="eval-link-{{ event.id }}" 
+                                   value="{{ event.evaluation_full_url }}" 
+                                   readonly 
+                                   style="flex:1;padding:0.75rem;border:1px solid #ddd;border-radius:4px;font-size:0.9rem;">
+                            <button onclick="copyEvaluationLink({{ event.id }})" 
+                                    class="admin-button edit"
+                                    style="padding:0.75rem 1.5rem;">
+                                <i class="fa-solid fa-copy"></i> Copy
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div style="background:#e0f2fe;padding:1rem;border-radius:4px;margin-top:1rem;">
+                        <p style="margin:0;font-size:0.9rem;color:#0369a1;">
+                            <i class="fa-solid fa-info-circle"></i> 
+                            <strong>Tip:</strong> Print the QR code or share the link via email/SMS with participants after the activity.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <script>
+                document.getElementById('eval-link-modal-{{ event.id }}').onclick = function(e) {
+                    if (e.target === this) {
+                        this.style.display = 'none';
+                    }
+                };
+            </script>
             {% endif %}
 
             {% empty %}
@@ -125,7 +205,7 @@
     <div class="event-modal-content">
         <span class="close" id="close-add-event-modal">&times;</span>
         <h2 style="margin-top:0;">Add New Activity</h2>
-        <form method="post" novalidate>
+        <form method="post" action="{% url 'project_events' project.id %}" novalidate>
             {% csrf_token %}
             <input type="hidden" name="add_event" value="1">
             <div class="form-group">
@@ -140,14 +220,25 @@
                 <label class="form-label">Location<span class="required">*</span></label>
                 <input class="user-details-value" type="text" name="add_event_location" required>
             </div>
-            <div class="form-group">
+            <div class="form-group" style="display:block;">
                 <label class="form-label">Allocated Budget (₱)<span class="required">*</span></label>
-                <input class="user-details-value" type="number" name="add_event_allocated_budget" id="add_event_allocated_budget" step="0.01" min="0" placeholder="0.00" required>
-                <div id="remaining-budget-display" style="margin-top:0.5rem;font-size:0.9rem;">
-                    <span style="color:#666;">Remaining Budget: </span>
-                    <span id="remaining-budget-amount" style="font-weight:600;color:#059669;">₱{{ remaining_budget_for_activities|floatformat:2 }}</span>
+                <input
+                    class="user-details-value"
+                    type="number"
+                    name="add_event_allocated_budget"
+                    id="add_event_allocated_budget"
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                    required
+                    style="display:block;width:100%;margin-top:0.35rem;"
+                >
+                <div id="budget-error-message" style="color:#DC2626;font-size:0.85rem;margin-top:0.35rem;display:none;"></div>
+                <div id="remaining-budget-display" style="margin-top:0.35rem;font-size:0.9rem; display:block; color:#4b5563; width:100%;">
+                    <span style="color:#6b7280;">Remaining Budget:</span>
+                    {# Use the same cash value shown in Expenses for consistency #}
+                    <span id="remaining-budget-amount" style="font-weight:600;color:#059669;">₱{{ cash_available_for_expenses|default:remaining_budget_for_activities|floatformat:2 }}</span>
                 </div>
-                <div id="budget-error-message" style="color:#DC2626;font-size:0.85rem;margin-top:0.25rem;display:none;"></div>
             </div>
             <div class="form-actions" style="justify-content:center;">
                 <button type="button" class="back admin-button" id="cancel-add-event-modal">Cancel</button>
@@ -372,6 +463,47 @@
             this.style.display = 'none';
         }
     };
+</script>
+
+<!-- Evaluation Link Modal Scripts -->
+<script>
+    function showEvaluationLink(eventId, token, fullUrl) {
+        const modal = document.getElementById('eval-link-modal-' + eventId);
+        if (modal) {
+            modal.style.display = 'flex';
+        }
+    }
+    
+    function closeEvalLinkModal(eventId) {
+        const modal = document.getElementById('eval-link-modal-' + eventId);
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    }
+    
+    function copyEvaluationLink(eventId) {
+        const input = document.getElementById('eval-link-' + eventId);
+        if (input) {
+            input.select();
+            input.setSelectionRange(0, 99999); // For mobile devices
+            try {
+                document.execCommand('copy');
+                // Show feedback
+                const button = event.target.closest('button');
+                if (button) {
+                    const originalText = button.innerHTML;
+                    button.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+                    button.style.background = '#059669';
+                    setTimeout(() => {
+                        button.innerHTML = originalText;
+                        button.style.background = '';
+                    }, 2000);
+                }
+            } catch (err) {
+                alert('Failed to copy. Please copy manually.');
+            }
+        }
+    }
 </script>
 
 
