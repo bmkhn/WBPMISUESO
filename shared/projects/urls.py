@@ -4,6 +4,7 @@ from .views import (
     project_overview, project_providers, project_events, project_files, project_submissions, project_expenses, project_invoices, project_evaluations,
     project_submissions_details, edit_project_evaluation, delete_project_evaluation,
     cancel_project, undo_cancel_project, check_college_budget, delete_project,
+    public_activity_evaluation, activity_evaluation_qr, activity_evaluations,
 )
 
 urlpatterns = [
@@ -30,4 +31,9 @@ urlpatterns = [
 
     path('<int:pk>/cancel/', cancel_project, name='cancel_project'),
     path('<int:pk>/undo_cancel/', undo_cancel_project, name='undo_cancel_project'),
+    
+    # Activity Evaluation Routes
+    path('evaluate/<uuid:token>/', public_activity_evaluation, name='public_activity_evaluation'),
+    path('<int:pk>/activities/<int:activity_id>/evaluations/', activity_evaluations, name='activity_evaluations'),
+    path('<int:pk>/activities/<int:activity_id>/evaluation-qr/', activity_evaluation_qr, name='activity_evaluation_qr'),
 ]

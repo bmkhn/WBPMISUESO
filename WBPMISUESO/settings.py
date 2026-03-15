@@ -29,8 +29,32 @@ else:
 
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-fallback-key-change-in-production')
 
-ALLOWED_HOSTS = [ 'localhost', '127.0.0.1', 'testserver', 'uesopmis.up.railway.app', 'healthcheck.railway.app', 'uesomis.pythonanywhere.com' ]
+# ALLOWED_HOSTS configuration
+# In development (DEBUG=True), allow all hosts for easier testing
+# In production, only allow specific domains
+if DEBUG:
+    # Development mode: Allow all hosts (including local network IPs and tunneling services)
+    # This makes it easier to test QR codes from any device
+    ALLOWED_HOSTS = ['*']  # Allows all hosts in development
+else:
+    # Production mode: Only allow specific domains
+    ALLOWED_HOSTS = [ 
+        'localhost', 
+        '127.0.0.1', 
+        'testserver', 
+        'uesopmis.up.railway.app', 
+        'healthcheck.railway.app', 
+        'uesomis.pythonanywhere.com' 
+    ]
 CSRF_TRUSTED_ORIGINS = [ 'https://uesopmis.up.railway.app' ]
+
+# Base URL for generating absolute URLs (e.g., for QR codes, emails)
+# Set via environment variable BASE_URL, or auto-detect from ALLOWED_HOSTS in production
+# In development, will auto-detect ngrok if running
+if os.environ.get('DEPLOYED', 'False') == 'True':
+    BASE_URL = os.environ.get('BASE_URL', 'https://uesopmis.up.railway.app')
+else:
+    BASE_URL = os.environ.get('BASE_URL', None)  # Will auto-detect ngrok or use request.get_host() if None
 
 # ============================================================
 # APPLICATION DEFINITION

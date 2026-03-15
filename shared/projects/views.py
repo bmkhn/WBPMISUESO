@@ -5,7 +5,7 @@ from shared import request
 from system.logs.models import LogEntry
 from system.notifications.models import Notification
 from system.users.decorators import role_required, project_visibility_required
-from .models import SustainableDevelopmentGoal, Project, ProjectEvaluation, ProjectEvent, ProjectUpdate, ProjectExpense, ProjectType
+from .models import SustainableDevelopmentGoal, Project, ProjectEvaluation, ProjectEvent, ProjectUpdate, ProjectExpense, ProjectType, ActivityEvaluation
 from internal.goals.models import Goal
 from internal.submissions.models import Submission
 from system.users.models import College, User, Campus
@@ -31,6 +31,44 @@ def get_role_constants():
     FACULTY_ROLE = ["FACULTY", "IMPLEMENTER"]
     COORDINATOR_ROLE = ["COORDINATOR"]
     return ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE, COORDINATOR_ROLE
+
+def calculate_project_budget_info(project):
+    """
+    Calculate budget information for a project.
+    Returns: (total_budget, spent_total, remaining_total)
+    This ensures consistent calculation across all views.
+    Refreshes project from database to avoid stale data.
+    Always queries expenses directly from database to ensure accuracy.
+    """
+    # Get project ID first to ensure we have it even if project object is stale
+    project_id = project.pk if hasattr(project, 'pk') else project.id
+    
+    # Get completely fresh project instance from database (not just refresh)
+    project = Project.objects.get(pk=project_id)
+    
+    # Calculate total budget from fresh project values
+    total_budget = (project.internal_budget or Decimal('0')) + (project.external_budget or Decimal('0'))
+    
+    # Recalculate spent from database to ensure accuracy
+    # This includes ALL expenses: regular expenses AND allocation expenses (created by signal handlers)
+    # Use project_id directly to ensure we're querying the correct project
+    try:
+        # Query expenses directly using project_id - this ensures we get ALL expenses for this project
+        spent_total = ProjectExpense.objects.filter(project_id=project_id).aggregate(s=Sum('amount'))['s']
+        if spent_total is None:
+            spent_total = Decimal('0')
+        else:
+            spent_total = Decimal(str(spent_total))
+    except Exception as e:
+        # Log error but don't break the page
+        import logging
+        logging.error(f"Error calculating project budget info for project {project_id}: {e}")
+        spent_total = Decimal('0')
+    
+    # Calculate remaining (ensure it's never negative)
+    remaining_total = max(Decimal('0'), total_budget - spent_total)
+    
+    return total_budget, spent_total, remaining_total
 
 def get_templates(request):
     user_role = getattr(request.user, 'role', None)
@@ -305,11 +343,8 @@ def project_events(request, pk):
                 return redirect(request.path)
             
             # Validate activity budget doesn't exceed project budget
-            total_project_budget = (project.internal_budget or Decimal('0')) + (project.external_budget or Decimal('0'))
-            total_allocated_to_activities = sum(
-                (event.allocated_budget or Decimal('0')) for event in project.events.all()
-            )
-            remaining_project_budget = total_project_budget - total_allocated_to_activities
+            # Use helper function to ensure consistency with expenses view
+            total_project_budget, current_used_budget, remaining_project_budget = calculate_project_budget_info(project)
             
             if allocated_budget > remaining_project_budget:
                 from django.contrib import messages
@@ -432,13 +467,12 @@ def project_events(request, pk):
                 
                 # Validate activity budget doesn't exceed project budget
                 if new_allocated_budget is not None:
-                    total_project_budget = (project.internal_budget or Decimal('0')) + (project.external_budget or Decimal('0'))
-                    # Calculate total allocated excluding current event's old budget
+                    # Use helper function to ensure consistency with expenses view
+                    total_project_budget, current_used_budget, _ = calculate_project_budget_info(project)
+                    # When editing, we need to account for the old allocation expense that will be updated
                     old_budget = event_to_edit.allocated_budget or Decimal('0')
-                    total_allocated_to_activities = sum(
-                        (event.allocated_budget or Decimal('0')) for event in project.events.exclude(pk=event_to_edit.pk)
-                    )
-                    remaining_project_budget = total_project_budget - total_allocated_to_activities
+                    # Subtract the old allocation expense amount to get the base used budget
+                    remaining_project_budget = total_project_budget - (current_used_budget - old_budget)
                     
                     if new_allocated_budget > remaining_project_budget:
                         from django.contrib import messages
@@ -488,28 +522,41 @@ def project_events(request, pk):
     if not event_form:
         event_form = ProjectEventForm()
     
+    # Ensure we have a fresh project instance from database to avoid caching issues
+    project = Project.objects.get(pk=project.pk)
+    
     # Calculate remaining budget for activity allocation
-    total_project_budget = (project.internal_budget or Decimal('0')) + (project.external_budget or Decimal('0'))
-    total_allocated_to_activities = sum(
-        (event.allocated_budget or Decimal('0')) for event in project.events.all()
-    )
-    remaining_budget_for_activities = total_project_budget - total_allocated_to_activities
+    # Use the same helper as the expenses view so the numbers match exactly
+    total_project_budget, current_used_budget, remaining_budget_for_activities = calculate_project_budget_info(project)
+    # Alias for clarity: this is the same “cash available” shown in Expenses
+    cash_available_for_expenses = remaining_budget_for_activities
     
     # Calculate remaining budget for each event (for edit modals - includes the event's own budget)
     events_with_remaining = []
-    for event in events:
+    # Convert queryset to list to avoid multiple evaluations
+    events_list = list(events)
+    for event in events_list:
         event_old_budget = event.allocated_budget or Decimal('0')
-        # For edit mode, remaining = total - (all allocated - this event's budget) = total - all allocated + this event's budget
+        # For edit mode, remaining = remaining_budget_for_activities + this event's old budget
+        # This works because remaining_budget_for_activities = total_budget - used_budget,
+        # and used_budget includes the old allocation expense, so adding it back gives us
+        # the available budget if we were to remove this event's allocation
         event_remaining = remaining_budget_for_activities + event_old_budget
         events_with_remaining.append({
             'event': event,
             'remaining_budget': event_remaining
         })
-
+        # Add evaluation URL to each event for template
+        try:
+            event.evaluation_full_url = event.get_full_evaluation_url(request)
+        except Exception as e:
+            # Fallback if there's an error generating URL
+            event.evaluation_full_url = f"http://localhost:8000/evaluate/{event.evaluation_token}/"
+    
     return render(request, 'projects/project_events.html', {
         'project': project,
         'base_template': base_template,
-        'events': events,
+        'events': events_list,
         'events_with_remaining': events_with_remaining,
         'total': total,
         'completed': completed,
@@ -518,6 +565,7 @@ def project_events(request, pk):
         'event_to_edit': event_to_edit,
         'total_project_budget': total_project_budget,
         'remaining_budget_for_activities': remaining_budget_for_activities,
+        'cash_available_for_expenses': cash_available_for_expenses,
         "ADMIN_ROLES": ADMIN_ROLES,
         "SUPERUSER_ROLES": SUPERUSER_ROLES,
         "FACULTY_ROLE": FACULTY_ROLE
@@ -1083,13 +1131,9 @@ def project_expenses(request, pk):
         base_template = "base_public.html"
 
     project = get_object_or_404(Project, pk=pk)
-
-    # Calculate Total Budget (Internal + External)
-    try:
-        # Ensure Decimal is used for calculation
-        total_budget = (project.internal_budget or Decimal('0')) + (project.external_budget or Decimal('0'))
-    except Exception:
-        total_budget = Decimal('0')
+    
+    # Ensure we have a fresh project instance from database to avoid caching issues
+    project = Project.objects.get(pk=project.pk)
 
     # Handle expense creation
     if request.method == 'POST' and request.user.is_authenticated:
@@ -1129,13 +1173,9 @@ def project_expenses(request, pk):
                 )
                 return redirect(request.path)
 
-        # Recompute used_budget for current check
-        try:
-            agg = ProjectExpense.objects.filter(project=project).aggregate(s=Sum('amount'))
-            current_spent_total = agg.get('s') or Decimal('0')
-        except Exception:
-            current_spent_total = Decimal('0')
-
+        # Calculate budget info for validation (use helper function for consistency)
+        total_budget, current_spent_total, _ = calculate_project_budget_info(project)
+        
         # Budget Validation: Check if new expense exceeds total budget
         new_spent_total = current_spent_total + amount_val
         
@@ -1176,13 +1216,8 @@ def project_expenses(request, pk):
 
 
     # Dynamic budget figures based on Project fields
-    # Use the calculated total_budget from above
-    try:
-        spent_total = project.used_budget or Decimal('0')
-    except Exception:
-        spent_total = Decimal('0')
-        
-    remaining_total = max(Decimal('0'), total_budget - spent_total)
+    # Use helper function to ensure consistency with activities view
+    total_budget, spent_total, remaining_total = calculate_project_budget_info(project)
     percent_remaining = 0
     if total_budget > Decimal('0'):
         try:
@@ -1395,6 +1430,219 @@ def delete_project_evaluation(request, pk, eval_id):
     except Exception:
         pass
     return redirect(f'/projects/{pk}/evaluations/')
+
+
+########################################################################################################################
+# Activity Evaluation Views (PSU-ESO 004)
+
+def public_activity_evaluation(request, token):
+    """
+    Public-facing evaluation form accessible via unique token
+    No authentication required
+    """
+    try:
+        activity = ProjectEvent.objects.select_related('project').get(
+            evaluation_token=token, 
+            evaluation_enabled=True
+        )
+    except ProjectEvent.DoesNotExist:
+        return render(request, 'projects/evaluation_not_found.html', status=404)
+    
+    # Allow evaluation for completed, ongoing, or scheduled activities
+    # (Scheduled is allowed for testing purposes - can be restricted later if needed)
+    if activity.status not in ['COMPLETED', 'ONGOING', 'SCHEDULED']:
+        return render(request, 'projects/evaluation_not_available.html', {
+            'message': 'Evaluation is not yet available for this activity.',
+            'activity': activity,
+            'project': activity.project
+        })
+    
+    if request.method == 'POST':
+        # Handle form submission
+        evaluator_name = request.POST.get('evaluator_name', '').strip()
+        if not evaluator_name:
+            evaluator_name = 'Anonymous'
+        
+        # Helper function to safely convert to int
+        def safe_int(value, default=None):
+            try:
+                val = int(value)
+                return val if 1 <= val <= 5 else default
+            except (ValueError, TypeError):
+                return default
+        
+        # Create evaluation
+        evaluation = ActivityEvaluation.objects.create(
+            activity=activity,
+            evaluated_by=request.user if request.user.is_authenticated else None,
+            evaluator_name=evaluator_name,
+            venue=activity.location or request.POST.get('venue', ''),
+            
+            # Trainings/Seminars Section
+            attainment_of_objectives=safe_int(request.POST.get('attainment_of_objectives')),
+            time_management=safe_int(request.POST.get('time_management')),
+            resource_persons_facilitators=safe_int(request.POST.get('resource_persons_facilitators')),
+            topics=safe_int(request.POST.get('topics')),
+            training_venue=safe_int(request.POST.get('training_venue')),
+            food=safe_int(request.POST.get('food')),
+            materials_handouts=safe_int(request.POST.get('materials_handouts')),
+            trainings_seminars_overall=safe_int(request.POST.get('trainings_seminars_overall')),
+            
+            # Timeliness Section
+            held_as_scheduled=safe_int(request.POST.get('held_as_scheduled')),
+            answers_present_need=safe_int(request.POST.get('answers_present_need')),
+            timeliness_overall=safe_int(request.POST.get('timeliness_overall')),
+            
+            # Comments
+            comments=request.POST.get('comments', '')
+        )
+        
+        # Force anonymous user for public template (no navbar needed)
+        from django.contrib.auth.models import AnonymousUser
+        request.user = AnonymousUser()
+        
+        return render(request, 'projects/evaluation_thank_you.html', {
+            'activity': activity,
+            'project': activity.project,
+            'evaluation_token': str(activity.evaluation_token)
+        })
+    
+    # Show evaluation form
+    # Force anonymous user to use public navbar (no role-based navbar needed)
+    from django.contrib.auth.models import AnonymousUser
+    request.user = AnonymousUser()
+    
+    return render(request, 'projects/public_activity_evaluation.html', {
+        'activity': activity,
+        'project': activity.project
+    })
+
+
+def activity_evaluation_qr(request, pk, activity_id):
+    """Generate and return QR code image"""
+    try:
+        import qrcode
+        from io import BytesIO
+        from django.http import HttpResponse
+        import uuid
+        
+        activity = get_object_or_404(ProjectEvent, pk=activity_id, project_id=pk)
+        
+        # Ensure evaluation_token exists before generating QR code
+        if not activity.evaluation_token:
+            activity.evaluation_token = uuid.uuid4()
+            activity.save(update_fields=['evaluation_token'])
+        
+        # Get the full URL for QR code (pass request to get proper host)
+        evaluation_url = activity.get_full_evaluation_url(request)
+        
+        # Generate QR code with larger size for better visibility
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_M,
+            box_size=12,
+            border=4,
+        )
+        qr.add_data(evaluation_url)
+        qr.make(fit=True)
+        
+        img = qr.make_image(fill_color="black", back_color="white")
+        buffer = BytesIO()
+        img.save(buffer, format='PNG')
+        buffer.seek(0)
+        
+        return HttpResponse(buffer.getvalue(), content_type='image/png')
+    except ImportError:
+        # QR code library not installed - return a simple error image or message
+        from django.http import HttpResponse
+        return HttpResponse(
+            '<html><body><h1>QR Code Library Not Installed</h1><p>Please install: pip install qrcode[pil]</p></body></html>',
+            content_type='text/html',
+            status=503
+        )
+    except Exception as e:
+        # Handle any other errors (e.g., missing evaluation_token, URL generation issues)
+        from django.http import HttpResponse
+        return HttpResponse(
+            f'<html><body><h1>Error Generating QR Code</h1><p>{str(e)}</p></body></html>',
+            content_type='text/html',
+            status=500
+        )
+
+
+@project_visibility_required
+def activity_evaluations(request, pk, activity_id):
+    """View all evaluations for a specific activity"""
+    ADMIN_ROLES, SUPERUSER_ROLES, FACULTY_ROLE, COORDINATOR_ROLE = get_role_constants()
+    
+    user_role = getattr(request.user, 'role', None) if request.user.is_authenticated else None
+    
+    if user_role in ["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
+        base_template = "base_internal.html"
+        project = get_object_or_404(Project, pk=pk)
+    else:
+        base_template = "base_public.html"
+        if not request.user.is_authenticated:
+            project = get_object_or_404(Project, pk=pk, status='COMPLETED')
+        else:
+            project = get_object_or_404(Project, pk=pk)
+    
+    activity = get_object_or_404(ProjectEvent, pk=activity_id, project=project)
+    evaluations = activity.evaluations.select_related('evaluated_by').order_by('-created_at')
+    
+    # Calculate statistics
+    total_evaluations = evaluations.count()
+    stats = None
+    if total_evaluations > 0:
+        from django.db.models import Avg
+        from django.db.models import Q
+        
+        # Calculate averages for individual criteria
+        trainings_seminars_individual = {
+            'attainment_of_objectives': evaluations.aggregate(Avg('attainment_of_objectives'))['attainment_of_objectives__avg'],
+            'time_management': evaluations.aggregate(Avg('time_management'))['time_management__avg'],
+            'resource_persons_facilitators': evaluations.aggregate(Avg('resource_persons_facilitators'))['resource_persons_facilitators__avg'],
+            'topics': evaluations.aggregate(Avg('topics'))['topics__avg'],
+            'training_venue': evaluations.aggregate(Avg('training_venue'))['training_venue__avg'],
+            'food': evaluations.aggregate(Avg('food'))['food__avg'],
+            'materials_handouts': evaluations.aggregate(Avg('materials_handouts'))['materials_handouts__avg'],
+        }
+        
+        # Calculate overall as average of all sub-items (more accurate than participant's subjective "overall" rating)
+        trainings_seminars_values = [v for v in trainings_seminars_individual.values() if v is not None]
+        trainings_seminars_overall_calculated = sum(trainings_seminars_values) / len(trainings_seminars_values) if trainings_seminars_values else None
+        
+        timeliness_individual = {
+            'held_as_scheduled': evaluations.aggregate(Avg('held_as_scheduled'))['held_as_scheduled__avg'],
+            'answers_present_need': evaluations.aggregate(Avg('answers_present_need'))['answers_present_need__avg'],
+        }
+        
+        # Calculate overall as average of sub-items
+        timeliness_values = [v for v in timeliness_individual.values() if v is not None]
+        timeliness_overall_calculated = sum(timeliness_values) / len(timeliness_values) if timeliness_values else None
+        
+        stats = {
+            'total': total_evaluations,
+            'trainings_seminars': {
+                **trainings_seminars_individual,
+                'overall': trainings_seminars_overall_calculated,  # Use calculated average instead of participant's "overall" field
+            },
+            'timeliness': {
+                **timeliness_individual,
+                'overall': timeliness_overall_calculated,  # Use calculated average instead of participant's "overall" field
+            }
+        }
+    
+    return render(request, 'projects/activity_evaluations.html', {
+        'project': project,
+        'activity': activity,
+        'evaluations': evaluations,
+        'stats': stats,
+        'base_template': base_template,
+        "ADMIN_ROLES": ADMIN_ROLES,
+        "SUPERUSER_ROLES": SUPERUSER_ROLES,
+        "FACULTY_ROLE": FACULTY_ROLE
+    })
 
 
 ########################################################################################################################
