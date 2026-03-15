@@ -63,7 +63,11 @@
             <div class="evaluation-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid #e5e7eb;">
                 <div>
                     <span style="font-weight:600;color:#333;">
-                        {{ evaluation.evaluated_by.get_full_name|default:evaluation.evaluated_by.username|default:evaluation.evaluator_name|default:"Anonymous" }}
+                        {% if evaluation.evaluated_by %}
+                            {{ evaluation.evaluated_by.get_full_name|default:evaluation.evaluated_by.username }}
+                        {% else %}
+                            {{ evaluation.evaluator_name|default:"Anonymous" }}
+                        {% endif %}
                     </span>
                     <span style="color:#666;margin-left:1rem;font-size:0.9rem;">
                         {{ evaluation.evaluation_date|date:'M d, Y' }}
