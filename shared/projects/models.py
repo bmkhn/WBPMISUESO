@@ -770,12 +770,19 @@ class ProjectEvent(models.Model):
 		from django.conf import settings
 		import os
 		import requests
+
+		# Always prefer the live host from the current request when available
+		base_url = None
+		if request is not None:
+			scheme = 'https' if request.is_secure() else 'http'
+			base_url = f"{scheme}://{request.get_host()}"
 		
 		# Check if we're in production/deployed mode
 		is_deployed = os.environ.get('DEPLOYED', 'False') == 'True'
 		
-		# Try to get BASE_URL from settings first (most reliable)
-		base_url = getattr(settings, 'BASE_URL', None)
+		# Try to get BASE_URL from settings only if we don't have a request-based URL
+		if not base_url:
+			base_url = getattr(settings, 'BASE_URL', None)
 		
 		# If not set, try environment variable
 		if not base_url:
