@@ -8,6 +8,7 @@
 
 <style>
     .clickable-tile {
+        position: relative;
         cursor: pointer; 
         transition: transform 0.3s ease-in-out; 
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -16,6 +17,75 @@
     .clickable-tile:hover {
         transform: scale(1.05); 
         z-index: 10;
+    }
+
+    .remove-provider-btn {
+        position: absolute;
+        bottom: 1rem;
+        border: none;
+        border-radius: 999px;
+        padding: 0.3rem 0.7rem;
+        font-size: 0.78rem;
+        font-weight: 600;
+        background: #ef4444;
+        color: #fff;
+        cursor: pointer;
+        z-index: 20;
+    }
+
+    .remove-provider-btn:hover {
+        background: #dc2626;
+    }
+
+    .remove-provider-modal-bg {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+    }
+
+    .remove-provider-modal {
+        width: min(92vw, 420px);
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+        padding: 1.1rem 1.2rem;
+    }
+
+    .remove-provider-modal h4 {
+        margin: 0 0 0.55rem;
+    }
+
+    .remove-provider-modal p {
+        margin: 0 0 1rem;
+        color: #374151;
+    }
+
+    .remove-provider-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.6rem;
+    }
+
+    .remove-provider-actions button {
+        border: none;
+        border-radius: 8px;
+        padding: 0.5rem 0.9rem;
+        cursor: pointer;
+        font-weight: 600;
+    }
+
+    .remove-provider-cancel {
+        background: #e5e7eb;
+        color: #111827;
+    }
+
+    .remove-provider-confirm {
+        background: #ef4444;
+        color: #fff;
     }
 </style>
 
@@ -76,6 +146,17 @@
 <div class="providers">
     {% for provider in paginated_providers %}
     <div class="tiles clickable-tile" onclick="window.location.href='{% url 'user_profile' provider.id %}'">
+        {% if request.user.role in ADMIN_ROLES and not project.has_final_submission and provider.id != project.project_leader.id %}
+            <button
+                type="button"
+                class="remove-provider-btn js-remove-provider"
+                data-provider-id="{{ provider.id }}"
+                data-provider-name="{{ provider.get_full_name|default:provider.username }}"
+                aria-label="Remove provider"
+            >
+                Remove
+            </button>
+        {% endif %}
         <section class="prov-seg-sec">
             {% if provider.role == 'IMPLEMENTER' %}
                 <button class="campus blank">&nbsp;</button>
@@ -94,7 +175,7 @@
         </section>
         <section style="text-align: center;">
             <h3>{{ provider.get_full_name|default:provider.username }}</h3>
-            <h5>{{ provider.degree }}</h5>
+            <h5 style="margin: -0.5rem 0 2rem 0;">{{ provider.degree }}</h5>
         </section>    
     </div>
     {% empty %}
@@ -128,5 +209,68 @@
         <button class="pagination-button" disabled>Last</button>
     {% endif %}
 </div>
+
+{% if request.user.role in ADMIN_ROLES and not project.has_final_submission %}
+<div id="remove-provider-modal-bg" class="remove-provider-modal-bg">
+    <div class="remove-provider-modal" role="dialog" aria-modal="true" aria-labelledby="remove-provider-title">
+        <h4 id="remove-provider-title">Remove Provider</h4>
+        <p id="remove-provider-message">Are you sure you want to remove this provider?</p>
+        <form method="post" id="remove-provider-form">
+            {% csrf_token %}
+            <input type="hidden" name="remove_provider_id" id="remove-provider-id" value="">
+            <div class="remove-provider-actions">
+                <button type="button" class="remove-provider-cancel" id="remove-provider-cancel">Cancel</button>
+                <button type="submit" class="remove-provider-confirm">Remove</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+{% if request.user.role in ADMIN_ROLES and not project.has_final_submission %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const modalBg = document.getElementById('remove-provider-modal-bg');
+        const message = document.getElementById('remove-provider-message');
+        const hiddenIdInput = document.getElementById('remove-provider-id');
+        const cancelBtn = document.getElementById('remove-provider-cancel');
+
+        function closeRemoveModal() {
+            modalBg.style.display = 'none';
+            hiddenIdInput.value = '';
+        }
+
+        document.querySelectorAll('.js-remove-provider').forEach(function (btn) {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const providerId = btn.getAttribute('data-provider-id');
+                const providerName = btn.getAttribute('data-provider-name') || 'this provider';
+
+                hiddenIdInput.value = providerId;
+                message.textContent = 'Are you sure you want to remove ' + providerName + ' from this project?';
+                modalBg.style.display = 'flex';
+            });
+        });
+
+        cancelBtn.addEventListener('click', function () {
+            closeRemoveModal();
+        });
+
+        modalBg.addEventListener('click', function (e) {
+            if (e.target === modalBg) {
+                closeRemoveModal();
+            }
+        });
+
+        window.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && modalBg.style.display === 'flex') {
+                closeRemoveModal();
+            }
+        });
+    });
+</script>
+{% endif %}
 
 {% endblock %}

@@ -277,15 +277,22 @@ def add_submission_requirement(request, project_id=None):
             if project.project_leader:  # Add project leader if exists
                 project_members.append(project.project_leader)
             
-            for member in project_members:
-                ProjectUpdate.objects.create(
+            # Deduplicate users (leader may also be listed as a provider).
+            unique_members = {member.id: member for member in project_members if member}
+            now = timezone.now()
+            updates_to_create = [
+                ProjectUpdate(
                     user=member,
                     project=project,
                     submission=submission,
                     status='PENDING',
                     viewed=False,
-                    updated_at=timezone.now()
+                    updated_at=now,
                 )
+                for member in unique_members.values()
+            ]
+            if updates_to_create:
+                ProjectUpdate.objects.bulk_create(updates_to_create, ignore_conflicts=True)
             
 
         

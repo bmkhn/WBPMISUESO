@@ -205,8 +205,24 @@ def project_providers(request, pk):
     if project.project_leader and project.project_leader not in providers_list:
         providers_list = [project.project_leader] + providers_list
 
-    # Handle add provider POST
+    # Handle add/remove provider POST
     if request.method == 'POST' and user_role in ADMIN_ROLES:
+        remove_provider_id = request.POST.get('remove_provider_id')
+        if remove_provider_id:
+            from system.users.models import User
+            try:
+                provider_to_remove = User.objects.get(pk=remove_provider_id)
+                # Never remove the project leader from providers via this action
+                if project.project_leader and provider_to_remove.id == project.project_leader.id:
+                    return redirect(request.path)
+
+                if project.providers.filter(pk=provider_to_remove.pk).exists():
+                    project.providers.remove(provider_to_remove)
+                    project.save()
+            except User.DoesNotExist:
+                pass
+            return redirect(request.path)
+
         provider_id = request.POST.get('provider_id')
         if provider_id:
             from system.users.models import User
@@ -911,7 +927,10 @@ def project_submissions_details(request, pk, submission_id):
         "COORDINATOR_ROLE": COORDINATOR_ROLE,
         "FACULTY_ROLE": FACULTY_ROLE,
     }
-    return render(request, "projects/project_submissions_details.html", context)
+    from django.utils.cache import add_never_cache_headers
+    response = render(request, "projects/project_submissions_details.html", context)
+    add_never_cache_headers(response)
+    return response
 
 # ACTIONS
 @role_required(allowed_roles=["UESO", "VP", "DIRECTOR", "COORDINATOR", "FACULTY", "IMPLEMENTER", "DEAN", "PROGRAM_HEAD"], require_confirmed=True)

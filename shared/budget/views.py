@@ -777,7 +777,6 @@ def budget_view(request):
         ).order_by('-timestamp')[:10]
 
         # Attach related project (parsed from description "(ID X)") so rows can link to project profile
-        from shared.projects.models import Project
         import re
 
         enriched = []
@@ -808,8 +807,11 @@ def budget_view(request):
         college_chart_data = _get_college_dashboard_data(request.user, current_year)
         if college_chart_data.get('is_setup'):
             context['college_remaining_data_json'] = college_chart_data.get('college_remaining_data_json', '[]')
+            context['has_college_budget'] = True
         else:
             context['college_remaining_data_json'] = '[]'
+            context['has_college_budget'] = False
+            context['college_name'] = college_chart_data.get('college_name')
             
         user = request.user
         user_projects = Project.objects.filter(
@@ -960,8 +962,19 @@ def budget_view(request):
 
     # Finally render role-specific dashboard
     if user_role in ["FACULTY", "IMPLEMENTER"]:
+        if not context.get('has_college_budget', False):
+            context["base_template"] = get_templates(request)
+            context["title"] = "No College Budget"
+            return render(request, 'budget/no_budget_setup.html', context)
         return render(request, 'budget/faculty_budget.html', context)
-    elif user_role in ["VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
+    elif user_role in ["VP", "DIRECTOR", "UESO"]:
+        return render(request, 'budget/budget.html', context)
+    elif user_role in ["PROGRAM_HEAD", "DEAN", "COORDINATOR"]:
+        # If college has no budget, show friendly message
+        if not context.get('has_college_budget', False):
+            context["base_template"] = get_templates(request)
+            context["title"] = "No College Budget"
+            return render(request, 'budget/no_budget_setup.html', context)
         return render(request, 'budget/budget.html', context)
     else:
         # Fallback for any unexpected role - show error page

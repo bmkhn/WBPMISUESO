@@ -55,26 +55,45 @@
                     {% endif %}
                 </content>
                 {% with providers_list=project.providers.all %}
-                    {% for provider in providers_list|slice:":2" %}
-                        <content>
-                            <img src="{{ provider.profile_picture_or_initial }}" alt="">
-                            <a href="{% url 'user_profile' provider.id %}">{{ provider.get_full_name|default:provider.username }}</a>
-                        </content>
-                    {% endfor %}
-                    {% if providers_list|length > 2 %}
-                        <div class="dropdown" style="display:inline-block; position:relative;">
-                            <button class="dropdown-btn" id="authors-dropdown-btn" style="font-size:0.95rem; color:#007bff; background:none; border:none; cursor:pointer; margin-left:8px;">+{{ providers_list|length|add:"-2" }} more ▾</button>
-                                <div class="dropdown-menu" id="authors-dropdown-menu" style="display:none; position:absolute; right:0; top:30px; min-width:220px; background:#fff; border:1px solid #ccc; border-radius:4px; box-shadow:0 2px 8px rgba(0,0,0,0.1); z-index:10;">
-                                {% for provider in providers_list|slice:"2:" %}
-                                    <div style="display:flex; align-items:center; gap:0.75rem; padding:8px 12px; border-bottom:1px solid #eee;">
-                                        <img src="{{ provider.profile_picture_or_initial }}" alt="" style="width:2rem; height:2rem; border-radius:50%; object-fit:cover; border:0.08rem solid #ccc;">
-                                        <style> .dropdown-provider { font-size:0.9rem; color:#000; text-decoration:none; } .dropdown-provider:hover { color:#007bff; } </style>
-                                        <a href="{% url 'user_profile' provider.id %}" class="dropdown-provider">{{ provider.get_full_name|default:provider.username }}</a>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    {% endif %}
+                    {% with leader_id=project.project_leader.id %}
+                        {% with shown_providers="" %}
+                            {% for provider in providers_list %}
+                                {% if provider.id != leader_id %}
+                                    {% if forloop.counter <= 2 %}
+                                        <content>
+                                            <img src="{{ provider.profile_picture_or_initial }}" alt="">
+                                            <a href="{% url 'user_profile' provider.id %}">{{ provider.get_full_name|default:provider.username }}</a>
+                                        </content>
+                                    {% endif %}
+                                {% endif %}
+                            {% endfor %}
+                            {% with total_providers=providers_list|length %}
+                                {% with filtered_count=0 %}
+                                    {% for provider in providers_list %}
+                                        {% if provider.id != leader_id %}
+                                            {% with filtered_count=filtered_count|add:"1" %}{% endwith %}
+                                        {% endif %}
+                                    {% endfor %}
+                                    {% if filtered_count > 2 %}
+                                        <div class="dropdown" style="display:inline-block; position:relative;">
+                                            <button class="dropdown-btn" id="authors-dropdown-btn" style="font-size:0.95rem; color:#007bff; background:none; border:none; cursor:pointer; margin-left:8px;">+{{ filtered_count|add:"-2" }} more ▾</button>
+                                                <div class="dropdown-menu" id="authors-dropdown-menu" style="display:none; position:absolute; right:0; top:30px; min-width:220px; background:#fff; border:1px solid #ccc; border-radius:4px; box-shadow:0 2px 8px rgba(0,0,0,0.1); z-index:10;">
+                                                {% for provider in providers_list %}
+                                                    {% if provider.id != leader_id and forloop.counter > 2 %}
+                                                        <div style="display:flex; align-items:center; gap:0.75rem; padding:8px 12px; border-bottom:1px solid #eee;">
+                                                            <img src="{{ provider.profile_picture_or_initial }}" alt="" style="width:2rem; height:2rem; border-radius:50%; object-fit:cover; border:0.08rem solid #ccc;">
+                                                            <style> .dropdown-provider { font-size:0.9rem; color:#000; text-decoration:none; } .dropdown-provider:hover { color:#007bff; } </style>
+                                                            <a href="{% url 'user_profile' provider.id %}" class="dropdown-provider">{{ provider.get_full_name|default:provider.username }}</a>
+                                                        </div>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                {% endwith %}
+                            {% endwith %}
+                        {% endwith %}
+                    {% endwith %}
                 {% endwith %}
             </div>
             <script>
