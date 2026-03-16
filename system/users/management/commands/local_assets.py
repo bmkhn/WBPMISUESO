@@ -405,14 +405,14 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         self.stdout.write(self.style.WARNING('Starting Local asset generation...\n'))
 
-        faculty_user_count = 25
-        no_of_ns_projects = 10
-        no_of_ip_projects = 10
-        no_of_c_projects = 10
+        faculty_user_count = 20
+        no_of_ns_projects = 3
+        no_of_ip_projects = 3
+        no_of_c_projects = 3
 
-        no_of_ns_faculty_projects = 5
-        no_of_ip_faculty_projects = 5
-        no_of_c_faculty_projects = 5
+        no_of_ns_faculty_projects = 3
+        no_of_ip_faculty_projects = 3
+        no_of_c_faculty_projects = 3
 
         # Use static/faker/Placeholder.pdf and static/faker/image.png for all file/image fields
         PLACEHOLDER_PDF_PATH = "downloadables/files/Placeholder.pdf"

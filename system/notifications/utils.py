@@ -1,9 +1,14 @@
 """
 Utility functions for creating notifications based on log entries
 """
+import logging
+
 from django.utils import timezone
 from django.core.cache import cache
 from .models import Notification
+
+
+logger = logging.getLogger(__name__)
 
 
 def create_notifications_from_log(log_entry):
@@ -46,8 +51,12 @@ def create_notifications_from_log(log_entry):
         
         # Invalidate cache for all recipients so they see updated counts
         cache_keys = [f'unread_notif_count_{notif.recipient_id}' for notif in notifications_to_create]
-        for cache_key in cache_keys:
-            cache.delete(cache_key)
+        for cache_key in set(cache_keys):
+            try:
+                cache.delete(cache_key)
+            except Exception as exc:
+                # Redis can be unavailable during local bootstrap; notifications are still persisted.
+                logger.warning("Skipping cache invalidation for %s: %s", cache_key, exc)
         
         return created_notifications
     
