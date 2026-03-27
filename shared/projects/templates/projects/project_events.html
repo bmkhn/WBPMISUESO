@@ -102,6 +102,7 @@
                         <div class="form-group">
                             <label class="form-label">Date Time<span class="required">*</span></label>
                             <input class="user-details-value event-datetime-input" type="datetime-local" name="datetime" value="{{ event.datetime|date:'Y-m-d\\TH:i' }}" required data-event-id="{{ event.id }}">
+                            <div id="datetime-error-{{ event.id }}" class="field-validation-error" style="color:#E53E3E;font-size:0.9rem;margin-top:0.25rem;display:none;"></div>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Location<span class="required">*</span></label>
@@ -216,6 +217,7 @@
             <div class="form-group">
                 <label class="form-label">Date Time<span class="required">*</span></label>
                 <input class="user-details-value" type="datetime-local" name="add_event_datetime" id="add_event_datetime" required>
+                <div id="add-datetime-error" class="field-validation-error" style="color:#E53E3E;font-size:0.9rem;margin-top:1rem;margin-left:1rem;display:none;"></div>
             </div>
             <div class="form-group">
                 <label class="form-label">Location<span class="required">*</span></label>
@@ -251,9 +253,74 @@
 
 <script>
     // Project date constraints for event validation
+    const validateDateTimeUrl = "{% url 'calendar_validate_datetime_conflict' %}";
     const projectStartDate = new Date('{{ project.start_date|date:"Y-m-d" }}');
     const projectEndDate = new Date('{{ project.estimated_end_date|date:"Y-m-d" }}');
     projectEndDate.setHours(23, 59, 59, 999); // Set to end of day
+
+    function clearDateTimeConflict(containerId) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        container.textContent = '';
+        container.style.display = 'none';
+    }
+
+    function showDateTimeConflict(containerId, message, calendarUrl) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        container.textContent = message + ' ';
+
+        if (calendarUrl) {
+            const link = document.createElement('a');
+            link.href = calendarUrl;
+            link.textContent = 'View calendar';
+            link.style.color = '#1D4ED8';
+            link.style.textDecoration = 'underline';
+            container.appendChild(link);
+        }
+
+        container.style.display = 'block';
+    }
+
+    async function validateDateTimeAgainstCalendar(input, errorContainerId, excludeEventId) {
+        if (!input || !input.value) {
+            clearDateTimeConflict(errorContainerId);
+            return true;
+        }
+
+        try {
+            const params = new URLSearchParams({ datetime: input.value });
+            if (excludeEventId) {
+                params.append('exclude_project_event_id', excludeEventId);
+            }
+
+            const response = await fetch(validateDateTimeUrl + '?' + params.toString(), {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                cache: 'no-store'
+            });
+
+            const data = await response.json();
+            if (!response.ok) {
+                showDateTimeConflict(errorContainerId, data.message || 'Unable to validate the selected date/time.', data.calendar_url);
+                input.classList.add('error-input');
+                return false;
+            }
+
+            if (data.has_conflict) {
+                showDateTimeConflict(errorContainerId, data.message || 'Selected date/time conflicts with the calendar.', data.calendar_url);
+                input.classList.add('error-input');
+                return false;
+            }
+
+            clearDateTimeConflict(errorContainerId);
+            input.classList.remove('error-input');
+            return true;
+        } catch (error) {
+            showDateTimeConflict(errorContainerId, 'Unable to validate date/time right now.', '{% url "calendar" %}');
+            input.classList.add('error-input');
+            return false;
+        }
+    }
     
     // Format dates for datetime-local input (YYYY-MM-DDTHH:MM)
     const minDateTime = projectStartDate.toISOString().slice(0, 16);
@@ -280,12 +347,23 @@
     if (addEventDateTimeInput) {
         addEventDateTimeInput.setAttribute('min', minDateTime);
         addEventDateTimeInput.setAttribute('max', maxDateTime);
+        ['change', 'blur'].forEach(function(evtName) {
+            addEventDateTimeInput.addEventListener(evtName, function() {
+                validateDateTimeAgainstCalendar(addEventDateTimeInput, 'add-datetime-error', '');
+            });
+        });
     }
     
     // Set min/max for edit event datetime inputs
     document.querySelectorAll('.event-datetime-input').forEach(function(input) {
         input.setAttribute('min', minDateTime);
         input.setAttribute('max', maxDateTime);
+        var eventId = input.getAttribute('data-event-id');
+        ['change', 'blur'].forEach(function(evtName) {
+            input.addEventListener(evtName, function() {
+                validateDateTimeAgainstCalendar(input, 'datetime-error-' + eventId, eventId);
+            });
+        });
     });
     
     // Budget calculation for Add Activity Modal
@@ -360,7 +438,7 @@
     
     // Validate on form submit with unified error handling
     document.querySelectorAll('form').forEach(function(form) {
-        form.addEventListener('submit', function(e) {
+        form.addEventListener('submit', async function(e) {
             let valid = true;
             let firstError = null;
             let errorQueue = [];
@@ -385,6 +463,20 @@
                     }
                 }
             });
+
+            for (const input of datetimeInputs) {
+                if (!input.value) {
+                    continue;
+                }
+
+                const eventId = input.getAttribute('data-event-id') || '';
+                const errorContainerId = input.id === 'add_event_datetime' ? 'add-datetime-error' : ('datetime-error-' + eventId);
+                const isConflictFree = await validateDateTimeAgainstCalendar(input, errorContainerId, eventId);
+                if (!isConflictFree) {
+                    valid = false;
+                    if (!firstError) firstError = input;
+                }
+            }
             
             // Validate all required fields and selects
             const requiredFields = form.querySelectorAll('input[required], select[required], textarea[required], select');

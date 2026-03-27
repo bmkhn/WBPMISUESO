@@ -18,7 +18,11 @@
         <div class="top_section"> 
             <div class="tags"> 
                 <content style="flex-grow: 2;"> 
+                    {% if project.project_leader and project.project_leader.campus %}
                     <button class="campus">{{ project.project_leader.get_campus_display }}</button> 
+                    {% else %}
+                    <button class="campus">UESO</button> 
+                    {% endif %}
                     {% if project.agenda %}
                     <button class="agenda">{{ project.agenda.name }}</button> 
                     {% endif %}

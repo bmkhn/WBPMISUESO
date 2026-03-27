@@ -325,6 +325,21 @@ def project_events(request, pk):
     completed = project.event_progress
     percent = int((completed / total) * 100) if total else 0
 
+    from shared.event_calendar import services as calendar_services
+
+    def parse_activity_datetime(value):
+        if not value:
+            return None
+        try:
+            parsed = datetime.fromisoformat(value.replace('Z', '+00:00'))
+        except (ValueError, TypeError):
+            return None
+
+        local_tz = timezone.get_current_timezone()
+        if timezone.is_naive(parsed):
+            return timezone.make_aware(parsed, local_tz)
+        return timezone.localtime(parsed, local_tz)
+
     event_form = None
     event_to_edit = None
     if request.method == 'POST':
@@ -343,18 +358,15 @@ def project_events(request, pk):
             
             # Validate and parse allocated budget (required field)
             if not allocated_budget_str or allocated_budget_str.strip() == '':
-                from django.contrib import messages
                 messages.error(request, "Allocated budget is required for activities.")
                 return redirect(request.path)
             
             try:
                 allocated_budget = Decimal(allocated_budget_str)
                 if allocated_budget <= 0:
-                    from django.contrib import messages
                     messages.error(request, "Allocated budget must be greater than zero.")
                     return redirect(request.path)
             except (ValueError, InvalidOperation):
-                from django.contrib import messages
                 messages.error(request, "Invalid budget amount. Please enter a valid number.")
                 return redirect(request.path)
             
@@ -363,7 +375,6 @@ def project_events(request, pk):
             total_project_budget, current_used_budget, remaining_project_budget = calculate_project_budget_info(project)
             
             if allocated_budget > remaining_project_budget:
-                from django.contrib import messages
                 messages.error(
                     request,
                     f"Cannot allocate ₱{allocated_budget:,.2f} to this activity. "
@@ -374,30 +385,17 @@ def project_events(request, pk):
             # Determine if this is a placeholder based on whether datetime and location are provided
             is_placeholder = not (datetime_str and location)
             
-            # Validate that the event is not scheduled on a Philippine holiday
+            # Validate against calendar conflicts (holidays, meetings, activities)
             if datetime_str and not is_placeholder:
-                from shared.event_calendar.holidays import is_philippine_holiday
-                from datetime import datetime
-                
-                # Parse the datetime string to get the date
-                try:
-                    event_datetime = datetime.fromisoformat(datetime_str.replace('Z', '+00:00'))
-                    event_date = event_datetime.date()
-                    
-                    # Check if this date is a holiday
-                    if is_philippine_holiday(event_date):
-                        from django.contrib import messages
-                        holiday_info = is_philippine_holiday(event_date)
-                        messages.error(
-                            request, 
-                            f"Cannot schedule project event on {event_date.strftime('%B %d, %Y')}. "
-                            f"This is a Philippine {holiday_info['type'].capitalize()} Holiday: {holiday_info['name']}. "
-                            f"Please choose a different date."
-                        )
-                        return redirect(request.path)
-                except (ValueError, AttributeError) as e:
-                    # If date parsing fails, allow the event to be created (existing validation will catch it)
-                    pass
+                event_datetime = parse_activity_datetime(datetime_str)
+                if not event_datetime:
+                    messages.error(request, "Invalid activity date/time format.")
+                    return redirect(request.path)
+
+                conflict = calendar_services.get_datetime_conflict(request.user, event_datetime)
+                if conflict.get('has_conflict'):
+                    messages.error(request, f"{conflict.get('message')} View calendar to choose another slot.")
+                    return redirect(request.path)
             
             ProjectEvent.objects.create(
                 project=project,
@@ -466,18 +464,15 @@ def project_events(request, pk):
                 allocated_budget_str = request.POST.get('allocated_budget', '')
                 
                 if not allocated_budget_str or allocated_budget_str.strip() == '':
-                    from django.contrib import messages
                     messages.error(request, "Allocated budget is required for activities.")
                     return redirect(request.path)
                 
                 try:
                     new_allocated_budget = Decimal(allocated_budget_str)
                     if new_allocated_budget <= 0:
-                        from django.contrib import messages
                         messages.error(request, "Allocated budget must be greater than zero.")
                         return redirect(request.path)
                 except (ValueError, InvalidOperation):
-                    from django.contrib import messages
                     messages.error(request, "Invalid budget amount. Please enter a valid number.")
                     return redirect(request.path)
                 
@@ -491,7 +486,6 @@ def project_events(request, pk):
                     remaining_project_budget = total_project_budget - (current_used_budget - old_budget)
                     
                     if new_allocated_budget > remaining_project_budget:
-                        from django.contrib import messages
                         messages.error(
                             request,
                             f"Cannot allocate ₱{new_allocated_budget:,.2f} to this activity. "
@@ -501,30 +495,21 @@ def project_events(request, pk):
                     
                     event_to_edit.allocated_budget = new_allocated_budget if new_allocated_budget > 0 else None
                 
-                # Validate that the event is not scheduled on a Philippine holiday
+                # Validate against calendar conflicts (holidays, meetings, activities)
                 if new_datetime:
-                    from shared.event_calendar.holidays import is_philippine_holiday
-                    from datetime import datetime
-                    
-                    try:
-                        # Parse the datetime string to get the date
-                        event_datetime = datetime.fromisoformat(new_datetime.replace('Z', '+00:00'))
-                        event_date = event_datetime.date()
-                        
-                        # Check if this date is a holiday
-                        if is_philippine_holiday(event_date):
-                            from django.contrib import messages
-                            holiday_info = is_philippine_holiday(event_date)
-                            messages.error(
-                                request, 
-                                f"Cannot schedule project event on {event_date.strftime('%B %d, %Y')}. "
-                                f"This is a Philippine {holiday_info['type'].capitalize()} Holiday: {holiday_info['name']}. "
-                                f"Please choose a different date."
-                            )
-                            return redirect(request.path)
-                    except (ValueError, AttributeError) as e:
-                        # If date parsing fails, allow the update (existing validation will catch it)
-                        pass
+                    event_datetime = parse_activity_datetime(new_datetime)
+                    if not event_datetime:
+                        messages.error(request, "Invalid activity date/time format.")
+                        return redirect(request.path)
+
+                    conflict = calendar_services.get_datetime_conflict(
+                        request.user,
+                        event_datetime,
+                        exclude_project_event_id=event_to_edit.id,
+                    )
+                    if conflict.get('has_conflict'):
+                        messages.error(request, f"{conflict.get('message')} View calendar to choose another slot.")
+                        return redirect(request.path)
                 
                 event_to_edit.datetime = new_datetime
                 
@@ -1972,7 +1957,7 @@ def admin_project(request):
     new_project_id = request.GET.get('new_project_id', '')
     project_title = request.GET.get('project_title', '')
 
-    return render(request, 'projects/admin_project.html', {
+    response = render(request, 'projects/admin_project.html', {
         'projects': page_obj,
         'colleges': colleges,
         'campuses': campuses,
@@ -2001,6 +1986,9 @@ def admin_project(request):
         'new_project_id': new_project_id,
         'project_title': project_title,
     })
+    from django.utils.cache import add_never_cache_headers
+    add_never_cache_headers(response)
+    return response
 
 
 ########################################################################################################################

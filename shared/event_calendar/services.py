@@ -1,5 +1,5 @@
 import pytz
-from datetime import datetime, date as date_class
+from datetime import datetime, date as date_class, timedelta
 import logging
 from django.utils import timezone
 from django.db import models
@@ -154,6 +154,119 @@ def _parse_and_localize_datetime(date_str, time_str):
     local_tz = pytz.timezone("Asia/Manila")
     aware_dt = local_tz.localize(naive_dt)
     return aware_dt
+
+
+def get_datetime_conflict(user, target_datetime, exclude_project_event_id=None):
+    """
+    Check whether a target datetime conflicts with holidays, meetings, or activities
+    visible to the current user in the calendar.
+
+    Returns:
+        dict: {
+            'has_conflict': bool,
+            'type': 'holiday' | 'meeting' | 'activity' | None,
+            'message': str,
+        }
+    """
+    if not target_datetime:
+        return {
+            'has_conflict': False,
+            'type': None,
+            'message': '',
+        }
+
+    local_tz = pytz.timezone("Asia/Manila")
+    if timezone.is_naive(target_datetime):
+        target_datetime = local_tz.localize(target_datetime)
+    else:
+        target_datetime = timezone.localtime(target_datetime, local_tz)
+
+    # 1) Holidays (always conflict)
+    holiday_info = _get_holiday_info(target_datetime.date())
+    if holiday_info:
+        return {
+            'has_conflict': True,
+            'type': 'holiday',
+            'message': (
+                f"Cannot schedule on {target_datetime.date().strftime('%B %d, %Y')}. "
+                f"This is a Philippine {holiday_info['type'].capitalize()} Holiday: {holiday_info['name']}."
+            ),
+        }
+
+    user_role = getattr(user, 'role', None)
+
+    # Apply calendar visibility rules per role.
+    if user_role in ['UESO', 'VP', 'DIRECTOR']:
+        meetings_qs = MeetingEvent.objects.all()
+        activities_qs = ProjectEvent.objects.select_related('project').filter(placeholder=False)
+    elif user_role in ['PROGRAM_HEAD', 'DEAN', 'COORDINATOR']:
+        meetings_qs = MeetingEvent.objects.filter(participants=user)
+        activities_qs = ProjectEvent.objects.select_related('project').filter(
+            project__project_leader__college=user.college,
+            placeholder=False,
+        )
+    elif user_role in ['FACULTY', 'IMPLEMENTER']:
+        meetings_qs = MeetingEvent.objects.filter(participants=user)
+        activities_qs = ProjectEvent.objects.select_related('project').filter(
+            (models.Q(project__project_leader=user) | models.Q(project__providers=user)),
+            placeholder=False,
+        )
+    else:
+        meetings_qs = MeetingEvent.objects.none()
+        activities_qs = ProjectEvent.objects.select_related('project').none()
+
+    # 2) Meeting overlap (point-in-time overlaps with meeting duration).
+    meetings_qs = meetings_qs.filter(datetime__date=target_datetime.date())
+    minute_later = target_datetime + timedelta(minutes=1)
+    meeting_conflict = meetings_qs.filter(
+        models.Q(
+            end_datetime__isnull=False,
+            datetime__lte=target_datetime,
+            end_datetime__gt=target_datetime,
+        )
+        | models.Q(
+            end_datetime__isnull=True,
+            datetime__gte=target_datetime,
+            datetime__lt=minute_later,
+        )
+    ).first()
+
+    if meeting_conflict:
+        start = format_time_12hour(meeting_conflict.datetime)
+        if meeting_conflict.end_datetime:
+            end = format_time_12hour(meeting_conflict.end_datetime)
+            msg = f"Time conflict with meeting \"{meeting_conflict.title}\" ({start} to {end})."
+        else:
+            msg = f"Time conflict with meeting \"{meeting_conflict.title}\" at {start}."
+        return {
+            'has_conflict': True,
+            'type': 'meeting',
+            'message': msg,
+        }
+
+    # 3) Activity overlap (same calendar minute as another activity).
+    activities_qs = activities_qs.filter(datetime__date=target_datetime.date(), datetime__isnull=False)
+    if exclude_project_event_id:
+        activities_qs = activities_qs.exclude(id=exclude_project_event_id)
+
+    activity_conflict = activities_qs.filter(
+        datetime__gte=target_datetime,
+        datetime__lt=minute_later,
+    ).first()
+
+    if activity_conflict:
+        activity_time = format_time_12hour(activity_conflict.datetime)
+        return {
+            'has_conflict': True,
+            'type': 'activity',
+            'message': f"Time conflict with activity \"{activity_conflict.title}\" at {activity_time}.",
+        }
+
+    return {
+        'has_conflict': False,
+        'type': None,
+        'message': '',
+    }
 
 def create_meeting_event(data, user):
     """

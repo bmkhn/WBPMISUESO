@@ -602,6 +602,88 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var AUTO_SYNC_INTERVAL_MS = 8000;
+    var isSyncInProgress = false;
+
+    function normalizeText(value) {
+        return (value || '').replace(/\s+/g, ' ').trim();
+    }
+
+    function buildPageSnapshot(doc) {
+        var body = doc || document;
+        var rows = body.querySelectorAll('.user-table tbody tr');
+        var pagination = body.querySelector('.pagination-container');
+
+        var rowsSignature = Array.from(rows).map(function(row) {
+            return normalizeText(row.textContent);
+        }).join('||');
+
+        var paginationSignature = pagination ? normalizeText(pagination.textContent) : '';
+
+        return [rowsSignature, paginationSignature].join('###');
+    }
+
+    var lastKnownSnapshot = buildPageSnapshot(document);
+
+    async function checkForProjectUpdates(force) {
+        if (isSyncInProgress) {
+            return;
+        }
+
+        if (!force && document.hidden) {
+            return;
+        }
+
+        isSyncInProgress = true;
+        try {
+            var response = await fetch(window.location.href, {
+                method: 'GET',
+                cache: 'no-store',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Cache-Control': 'no-cache'
+                }
+            });
+
+            if (!response.ok) {
+                return;
+            }
+
+            var html = await response.text();
+            var parser = new DOMParser();
+            var nextDoc = parser.parseFromString(html, 'text/html');
+            var nextSnapshot = buildPageSnapshot(nextDoc);
+
+            if (nextSnapshot && nextSnapshot !== lastKnownSnapshot) {
+                window.location.reload();
+                return;
+            }
+        } catch (err) {
+            // Ignore transient sync errors; polling will retry.
+        } finally {
+            lastKnownSnapshot = buildPageSnapshot(document);
+            isSyncInProgress = false;
+        }
+    }
+
+    setInterval(function() {
+        checkForProjectUpdates(false);
+    }, AUTO_SYNC_INTERVAL_MS);
+
+    window.addEventListener('focus', function() {
+        checkForProjectUpdates(true);
+    });
+
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) {
+            checkForProjectUpdates(true);
+        }
+    });
+});
+</script>
+
 </body>
 </html>
 

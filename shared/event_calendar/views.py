@@ -10,6 +10,10 @@ from rest_framework import viewsets, permissions
 from rest_framework.authentication import TokenAuthentication 
 from django.db.models import Q
 from system.api.permissions import TieredAPIPermission
+from django.urls import reverse
+from django.utils import timezone
+import pytz
+from datetime import datetime
 
 from . import services
 
@@ -41,6 +45,52 @@ def calendar_view(request):
         context['initial_date'] = initial_date
 
     return render(request, 'event_calendar/calendar.html', context)
+
+
+@role_required(allowed_roles=["DIRECTOR", "VP", "UESO", "COORDINATOR", "DEAN", "PROGRAM_HEAD", "FACULTY", "IMPLEMENTER"], require_confirmed=True)
+@require_GET
+def validate_datetime_conflict(request):
+    datetime_str = request.GET.get('datetime', '').strip()
+    exclude_project_event_id = request.GET.get('exclude_project_event_id', '').strip()
+
+    if not datetime_str:
+        return JsonResponse({
+            'has_conflict': False,
+            'message': '',
+            'calendar_url': reverse('calendar'),
+        })
+
+    try:
+        parsed_dt = datetime.fromisoformat(datetime_str.replace('Z', '+00:00'))
+        local_tz = pytz.timezone("Asia/Manila")
+        if timezone.is_naive(parsed_dt):
+            parsed_dt = local_tz.localize(parsed_dt)
+        else:
+            parsed_dt = timezone.localtime(parsed_dt, local_tz)
+    except (ValueError, TypeError):
+        return JsonResponse({
+            'has_conflict': True,
+            'message': 'Invalid date/time format.',
+            'calendar_url': reverse('calendar'),
+        }, status=400)
+
+    exclude_id = None
+    if exclude_project_event_id.isdigit():
+        exclude_id = int(exclude_project_event_id)
+
+    conflict = services.get_datetime_conflict(
+        request.user,
+        parsed_dt,
+        exclude_project_event_id=exclude_id,
+    )
+
+    calendar_url = f"{reverse('calendar')}?date={parsed_dt.date().isoformat()}"
+    return JsonResponse({
+        'has_conflict': conflict['has_conflict'],
+        'message': conflict['message'],
+        'type': conflict.get('type'),
+        'calendar_url': calendar_url,
+    })
 
 
 

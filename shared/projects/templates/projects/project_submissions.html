@@ -321,6 +321,99 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        var AUTO_SYNC_INTERVAL_MS = 5000;
+        var isSyncInProgress = false;
+
+        function normalizeText(value) {
+            return (value || '').replace(/\s+/g, ' ').trim();
+        }
+
+        function buildSnapshot(doc) {
+            var body = doc || document;
+            var list = body.querySelector('.submission-list');
+            var emptyState = body.querySelector('.card-body > p');
+            var pagination = body.querySelector('.pagination-container');
+
+            var cardsData = '';
+            if (list) {
+                cardsData = Array.from(list.querySelectorAll('.submission-card')).map(function(card) {
+                    var titleEl = card.querySelector('h4');
+                    var assignedEl = card.querySelector('p strong');
+                    var notesEl = card.querySelector('p[title]');
+                    return [
+                        card.getAttribute('data-submission-id') || '',
+                        card.getAttribute('data-submission-type') || '',
+                        card.getAttribute('data-submission-status') || '',
+                        titleEl ? normalizeText(titleEl.textContent) : '',
+                        assignedEl ? normalizeText(assignedEl.textContent) : '',
+                        notesEl ? normalizeText(notesEl.textContent) : ''
+                    ].join('|');
+                }).join('||');
+            }
+
+            return [
+                cardsData,
+                emptyState ? normalizeText(emptyState.textContent) : '',
+                pagination ? normalizeText(pagination.textContent) : ''
+            ].join('###');
+        }
+
+        var lastKnownSnapshot = buildSnapshot(document);
+
+        async function checkForSubmissionUpdates(force) {
+            if (isSyncInProgress) {
+                return;
+            }
+            if (!force && document.hidden) {
+                return;
+            }
+
+            isSyncInProgress = true;
+            try {
+                var response = await fetch(window.location.href, {
+                    method: 'GET',
+                    cache: 'no-store',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Cache-Control': 'no-cache'
+                    }
+                });
+
+                if (!response.ok) {
+                    return;
+                }
+
+                var html = await response.text();
+                var parser = new DOMParser();
+                var nextDoc = parser.parseFromString(html, 'text/html');
+                var nextSnapshot = buildSnapshot(nextDoc);
+
+                if (nextSnapshot && nextSnapshot !== lastKnownSnapshot) {
+                    window.location.reload();
+                    return;
+                }
+            } catch (err) {
+                // Do nothing on transient network errors; next poll will retry.
+            } finally {
+                lastKnownSnapshot = buildSnapshot(document);
+                isSyncInProgress = false;
+            }
+        }
+
+        setInterval(function() {
+            checkForSubmissionUpdates(false);
+        }, AUTO_SYNC_INTERVAL_MS);
+
+        window.addEventListener('focus', function() {
+            checkForSubmissionUpdates(true);
+        });
+
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                checkForSubmissionUpdates(true);
+            }
+        });
+
         // Action confirmation modal logic
         function showActionModal(which, subId) {
             document.getElementById('modal-bg-action').style.display = 'flex';
@@ -342,8 +435,6 @@
         // Fix: Always redirect to details page when clicking submission cards
         document.querySelectorAll('.submission-card-clickable').forEach(function(card) {
             card.addEventListener('click', function() {
-                var type = card.getAttribute('data-submission-type');
-                var status = card.getAttribute('data-submission-status');
                 var subId = card.getAttribute('data-submission-id');
                 
                 // Always redirect to submission details

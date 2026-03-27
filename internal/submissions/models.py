@@ -240,13 +240,11 @@ def update_project_event_progress(sender, instance, **kwargs):
 	# Handle APPROVED final submissions
 	elif instance.downloadable.submission_type == 'final' and instance.status == 'APPROVED':
 		project.has_final_submission = True
-		
-		# Auto-complete project when final submission is approved
-		if project.status == 'IN_PROGRESS':
-			project.status = 'COMPLETED'
-			project.save(update_fields=['has_final_submission', 'status'])
-		else:
-			project.save(update_fields=['has_final_submission'])
+
+		# Final approval always marks the project as completed.
+		# This is intentionally independent of start/end date-driven status transitions.
+		project.status = 'COMPLETED'
+		project.save(update_fields=['has_final_submission', 'status'])
 
 
 class SubmissionUpdate(models.Model):
