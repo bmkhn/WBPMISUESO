@@ -59,7 +59,7 @@
                     <label class="user-details-label">SDG (Select multiple):</label>
                     <!-- CHECKBOXES START -->
                     <div style="max-height: 200px; overflow-y: auto; border: 1px solid #d1d5db; border-radius: 8px; padding: 12px; background: #ffffff; margin-top: 8px;">
-                        {% if sdgs %}
+                        {% if sdg_rows %}
                             <!-- Select All Checkbox -->
                             <div style="display: flex; align-items: center; padding: 8px 0; min-height: 32px; border-bottom: 1px solid #e5e7eb; margin-bottom: 8px; padding-bottom: 12px;">
                                 <input type="checkbox" 
@@ -71,7 +71,8 @@
                                     Select All
                                 </label>
                             </div>
-                            {% for s in sdgs %}
+                            {% for row in sdg_rows %}
+                            {% with s=row.sdg %}
                             <div style="display: flex; align-items: center; padding: 8px 0; min-height: 32px;">
                                 <input type="checkbox" 
                                        name="sdgs" 
@@ -82,17 +83,21 @@
                                        {% elif selected_sdg_ids and s.id in selected_sdg_ids %}checked{% endif %}
                                        style="margin-right: 12px; width: 20px; height: 20px; cursor: pointer; accent-color: #00681a; flex-shrink: 0;">
                                 <label for="sdg_edit_checkbox_{{ s.id }}" 
-                                       style="cursor: pointer; font-size: 14px; color: #111827; margin: 0; user-select: none; flex: 1;">
-                                    SDG {{ s.goal_number }} - {{ s.name }}
+                                       style="cursor: pointer; font-size: 14px; color: #111827; margin: 0; user-select: none; flex: 1; line-height: 1.35;">
+                                    <span style="font-weight: 500;">SDG {{ s.goal_number }} — {{ s.name }}</span>
+                                    <span style="display: block; font-size: 12px; color: #6b7280; font-weight: 400; margin-top: 2px;">
+                                        {{ row.project_percent }}% of projects{% if sdg_usage_total_projects %} ({{ row.project_count }}&nbsp;project{{ row.project_count|pluralize }}){% endif %}
+                                    </span>
                                 </label>
                             </div>
+                            {% endwith %}
                             {% endfor %}
                         {% else %}
                             <p style="color: #6b7280; font-size: 0.9rem; margin: 0;">No SDGs available in the database.</p>
                         {% endif %}
                     </div>
                     <!-- CHECKBOXES END -->
-                    <p style="margin-top: 8px; font-size: 0.8rem; color: #6b7280;">You can select multiple SDGs for this goal.</p>
+                    <p style="margin-top: 8px; font-size: 0.8rem; color: #6b7280;">You can select multiple SDGs. Rows are ordered from least to most common.{% if sdg_usage_total_projects %} Each line shows what share of projects (that have at least one SDG) include that SDG.{% else %} Percentages will apply once there are projects with SDGs.{% endif %}</p>
                 </div>
 
                 <script>
