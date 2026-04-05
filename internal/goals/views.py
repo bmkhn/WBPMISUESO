@@ -238,6 +238,46 @@ def api_goal_filters(request):
     })
 
 
+def _sdg_project_usage_by_id():
+    """
+    Map each SDG id to project count and percent of projects that have any SDG.
+
+    Matches the semantics of api_sdg_distribution: denominator is distinct projects
+    linked to at least one SDG; numerator is distinct projects linked to that SDG.
+    """
+    base_qs = Project.objects.filter(sdgs__isnull=False).distinct()
+    total_projects = base_qs.count()
+    by_id = {}
+    if total_projects == 0:
+        return total_projects, by_id
+
+    for sdg in (
+        SustainableDevelopmentGoal.objects.filter(projects__in=base_qs)
+        .annotate(project_count=Count("projects", distinct=True))
+    ):
+        count = sdg.project_count or 0
+        percent = round((count * 100.0) / total_projects, 1) if total_projects else 0.0
+        by_id[sdg.id] = {"count": count, "percent": percent}
+    return total_projects, by_id
+
+
+def _sdg_rows_for_goal_form():
+    """Rows for add/edit goal templates: sdg, usage counts, sorted by least-used first."""
+    total_projects, by_id = _sdg_project_usage_by_id()
+    rows = []
+    for s in SustainableDevelopmentGoal.objects.all().order_by("goal_number"):
+        u = by_id.get(s.id, {"count": 0, "percent": 0.0})
+        rows.append(
+            {
+                "sdg": s,
+                "project_count": u["count"],
+                "project_percent": u["percent"],
+            }
+        )
+    rows.sort(key=lambda r: (r["project_percent"], r["project_count"], r["sdg"].goal_number))
+    return rows, total_projects
+
+
 @role_required(allowed_roles=["DIRECTOR", "VP", "UESO"])
 @require_http_methods(["GET"])
 def api_sdg_distribution(request):
@@ -249,9 +289,7 @@ def api_sdg_distribution(request):
     - Percent is based on distinct projects that have at least one SDG
       so multiple-SDG projects still appear in every relevant SDG slice.
     """
-    # All projects that are linked to at least one SDG
-    base_qs = Project.objects.filter(sdgs__isnull=False).distinct()
-    total_projects = base_qs.count()
+    total_projects, by_id = _sdg_project_usage_by_id()
 
     if total_projects == 0:
         return JsonResponse({
@@ -262,21 +300,14 @@ def api_sdg_distribution(request):
             "total_projects": 0,
         })
 
-    # Count how many distinct projects are attached to each SDG
-    sdg_counts = (
-        SustainableDevelopmentGoal.objects
-        .filter(projects__in=base_qs)
-        .annotate(project_count=Count("projects", distinct=True))
-        .order_by("goal_number")
-    )
-
     labels = []
     percents = []
     counts = []
 
-    for sdg in sdg_counts:
-        count = sdg.project_count or 0
-        percent = round((count * 100.0) / total_projects, 1) if total_projects > 0 else 0
+    for sdg in SustainableDevelopmentGoal.objects.filter(id__in=by_id.keys()).order_by("goal_number"):
+        info = by_id[sdg.id]
+        count = info["count"]
+        percent = info["percent"]
         labels.append(f"SDG {sdg.goal_number} – {sdg.name}")
         percents.append(percent)
         counts.append(count)
@@ -295,7 +326,7 @@ def api_sdg_distribution(request):
 @csrf_protect
 def add_goal_view(request):
     agendas = Agenda.objects.all().order_by('-created_at', '-id')
-    sdgs = SustainableDevelopmentGoal.objects.all().order_by('goal_number')
+    sdg_rows, sdg_usage_total_projects = _sdg_rows_for_goal_form()
     status_display_map = dict(Project.STATUS_CHOICES)
     statuses = [{"code": code, "label": status_display_map.get(code, code)} for code, _ in Project.STATUS_CHOICES]
 
@@ -354,7 +385,8 @@ def add_goal_view(request):
 
         return render(request, 'goals/add_goal.html', {
             'agendas': agendas,
-            'sdgs': sdgs,
+            'sdg_rows': sdg_rows,
+            'sdg_usage_total_projects': sdg_usage_total_projects,
             'statuses': statuses,
             'errors': errors,
             'form': {
@@ -369,7 +401,8 @@ def add_goal_view(request):
 
     return render(request, 'goals/add_goal.html', {
         'agendas': agendas,
-        'sdgs': sdgs,
+        'sdg_rows': sdg_rows,
+        'sdg_usage_total_projects': sdg_usage_total_projects,
         'statuses': statuses,
     })
 
@@ -379,7 +412,7 @@ def add_goal_view(request):
 def edit_goal_view(request, goal_id: int):
     goal = get_object_or_404(Goal, id=goal_id)
     agendas = Agenda.objects.all().order_by('-created_at', '-id')
-    sdgs = SustainableDevelopmentGoal.objects.all().order_by('goal_number')
+    sdg_rows, sdg_usage_total_projects = _sdg_rows_for_goal_form()
     status_display_map = dict(Project.STATUS_CHOICES)
     statuses = [{"code": code, "label": status_display_map.get(code, code)} for code, _ in Project.STATUS_CHOICES]
 
@@ -434,7 +467,8 @@ def edit_goal_view(request, goal_id: int):
         return render(request, 'goals/edit_goal.html', {
             'goal': goal,
             'agendas': agendas,
-            'sdgs': sdgs,
+            'sdg_rows': sdg_rows,
+            'sdg_usage_total_projects': sdg_usage_total_projects,
             'statuses': statuses,
             'errors': errors,
             'form': {
@@ -457,7 +491,8 @@ def edit_goal_view(request, goal_id: int):
     return render(request, 'goals/edit_goal.html', {
         'goal': goal,
         'agendas': agendas,
-        'sdgs': sdgs,
+        'sdg_rows': sdg_rows,
+        'sdg_usage_total_projects': sdg_usage_total_projects,
         'statuses': statuses,
         'selected_sdg_ids': selected_sdg_ids,
     })
