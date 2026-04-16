@@ -1,10 +1,16 @@
-import numpy as np
 import os
 from django.conf import settings
 from django.db.models import Q
-from sentence_transformers import SentenceTransformer, util
 from system.users.models import User
 from shared.projects.models import Project
+
+try:
+    import numpy as np
+    from sentence_transformers import SentenceTransformer, util
+except Exception:
+    np = None
+    SentenceTransformer = None
+    util = None
 
 
 class AITeamGenerator:
@@ -33,6 +39,13 @@ class AITeamGenerator:
 
     # Load or get cached model
     def _load_model(self):
+        if SentenceTransformer is None:
+            raise RuntimeError(getattr(
+                settings,
+                'PYTHONANYWHERE_UNAVAILABLE_MESSAGE',
+                'This is not available in the pythonanywhere version of the system',
+            ))
+
         if self.model is None:
             os.makedirs(self.MODEL_CACHE_DIR, exist_ok=True)
             self.model = SentenceTransformer(self.MODEL_NAME, cache_folder=self.MODEL_CACHE_DIR)
@@ -41,6 +54,13 @@ class AITeamGenerator:
 
     # Softmax function for multi-title scoring
     def _softmax(self, x):
+        if np is None:
+            raise RuntimeError(getattr(
+                settings,
+                'PYTHONANYWHERE_UNAVAILABLE_MESSAGE',
+                'This is not available in the pythonanywhere version of the system',
+            ))
+
         x = np.array(x)
         exp = np.exp(x - np.max(x))
         return exp / exp.sum()
@@ -49,6 +69,13 @@ class AITeamGenerator:
     # Cosine similarity between two embeddings
     def _sim(self, emb1, emb2):
         """Cosine similarity returning float."""
+        if util is None:
+            raise RuntimeError(getattr(
+                settings,
+                'PYTHONANYWHERE_UNAVAILABLE_MESSAGE',
+                'This is not available in the pythonanywhere version of the system',
+            ))
+
         return float(util.cos_sim(emb1, emb2)[0][0])
 
 

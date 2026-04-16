@@ -1,1 +1,1 @@
-# Celery removed - using APScheduler instead
+# Celery removed - scheduled jobs run via management commands/cron

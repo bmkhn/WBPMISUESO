@@ -299,6 +299,11 @@ class Command(BaseCommand):
 
         from django.utils import timezone
         number_of_announcements = 5
+        if getattr(settings, 'PYTHONANYWHERE_VERSION', False):
+            number_of_announcements = min(
+                number_of_announcements,
+                getattr(settings, 'PYTHONANYWHERE_FAKE_MAX_ANNOUNCEMENTS', 4)
+            )
         for i in range(number_of_announcements):
             title = fake.sentence(nb_words=6)
             body = fake.paragraph(nb_sentences=5)

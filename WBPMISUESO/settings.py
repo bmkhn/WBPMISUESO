@@ -17,12 +17,23 @@ load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Strict branch mode: this branch is intended for PythonAnywhere deployment.
+PYTHONANYWHERE_VERSION = True
+PYTHONANYWHERE_UNAVAILABLE_MESSAGE = "This is not available in the pythonanywhere version of the system"
+
+# Keep Faker enabled but cap generated volumes for lighter storage usage.
+PYTHONANYWHERE_FAKE_MAX_ANNOUNCEMENTS = 4
+PYTHONANYWHERE_FAKE_MAX_USERS_PER_ROLE = 12
+PYTHONANYWHERE_FAKE_MAX_PROJECTS = 8
+
+DEPLOYED = os.environ.get('DEPLOYED', 'False') == 'True'
+
 
 # ============================================================
 # CORE SETTINGS
 # ============================================================
 
-if os.environ.get('DEPLOYED', 'False') == 'True':
+if DEPLOYED:
     DEBUG = False
 else:
     DEBUG = True
@@ -44,15 +55,21 @@ else:
         'testserver', 
         'uesopmis.up.railway.app', 
         'healthcheck.railway.app', 
-        'uesomis.pythonanywhere.com' 
+        'pmisueso.pythonanywhere.com' 
     ]
-CSRF_TRUSTED_ORIGINS = [ 'https://uesopmis.up.railway.app' ]
+CSRF_TRUSTED_ORIGINS = [
+    'https://uesopmis.up.railway.app',
+    'https://pmisueso.pythonanywhere.com',
+]
 
 # Base URL for generating absolute URLs (e.g., for QR codes, emails)
 # Set via environment variable BASE_URL, or auto-detect from ALLOWED_HOSTS in production
 # In development, will auto-detect ngrok if running
-if os.environ.get('DEPLOYED', 'False') == 'True':
-    BASE_URL = os.environ.get('BASE_URL', 'https://uesopmis.up.railway.app')
+if DEPLOYED:
+    if PYTHONANYWHERE_VERSION:
+        BASE_URL = os.environ.get('BASE_URL', 'https://pmisueso.pythonanywhere.com')
+    else:
+        BASE_URL = os.environ.get('BASE_URL', 'https://uesopmis.up.railway.app')
 else:
     BASE_URL = os.environ.get('BASE_URL', None)  # Will auto-detect ngrok or use request.get_host() if None
 
@@ -178,7 +195,7 @@ WSGI_APPLICATION = 'WBPMISUESO.wsgi.application'
 # DATABASE CONFIGURATION
 # ============================================================
 
-if os.environ.get('DEPLOYED', 'False') == 'True':    
+if DEPLOYED:
     DATABASES = {
         'default': dj_database_url.parse(os.environ.get('DATABASE_URL'))
     }
@@ -280,8 +297,11 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 MEDIA_URL = '/media/'
 
 # For Railway deployment with volume mounted at /media/ ### Check this ###
-if os.environ.get('DEPLOYED', 'False') == 'True':
-    MEDIA_ROOT = '/media'
+if DEPLOYED:
+    if PYTHONANYWHERE_VERSION:
+        MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+    else:
+        MEDIA_ROOT = '/media'
 else:
     MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
@@ -291,7 +311,7 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB in bytes
 FILE_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB in bytes
 
 # Use MEDIA_ROOT for temp uploads on Railway
-if os.environ.get('DEPLOYED', 'False') == 'True':
+if DEPLOYED:
     FILE_UPLOAD_TEMP_DIR = os.path.join(MEDIA_ROOT, 'temp_uploads')
     # Create temp directory if it doesn't exist
     os.makedirs(FILE_UPLOAD_TEMP_DIR, exist_ok=True)
@@ -302,7 +322,7 @@ if os.environ.get('DEPLOYED', 'False') == 'True':
 # ============================================================
 
 
-if os.environ.get('DEPLOYED', 'False') == 'True':
+if DEPLOYED:
     SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY', '')
     SENDGRID_FROM_EMAIL = os.environ.get('SENDGRID_FROM_EMAIL', 'noreply@example.com')
 else:
@@ -319,7 +339,7 @@ X_FRAME_OPTIONS = 'DENY'
 SECURE_CONTENT_TYPE_NOSNIFF = True
 
 
-if os.environ.get('DEPLOYED', 'False') == 'True':
+if DEPLOYED:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_HTTPONLY = True
@@ -344,71 +364,81 @@ USER_CACHE_SECONDS = 600            # 10 minutes for logged-in pages
 CACHE_MIDDLEWARE_SECONDS = 86400    # 24 hours for anonymous pages
 CACHE_MIDDLEWARE_KEY_PREFIX = ''
 
-if os.environ.get('DEPLOYED', 'False') == 'True':  
-    REDIS_URL = os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379')
-else:
-    REDIS_URL = 'redis://127.0.0.1:6379'
-
-CACHES = {
-    'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': f"{REDIS_URL}/1",  # General cache (for anonymous pages)
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-        }
-    },
-    'sessions': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': f"{REDIS_URL}/2",  # Sessions only
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-            'KEY_PREFIX': 'session:',
+if PYTHONANYWHERE_VERSION:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'wbpmisueso-pythonanywhere-cache',
         }
     }
-}
+else:
+    if DEPLOYED:
+        REDIS_URL = os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379')
+    else:
+        REDIS_URL = 'redis://127.0.0.1:6379'
+
+    CACHES = {
+        'default': {
+            'BACKEND': 'django_redis.cache.RedisCache',
+            'LOCATION': f"{REDIS_URL}/1",  # General cache (for anonymous pages)
+            'OPTIONS': {
+                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            }
+        },
+        'sessions': {
+            'BACKEND': 'django_redis.cache.RedisCache',
+            'LOCATION': f"{REDIS_URL}/2",  # Sessions only
+            'OPTIONS': {
+                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+                'KEY_PREFIX': 'session:',
+            }
+        }
+    }
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
-SESSION_CACHE_ALIAS = 'sessions'
+if PYTHONANYWHERE_VERSION:
+    SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+else:
+    SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+    SESSION_CACHE_ALIAS = 'sessions'
 
 SESSION_COOKIE_AGE = 86400          # 24 hours
 SESSION_SAVE_EVERY_REQUEST = False
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
 
-# ============================================================
-# CELERY CONFIGURATION
-# ============================================================
+if not PYTHONANYWHERE_VERSION:
+    # ============================================================
+    # CELERY CONFIGURATION
+    # ============================================================
 
+    CELERY_BROKER_URL = f"{REDIS_URL}/0"
+    CELERY_RESULT_BACKEND = f"{REDIS_URL}/0"
 
-CELERY_BROKER_URL = f"{REDIS_URL}/0"
-CELERY_RESULT_BACKEND = f"{REDIS_URL}/0"
-
-
-CELERY_BEAT_SCHEDULE = {
-    'publish_announcements_every_minute': {
-        'task': 'system.scheduler.tasks.celery_publish_scheduled_announcements',
-        'schedule': 60.0,  # every minute
-    },
-    'clear_sessions_daily': {
-        'task': 'system.scheduler.tasks.celery_clear_expired_sessions',
-        'schedule': 24 * 60 * 60,  # every 24 hours
-    },
-    'update_event_statuses_daily': {
-        'task': 'system.scheduler.tasks.celery_update_event_statuses',
-        'schedule': 24 * 60 * 60,  # every 24 hours
-    },
-    'update_project_statuses_daily': {
-        'task': 'system.scheduler.tasks.celery_update_project_statuses',
-        'schedule': 24 * 60 * 60,  # every 24 hours
-    },
-    'update_user_expert_status_daily': {
-        'task': 'system.scheduler.tasks.celery_update_user_expert_status',
-        'schedule': 24 * 60 * 60,  # every 24 hours
-    },
-    'send_event_reminders_daily': {
-        'task': 'system.scheduler.tasks.celery_send_event_reminders',
-        'schedule': 24 * 60 * 60,  # every 24 hours
-    },
-}
+    CELERY_BEAT_SCHEDULE = {
+        'publish_announcements_every_minute': {
+            'task': 'system.scheduler.tasks.celery_publish_scheduled_announcements',
+            'schedule': 60.0,  # every minute
+        },
+        'clear_sessions_daily': {
+            'task': 'system.scheduler.tasks.celery_clear_expired_sessions',
+            'schedule': 24 * 60 * 60,  # every 24 hours
+        },
+        'update_event_statuses_daily': {
+            'task': 'system.scheduler.tasks.celery_update_event_statuses',
+            'schedule': 24 * 60 * 60,  # every 24 hours
+        },
+        'update_project_statuses_daily': {
+            'task': 'system.scheduler.tasks.celery_update_project_statuses',
+            'schedule': 24 * 60 * 60,  # every 24 hours
+        },
+        'update_user_expert_status_daily': {
+            'task': 'system.scheduler.tasks.celery_update_user_expert_status',
+            'schedule': 24 * 60 * 60,  # every 24 hours
+        },
+        'send_event_reminders_daily': {
+            'task': 'system.scheduler.tasks.celery_send_event_reminders',
+            'schedule': 24 * 60 * 60,  # every 24 hours
+        },
+    }

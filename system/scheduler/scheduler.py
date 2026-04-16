@@ -1,4 +1,3 @@
-from apscheduler.schedulers.background import BackgroundScheduler
 from django.utils import timezone
 from django.db.models import Q
 from datetime import timedelta

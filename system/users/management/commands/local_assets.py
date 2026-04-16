@@ -414,6 +414,19 @@ class Command(BaseCommand):
         no_of_ip_faculty_projects = 3
         no_of_c_faculty_projects = 3
 
+        if getattr(settings, 'PYTHONANYWHERE_VERSION', False):
+            max_users = getattr(settings, 'PYTHONANYWHERE_FAKE_MAX_USERS_PER_ROLE', 12)
+            max_projects = getattr(settings, 'PYTHONANYWHERE_FAKE_MAX_PROJECTS', 8)
+            per_status_projects = max(1, max_projects // 3)
+
+            faculty_user_count = min(faculty_user_count, max_users)
+            no_of_ns_projects = min(no_of_ns_projects, per_status_projects)
+            no_of_ip_projects = min(no_of_ip_projects, per_status_projects)
+            no_of_c_projects = min(no_of_c_projects, per_status_projects)
+            no_of_ns_faculty_projects = min(no_of_ns_faculty_projects, per_status_projects)
+            no_of_ip_faculty_projects = min(no_of_ip_faculty_projects, per_status_projects)
+            no_of_c_faculty_projects = min(no_of_c_faculty_projects, per_status_projects)
+
         # Use static/faker/Placeholder.pdf and static/faker/image.png for all file/image fields
         PLACEHOLDER_PDF_PATH = "downloadables/files/Placeholder.pdf"
         PLACEHOLDER_IMAGE_PATH = "downloadables/files/Placeholder.png"

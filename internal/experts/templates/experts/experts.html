@@ -77,7 +77,12 @@
 		<div class="container-a">
 			<div class="project-text">Pool of Experts</div>
 			<div>
-				<button class="generate-btn" id="openModalBtn">Generate Team</button>
+				<button
+					class="generate-btn"
+					id="openModalBtn"
+					data-pythonanywhere="{{ pythonanywhere_mode|yesno:'true,false' }}"
+					data-pythonanywhere-message="{{ pythonanywhere_unavailable_message }}"
+				>Generate Team</button>
 			</div>
 		</div>
 
@@ -558,6 +563,8 @@
 	const searchKeyword = document.getElementById('searchKeyword');
 
 	let currentTeamMembers = [];
+	const pythonAnywhereMode = openModalBtn?.dataset?.pythonanywhere === 'true';
+	const pythonAnywhereMessage = openModalBtn?.dataset?.pythonanywhereMessage || 'This is not available in the pythonanywhere version of the system';
 
 	// Open modal
 	openModalBtn.addEventListener('click', function() {
@@ -567,6 +574,11 @@
 		showFormView();
 		generateTeamForm.reset();
 		errorMessage.classList.remove('show');
+
+		if (pythonAnywhereMode) {
+			errorMessage.textContent = pythonAnywhereMessage;
+			errorMessage.classList.add('show');
+		}
 	});
 
 	// Close modal
@@ -608,6 +620,12 @@
 	// Form submission
 	generateTeamForm.addEventListener('submit', async function(e) {
 		e.preventDefault();
+
+		if (pythonAnywhereMode) {
+			errorMessage.textContent = pythonAnywhereMessage;
+			errorMessage.classList.add('show');
+			return;
+		}
 
 		// Get form data
 		const keywords = document.getElementById('keywords').value;

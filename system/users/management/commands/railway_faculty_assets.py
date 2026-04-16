@@ -6,6 +6,7 @@ from internal.submissions.models import Submission
 from shared.downloadables.models import Downloadable
 from internal.agenda.models import Agenda
 from django.utils import timezone
+from django.conf import settings
 from datetime import timedelta
 import random
 from faker import Faker
@@ -24,6 +25,14 @@ class Command(BaseCommand):
         not_started_projects = 3
         in_progress_projects = 3
         completed_projects = 3
+
+        if getattr(settings, 'PYTHONANYWHERE_VERSION', False):
+            max_projects = getattr(settings, 'PYTHONANYWHERE_FAKE_MAX_PROJECTS', 8)
+            per_status_projects = max(1, max_projects // 3)
+
+            not_started_projects = min(not_started_projects, per_status_projects)
+            in_progress_projects = min(in_progress_projects, per_status_projects)
+            completed_projects = min(completed_projects, per_status_projects)
 
         # PLACEHOLDER URLS - Files already in Railway media
         PLACEHOLDER_PDF_URL = "https://uesopmis.up.railway.app/media/downloadables/files/Placeholder.pdf"

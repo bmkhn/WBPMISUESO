@@ -1,6 +1,6 @@
-# Ignore all model files (they are large and should be downloaded on deployment)
-# models--*
-# .locks/
+# Ignore all model cache files (large and not needed in pythonanywhere branch)
+models--*
+.locks/
 
-# # Keep this directory structure in git
-# !.gitignore
+# Keep this directory scaffold
+!.gitignore

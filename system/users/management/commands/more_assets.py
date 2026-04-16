@@ -24,6 +24,21 @@ class Command(BaseCommand):
 		campuses = list(Campus.objects.all())
 		password = "test1234"
 		director_user = User.objects.filter(role=User.Role.DIRECTOR).first()
+		pythonanywhere_mode = getattr(settings, 'PYTHONANYWHERE_VERSION', False)
+		max_announcements = getattr(settings, 'PYTHONANYWHERE_FAKE_MAX_ANNOUNCEMENTS', 4)
+		max_users_per_role = getattr(settings, 'PYTHONANYWHERE_FAKE_MAX_USERS_PER_ROLE', 12)
+		max_projects = getattr(settings, 'PYTHONANYWHERE_FAKE_MAX_PROJECTS', 8)
+
+		number_of_announcements = 10
+		users_per_role = 50
+		number_of_projects = 20
+		completed_project_limit = 5
+
+		if pythonanywhere_mode:
+			number_of_announcements = min(number_of_announcements, max_announcements)
+			users_per_role = min(users_per_role, max_users_per_role)
+			number_of_projects = min(number_of_projects, max_projects)
+			completed_project_limit = min(completed_project_limit, max(2, number_of_projects // 2))
 
 
 
@@ -31,7 +46,6 @@ class Command(BaseCommand):
 		announcement_cover = os.path.join(settings.MEDIA_ROOT, 'announcements', 'PFP.jpg')
 		from django.utils import timezone
 		import datetime
-		number_of_announcements = 10
 		for i in range(number_of_announcements):
 			title = fake.sentence(nb_words=6)
 			body = fake.paragraph(nb_sentences=5)
@@ -151,7 +165,7 @@ class Command(BaseCommand):
 				for expertise in expertise_options:
 					degree_expertise_pairs.append((degree, expertise))
 			
-			for _ in range(50):
+			for _ in range(users_per_role):
 				given_name = fake.first_name()
 				last_name = fake.last_name()
 				email = fake.unique.email()
@@ -193,7 +207,9 @@ class Command(BaseCommand):
 				)
 		create_user(User.Role.FACULTY)
 		create_user(User.Role.IMPLEMENTER)
-		self.stdout.write(self.style.SUCCESS("50 faculty and 50 implementer users created with realistic degree-expertise pairings."))
+		self.stdout.write(self.style.SUCCESS(
+			f"{users_per_role} faculty and {users_per_role} implementer users created with realistic degree-expertise pairings."
+		))
 
 
 
@@ -217,7 +233,6 @@ class Command(BaseCommand):
 				year += 1
 			return datetime.date(year, month, 1)
 
-		number_of_projects = 20
 		for i in range(number_of_projects):
 			# Random project leader (faculty)
 			project_leader = random.choice(faculty_users) if faculty_users else None
@@ -230,7 +245,7 @@ class Command(BaseCommand):
 			# Estimated end date 1-6 months after start
 			estimated_end_date = start_date + datetime.timedelta(days=random.randint(30, 180))
 			# Status: first 5 completed, rest random
-			status = 'COMPLETED' if i < 5 else random.choice(['NOT_STARTED', 'IN_PROGRESS', 'ON_HOLD', 'CANCELLED'])
+			status = 'COMPLETED' if i < completed_project_limit else random.choice(['NOT_STARTED', 'IN_PROGRESS', 'ON_HOLD', 'CANCELLED'])
 
 			# Create Project first (without proposal/additional docs)
 			estimated_events = random.randint(1, 10)
@@ -386,7 +401,8 @@ class Command(BaseCommand):
 				'Health and Wellness Community Outreach'
 			]
 			
-			for idx, title in enumerate(completed_project_titles):
+			selected_completed_titles = completed_project_titles[:completed_project_limit]
+			for idx, title in enumerate(selected_completed_titles):
 				# Set dates in the past
 				start_date = timezone.now().date() - datetime.timedelta(days=random.randint(180, 365))
 				end_date = start_date + datetime.timedelta(days=random.randint(60, 120))
@@ -454,9 +470,13 @@ class Command(BaseCommand):
 				completed_proj.save(update_fields=['proposal_document'])
 				completed_proj.additional_documents.set(additional_docs_completed)
 				
-				self.stdout.write(self.style.SUCCESS(f"Created completed project {idx+1}/5: {title}"))
+				self.stdout.write(self.style.SUCCESS(
+					f"Created completed project {idx+1}/{len(selected_completed_titles)}: {title}"
+				))
 			
-			self.stdout.write(self.style.SUCCESS(f"Added 5 completed projects for Faculty T. User"))
+			self.stdout.write(self.style.SUCCESS(
+				f"Added {len(selected_completed_titles)} completed projects for Faculty T. User"
+			))
 		else:
 			self.stdout.write(self.style.WARNING("Faculty T. User not found. Test project not created."))
 

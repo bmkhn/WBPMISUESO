@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
-from system.users.decorators import role_required
+from django.conf import settings
 from system.users.decorators import role_required
 from system.users.models import Campus, College, User
 
@@ -175,6 +175,12 @@ def experts_view(request):
         'view': view,
         'querystring': querystring,
         'can_create_projects': can_create_projects,
+        'pythonanywhere_mode': getattr(settings, 'PYTHONANYWHERE_VERSION', False),
+        'pythonanywhere_unavailable_message': getattr(
+            settings,
+            'PYTHONANYWHERE_UNAVAILABLE_MESSAGE',
+            'This is not available in the pythonanywhere version of the system',
+        ),
     })
 
 
@@ -260,14 +266,16 @@ def generate_team_view(request):
     """
     API endpoint to generate AI-powered team recommendations.
     """ 
-    # FOR DEPLOYED VERSION - COMMENTED OUT FOR TEMPORARY DISABLEMENT
-    # return JsonResponse({
-    #     'success': False,
-    #     'error': 'AI Team Generation is temporarily disabled for deployment.'
-    # }, status=503)
+    if getattr(settings, 'PYTHONANYWHERE_VERSION', False):
+        return JsonResponse({
+            'success': False,
+            'error': getattr(
+                settings,
+                'PYTHONANYWHERE_UNAVAILABLE_MESSAGE',
+                'This is not available in the pythonanywhere version of the system',
+            ),
+        }, status=503)
 
-
-    # ORGIINAL IMPLEMENTATION BELOW - COMMENTED OUT FOR TEMPORARY DISABLEMENT
     try:
         data = json.loads(request.body)
 

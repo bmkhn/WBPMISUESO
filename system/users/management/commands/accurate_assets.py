@@ -42,6 +42,17 @@ class Command(BaseCommand):
         in_progress_projects = 5
         completed_projects = 5
 
+        if getattr(settings, 'PYTHONANYWHERE_VERSION', False):
+            max_users = getattr(settings, 'PYTHONANYWHERE_FAKE_MAX_USERS_PER_ROLE', 12)
+            max_projects = getattr(settings, 'PYTHONANYWHERE_FAKE_MAX_PROJECTS', 8)
+            per_status_projects = max(1, max_projects // 3)
+
+            faculty_user_count = min(faculty_user_count, max_users)
+            client_user_count = min(client_user_count, max(4, max_users // 2))
+            not_started_projects = min(not_started_projects, per_status_projects)
+            in_progress_projects = min(in_progress_projects, per_status_projects)
+            completed_projects = min(completed_projects, per_status_projects)
+
         # Get existing data
         colleges = list(College.objects.all())
         agendas = list(Agenda.objects.all())

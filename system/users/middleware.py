@@ -44,9 +44,23 @@ class SmartCacheMiddleware(MiddlewareMixin):
         Clears all cached pages for both anonymous and logged-in users.
         For large systems, consider selective invalidation for efficiency.
         """
-        keys = [key for key in self.cache.keys("anon:*")] + [key for key in self.cache.keys("user:*")]
-        for key in keys:
-            self.cache.delete(key)
+        # django-redis supports pattern deletion. LocMemCache does not, so fall back to clear().
+        try:
+            if hasattr(self.cache, "delete_pattern"):
+                self.cache.delete_pattern("anon:*")
+                self.cache.delete_pattern("user:*")
+                return
+
+            if hasattr(self.cache, "keys"):
+                keys = list(self.cache.keys("anon:*")) + list(self.cache.keys("user:*"))
+                if keys:
+                    self.cache.delete_many(keys)
+                return
+
+            self.cache.clear()
+        except Exception:
+            # Never let cache invalidation break the request lifecycle.
+            self.cache.clear()
 
 
     def process_request(self, request):
