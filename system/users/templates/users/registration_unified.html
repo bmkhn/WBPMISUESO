@@ -745,7 +745,6 @@
                         document.getElementById('step3').style.display = 'none';
                         document.getElementById('step4').style.display = 'block';
                         showPopup('Verification code sent to ' + document.getElementById('id_email').value);
-                        if (data.code) { showCodeModal(data.code); }
                     } else if (data.errors) {
                         for (const field in data.errors) { showFieldError('id_' + field, data.errors[field][0]); }
                         showPopup('Please correct the validation errors below.');
@@ -826,7 +825,6 @@
                 
                 if (data.success) {
                     showPopup('Verification code resent to ' + email);
-                    if (data.code) { showCodeModal(data.code); }
                 } else {
                     showPopup(data.error || 'Failed to resend verification code.');
                 }

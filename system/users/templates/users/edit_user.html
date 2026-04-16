@@ -104,8 +104,8 @@
                 <div>
                     <div class="user-details-label">Sex <span class="required">*</span></div>
                     <select name="sex" class="user-details-value" style="transition: none;" required>
-                        <option value="Male" {% if user.sex == 'Male' %}selected{% endif %}>Male</option>
-                        <option value="Female" {% if user.sex == 'Female' %}selected{% endif %}>Female</option>
+                        <option value="MALE" {% if user.sex == 'MALE' or user.sex == 'Male' %}selected{% endif %}>Male</option>
+                        <option value="FEMALE" {% if user.sex == 'FEMALE' or user.sex == 'Female' %}selected{% endif %}>Female</option>
                     </select>
                 </div>
                 <div>

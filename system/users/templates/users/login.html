@@ -71,9 +71,11 @@
                     </div>
                     <a href="/forgot-password/1/" class="forgot-text">Forgot password</a>
                 </div>
-                <button type="submit" class="sign-in-button" id="signin-btn">
-                    <span id="signin-text">SIGN IN</span>
-                    <i class="fa-solid fa-spinner fa-spin" id="signin-spinner" style="display:none; margin-left:0.5rem;"></i>
+                <button type="submit" class="sign-in-button" id="signin-btn" style="white-space:nowrap;">
+                    <span style="display:inline-flex; align-items:center; justify-content:center; gap:0.5rem; white-space:nowrap;">
+                        <span id="signin-text">SIGN IN</span>
+                        <i class="fa-solid fa-spinner fa-spin" id="signin-spinner" style="display:none;"></i>
+                    </span>
                 </button>
                 
                 <div style="display:flex; align-items:center; margin:1.5rem 0; width:100%;">
@@ -182,6 +184,23 @@
             }
         }
 
+        document.addEventListener('DOMContentLoaded', function() {
+            const params = new URLSearchParams(window.location.search);
+            const loginError = document.getElementById('login-error');
+            const errorCode = params.get('error');
+
+            if (!loginError || !errorCode) {
+                return;
+            }
+
+            if (errorCode === 'social_auth_failed') {
+                loginError.textContent = 'Google sign-in failed. Please verify your Google account email and try again.';
+            } else {
+                loginError.textContent = 'Unable to sign in. Please try again.';
+            }
+            loginError.style.display = 'block';
+        });
+
         // Login Code Modal Functions (Kept original logic)
         function showLoginCodeModal(code) {
             document.getElementById('login-code-value').textContent = code;
@@ -243,16 +262,33 @@
                 },
                 body: currentLoginFormData
             })
-            .then(response => response.json())
+            .then(async response => {
+                const contentType = response.headers.get('content-type') || '';
+                let data;
+
+                if (contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    await response.text();
+                    if (response.status === 403) {
+                        data = { success: false, error: 'Security check failed. Please refresh the page and try again.' };
+                    } else if (response.status >= 500) {
+                        data = { success: false, error: 'Server error while signing in. Please try again.' };
+                    } else {
+                        data = { success: false, error: 'Unexpected response from server. Please try again.' };
+                    }
+                }
+
+                if (!response.ok && !data.error) {
+                    data.error = 'Unable to sign in. Please try again.';
+                }
+                return data;
+            })
             .then(data => {
                 if (data.success) {
                     // Show 2FA step
                     document.getElementById('login-step-1').style.display = 'none';
                     document.getElementById('login-step-2').style.display = 'block';
-                    // Show code modal for testing
-                    if (data.code) {
-                        showLoginCodeModal(data.code);
-                    }
                     
                     // Reset button (it will be hidden anyway)
                     signinBtn.disabled = false;
@@ -274,7 +310,7 @@
                 signinText.textContent = 'SIGN IN';
                 signinSpinner.style.display = 'none';
                 
-                errorDiv.textContent = 'An error occurred. Please try again.';
+                errorDiv.textContent = 'Network error. Please check your connection and try again.';
                 errorDiv.style.display = 'block';
             });
         });
@@ -315,9 +351,7 @@
                     resendText.textContent = 'Resend Code';
                     resendSpinner.style.display = 'none';
                     
-                    if (data.success && data.code) {
-                        showLoginCodeModal(data.code);
-                    }
+                    // Code is delivered via email; nothing is shown client-side.
                 })
                 .catch(error => {
                     // Reset link state on error

@@ -207,6 +207,15 @@
         const action = urlParams.get('action');
         const title = urlParams.get('title');
 
+        function safeDecodeTitle(rawTitle) {
+            if (!rawTitle) return 'User';
+            try {
+                return decodeURIComponent(rawTitle);
+            } catch (e) {
+                return 'User';
+            }
+        }
+
         if (success === 'true' && action === 'edited') {
             const toast = document.createElement('div');
             toast.id = 'successToast';
@@ -216,11 +225,15 @@
                     <i class="fa-solid fa-check-circle" style="font-size:1.5rem;"></i>
                     <div>
                         <div style="font-weight:600;margin-bottom:0.25rem;">User Updated Successfully!</div>
-                        <div style="font-size:0.875rem;opacity:0.9;">${title ? decodeURIComponent(title) : 'User'}</div>
+                        <div class="success-toast-title" style="font-size:0.875rem;opacity:0.9;"></div>
                     </div>
                 </div>
             `;
             document.body.appendChild(toast);
+            const titleEl = toast.querySelector('.success-toast-title');
+            if (titleEl) {
+                titleEl.textContent = safeDecodeTitle(title);
+            }
 
             // Auto-hide after 4 seconds
             setTimeout(function() {

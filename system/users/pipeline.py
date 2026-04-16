@@ -14,6 +14,24 @@ from social_core.exceptions import AuthException
 User = get_user_model()
 
 
+def _coerce_bool(value):
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.strip().lower() in {'1', 'true', 'yes', 'on'}
+    if isinstance(value, (int, float)):
+        return bool(value)
+    return False
+
+
+def _is_google_email_verified(details, kwargs) -> bool:
+    """Require verified Google email claim before allowing social auth flow."""
+    raw = details.get('email_verified')
+    if raw is None:
+        raw = kwargs.get('response', {}).get('email_verified')
+    return _coerce_bool(raw)
+
+
 def get_username(strategy, details, backend, user=None, *args, **kwargs):
     """
     Generate a username from the email address.
@@ -42,6 +60,9 @@ def create_user(strategy, details, backend, user=None, *args, **kwargs):
     email = details.get('email')
     if not email:
         raise AuthException(backend, 'Email is required for authentication.')
+
+    if not _is_google_email_verified(details, kwargs):
+        raise AuthException(backend, 'Google email is not verified.')
     
     # Double-check if user exists (safety check)
     try:
@@ -94,7 +115,8 @@ def create_user(strategy, details, backend, user=None, *args, **kwargs):
         contact_no=contact_no,
         role=role,
         google_role_selected=google_role_selected,
-        is_confirmed=True,  # Google-verified emails are considered confirmed
+        # All registrations require explicit admin confirmation.
+        is_confirmed=False,
         password=temp_password,  # Temporary password, will be set to unusable
     )
     
@@ -110,7 +132,7 @@ def create_user(strategy, details, backend, user=None, *args, **kwargs):
         user=None,
         action='CREATE',
         target_user=user,
-        details=f"Registered via Google Sign-In",
+        details=f"Registered via Google Sign-In (awaiting admin confirmation)",
         is_notification=False
     )
     
@@ -152,12 +174,7 @@ def user_details(strategy, details, backend, user=None, *args, **kwargs):
     is_new = kwargs.get('is_new', False)
     if is_new:
         strategy.session_set('google_profile_incomplete', True)
-        # Only non-PSU emails need role selection (PSU emails are auto-assigned FACULTY)
-        email = details.get('email', '')
-        if not email.lower().endswith('@psu.palawan.edu.ph'):
-            strategy.session_set('google_role_selection_needed', True)
     
     return {
         'user': user
     }
-

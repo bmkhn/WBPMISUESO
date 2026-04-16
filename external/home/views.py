@@ -21,20 +21,15 @@ def home_view(request):
     
     # Check if Google user needs role selection or profile completion
     # Show banner/notification but don't force redirect
-    from system.users.views import is_google_profile_incomplete, is_google_account
-    from system.users.models import User
+    from system.users.views import is_google_profile_incomplete, needs_google_role_selection
     
     needs_role_selection = False
     needs_profile_completion = False
     
     if request.user.is_authenticated:
-        # Check if needs role selection (non-PSU email with default CLIENT role)
-        if (is_google_account(request.user) and 
-            request.user.role == User.Role.CLIENT and 
-            not request.user.email.lower().endswith('@psu.palawan.edu.ph')):
-            # Check if they still have placeholder data
-            if request.user.given_name in ['Google', ''] or request.user.last_name in ['User', '']:
-                needs_role_selection = True
+        # Check if needs role selection (single source of truth)
+        if needs_google_role_selection(request.user):
+            needs_role_selection = True
         
         # Check if profile is incomplete
         if is_google_profile_incomplete(request.user):
