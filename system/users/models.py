@@ -34,8 +34,8 @@ class College(models.Model):
         super().delete(*args, **kwargs)
 
     def get_campus_display(self):
-        """Return campus name or N/A if no campus assigned"""
-        return self.campus.name if self.campus else "N/A"
+        """Return campus name or nothing if no campus assigned"""
+        return self.campus.name if self.campus else ""
 
     def __str__(self):
         return self.name
@@ -237,9 +237,9 @@ class User(AbstractUser):
         return self.college.campus if self.college else None
 
     def get_campus_display(self):
-        """Return campus name or N/A if no campus assigned"""
+        """Return campus name or nothing if no campus assigned"""
         campus = self.campus  # Uses property
-        return campus.name if campus else "N/A"
+        return campus.name if campus else ""
 
     def save(self, *args, **kwargs):
         # Only set updated_at if this is an update (object already exists)

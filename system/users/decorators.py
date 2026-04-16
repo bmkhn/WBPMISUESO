@@ -12,14 +12,10 @@ def role_required(allowed_roles, require_confirmed=False):
                 return redirect('not_authenticated')
             
             # Check if Google user needs profile completion (for protected features)
-            from .views import is_google_profile_incomplete, is_google_account
-            from .models import User
+            from .views import is_google_profile_incomplete, is_google_account, needs_google_role_selection
             
             if is_google_account(request.user):
-                # Check if needs role selection
-                if (request.user.role == User.Role.CLIENT and 
-                    not request.user.email.lower().endswith('@psu.palawan.edu.ph') and
-                    (request.user.given_name in ['Google', ''] or request.user.last_name in ['User', ''])):
+                if needs_google_role_selection(request.user):
                     return redirect('select_google_role')
                 
                 # Check if profile is incomplete

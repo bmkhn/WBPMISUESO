@@ -12,12 +12,16 @@
 </head>
 
 <body>
+    <form id="cancel-google-signup-form" method="POST" action="{% url 'cancel_google_signup' %}" style="display:none;">
+        {% csrf_token %}
+    </form>
+
     <!-- Cancel button at top of page - Always visible -->
     <div style="position: fixed; top: 1rem; right: 1rem; z-index: 1000;">
-        <a href="{% url 'cancel_google_signup' %}" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; background: white; border: 2px solid #0099FF; border-radius: 8px; color: #0099FF; font-weight: 600; font-size: 0.875rem; text-decoration: none; box-shadow: 0 2px 8px rgba(0,153,255,0.2); transition: all 0.2s;" onmouseover="this.style.background='#0099FF'; this.style.color='white';" onmouseout="this.style.background='white'; this.style.color='#0099FF';" onclick="event.stopPropagation();">
+        <button type="button" onclick="submitCancelGoogleSignup()" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; background: white; border: 2px solid #0099FF; border-radius: 8px; color: #0099FF; font-weight: 600; font-size: 0.875rem; text-decoration: none; box-shadow: 0 2px 8px rgba(0,153,255,0.2); transition: all 0.2s;" onmouseover="this.style.background='#0099FF'; this.style.color='white';" onmouseout="this.style.background='white'; this.style.color='#0099FF';">
             <i class="fa-solid fa-home"></i>
             <span>Return Home</span>
-        </a>
+        </button>
     </div>
     
     <form id="profile-completion-form" method="POST" enctype="multipart/form-data" autocomplete="off">
@@ -70,10 +74,10 @@
                 </div>
             </div>
             <div class="actions">
-                <a href="{% url 'cancel_google_signup' %}" class="back-btn" style="display: flex; align-items: center; gap: 0.5rem;" onclick="event.stopPropagation();">
+                <button type="button" onclick="submitCancelGoogleSignup()" class="back-btn" style="display: flex; align-items: center; gap: 0.5rem;">
                     <i class="fa-solid fa-home"></i>
                     <span class="back-btn-text">Return Home</span>
-                </a>
+                </button>
                 <button class="proceed-btn" type="button" onclick="nextStep(1)">
                     <span class="back-btn-text">Proceed</span>
                     <i class="fa-solid fa-arrow-right"></i>
@@ -153,10 +157,10 @@
                         <i class="fa-solid fa-arrow-left"></i>
                         <span class="back-btn-text">Back</span>
                     </a>
-                    <a href="{% url 'cancel_google_signup' %}" class="back-btn" style="text-decoration: none; display: flex; align-items: center; gap: 0.5rem;" onclick="event.stopPropagation();">
+                    <button type="button" onclick="submitCancelGoogleSignup()" class="back-btn" style="text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
                         <i class="fa-solid fa-home"></i>
                         <span class="back-btn-text">Return Home</span>
-                    </a>
+                    </button>
                 </div>
                 <button class="proceed-btn" type="button" onclick="nextStep(2)">
                     <span class="back-btn-text">Proceed</span>
@@ -212,10 +216,10 @@
                         <i class="fa-solid fa-arrow-left"></i>
                         <span class="back-btn-text">Back</span>
                     </a>
-                    <a href="{% url 'cancel_google_signup' %}" class="back-btn" style="text-decoration: none; display: flex; align-items: center; gap: 0.5rem;" onclick="event.stopPropagation();">
+                    <button type="button" onclick="submitCancelGoogleSignup()" class="back-btn" style="text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
                         <i class="fa-solid fa-home"></i>
                         <span class="back-btn-text">Return Home</span>
-                    </a>
+                    </button>
                 </div>
                 <button class="proceed-btn" id="proceed-step3-btn" type="button" onclick="nextStep(3)">
                     <span class="back-btn-text" id="proceed-step3-text">Complete Profile</span>
@@ -230,13 +234,23 @@
             <div style="display:inline-flex; align-items:center; justify-content:center; width:80px; height:80px; background:#E6F7FF; border-radius:50%; margin:0 auto 1.5rem;">
                 <i class="fa-solid fa-check" style="font-size:2.5rem; color:#0099FF;"></i>
             </div>
-            <p style="font-size:1rem;color:#718096;line-height:1.6;margin:0 auto 2rem;">
-                Your profile has been completed successfully.<br>
-                You can now access all features of the system.
-            </p>
-            <a href="/redirector/" class="proceed-btn" style="display:inline-flex; align-items:center; text-decoration:none; padding:0.75rem 2rem;">
-                <span>Continue</span><i class="fa-solid fa-arrow-right" style="margin-left:0.5rem;"></i>
-            </a>
+            {% if user.is_confirmed %}
+                <p style="font-size:1rem;color:#718096;line-height:1.6;margin:0 auto 2rem;">
+                    Your profile has been completed successfully.<br>
+                    You can now continue to your account.
+                </p>
+                <a href="/redirector/" class="proceed-btn" style="display:inline-flex; align-items:center; text-decoration:none; padding:0.75rem 2rem;">
+                    <span>Continue</span><i class="fa-solid fa-arrow-right" style="margin-left:0.5rem;"></i>
+                </a>
+            {% else %}
+                <p style="font-size:1rem;color:#718096;line-height:1.6;margin:0 auto 2rem;">
+                    Your profile has been completed successfully.<br>
+                    Your account is now pending admin approval. We will notify you by email once approved.
+                </p>
+                <a href="{% url 'not_confirmed' %}" class="proceed-btn" style="display:inline-flex; align-items:center; text-decoration:none; padding:0.75rem 2rem;">
+                    <span>Continue</span><i class="fa-solid fa-arrow-right" style="margin-left:0.5rem;"></i>
+                </a>
+            {% endif %}
         </div>
     </form>
 
@@ -265,6 +279,13 @@
     <script>
         const ROLE = '{{ role }}';
         let COLLEGE_CAMPUS_MAP = {};
+
+        function submitCancelGoogleSignup() {
+            const cancelForm = document.getElementById('cancel-google-signup-form');
+            if (cancelForm) {
+                cancelForm.submit();
+            }
+        }
         
         function collectCampusMapping() {
             const collegeSelect = document.getElementById('id_college');

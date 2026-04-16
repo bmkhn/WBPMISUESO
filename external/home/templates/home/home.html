@@ -190,6 +190,52 @@
     text-align: center;
 }
 
+.google-flow-banner {
+    max-width: 1100px;
+    margin: 1.25rem auto 0;
+    border: 1px solid #B7E4C7;
+    background: linear-gradient(135deg, #F4FFF7 0%, #ECFDF3 100%);
+    border-radius: 14px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    box-shadow: 0 8px 24px rgba(6, 58, 28, 0.08);
+}
+
+.google-flow-banner-copy {
+    color: #14532D;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.google-flow-banner-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #FFFFFF;
+    background: #166534;
+    border-radius: 999px;
+    padding: 8px 14px;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.google-flow-banner-link:hover {
+    background: #14532D;
+    color: #FFFFFF;
+}
+
+@media (max-width: 768px) {
+    .google-flow-banner {
+        margin: 1rem;
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+
 /* Floating Pill Buttons */
 .floating-pill-btn {
     position: fixed;
@@ -236,6 +282,22 @@
 
 </head>
 <body>
+    {% if user.is_authenticated and needs_role_selection %}
+    <div class="google-flow-banner" role="status" aria-live="polite">
+        <div class="google-flow-banner-copy">Your Google account needs role selection before you can continue.</div>
+        <a class="google-flow-banner-link" href="{% url 'select_google_role' %}">
+            Select Role <i class="fa-solid fa-arrow-right"></i>
+        </a>
+    </div>
+    {% elif user.is_authenticated and needs_profile_completion %}
+    <div class="google-flow-banner" role="status" aria-live="polite">
+        <div class="google-flow-banner-copy">Your Google profile is incomplete. Please complete your profile to proceed.</div>
+        <a class="google-flow-banner-link" href="{% url 'complete_google_profile' %}">
+            Complete Profile <i class="fa-solid fa-arrow-right"></i>
+        </a>
+    </div>
+    {% endif %}
+
     <!-- View Reminders Pill and Notification Popup: Only show if there are actual reminders -->
     {% with total1=notifications.pending_submissions|default:0|add:notifications.revision_submissions|default:0 %}
     {% with total2=total1|add:notifications.rejected_submissions|default:0 %}

@@ -1,13 +1,17 @@
 from django.contrib import messages
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import login, logout, authenticate, get_user_model
+from django.contrib.auth import login, logout, authenticate, get_user_model, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.messages import get_messages
 from django.core.mail import send_mail
 from django.db.models import Q
-from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.cache import never_cache
+from django.http import HttpResponseNotAllowed
+from django.views.decorators.http import require_GET, require_POST
+from django.utils import timezone
+
+import logging
 
 from system.users.models import College, Campus
 from system.users.decorators import role_required
@@ -27,6 +31,18 @@ from .models import User, UserRoleHistory
 from .services import serialize_user_data
 
 
+CODE_TTL_SECONDS = 600  # 10 minutes
+
+LOGIN_2FA_ISSUED_AT_KEY = 'login_2fa_issued_at'
+PASSWORD_RESET_CODE_ISSUED_AT_KEY = 'password_reset_code_issued_at'
+REGISTRATION_CODE_ISSUED_AT_KEY = 'registration_2fa_issued_at'
+
+PASSWORD_RESET_VERIFIED_KEY = 'password_reset_code_verified'
+PROFILE_CHANGE_VERIFIED_KEY = 'profile_change_code_verified'
+PROFILE_CHANGE_VERIFIED_USER_KEY = 'profile_change_verified_user_id'
+PROFILE_CHANGE_VERIFIED_EMAIL_KEY = 'profile_change_verified_email'
+
+
 def _is_psu_email(email: str) -> bool:
     """Normalize email and check PSU domain."""
     return (email or '').strip().lower().endswith('@psu.palawan.edu.ph')
@@ -44,11 +60,22 @@ def is_google_account(user) -> bool:
         # Provided by social_django (UserSocialAuth reverse relation)
         return user.social_auth.filter(provider='google-oauth2').exists()
     except Exception:
-        # Fallback for environments without social_auth relation.
-        return not user.has_usable_password()
+        # Fail closed for auth-provider detection.
+        return False
+
+
+def needs_google_role_selection(user) -> bool:
+    """Return True when a Google-linked non-PSU user still needs to choose a role."""
+    if not user or not getattr(user, 'is_authenticated', False):
+        return False
+    if not is_google_account(user):
+        return False
+    if _is_psu_email(getattr(user, 'email', '')):
+        return False
+    return getattr(user, 'role', None) == User.Role.CLIENT and not getattr(user, 'google_role_selected', False)
 
 @never_cache
-@csrf_exempt
+@require_GET
 def health_check(request):
     """Lightweight healthcheck for Railway"""
     return JsonResponse({"status": "healthy", "service": "WBPMISUESO"}, status=200)
@@ -85,78 +112,125 @@ def create_user_log(user, action, target_user, details, is_notification=False):
     )
 
 
+def _current_timestamp() -> int:
+    return int(timezone.now().timestamp())
+
+
+def _set_code_with_expiry(request, code_key: str, issued_at_key: str, code: str) -> None:
+    request.session[code_key] = code
+    request.session[issued_at_key] = _current_timestamp()
+
+
+def _is_code_expired(request, issued_at_key: str, ttl_seconds: int = CODE_TTL_SECONDS) -> bool:
+    issued_at = request.session.get(issued_at_key)
+    if issued_at is None:
+        return True
+    try:
+        issued_at_int = int(issued_at)
+    except (TypeError, ValueError):
+        return True
+    return (_current_timestamp() - issued_at_int) > ttl_seconds
+
+
+def _clear_login_2fa_session(request) -> None:
+    for key in ['login_2fa_code', LOGIN_2FA_ISSUED_AT_KEY, 'pending_login_user_id', 'pending_login_backend', 'remember_me']:
+        request.session.pop(key, None)
+
+
+def _clear_password_reset_code_data(request) -> None:
+    for key in ['password_reset_code', 'password_reset_email', PASSWORD_RESET_CODE_ISSUED_AT_KEY, PASSWORD_RESET_VERIFIED_KEY, 'code_verified']:
+        request.session.pop(key, None)
+
+
+def _clear_profile_change_verification(request) -> None:
+    for key in [PROFILE_CHANGE_VERIFIED_KEY, PROFILE_CHANGE_VERIFIED_USER_KEY, PROFILE_CHANGE_VERIFIED_EMAIL_KEY]:
+        request.session.pop(key, None)
+
+
+def _clear_registration_code_session(request) -> None:
+    for key in ['2fa_code', REGISTRATION_CODE_ISSUED_AT_KEY]:
+        request.session.pop(key, None)
+
+
 ####################################################################################################
 
 
 def login_view(request):
     if request.method == 'POST':
-        form = LoginForm(request, data=request.POST)
-        if form.is_valid():
-            user = authenticate(request, email=form.cleaned_data.get('username'), password=form.cleaned_data.get('password'))
-            if user:
-                code = str(random.randint(100000, 999999))
-                
-                # Send 2FA code via email ASYNCHRONOUSLY
-                try:
-                    async_send_verification_code(user.email, code)
-                    print(f"Login 2FA code queued for {user.email}: {code}")  # Debug
-                except Exception as e:
-                    print(f"Email queuing failed: {str(e)}")  # Debug
-                
-                request.session['login_2fa_code'] = code
-                request.session['pending_login_user_id'] = user.id
-                request.session['pending_login_backend'] = user.backend
-                request.session['remember_me'] = request.POST.get('remember') == 'on'
-                
-                return JsonResponse({'success': True, 'code': code})
-        else:
-            return JsonResponse({'success': False, 'error': 'Invalid email or password.'})
+        try:
+            form = LoginForm(request, data=request.POST)
+            if form.is_valid():
+                user = authenticate(request, email=form.cleaned_data.get('username'), password=form.cleaned_data.get('password'))
+                if user:
+                    code = str(random.randint(100000, 999999))
+
+                    # Send 2FA code via email ASYNCHRONOUSLY
+                    try:
+                        async_send_verification_code(user.email, code)
+                    except Exception:
+                        # Avoid leaking internal details and avoid logging the code
+                        pass
+
+                    _set_code_with_expiry(request, 'login_2fa_code', LOGIN_2FA_ISSUED_AT_KEY, code)
+                    request.session['pending_login_user_id'] = user.id
+                    request.session['pending_login_backend'] = getattr(user, 'backend', None) or settings.AUTHENTICATION_BACKENDS[0]
+                    request.session['remember_me'] = request.POST.get('remember') == 'on'
+
+                    # Never return the verification code to the client.
+                    return JsonResponse({'success': True})
+            else:
+                return JsonResponse({'success': False, 'error': 'Invalid email or password.'})
+        except Exception:
+            logging.getLogger(__name__).exception("Unexpected error during login initiation")
+            return JsonResponse({'success': False, 'error': 'Unable to process sign in right now. Please try again.'}, status=500)
     else:
         form = LoginForm()
     return render(request, 'users/login.html', {'form': form})
 
 
 def verify_login_2fa_view(request):
-    if request.method == 'POST':
-        code_entered = request.POST.get('code')
-        code_sent = request.session.get('login_2fa_code')
-        user_id = request.session.get('pending_login_user_id')
-        backend = request.session.get('pending_login_backend')
-        remember_me = request.session.get('remember_me', False)
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request method.'}, status=405)
 
-        print(f"DEBUG - Code entered: {code_entered}, Code sent: {code_sent}, User ID: {user_id}, Remember: {remember_me}")
-        
-        if code_entered == code_sent and user_id:
-            User = get_user_model()
-            try:
-                user = User.objects.get(id=user_id)
-                user.backend = backend
+    code_entered = request.POST.get('code')
+    code_sent = request.session.get('login_2fa_code')
+    user_id = request.session.get('pending_login_user_id')
+    backend = request.session.get('pending_login_backend')
+    remember_me = request.session.get('remember_me', False)
 
-                # IMPORTANT: Flush the temporary session BEFORE final login
-                request.session.flush()
+    if _is_code_expired(request, LOGIN_2FA_ISSUED_AT_KEY):
+        _clear_login_2fa_session(request)
+        return JsonResponse({'success': False, 'error': 'Verification code expired. Please login again.'})
 
-                # Log the user in (creates a new session)
-                login(request, user)
+    if code_entered == code_sent and user_id:
+        User = get_user_model()
+        try:
+            user = User.objects.get(id=user_id)
+            user.backend = backend
 
-                # Ensure Django 5.x is satisfied (avoid SessionInterrupted)
-                request.session.cycle_key()
+            # IMPORTANT: Flush the temporary session BEFORE final login
+            request.session.flush()
 
-                # Set a message to show reminders on redirect
-                messages.info(request, "SHOW_REMINDERS")
+            # Log the user in (creates a new session)
+            login(request, user)
 
-                # Set session expiry on the NEW session
-                if remember_me:
-                    request.session.set_expiry(1209600)  # 14 days
-                else:
-                    request.session.set_expiry(0)  # browser session
+            # Ensure Django 5.x is satisfied (avoid SessionInterrupted)
+            request.session.cycle_key()
 
-                return JsonResponse({'success': True})
-            except User.DoesNotExist:
-                return JsonResponse({'success': False, 'error': 'User not found.'})
-        else:
-            return JsonResponse({'success': False, 'error': 'Invalid verification code.'})
-    
-    return JsonResponse({'success': False, 'error': 'Invalid request method.'})
+            # Set a message to show reminders on redirect
+            messages.info(request, "SHOW_REMINDERS")
+
+            # Set session expiry on the NEW session
+            if remember_me:
+                request.session.set_expiry(1209600)  # 14 days
+            else:
+                request.session.set_expiry(0)  # browser session
+
+            return JsonResponse({'success': True})
+        except User.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'User not found.'})
+
+    return JsonResponse({'success': False, 'error': 'Invalid verification code.'})
 
 
 
@@ -179,92 +253,116 @@ def forgot_password_view(request):
 
 
 def send_password_reset_code_view(request):
-    if request.method == 'POST':
-        email = request.POST.get('email')
-        
-        if not email:
-            return JsonResponse({'success': False, 'error': 'Email is required.'})
-        
-        User = get_user_model()
-        try:
-            user = User.objects.get(email=email)
-        except User.DoesNotExist:
-            return JsonResponse({'success': False, 'error': 'No account found with this email.'})
-        
-        code = str(random.randint(100000, 999999))
-        
-        # Send password reset code via email ASYNCHRONOUSLY (no 2-minute block!)
-        try:
-            from system.utils.email_utils import async_send_password_reset_code
-            async_send_password_reset_code(email, code)
-            print(f"Password reset code queued for {email}: {code}")  # Debug
-        except Exception as e:
-            print(f"Email queuing failed: {str(e)}")  # Debug
-        
-        request.session['password_reset_code'] = code
-        request.session['password_reset_email'] = email
-        
-        return JsonResponse({'success': True, 'code': code})
-    
-    return JsonResponse({'success': False, 'error': 'Invalid request method.'})
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request method.'}, status=405)
+
+    email = (request.POST.get('email') or '').strip()
+    if not email:
+        return JsonResponse({'success': False, 'error': 'Email is required.'})
+
+    _clear_password_reset_code_data(request)
+    _clear_profile_change_verification(request)
+
+    # Avoid account enumeration: always return success.
+    User = get_user_model()
+    user = User.objects.filter(email=email).first()
+    if not user:
+        return JsonResponse({'success': True})
+
+    code = str(random.randint(100000, 999999))
+
+    # Send password reset code via email ASYNCHRONOUSLY
+    try:
+        from system.utils.email_utils import async_send_password_reset_code
+        async_send_password_reset_code(email, code)
+    except Exception:
+        # Avoid leaking internal details and avoid logging the code
+        pass
+
+    _set_code_with_expiry(request, 'password_reset_code', PASSWORD_RESET_CODE_ISSUED_AT_KEY, code)
+    request.session['password_reset_email'] = email
+
+    # Never return the reset code to the client.
+    return JsonResponse({'success': True})
 
 
 def verify_reset_code_view(request):
-    if request.method == 'POST':
-        code_entered = request.POST.get('code')
-        verify_only = request.POST.get('verify_only', 'false')
-        code_sent = request.session.get('password_reset_code')
-        
-        if not code_entered:
-            return JsonResponse({'success': False, 'error': 'Code is required.'})
-        
-        if code_entered == code_sent:
-            request.session['code_verified'] = True
-            return JsonResponse({'success': True})
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request method.'}, status=405)
+
+    verify_only = str(request.POST.get('verify_only', '')).lower() in {'1', 'true', 'yes', 'on'}
+    if verify_only and not getattr(request.user, 'is_authenticated', False):
+        return JsonResponse({'success': False, 'error': 'Authentication required.'}, status=403)
+
+    code_entered = request.POST.get('code')
+    code_sent = request.session.get('password_reset_code')
+
+    if not code_entered:
+        return JsonResponse({'success': False, 'error': 'Code is required.'})
+
+    if _is_code_expired(request, PASSWORD_RESET_CODE_ISSUED_AT_KEY):
+        _clear_password_reset_code_data(request)
+        _clear_profile_change_verification(request)
+        return JsonResponse({'success': False, 'error': 'Verification code expired. Please request a new one.'})
+
+    if code_entered == code_sent and code_sent:
+        if verify_only:
+            request.session[PROFILE_CHANGE_VERIFIED_KEY] = True
+            request.session[PROFILE_CHANGE_VERIFIED_USER_KEY] = request.user.id
+            request.session[PROFILE_CHANGE_VERIFIED_EMAIL_KEY] = request.session.get('password_reset_email')
+            request.session.pop(PASSWORD_RESET_VERIFIED_KEY, None)
+            request.session.pop('code_verified', None)
         else:
-            return JsonResponse({'success': False, 'error': 'Invalid verification code.'})
-    
-    return JsonResponse({'success': False, 'error': 'Invalid request method.'})
+            request.session[PASSWORD_RESET_VERIFIED_KEY] = True
+            request.session.pop(PROFILE_CHANGE_VERIFIED_KEY, None)
+            request.session.pop(PROFILE_CHANGE_VERIFIED_USER_KEY, None)
+            request.session.pop(PROFILE_CHANGE_VERIFIED_EMAIL_KEY, None)
+        return JsonResponse({'success': True})
+
+    return JsonResponse({'success': False, 'error': 'Invalid verification code.'})
 
 
 def reset_password_view(request):
-    if request.method == 'POST':
-        new_password = request.POST.get('new_password')
-        email = request.session.get('password_reset_email')
-        code_verified = request.session.get('code_verified', False)
-        
-        if not new_password:
-            return JsonResponse({'success': False, 'error': 'New password is required.'})
-        
-        if not code_verified:
-            return JsonResponse({'success': False, 'error': 'Please verify your code first.'})
-        
-        if email:
-            User = get_user_model()
-            try:
-                user = User.objects.get(email=email)
-                user.set_password(new_password)
-                user.save()
-                
-                create_user_log(
-                    user=user,
-                    action='UPDATE',
-                    target_user=user,
-                    details="Password reset via forgot password",
-                    is_notification=False
-                )
-                
-                request.session.pop('password_reset_code', None)
-                request.session.pop('password_reset_email', None)
-                request.session.pop('code_verified', None)
-                
-                return JsonResponse({'success': True})
-            except User.DoesNotExist:
-                return JsonResponse({'success': False, 'error': 'User not found.'})
-        else:
-            return JsonResponse({'success': False, 'error': 'Session expired. Please start over.'})
-    
-    return JsonResponse({'success': False, 'error': 'Invalid request method.'})
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request method.'}, status=405)
+
+    new_password = request.POST.get('new_password')
+    email = request.session.get('password_reset_email')
+    code_verified = request.session.get(PASSWORD_RESET_VERIFIED_KEY, False)
+
+    if not new_password:
+        return JsonResponse({'success': False, 'error': 'New password is required.'})
+
+    if _is_code_expired(request, PASSWORD_RESET_CODE_ISSUED_AT_KEY):
+        _clear_password_reset_code_data(request)
+        return JsonResponse({'success': False, 'error': 'Verification code expired. Please request a new one.'})
+
+    if not code_verified:
+        return JsonResponse({'success': False, 'error': 'Please verify your code first.'})
+
+    if not email:
+        return JsonResponse({'success': False, 'error': 'Session expired. Please start over.'})
+
+    User = get_user_model()
+    try:
+        user = User.objects.get(email=email)
+        user.set_password(new_password)
+        user.save()
+
+        create_user_log(
+            user=user,
+            action='UPDATE',
+            target_user=user,
+            details="Password reset via forgot password",
+            is_notification=False
+        )
+    except User.DoesNotExist:
+        # Avoid account enumeration.
+        pass
+    finally:
+        _clear_password_reset_code_data(request)
+
+    return JsonResponse({'success': True})
 
 def is_google_profile_incomplete(user):
     """
@@ -314,9 +412,7 @@ def role_redirect(request):
                 request.user.google_role_selected = True
                 request.user.save()
         else:
-            # Only force role selection for Google users who still have the default CLIENT role
-            # and haven't explicitly confirmed a role yet.
-            if request.user.role == User.Role.CLIENT and not request.user.google_role_selected:
+            if needs_google_role_selection(request.user):
                 return redirect('select_google_role')
 
         # Profile completion is required for Google-linked users
@@ -356,6 +452,17 @@ def dashboard(request):
 
 
 def check_email_view(request):
+    if request.method != 'GET':
+        return JsonResponse({'exists': False}, status=405)
+
+    # Prevent public email enumeration. This endpoint is intended for internal/admin UX.
+    if not getattr(request.user, 'is_authenticated', False):
+        return JsonResponse({'exists': False})
+
+    allowed_roles = {"VP", "DIRECTOR", "UESO", "PROGRAM_HEAD", "DEAN", "COORDINATOR"}
+    if not (getattr(request.user, 'is_superuser', False) or getattr(request.user, 'is_staff', False) or getattr(request.user, 'role', None) in allowed_roles):
+        return JsonResponse({'exists': False})
+
     email = request.GET.get('email', '').strip()
     exists = False
     if email:
@@ -433,8 +540,11 @@ def cancel_google_signup(request):
     Cancel Google signup: delete the account if role not yet selected and log out.
     This prevents half-created accounts when the user backs out.
     """
+    if request.method != 'POST':
+        return HttpResponseNotAllowed(['POST'])
+
     user = request.user
-    is_google = not user.has_usable_password()
+    is_google = is_google_account(user)
     is_psu = _is_psu_email(user.email) if user.email else False
 
     if is_google:
@@ -463,7 +573,7 @@ def cancel_google_signup(request):
 
 def register_view(request):
     logout(request)
-    for key in ['pending_user_id', '2fa_code', 'registration_role', 'registration_data']:
+    for key in ['pending_user_id', '2fa_code', REGISTRATION_CODE_ISSUED_AT_KEY, 'registration_role', 'registration_data']:
         request.session.pop(key, None)
     return render(request, 'users/register.html')
 
@@ -471,7 +581,7 @@ def register_view(request):
 def send_verification_code_view(request):
     """Send verification code to email without creating user - ASYNC VERSION"""
     if request.method == 'POST':
-        email = request.POST.get('email')
+        email = (request.POST.get('email') or '').strip()
         role = request.POST.get('role')
 
         if not email or not role:
@@ -498,10 +608,8 @@ def send_verification_code_view(request):
         sent = False
         try:
             async_send_verification_code(email, code)
-            print(f"Verification code queued for {email}: {code}")  # Debug
             sent = True
         except Exception as e:
-            print(f"Email queuing failed: {str(e)}")  # Debug
             try:
                 send_mail(
                     'Your Verification Code',
@@ -510,18 +618,18 @@ def send_verification_code_view(request):
                     [email],
                     fail_silently=False,
                 )
-                print(f"Verification code sent to {email}: {code}")
                 sent = True
             except Exception as e2:
-                print(f"Email sending failed: {str(e2)}")
+                pass
 
         # Always set session variables if sent
         if sent:
-            request.session['2fa_code'] = code
+            _set_code_with_expiry(request, '2fa_code', REGISTRATION_CODE_ISSUED_AT_KEY, code)
             request.session['pending_email'] = email
             request.session['registration_role'] = role
             request.session['registration_data'] = registration_data
-            return JsonResponse({'success': True, 'code': code, 'role': role})
+            # Never return the verification code to the client.
+            return JsonResponse({'success': True, 'role': role})
         else:
             return JsonResponse({'success': False, 'error': 'Failed to send verification code.'})
 
@@ -560,8 +668,12 @@ def complete_google_profile_view(request):
         if verification_code:
             # For Google users, accept the verification code (we skip email verification)
             # The template sends '000000' as a placeholder
-            if verification_code != '000000' and verification_code != request.session.get('2fa_code', ''):
-                return JsonResponse({'success': False, 'error': 'Invalid verification code.'})
+            if verification_code != '000000':
+                if _is_code_expired(request, REGISTRATION_CODE_ISSUED_AT_KEY):
+                    _clear_registration_code_session(request)
+                    return JsonResponse({'success': False, 'error': 'Verification code expired. Please request a new one.'})
+                if verification_code != request.session.get('2fa_code', ''):
+                    return JsonResponse({'success': False, 'error': 'Invalid verification code.'})
             
             # Update existing user instead of creating new one
             form = UnifiedRegistrationForm(request.POST, request.FILES, role=role_upper, instance=user)
@@ -574,14 +686,13 @@ def complete_google_profile_view(request):
                 # Update user with form data
                 updated_user = form.save(commit=False)
                 updated_user.role = role_upper
-                updated_user.is_confirmed = True  # Google users are already verified
+                # Keep current admin-confirmation state; do not auto-confirm.
+                updated_user.is_confirmed = user.is_confirmed
                 
-                # Google users don't need password - keep it unusable
-                # Only set password if explicitly provided (optional)
+                # Only update password when explicitly provided.
+                # Otherwise, preserve the current password/auth linkage state.
                 if request.POST.get('password') and request.POST.get('password').strip():
                     updated_user.set_password(request.POST.get('password'))
-                else:
-                    updated_user.set_unusable_password()
                 
                 if request.FILES.get('valid_id'):
                     updated_user.valid_id = request.FILES['valid_id']
@@ -598,7 +709,7 @@ def complete_google_profile_view(request):
                     is_notification=False
                 )
                 
-                request.session.pop('2fa_code', None)
+                _clear_registration_code_session(request)
                 request.session.pop('registration_data', None)
                 
                 return JsonResponse({'success': True})
@@ -661,6 +772,10 @@ def registration_unified_view(request, role):
         if verification_code:
             code_sent = request.session.get('2fa_code')
             registration_data = request.session.get('registration_data')
+
+            if _is_code_expired(request, REGISTRATION_CODE_ISSUED_AT_KEY):
+                _clear_registration_code_session(request)
+                return JsonResponse({'success': False, 'error': 'Verification code expired. Please request a new one.'})
             
             if verification_code != code_sent:
                 return JsonResponse({'success': False, 'error': 'Invalid verification code.'})
@@ -700,7 +815,7 @@ def registration_unified_view(request, role):
                     is_notification=False
                 )
                 
-                request.session.pop('2fa_code', None)
+                _clear_registration_code_session(request)
                 request.session.pop('pending_email', None)
                 request.session.pop('registration_role', None)
                 request.session.pop('registration_data', None)
@@ -740,6 +855,15 @@ def verify_unified_view(request):
         code_entered = request.POST.get('verification_code')
         code_sent = request.session.get('2fa_code')
         pending_user_id = request.session.get('pending_user_id')
+
+        if _is_code_expired(request, REGISTRATION_CODE_ISSUED_AT_KEY):
+            _clear_registration_code_session(request)
+            error = "Verification code expired. Please request a new one."
+            return render(request, 'users/verify_unified.html', {
+                'error': error,
+                'role': role,
+                'role_display': role.capitalize()
+            })
         
         if code_entered == code_sent and pending_user_id:
             User = get_user_model()
@@ -747,7 +871,7 @@ def verify_unified_view(request):
                 user = User.objects.get(id=pending_user_id)
                 user.save()
 
-                for key in ['2fa_code', 'pending_user_id', 'registration_role']:
+                for key in ['2fa_code', REGISTRATION_CODE_ISSUED_AT_KEY, 'pending_user_id', 'registration_role']:
                     request.session.pop(key, None)
                 
                 return redirect('thank_you')
@@ -785,6 +909,7 @@ def not_confirmed_view(request):
 ####################################################################################################
 
 
+@never_cache
 @role_required(allowed_roles=["VP", "DIRECTOR"], require_confirmed=True)
 def manage_user(request):
     query_params = {}
@@ -955,7 +1080,8 @@ def add_user(request):
 
                 success = True
             except Exception as e:
-                error = str(e)
+                logging.getLogger(__name__).exception("Error creating user")
+                error = "An unexpected error occurred while creating the user."
     return render(request, 'users/add_user.html', {
         'error': error,
         'success': success,
@@ -995,8 +1121,10 @@ def edit_user(request, id):
         password_is_changing = bool(password)
         
         if email_is_changing or password_is_changing:
-            code_verified = request.session.get('code_verified', False)
-            if not code_verified:
+            code_verified = request.session.get(PROFILE_CHANGE_VERIFIED_KEY, False)
+            verified_user_id = request.session.get(PROFILE_CHANGE_VERIFIED_USER_KEY)
+            verified_email = request.session.get(PROFILE_CHANGE_VERIFIED_EMAIL_KEY)
+            if not (code_verified and verified_user_id == request.user.id and verified_email == old_email):
                 error = "Email or password change requires verification. Please verify your code."
                 return render(request, 'users/edit_user.html', {
                     'user': user,
@@ -1022,7 +1150,23 @@ def edit_user(request, id):
                 user.given_name = data.get('given_name')
                 user.middle_initial = data.get('middle_initial') or None
                 user.suffix = data.get('suffix') or None
-                user.sex = data.get('sex')
+                posted_sex = (data.get('sex') or '').strip().upper()
+                valid_sex_values = {choice[0] for choice in User.Sex.choices}
+                if posted_sex not in valid_sex_values:
+                    error = "Invalid sex value selected."
+                    return render(request, 'users/edit_user.html', {
+                        'user': user,
+                        'error': error,
+                        'success': False,
+                        'email_changed': email_changed,
+                        'colleges': colleges,
+                        'campus_choices': campus_choices,
+                        'roles': roles,
+                        'base_template': base_template,
+                        'can_edit_role_and_verify': can_edit_role_and_verify,
+                        'is_editing_self': request.user.id == user.id,
+                    })
+                user.sex = posted_sex
                 user.contact_no = data.get('contact_no')
                 
                 if user.email != new_email:
@@ -1113,6 +1257,10 @@ def edit_user(request, id):
                     changes.append('profile picture')
 
                 user.save()
+
+                if password_changed and request.user.id == user.id:
+                    # Preserve current session when users change their own password.
+                    update_session_auth_hash(request, user)
                 
                 if password_changed:
                     try:
@@ -1133,12 +1281,8 @@ def edit_user(request, id):
                     is_notification=True
                 )
                 
-                if 'code_verified' in request.session:
-                    del request.session['code_verified']
-                if 'password_reset_code' in request.session:
-                    del request.session['password_reset_code']
-                if 'password_reset_email' in request.session:
-                    del request.session['password_reset_email']
+                _clear_profile_change_verification(request)
+                _clear_password_reset_code_data(request)
                 
                 referrer = request.META.get('HTTP_REFERER', '')
                 user_full_name = quote(user.get_full_name())
@@ -1156,7 +1300,8 @@ def edit_user(request, id):
                 return redirect(redirect_url)
                 
             except Exception as e:
-                error = str(e)
+                logging.getLogger(__name__).exception("Error editing user")
+                error = "An unexpected error occurred while saving changes."
     
     return render(request, 'users/edit_user.html', {
         'user': user,
@@ -1173,6 +1318,7 @@ def edit_user(request, id):
 
 
 @role_required(allowed_roles=["VP", "DIRECTOR"], require_confirmed=True)
+@require_POST
 def verify_user(request, id):
     User = get_user_model()
     user = get_object_or_404(User, id=id)
@@ -1182,6 +1328,14 @@ def verify_user(request, id):
     
     user.is_confirmed = True
     user.save()
+
+    create_user_log(
+        user=request.user,
+        action='UPDATE',
+        target_user=user,
+        details=f"Activated by {request.user.get_role_display()}",
+        is_notification=True
+    )
     
     try:
         from system.utils.email_utils import async_send_account_activated
@@ -1198,6 +1352,7 @@ def verify_user(request, id):
 
 
 @role_required(allowed_roles=["VP", "DIRECTOR"], require_confirmed=True)
+@require_POST
 def unverify_user(request, id):
     User = get_user_model()
     user = get_object_or_404(User, id=id)
@@ -1207,6 +1362,14 @@ def unverify_user(request, id):
     
     user.is_confirmed = False
     user.save()
+
+    create_user_log(
+        user=request.user,
+        action='UPDATE',
+        target_user=user,
+        details=f"Deactivated by {request.user.get_role_display()}",
+        is_notification=True
+    )
     
     try:
         from system.utils.email_utils import async_send_account_deactivated
@@ -1223,6 +1386,7 @@ def unverify_user(request, id):
 
 
 @role_required(allowed_roles=["VP", "DIRECTOR"], require_confirmed=True)
+@require_POST
 def delete_user(request, id):
     User = get_user_model()
     user = get_object_or_404(User, id=id)
@@ -1230,6 +1394,14 @@ def delete_user(request, id):
     # Prevent self-deletion
     if request.user.id == user.id:
         return redirect('no_permission')
+
+    create_user_log(
+        user=request.user,
+        action='DELETE',
+        target_user=user,
+        details=f"Deleted by {request.user.get_role_display()}",
+        is_notification=True
+    )
     
     # Delete the user - Django will handle related objects based on on_delete settings
     # The APIConnection.requested_by field has on_delete=models.SET_NULL, so it will be set to None automatically
