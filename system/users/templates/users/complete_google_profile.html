@@ -74,10 +74,6 @@
                 </div>
             </div>
             <div class="actions">
-                <button type="button" onclick="submitCancelGoogleSignup()" class="back-btn" style="display: flex; align-items: center; gap: 0.5rem;">
-                    <i class="fa-solid fa-home"></i>
-                    <span class="back-btn-text">Return Home</span>
-                </button>
                 <button class="proceed-btn" type="button" onclick="nextStep(1)">
                     <span class="back-btn-text">Proceed</span>
                     <i class="fa-solid fa-arrow-right"></i>
@@ -151,17 +147,11 @@
                     <div id="terms-error-container"></div>
                 </div>
             </div>
-            <div class="actions" style="display: flex; justify-content: space-between; align-items: center;">
-                <div style="display: flex; gap: 1rem;">
-                    <a class="back-btn" onclick="prevStep(2)">
-                        <i class="fa-solid fa-arrow-left"></i>
-                        <span class="back-btn-text">Back</span>
-                    </a>
-                    <button type="button" onclick="submitCancelGoogleSignup()" class="back-btn" style="text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
-                        <i class="fa-solid fa-home"></i>
-                        <span class="back-btn-text">Return Home</span>
-                    </button>
-                </div>
+            <div class="actions">
+                <a class="back-btn" onclick="prevStep(2)">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span class="back-btn-text">Back</span>
+                </a>
                 <button class="proceed-btn" type="button" onclick="nextStep(2)">
                     <span class="back-btn-text">Proceed</span>
                     <i class="fa-solid fa-arrow-right"></i>
@@ -210,17 +200,11 @@
                     </div>
                 </div>
             </div>
-            <div class="actions" style="display: flex; justify-content: space-between; align-items: center;">
-                <div style="display: flex; gap: 1rem;">
-                    <a class="back-btn" onclick="prevStep(3)">
-                        <i class="fa-solid fa-arrow-left"></i>
-                        <span class="back-btn-text">Back</span>
-                    </a>
-                    <button type="button" onclick="submitCancelGoogleSignup()" class="back-btn" style="text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
-                        <i class="fa-solid fa-home"></i>
-                        <span class="back-btn-text">Return Home</span>
-                    </button>
-                </div>
+            <div class="actions">
+                <a class="back-btn" onclick="prevStep(3)">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span class="back-btn-text">Back</span>
+                </a>
                 <button class="proceed-btn" id="proceed-step3-btn" type="button" onclick="nextStep(3)">
                     <span class="back-btn-text" id="proceed-step3-text">Complete Profile</span>
                     <i class="fa-solid fa-arrow-right" id="proceed-step3-arrow"></i>
@@ -230,7 +214,11 @@
         </div>
 
         <div class="card step-content" id="step4" style="display: none; text-align: center; padding: 3rem 2rem;">
-            <h2 style="font-size: 2.75rem;font-weight:600;color:#2D3748;margin-bottom: 2rem;text-align:center;">PROFILE COMPLETED</h2>
+            {% if user.is_confirmed %}
+                <h2 style="font-size: 2.75rem;font-weight:600;color:#2D3748;margin-bottom: 2rem;text-align:center;">PROFILE COMPLETED</h2>
+            {% else %}
+                <h2 style="font-size: 2.75rem;font-weight:600;color:#2D3748;margin-bottom: 2rem;text-align:center;">THANK YOU FOR REGISTERING</h2>
+            {% endif %}
             <div style="display:inline-flex; align-items:center; justify-content:center; width:80px; height:80px; background:#E6F7FF; border-radius:50%; margin:0 auto 1.5rem;">
                 <i class="fa-solid fa-check" style="font-size:2.5rem; color:#0099FF;"></i>
             </div>
@@ -239,17 +227,29 @@
                     Your profile has been completed successfully.<br>
                     You can now continue to your account.
                 </p>
-                <a href="/redirector/" class="proceed-btn" style="display:inline-flex; align-items:center; text-decoration:none; padding:0.75rem 2rem;">
-                    <span>Continue</span><i class="fa-solid fa-arrow-right" style="margin-left:0.5rem;"></i>
-                </a>
+                {% if role == 'IMPLEMENTER' or role == 'CLIENT' %}
+                    <a href="/home/" class="proceed-btn" style="display:inline-flex; align-items:center; text-decoration:none; padding:0.75rem 2rem;">
+                        <span>Continue</span><i class="fa-solid fa-arrow-right" style="margin-left:0.5rem;"></i>
+                    </a>
+                {% else %}
+                    <a href="/redirector/" class="proceed-btn" style="display:inline-flex; align-items:center; text-decoration:none; padding:0.75rem 2rem;">
+                        <span>Continue</span><i class="fa-solid fa-arrow-right" style="margin-left:0.5rem;"></i>
+                    </a>
+                {% endif %}
             {% else %}
                 <p style="font-size:1rem;color:#718096;line-height:1.6;margin:0 auto 2rem;">
                     Your profile has been completed successfully.<br>
                     Your account is now pending admin approval. We will notify you by email once approved.
                 </p>
-                <a href="{% url 'not_confirmed' %}" class="proceed-btn" style="display:inline-flex; align-items:center; text-decoration:none; padding:0.75rem 2rem;">
-                    <span>Continue</span><i class="fa-solid fa-arrow-right" style="margin-left:0.5rem;"></i>
-                </a>
+                {% if role == 'IMPLEMENTER' or role == 'CLIENT' %}
+                    <a href="/home/" class="proceed-btn" style="display:inline-flex; align-items:center; text-decoration:none; padding:0.75rem 2rem;">
+                        <span>Continue</span><i class="fa-solid fa-arrow-right" style="margin-left:0.5rem;"></i>
+                    </a>
+                {% else %}
+                    <a href="{% url 'not_confirmed' %}" class="proceed-btn" style="display:inline-flex; align-items:center; text-decoration:none; padding:0.75rem 2rem;">
+                        <span>Continue</span><i class="fa-solid fa-arrow-right" style="margin-left:0.5rem;"></i>
+                    </a>
+                {% endif %}
             {% endif %}
         </div>
     </form>
@@ -279,6 +279,7 @@
     <script>
         const ROLE = '{{ role }}';
         let COLLEGE_CAMPUS_MAP = {};
+        let postCompletionRedirectUrl = null;
 
         function submitCancelGoogleSignup() {
             const cancelForm = document.getElementById('cancel-google-signup-form');
@@ -407,6 +408,11 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
+                        postCompletionRedirectUrl = data.redirect_url || null;
+                        const continueLink = document.querySelector('#step4 a.proceed-btn');
+                        if (continueLink && postCompletionRedirectUrl) {
+                            continueLink.setAttribute('href', postCompletionRedirectUrl);
+                        }
                         document.getElementById('step3').style.display = 'none';
                         document.getElementById('step4').style.display = 'block';
                     } else {
@@ -475,24 +481,53 @@
             const uploadLabel = document.getElementById('upload-label');
             if (file) {
                 fileNameSpan.textContent = file.name;
-                filePreview.style.display = 'flex';
+                filePreview.style.setProperty('display', 'flex', 'important');
                 uploadLabel.style.background = '#EDF2F7';
                 uploadLabel.style.borderColor = '#0099FF';
+                const uploadText = uploadLabel.querySelector('.upload-text');
+                if (uploadText) {
+                    uploadText.textContent = file.name;
+                }
+            } else {
+                fileNameSpan.textContent = '';
+                filePreview.style.setProperty('display', 'none', 'important');
+                uploadLabel.style.background = '#F7FAFC';
+                uploadLabel.style.borderColor = '#CBD5E0';
+                const uploadText = uploadLabel.querySelector('.upload-text');
+                if (uploadText) {
+                    uploadText.innerHTML = 'Drag and drop file here or <span class="text-primary fw-bold">click to upload</span>';
+                }
             }
         }
         function removeUploadedFile() {
-            document.getElementById('id_valid_id').value = '';
+            const validIdInput = document.getElementById('id_valid_id');
+            if (validIdInput) {
+                validIdInput.value = '';
+                try {
+                    validIdInput.files = new DataTransfer().files;
+                } catch (e) {
+                    // Some browsers do not allow assigning to .files directly.
+                }
+            }
             updateFileUploadUI(null);
             clearFieldErrors();
         }
         document.getElementById('id_valid_id').addEventListener('change', function(e) {
-            updateFileUploadUI(e.target.files[0]);
+            const selectedFile = (e.target.files && e.target.files.length) ? e.target.files[0] : null;
+            updateFileUploadUI(selectedFile);
         });
         document.getElementById('upload-label').addEventListener('drop', function(e) {
             e.preventDefault();
             const files = e.dataTransfer.files;
             if (files.length) {
-                document.getElementById('id_valid_id').files = files;
+                const input = document.getElementById('id_valid_id');
+                try {
+                    const dt = new DataTransfer();
+                    dt.items.add(files[0]);
+                    input.files = dt.files;
+                } catch (error) {
+                    input.files = files;
+                }
                 updateFileUploadUI(files[0]);
             }
         });

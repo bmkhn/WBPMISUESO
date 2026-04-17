@@ -27,6 +27,24 @@ class SmartCacheMiddleware(MiddlewareMixin):
         self.cache = caches['default']
         self.anonymous_timeout = getattr(settings, 'CACHE_MIDDLEWARE_SECONDS', 86400)
         self.logged_in_timeout = getattr(settings, 'USER_CACHE_SECONDS', 600)
+        self.cache_bypass_prefixes = tuple(getattr(settings, 'SMART_CACHE_BYPASS_PREFIXES', (
+            '/oauth/',
+            '/login/',
+            '/logout/',
+            '/register/',
+            '/verify-login-2fa/',
+            '/send-verification-code/',
+            '/send-password-reset-code/',
+            '/verify-reset-code/',
+            '/reset-password/',
+            '/forgot-password/',
+            '/complete-profile/',
+            '/select-role/',
+            '/google-cancel/',
+            '/admin/',
+            '/static/',
+            '/media/',
+        )))
         self._connect_signals()
 
 
@@ -44,9 +62,27 @@ class SmartCacheMiddleware(MiddlewareMixin):
         Clears all cached pages for both anonymous and logged-in users.
         For large systems, consider selective invalidation for efficiency.
         """
-        keys = [key for key in self.cache.keys("anon:*")] + [key for key in self.cache.keys("user:*")]
-        for key in keys:
-            self.cache.delete(key)
+        try:
+            if hasattr(self.cache, 'delete_pattern'):
+                self.cache.delete_pattern('anon:*')
+                self.cache.delete_pattern('user:*')
+                return
+
+            if hasattr(self.cache, 'keys'):
+                keys = [key for key in self.cache.keys('anon:*')] + [key for key in self.cache.keys('user:*')]
+                for key in keys:
+                    self.cache.delete(key)
+                return
+
+            self.cache.clear()
+        except Exception:
+            self.cache.clear()
+
+
+    def _should_bypass_cache(self, request):
+        """Skip cache for auth/session-sensitive and non-cacheable paths."""
+        path = request.path or '/'
+        return any(path.startswith(prefix) for prefix in self.cache_bypass_prefixes)
 
 
     def process_request(self, request):
@@ -54,7 +90,7 @@ class SmartCacheMiddleware(MiddlewareMixin):
         Handles caching for GET requests only. Skips caching for non-GET requests.
         Returns cached response if available, otherwise allows view to process.
         """
-        if request.method != "GET":
+        if request.method != "GET" or self._should_bypass_cache(request):
             request._cache_update_cache = False
             return None
 
@@ -74,16 +110,31 @@ class SmartCacheMiddleware(MiddlewareMixin):
         Caches GET responses unless they are streaming/file responses. 
         Skips caching for media/static files and handles serialization errors gracefully.
         """
-        if getattr(request, '_cache_update_cache', True) and request.method == "GET":
-            if isinstance(response, (StreamingHttpResponse, FileResponse)):
-                return response
+        if request.method != "GET" or self._should_bypass_cache(request):
+            return response
 
-            key = self._generate_cache_key(request)
-            timeout = self.anonymous_timeout if not request.user.is_authenticated else self.logged_in_timeout
-            try:
-                self.cache.set(key, response, timeout=timeout)
-            except Exception:
-                pass
+        if not getattr(request, '_cache_update_cache', True):
+            return response
+
+        if response.status_code != 200:
+            return response
+
+        if isinstance(response, (StreamingHttpResponse, FileResponse)):
+            return response
+
+        if response.has_header('Set-Cookie'):
+            return response
+
+        cache_control = (response.get('Cache-Control') or '').lower()
+        if 'no-store' in cache_control or 'private' in cache_control:
+            return response
+
+        key = self._generate_cache_key(request)
+        timeout = self.anonymous_timeout if not request.user.is_authenticated else self.logged_in_timeout
+        try:
+            self.cache.set(key, response, timeout=timeout)
+        except Exception:
+            pass
 
         return response
 

@@ -407,10 +407,18 @@ def role_redirect(request):
 
         # PSU emails are auto-assigned FACULTY
         if is_psu_email:
-            if request.user.role != User.Role.FACULTY or not request.user.google_role_selected:
+            fields_to_update = []
+            if request.user.role != User.Role.FACULTY:
                 request.user.role = User.Role.FACULTY
+                fields_to_update.append('role')
+            if not request.user.google_role_selected:
                 request.user.google_role_selected = True
-                request.user.save()
+                fields_to_update.append('google_role_selected')
+            if not request.user.is_confirmed:
+                request.user.is_confirmed = True
+                fields_to_update.append('is_confirmed')
+            if fields_to_update:
+                request.user.save(update_fields=fields_to_update)
         else:
             if needs_google_role_selection(request.user):
                 return redirect('select_google_role')
@@ -487,10 +495,18 @@ def select_google_role_view(request):
     is_psu_email = _is_psu_email(request.user.email)
     if is_psu_email:
         # Ensure PSU email users have FACULTY role
+        fields_to_update = []
         if request.user.role != User.Role.FACULTY:
             request.user.role = User.Role.FACULTY
+            fields_to_update.append('role')
+        if not request.user.google_role_selected:
             request.user.google_role_selected = True
-            request.user.save()
+            fields_to_update.append('google_role_selected')
+        if not request.user.is_confirmed:
+            request.user.is_confirmed = True
+            fields_to_update.append('is_confirmed')
+        if fields_to_update:
+            request.user.save(update_fields=fields_to_update)
         # Redirect to profile completion
         return redirect('complete_google_profile')
     
@@ -565,6 +581,7 @@ def cancel_google_signup(request):
             # PSU: keep Faculty assignment
             user.role = User.Role.FACULTY
             user.google_role_selected = True
+            user.is_confirmed = True
             user.save()
 
     logout(request)
@@ -654,6 +671,21 @@ def complete_google_profile_view(request):
     
     from .forms import UnifiedRegistrationForm
     user = request.user
+
+    if _is_psu_email(user.email):
+        fields_to_update = []
+        if user.role != User.Role.FACULTY:
+            user.role = User.Role.FACULTY
+            fields_to_update.append('role')
+        if not user.google_role_selected:
+            user.google_role_selected = True
+            fields_to_update.append('google_role_selected')
+        if not user.is_confirmed:
+            user.is_confirmed = True
+            fields_to_update.append('is_confirmed')
+        if fields_to_update:
+            user.save(update_fields=fields_to_update)
+
     role_upper = user.role.upper()
     
     colleges = None
@@ -686,13 +718,18 @@ def complete_google_profile_view(request):
                 # Update user with form data
                 updated_user = form.save(commit=False)
                 updated_user.role = role_upper
-                # Keep current admin-confirmation state; do not auto-confirm.
-                updated_user.is_confirmed = user.is_confirmed
+                password_updated = False
+                # PSU Google accounts are auto-confirmed after successful profile completion.
+                if _is_psu_email(updated_user.email):
+                    updated_user.is_confirmed = True
+                else:
+                    updated_user.is_confirmed = user.is_confirmed
                 
                 # Only update password when explicitly provided.
                 # Otherwise, preserve the current password/auth linkage state.
                 if request.POST.get('password') and request.POST.get('password').strip():
                     updated_user.set_password(request.POST.get('password'))
+                    password_updated = True
                 
                 if request.FILES.get('valid_id'):
                     updated_user.valid_id = request.FILES['valid_id']
@@ -700,6 +737,20 @@ def complete_google_profile_view(request):
                     updated_user.profile_picture = request.FILES['profile_picture']
                 
                 updated_user.save()
+
+                # Keep the user logged in when password is updated during profile completion.
+                if password_updated:
+                    update_session_auth_hash(request, updated_user)
+
+                # Ensure the current session is authenticated for this updated user
+                # before the user clicks Continue on the completion screen.
+                auth_backend = (
+                    request.session.get('_auth_user_backend')
+                    or getattr(request.user, 'backend', None)
+                    or settings.AUTHENTICATION_BACKENDS[0]
+                )
+                login(request, updated_user, backend=auth_backend)
+                request.session.cycle_key()
                 
                 create_user_log(
                     user=updated_user,
@@ -711,8 +762,13 @@ def complete_google_profile_view(request):
                 
                 _clear_registration_code_session(request)
                 request.session.pop('registration_data', None)
+
+                if role_upper in [User.Role.IMPLEMENTER, User.Role.CLIENT]:
+                    redirect_url = reverse('home')
+                else:
+                    redirect_url = reverse('role_redirect')
                 
-                return JsonResponse({'success': True})
+                return JsonResponse({'success': True, 'redirect_url': redirect_url})
             else:
                 return JsonResponse({'success': False, 'errors': form.errors, 'error': 'Invalid form data. Please correct the errors.'})
         else:
