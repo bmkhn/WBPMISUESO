@@ -3,7 +3,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
-from system.utils.file_validators import validate_image_size
+from system.utils.file_validators import validate_image_size, validate_valid_id_file
 
 class Campus(models.Model):
     """
@@ -209,7 +209,7 @@ class User(AbstractUser):
         svg_b64 = base64.b64encode(svg.encode('utf-8')).decode('utf-8')
         return f'data:image/svg+xml;base64,{svg_b64}'
     preferred_id = models.CharField(max_length=50, blank=True, null=True, choices=PreferenceID.choices)  # e.g., Passport, Driver's License
-    valid_id = models.ImageField(upload_to='users/valid_ids/', blank=True, null=True, validators=[validate_image_size])       # Required Logic will be backend
+    valid_id = models.FileField(upload_to='users/valid_ids/', blank=True, null=True, validators=[validate_valid_id_file])       # Accept image or PDF
     created_by = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='created_users')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_by = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='updated_users')

@@ -123,8 +123,14 @@
             <div style="margin-top: 1.5rem;">
                 <div class="user-details-label">Valid ID</div>
                 <div style="display:flex;align-items:center;">
-                    <img id="preview-img" src="{{ user.valid_id.url }}" alt="Valid ID" class="user-details-picture">
-                    <a id="preview-link" href="{{ user.valid_id.url }}" style="font-size:18px;color:#00538E;margin-left:18px;vertical-align:middle;text-decoration:none;">View ID</a>
+                    {% with valid_id_url=user.valid_id.url|lower %}
+                        {% if '.pdf' in valid_id_url %}
+                            <a id="preview-link" href="{{ user.valid_id.url }}" style="font-size:18px;color:#00538E;margin-left:18px;vertical-align:middle;text-decoration:none;">View ID</a>
+                        {% else %}
+                            <img id="preview-img" src="{{ user.valid_id.url }}" alt="Valid ID" class="user-details-picture">
+                            <a id="preview-link" href="{{ user.valid_id.url }}" style="font-size:18px;color:#00538E;margin-left:18px;vertical-align:middle;text-decoration:none;">View ID</a>
+                        {% endif %}
+                    {% endwith %}
                 </div>
             </div>
             {% else %}
@@ -740,21 +746,38 @@
             var previewImg = document.getElementById('preview-img');
             var previewLink = document.getElementById('preview-link');
             var fileNameSpan = document.getElementById('file-name');
-            if (file && previewImg && previewLink) {
-                var reader = new FileReader();
-                reader.onload = function(evt) {
-                    previewImg.src = evt.target.result;
-                    previewLink.href = evt.target.result;
-                    previewLink.style.opacity = '0.5';
-                    previewLink.style.pointerEvents = 'none';
-                    previewLink.style.cursor = 'not-allowed';
-                };
-                reader.readAsDataURL(file);
+            if (file && previewLink) {
+                if (file.type && file.type.startsWith('image/') && previewImg) {
+                    previewImg.style.display = '';
+                    var reader = new FileReader();
+                    reader.onload = function(evt) {
+                        previewImg.src = evt.target.result;
+                        previewLink.href = evt.target.result;
+                        previewLink.textContent = 'View ID';
+                        previewLink.style.opacity = '0.5';
+                        previewLink.style.pointerEvents = 'none';
+                        previewLink.style.cursor = 'not-allowed';
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    if (previewImg) {
+                        previewImg.style.display = 'none';
+                    }
+                    previewLink.href = URL.createObjectURL(file);
+                    previewLink.textContent = 'View ID (PDF)';
+                    previewLink.style.opacity = '1';
+                    previewLink.style.pointerEvents = 'auto';
+                    previewLink.style.cursor = 'pointer';
+                }
                 if (fileNameSpan) fileNameSpan.textContent = file.name;
-            } else if (previewImg && previewLink) {
+            } else if (previewLink) {
                 // Reset to original
-                previewImg.src = valid_id_url;
+                if (previewImg) {
+                    previewImg.style.display = '';
+                    previewImg.src = valid_id_url;
+                }
                 previewLink.href = valid_id_url ? valid_id_url : "#";
+                previewLink.textContent = valid_id_url.toLowerCase().includes('.pdf') ? 'View ID (PDF)' : 'View ID';
                 if (fileNameSpan) fileNameSpan.textContent = '';
             }
         });

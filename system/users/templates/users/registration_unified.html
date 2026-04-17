@@ -509,7 +509,7 @@
         function updateFileUploadUI(file) {
             if (file) {
                 fileNameSpan.textContent = file.name;
-                filePreview.style.display = 'flex';
+                filePreview.style.setProperty('display', 'flex', 'important');
                 uploadLabel.style.background = '#EDF2F7';
                 uploadLabel.style.borderColor = '#0099FF';
                 uploadLabel.style.color = '#0099FF';
@@ -532,14 +532,20 @@
         }
         
         function removeUploadedFile() {
-            fileInput.value = ''; 
+            fileInput.value = '';
+            try {
+                fileInput.files = new DataTransfer().files;
+            } catch (e) {
+                // Some browsers do not allow assigning to .files directly.
+            }
             updateFileUploadUI(null);
             clearFieldErrors();
         }
 
         if (fileInput) {
             fileInput.addEventListener('change', function(e) {
-                updateFileUploadUI(e.target.files[0]);
+                const selectedFile = (e.target.files && e.target.files.length) ? e.target.files[0] : null;
+                updateFileUploadUI(selectedFile);
             });
         }
         
@@ -549,7 +555,13 @@
                 this.classList.remove('bg-light', 'border-primary');
                 const files = e.dataTransfer.files;
                 if (files.length) {
-                    fileInput.files = files;
+                    try {
+                        const dt = new DataTransfer();
+                        dt.items.add(files[0]);
+                        fileInput.files = dt.files;
+                    } catch (error) {
+                        fileInput.files = files;
+                    }
                     updateFileUploadUI(files[0]);
                 }
             });

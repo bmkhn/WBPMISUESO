@@ -63,10 +63,25 @@ def create_user(strategy, details, backend, user=None, *args, **kwargs):
 
     if not _is_google_email_verified(details, kwargs):
         raise AuthException(backend, 'Google email is not verified.')
+
+    is_psu_account = _is_psu_email(email)
     
     # Double-check if user exists (safety check)
     try:
         existing_user = User.objects.get(email=email)
+        updated_fields = []
+        if is_psu_account and existing_user.role != User.Role.FACULTY:
+            existing_user.role = User.Role.FACULTY
+            updated_fields.append('role')
+        if is_psu_account and not existing_user.google_role_selected:
+            existing_user.google_role_selected = True
+            updated_fields.append('google_role_selected')
+        if is_psu_account and not existing_user.is_confirmed:
+            existing_user.is_confirmed = True
+            updated_fields.append('is_confirmed')
+        if updated_fields:
+            existing_user.save(update_fields=updated_fields)
+
         return {
             'is_new': False,
             'user': existing_user
@@ -95,7 +110,7 @@ def create_user(strategy, details, backend, user=None, *args, **kwargs):
     # Determine role based on email domain
     # If @psu.palawan.edu.ph → automatically assign FACULTY and mark selection done
     # Otherwise → needs role selection (set CLIENT temporarily)
-    if _is_psu_email(email):
+    if is_psu_account:
         role = User.Role.FACULTY
         google_role_selected = True
     else:
@@ -115,8 +130,8 @@ def create_user(strategy, details, backend, user=None, *args, **kwargs):
         contact_no=contact_no,
         role=role,
         google_role_selected=google_role_selected,
-        # All registrations require explicit admin confirmation.
-        is_confirmed=False,
+        # PSU SSO accounts are trusted and auto-confirmed.
+        is_confirmed=is_psu_account,
         password=temp_password,  # Temporary password, will be set to unusable
     )
     
@@ -132,7 +147,11 @@ def create_user(strategy, details, backend, user=None, *args, **kwargs):
         user=None,
         action='CREATE',
         target_user=user,
-        details=f"Registered via Google Sign-In (awaiting admin confirmation)",
+        details=(
+            'Registered via Google Sign-In (auto-confirmed PSU account)'
+            if is_psu_account
+            else 'Registered via Google Sign-In (awaiting admin confirmation)'
+        ),
         is_notification=False
     )
     
@@ -178,4 +197,3 @@ def user_details(strategy, details, backend, user=None, *args, **kwargs):
     return {
         'user': user
     }
-

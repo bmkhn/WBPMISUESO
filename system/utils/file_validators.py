@@ -4,6 +4,8 @@ Provides server-side validation for file uploads to enforce size limits.
 Synced with settings.py: DATA_UPLOAD_MAX_MEMORY_SIZE and FILE_UPLOAD_MAX_MEMORY_SIZE (10MB)
 """
 
+import os
+
 from django.core.exceptions import ValidationError
 from django.conf import settings
 
@@ -40,3 +42,26 @@ def validate_image_size(image):
         ValidationError: If image size exceeds limit
     """
     validate_file_size(image)
+
+
+def validate_valid_id_file(file):
+    """Allow only image or PDF uploads for user valid IDs."""
+    validate_file_size(file)
+
+    allowed_extensions = {
+        '.pdf', '.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.tif', '.tiff', '.heic', '.heif'
+    }
+    extension = os.path.splitext(getattr(file, 'name', '') or '')[1].lower()
+    content_type = (getattr(file, 'content_type', '') or '').lower()
+
+    # Prefer MIME checks when available from request upload metadata.
+    if content_type:
+        if content_type == 'application/pdf' or content_type.startswith('image/'):
+            return
+        raise ValidationError('Valid ID must be an image or PDF file.')
+
+    # Fallback for storage/file contexts without MIME metadata.
+    if extension in allowed_extensions:
+        return
+
+    raise ValidationError('Valid ID must be an image or PDF file.')

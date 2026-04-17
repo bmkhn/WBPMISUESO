@@ -119,8 +119,14 @@
             <div>
                 <div class="user-details-label">Valid ID ({{ user.get_preferred_id_display }})</div>
                 <div style="display:flex;align-items:center;">
-                    <img src="{{ user.valid_id.url }}" alt="Valid ID" class="user-details-picture">
-                    <a href="{{ user.valid_id.url }}" style="font-size:18px;color:#00538E;margin-left:28px;vertical-align:middle;text-decoration:none;">View ID</a>
+                    {% with valid_id_url=user.valid_id.url|lower %}
+                        {% if '.pdf' in valid_id_url %}
+                            <a href="{{ user.valid_id.url }}" style="font-size:18px;color:#00538E;margin-left:28px;vertical-align:middle;text-decoration:none;">View ID</a>
+                        {% else %}
+                            <img src="{{ user.valid_id.url }}" alt="Valid ID" class="user-details-picture">
+                            <a href="{{ user.valid_id.url }}" style="font-size:18px;color:#00538E;margin-left:28px;vertical-align:middle;text-decoration:none;">View ID</a>
+                        {% endif %}
+                    {% endwith %}
                 </div>
             </div>
             {% else %}
