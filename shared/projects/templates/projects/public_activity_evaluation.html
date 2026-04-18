@@ -7,6 +7,7 @@
 
 <style>
     .evaluation-container {
+        box-sizing: border-box;
         max-width: 900px;
         margin: 2rem auto;
         padding: 2rem;
@@ -26,7 +27,9 @@
     .activity-info h2 {
         margin-top: 0;
         color: #0A6C44;
-        font-size: 1.5rem;
+        font-size: clamp(1.15rem, 4vw, 1.5rem);
+        line-height: 1.3;
+        word-break: break-word;
     }
     
     .activity-info p {
@@ -45,10 +48,16 @@
         color: #0A6C44;
     }
     
+    .evaluation-table-wrap {
+        width: 100%;
+        margin-top: 1rem;
+        -webkit-overflow-scrolling: touch;
+    }
+
     .evaluation-table {
         width: 100%;
         border-collapse: collapse;
-        margin-top: 1rem;
+        margin-top: 0;
         font-size: 0.9rem;
     }
     
@@ -72,7 +81,20 @@
     
     .evaluation-table input[type="radio"] {
         cursor: pointer;
-        transform: scale(1.2);
+        width: 1.125rem;
+        height: 1.125rem;
+        accent-color: #0A6C44;
+    }
+
+    .rating-scale-items {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem 1rem;
+        margin-top: 0.35rem;
+    }
+
+    .rating-scale-items span {
+        line-height: 1.35;
     }
     
     .form-group {
@@ -117,6 +139,10 @@
     .submit-button:hover {
         background: #085536;
     }
+
+    .submit-button:active {
+        background: #074a30;
+    }
     
     .rating-scale {
         background: #f0f9ff;
@@ -130,19 +156,115 @@
         color: #0A6C44;
     }
     
+    /* Phones and narrow tablets: stack rating scale, card-style rating rows */
     @media (max-width: 768px) {
         .evaluation-container {
+            padding: 0.85rem;
+            margin: 0.5rem;
+            border-radius: 6px;
+        }
+
+        .evaluation-section h3 {
+            font-size: 1.05rem;
+        }
+
+        .activity-info {
             padding: 1rem;
-            margin: 1rem;
         }
-        
-        .evaluation-table {
-            font-size: 0.8rem;
+
+        .rating-scale {
+            padding: 0.85rem;
         }
-        
-        .evaluation-table th,
-        .evaluation-table td {
-            padding: 0.5rem;
+
+        .rating-scale-items {
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+
+        .rating-scale-items span {
+            display: block;
+            padding: 0.35rem 0.5rem;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 4px;
+            font-size: 0.82rem;
+            line-height: 1.35;
+        }
+
+        .evaluation-table-wrap {
+            overflow: visible;
+        }
+
+        .evaluation-table thead {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        .evaluation-table tbody tr {
+            display: flex;
+            flex-wrap: wrap;
+            margin-bottom: 0.85rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #fff;
+        }
+
+        .evaluation-table tbody td {
+            border: none;
+            box-sizing: border-box;
+        }
+
+        .evaluation-table tbody td:first-child {
+            flex: 1 1 100%;
+            width: 100%;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.9rem;
+            line-height: 1.35;
+            padding: 0.85rem 1rem;
+            background: #f3f4f6;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .evaluation-table tbody td:not(:first-child) {
+            flex: 1 1 18%;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.2rem;
+            padding: 0.65rem 0.2rem;
+            min-height: 3rem;
+            border-left: 1px solid #eee;
+        }
+
+        .evaluation-table tbody td:nth-child(2) {
+            border-left: none;
+        }
+
+        .evaluation-table tbody td:nth-child(2)::after { content: "5"; font-size: 0.65rem; font-weight: 600; color: #555; }
+        .evaluation-table tbody td:nth-child(3)::after { content: "4"; font-size: 0.65rem; font-weight: 600; color: #555; }
+        .evaluation-table tbody td:nth-child(4)::after { content: "3"; font-size: 0.65rem; font-weight: 600; color: #555; }
+        .evaluation-table tbody td:nth-child(5)::after { content: "2"; font-size: 0.65rem; font-weight: 600; color: #555; }
+        .evaluation-table tbody td:nth-child(6)::after { content: "1"; font-size: 0.65rem; font-weight: 600; color: #555; }
+
+        .evaluation-table input[type="radio"] {
+            width: 1.35rem;
+            height: 1.35rem;
+            margin: 0;
+        }
+
+        .form-group input[type="text"],
+        .form-group textarea {
+            font-size: 16px; /* avoids iOS zoom on focus */
         }
     }
 </style>
@@ -163,11 +285,13 @@
     <!-- Rating Scale Info -->
     <div class="rating-scale">
         <strong>Rating Scale:</strong>
-        <span>5 (100-95) - Excellent | </span>
-        <span>4 (94-89) - Very Good | </span>
-        <span>3 (88-83) - Good | </span>
-        <span>2 (82-77) - Fair | </span>
-        <span>1 (76 and below) - Needs Improvement</span>
+        <div class="rating-scale-items">
+            <span>5 (100-95) — Excellent</span>
+            <span>4 (94-89) — Very Good</span>
+            <span>3 (88-83) — Good</span>
+            <span>2 (82-77) — Fair</span>
+            <span>1 (76 and below) — Needs Improvement</span>
+        </div>
     </div>
     
     <!-- Evaluation Form -->
@@ -185,6 +309,7 @@
         <div class="evaluation-section">
             <h3>A. Trainings/Seminars</h3>
             
+            <div class="evaluation-table-wrap">
             <table class="evaluation-table">
                 <thead>
                     <tr>
@@ -263,6 +388,7 @@
                     </tr>
                 </tbody>
             </table>
+            </div>
         </div>
         
         <!-- Timeliness Section -->
@@ -272,6 +398,7 @@
                 Percentage of persons given training or advisory services who rate timeliness of service delivery as good or better
             </p>
             
+            <div class="evaluation-table-wrap">
             <table class="evaluation-table">
                 <thead>
                     <tr>
@@ -310,6 +437,7 @@
                     </tr>
                 </tbody>
             </table>
+            </div>
         </div>
         
         <!-- Comments -->
@@ -328,7 +456,7 @@
 
 <script>
     // Form validation - ensure at least some ratings are selected
-    document.querySelector('.evaluation-form').addEventListener('submit', function(e) {
+    document.querySelector('.evaluation-form')?.addEventListener('submit', function(e) {
         const requiredRadios = document.querySelectorAll('input[type="radio"][required]');
         let allSelected = true;
         

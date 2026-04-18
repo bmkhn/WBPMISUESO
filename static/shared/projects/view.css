@@ -154,7 +154,9 @@ h5 {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 2rem;
-    height: 50px;
+    min-height: 50px;
+    flex-wrap: wrap;
+    gap: 0.75rem;
 }
 
 .card-header h3 {
@@ -950,6 +952,26 @@ select.user-details-value {
     font-size: 0.9rem;
     color: #888;
     font-style: italic;
+}
+
+@media (max-width: 768px) {
+    .evaluation-card,
+    .submission-card {
+        width: 100%;
+        max-width: 100%;
+        align-self: stretch;
+        box-sizing: border-box;
+        padding: 1rem 1.1rem;
+    }
+
+    .card-header {
+        height: auto;
+    }
+
+    .card-header h3 {
+        font-size: 1.05rem;
+        flex: 1 1 100%;
+    }
 }
 
 .eval {
