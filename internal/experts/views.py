@@ -276,7 +276,13 @@ def generate_team_view(request):
         campus_filter = data.get('campus', '').strip() or None
         college_filter = data.get('college', '').strip() or None
         num_participants = int(data.get('num_participants', 5))
-        include_in_progress = bool(data.get('include_in_progress', False))
+        include_in_progress_raw = data.get('include_in_progress', False)
+        if isinstance(include_in_progress_raw, bool):
+            include_in_progress = include_in_progress_raw
+        elif isinstance(include_in_progress_raw, str):
+            include_in_progress = include_in_progress_raw.strip().lower() in {'1', 'true', 'yes', 'on'}
+        else:
+            include_in_progress = bool(include_in_progress_raw)
         
         if not keywords:
             return JsonResponse({'success': False, 'error': 'Keywords are required'}, status=400)

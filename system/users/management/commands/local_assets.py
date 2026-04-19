@@ -13,10 +13,34 @@ import os
 from django.conf import settings
 
 User = get_user_model()
-fake = Faker()
+Faker.seed(2026)
+random.seed(2026)
+fake = Faker("en_PH")
 
 class Command(BaseCommand):
     help = "Generate test data for local dev, using actual media/static files (not URLs)"
+
+    EMAIL_DOMAINS = [
+        "example.com",
+        "psu.palawan.edu.ph"
+    ]
+
+    def _build_unique_faculty_email(self, given_name, last_name):
+        """Create realistic, unique faculty emails for local demo data."""
+        first = (given_name or "user").strip().lower()
+        last = (last_name or "demo").strip().lower()
+        first = ''.join(ch for ch in first if ch.isalpha())
+        last = ''.join(ch for ch in last if ch.isalpha())
+        base = f"{first}.{last}".strip('.') or "faculty.demo"
+
+        for idx in range(1, 500):
+            suffix = '' if idx == 1 else str(idx)
+            domain = self.EMAIL_DOMAINS[(idx - 1) % len(self.EMAIL_DOMAINS)]
+            candidate = f"{base}{suffix}@{domain}"
+            if not User.objects.filter(email=candidate).exists():
+                return candidate
+
+        return fake.unique.email(domain="example.com")
 
     # Project Creation Helper
     def create_project(self, *, status, leader, providers, agendas, sdgs, director, file_templates, event_templates, final_templates, now, PLACEHOLDER_PDF_PATH, PLACEHOLDER_IMAGE_PATH):
@@ -405,14 +429,14 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         self.stdout.write(self.style.WARNING('Starting Local asset generation...\n'))
 
-        faculty_user_count = 20
-        no_of_ns_projects = 3
-        no_of_ip_projects = 3
-        no_of_c_projects = 3
+        faculty_user_count = 50
+        no_of_ns_projects = 10
+        no_of_ip_projects = 10
+        no_of_c_projects = 10
 
-        no_of_ns_faculty_projects = 3
-        no_of_ip_faculty_projects = 3
-        no_of_c_faculty_projects = 3
+        no_of_ns_faculty_projects = 5
+        no_of_ip_faculty_projects = 5
+        no_of_c_faculty_projects = 5
 
         # Use static/faker/Placeholder.pdf and static/faker/image.png for all file/image fields
         PLACEHOLDER_PDF_PATH = "downloadables/files/Placeholder.pdf"
@@ -531,7 +555,7 @@ class Command(BaseCommand):
         for i in range(1, faculty_user_count + 1):
             given_name = fake.first_name()
             last_name = fake.last_name()
-            email = fake.unique.email()
+            email = self._build_unique_faculty_email(given_name, last_name)
             base_username = email.split('@')[0]
             username = base_username
             counter = 1
@@ -570,14 +594,17 @@ class Command(BaseCommand):
         now = timezone.now()
         project_count = [0]  # Use list for mutability in inner function
 
-        # Get Faculty U. Test user
-        faculty_test_user = User.objects.filter(role=User.Role.FACULTY, given_name='Faculty', last_name='Test').first()
+        # Get quick-login faculty user by stable credential email.
+        faculty_test_user = User.objects.filter(email='faculty@example.com').first()
+        if not faculty_test_user:
+            # Backward compatibility for older seed data.
+            faculty_test_user = User.objects.filter(role=User.Role.FACULTY, given_name='Faculty', last_name='Test').first()
         if not faculty_test_user:
             self.stdout.write(self.style.ERROR('Faculty U. Test user not found. Please run create_test_assets first.'))
             return
 
         # NOT_STARTED projects with random faculty
-        for _ in range(5):
+        for _ in range(no_of_ns_projects):
             leader = random.choice([u for u in faculty_users if u.role not in [User.Role.IMPLEMENTER, User.Role.CLIENT]])
             providers = random.sample(faculty_users, k=min(random.randint(2, 3), len(faculty_users)))
             project = self.create_project(
@@ -649,7 +676,7 @@ class Command(BaseCommand):
         self.create_projects_for_leader(faculty_test_user, 'COMPLETED', no_of_c_faculty_projects, faculty_users, agendas, sdgs, director, file_templates, event_templates, final_templates, now, PLACEHOLDER_PDF_PATH, PLACEHOLDER_IMAGE_PATH, project_count)
 
 
-        self.stdout.write(self.style.SUCCESS(f'\n✅ Successfully created {project_count} projects with realistic data!'))
+        self.stdout.write(self.style.SUCCESS(f'\n✅ Successfully created {project_count[0]} projects with realistic data!'))
         self.stdout.write(self.style.SUCCESS(f'✅ Created {faculty_user_count} faculty users (email = password)'))
         self.stdout.write(self.style.SUCCESS('\n📊 Summary:'))
         self.stdout.write(f'   - NOT_STARTED: {no_of_ns_projects} project (future dates)')

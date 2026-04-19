@@ -210,7 +210,9 @@
 					</div>
 
 					<div class="content-right">
+						{% if req.letter_of_intent %}
 						<a class="name-link notes-text" href="{{ req.letter_of_intent.url }}" target="_blank">Letter of Intent</a>
+						{% endif %}
 						{% if req.reason and req.status == 'REJECTED' %}
 						<span class="notes-text"><strong class="red">Reason/s for Rejection</strong><br>{{ req.reason }}</span>
 						{% elif req.reason and req.status == 'DENIED' %}
