@@ -6,6 +6,7 @@ Now using SendGrid API for reliable delivery on cloud platforms.
 
 import threading
 import logging
+import os
 from django.conf import settings
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail, Email, To, Content
@@ -707,7 +708,27 @@ def async_send_password_changed(user_email, user_name, new_password):
         None (email sends in background)
     """
     subject = 'Password Changed Successfully - UESOPMIS'
-    message = f'Hello {user_name},\n\nYour password has been changed successfully.\n\nYour new password is: {new_password}\n\nIf you did not make this change, please contact support immediately.'
+    is_deployed = os.environ.get('DEPLOYED', 'False') == 'True'
+    if is_deployed:
+        message = (
+            f'Hello {user_name},\n\nYour password has been changed successfully.'
+            '\n\nIf you did not make this change, please contact support immediately.'
+        )
+        password_block_html = ''
+        password_updated_html = 'For security, your password is not sent by email.'
+    else:
+        message = (
+            f'Hello {user_name},\n\nYour password has been changed successfully.'
+            f'\n\nYour new password is: {new_password}'
+            '\n\nIf you did not make this change, please contact support immediately.'
+        )
+        password_block_html = f'''
+                                <p style="margin: 20px 0; padding: 20px; background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border: 3px solid #10b981; border-radius: 12px; text-align: center;">
+                                    <strong style="color: #065f46; font-size: 14px; display: block; margin-bottom: 10px;">Your New Password:</strong>
+                                    <span style="font-size: 24px; font-weight: bold; letter-spacing: 2px; color: #047857; font-family: 'Courier New', monospace; display: block;">{new_password}</span>
+                                </p>
+        '''
+        password_updated_html = 'Your account is now secured with your new password. You can use it to log in immediately.'
     html_message = f'''
     <!DOCTYPE html>
     <html>
@@ -730,12 +751,9 @@ def async_send_password_changed(user_email, user_name, new_password):
                                 <h2 style="margin: 0 0 20px 0; color: #1f2937; font-size: 20px;">Hello {user_name},</h2>
                                 <p style="margin: 0 0 15px 0; color: #4b5563; font-size: 16px; line-height: 1.6;">This email confirms that your password has been <strong>successfully changed</strong>.</p>
                                 
-                                <p style="margin: 20px 0; padding: 20px; background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border: 3px solid #10b981; border-radius: 12px; text-align: center;">
-                                    <strong style="color: #065f46; font-size: 14px; display: block; margin-bottom: 10px;">Your New Password:</strong>
-                                    <span style="font-size: 24px; font-weight: bold; letter-spacing: 2px; color: #047857; font-family: 'Courier New', monospace; display: block;">{new_password}</span>
-                                </p>
+                                {password_block_html}
                                 
-                                <p style="margin: 0 0 20px 0; padding: 15px; background-color: #f0fdf4; border-left: 4px solid #10b981; color: #065f46; font-size: 14px; line-height: 1.5;"><strong>✓ Password Updated</strong><br>Your account is now secured with your new password. You can use it to log in immediately.</p>
+                                <p style="margin: 0 0 20px 0; padding: 15px; background-color: #f0fdf4; border-left: 4px solid #10b981; color: #065f46; font-size: 14px; line-height: 1.5;"><strong>✓ Password Updated</strong><br>{password_updated_html}</p>
                                 <p style="margin: 20px 0 0 0; padding: 15px; background-color: #fef2f2; border-left: 4px solid #ef4444; color: #991b1b; font-size: 14px; line-height: 1.5;"><strong>⚠️ Security Alert</strong><br>If you did not make this change, your account may have been compromised. Please contact support immediately and reset your password.</p>
                             </td>
                         </tr>

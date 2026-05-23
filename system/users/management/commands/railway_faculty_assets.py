@@ -26,8 +26,8 @@ class Command(BaseCommand):
         completed_projects = 3
 
         # PLACEHOLDER URLS - Files already in Railway media
-        PLACEHOLDER_PDF_URL = "https://uesopmis.up.railway.app/media/downloadables/files/Placeholder.pdf"
-        PLACEHOLDER_IMAGE_URL = "https://uesopmis.up.railway.app/media/about_us/director/image.png"
+        PLACEHOLDER_PDF_URL = "https://ueso-pmis.up.railway.app/media/downloadables/files/Placeholder.pdf"
+        PLACEHOLDER_IMAGE_URL = "https://ueso-pmis.up.railway.app/media/about_us/director/image.png"
         
         # These are relative paths from MEDIA_ROOT for Django FileField
         PLACEHOLDER_PDF_PATH = "downloadables/files/Placeholder.pdf"

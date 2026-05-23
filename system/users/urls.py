@@ -59,7 +59,12 @@ urlpatterns = [
 
     path('', role_redirect, name='role_redirect'),              # Default Redirector
 
-    path('quick-login/<str:role>/', quick_login, name='quick_login'),       # Quick Login URL (For Testing Purposes)
-
     path('health/', health_check, name='health_check'),
 ]
+
+import os
+
+if os.environ.get('DEPLOYED', 'False') != 'True':
+    urlpatterns.append(
+        path('quick-login/<str:role>/', quick_login, name='quick_login')
+    )

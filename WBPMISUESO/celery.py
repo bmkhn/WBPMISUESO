@@ -6,7 +6,10 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'WBPMISUESO.settings')
 app = Celery('WBPMISUESO')
 app.config_from_object('django.conf:settings', namespace='CELERY')
 app.autodiscover_tasks()
-app.conf.broker_url = 'redis://127.0.0.1:6379/0'  # Or your Railway Redis URL
+if os.environ.get('DEPLOYED', 'False') == 'True':
+	pass
+else:	
+	app.conf.broker_url = 'redis://127.0.0.1:6379/0'  # Or your Railway Redis URL
 
 # --- Celery Startup Hook ---
 @app.on_after_configure.connect

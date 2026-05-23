@@ -44,6 +44,7 @@ class SmartCacheMiddleware(MiddlewareMixin):
             '/admin/',
             '/static/',
             '/media/',
+            '/api/ ',
         )))
         self._connect_signals()
 
